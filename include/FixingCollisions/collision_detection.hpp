@@ -4,9 +4,10 @@
 #ifndef COLLISION_DETECTION
 #define COLLISION_DETECTION
 
-#include <vector>
 #include <Eigen/Core>
+#include <vector>
 
+namespace ccd {
 struct Impact {
     int vertex_index;
     int edge_index;
@@ -17,7 +18,10 @@ typedef std::shared_ptr<Impact> ImpactPtr;
 typedef std::vector<ImpactPtr> Impacts;
 typedef std::shared_ptr<Impacts> ImpactsPtr;
 
-enum DetectionMethod {BRUTE_FORCE, HASH_MAP};
+enum DetectionMethod {
+    BRUTE_FORCE,
+    HASH_MAP
+};
 
 ImpactPtr detect_edge_vertex_collision(
     const Eigen::VectorXd& vertex0_t0,
@@ -32,7 +36,7 @@ ImpactsPtr detect_edge_vertex_collisions(
     const Eigen::MatrixXd& vertices_t0,
     const Eigen::MatrixXd& vertices_t1,
     const Eigen::Matrix<int, Eigen::Dynamic, 2>& edges,
-    DetectionMethod method=BRUTE_FORCE);
+    DetectionMethod method = BRUTE_FORCE);
 
 // Brute-force detection algorithm
 ImpactsPtr detect_edge_vertex_collisions_brute_force(
@@ -46,4 +50,5 @@ ImpactsPtr detect_edge_vertex_collisions_hash_map(
     const Eigen::MatrixXd& vertices_t1,
     const Eigen::Matrix<int, Eigen::Dynamic, 2>& edges);
 
+}
 #endif
