@@ -36,13 +36,10 @@ public:
     bool load_scene(const std::string filename);
     bool save_scene();
     bool save_scene(const std::string filename);
+    void load_state();
 
     void resize_canvas();
     void clicked_on_canvas(const int button, const int modifier, const Eigen::RowVector3d& coord);
-    void clicked__select(const int button, const int modifier, const Eigen::RowVector3d& coord);
-    void clicked__translate(const int button, const int modifier, const Eigen::RowVector3d& coord);
-    void clicked__add_node(const int button, const int modifier, const Eigen::RowVector3d& coord);
-    void clicked__add_chain(const int button, const int modifier, const Eigen::RowVector3d& coord);
     void recolor_vertices();
     void redraw_vertices();
     void redraw_displacements();
@@ -50,6 +47,11 @@ public:
 
     // CRUD actions
     void connect_selected_vertices();
+    void clicked__select(const int button, const int modifier, const Eigen::RowVector3d& coord);
+    void clicked__translate(const int button, const int modifier, const Eigen::RowVector3d& coord);
+    void clicked__add_node(const int button, const int modifier, const Eigen::RowVector3d& coord);
+    void clicked__add_chain(const int button, const int modifier, const Eigen::RowVector3d& coord);
+    void undo();
 
     // menu windows
     void draw_io();
@@ -66,6 +68,8 @@ public:
     void highlight_points(const unsigned long data_id, const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl);
 
     State state;
+    std::vector<State> state_history;
+
     ViewerEditMode edit_mode;
 
     Eigen::RowVector3d color_vtx, color_edge, color_displ, color_grad, color_canvas, color_sl;
