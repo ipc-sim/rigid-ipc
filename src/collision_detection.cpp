@@ -85,3 +85,4 @@ void test(){
 
     detect_edge_vertex_collisions(vertices_t0, vertices_t1, edges);
 }
+}
