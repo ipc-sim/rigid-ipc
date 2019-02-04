@@ -24,12 +24,12 @@ enum DetectionMethod {
 };
 
 ImpactPtr detect_edge_vertex_collision(
-    const Eigen::VectorXd& vertex0_t0,
-    const Eigen::VectorXd& vertex0_t1,
-    const Eigen::VectorXd& edge_vertex1_t0,
-    const Eigen::VectorXd& edge_vertex1_t1,
-    const Eigen::VectorXd& edge_vertex2_t0,
-    const Eigen::VectorXd& edge_vertex2_t1);
+    const Eigen::MatrixXd& vertex0_t0,
+    const Eigen::MatrixXd& vertex0_t1,
+    const Eigen::MatrixXd& edge_vertex1_t0,
+    const Eigen::MatrixXd& edge_vertex1_t1,
+    const Eigen::MatrixXd& edge_vertex2_t0,
+    const Eigen::MatrixXd& edge_vertex2_t1);
 
 // General detection algorithm
 ImpactsPtr detect_edge_vertex_collisions(
