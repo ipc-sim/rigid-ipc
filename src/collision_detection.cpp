@@ -3,16 +3,18 @@
 // Supported geometry: point vs edge
 
 #include <FixingCollisions/collision_detection.hpp>
+#include <iostream>
 
 ImpactPtr detect_edge_vertex_collision(
-        const Eigen::VectorXd& vertex0_t0,
-        const Eigen::VectorXd& vertex0_t1,
-        const Eigen::VectorXd& edge_vertex1_t0,
-        const Eigen::VectorXd& edge_vertex1_t1,
-        const Eigen::VectorXd& edge_vertex2_t0,
-        const Eigen::VectorXd& edge_vertex2_t1){
+        const Eigen::MatrixXd& vertex0_t0,
+        const Eigen::MatrixXd& vertex0_t1,
+        const Eigen::MatrixXd& edge_vertex1_t0,
+        const Eigen::MatrixXd& edge_vertex1_t1,
+        const Eigen::MatrixXd& edge_vertex2_t0,
+        const Eigen::MatrixXd& edge_vertex2_t1){
     throw "Not implemented yet";
 }
+
 
 ImpactsPtr detect_edge_vertex_collisions(
         const Eigen::MatrixXd& vertices_t0,
@@ -39,17 +41,17 @@ ImpactsPtr detect_edge_vertex_collisions_brute_force(
     ImpactsPtr impacts(new Impacts());
     ImpactPtr potential_impact(nullptr);
     for(int edge_index = 0; edge_index < edges.rows(); edge_index++){
-        auto edge = edges.block<1, 2>(edge_index, 0);
+        auto edge = edges.middleRows<1>(edge_index);
         for(int vertex_index = 0; vertex_index < vertices_t0.rows();
                 vertex_index++){
             if(vertex_index != edge(0) && vertex_index != edge(1)){
                 potential_impact = detect_edge_vertex_collision(
-                    vertices_t0.block(vertex_index, 0, 1, dimensions),
-                    vertices_t1.block(vertex_index, 0, 1, dimensions),
-                    vertices_t0.block(edge(0), 0, 1, dimensions),
-                    vertices_t1.block(edge(0), 0, 1, dimensions),
-                    vertices_t0.block(edge(1), 0, 1, dimensions),
-                    vertices_t1.block(edge(0), 0, 1, dimensions));
+                    vertices_t0.middleRows(vertex_index, 1),
+                    vertices_t1.middleRows(vertex_index, 1),
+                    vertices_t0.middleRows(edge(0), 1),
+                    vertices_t1.middleRows(edge(0), 1),
+                    vertices_t0.middleRows(edge(1), 1),
+                    vertices_t1.middleRows(edge(1), 1));
                 if(potential_impact){
                     impacts->push_back(potential_impact);
                 }
@@ -67,6 +69,19 @@ ImpactsPtr detect_edge_vertex_collisions_hash_map(
     throw "Hash Map collision detection is not implemented yet.";
 }
 
-int main(int argc, char** argv){
+int main(int, char**){
+    Eigen::Matrix<double, 3, 2, Eigen::RowMajor> vertices_t0;
+    Eigen::Matrix<double, 3, 2, Eigen::RowMajor> vertices_t1;
+    Eigen::Matrix<int, 1, 2, Eigen::RowMajor> edges;
+    vertices_t0 << 0, 2,
+                   1, 1,
+                   1, 3;
+    vertices_t1 << 1, 2,
+                   0, 1,
+                   0, 3;
+    edges << 1, 2;
+
+    detect_edge_vertex_collisions(vertices_t0, vertices_t1, edges);
+
     return 0;
 }
