@@ -5,6 +5,7 @@
 #include <igl/unproject_onto_mesh.h>
 
 #include "read_scene.hpp"
+#include <FixingCollisions/not_implemented_error.hpp>
 
 namespace ccd {
 
@@ -17,6 +18,8 @@ ViewerMenu::ViewerMenu(std::string scene_file)
     , color_canvas(0.8, 0.8, 0.8)
     , color_sl(1.0, 1.0, 0.0)
     , scene_file(scene_file)
+    , last_action_message("")
+    , last_action_success(true)
 {
     // clang-format off
     canvas_nodes = (Eigen::MatrixXd(4, 3) <<
@@ -113,7 +116,7 @@ void ViewerMenu::load_state()
     vertices_colors.resize(state.vertices.rows(), 3);
 
     recolor_vertices();
-    redraw_with_displacements();
+    redraw_at_time();
 }
 
 void ViewerMenu::resize_canvas()
@@ -304,6 +307,29 @@ bool ViewerMenu::key_pressed(unsigned int key, int modifiers)
 }
 
 // ----------------------------------------------------------------------------------------------------------------------------
+// CCD USER ACTIONS
+// ----------------------------------------------------------------------------------------------------------------------------
+void ViewerMenu::detect_edge_vertex_collisions()
+{
+    try {
+        state.detect_edge_vertex_collisions();
+    } catch (NotImplementedError e) {
+        last_action_message = e.what();
+        last_action_success = false;
+    }
+}
+
+void ViewerMenu::goto_next_impact()
+{
+    if (state.impacts != nullptr && state.impacts->size() > 0) {
+        state.current_impact += 1;
+        state.current_impact %= state.impacts->size();
+
+        state.time = float(state.impacts->at(size_t(state.current_impact))->time);
+    }
+}
+
+// ----------------------------------------------------------------------------------------------------------------------------
 // DRAWING
 // ----------------------------------------------------------------------------------------------------------------------------
 void ViewerMenu::recolor_vertices()
@@ -332,9 +358,9 @@ void ViewerMenu::redraw_displacements()
     update_vector_field(displ_data_id, state.vertices, state.displacements);
 }
 
-void ViewerMenu::redraw_with_displacements()
+void ViewerMenu::redraw_at_time()
 {
-    update_graph(surface_data_id, state.vertices + state.displacements * double(state.displacement_ptge), state.edges);
+    update_graph(surface_data_id, state.vertices + state.displacements * double(state.time), state.edges);
 }
 
 void ViewerMenu::update_vector_field(const unsigned long data_id, const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta)

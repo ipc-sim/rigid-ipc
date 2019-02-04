@@ -20,6 +20,11 @@ enum ViewerEditMode {
 static const std::array<ViewerEditMode, 4> ViewerEditModeAll = { { select, translate, add_node, add_chain } };
 static const std::array<std::string, 4> ViewerEditModeNames = { { "Select", "Translate", "Add Node", "Add Chain" } };
 
+
+static const std::array<DetectionMethod, 2> DetectionMethodAll = { { BRUTE_FORCE} };
+static const std::array<std::string, 2> DetectionMethodNames = { { "BRUTE_FORCE"} };
+
+
 class ViewerMenu : public igl::opengl::glfw::imgui::ImGuiMenu {
 private:
     typedef igl::opengl::glfw::imgui::ImGuiMenu Super;
@@ -43,7 +48,7 @@ public:
     void recolor_vertices();
     void redraw_vertices();
     void redraw_displacements();
-    void redraw_with_displacements();
+    void redraw_at_time();
 
     // CRUD actions
     void connect_selected_vertices();
@@ -53,10 +58,15 @@ public:
     void clicked__add_chain(const int button, const int modifier, const Eigen::RowVector3d& coord);
     void undo();
 
+    // CCD actions
+    void detect_edge_vertex_collisions();
+    void goto_next_impact();
+
     // menu windows
     void draw_io();
     void draw_edit_modes();
     void draw_ui_settings();
+    void draw_ccd_steps();
 
     // utils functions
     void update_vector_field(const unsigned long data_id, const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta);
@@ -86,6 +96,8 @@ public:
                                     "edges":[[0,1]],
                                     "displacements":[[0.0,0.5],[0.0,0.5],[0.0,-1.0]]
                                 })";
+    std::string last_action_message;
+    bool last_action_success;
 };
 }
 

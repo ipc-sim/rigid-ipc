@@ -5,6 +5,7 @@ void ViewerMenu::draw_menu()
 {
     float menu_width = 180.f * menu_scaling();
     draw_labels_window();
+
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
@@ -16,8 +17,22 @@ void ViewerMenu::draw_menu()
     draw_io();
     draw_edit_modes();
     draw_ui_settings();
+    draw_ccd_steps();
 
     ImGui::PopItemWidth();
+    ImGui::End();
+
+
+    ImGui::SetNextWindowPos(ImVec2(menu_width + 10.0f, 0.0f), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(800.0f, 50.0f), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(200.0f, 30.0f), ImVec2(800.0f, -1.0f));
+    bool _message_menu_visible = true;
+    ImGui::Begin(
+        "CCD Message", &_message_menu_visible, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
+    static ImVec4 color_ok(0.0,1.0,0.0,1.0);
+    static ImVec4 color_error(1.0,0.0,0.0,1.0);
+
+    ImGui::TextColored(last_action_success ? color_ok: color_error, "%s", last_action_message.c_str());
     ImGui::End();
 }
 
@@ -86,9 +101,30 @@ void ViewerMenu::draw_ui_settings()
         ImGui::InputFloat("point size ##displ", &(viewer->data_list[displ_data_id].point_size));
         ImGui::Checkbox("show gradient", &(viewer->data_list[gradient_data_id].show_overlay));
 
-        if(ImGui::SliderFloat("displ", &(state.displacement_ptge), 0.0, 1.0)){
-            redraw_with_displacements();
+        if(ImGui::SliderFloat("time", &(state.time), 0.0, 1.0)){
+            redraw_at_time();
         }
     }
+}
+
+void ViewerMenu::draw_ccd_steps()
+{
+    static int idx_detection_method = 0;
+    if (ImGui::CollapsingHeader("CCD Steps", ImGuiTreeNodeFlags_DefaultOpen)) {
+        std::string combo_options;
+        for (const auto &piece : DetectionMethodNames) combo_options += piece + "\0";
+        combo_options+="\0";
+
+        if (ImGui::Combo("Method", &idx_detection_method, combo_options.c_str())){
+            state.detection_method = DetectionMethodAll[size_t(idx_detection_method)];
+        }
+        if (ImGui::Button("detect EV collisions", ImVec2(-1,0))){
+            detect_edge_vertex_collisions();
+        }
+        if (ImGui::Button("Goto Next impact", ImVec2(-1,0))){
+            goto_next_impact();
+        }
+    }
+
 }
 }

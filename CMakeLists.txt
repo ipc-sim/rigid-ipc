@@ -13,6 +13,7 @@ find_package(LIBIGL REQUIRED QUIET)
 
 # Add your project files
 set(SRCFILES
+    src/not_implemented_error.cpp
     src/collision_detection.cpp
     src/read_scene.cpp
     src/write_scene.cpp

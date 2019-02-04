@@ -1,11 +1,12 @@
 #include "state.hpp"
 
-#include "read_scene.hpp"
+#include <read_scene.hpp>
 
 namespace ccd {
 State::State()
     : canvas_width(10)
-    , canvas_height(10)
+    , canvas_height(10),
+      current_impact(-1)
 {
 }
 
@@ -20,7 +21,7 @@ void State::save_scene(std::string filename)
 {
     io::write_scene(filename, vertices, edges, displacements);
 }
-
+// CRUD Scene ---------------------------------------------------
 void State::add_vertex(const Eigen::RowVector3d& position)
 {
     long lastid = vertices.rows();
@@ -56,6 +57,11 @@ void State::move_vertex(const int vertex_idx, const Eigen::RowVector3d& delta)
 void State::move_displacement(const int vertex_idx, const Eigen::RowVector3d& delta)
 {
     displacements.row(vertex_idx) += delta;
+}
+
+// CCD ---------------------------------------------------------
+void State::detect_edge_vertex_collisions(){
+    impacts = ccd::detect_edge_vertex_collisions(vertices, vertices + displacements, edges, detection_method);
 }
 
 }

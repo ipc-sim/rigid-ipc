@@ -4,6 +4,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
+#include <FixingCollisions/collision_detection.hpp>
+
 namespace ccd {
 class State {
 public:
@@ -14,6 +16,9 @@ public:
     Eigen::MatrixXi edges;
     Eigen::MatrixXd displacements;
     Eigen::MatrixXd volume_grad;
+
+    ImpactsPtr impacts;
+    DetectionMethod detection_method;
 
     // ----------------------------------- SCENE CRUD
     void load_scene(const std::string filename);
@@ -28,10 +33,13 @@ public:
 
     void set_vertex_displacement(const int vertex_idx, const Eigen::Vector2d& displacement);
 
+    void detect_edge_vertex_collisions();
+
     // ----------------------------------- UI
     double canvas_width, canvas_height;
-    float displacement_ptge;
+    float time;
     std::vector<int> selected_points, selected_displacements;
+    int current_impact;
 
 
 };
