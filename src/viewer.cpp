@@ -4,9 +4,11 @@
 #include <igl/opengl/MeshGL.h>
 #include <igl/unproject_onto_mesh.h>
 
+#include "read_scene.hpp"
+
 namespace ccd {
 
-ViewerMenu::ViewerMenu()
+ViewerMenu::ViewerMenu(std::string scene_file)
     : edit_mode(ViewerEditMode::select)
     , color_vtx(1.0, 0.0, 0.0)
     , color_edge(1.0, 0.0, 0.0)
@@ -14,6 +16,7 @@ ViewerMenu::ViewerMenu()
     , color_grad(0.0, 0.0, 1.0)
     , color_canvas(0.8, 0.8, 0.8)
     , color_sl(1.0, 1.0, 0.0)
+    , scene_file(scene_file)
 {
     // clang-format off
     canvas_nodes = (Eigen::MatrixXd(4, 3) <<
@@ -26,6 +29,7 @@ ViewerMenu::ViewerMenu()
         0, 2, 1,
         2, 3, 1).finished();
     // clang-format on
+
 }
 
 void ViewerMenu::init(igl::opengl::glfw::Viewer* _viewer)
@@ -39,7 +43,8 @@ void ViewerMenu::init(igl::opengl::glfw::Viewer* _viewer)
         displ_data_id = viewer->data_list.size() - 1;
         viewer->append_mesh();
         gradient_data_id = viewer->data_list.size() - 1;
-        load_scene("");
+        load_scene(scene_file);
+
     }
 
     // CANVAS
@@ -53,13 +58,35 @@ void ViewerMenu::init(igl::opengl::glfw::Viewer* _viewer)
     }
 }
 
-void ViewerMenu::load_scene(const std::string filename)
+bool ViewerMenu::save_scene(){
+    std::string fname = igl::file_dialog_save();
+       if (fname.length() == 0)
+         return false;
+       state.save_scene(fname);
+       return true;
+}
+
+
+bool ViewerMenu::load_scene(){
+    std::string fname = igl::file_dialog_open();
+       if(fname.length() == 0)
+         return false;
+       return load_scene(fname);
+}
+
+bool ViewerMenu::load_scene(const std::string filename)
 {
-    state.load_scene(filename);
+
+    if (filename.empty()){
+        io::read_scene_from_str(default_scene, state.vertices, state.edges, state.displacements);
+    }
+    else {
+        state.load_scene(filename);
+    }
 
     viewer->data_list[surface_data_id].set_points(state.vertices, color_vtx);
     viewer->data_list[surface_data_id].set_edges(state.vertices, state.edges, color_edge);
-    viewer->data_list[surface_data_id].point_size = 10;
+    viewer->data_list[surface_data_id].point_size = 10 * pixel_ratio();
     // only needed to show vertex_ids
     viewer->data_list[surface_data_id].set_vertices(state.vertices);
     Eigen::MatrixXd nz(state.vertices.rows(), 3);
@@ -68,13 +95,15 @@ void ViewerMenu::load_scene(const std::string filename)
 
     viewer->data_list[displ_data_id].set_points(state.vertices + state.displacements, color_displ);
     viewer->data_list[displ_data_id].add_edges(state.vertices, state.vertices + state.displacements, color_displ);
-    viewer->data_list[displ_data_id].point_size = 10;
+    viewer->data_list[displ_data_id].point_size = 10 * pixel_ratio();
 
     viewer->data_list[gradient_data_id].set_points(state.vertices, color_grad);
     viewer->data_list[gradient_data_id].add_edges(state.vertices, state.vertices, color_grad);
     viewer->data_list[gradient_data_id].point_size = 1;
 
     vertices_colors.resize(state.vertices.rows(), 3);
+
+    return true;
 }
 
 void ViewerMenu::resize_canvas()

@@ -17,6 +17,7 @@ public:
 
     // ----------------------------------- SCENE CRUD
     void load_scene(const std::string filename);
+    void save_scene(const std::string filename);
 
     void add_vertex(const Eigen::RowVector3d& vertex);
     void add_edges(const Eigen::MatrixXi& edges);

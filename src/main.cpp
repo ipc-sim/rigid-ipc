@@ -2,11 +2,17 @@
 
 #include "viewer.hpp"
 
-int main(int /*argc*/, char* /*argv*/[])
+int main(int argc, char* argv [])
 {
 
     igl::opengl::glfw::Viewer viewer;
     ccd::ViewerMenu menu;
+
+    std::string scene_file;
+    if (argc > 1){
+        menu.scene_file = argv[1];
+    }
+
     viewer.plugins.push_back(&menu);
 
     viewer.core.set_rotation_type(igl::opengl::ViewerCore::ROTATION_TYPE_NO_ROTATION);

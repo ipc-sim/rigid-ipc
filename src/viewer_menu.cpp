@@ -23,16 +23,16 @@ void ViewerMenu::draw_menu()
 
 void ViewerMenu::draw_io(){
 
-    // Workspace
-    if (ImGui::CollapsingHeader("Workspace", ImGuiTreeNodeFlags_DefaultOpen)) {
+    // Scene
+    if (ImGui::CollapsingHeader("Scene", ImGuiTreeNodeFlags_DefaultOpen)) {
         float w = ImGui::GetContentRegionAvailWidth();
         float p = ImGui::GetStyle().FramePadding.x;
-        if (ImGui::Button("Load##Workspace", ImVec2((w - p) / 2.f, 0))) {
-            viewer->load_scene();
+        if (ImGui::Button("Load##Scene", ImVec2((w - p) / 2.f, 0))) {
+            load_scene();
         }
         ImGui::SameLine(0, p);
-        if (ImGui::Button("Save##Workspace", ImVec2((w - p) / 2.f, 0))) {
-            viewer->save_scene();
+        if (ImGui::Button("Save##Scene", ImVec2((w - p) / 2.f, 0))) {
+            save_scene();
         }
     }
 

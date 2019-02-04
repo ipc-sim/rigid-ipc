@@ -1,5 +1,7 @@
 #include "state.hpp"
 
+#include "read_scene.hpp"
+
 namespace ccd {
 State::State()
     : canvas_width(10)
@@ -7,32 +9,20 @@ State::State()
 {
 }
 
-void State::load_scene(std::string /*filename*/)
+void State::load_scene(std::string filename)
 {
-    int num_vertices = 3;
-    int num_edges = 1;
-
-    // surface
-    vertices.resize(num_vertices, 3);
-    vertices.row(0) << -1.0, 0.0, 0.0;
-    vertices.row(1) << 1.0, 0.0, 0.0;
-    vertices.row(2) << 0.0, 0.5, 0.0;
-
-    edges.resize(num_edges, 2);
-    edges.row(0) << 0, 1;
-
-    // per-node displacements
-    displacements.resize(num_vertices, 3);
-    displacements.row(0) << 0.0, 0.5, 0.0;
-    displacements.row(1) << 0.0, 0.5, 0.0;
-    displacements.row(2) << 0.0, -1.0, 0.0;
-
-    // per-node volume gradient ?
-    volume_grad.resize(num_vertices, 3);
+    io::read_scene(filename, vertices, edges, displacements);
+    volume_grad.resize(vertices.rows(), 3);
     volume_grad.setZero();
 }
 
-void State::add_vertex(const Eigen::RowVector3d& position){
+void State::save_scene(std::string filename)
+{
+    io::write_scene(filename, vertices, edges, displacements);
+}
+
+void State::add_vertex(const Eigen::RowVector3d& position)
+{
     long lastid = vertices.rows();
     vertices.conservativeResize(lastid + 1, 3);
     vertices.row(lastid) << position;
@@ -42,7 +32,6 @@ void State::add_vertex(const Eigen::RowVector3d& position){
 
     volume_grad.conservativeResize(lastid + 1, 3);
     volume_grad.row(lastid).setConstant(0.0);
-
 }
 
 void State::add_edges(const Eigen::MatrixXi& new_edges)

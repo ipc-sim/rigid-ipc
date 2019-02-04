@@ -17,22 +17,26 @@ enum ViewerEditMode {
     add_chain,
 };
 
-static const std::array<ViewerEditMode,4> ViewerEditModeAll = {{ select, translate, add_node, add_chain}};
-static const std::array<std::string,4> ViewerEditModeNames = {{ "Select", "Translate", "Add Node", "Add Chain"}};
+static const std::array<ViewerEditMode, 4> ViewerEditModeAll = { { select, translate, add_node, add_chain } };
+static const std::array<std::string, 4> ViewerEditModeNames = { { "Select", "Translate", "Add Node", "Add Chain" } };
 
 class ViewerMenu : public igl::opengl::glfw::imgui::ImGuiMenu {
 private:
     typedef igl::opengl::glfw::imgui::ImGuiMenu Super;
 
 public:
-    ViewerMenu();
+    ViewerMenu(const std::string scene_file = "");
 
     virtual void init(igl::opengl::glfw::Viewer* _viewer) override;
     virtual bool mouse_down(int button, int modifier) override;
     virtual bool key_pressed(unsigned int key, int modifiers) override;
     virtual void draw_menu() override;
 
-    void load_scene(const std::string filename);
+    bool load_scene();
+    bool load_scene(const std::string filename);
+    bool save_scene();
+    bool save_scene(const std::string filename);
+
     void resize_canvas();
     void clicked_on_canvas(const int button, const int modifier, const Eigen::RowVector3d& coord);
     void clicked__select(const int button, const int modifier, const Eigen::RowVector3d& coord);
@@ -61,7 +65,6 @@ public:
     void color_points(const unsigned long data_id, const Eigen::RowVector3d& color);
     void highlight_points(const unsigned long data_id, const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl);
 
-
     State state;
     ViewerEditMode edit_mode;
 
@@ -71,6 +74,14 @@ public:
     Eigen::MatrixXd vertices_colors;
     Eigen::MatrixXd canvas_nodes;
     Eigen::MatrixXi canvas_faces;
+
+    std::string scene_file;
+    std::string default_scene = R"(
+                                {
+                                    "vertices":[[-1.0, 0.0],[1.0,0.0],[0.0,0.5]],
+                                    "edges":[[0,1]],
+                                    "displacements":[[0.0,0.5],[0.0,0.5],[0.0,-1.0]]
+                                })";
 };
 }
 

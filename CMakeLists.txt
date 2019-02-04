@@ -14,13 +14,22 @@ find_package(LIBIGL REQUIRED QUIET)
 # Add your project files
 set(SRCFILES
     src/collision_detection.cpp
+    src/read_scene.cpp
+    src/write_scene.cpp
     src/main.cpp
     src/state.cpp
     src/viewer.cpp
     src/viewer_menu.cpp)
+
 add_executable(${PROJECT_NAME}_bin ${SRCFILES})
 target_link_libraries(${PROJECT_NAME}_bin igl::core igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui)
 include_directories(${PROJECT_NAME}_bin include src)
+
+# Add fixtures folder
+add_custom_command(TARGET ${PROJECT_NAME}_bin POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/fixtures
+        $<TARGET_FILE_DIR:${PROJECT_NAME}_bin>/fixtures)
 
 add_library(json INTERFACE)
 target_include_directories(json SYSTEM INTERFACE ${THIRD_PARTY_DIR}/json/include)
