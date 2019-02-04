@@ -84,5 +84,8 @@ _deps
 build
 bin
 
+## IDES
+*.autosave
+
 ## Zach's
 intersections.py
