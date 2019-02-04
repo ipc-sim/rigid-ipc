@@ -1,6 +1,7 @@
 #include "state.hpp"
 
 #include <read_scene.hpp>
+#include <write_scene.hpp>
 
 namespace ccd {
 State::State()
@@ -35,7 +36,7 @@ void State::add_vertex(const Eigen::RowVector3d& position)
     volume_grad.row(lastid).setConstant(0.0);
 }
 
-void State::add_edges(const Eigen::MatrixXi& new_edges)
+void State::add_edges(const Eigen::MatrixX2i& new_edges)
 {
     assert(new_edges.cols() == 2);
 

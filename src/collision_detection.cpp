@@ -23,7 +23,7 @@ ImpactPtr detect_edge_vertex_collision(
 ImpactsPtr detect_edge_vertex_collisions(
     const Eigen::MatrixXd& vertices_t0,
     const Eigen::MatrixXd& vertices_t1,
-    const Eigen::Matrix<int, Eigen::Dynamic, 2>& edges,
+    const Eigen::MatrixX2i& edges,
     DetectionMethod method)
 {
     assert(vertices_t0.rows() == vertices_t1.rows());
@@ -38,11 +38,10 @@ ImpactsPtr detect_edge_vertex_collisions(
 }
 
 ImpactsPtr detect_edge_vertex_collisions_brute_force(
-    const Eigen::MatrixXd& vertices_t0,
-    const Eigen::MatrixXd& vertices_t1,
-    const Eigen::Matrix<int, Eigen::Dynamic, 2>& edges)
+    const Eigen::MatrixXd& vertices_t0, const Eigen::MatrixXd& vertices_t1,
+    const Eigen::MatrixX2i& edges)
 {
-//    int dimensions = int(vertices_t0.cols());
+    //    int dimensions = int(vertices_t0.cols());
 
     ImpactsPtr impacts(new Impacts());
     ImpactPtr potential_impact(nullptr);
@@ -70,7 +69,7 @@ ImpactsPtr detect_edge_vertex_collisions_brute_force(
 ImpactsPtr detect_edge_vertex_collisions_hash_map(
     const Eigen::MatrixXd& /*vertices_t0*/,
     const Eigen::MatrixXd& /*vertices_t1*/,
-    const Eigen::Matrix<int, Eigen::Dynamic, 2>& /*edges*/)
+    const Eigen::MatrixX2i& /*edges*/)
 {
     throw NotImplementedError("Hash Map collision detection is not implemented yet.");
 }
@@ -79,13 +78,9 @@ void test()
 {
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> vertices_t0;
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> vertices_t1;
-    Eigen::Matrix<int, 1, 2, Eigen::RowMajor> edges;
-    vertices_t0 << 0, 2,
-        1, 1,
-        1, 3;
-    vertices_t1 << 1, 2,
-        0, 1,
-        0, 3;
+    Eigen::MatrixX2i edges;
+    vertices_t0 << 0, 2, 1, 1, 1, 3;
+    vertices_t1 << 1, 2, 0, 1, 0, 3;
     edges << 1, 2;
 
     detect_edge_vertex_collisions(vertices_t0, vertices_t1, edges);

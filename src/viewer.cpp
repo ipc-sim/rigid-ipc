@@ -242,6 +242,8 @@ void ViewerMenu::clicked__add_node(const int /*button*/, const int /*modifier*/,
 
 void ViewerMenu::clicked__add_chain(const int /*button*/, const int /*modifier*/, const Eigen::RowVector3d& /*coord*/)
 {
+    last_action_message = "Adding a chain is not implemented yet.";
+    last_action_success = false;
 }
 
 void ViewerMenu::clicked_on_canvas(const int button, const int modifier, const Eigen::RowVector3d& coord)

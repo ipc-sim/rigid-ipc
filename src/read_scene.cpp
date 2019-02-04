@@ -4,7 +4,7 @@
 
 namespace ccd {
 namespace io {
-    void read_scene(const std::string filename, Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Eigen::MatrixXd& displacements)
+    void read_scene(const std::string filename, Eigen::MatrixXd& vertices, Eigen::MatrixX2i& edges, Eigen::MatrixXd& displacements)
     {
         using nlohmann::json;
 
@@ -15,14 +15,14 @@ namespace io {
         return read_scene(scene, vertices, edges, displacements);
     }
 
-    void read_scene_from_str(const std::string str, Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Eigen::MatrixXd& displacements)
+    void read_scene_from_str(const std::string str, Eigen::MatrixXd& vertices, Eigen::MatrixX2i& edges, Eigen::MatrixXd& displacements)
     {
         using nlohmann::json;
         json scene = json::parse(str.c_str());
         return read_scene(scene, vertices, edges, displacements);
     }
 
-    void read_scene(const nlohmann::json scene, Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Eigen::MatrixXd& displacements)
+    void read_scene(const nlohmann::json scene, Eigen::MatrixXd& vertices, Eigen::MatrixX2i& edges, Eigen::MatrixXd& displacements)
     {
         vec2d vec_vertices = scene["vertices"].get<vec2d>();
         size_t num_vertices = vec_vertices.size();

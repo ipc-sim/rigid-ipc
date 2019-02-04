@@ -18,10 +18,8 @@ typedef std::shared_ptr<Impact> ImpactPtr;
 typedef std::vector<ImpactPtr> Impacts;
 typedef std::shared_ptr<Impacts> ImpactsPtr;
 
-enum DetectionMethod {
-    BRUTE_FORCE,
-    HASH_MAP
-};
+enum DetectionMethod { BRUTE_FORCE,
+    HASH_MAP };
 
 ImpactPtr detect_edge_vertex_collision(
     const Eigen::MatrixXd& vertex0_t0,
@@ -35,20 +33,18 @@ ImpactPtr detect_edge_vertex_collision(
 ImpactsPtr detect_edge_vertex_collisions(
     const Eigen::MatrixXd& vertices_t0,
     const Eigen::MatrixXd& vertices_t1,
-    const Eigen::Matrix<int, Eigen::Dynamic, 2>& edges,
+    const Eigen::MatrixX2i& edges,
     DetectionMethod method = BRUTE_FORCE);
 
 // Brute-force detection algorithm
 ImpactsPtr detect_edge_vertex_collisions_brute_force(
-    const Eigen::MatrixXd& vertices_t0,
-    const Eigen::MatrixXd& vertices_t1,
-    const Eigen::Matrix<int, Eigen::Dynamic, 2>& edges);
+    const Eigen::MatrixXd& vertices_t0, const Eigen::MatrixXd& vertices_t1,
+    const Eigen::MatrixX2i& edges);
 
 // Spatial-hashing detection algorithm
 ImpactsPtr detect_edge_vertex_collisions_hash_map(
-    const Eigen::MatrixXd& vertices_t0,
-    const Eigen::MatrixXd& vertices_t1,
-    const Eigen::Matrix<int, Eigen::Dynamic, 2>& edges);
+    const Eigen::MatrixXd& vertices_t0, const Eigen::MatrixXd& vertices_t1,
+    const Eigen::MatrixX2i& edges);
 
-}
+} // namespace ccd
 #endif

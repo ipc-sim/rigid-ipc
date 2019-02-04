@@ -13,7 +13,7 @@ public:
     State();
 
     Eigen::MatrixXd vertices;
-    Eigen::MatrixXi edges;
+    Eigen::MatrixX2i edges;
     Eigen::MatrixXd displacements;
     Eigen::MatrixXd volume_grad;
 
@@ -25,7 +25,7 @@ public:
     void save_scene(const std::string filename);
 
     void add_vertex(const Eigen::RowVector3d& vertex);
-    void add_edges(const Eigen::MatrixXi& edges);
+    void add_edges(const Eigen::MatrixX2i& edges);
 
     void set_vertex_position(const int vertex_idx, const Eigen::RowVector3d& position);
     void move_vertex(const int vertex_idx, const Eigen::RowVector3d& delta);

@@ -21,7 +21,7 @@ namespace io {
         return vec;
     }
 
-    void write_scene(const std::string filename, const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& edges, const Eigen::MatrixXd& displacements)
+    void write_scene(const std::string filename, const Eigen::MatrixXd& vertices, const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& displacements)
     {
         using nlohmann::json;
         json scene = write_scene(vertices, edges, displacements);
@@ -30,7 +30,7 @@ namespace io {
         o << std::setw(4) << scene << std::endl;
     }
 
-    nlohmann::json write_scene(const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& edges, const Eigen::MatrixXd& displacements)
+    nlohmann::json write_scene(const Eigen::MatrixXd& vertices, const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& displacements)
     {
         using nlohmann::json;
         json scene;
