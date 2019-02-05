@@ -8,25 +8,32 @@
 ### Collision Detection
 
 ```c++
-detect_edge_vertex_collisions(vertices_at_t0, vertices_at_t1, edges); // -> vector(vertex_idx, edge_idx, time_of_impact)
-detect_edge_vertex_collisions_brute_force(vertices_at_t0, vertices_at_t1, edges); // -> vector(vertex_idx, edge_idx, time_of_impact)
-detect_edge_vertex_collisions_hash_map(vertices_at_t0, vertices_at_t1, edges); // -> vector(vertex_idx, edge_idx, time_of_impact)
+detect_edge_vertex_collisions(
+    vertices, displacements, edges, method=(BRUTE_FORCE | HASH_MAP))
+    // -> vector(vertex_idx, edge_idx, time_of_impact)
 ```
 
-### Collision Pruning 
+### Collision Pruning
 
 ```c++
-prune_edge_vertex_collisions(vector(vertex_idx, edge_idx, time_of_impact)); // -> vector(vertex_idx, edge_idx, time_of_impact)
+prune_edge_vertex_collisions(vector(vertex_idx, edge_idx, time_of_impact))
+    // -> vector(vertex_idx, edge_idx, time_of_impact)
 ```
 
 ### Space-Time Interference Volume Computation
 
 ```c++
-compute_volume(vertices_at_t0, vertices_at_t1, edges, vector(vertex_idx, edge_idx, time_of_impact)); // -> double(volume)
+compute_volume(
+    vertices, displacements, edges,
+    vector(vertex_idx, edge_idx, time_of_impact))
+    // -> double(volume)
 ```
 
 ### Space-Time Interference Volume Gradient Computation
 
 ```c++
-compute_volume_gradient(vertices_at_t0, vertices_at_t1, edges, vector(vertex_idx, edge_idx, time_of_impact)); // -> vector(d volume / d displacement_0_x, d volume / d displacement_0_y, d volume / d displacement_1_x, d volume / d displacement_1_y, d volume / d displacement_2_x, d volume / d displacement_2_y)
+compute_volume_gradient(
+    vertices, displacements, edges,
+    vector(vertex_idx, edge_idx, time_of_impact))
+    // -> vector([d volume / d displacement for displacement in displacements])
 ```
