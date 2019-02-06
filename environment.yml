@@ -1,0 +1,13 @@
+name: ccd-3.6
+channels:
+  - conda-forge
+  - anaconda
+  - defaults
+dependencies:
+  - ipython=6.5.0
+  - matplotlib=2.2.3
+  - nose=1.3.7
+  - numpy=1.15.1
+  - scipy=1.1.0
+  - jupyter=1.0.0
+  - sympy=1.3
