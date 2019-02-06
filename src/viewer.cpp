@@ -323,10 +323,15 @@ void ViewerMenu::detect_edge_vertex_collisions()
     }
 }
 
-void ViewerMenu::goto_next_impact()
+void ViewerMenu::goto_impact(const int impact)
 {
-    if (state.impacts != nullptr && state.impacts->size() > 0) {
-        state.current_impact += 1;
+    if (impact == -1){
+        state.time = 0.0;
+        state.current_impact = impact;
+        redraw_at_time();
+    }
+    else if (state.impacts != nullptr && state.impacts->size() > 0) {
+        state.current_impact = impact;
         state.current_impact %= state.impacts->size();
 
         state.time = float(state.impacts->at(size_t(state.current_impact))->time);

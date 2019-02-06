@@ -10,7 +10,8 @@ double collision_volume(
     const Eigen::MatrixX2d& displacements,
     const Eigen::MatrixX2i& edges,
     const Impact& impact,
-    const Eigen::VectorXd grad_volume);
+    const double epsilon,
+    Eigen::VectorXd grad_volume);
 }
 
 #endif

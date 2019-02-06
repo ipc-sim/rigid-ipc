@@ -2,6 +2,7 @@
 
 #include <read_scene.hpp>
 #include <write_scene.hpp>
+#include <FixingCollisions/collision_volume.hpp>
 
 namespace ccd {
 State::State()
@@ -16,6 +17,12 @@ void State::load_scene(std::string filename)
     io::read_scene(filename, vertices, edges, displacements);
     volume_grad.resize(vertices.rows(), kDIM);
     volume_grad.setZero();
+
+    current_impact = -1;
+    time = 0.0;
+    selected_displacements.clear();
+    selected_points.clear();
+    impacts = nullptr;
 }
 
 void State::save_scene(std::string filename)
@@ -63,6 +70,10 @@ void State::move_displacement(const int vertex_idx, const Eigen::RowVector2d& de
 // CCD ---------------------------------------------------------
 void State::detect_edge_vertex_collisions(){
     impacts = ccd::detect_edge_vertex_collisions(vertices, displacements, edges, detection_method);
+    // NOTE: dummy calls just so the code is called
+    for (size_t i=0; i < impacts->size(); i++){
+        ccd::collision_volume(vertices, displacements, edges, *impacts->at(i), epsilon, Eigen::VectorXd());
+    }
 }
 
 }

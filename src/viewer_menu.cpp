@@ -1,4 +1,4 @@
-#include "viewer.hpp"
+﻿#include "viewer.hpp"
 
 namespace ccd {
 void ViewerMenu::draw_menu()
@@ -121,9 +121,21 @@ void ViewerMenu::draw_ccd_steps()
         if (ImGui::Button("detect EV collisions", ImVec2(-1,0))){
             detect_edge_vertex_collisions();
         }
-        if (ImGui::Button("Goto Next impact", ImVec2(-1,0))){
-            goto_next_impact();
+
+        if(state.impacts != nullptr && state.impacts->size()){
+            int impact_id = state.current_impact + 1;
+            ImGui::Text("impact %i/%i", state.current_impact+1, int(state.impacts->size()));
+
+            if(ImGui::InputInt("", &impact_id)){
+                goto_impact(impact_id - 1);
+            }
+
+            if (ImGui::Button("Goto Next impact", ImVec2(-1,0))){
+                goto_impact(state.current_impact + 1);
+            }
         }
+        ImGui::Separator();
+        ImGui::InputDouble("vol. epsilon", &state.epsilon);
     }
 
 }

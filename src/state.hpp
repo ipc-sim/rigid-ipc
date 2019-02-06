@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
+#include <FixingCollisions/impact.hpp>
 #include <FixingCollisions/collision_detection.hpp>
 
 namespace ccd {
@@ -22,6 +23,7 @@ public:
 
     ImpactsPtr impacts;
     DetectionMethod detection_method;
+    double epsilon = 0.0;
 
     // ----------------------------------- SCENE CRUD
     void load_scene(const std::string filename);

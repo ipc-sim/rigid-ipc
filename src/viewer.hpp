@@ -60,7 +60,7 @@ public:
 
     // CCD actions
     void detect_edge_vertex_collisions();
-    void goto_next_impact();
+    void goto_impact(const int impact);
 
     // menu windows
     void draw_io();
