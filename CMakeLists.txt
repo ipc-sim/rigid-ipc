@@ -17,6 +17,7 @@ set(SRCFILES
     src/degenerate_edge_error.cpp
     src/impact.cpp
     src/collision_detection.cpp
+    src/collision_volume.cpp
     src/read_scene.cpp
     src/write_scene.cpp
     src/main.cpp

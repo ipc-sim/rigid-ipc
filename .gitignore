@@ -87,4 +87,7 @@ bin
 ## IDES
 *.autosave
 
+## jupyter
+.ipynb_checkpoints
+
 ## Zach's

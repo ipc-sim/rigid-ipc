@@ -7,15 +7,18 @@
 #include <FixingCollisions/collision_detection.hpp>
 
 namespace ccd {
+
 class State {
 public:
+    static const int kDIM = 2;
+
     ~State() = default;
     State();
 
-    Eigen::MatrixXd vertices;
+    Eigen::MatrixX2d vertices;
     Eigen::MatrixX2i edges;
-    Eigen::MatrixXd displacements;
-    Eigen::MatrixXd volume_grad;
+    Eigen::MatrixX2d displacements;
+    Eigen::MatrixX2d volume_grad;
 
     ImpactsPtr impacts;
     DetectionMethod detection_method;
@@ -24,23 +27,26 @@ public:
     void load_scene(const std::string filename);
     void save_scene(const std::string filename);
 
-    void add_vertex(const Eigen::RowVector3d& vertex);
+    void add_vertex(const Eigen::RowVector2d& vertex);
     void add_edges(const Eigen::MatrixX2i& edges);
 
-    void set_vertex_position(const int vertex_idx, const Eigen::RowVector3d& position);
-    void move_vertex(const int vertex_idx, const Eigen::RowVector3d& delta);
-    void move_displacement(const int vertex_idx, const Eigen::RowVector3d& delta);
+    void set_vertex_position(const int vertex_idx, const Eigen::RowVector2d& position);
+    void move_vertex(const int vertex_idx, const Eigen::RowVector2d& delta);
+    void move_displacement(const int vertex_idx, const Eigen::RowVector2d& delta);
 
-    void set_vertex_displacement(const int vertex_idx, const Eigen::Vector2d& displacement);
-
+        // ----------------------------------- SCENE CCD
     void detect_edge_vertex_collisions();
 
-    // ----------------------------------- UI
+    // --------------------------------------- UI
+    // bacground rectangle to detect clicks
     double canvas_width, canvas_height;
+    // we show the scene at time=`time` between 0 and 1
     float time;
+    // current user-selection of vertex and displacement points
     std::vector<int> selected_points, selected_displacements;
+    // use for any functionallity that requires showing only one impact
+    // e.g goto time_of_impact
     int current_impact;
-
 
 };
 
