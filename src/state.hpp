@@ -7,8 +7,11 @@
 #include <FixingCollisions/collision_detection.hpp>
 
 namespace ccd {
+
 class State {
 public:
+    static const int kDIM = 2;
+
     ~State() = default;
     State();
 

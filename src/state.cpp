@@ -14,7 +14,7 @@ State::State()
 void State::load_scene(std::string filename)
 {
     io::read_scene(filename, vertices, edges, displacements);
-    volume_grad.resize(vertices.rows(), 2);
+    volume_grad.resize(vertices.rows(), kDIM);
     volume_grad.setZero();
 }
 
@@ -26,13 +26,13 @@ void State::save_scene(std::string filename)
 void State::add_vertex(const Eigen::RowVector2d& position)
 {
     long lastid = vertices.rows();
-    vertices.conservativeResize(lastid + 1, 3);
+    vertices.conservativeResize(lastid + 1, kDIM);
     vertices.row(lastid) << position;
 
-    displacements.conservativeResize(lastid + 1, 3);
-    displacements.row(lastid) << 0.0, -0.1, 0.0;
+    displacements.conservativeResize(lastid + 1, kDIM);
+    displacements.row(lastid) << 0.0, -0.1;
 
-    volume_grad.conservativeResize(lastid + 1, 3);
+    volume_grad.conservativeResize(lastid + 1, kDIM);
     volume_grad.row(lastid).setConstant(0.0);
 }
 

@@ -6,8 +6,8 @@
 
 namespace ccd {
 double collision_volume(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2d& vertices,
+    const Eigen::MatrixX2d& displacements,
     const Eigen::MatrixX2i& edges,
     const Impact& impact,
     const Eigen::VectorXd grad_volume);
