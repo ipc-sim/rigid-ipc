@@ -8,23 +8,10 @@
 #define COLLISION_DETECTION_H
 
 #include <Eigen/Core>
-#include <vector>
+
+#include <FixingCollisions/impact.hpp>
 
 namespace ccd {
-
-/** Structure representing an impact of an edge and vertex. */
-struct Impact {
-    /** Impacting vertex. */
-    int vertex_index;
-    /** Impacted edge. */
-    int edge_index;
-    /** Time of impact. */
-    double time;
-};
-
-typedef std::shared_ptr<Impact> ImpactPtr;
-typedef std::vector<ImpactPtr> Impacts;
-typedef std::shared_ptr<Impacts> ImpactsPtr;
 
 /** Possible methods for detecting all edge vertex collisions. */
 enum DetectionMethod { BRUTE_FORCE, HASH_MAP };

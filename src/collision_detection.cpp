@@ -169,10 +169,14 @@ ImpactsPtr detect_edge_vertex_collisions_brute_force(
                         displacements.row(edge(0)), vertices.row(edge(1)),
                         displacements.row(edge(1)));
                 if (potential_time_of_impact != NO_IMPACT) {
-                    impacts->push_back(ImpactPtr(new Impact()));
-                    impacts->back()->vertex_index = vertex_index;
-                    impacts->back()->edge_index = edge_index;
-                    impacts->back()->time = potential_time_of_impact;
+                    impacts->push_back(ImpactPtr(new Impact(vertex_index,
+                        edge_index, potential_time_of_impact,
+                        temporal_parameterization_to_spatial(
+                            vertices.row(vertex_index),
+                            displacements.row(vertex_index),
+                            vertices.row(edge(0)), displacements.row(edge(0)),
+                            vertices.row(edge(1)), displacements.row(edge(1)),
+                            potential_time_of_impact))));
                 }
             }
         }

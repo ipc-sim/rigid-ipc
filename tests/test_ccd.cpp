@@ -87,3 +87,11 @@ void test4()
                   << impact->time << std::endl;
     }
 }
+
+int main()
+{
+    test1();
+    test2();
+    test3();
+    test4();
+}
