@@ -1,3 +1,7 @@
+# Compute a polynomial for the intersection of a point and edge both moving
+# through time.
+# General idea: http://www.sci.utah.edu/~kpotter/publications/ramsey-2004-RBPI.pdf
+
 import sympy
 
 # s is the spatial parameterization for the edge
@@ -46,7 +50,7 @@ for i, coeff in enumerate(coeffs):
 # (-v0x*v1y + v0x*v2y + v0y*v1x - v0y*v2x - v1x*v2y + v1y*v2x)*t**2
 # + (-p0x*v1y + p0x*v2y + p0y*v1x - p0y*v2x + p1x*v0y - p1x*v2y - p1y*v0x + p1y*v2x - p2x*v0y + p2x*v1y + p2y*v0x - p2y*v1x)*t
 # - p0x*p1y + p0x*p2y + p0y*p1x - p0y*p2x - p1x*p2y + p1y*p2x
-
+# 
 # a2:
 # -v0x⋅v1y + v0x⋅v2y + v0y⋅v1x - v0y⋅v2x - v1x⋅v2y + v1y⋅v2x
 #  = v0x * (v2y - v1y) + v0y * (v1x - v2x) - v1x⋅v2y + v1y⋅v2x

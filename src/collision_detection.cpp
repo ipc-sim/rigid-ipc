@@ -3,41 +3,60 @@
 // Supported geometry: point vs edge
 
 #include <FixingCollisions/collision_detection.hpp>
+#include <FixingCollisions/degenerate_edge_error.hpp>
+#include <FixingCollisions/not_implemented_error.hpp>
 
 #include <iostream>
-
-#include <FixingCollisions/not_implemented_error.hpp>
 
 #define NO_IMPACT (-1)
 #define EPSILON (1e-8)
 
+#define EDGE_VERTEX_PARAMS                                                     \
+    vertex0, displacement0, edge_vertex1, edge_displacement1, edge_vertex2,    \
+        edge_displacement2
+
 namespace ccd {
 
-double temporal_parameterization_to_spactial(const Eigen::MatrixXd& vertex0,
-    const Eigen::MatrixXd& displacement0, const Eigen::MatrixXd& edge_vertex1,
-    const Eigen::MatrixXd& edge_displacement1,
-    const Eigen::MatrixXd& edge_vertex2,
-    const Eigen::MatrixXd& edge_displacement2, double t)
+// Convert a temporal parameterization to a spatial parameterization.
+double temporal_parameterization_to_spatial(const Eigen::VectorXd& vertex0,
+    const Eigen::VectorXd& displacement0, const Eigen::VectorXd& edge_vertex1,
+    const Eigen::VectorXd& edge_displacement1,
+    const Eigen::VectorXd& edge_vertex2,
+    const Eigen::VectorXd& edge_displacement2, double t)
 {
     Eigen::MatrixXd numerator
         = edge_vertex1 - vertex0 + t * (edge_displacement1 - displacement0);
     Eigen::MatrixXd denominator = edge_vertex1 - edge_vertex2
         + t * (edge_displacement1 - edge_displacement2);
+    assert(numerator.size() == denominator.size());
     if (std::abs(denominator(0)) > EPSILON) {
         return numerator(0) / denominator(0);
     } else if (std::abs(denominator(1)) > EPSILON) {
         return numerator(1) / denominator(1);
+    } else if (denominator.size() > 2 && std::abs(denominator(2)) > EPSILON) {
+        return numerator(2) / denominator(2);
     }
-    throw "Edge is a singular non-moving point.";
+    throw DegenerateEdgeError();
 }
 
-double compute_edge_vertex_time_of_impact(const Eigen::MatrixX2d& vertex0,
-    const Eigen::MatrixX2d& displacement0, const Eigen::MatrixX2d& edge_vertex1,
-    const Eigen::MatrixX2d& edge_displacement1,
-    const Eigen::MatrixX2d& edge_vertex2,
-    const Eigen::MatrixX2d& edge_displacement2)
+// Compute the time of impact of a point and edge moving in 2D.
+double compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
+    const Eigen::Vector2d& displacement0, const Eigen::Vector2d& edge_vertex1,
+    const Eigen::Vector2d& edge_displacement1,
+    const Eigen::Vector2d& edge_vertex2,
+    const Eigen::Vector2d& edge_displacement2)
 {
-    // a*t^2 + b*t + c = 0
+    // In 2D the intersecton of a point and edge moving through time is the a
+    // quadratic equation, at^2 + bt + c = 0. A sketch for the geometric proof
+    // is: the point forms a line in space-time and the edge forms a
+    // bilinear surface in space-time, so the impact is an intersection of the
+    // line and bilinear surface. There can possibly 0, 1, 2, or infinite such
+    // intersections. Therefore, the function for time of impact is a quadratic
+    // equation.
+    // Importantly, this function only works for a 2D point and edge. In order
+    // to extend this function to 3D one would have to solve a cubic function.
+    // These coefficients were found using `python/intersections.py` which uses
+    // sympy to compute a polynomial in terms of t.
     double a
         = displacement0(0) * (edge_displacement2(1) - edge_displacement1(1))
         + displacement0(1) * (edge_displacement1(0) - edge_displacement2(0))
@@ -53,44 +72,68 @@ double compute_edge_vertex_time_of_impact(const Eigen::MatrixX2d& vertex0,
         + vertex0(1) * (edge_vertex1(0) - edge_vertex2(0))
         + edge_vertex1(1) * edge_vertex2(0) - edge_vertex1(0) * edge_vertex2(1);
 
-    if (std::abs(a) > EPSILON) {
+    if (std::abs(a) > EPSILON) { // Is the equation truly quadratic?
         // Quadratic equation
+        // at^2 + bt + c = 0 => t = (-b ± sqrt(b^2 - 4ac)) / 2a
         double radicand = b * b - 4 * a * c;
         if (radicand >= 0) {
-            // TODO: Check that a is not zero
             double tmp0 = -b / (2 * a);
             double tmp1 = sqrt(radicand) / (2 * a);
-            double t0 = tmp0 + tmp1;
-            double t1 = tmp0 - tmp1;
-            double s0 = temporal_parameterization_to_spactial(vertex0,
-                displacement0, edge_vertex1, edge_displacement1, edge_vertex2,
-                edge_displacement2, t0);
-            double s1 = temporal_parameterization_to_spactial(vertex0,
-                displacement0, edge_vertex1, edge_displacement1, edge_vertex2,
-                edge_displacement2, t1);
-            bool is_t0_valid = t0 >= 0 && t0 <= 1 && s0 >= 0 && s0 <= 1;
-            bool is_t1_valid = t1 >= 0 && t1 <= 1 && s1 >= 0 && s1 <= 1;
-            if (is_t0_valid) {
-                return is_t1_valid ? std::min(t0, t1) : t0;
+            double tI0 = tmp0 + tmp1;
+            double tI1 = tmp0 - tmp1;
+
+            double sI0, sI1;
+            bool is_tI0_valid, is_tI1_valid;
+            try {
+                sI0 = temporal_parameterization_to_spatial(
+                    EDGE_VERTEX_PARAMS, tI0);
+                is_tI0_valid = tI0 >= 0 && tI0 <= 1 && sI0 >= 0 && sI0 <= 1;
+            } catch (DegenerateEdgeError err) {
+                is_tI0_valid = false;
+            }
+            try {
+                sI1 = temporal_parameterization_to_spatial(
+                    EDGE_VERTEX_PARAMS, tI1);
+                is_tI1_valid = tI1 >= 0 && tI1 <= 1 && sI1 >= 0 && sI1 <= 1;
+            } catch (DegenerateEdgeError err) {
+                is_tI1_valid = false;
+            }
+
+            if (is_tI0_valid) {
+                return is_tI1_valid ? std::min(tI0, tI1) : tI0;
             } else {
-                return is_t1_valid ? t1 : NO_IMPACT;
+                return is_tI1_valid ? tI1 : NO_IMPACT;
             }
         }
         return NO_IMPACT;
-    } else if (std::abs(b) > EPSILON) {
+    } else if (std::abs(b) > EPSILON) { // Is the equation truly linear?
         // Linear equation
-        // b * t + c = 0 => t = -c / b
+        // bt + c = 0 => t = -c / b
         double t = -c / b;
-        double s = temporal_parameterization_to_spactial(vertex0, displacement0,
-            edge_vertex1, edge_displacement1, edge_vertex2, edge_displacement2,
-            t);
+        double s = temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, t);
         return (t >= 0 && t <= 1 && s >= 0 && s <= 1) ? t : NO_IMPACT;
     } else if (std::abs(c) > EPSILON) {
         // (c != 0) = 0 => no solution exists
         return NO_IMPACT;
     } else {
         // a = b = c = 0 => infinite solutions, but may not be on the edge.
-        throw NotImplementedError("Case a = b = c = 0 is not implemented yet.");
+        // Find the spatial locations along the line at t=0 and t=1
+        double s0 = temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, 0);
+        double s1 = temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, 1);
+
+        // Possible cases for trajectories:
+        // - No impact to impact ():
+        //  - s0 < 0 && s1 >= 0 -> sI = 0
+        //  - s0 > 1 && s1 <= 1 -> sI = 1
+        // - impact to *: 0 <= s0 <= 1 -> sI = s0
+        // - No impact to no impact: * -> NO_IMPACT
+        if ((s0 < 0 && s1 >= 0) || (s0 > 1 && s1 <= 1)
+            || (s0 >= 0 && s0 <= 1)) {
+            double sI = s0 < 0 ? 0 : (s0 > 1 ? 1 : s0);
+            return std::abs(s1 - s0) > EPSILON ? ((sI - s0) / (s1 - s0)) : 0;
+        } else { // No impact to no impact
+            return NO_IMPACT;
+        }
     }
 }
 
@@ -146,24 +189,4 @@ ImpactsPtr detect_edge_vertex_collisions_hash_map(
         "Hash Map collision detection is not implemented yet.");
 }
 
-void test()
-{
-    Eigen::Matrix<double, 3, 2, Eigen::RowMajor> vertices;
-    Eigen::Matrix<double, 3, 2, Eigen::RowMajor> displacements;
-    Eigen::Matrix<int, 1, 2, Eigen::RowMajor> edges;
-    vertices.row(0) << -1, 0;
-    vertices.row(1) << 1, -1;
-    vertices.row(2) << 1, 1;
-    displacements.row(0) << 2, 0;
-    displacements.row(1) << -2, 0;
-    displacements.row(2) << -2, 0;
-    edges.row(0) << 1, 2;
-    ccd::ImpactsPtr impacts
-        = ccd::detect_edge_vertex_collisions(vertices, displacements, edges);
-    for (auto const& impact : *impacts) {
-        std::cout << "Impact between point " << impact->vertex_index
-                  << " and edge " << impact->edge_index << " at time "
-                  << impact->time << std::endl;
-    }
-}
 }
