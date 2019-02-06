@@ -15,6 +15,7 @@ find_package(LIBIGL REQUIRED QUIET)
 set(SRCFILES
     src/not_implemented_error.cpp
     src/degenerate_edge_error.cpp
+    src/impact.cpp
     src/collision_detection.cpp
     src/read_scene.cpp
     src/write_scene.cpp
@@ -36,3 +37,5 @@ add_custom_command(TARGET ${PROJECT_NAME}_bin POST_BUILD
 add_library(json INTERFACE)
 target_include_directories(json SYSTEM INTERFACE ${THIRD_PARTY_DIR}/json/include)
 target_link_libraries(${PROJECT_NAME}_bin json)
+
+# add_subdirectory(tests)
