@@ -86,8 +86,14 @@ bin
 
 ## IDES
 *.autosave
+.idea/
 
-## jupyter
+## python
 .ipynb_checkpoints
+__pycache__
+
+## AUTOGEN!
+src/autogen/*.cpp
+src/autogen/*.hpp
 
 ## Zach's

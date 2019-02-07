@@ -3,6 +3,7 @@
 #include <read_scene.hpp>
 #include <write_scene.hpp>
 #include <FixingCollisions/collision_volume.hpp>
+#include "autogen/auto_test_function.hpp"
 
 namespace ccd {
 State::State()
@@ -73,6 +74,11 @@ void State::detect_edge_vertex_collisions(){
     // NOTE: dummy calls just so the code is called
     for (size_t i=0; i < impacts->size(); i++){
         ccd::collision_volume(vertices, displacements, edges, *impacts->at(i), epsilon, Eigen::VectorXd());
+        auto edge = edges.row(impacts->at(i)->edge_index);
+        ccd::autogen::test_function(
+                    vertices.row(edge(0)), vertices.row(edge(1)), vertices.row(edge(0)), vertices.row(edge(1)),
+                    displacements.row(edge(0)), displacements.row(edge(1)), displacements.row(edge(0)), displacements.row(edge(1)),
+                    epsilon);
     }
 }
 
