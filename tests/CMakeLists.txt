@@ -1,3 +1,5 @@
+# TODO: Update this code to not require installed Catch2
+# https://github.com/catchorg/Catch2/blob/master/docs/cmake-integration.md
 cmake_minimum_required(VERSION 3.1)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
