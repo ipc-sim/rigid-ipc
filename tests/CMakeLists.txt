@@ -9,6 +9,7 @@ find_package(Catch2 REQUIRED) # Find Catch2 for unit testing
 set(test_sources
 	main.cpp
 	test_ccd.cpp
+	test_impact_pruning.cpp
 	../src/collision_detection.cpp
 	../src/degenerate_edge_error.cpp
 	../src/not_implemented_error.cpp

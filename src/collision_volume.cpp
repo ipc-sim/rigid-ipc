@@ -1,14 +1,10 @@
 #include <FixingCollisions/collision_volume.hpp>
 
-
 namespace ccd {
 
-double collision_volume(
-    const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements,
-    const Eigen::MatrixX2i& edges,
-    const Impact& impact,
-    const double epsilon,
+double collision_volume(const Eigen::MatrixX2d& vertices,
+    const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
+    const EdgeVertexImpact& impact, const double epsilon,
     Eigen::VectorXd /*grad_volume*/)
 {
     Eigen::Vector2i e_ij = edges.row(impact.edge_index);
@@ -37,11 +33,14 @@ double collision_volume(
     double U_ij_dot_e_rot90_toi = U_ij.dot(e_rot90_toi);
     assert((epsilon > 0 || std::abs(U_ij_dot_e_rot90_toi) > 0));
 
-    // volume = (1-t) [ \epsilon^2 ||e(t)||^2 + ( U_ij \cdot rot90(e(t)) )^2 ]^(1/2)
-    double volume = (1.0 - toi) * std::sqrt(epsilon * epsilon * e_length_toi * e_length_toi + U_ij_dot_e_rot90_toi * U_ij_dot_e_rot90_toi);
+    // volume = (1-t) [ \epsilon^2 ||e(t)||^2 + ( U_ij \cdot rot90(e(t)) )^2
+    // ]^(1/2)
+    double volume = (1.0 - toi)
+        * std::sqrt(epsilon * epsilon * e_length_toi * e_length_toi
+            + U_ij_dot_e_rot90_toi * U_ij_dot_e_rot90_toi);
 
     bool flip_volume_sign = volume > 0;
-    if (flip_volume_sign){
+    if (flip_volume_sign) {
         volume *= -1;
     }
 

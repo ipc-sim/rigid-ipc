@@ -79,9 +79,9 @@ double compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
     @return All impacts as impact structures containing the impacting edge and
             vertex index and the time of impact.
 */
-ImpactsPtr detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
-    DetectionMethod method = BRUTE_FORCE);
+EdgeVertexImpactsPtr detect_edge_vertex_collisions(
+    const Eigen::MatrixXd& vertices, const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges, DetectionMethod method = BRUTE_FORCE);
 
 /**
     Find all edge-vertex collisions in one time step using brute-force
@@ -97,7 +97,7 @@ ImpactsPtr detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     @return All impacts as impact structures containing the impacting edge and
             vertex index and the time of impact.
 */
-ImpactsPtr detect_edge_vertex_collisions_brute_force(
+EdgeVertexImpactsPtr detect_edge_vertex_collisions_brute_force(
     const Eigen::MatrixXd& vertices, const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges);
 
@@ -115,7 +115,7 @@ ImpactsPtr detect_edge_vertex_collisions_brute_force(
     @return All impacts as impact structures containing the impacting edge and
             vertex index and the time of impact.
 */
-ImpactsPtr detect_edge_vertex_collisions_hash_map(
+EdgeVertexImpactsPtr detect_edge_vertex_collisions_hash_map(
     const Eigen::MatrixXd& vertices, const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges);
 

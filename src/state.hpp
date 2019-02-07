@@ -4,8 +4,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
-#include <FixingCollisions/impact.hpp>
 #include <FixingCollisions/collision_detection.hpp>
+#include <FixingCollisions/impact.hpp>
 
 namespace ccd {
 
@@ -21,7 +21,7 @@ public:
     Eigen::MatrixX2d displacements;
     Eigen::MatrixX2d volume_grad;
 
-    ImpactsPtr impacts;
+    EdgeVertexImpactsPtr impacts;
     DetectionMethod detection_method;
     double epsilon = 0.0;
 
@@ -32,11 +32,13 @@ public:
     void add_vertex(const Eigen::RowVector2d& vertex);
     void add_edges(const Eigen::MatrixX2i& edges);
 
-    void set_vertex_position(const int vertex_idx, const Eigen::RowVector2d& position);
+    void set_vertex_position(
+        const int vertex_idx, const Eigen::RowVector2d& position);
     void move_vertex(const int vertex_idx, const Eigen::RowVector2d& delta);
-    void move_displacement(const int vertex_idx, const Eigen::RowVector2d& delta);
+    void move_displacement(
+        const int vertex_idx, const Eigen::RowVector2d& delta);
 
-        // ----------------------------------- SCENE CCD
+    // ----------------------------------- SCENE CCD
     void detect_edge_vertex_collisions();
 
     // --------------------------------------- UI
@@ -49,7 +51,6 @@ public:
     // use for any functionallity that requires showing only one impact
     // e.g goto time_of_impact
     int current_impact;
-
 };
 
 }

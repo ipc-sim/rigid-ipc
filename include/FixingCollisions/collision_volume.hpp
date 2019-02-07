@@ -5,12 +5,9 @@
 #include <FixingCollisions/collision_detection.hpp>
 
 namespace ccd {
-double collision_volume(
-    const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements,
-    const Eigen::MatrixX2i& edges,
-    const Impact& impact,
-    const double epsilon,
+double collision_volume(const Eigen::MatrixX2d& vertices,
+    const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
+    const EdgeVertexImpact& impact, const double epsilon,
     Eigen::VectorXd grad_volume);
 }
 
