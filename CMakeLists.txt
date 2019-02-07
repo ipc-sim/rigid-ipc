@@ -40,7 +40,7 @@ target_include_directories(json SYSTEM INTERFACE ${THIRD_PARTY_DIR}/json/include
 target_link_libraries(${PROJECT_NAME}_bin json)
 
 # Unit-tests
-option(UNIT_TESTS "Build unit-tests" ON)
-if(UNIT_TESTS)
+option(BUILD_UNIT_TESTS "Build unit-tests" ON)
+if(BUILD_UNIT_TESTS)
     add_subdirectory(tests)
 endif()

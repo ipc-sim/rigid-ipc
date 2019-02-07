@@ -13,7 +13,6 @@ set(test_sources
 	../src/impact.cpp
 )
 
-
 add_executable(unit_tests ${test_sources}) # Create an executable with all tests
 
 foreach(source IN ITEMS ${test_sources})

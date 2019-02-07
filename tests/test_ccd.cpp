@@ -1,10 +1,12 @@
 #include <iostream>
 
+#include <catch2/catch.hpp>
+
 #include <FixingCollisions/collision_detection.hpp>
 
 using namespace ccd;
 
-void test1()
+TEST_CASE("ToI test 1", "[ccd]")
 {
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> vertices;
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> displacements;
@@ -18,14 +20,12 @@ void test1()
     edges.row(0) << 1, 2;
     ccd::ImpactsPtr impacts
         = ccd::detect_edge_vertex_collisions(vertices, displacements, edges);
-    for (auto const& impact : *impacts) {
-        std::cout << "Impact between point " << impact->vertex_index
-                  << " and edge " << impact->edge_index << " at time "
-                  << impact->time << std::endl;
-    }
+    REQUIRE(impacts->size() == 1);
+    REQUIRE(impacts->front()->time == Approx(0.5));
+    REQUIRE(impacts->front()->alpha == Approx(0.5));
 }
 
-void test2()
+TEST_CASE("ToI test 2", "[ccd]")
 {
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> vertices;
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> displacements;
@@ -39,14 +39,12 @@ void test2()
     edges.row(0) << 1, 2;
     ccd::ImpactsPtr impacts
         = ccd::detect_edge_vertex_collisions(vertices, displacements, edges);
-    for (auto const& impact : *impacts) {
-        std::cout << "Impact between point " << impact->vertex_index
-                  << " and edge " << impact->edge_index << " at time "
-                  << impact->time << std::endl;
-    }
+    REQUIRE(impacts->size() == 1);
+    REQUIRE(impacts->front()->time == Approx(0.5));
+    REQUIRE(impacts->front()->alpha == Approx(0.0));
 }
 
-void test3()
+TEST_CASE("ToI test 3", "[ccd]")
 {
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> vertices;
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> displacements;
@@ -60,14 +58,10 @@ void test3()
     edges.row(0) << 1, 2;
     ccd::ImpactsPtr impacts
         = ccd::detect_edge_vertex_collisions(vertices, displacements, edges);
-    for (auto const& impact : *impacts) {
-        std::cout << "Impact between point " << impact->vertex_index
-                  << " and edge " << impact->edge_index << " at time "
-                  << impact->time << std::endl;
-    }
+    REQUIRE(impacts->size() == 0);
 }
 
-void test4()
+TEST_CASE("ToI test 4", "[ccd]")
 {
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> vertices;
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> displacements;
@@ -81,17 +75,7 @@ void test4()
     edges.row(0) << 1, 2;
     ccd::ImpactsPtr impacts
         = ccd::detect_edge_vertex_collisions(vertices, displacements, edges);
-    for (auto const& impact : *impacts) {
-        std::cout << "Impact between point " << impact->vertex_index
-                  << " and edge " << impact->edge_index << " at time "
-                  << impact->time << std::endl;
-    }
-}
-
-int main()
-{
-    test1();
-    test2();
-    test3();
-    test4();
+    REQUIRE(impacts->size() == 1);
+    REQUIRE(impacts->front()->time == Approx(1.0));
+    REQUIRE(impacts->front()->alpha == Approx(0.5));
 }
