@@ -5,4 +5,4 @@
 // Catch2 Documentation: https://github.com/catchorg/Catch2/tree/master/docs
 
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
+#include <catch.hpp>

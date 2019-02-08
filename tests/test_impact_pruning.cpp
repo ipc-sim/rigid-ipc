@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stdlib.h> /* srand, rand */
 
-#include <catch2/catch.hpp>
+#include <catch.hpp>
 
 #include <FixingCollisions/impact.hpp>
 

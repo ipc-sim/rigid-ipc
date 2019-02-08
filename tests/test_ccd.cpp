@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <catch2/catch.hpp>
+#include <catch.hpp>
 
 #include <FixingCollisions/collision_detection.hpp>
 
