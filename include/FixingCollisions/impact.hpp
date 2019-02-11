@@ -1,8 +1,4 @@
-/**
-    Detection collisions between different geometry.
-    Includes continous collision detection to compute the time of impact.
-    Supported geometry: point vs edge
-*/
+/** Data structures for impacts between different geometry. */
 
 #ifndef IMPACT_H
 #define IMPACT_H
@@ -18,6 +14,11 @@ public:
     /** Time of impact. */
     const double time;
 
+    /**
+    Construct an abstract impact.
+
+    @param time The time of impact.
+    */
     Impact(double time);
     virtual ~Impact();
 };
@@ -36,8 +37,28 @@ public:
     /** Impacting vertex. */
     const int vertex_index;
 
+    /**
+    Construct an edge-vertex impact.
+
+    @param time The time of impact.
+    @param edge_index The index of the edge being impacted by a vertex.
+    @param alpha The prameter along the edge where the impact occurred.
+    @param vertex_index The index of the vertex impacting the edge.
+    */
     EdgeVertexImpact(
         double time, int edge_index, double alpha, int vertex_index);
+
+    /**
+    Compare two edge-vertex impacts to determine if impact0 comes before
+    impact1.
+
+    @param impact0 Impact to check if is came first.
+    @param impact1 Impact to check if is came second.
+    @return A boolean for if impact0->time <= impact1->time.
+    */
+    static bool compare_impacts_by_time(
+        std::shared_ptr<EdgeVertexImpact> impact0,
+        std::shared_ptr<EdgeVertexImpact> impact1);
 };
 
 typedef std::shared_ptr<EdgeVertexImpact> EdgeVertexImpactPtr;
@@ -56,9 +77,29 @@ public:
     /** Parameter along edge1 where the impact occured */
     const double alpha1;
 
+    /**
+    Construct an edge-edge impact.
+
+    @param time The time of impact.
+    @param edge0_index The index of the edge being impacted by another edge.
+    @param alpha0 The prameter along edge0 where the impact occurred.
+    @param edge1_index The index of the edge impacting the edge0.
+    @param alpha1 The prameter along edge1 where the impact occurred.
+    */
     EdgeEdgeImpact(double time, int edge0_index, double alpha0, int edge1_index,
         double alpha1);
 
+    /**
+    Convert all edge-vertex impacts to correspoding edge-edge impacts.
+    There may be multiple edge-edge impacts per edge-vertex impact
+    depending on the connectivity.
+
+    @param edges The matrix of edges where each row is two indices for the
+                 endpoints in the vertices matrix (not a prameter).
+    @param ev_impacts Vector of edge-vertex impacts to convert to edge-edge
+                      impacts.
+    @returns A EdgeEdgeImpactsPtr containing all of the edge-edge impacts.
+    */
     static std::shared_ptr<std::vector<std::shared_ptr<EdgeEdgeImpact>>>
     convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
         const EdgeVertexImpactsPtr other_impacts);

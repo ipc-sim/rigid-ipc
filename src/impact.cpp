@@ -1,7 +1,9 @@
+// Data structures for impacts between different geometry.
 #include <FixingCollisions/impact.hpp>
 
 namespace ccd {
 
+// Construct an abstract impact.
 Impact::Impact(double time)
     : time(time)
 {
@@ -9,6 +11,7 @@ Impact::Impact(double time)
 
 Impact::~Impact() {}
 
+// Construct an edge-vertex impact.
 EdgeVertexImpact::EdgeVertexImpact(
     double time, int edge_index, double alpha, int vertex_index)
     : Impact(time)
@@ -18,6 +21,15 @@ EdgeVertexImpact::EdgeVertexImpact(
 {
 }
 
+// Compare two edge-vertex impacts to determine if impact0 comes before impact1.
+bool EdgeVertexImpact::compare_impacts_by_time(
+    std::shared_ptr<EdgeVertexImpact> impact0,
+    std::shared_ptr<EdgeVertexImpact> impact1)
+{
+    return impact0->time <= impact1->time;
+}
+
+// Construct an edge-edge impact.
 EdgeEdgeImpact::EdgeEdgeImpact(
     double time, int edge0_index, double alpha0, int edge1_index, double alpha1)
     : Impact(time)
@@ -28,6 +40,9 @@ EdgeEdgeImpact::EdgeEdgeImpact(
 {
 }
 
+// Convert all edge-vertex impacts to correspoding edge-edge impacts.
+// There may be multiple edge-edge impacts per edge-vertex impact
+// depending on the connectivity.
 EdgeEdgeImpactsPtr EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
     const Eigen::MatrixX2i& edges, const EdgeVertexImpactsPtr ev_impacts)
 {

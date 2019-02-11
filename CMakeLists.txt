@@ -27,6 +27,7 @@ set(SRCFILES
     src/degenerate_edge_error.cpp
     src/impact.cpp
     src/collision_detection.cpp
+    src/prune_impacts.cpp
     src/collision_volume.cpp)
 
 add_library(${PROJECT_NAME} ${SRCFILES})
@@ -81,7 +82,7 @@ target_link_libraries(${PROJECT_NAME}_bin json)
 ################################################################################
 # Tests
 ################################################################################
-if(BUILD_UNIT_TESTS)    
+if(BUILD_UNIT_TESTS)
     # catch - for testing
     download_catch2()
     add_library(catch INTERFACE)

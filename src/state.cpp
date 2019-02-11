@@ -1,15 +1,17 @@
+#include <algorithm> // std::sort
+
 #include "state.hpp"
 
+#include "autogen/auto_test_function.hpp"
+#include <FixingCollisions/collision_volume.hpp>
 #include <read_scene.hpp>
 #include <write_scene.hpp>
-#include <FixingCollisions/collision_volume.hpp>
-#include "autogen/auto_test_function.hpp"
 
 namespace ccd {
 State::State()
     : canvas_width(10)
-    , canvas_height(10),
-      current_impact(-1)
+    , canvas_height(10)
+    , current_impact(-1)
 {
 }
 
@@ -54,7 +56,8 @@ void State::add_edges(const Eigen::MatrixX2i& new_edges)
         edges.row(lastid + i) << new_edges.row(i);
 }
 
-void State::set_vertex_position(const int vertex_idx, const Eigen::RowVector2d& position)
+void State::set_vertex_position(
+    const int vertex_idx, const Eigen::RowVector2d& position)
 {
     vertices.row(vertex_idx) = position;
 }
@@ -63,22 +66,28 @@ void State::move_vertex(const int vertex_idx, const Eigen::RowVector2d& delta)
 {
     vertices.row(vertex_idx) += delta;
 }
-void State::move_displacement(const int vertex_idx, const Eigen::RowVector2d& delta)
+void State::move_displacement(
+    const int vertex_idx, const Eigen::RowVector2d& delta)
 {
     displacements.row(vertex_idx) += delta;
 }
 
 // CCD ---------------------------------------------------------
-void State::detect_edge_vertex_collisions(){
-    impacts = ccd::detect_edge_vertex_collisions(vertices, displacements, edges, detection_method);
+void State::detect_edge_vertex_collisions()
+{
+    impacts = ccd::detect_edge_vertex_collisions(
+        vertices, displacements, edges, detection_method);
+    std::sort(impacts->begin(), impacts->end(),
+        EdgeVertexImpact::compare_impacts_by_time);
     // NOTE: dummy calls just so the code is called
-    for (size_t i=0; i < impacts->size(); i++){
-        ccd::collision_volume(vertices, displacements, edges, *impacts->at(i), epsilon, Eigen::VectorXd());
+    for (size_t i = 0; i < impacts->size(); i++) {
+        ccd::collision_volume(vertices, displacements, edges, *impacts->at(i),
+            epsilon, Eigen::VectorXd());
         auto edge = edges.row(impacts->at(i)->edge_index);
-        ccd::autogen::test_function(
-                    vertices.row(edge(0)), vertices.row(edge(1)), vertices.row(edge(0)), vertices.row(edge(1)),
-                    displacements.row(edge(0)), displacements.row(edge(1)), displacements.row(edge(0)), displacements.row(edge(1)),
-                    epsilon);
+        ccd::autogen::test_function(vertices.row(edge(0)),
+            vertices.row(edge(1)), vertices.row(edge(0)), vertices.row(edge(1)),
+            displacements.row(edge(0)), displacements.row(edge(1)),
+            displacements.row(edge(0)), displacements.row(edge(1)), epsilon);
     }
 }
 
