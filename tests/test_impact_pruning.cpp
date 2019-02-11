@@ -22,6 +22,15 @@ TEST_CASE("Test edge vertex impact to edge edge impact", "[impact_pruning]")
     ev_impacts->push_back(EdgeVertexImpactPtr(
         new EdgeVertexImpact(time, edge0_index, alpha0, vertex_index)));
 
+    SECTION("Free point contacting edge")
+    {
+        Eigen::Matrix<int, 1, 2, Eigen::RowMajor> edges;
+        edges.row(edge0_index) << 0, 1;
+        EdgeEdgeImpactsPtr ee_impacts
+            = EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
+                edges, ev_impacts);
+        REQUIRE(ee_impacts->size() == 0);
+    }
     SECTION("Only two edges contacting")
     {
         Eigen::Matrix<int, 2, 2, Eigen::RowMajor> edges;
