@@ -1,5 +1,5 @@
 # Autogen helper function
-function(project_autogen MAIN_TARGET PYTHON_SCRIPT OUTPUT_BASE)
+function(project_autogen MAIN_TARGET PYTHON_SCRIPT TEMPLATE OUTPUT_BASE)
     find_package(PythonInterp 3 QUIET)
 
     if(NOT ${PYTHONINTERP_FOUND})
@@ -39,17 +39,16 @@ function(project_autogen MAIN_TARGET PYTHON_SCRIPT OUTPUT_BASE)
     add_custom_command(
         OUTPUT
                 ${PROJECT_SOURCE_DIR}/src/autogen/${OUTPUT_BASE}.cpp
-                ${PROJECT_SOURCE_DIR}/src/autogen/${OUTPUT_BASE}.hpp
         COMMAND
                 ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/autogen/${PYTHON_SCRIPT} ${PROJECT_SOURCE_DIR}/src/autogen/
         DEPENDS
                 ${PROJECT_SOURCE_DIR}/src/autogen/${PYTHON_SCRIPT}
+                ${PROJECT_SOURCE_DIR}/src/autogen/${TEMPLATE}
     )
 
     add_custom_target(
         autogen_${OUTPUT_BASE}
         DEPENDS
-                ${PROJECT_SOURCE_DIR}/src/autogen/${OUTPUT_BASE}.hpp
                 ${PROJECT_SOURCE_DIR}/src/autogen/${OUTPUT_BASE}.cpp
     )
 

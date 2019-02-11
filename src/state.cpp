@@ -6,6 +6,11 @@
 #include <FixingCollisions/collision_volume.hpp>
 #include <read_scene.hpp>
 #include <write_scene.hpp>
+<<<<<<< HEAD
+=======
+#include <FixingCollisions/collision_volume.hpp>
+#include "autogen/test_function.hpp"
+>>>>>>> 1861a0e2fcb3751bf76848fd29f6048075b49e94
 
 namespace ccd {
 State::State()
@@ -73,6 +78,7 @@ void State::move_displacement(
 }
 
 // CCD ---------------------------------------------------------
+<<<<<<< HEAD
 void State::detect_edge_vertex_collisions()
 {
     impacts = ccd::detect_edge_vertex_collisions(
@@ -89,6 +95,10 @@ void State::detect_edge_vertex_collisions()
             displacements.row(edge(0)), displacements.row(edge(1)),
             displacements.row(edge(0)), displacements.row(edge(1)), epsilon);
     }
+=======
+void State::detect_edge_vertex_collisions(){
+    impacts = ccd::detect_edge_vertex_collisions(vertices, displacements, edges, detection_method);
+>>>>>>> 1861a0e2fcb3751bf76848fd29f6048075b49e94
 }
 
 }

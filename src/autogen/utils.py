@@ -28,7 +28,6 @@ def C99_print(expr, expr_names):
         if expr_names[i] == None:
             lines.append("%s;" % ccode(result, name))
         else:
-
             lines.append(ccode(result, name))
     return lines
 
@@ -39,51 +38,14 @@ my_printer = MyPrinter({'user_functions': custom_functions})
 def ccode(expr, assign_to=None):
     return my_printer.doprint(expr, assign_to)
 
-
-_template_hpp_ = """
+message = """
 /******************************************************************************
 *                    Code generated with jinja and sympy                     *
 *                                                                            *
-*                      See src/autogen/.py for originals                     *
+*                      See src/autogen/.tpp for originals                    *
 *                                                                            * 
 *                            DO NOT MODIFY THIS FILE                         *
 ******************************************************************************/
-#ifndef {{define}}
-#define {{define}}
-
-#include <Eigen/Core>
-
-namespace ccd {
-namespace autogen {
-
-{% for function in functions %}
-    {{function.declaration}};
-{% endfor %}
-
-}}
-#endif
-
 """
-_template_cpp_ = """
-/******************************************************************************
-*                    Code generated with jinja and sympy                     *
-*                                                                            *
-*                      See src/autogen/.py for originals                     *
-*                                                                            * 
-*                            DO NOT MODIFY THIS FILE                         *
-******************************************************************************/
-#include "{{header}}"
 
-namespace ccd {
-namespace autogen {
-
-{% for function in functions %}
-    {{function.declaration}}
-    {
-        {{ function.body }}
-    }
-{% endfor %}
-
-}}
-
-"""
+short_message = """DO NOT MODIFY THIS FILE. See src/autogen/.tpp for originals."""
