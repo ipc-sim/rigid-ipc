@@ -1,42 +1,47 @@
 import argparse
+import re
 import subprocess
 import os
 from functools import reduce
 
 import sympy as sympy
-from jinja2 import Environment, BaseLoader
+from jinja2 import Environment, FileSystemLoader
 
-from utils import C99_print, assert_, _template_hpp_, _template_cpp_
+from utils import C99_print, assert_, message, short_message
+
+template_path = os.path.dirname(os.path.realpath(__file__))
 
 
-def test_formula():
-    u = sympy.symbols("Ui:l[0:2]", real=True)  # vertices velocities
-    u = [sympy.Matrix(u[2 * i:2 * i + 2]) for i in range(0, 4)]
+def vec2_symbols(prefix):
+    _range = "i:l[0:2]"
+    x = sympy.symbols("{X}{range}".format(X=prefix, range=_range), real=True)
+    x = [sympy.Matrix(x[2 * i:2 * i + 2]) for i in range(0, 4)]
+    return x
+
+
+def test_formula(u):
 
     epsilon = sympy.symbols("epsilon", real=True)
     volume =  epsilon * reduce(lambda acc, x: acc + (u[x].T * u[x])[0], range(0, 4), 0)
 
-    # now generate the src code --------------------------------------------------
-    eigen_params = "/*Vi*/ /*Vj*/ /*Vk*/ /*Vl*/ Ui Uj Uk Ul".split()
-    eigen_params = ["const Eigen::Vector2d& %s" % param for param in eigen_params]
-    eigen_params += ["const double epsilon"]
-    eigen_params = ',\n'.join(eigen_params)
+    expressions = [volume]
+    expressions_names = ['volume']
 
-    declaration = "double test_function({params})".format(params=eigen_params)
+    return C99_print(expressions, expressions_names)
 
-    results = [volume]
-    results_names = ['volume']
+def test_function():
+    prefix_vel = "U"
 
-    body = ["using namespace std;","double volume;"]
-    body += C99_print(results, results_names)
-    body += ["return volume;"]
-    body = '\n'.join(body)
+    U = vec2_symbols(prefix_vel)
 
-    functions = [{
-        'declaration':declaration,
-        'body':body
-    }]
-    return functions
+    volume_code = [short_message] + test_formula(U)
+    volume_code = '\n'.join(volume_code)
+
+    grad_volume_ccode = re.sub(r'(U[ijkl])(\[0\])', r'\g<1>x', volume_code)
+    grad_volume_ccode = re.sub(r'(U[ijkl])(\[1\])', r'\g<1>y', grad_volume_ccode)
+
+
+    return dict(func_ccode=volume_code, grad_func_ccode=grad_volume_ccode)
 
 
 
@@ -46,16 +51,11 @@ def main(args=None):
     args = parser.parse_args()
 
     print("generating %s" % args.output)
-    functions = []
-    functions += test_formula()
-
-    env = Environment(loader=BaseLoader, trim_blocks=True, lstrip_blocks=False)
-    hpp_temp = env.from_string(_template_hpp_)
-    cpp_temp = env.from_string(_template_cpp_)
+    env = Environment(loader=FileSystemLoader(str(template_path)), trim_blocks=True, lstrip_blocks=False)
+    cpp_temp = env.get_template("test_function.tpp")
 
     filename = 'auto_test_function'
-    hpp = hpp_temp.render(define='CCD_%s_HPP' % filename.upper(), functions=functions)
-    cpp = cpp_temp.render(header='%s.hpp' % filename, functions=functions)
+    cpp = cpp_temp.render(**test_function())
 
     print("saving ...")
     path = os.path.abspath(args.output)
@@ -64,15 +64,12 @@ def main(args=None):
     with open(filename_cpp, "w") as file:
         file.write(cpp)
 
-    filename_hpp = os.path.join(path, "%s.hpp"  % filename)
-    with open(filename_hpp, "w") as file:
-        file.write(hpp)
-
-    subprocess.run(["clang-format", "--style=WebKit", "-i", filename_cpp, filename_hpp])
+    subprocess.run(["clang-format", "--style=WebKit", "-i", filename_cpp])
     print("done!")
 
 
 if __name__ == "__main__":
     main()
+
 
 

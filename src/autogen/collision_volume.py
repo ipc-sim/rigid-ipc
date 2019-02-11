@@ -1,19 +1,24 @@
 import argparse
+import re
 import subprocess
 import os
 
 import sympy as sympy
-from jinja2 import Environment, BaseLoader
+from jinja2 import Environment, FileSystemLoader
 
-from utils import C99_print, assert_, _template_hpp_, _template_cpp_
+from utils import C99_print, assert_, message, short_message
+
+template_path = os.path.dirname(os.path.realpath(__file__))
+
+def vec2_symbols(prefix):
+    _range = "i:l[0:2]"
+    x = sympy.symbols("{X}{range}".format(X=prefix, range=_range), real=True)
+    x = [sympy.Matrix(x[2 * i:2 * i + 2]) for i in range(0, 4)]
+    return x
 
 
-def volume_formula():
-    i,j,k,l = 0,1,2,3
-    v = sympy.symbols("Vi:l[0:2]", real=True)  # vertices positions
-    v = [sympy.Matrix(v[2 * i:2 * i + 2]) for i in range(0, 4)]
-    u = sympy.symbols("Ui:l[0:2]", real=True)  # vertices velocities
-    u = [sympy.Matrix(u[2 * i:2 * i + 2]) for i in range(0, 4)]
+def volume_formula(v, u):
+    i, j, k, l = 0, 1, 2, 3
 
     toi, alpha, epsilon = sympy.symbols("toi alpha epsilon", real=True)
 
@@ -27,37 +32,37 @@ def volume_formula():
 
     U_ij_dot_e_rot90_toi = (U_ij.T * e_rot90_toi)[0]
 
-    volume = (1.0 - toi) * sympy.sqrt(epsilon **2 * e_length_toi **2 + U_ij_dot_e_rot90_toi **2)
+    volume = (1.0 - toi) * sympy.sqrt(epsilon ** 2 * e_length_toi ** 2 + U_ij_dot_e_rot90_toi ** 2)
     volume = sympy.Piecewise((-volume, volume > 0), (volume, True))
 
-    # now generate the src code --------------------------------------------------
-    eigen_params = "Vi Vj /*Vk*/ /*Vl*/ Ui Uj /*Uk*/ /*Ul*/".split()
-    eigen_params = ["const Eigen::Vector2d& %s" % param for param in eigen_params]
-    eigen_params += ["const double epsilon"]
-    eigen_params = ',\n'.join(eigen_params)
-
-    declaration = "double collision_volume({params})".format(params=eigen_params)
-
-    results = [
+    expressions = [
         assert_(e_length_toi > 0),
-        assert_(sympy.Or(epsilon > 0 , sympy.Or(U_ij_dot_e_rot90_toi > 0, -U_ij_dot_e_rot90_toi > 0))),
+        assert_(sympy.Or(epsilon > 0, sympy.Or(U_ij_dot_e_rot90_toi > 0, -U_ij_dot_e_rot90_toi > 0))),
         volume]
-    results_names = [
+
+    expressions_names = [
         None,
         None,
         'volume']
 
-    body = ["using namespace std;", "double volume, alpha, toi;"]
-    body += C99_print(results, results_names)
-    body += ["return volume;"]
-    body = '\n'.join(body)
+    code = C99_print(expressions, expressions_names)
 
-    functions = [{
-        'declaration':declaration,
-        'body':body
-    }]
-    return functions
+    return code
 
+
+def volume_function():
+    prefix_pos = "V"
+    prefix_vel = "U"
+
+    V = vec2_symbols(prefix_pos)
+    U = vec2_symbols(prefix_vel)
+    volume_code = [short_message] + volume_formula(V, U)
+    volume_code = '\n'.join(volume_code)
+
+    grad_volume_ccode = re.sub(r'(U[ijkl])(\[0\])',r'\g<1>x', volume_code)
+    grad_volume_ccode = re.sub(r'(U[ijkl])(\[1\])', r'\g<1>y', grad_volume_ccode)
+
+    return dict(volume_ccode = volume_code, grad_volume_ccode = grad_volume_ccode)
 
 
 def main(args=None):
@@ -66,16 +71,11 @@ def main(args=None):
     args = parser.parse_args()
 
     print("generating %s" % args.output)
-    functions = []
-    functions += volume_formula()
-
-    env = Environment(loader=BaseLoader, trim_blocks=True, lstrip_blocks=False)
-    hpp_temp = env.from_string(_template_hpp_)
-    cpp_temp = env.from_string(_template_cpp_)
+    env = Environment(loader=FileSystemLoader(str(template_path)), trim_blocks=True, lstrip_blocks=False)
+    cpp_temp = env.get_template("collision_volume.tpp")
 
     filename = 'auto_collision_volume'
-    hpp = hpp_temp.render(define='CCD_%s_HPP' % filename.upper(), functions=functions)
-    cpp = cpp_temp.render(header='%s.hpp' % filename, functions=functions)
+    cpp = cpp_temp.render(**volume_function())
 
     print("saving ...")
     path = os.path.abspath(args.output)
@@ -84,15 +84,9 @@ def main(args=None):
     with open(filename_cpp, "w") as file:
         file.write(cpp)
 
-    filename_hpp = os.path.join(path, "%s.hpp"  % filename)
-    with open(filename_hpp, "w") as file:
-        file.write(hpp)
-
-    subprocess.run(["clang-format", "--style=WebKit", "-i", filename_cpp, filename_hpp])
+    subprocess.run(["clang-format", "--style=WebKit", "-i", filename_cpp])
     print("done!")
 
 
 if __name__ == "__main__":
     main()
-
-

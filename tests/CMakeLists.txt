@@ -5,6 +5,8 @@ set(test_sources
     main.cpp
     test_ccd.cpp
     test_impact_pruning.cpp
+    test_collision_volume.cpp
+    test_autogen.cpp
 )
 
 add_executable(unit_tests ${test_sources})

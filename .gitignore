@@ -94,7 +94,7 @@ __pycache__
 
 ## AUTOGEN!
 src/autogen/*.cpp
-src/autogen/*.hpp
+#src/autogen/*.hpp
 
 3rd_party/.cache/
 3rd_party/Catch2
