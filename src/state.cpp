@@ -5,6 +5,7 @@
 #include "autogen/auto_test_function.hpp"
 #include "autogen/test_function.hpp"
 #include <FixingCollisions/collision_volume.hpp>
+#include <FixingCollisions/prune_impacts.hpp>
 #include <read_scene.hpp>
 #include <write_scene.hpp>
 
@@ -19,6 +20,8 @@ State::State()
 void State::load_scene(std::string filename)
 {
     io::read_scene(filename, vertices, edges, displacements);
+    volumes.resize(edges.rows());
+    volumes.setZero();
     volume_grad.resize(vertices.rows(), kDIM);
     volume_grad.setZero();
 
@@ -55,6 +58,12 @@ void State::add_edges(const Eigen::MatrixX2i& new_edges)
     edges.conservativeResize(lastid + new_edges.rows(), 2);
     for (unsigned i = 0; i < new_edges.rows(); ++i)
         edges.row(lastid + i) << new_edges.row(i);
+
+    // Add a new rows to the volume vector
+    volumes.conservativeResize(lastid + new_edges.rows());
+    // Add zero volumes for each new edge
+    for (unsigned i = 0; i < new_edges.rows(); ++i)
+        volumes(lastid + i) = 0.0;
 }
 
 void State::set_vertex_position(
@@ -80,6 +89,22 @@ void State::detect_edge_vertex_collisions()
         vertices, displacements, edges, detection_method);
     std::sort(impacts->begin(), impacts->end(),
         EdgeVertexImpact::compare_impacts_by_time);
+}
+
+// Full Pipeline
+void State::run_full_pipeline()
+{
+    this->detect_edge_vertex_collisions();
+    auto ee_impacts
+        = ccd::EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
+            edges, impacts);
+    auto e_impacts = ccd::prune_impacts(ee_impacts);
+    for (auto e_impact : *e_impacts) {
+        auto edge = edges.row(e_impact.first);
+        // TODO: Link up the volume and gradient of volume computation
+        // volume(e_impact.first)
+        //     = ccd::collision_volume(vertices, displacements, edges, )
+    }
 }
 
 }

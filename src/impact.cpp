@@ -9,7 +9,12 @@ Impact::Impact(double time)
 {
 }
 
-Impact::~Impact() {}
+// Compare two edge-vertex impacts to determine if impact0 comes before impact1.
+bool Impact::compare_impacts_by_time(
+    std::shared_ptr<Impact> impact0, std::shared_ptr<Impact> impact1)
+{
+    return impact0->time <= impact1->time;
+}
 
 // Construct an edge-vertex impact.
 EdgeVertexImpact::EdgeVertexImpact(
@@ -21,22 +26,25 @@ EdgeVertexImpact::EdgeVertexImpact(
 {
 }
 
-// Compare two edge-vertex impacts to determine if impact0 comes before impact1.
-bool EdgeVertexImpact::compare_impacts_by_time(
-    std::shared_ptr<EdgeVertexImpact> impact0,
-    std::shared_ptr<EdgeVertexImpact> impact1)
+// Construct an edge-vertex impact.
+EdgeVertexImpact::EdgeVertexImpact(
+    const Eigen::MatrixX2i& edges, const EdgeEdgeImpactPtr ee_impact)
+    : Impact(ee_impact->time)
+    , edge_index(ee_impact->impacted_edge_index)
+    , alpha(ee_impact->impacted_alpha)
+    , vertex_index(edges.row(ee_impact->impacting_edge_index)(
+          int(ee_impact->impacting_alpha + 0.5)))
 {
-    return impact0->time <= impact1->time;
 }
 
 // Construct an edge-edge impact.
-EdgeEdgeImpact::EdgeEdgeImpact(
-    double time, int edge0_index, double alpha0, int edge1_index, double alpha1)
+EdgeEdgeImpact::EdgeEdgeImpact(double time, int impacted_edge_index,
+    double impacted_alpha, int impacting_edge_index, double impacting_alpha)
     : Impact(time)
-    , edge0_index(edge0_index)
-    , alpha0(alpha0)
-    , edge1_index(edge1_index)
-    , alpha1(alpha1)
+    , impacted_edge_index(impacted_edge_index)
+    , impacted_alpha(impacted_alpha)
+    , impacting_edge_index(impacting_edge_index)
+    , impacting_alpha(impacting_alpha)
 {
 }
 

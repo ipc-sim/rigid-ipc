@@ -14,7 +14,8 @@ std::shared_ptr<std::unordered_map<int, EdgeEdgeImpactPtr>> prune_impacts(
     // Loop over all impacts and add them to the prunced impacts if they are the
     // earliest.
     for (EdgeEdgeImpactPtr impact : *all_impacts) {
-        for (int index : { impact->edge0_index, impact->edge1_index }) {
+        for (int index :
+            { impact->impacted_edge_index, impact->impacting_edge_index }) {
             // Find the impact for the edge.
             auto search = pruned_impacts->find(index);
             // If the edge is not in the map or the current impact happens

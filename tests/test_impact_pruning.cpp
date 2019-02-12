@@ -16,16 +16,16 @@ inline double rand_norm_double()
 TEST_CASE("Test edge vertex impact to edge edge impact", "[impact_pruning]")
 {
     // Create the impact manually
-    double time = rand_norm_double(), alpha0 = rand_norm_double();
-    int edge0_index = 0, edge1_index = 1, vertex_index = 2;
+    double time = rand_norm_double(), impacted_alpha = rand_norm_double();
+    int impacted_edge_index = 0, impacting_edge_index = 1, vertex_index = 2;
     EdgeVertexImpactsPtr ev_impacts(new EdgeVertexImpacts);
-    ev_impacts->push_back(EdgeVertexImpactPtr(
-        new EdgeVertexImpact(time, edge0_index, alpha0, vertex_index)));
+    ev_impacts->push_back(EdgeVertexImpactPtr(new EdgeVertexImpact(
+        time, impacted_edge_index, impacted_alpha, vertex_index)));
 
     SECTION("Free point contacting edge")
     {
         Eigen::Matrix<int, 1, 2, Eigen::RowMajor> edges;
-        edges.row(edge0_index) << 0, 1;
+        edges.row(impacted_edge_index) << 0, 1;
         EdgeEdgeImpactsPtr ee_impacts
             = EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
                 edges, ev_impacts);
@@ -34,30 +34,32 @@ TEST_CASE("Test edge vertex impact to edge edge impact", "[impact_pruning]")
     SECTION("Only two edges contacting")
     {
         Eigen::Matrix<int, 2, 2, Eigen::RowMajor> edges;
-        edges.row(edge0_index) << 0, 1;
+        edges.row(impacted_edge_index) << 0, 1;
 
         EdgeEdgeImpactsPtr ee_impacts;
-        SECTION("alpha1 = 0")
+        SECTION("impacting_alpha = 0")
         {
-            edges.row(edge1_index) << vertex_index, 3;
+            edges.row(impacting_edge_index) << vertex_index, 3;
             ee_impacts
                 = EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
                     edges, ev_impacts);
-            REQUIRE(ee_impacts->front()->alpha1 == Approx(0));
+            REQUIRE(ee_impacts->front()->impacting_alpha == Approx(0));
         }
-        SECTION("alpha1 = 1")
+        SECTION("impacting_alpha = 1")
         {
-            edges.row(edge1_index) << 3, vertex_index;
+            edges.row(impacting_edge_index) << 3, vertex_index;
             ee_impacts
                 = EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
                     edges, ev_impacts);
-            REQUIRE(ee_impacts->front()->alpha1 == Approx(1));
+            REQUIRE(ee_impacts->front()->impacting_alpha == Approx(1));
         }
         REQUIRE(ee_impacts->size() == 1);
         REQUIRE(ee_impacts->front()->time == Approx(time));
-        REQUIRE(ee_impacts->front()->edge0_index == edge0_index);
-        REQUIRE(ee_impacts->front()->alpha0 == Approx(alpha0));
-        REQUIRE(ee_impacts->front()->edge1_index == edge1_index);
+        REQUIRE(
+            ee_impacts->front()->impacted_edge_index == impacted_edge_index);
+        REQUIRE(ee_impacts->front()->impacted_alpha == Approx(impacted_alpha));
+        REQUIRE(
+            ee_impacts->front()->impacting_edge_index == impacting_edge_index);
     }
 
     SECTION("Three edges contacting")
@@ -66,65 +68,66 @@ TEST_CASE("Test edge vertex impact to edge edge impact", "[impact_pruning]")
         SECTION("Out of three edges")
         {
             Eigen::Matrix<int, 3, 2, Eigen::RowMajor> edges;
-            edges.row(edge0_index) << 0, 1;
+            edges.row(impacted_edge_index) << 0, 1;
 
-            SECTION("alpha1 = 0")
+            SECTION("impacting_alpha = 0")
             {
-                edges.row(edge1_index) << vertex_index, 3;
-                edges.row(edge1_index + 1) << vertex_index, 4;
+                edges.row(impacting_edge_index) << vertex_index, 3;
+                edges.row(impacting_edge_index + 1) << vertex_index, 4;
                 ee_impacts
                     = EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
                         edges, ev_impacts);
-                REQUIRE((*ee_impacts)[0]->alpha1 == Approx(0));
-                REQUIRE((*ee_impacts)[1]->alpha1 == Approx(0));
+                REQUIRE((*ee_impacts)[0]->impacting_alpha == Approx(0));
+                REQUIRE((*ee_impacts)[1]->impacting_alpha == Approx(0));
             }
-            SECTION("alpha1 = 1")
+            SECTION("impacting_alpha = 1")
             {
-                edges.row(edge1_index) << 3, vertex_index;
-                edges.row(edge1_index + 1) << 4, vertex_index;
+                edges.row(impacting_edge_index) << 3, vertex_index;
+                edges.row(impacting_edge_index + 1) << 4, vertex_index;
                 ee_impacts
                     = EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
                         edges, ev_impacts);
-                REQUIRE((*ee_impacts)[0]->alpha1 == Approx(1));
-                REQUIRE((*ee_impacts)[1]->alpha1 == Approx(1));
+                REQUIRE((*ee_impacts)[0]->impacting_alpha == Approx(1));
+                REQUIRE((*ee_impacts)[1]->impacting_alpha == Approx(1));
             }
         }
         SECTION("Out of four edges")
         {
             Eigen::Matrix<int, 4, 2, Eigen::RowMajor> edges;
-            edges.row(edge0_index) << 0, 1;
+            edges.row(impacted_edge_index) << 0, 1;
             edges.row(3) << 3, 4;
 
-            SECTION("alpha1 = 0")
+            SECTION("impacting_alpha = 0")
             {
-                edges.row(edge1_index) << vertex_index, 3;
-                edges.row(edge1_index + 1) << vertex_index, 4;
+                edges.row(impacting_edge_index) << vertex_index, 3;
+                edges.row(impacting_edge_index + 1) << vertex_index, 4;
                 ee_impacts
                     = EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
                         edges, ev_impacts);
-                REQUIRE((*ee_impacts)[0]->alpha1 == Approx(0));
-                REQUIRE((*ee_impacts)[1]->alpha1 == Approx(0));
+                REQUIRE((*ee_impacts)[0]->impacting_alpha == Approx(0));
+                REQUIRE((*ee_impacts)[1]->impacting_alpha == Approx(0));
             }
-            SECTION("alpha1 = 1")
+            SECTION("impacting_alpha = 1")
             {
-                edges.row(edge1_index) << 3, vertex_index;
-                edges.row(edge1_index + 1) << 4, vertex_index;
+                edges.row(impacting_edge_index) << 3, vertex_index;
+                edges.row(impacting_edge_index + 1) << 4, vertex_index;
                 ee_impacts
                     = EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
                         edges, ev_impacts);
-                REQUIRE((*ee_impacts)[0]->alpha1 == Approx(1));
-                REQUIRE((*ee_impacts)[1]->alpha1 == Approx(1));
+                REQUIRE((*ee_impacts)[0]->impacting_alpha == Approx(1));
+                REQUIRE((*ee_impacts)[1]->impacting_alpha == Approx(1));
             }
         }
         REQUIRE(ee_impacts->size() == 2);
         REQUIRE((*ee_impacts)[0]->time == Approx(time));
         REQUIRE((*ee_impacts)[1]->time == Approx(time));
-        REQUIRE((*ee_impacts)[0]->edge0_index == edge0_index);
-        REQUIRE((*ee_impacts)[1]->edge0_index == edge0_index);
-        REQUIRE((*ee_impacts)[0]->alpha0 == Approx(alpha0));
-        REQUIRE((*ee_impacts)[1]->alpha0 == Approx(alpha0));
-        REQUIRE((*ee_impacts)[0]->edge1_index == edge1_index);
-        REQUIRE((*ee_impacts)[1]->edge1_index == edge1_index + 1);
+        REQUIRE((*ee_impacts)[0]->impacted_edge_index == impacted_edge_index);
+        REQUIRE((*ee_impacts)[1]->impacted_edge_index == impacted_edge_index);
+        REQUIRE((*ee_impacts)[0]->impacted_alpha == Approx(impacted_alpha));
+        REQUIRE((*ee_impacts)[1]->impacted_alpha == Approx(impacted_alpha));
+        REQUIRE((*ee_impacts)[0]->impacting_edge_index == impacting_edge_index);
+        REQUIRE(
+            (*ee_impacts)[1]->impacting_edge_index == impacting_edge_index + 1);
     }
 }
 
@@ -133,13 +136,13 @@ TEST_CASE("Test impact pruning", "[impact_pruning]")
     // Create the impact manually
     double early_time = rand_norm_double() / 2,
            late_time = rand_norm_double() / 2 + 0.5;
-    int edge0_index = 0, edge1_index = 1, edge2_index = 2;
+    int impacted_edge_index = 0, impacting_edge_index = 1, edge2_index = 2;
     EdgeEdgeImpactsPtr all_impacts(new EdgeEdgeImpacts);
 
-    EdgeEdgeImpactPtr early_impact(new EdgeEdgeImpact(
-        early_time, edge0_index, rand_norm_double(), edge1_index, 0)),
-        late_impact(new EdgeEdgeImpact(
-            late_time, edge0_index, rand_norm_double(), edge2_index, 0));
+    EdgeEdgeImpactPtr early_impact(new EdgeEdgeImpact(early_time,
+        impacted_edge_index, rand_norm_double(), impacting_edge_index, 0)),
+        late_impact(new EdgeEdgeImpact(late_time, impacted_edge_index,
+            rand_norm_double(), edge2_index, 0));
     SECTION("Two impacts against edge 0")
     {
         std::shared_ptr<std::unordered_map<int, EdgeEdgeImpactPtr>>

@@ -13,12 +13,13 @@ class State {
 public:
     static const int kDIM = 2;
 
-    ~State() = default;
     State();
+    virtual ~State() = default;
 
     Eigen::MatrixX2d vertices;
     Eigen::MatrixX2i edges;
     Eigen::MatrixX2d displacements;
+    Eigen::VectorXd volumes;
     Eigen::MatrixX2d volume_grad;
 
     EdgeVertexImpactsPtr impacts;
@@ -40,15 +41,16 @@ public:
 
     // ----------------------------------- SCENE CCD
     void detect_edge_vertex_collisions();
+    void run_full_pipeline();
 
     // --------------------------------------- UI
-    // bacground rectangle to detect clicks
+    // Background rectangle to detect clicks
     double canvas_width, canvas_height;
-    // we show the scene at time=`time` between 0 and 1
+    // We show the scene at time=`time` between 0 and 1
     float time;
-    // current user-selection of vertex and displacement points
+    // Current user-selection of vertex and displacement points
     std::vector<int> selected_points, selected_displacements;
-    // use for any functionallity that requires showing only one impact
+    // Use for any functionallity that requires showing only one impact
     // e.g goto time_of_impact
     int current_impact;
 };

@@ -8,6 +8,22 @@
 
 namespace ccd {
 
+// Forward declarations and typedefs
+class Impact;
+typedef std::shared_ptr<Impact> ImpactPtr;
+typedef std::vector<ImpactPtr> Impacts;
+typedef std::shared_ptr<Impacts> ImpactsPtr;
+
+class EdgeVertexImpact;
+typedef std::shared_ptr<EdgeVertexImpact> EdgeVertexImpactPtr;
+typedef std::vector<EdgeVertexImpactPtr> EdgeVertexImpacts;
+typedef std::shared_ptr<EdgeVertexImpacts> EdgeVertexImpactsPtr;
+
+class EdgeEdgeImpact;
+typedef std::shared_ptr<EdgeEdgeImpact> EdgeEdgeImpactPtr;
+typedef std::vector<EdgeEdgeImpactPtr> EdgeEdgeImpacts;
+typedef std::shared_ptr<EdgeEdgeImpacts> EdgeEdgeImpactsPtr;
+
 /** Class representing an abstract impact. */
 class Impact {
 public:
@@ -20,12 +36,17 @@ public:
     @param time The time of impact.
     */
     Impact(double time);
-    virtual ~Impact();
-};
+    virtual ~Impact() = default;
 
-typedef std::shared_ptr<Impact> ImpactPtr;
-typedef std::vector<ImpactPtr> Impacts;
-typedef std::shared_ptr<Impacts> ImpactsPtr;
+    /**
+    Compare two impacts to determine if impact0 comes before impact1.
+
+    @param impact0 Impact to check if is came first.
+    @param impact1 Impact to check if is came second.
+    @return A boolean for if impact0->time <= impact1->time.
+    */
+    static bool compare_impacts_by_time(ImpactPtr impact0, ImpactPtr impact1);
+};
 
 /** Class representing an impact of an edge and vertex. */
 class EdgeVertexImpact : public Impact {
@@ -49,65 +70,57 @@ public:
         double time, int edge_index, double alpha, int vertex_index);
 
     /**
-    Compare two edge-vertex impacts to determine if impact0 comes before
-    impact1.
+    Construct an edge-vertex impact from an edge-edge impact.
 
-    @param impact0 Impact to check if is came first.
-    @param impact1 Impact to check if is came second.
-    @return A boolean for if impact0->time <= impact1->time.
+    @param edges A matrix where rows are edges and columns are vertex indices.
+    @param ee_impact Edge-edge impact to convert to an edge-vertex impact.
     */
-    static bool compare_impacts_by_time(
-        std::shared_ptr<EdgeVertexImpact> impact0,
-        std::shared_ptr<EdgeVertexImpact> impact1);
+    EdgeVertexImpact(
+        const Eigen::MatrixX2i& edges, const EdgeEdgeImpactPtr ee_impact);
 };
-
-typedef std::shared_ptr<EdgeVertexImpact> EdgeVertexImpactPtr;
-typedef std::vector<EdgeVertexImpactPtr> EdgeVertexImpacts;
-typedef std::shared_ptr<EdgeVertexImpacts> EdgeVertexImpactsPtr;
 
 /** Class representing an impact of an edge and edge. */
 class EdgeEdgeImpact : public Impact {
 public:
-    /** Impacting edge 0. */
-    const int edge0_index;
-    /** Parameter along edge0 where the impact occured */
-    const double alpha0;
-    /** Impacted edge 1. */
-    const int edge1_index;
-    /** Parameter along edge1 where the impact occured */
-    const double alpha1;
+    /** Impacted edge. */
+    const int impacted_edge_index;
+    /** Parameter along the impacted edge where the impact occured. */
+    const double impacted_alpha;
+    /** Impacting edge. */
+    const int impacting_edge_index;
+    /** Parameter along the impacting edge where the impact occured. */
+    const double impacting_alpha;
 
     /**
     Construct an edge-edge impact.
 
     @param time The time of impact.
-    @param edge0_index The index of the edge being impacted by another edge.
-    @param alpha0 The prameter along edge0 where the impact occurred.
-    @param edge1_index The index of the edge impacting the edge0.
-    @param alpha1 The prameter along edge1 where the impact occurred.
+    @param impacted_edge_index The index of the edge being impacted by another
+        edge.
+    @param impacted_alpha The parameter along the impacted edge where the impact
+        occured.
+    @param impacting_edge_index The index of the edge impacting the impacted
+        edge.
+    @param impacting_alpha The parameter along the impacting edge where the
+        impact occured.
     */
-    EdgeEdgeImpact(double time, int edge0_index, double alpha0, int edge1_index,
-        double alpha1);
+    EdgeEdgeImpact(double time, int impacted_edge_index, double impacted_alpha,
+        int impacting_edge_index, double impacting_alpha);
 
     /**
-    Convert all edge-vertex impacts to correspoding edge-edge impacts.
-    There may be multiple edge-edge impacts per edge-vertex impact
-    depending on the connectivity.
+    Convert all edge-vertex impacts to correspoding edge-edge impacts. There may
+    be multiple edge-edge impacts per edge-vertex impact depending on the
+    connectivity.
 
     @param edges The matrix of edges where each row is two indices for the
-                 endpoints in the vertices matrix (not a prameter).
+        endpoints in the vertices matrix (not a prameter).
     @param ev_impacts Vector of edge-vertex impacts to convert to edge-edge
-                      impacts.
+        impacts.
     @returns A EdgeEdgeImpactsPtr containing all of the edge-edge impacts.
     */
-    static std::shared_ptr<std::vector<std::shared_ptr<EdgeEdgeImpact>>>
-    convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
-        const EdgeVertexImpactsPtr other_impacts);
+    static EdgeEdgeImpactsPtr convert_edge_vertex_to_edge_edge_impacts(
+        const Eigen::MatrixX2i& edges, const EdgeVertexImpactsPtr ev_impacts);
 };
-
-typedef std::shared_ptr<EdgeEdgeImpact> EdgeEdgeImpactPtr;
-typedef std::vector<EdgeEdgeImpactPtr> EdgeEdgeImpacts;
-typedef std::shared_ptr<EdgeEdgeImpacts> EdgeEdgeImpactsPtr;
 
 }
 

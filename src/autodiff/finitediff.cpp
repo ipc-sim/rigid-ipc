@@ -3,15 +3,14 @@
 #include <array>
 #include <vector>
 
-/**
-  Based on the functions on https://github.com/PatWie/CppNumericalSolvers
-  and rewritten to use Eigen
-  **/
+// Based on the functions on https://github.com/PatWie/CppNumericalSolvers
+// and rewritten to use Eigen
 
 namespace ccd {
+
+// Compare if two gradients are close enough.
 bool compare_gradient(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
 {
-
     assert(x.rows() == y.rows());
 
     for (long d = 0; d < x.rows(); ++d) {
@@ -22,20 +21,23 @@ bool compare_gradient(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
     return true;
 }
 
-void finite_gradient(
-    const Eigen::VectorXd& x, std::function<double(const Eigen::VectorXd&)> value,
-    Eigen::VectorXd& grad, size_t accuracy)
+// Compute the gradient of a function at a point using finite differences.
+void finite_gradient(const Eigen::VectorXd& x,
+    std::function<double(const Eigen::VectorXd&)> value, Eigen::VectorXd& grad,
+    AccuracyOrder accuracy)
 {
-    // accuracy can be 0, 1, 2, 3
-    assert(accuracy <= 3);
-
     const double eps = 2.2204e-6;
+    // Create an array of the coefficients for finite differences.
+    // See: https://en.wikipedia.org/wiki/Finite_difference_coefficient
     // clang-format off
+    // The external coefficients, c1, in c1 * f(x + c2).
     static const std::array<std::vector<double>, 4> coeff =
     { { {1, -1}, {1, -8, 8, -1}, {-1, 9, -45, 45, -9, 1}, {3, -32, 168, -672, 672, -168, 32, -3} } };
+    // The internal coefficients, c2, in c1 * f(x + c2).
     static const std::array<std::vector<double>, 4> coeff2 =
     { { {1, -1}, {-2, -1, 1, 2}, {-3, -2, -1, 1, 2, 3}, {-4, -3, -2, -1, 1, 2, 3, 4} } };
     // clang-format on
+    // The denominators of the finite difference.
     static const std::array<double, 4> dd = { { 2, 12, 60, 840 } };
 
     grad.resize(x.rows());
@@ -55,4 +57,5 @@ void finite_gradient(
         grad[d] /= ddVal;
     }
 }
+
 }

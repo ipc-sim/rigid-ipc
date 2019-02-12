@@ -15,7 +15,7 @@ ViewerMenu::ViewerMenu(std::string scene_file)
     , color_edge(1.0, 0.0, 0.0)
     , color_displ(0.0, 1.0, 0.0)
     , color_grad(0.0, 0.0, 1.0)
-    , color_canvas(0.8, 0.8, 0.8)
+    , color_canvas(0.3, 0.3, 0.5) // #4c4c80
     , color_sl(1.0, 1.0, 0.0)
     , scene_file(scene_file)
     , last_action_message("")
@@ -80,7 +80,8 @@ bool ViewerMenu::load_scene(const std::string filename)
 {
 
     if (filename.empty()) {
-        io::read_scene_from_str(default_scene, state.vertices, state.edges, state.displacements);
+        io::read_scene_from_str(
+            default_scene, state.vertices, state.edges, state.displacements);
     } else {
         state.load_scene(filename);
     }
@@ -103,14 +104,19 @@ void ViewerMenu::load_state()
     nz.col(2).setConstant(1.0);
     viewer->data_list[surface_data_id].set_normals(nz);
 
-    viewer->data_list[displ_data_id].set_points(state.vertices + state.displacements, color_displ);
-    viewer->data_list[displ_data_id].set_edges(Eigen::MatrixXd(), Eigen::MatrixXi(), color_edge);
-    viewer->data_list[displ_data_id].add_edges(state.vertices, state.vertices + state.displacements, color_displ);
+    viewer->data_list[displ_data_id].set_points(
+        state.vertices + state.displacements, color_displ);
+    viewer->data_list[displ_data_id].set_edges(
+        Eigen::MatrixXd(), Eigen::MatrixXi(), color_edge);
+    viewer->data_list[displ_data_id].add_edges(
+        state.vertices, state.vertices + state.displacements, color_displ);
     viewer->data_list[displ_data_id].point_size = 10 * pixel_ratio();
 
     viewer->data_list[gradient_data_id].set_points(state.vertices, color_grad);
-    viewer->data_list[gradient_data_id].set_edges(Eigen::MatrixXd(), Eigen::MatrixXi(), color_grad);
-    viewer->data_list[gradient_data_id].add_edges(state.vertices, state.vertices, color_grad);
+    viewer->data_list[gradient_data_id].set_edges(
+        Eigen::MatrixXd(), Eigen::MatrixXi(), color_grad);
+    viewer->data_list[gradient_data_id].add_edges(
+        state.vertices, state.vertices, color_grad);
     viewer->data_list[gradient_data_id].point_size = 1;
 
     vertices_colors.resize(state.vertices.rows(), 3);
@@ -147,21 +153,24 @@ void ViewerMenu::connect_selected_vertices()
     }
     Eigen::MatrixXi new_edges(num_sl - 1, 2);
     for (uint i = 0; i < num_sl - 1; ++i) {
-        new_edges.row(i) << state.selected_points[i], state.selected_points[i + 1];
+        new_edges.row(i) << state.selected_points[i],
+            state.selected_points[i + 1];
     }
     state.add_edges(new_edges);
     add_graph_edges(surface_data_id, state.vertices, new_edges, color_edge);
     state_history.push_back(state);
 }
 
-bool update_selection(
-    const Eigen::MatrixXd& points, const int modifier,
-    const Eigen::RowVector2d& click_coord, const double thr, std::vector<int>& selection)
+bool update_selection(const Eigen::MatrixXd& points, const int modifier,
+    const Eigen::RowVector2d& click_coord, const double thr,
+    std::vector<int>& selection)
 {
-    // If a vertex was clicked while holding _shift_ it is added to the selected points. If _shift_ was not clicked, the selection
+    // If a vertex was clicked while holding _shift_ it is added to the selected
+    // points. If _shift_ was not clicked, the selection
     //      is replaced by clicked-vertex.
     int index;
-    double dist = (points.rowwise() - click_coord).rowwise().norm().minCoeff(&index);
+    double dist
+        = (points.rowwise() - click_coord).rowwise().norm().minCoeff(&index);
     if (dist < thr) {
         if (modifier == GLFW_MOD_SHIFT) {
             selection.push_back(index);
@@ -176,9 +185,9 @@ bool update_selection(
     }
 }
 
-void translation_delta(
-    const Eigen::MatrixXd& points, const int modifier,
-    const Eigen::RowVector2d& click_coord, const std::vector<int>& selection, Eigen::RowVector2d& delta)
+void translation_delta(const Eigen::MatrixXd& points, const int modifier,
+    const Eigen::RowVector2d& click_coord, const std::vector<int>& selection,
+    Eigen::RowVector2d& delta)
 {
     size_t num_sl = selection.size();
     assert(num_sl > 0);
@@ -196,25 +205,30 @@ void translation_delta(
     }
 }
 
-void ViewerMenu::clicked__select(const int /*button*/, const int modifier, const Eigen::RowVector2d& coord)
+void ViewerMenu::clicked__select(
+    const int /*button*/, const int modifier, const Eigen::RowVector2d& coord)
 {
     double thr = state.canvas_width / 100;
-    bool clicked_vertex = update_selection(state.vertices, modifier, coord, thr, state.selected_points);
+    bool clicked_vertex = update_selection(
+        state.vertices, modifier, coord, thr, state.selected_points);
     if (clicked_vertex) {
         state.selected_displacements.clear();
     } else {
-        update_selection(state.vertices + state.displacements, modifier, coord, thr, state.selected_displacements);
+        update_selection(state.vertices + state.displacements, modifier, coord,
+            thr, state.selected_displacements);
     }
 
     recolor_vertices();
 }
 
-void ViewerMenu::clicked__translate(const int /*button*/, const int modifier, const Eigen::RowVector2d& coord)
+void ViewerMenu::clicked__translate(
+    const int /*button*/, const int modifier, const Eigen::RowVector2d& coord)
 {
     size_t num_sl = state.selected_points.size();
     if (num_sl > 0) {
         Eigen::RowVector2d delta;
-        translation_delta(state.vertices, modifier, coord, state.selected_points, delta);
+        translation_delta(
+            state.vertices, modifier, coord, state.selected_points, delta);
         for (size_t i = 0; i < num_sl; ++i) {
             state.move_vertex(state.selected_points[i], delta);
         }
@@ -223,7 +237,8 @@ void ViewerMenu::clicked__translate(const int /*button*/, const int modifier, co
         size_t num_sl = state.selected_displacements.size();
         if (num_sl > 0) {
             Eigen::RowVector2d delta;
-            translation_delta(state.vertices + state.displacements, modifier, coord, state.selected_displacements, delta);
+            translation_delta(state.vertices + state.displacements, modifier,
+                coord, state.selected_displacements, delta);
             for (size_t i = 0; i < num_sl; ++i) {
                 state.move_displacement(state.selected_displacements[i], delta);
             }
@@ -232,21 +247,26 @@ void ViewerMenu::clicked__translate(const int /*button*/, const int modifier, co
     }
 }
 
-void ViewerMenu::clicked__add_node(const int /*button*/, const int /*modifier*/, const Eigen::RowVector2d& coord)
+void ViewerMenu::clicked__add_node(const int /*button*/, const int /*modifier*/,
+    const Eigen::RowVector2d& coord)
 {
     state.add_vertex(coord);
     add_graph_vertex(surface_data_id, state.vertices, coord, color_vtx);
-    extend_vector_field(displ_data_id, state.vertices, state.displacements, 1, color_displ);
-    extend_vector_field(gradient_data_id, state.vertices, state.volume_grad, 1, color_grad);
+    extend_vector_field(
+        displ_data_id, state.vertices, state.displacements, 1, color_displ);
+    extend_vector_field(
+        gradient_data_id, state.vertices, state.volume_grad, 1, color_grad);
 }
 
-void ViewerMenu::clicked__add_chain(const int /*button*/, const int /*modifier*/, const Eigen::RowVector2d& /*coord*/)
+void ViewerMenu::clicked__add_chain(const int /*button*/,
+    const int /*modifier*/, const Eigen::RowVector2d& /*coord*/)
 {
     last_action_message = "Adding a chain is not implemented yet.";
     last_action_success = false;
 }
 
-void ViewerMenu::clicked_on_canvas(const int button, const int modifier, const Eigen::RowVector2d& coord)
+void ViewerMenu::clicked_on_canvas(
+    const int button, const int modifier, const Eigen::RowVector2d& coord)
 {
     switch (edit_mode) {
     case select:
@@ -281,14 +301,17 @@ bool ViewerMenu::mouse_down(int button, int modifier)
     Eigen::Vector3d barycentric_coords;
 
     Eigen::MatrixXd BV = viewer->data_list[canvas_data_id].V;
-    if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y),
-            viewer->core.view, viewer->core.proj,
-            viewer->core.viewport, BV, canvas_faces, face_id, barycentric_coords)) {
+    if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y), viewer->core.view,
+            viewer->core.proj, viewer->core.viewport, BV, canvas_faces, face_id,
+            barycentric_coords)) {
         Eigen::Vector3i face_nodes = canvas_faces.row(face_id);
-        Eigen::RowVector3d coords = BV.row(face_nodes[0]) * barycentric_coords[0] + BV.row(face_nodes[1]) * barycentric_coords[1] + BV.row(face_nodes[2]) * barycentric_coords[2];
+        Eigen::RowVector3d coords
+            = BV.row(face_nodes[0]) * barycentric_coords[0]
+            + BV.row(face_nodes[1]) * barycentric_coords[1]
+            + BV.row(face_nodes[2]) * barycentric_coords[2];
 
         // pass 2d coords
-        clicked_on_canvas(button, modifier, coords.segment(0,2));
+        clicked_on_canvas(button, modifier, coords.segment(0, 2));
     }
     return true;
 }
@@ -325,16 +348,16 @@ void ViewerMenu::detect_edge_vertex_collisions()
 
 void ViewerMenu::goto_impact(const int impact)
 {
-    if (impact == -1){
+    if (impact == -1) {
         state.time = 0.0;
         state.current_impact = impact;
         redraw_at_time();
-    }
-    else if (state.impacts != nullptr && state.impacts->size() > 0) {
+    } else if (state.impacts != nullptr && state.impacts->size() > 0) {
         state.current_impact = impact;
         state.current_impact %= state.impacts->size();
 
-        state.time = float(state.impacts->at(size_t(state.current_impact))->time);
+        state.time
+            = float(state.impacts->at(size_t(state.current_impact))->time);
         redraw_at_time();
     }
 }
@@ -370,10 +393,12 @@ void ViewerMenu::redraw_displacements()
 
 void ViewerMenu::redraw_at_time()
 {
-    update_graph(surface_data_id, state.vertices + state.displacements * double(state.time), state.edges);
+    update_graph(surface_data_id,
+        state.vertices + state.displacements * double(state.time), state.edges);
 }
 
-void ViewerMenu::update_vector_field(const unsigned long data_id, const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta)
+void ViewerMenu::update_vector_field(const unsigned long data_id,
+    const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta)
 {
     Eigen::MatrixXd& lines = viewer->data_list[data_id].lines;
     Eigen::MatrixXd& points = viewer->data_list[data_id].points;
@@ -393,11 +418,15 @@ void ViewerMenu::update_vector_field(const unsigned long data_id, const Eigen::M
         points.row(i).segment(0, dim) << x1.row(i);
     }
 
-    viewer->data_list[data_id].dirty |= igl::opengl::MeshGL::DIRTY_OVERLAY_LINES;
-    viewer->data_list[data_id].dirty |= igl::opengl::MeshGL::DIRTY_OVERLAY_POINTS;
+    viewer->data_list[data_id].dirty
+        |= igl::opengl::MeshGL::DIRTY_OVERLAY_LINES;
+    viewer->data_list[data_id].dirty
+        |= igl::opengl::MeshGL::DIRTY_OVERLAY_POINTS;
 }
 
-void ViewerMenu::extend_vector_field(const unsigned long data_id, const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta, const int count, const Eigen::RowVector3d& color)
+void ViewerMenu::extend_vector_field(const unsigned long data_id,
+    const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta, const int count,
+    const Eigen::RowVector3d& color)
 {
     Eigen::MatrixXd x1 = x0 + delta;
     for (int i = 0; i < count; ++i) {
@@ -407,7 +436,8 @@ void ViewerMenu::extend_vector_field(const unsigned long data_id, const Eigen::M
     }
 }
 
-void ViewerMenu::update_graph(const unsigned long data_id, const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& edges)
+void ViewerMenu::update_graph(const unsigned long data_id,
+    const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& edges)
 {
     long dim = vertices.cols();
 
@@ -422,11 +452,15 @@ void ViewerMenu::update_graph(const unsigned long data_id, const Eigen::MatrixXd
         lines.row(i).segment(3, dim) << vertices.row(edges(i, 1));
     }
 
-    viewer->data_list[data_id].dirty |= igl::opengl::MeshGL::DIRTY_OVERLAY_POINTS;
-    viewer->data_list[data_id].dirty |= igl::opengl::MeshGL::DIRTY_OVERLAY_LINES;
+    viewer->data_list[data_id].dirty
+        |= igl::opengl::MeshGL::DIRTY_OVERLAY_POINTS;
+    viewer->data_list[data_id].dirty
+        |= igl::opengl::MeshGL::DIRTY_OVERLAY_LINES;
 }
 
-void ViewerMenu::add_graph_edges(const unsigned long data_id, const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& new_edges, const Eigen::RowVector3d& color)
+void ViewerMenu::add_graph_edges(const unsigned long data_id,
+    const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& new_edges,
+    const Eigen::RowVector3d& color)
 {
     long dim = vertices.cols();
 
@@ -439,7 +473,9 @@ void ViewerMenu::add_graph_edges(const unsigned long data_id, const Eigen::Matri
     viewer->data_list[data_id].add_edges(P1, P2, color);
 }
 
-void ViewerMenu::add_graph_vertex(const unsigned long data_id, const Eigen::MatrixXd& vertices, const Eigen::RowVector2d& vertex, const Eigen::RowVector3d& color)
+void ViewerMenu::add_graph_vertex(const unsigned long data_id,
+    const Eigen::MatrixXd& vertices, const Eigen::RowVector2d& vertex,
+    const Eigen::RowVector3d& color)
 {
 
     viewer->data_list[data_id].set_vertices(vertices);
@@ -450,36 +486,40 @@ void ViewerMenu::add_graph_vertex(const unsigned long data_id, const Eigen::Matr
     viewer->data_list[data_id].add_points(vertex, color);
 }
 
-void ViewerMenu::color_points(const unsigned long data_id, const Eigen::RowVector3d& color)
+void ViewerMenu::color_points(
+    const unsigned long data_id, const Eigen::RowVector3d& color)
 {
     Eigen::MatrixXd& points = viewer->data_list[data_id].points;
     points.block(0, 3, points.rows(), 3).rowwise() = color;
-    viewer->data_list[data_id].dirty |= igl::opengl::MeshGL::DIRTY_OVERLAY_POINTS;
+    viewer->data_list[data_id].dirty
+        |= igl::opengl::MeshGL::DIRTY_OVERLAY_POINTS;
 }
 
-void ViewerMenu::highlight_points(const unsigned long data_id, const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl)
+void ViewerMenu::highlight_points(const unsigned long data_id,
+    const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl)
 {
     Eigen::MatrixXd& points = viewer->data_list[data_id].points;
     for (unsigned i = 0; i < nodes.size(); ++i) {
         points.row(nodes[i]).segment(3, 3) = color_hl;
     }
 
-    viewer->data_list[data_id].dirty |= igl::opengl::MeshGL::DIRTY_OVERLAY_POINTS;
+    viewer->data_list[data_id].dirty
+        |= igl::opengl::MeshGL::DIRTY_OVERLAY_POINTS;
 }
 
 // FIX of LIBIGL VIEWER FUNCTIONS
-void ViewerMenu::viewer_set_edges(const unsigned long data_id, const Eigen::MatrixXd& P, const Eigen::MatrixXi& E, const Eigen::MatrixXd& C){
+void ViewerMenu::viewer_set_edges(const unsigned long data_id,
+    const Eigen::MatrixXd& P, const Eigen::MatrixXi& E,
+    const Eigen::MatrixXd& C)
+{
     Eigen::MatrixXd P_temp;
 
     // If P only has two columns, pad with a column of zeros
-    if (P.cols() == 2)
-    {
-      P_temp = Eigen::MatrixXd::Zero(P.rows(),3);
-      P_temp.block(0,0,P.rows(),2) = P;
-    }
-    else
-    {
-      P_temp = P;
+    if (P.cols() == 2) {
+        P_temp = Eigen::MatrixXd::Zero(P.rows(), 3);
+        P_temp.block(0, 0, P.rows(), 2) = P;
+    } else {
+        P_temp = P;
     }
     viewer->data_list[data_id].set_edges(P_temp, E, C);
 }
