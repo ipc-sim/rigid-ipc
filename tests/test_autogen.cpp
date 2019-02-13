@@ -56,7 +56,7 @@ TEST_CASE("Test Autogen Test", "[autogen][dummy]")
 
         REQUIRE(actual.rows() == 8);
         REQUIRE(!std::isnan(actual.squaredNorm()));
-        REQUIRE(actual == expected);
+        REQUIRE(compare_gradient(actual, expected));
     }
     SECTION("One displacement different than zero -> one entry in gradient energy")
     {
@@ -75,7 +75,7 @@ TEST_CASE("Test Autogen Test", "[autogen][dummy]")
 
             REQUIRE(actual.rows() == 8);
             REQUIRE(!std::isnan(actual.squaredNorm()));
-            REQUIRE(actual == expected);
+            REQUIRE(compare_gradient(actual, expected));
         }
     }
     SECTION("Compare gradient with finite diff")

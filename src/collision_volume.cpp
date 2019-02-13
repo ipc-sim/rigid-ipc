@@ -44,7 +44,6 @@ double collision_volume(const Eigen::MatrixX2d& vertices,
         volume *= -1;
     }
 
-    // TODO: compute gradient
     return volume;
 }
 }
