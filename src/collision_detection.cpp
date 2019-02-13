@@ -17,25 +17,26 @@
 namespace ccd {
 
 // Convert a temporal parameterization to a spatial parameterization.
-double temporal_parameterization_to_spatial(const Eigen::VectorXd& vertex0,
+bool temporal_parameterization_to_spatial(const Eigen::VectorXd& vertex0,
     const Eigen::VectorXd& displacement0, const Eigen::VectorXd& edge_vertex1,
     const Eigen::VectorXd& edge_displacement1,
     const Eigen::VectorXd& edge_vertex2,
-    const Eigen::VectorXd& edge_displacement2, double t)
+    const Eigen::VectorXd& edge_displacement2, const double t, double& alpha)
 {
     Eigen::MatrixXd numerator
         = edge_vertex1 - vertex0 + t * (edge_displacement1 - displacement0);
     Eigen::MatrixXd denominator = edge_vertex1 - edge_vertex2
         + t * (edge_displacement1 - edge_displacement2);
     assert(numerator.size() == denominator.size());
+
     if (std::abs(denominator(0)) > EPSILON) {
-        return numerator(0) / denominator(0);
+        alpha = numerator(0) / denominator(0);
+        return true;
     } else if (std::abs(denominator(1)) > EPSILON) {
-        return numerator(1) / denominator(1);
-    } else if (denominator.size() > 2 && std::abs(denominator(2)) > EPSILON) {
-        return numerator(2) / denominator(2);
+        alpha = numerator(1) / denominator(1);
+        return true;
     }
-    throw DegenerateEdgeError();
+    return false;
 }
 
 // Compute the time of impact of a point and edge moving in 2D.
@@ -71,6 +72,13 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
         + vertex0(1) * (edge_vertex1(0) - edge_vertex2(0))
         + edge_vertex1(1) * edge_vertex2(0) - edge_vertex1(0) * edge_vertex2(1);
 
+    auto check_solution = [&]() {
+        // clang-format off
+        return toi >= 0 && toi <= 1 && temporal_parameterization_to_spatial(
+                EDGE_VERTEX_PARAMS, toi, alpha) && alpha >= 0 && alpha <= 1;
+        // clang-format on
+    };
+
     if (std::abs(a) > EPSILON) { // Is the equation truly quadratic?
         // Quadratic equation
         // at^2 + bt + c = 0 => t = (-b ± sqrt(b^2 - 4ac)) / 2a
@@ -80,28 +88,21 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
             // We know the time of impacts will be sorted earliest to latest.
             for (double sign : { -1, 1 }) {
                 toi = (-b + sign * sqrt_rad) / (2 * a);
-                try {
-                    alpha = temporal_parameterization_to_spatial(
-                        EDGE_VERTEX_PARAMS, toi);
-                } catch (DegenerateEdgeError err) {
-                    continue;
-                }
-                if (toi >= 0 && toi <= 1 && alpha >= 0 && alpha <= 1) {
+                if (check_solution())
                     return true;
-                }
             }
         }
     } else if (std::abs(b) > EPSILON) { // Is the equation truly linear?
         // Linear equation
         // bt + c = 0 => t = -c / b
         toi = -c / b;
-        alpha = temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, toi);
-        return toi >= 0 && toi <= 1 && alpha >= 0 && alpha <= 1;
+        return check_solution();
     } else if (std::abs(c) < EPSILON) {
         // a = b = c = 0 => infinite solutions, but may not be on the edge.
         // Find the spatial locations along the line at t=0 and t=1
-        double s0 = temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, 0);
-        double s1 = temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, 1);
+        double s0(0.0), s1(0.0);
+        temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, 0, s0);
+        temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, 1, s1);
 
         // Possible cases for trajectories:
         // - No impact to impact ():
@@ -120,6 +121,7 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
     return false;
 }
 
+// Find all edge-vertex collisions in one time step.
 EdgeVertexImpactsPtr detect_edge_vertex_collisions(
     const Eigen::MatrixXd& vertices, const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges, DetectionMethod method)
@@ -135,6 +137,8 @@ EdgeVertexImpactsPtr detect_edge_vertex_collisions(
     }
 }
 
+// Find all edge-vertex collisions in one time step using brute-force
+// comparisons of all edges and all vertices.
 EdgeVertexImpactsPtr detect_edge_vertex_collisions_brute_force(
     const Eigen::MatrixXd& vertices, const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges)
@@ -160,6 +164,8 @@ EdgeVertexImpactsPtr detect_edge_vertex_collisions_brute_force(
     return impacts;
 }
 
+// Find all edge-vertex collisions in one time step using spatial-hashing to
+// only compare points and edge in the same cells.
 EdgeVertexImpactsPtr detect_edge_vertex_collisions_hash_map(
     const Eigen::MatrixXd& /* vertices */,
     const Eigen::MatrixXd& /* displacements */,

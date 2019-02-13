@@ -32,14 +32,17 @@ impact where vertex0 lies on the line spaned by the edge vertices.
 @param edge_vertex2 The second end-point of the edge.
 @param edge_displacement2 The displacement of edge_vertex2 over the time-step.
 @param t The time of impact to move the vertices.
-@return The spatial parameterization, \f$s\f$, such that
-    \f$p_0(t) = (p_2(t) - p_1(t))*s + p_1(t)\f$.
+@param alpha The spatial parameterization, \f$s\f$, such that
+    \f$p_0(t) = (p_2(t) - p_1(t))*s + p_1(t)\f$. The computed output value is
+    stored in this variable.
+@return A boolean for if their is a valid spatial parameterization. Stores the
+    valid spatial parameter in alpha.
 */
-double temporal_parameterization_to_spatial(const Eigen::VectorXd& vertex0,
+bool temporal_parameterization_to_spatial(const Eigen::VectorXd& vertex0,
     const Eigen::VectorXd& displacement0, const Eigen::VectorXd& edge_vertex1,
     const Eigen::VectorXd& edge_displacement1,
     const Eigen::VectorXd& edge_vertex2,
-    const Eigen::VectorXd& edge_displacement2, const double t);
+    const Eigen::VectorXd& edge_displacement2, const double t, double& alpha);
 
 /**
 Compute the time of impact of a point and edge moving in 2D.
