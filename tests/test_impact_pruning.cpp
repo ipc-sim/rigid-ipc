@@ -18,9 +18,9 @@ TEST_CASE("Test edge vertex impact to edge edge impact", "[impact_pruning]")
     // Create the impact manually
     double time = rand_norm_double(), impacted_alpha = rand_norm_double();
     int impacted_edge_index = 0, impacting_edge_index = 1, vertex_index = 2;
-    EdgeVertexImpactsPtr ev_impacts(new EdgeVertexImpacts);
-    ev_impacts->push_back(EdgeVertexImpactPtr(new EdgeVertexImpact(
-        time, impacted_edge_index, impacted_alpha, vertex_index)));
+    EdgeVertexImpactsPtr ev_impacts = std::make_shared<EdgeVertexImpacts>();
+    ev_impacts->push_back(std::make_shared<EdgeVertexImpact>(
+        time, impacted_edge_index, impacted_alpha, vertex_index));
 
     SECTION("Free point contacting edge")
     {
@@ -137,12 +137,13 @@ TEST_CASE("Test impact pruning", "[impact_pruning]")
     double early_time = rand_norm_double() / 2,
            late_time = rand_norm_double() / 2 + 0.5;
     int impacted_edge_index = 0, impacting_edge_index = 1, edge2_index = 2;
-    EdgeEdgeImpactsPtr all_impacts(new EdgeEdgeImpacts);
+    EdgeEdgeImpactsPtr all_impacts = std::make_shared<EdgeEdgeImpacts>();
 
-    EdgeEdgeImpactPtr early_impact(new EdgeEdgeImpact(early_time,
-        impacted_edge_index, rand_norm_double(), impacting_edge_index, 0)),
-        late_impact(new EdgeEdgeImpact(late_time, impacted_edge_index,
-            rand_norm_double(), edge2_index, 0));
+    EdgeEdgeImpactPtr early_impact
+        = std::make_shared<EdgeEdgeImpact>(early_time, impacted_edge_index,
+            rand_norm_double(), impacting_edge_index, 0);
+    EdgeEdgeImpactPtr late_impact = std::make_shared<EdgeEdgeImpact>(
+        late_time, impacted_edge_index, rand_norm_double(), edge2_index, 0);
     SECTION("Two impacts against edge 0")
     {
         std::shared_ptr<std::unordered_map<int, EdgeEdgeImpactPtr>>

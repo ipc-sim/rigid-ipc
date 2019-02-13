@@ -102,8 +102,8 @@ void State::run_full_pipeline()
     for (auto e_impact : *e_impacts) {
         auto edge = edges.row(e_impact.first);
         // TODO: Link up the volume and gradient of volume computation
-        // volume(e_impact.first)
-        //     = ccd::collision_volume(vertices, displacements, edges, )
+        volumes(e_impact.first) = ccd::collision_volume(
+            vertices, displacements, edges, e_impact.second, 0.1, volume_grad);
     }
 }
 

@@ -156,7 +156,7 @@ EdgeVertexImpactsPtr detect_edge_vertex_collisions_brute_force(
     const Eigen::MatrixXd& vertices, const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges)
 {
-    EdgeVertexImpactsPtr impacts(new EdgeVertexImpacts());
+    EdgeVertexImpactsPtr impacts = std::make_shared<EdgeVertexImpacts>();
     for (int edge_index = 0; edge_index < edges.rows(); edge_index++) {
         auto edge = edges.row(edge_index);
         for (int vertex_index = 0; vertex_index < vertices.rows();
@@ -169,7 +169,7 @@ EdgeVertexImpactsPtr detect_edge_vertex_collisions_brute_force(
                         displacements.row(edge(0)), vertices.row(edge(1)),
                         displacements.row(edge(1)));
                 if (potential_time_of_impact != NO_IMPACT) {
-                    impacts->push_back(EdgeVertexImpactPtr(new EdgeVertexImpact(
+                    impacts->push_back(std::make_shared<EdgeVertexImpact>(
                         potential_time_of_impact, edge_index,
                         temporal_parameterization_to_spatial(
                             vertices.row(vertex_index),
@@ -177,7 +177,7 @@ EdgeVertexImpactsPtr detect_edge_vertex_collisions_brute_force(
                             vertices.row(edge(0)), displacements.row(edge(0)),
                             vertices.row(edge(1)), displacements.row(edge(1)),
                             potential_time_of_impact),
-                        vertex_index)));
+                        vertex_index));
                 }
             }
         }

@@ -10,8 +10,7 @@ Impact::Impact(double time)
 }
 
 // Compare two edge-vertex impacts to determine if impact0 comes before impact1.
-bool Impact::compare_impacts_by_time(
-    std::shared_ptr<Impact> impact0, std::shared_ptr<Impact> impact1)
+bool Impact::compare_impacts_by_time(ImpactPtr impact0, ImpactPtr impact1)
 {
     return impact0->time <= impact1->time;
 }
@@ -54,15 +53,16 @@ EdgeEdgeImpact::EdgeEdgeImpact(double time, int impacted_edge_index,
 EdgeEdgeImpactsPtr EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
     const Eigen::MatrixX2i& edges, const EdgeVertexImpactsPtr ev_impacts)
 {
-    EdgeEdgeImpactsPtr ee_impacts(new EdgeEdgeImpacts());
-    for (auto ev_impact : *ev_impacts) {
+    EdgeEdgeImpactsPtr ee_impacts = std::make_shared<EdgeEdgeImpacts>();
+    for (EdgeVertexImpactPtr& ev_impact : *ev_impacts) {
         for (int edge_index = 0; edge_index < edges.rows(); edge_index++) {
             auto edge = edges.row(edge_index);
             if (edge(0) == ev_impact->vertex_index
                 || edge(1) == ev_impact->vertex_index) {
-                ee_impacts->push_back(EdgeEdgeImpactPtr(new EdgeEdgeImpact(
-                    ev_impact->time, ev_impact->edge_index, ev_impact->alpha,
-                    edge_index, edge(0) == ev_impact->vertex_index ? 0 : 1)));
+                ee_impacts->push_back(EdgeEdgeImpactPtr(
+                    std::make_shared<EdgeEdgeImpact>(ev_impact->time,
+                        ev_impact->edge_index, ev_impact->alpha, edge_index,
+                        edge(0) == ev_impact->vertex_index ? 0 : 1)));
             }
         }
     }
