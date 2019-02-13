@@ -8,7 +8,6 @@
 
 #include <iostream>
 
-#define NO_IMPACT (-1)
 #define EPSILON (1e-8)
 
 #define EDGE_VERTEX_PARAMS                                                     \
@@ -40,11 +39,11 @@ double temporal_parameterization_to_spatial(const Eigen::VectorXd& vertex0,
 }
 
 // Compute the time of impact of a point and edge moving in 2D.
-double compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
+bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
     const Eigen::Vector2d& displacement0, const Eigen::Vector2d& edge_vertex1,
     const Eigen::Vector2d& edge_displacement1,
     const Eigen::Vector2d& edge_vertex2,
-    const Eigen::Vector2d& edge_displacement2)
+    const Eigen::Vector2d& edge_displacement2, double& toi, double& alpha)
 {
     // In 2D the intersecton of a point and edge moving through time is the a
     // quadratic equation, at^2 + bt + c = 0. A sketch for the geometric proof
@@ -77,45 +76,28 @@ double compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
         // at^2 + bt + c = 0 => t = (-b ± sqrt(b^2 - 4ac)) / 2a
         double radicand = b * b - 4 * a * c;
         if (radicand >= 0) {
-            double tmp0 = -b / (2 * a);
-            double tmp1 = sqrt(radicand) / (2 * a);
-            double tI0 = tmp0 + tmp1;
-            double tI1 = tmp0 - tmp1;
-
-            double sI0, sI1;
-            bool is_tI0_valid, is_tI1_valid;
-            try {
-                sI0 = temporal_parameterization_to_spatial(
-                    EDGE_VERTEX_PARAMS, tI0);
-                is_tI0_valid = tI0 >= 0 && tI0 <= 1 && sI0 >= 0 && sI0 <= 1;
-            } catch (DegenerateEdgeError err) {
-                is_tI0_valid = false;
-            }
-            try {
-                sI1 = temporal_parameterization_to_spatial(
-                    EDGE_VERTEX_PARAMS, tI1);
-                is_tI1_valid = tI1 >= 0 && tI1 <= 1 && sI1 >= 0 && sI1 <= 1;
-            } catch (DegenerateEdgeError err) {
-                is_tI1_valid = false;
-            }
-
-            if (is_tI0_valid) {
-                return is_tI1_valid ? std::min(tI0, tI1) : tI0;
-            } else {
-                return is_tI1_valid ? tI1 : NO_IMPACT;
+            double sqrt_rad = sqrt(radicand);
+            // We know the time of impacts will be sorted earliest to latest.
+            for (double sign : { -1, 1 }) {
+                toi = (-b + sign * sqrt_rad) / (2 * a);
+                try {
+                    alpha = temporal_parameterization_to_spatial(
+                        EDGE_VERTEX_PARAMS, toi);
+                } catch (DegenerateEdgeError err) {
+                    continue;
+                }
+                if (toi >= 0 && toi <= 1 && alpha >= 0 && alpha <= 1) {
+                    return true;
+                }
             }
         }
-        return NO_IMPACT;
     } else if (std::abs(b) > EPSILON) { // Is the equation truly linear?
         // Linear equation
         // bt + c = 0 => t = -c / b
-        double t = -c / b;
-        double s = temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, t);
-        return (t >= 0 && t <= 1 && s >= 0 && s <= 1) ? t : NO_IMPACT;
-    } else if (std::abs(c) > EPSILON) {
-        // (c != 0) = 0 => no solution exists
-        return NO_IMPACT;
-    } else {
+        toi = -c / b;
+        alpha = temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, toi);
+        return toi >= 0 && toi <= 1 && alpha >= 0 && alpha <= 1;
+    } else if (std::abs(c) < EPSILON) {
         // a = b = c = 0 => infinite solutions, but may not be on the edge.
         // Find the spatial locations along the line at t=0 and t=1
         double s0 = temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, 0);
@@ -129,12 +111,13 @@ double compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
         // - No impact to no impact: * -> NO_IMPACT
         if ((s0 < 0 && s1 >= 0) || (s0 > 1 && s1 <= 1)
             || (s0 >= 0 && s0 <= 1)) {
-            double sI = s0 < 0 ? 0 : (s0 > 1 ? 1 : s0);
-            return std::abs(s1 - s0) > EPSILON ? ((sI - s0) / (s1 - s0)) : 0;
-        } else { // No impact to no impact
-            return NO_IMPACT;
+            alpha = s0 < 0 ? 0 : (s0 > 1 ? 1 : s0);
+            toi = std::abs(s1 - s0) > EPSILON ? ((alpha - s0) / (s1 - s0)) : 0;
+            return true;
         }
     }
+    // else (c != 0) = 0 => no solution exists
+    return false;
 }
 
 EdgeVertexImpactsPtr detect_edge_vertex_collisions(
@@ -157,27 +140,19 @@ EdgeVertexImpactsPtr detect_edge_vertex_collisions_brute_force(
     const Eigen::MatrixX2i& edges)
 {
     EdgeVertexImpactsPtr impacts = std::make_shared<EdgeVertexImpacts>();
+    double toi, alpha;
     for (int edge_index = 0; edge_index < edges.rows(); edge_index++) {
         auto edge = edges.row(edge_index);
         for (int vertex_index = 0; vertex_index < vertices.rows();
              vertex_index++) {
             if (vertex_index != edge(0) && vertex_index != edge(1)) {
-                double potential_time_of_impact
-                    = compute_edge_vertex_time_of_impact(
+                if (compute_edge_vertex_time_of_impact(
                         vertices.row(vertex_index),
                         displacements.row(vertex_index), vertices.row(edge(0)),
                         displacements.row(edge(0)), vertices.row(edge(1)),
-                        displacements.row(edge(1)));
-                if (potential_time_of_impact != NO_IMPACT) {
+                        displacements.row(edge(1)), toi, alpha)) {
                     impacts->push_back(std::make_shared<EdgeVertexImpact>(
-                        potential_time_of_impact, edge_index,
-                        temporal_parameterization_to_spatial(
-                            vertices.row(vertex_index),
-                            displacements.row(vertex_index),
-                            vertices.row(edge(0)), displacements.row(edge(0)),
-                            vertices.row(edge(1)), displacements.row(edge(1)),
-                            potential_time_of_impact),
-                        vertex_index));
+                        toi, edge_index, alpha, vertex_index));
                 }
             }
         }

@@ -43,4 +43,5 @@ double collision_volume(const Eigen::MatrixX2d& vertices,
 
     return volume;
 }
+
 }
