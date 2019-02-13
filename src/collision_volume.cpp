@@ -41,7 +41,6 @@ double collision_volume(const Eigen::MatrixX2d& vertices,
     // Flip the volume if we used the wrong perpendicular vector to e_toi
     volume *= volume > 0 ? -1 : 1;
 
-    // TODO: compute gradient
     return volume;
 }
 }
