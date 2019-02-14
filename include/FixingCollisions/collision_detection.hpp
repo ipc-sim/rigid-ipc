@@ -41,11 +41,11 @@ impact where vertex0 lies on the line spaned by the edge vertices.
 @return A boolean for if their is a valid spatial parameterization. Stores the
     valid spatial parameter in alpha.
 */
-bool temporal_parameterization_to_spatial(const Eigen::VectorXd& vertex0,
-    const Eigen::VectorXd& displacement0, const Eigen::VectorXd& edge_vertex1,
-    const Eigen::VectorXd& edge_displacement1,
-    const Eigen::VectorXd& edge_vertex2,
-    const Eigen::VectorXd& edge_displacement2, const double t, double& alpha);
+bool temporal_parameterization_to_spatial(const Eigen::Vector2d& vertex0,
+    const Eigen::Vector2d& displacement0, const Eigen::Vector2d& edge_vertex1,
+    const Eigen::Vector2d& edge_displacement1,
+    const Eigen::Vector2d& edge_vertex2,
+    const Eigen::Vector2d& edge_displacement2, const double t, double& alpha);
 
 /**
 Compute the time of impact of a point and edge moving in 2D.
@@ -53,18 +53,18 @@ Compute the time of impact of a point and edge moving in 2D.
 @param vertex0 The position, in 2D, of the vertex.
 @param displacment0 The displacement, in 2D, of the vertex.
 @param edge_vertex1 The position, in 2D, of the first endpoint of the edge.
-@param edge_displacement1 The displacement, in 2D, of the first endpoint of the
-edge.
+@param edge_displacement1 The displacement, in 2D, of the first endpoint of
+    the edge.
 @param edge_vertex1 The position, in 2D, of the second endpoint of the edge.
-@param edge_displacement1 The displacement, in 2D, of the second endpoint of the
-edge.
+@param edge_displacement1 The displacement, in 2D, of the second endpoint of
+    the edge.
 @param toi The time of impact, \f$\tau_I \in [0, 1]\f$, where
-the start of the time-step is at \f$t=0\f$ and the end of the time-step is at
-time \f$t=1\f$. The computed output value is stored in this variable.
-@param alpha The spatial position of the impact along the edge, \f$\alpha \in
-[0, 1]\f$, where the start of the edge is at \f$\alpha=0\f$ and the end of the
-edge is at time \f$\alpha=1\f$. The computed output value is stored in this
-variable.
+the start of the time-step is at \f$t=0\f$ and the end of the time-step is
+    at time \f$t=1\f$. The computed output value is stored in this variable.
+@param alpha The spatial position of the impact along the edge, \f$\alpha
+    \in [0, 1]\f$, where the start of the edge is at \f$\alpha=0\f$ and the end
+    of the edge is at time \f$\alpha=1\f$. The computed output value is stored
+    in this variable.
 @return A boolean for if a collision occured in time 0 to 1. If there is a
 collision the computed time of impact is stored in toi and the impact points
 spatial parameter along the edge is stored in alpha.
