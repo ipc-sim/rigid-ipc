@@ -14,7 +14,10 @@ Supported geometry: point vs edge
 namespace ccd {
 
 /** Possible methods for detecting all edge vertex collisions. */
-enum DetectionMethod { BRUTE_FORCE, HASH_MAP };
+enum DetectionMethod {
+    BRUTE_FORCE, /*!< Use brute-force to detect all collisions. */
+    HASH_MAP /*!< Use a spatial data structure to detect all collisions. */
+};
 
 /**
 Convert a temporal parameterization to a spatial parameterization.
