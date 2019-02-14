@@ -1,5 +1,7 @@
 #include "collision_volume.hpp"
 
+#include <iostream>
+
 namespace ccd {
 namespace autogen {
 
@@ -54,8 +56,8 @@ namespace autogen {
         // {{toi_abc_ccode}}
 
         T alpha;
-        auto check_solution = [&]() {
-            return toi >= 0 && toi <= 1 && temporal_parameterization_to_spatial(Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha) && alpha >= 0 && alpha <= 1;
+        auto check_solution = [&](T t) {
+            return t >= 0 && t <= 1 && temporal_parameterization_to_spatial(Vi, Vj, Vk, Ui, Uj, Uk, t, alpha) && alpha >= 0 && alpha <= 1;
         };
 
         // Solve the quadratic equation
@@ -66,18 +68,30 @@ namespace autogen {
                 return false;
             }
             T sqrt_rad = sqrt(radicand);
+
             // the two candidates
-            toi = (-b + sqrt_rad) / (2 * a);
-            if (check_solution()) {
+            T toi_neg = (-b - sqrt_rad) / (2 * a);
+            T toi_pos = (-b + sqrt_rad) / (2 * a);
+
+            bool toi_neg_valid = check_solution(toi_neg);
+            bool toi_pos_valid = check_solution(toi_pos);
+            if (toi_neg_valid && toi_pos_valid) {
+                toi = std::min(toi_neg, toi_pos);
                 return true;
             }
-            toi = (-b - sqrt_rad) / (2 * a);
-            return check_solution();
+            else if (toi_neg_valid){
+                toi = toi_neg;
+                return true;
+            }
+            else {
+                toi = toi_pos;
+                return toi_pos_valid;
+            }
 
         } else if (b > kEPSILON || b < -kEPSILON) { //  the equation is linear
             // b*t + c = 0 => t = -c / b
             toi = -c / b;
-            return check_solution();
+            return check_solution(toi);
 
         } else if (c > kEPSILON || c < -kEPSILON) { //  No solution (c !=0 && c == 0)
             return false;

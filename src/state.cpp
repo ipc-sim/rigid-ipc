@@ -2,8 +2,6 @@
 
 #include "state.hpp"
 
-#include "autogen/auto_test_function.hpp"
-#include "autogen/test_function.hpp"
 #include <FixingCollisions/collision_volume.hpp>
 #include <FixingCollisions/prune_impacts.hpp>
 #include <read_scene.hpp>
