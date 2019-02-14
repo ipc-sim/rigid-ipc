@@ -72,10 +72,10 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
         + vertex0(1) * (edge_vertex1(0) - edge_vertex2(0))
         + edge_vertex1(1) * edge_vertex2(0) - edge_vertex1(0) * edge_vertex2(1);
 
-    auto check_solution = [&]() {
+    auto check_solution = [&](double t) {
         // clang-format off
-        return toi >= 0 && toi <= 1 && temporal_parameterization_to_spatial(
-                EDGE_VERTEX_PARAMS, toi, alpha) && alpha >= 0 && alpha <= 1;
+        return t >= 0 && t <= 1 && temporal_parameterization_to_spatial(
+                EDGE_VERTEX_PARAMS, t, alpha) && alpha >= 0 && alpha <= 1;
         // clang-format on
     };
 
@@ -86,17 +86,21 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
         if (radicand >= 0) {
             double sqrt_rad = sqrt(radicand);
             // We know the time of impacts will be sorted earliest to latest.
-            for (double sign : { -1, 1 }) {
-                toi = (-b + sign * sqrt_rad) / (2 * a);
-                if (check_solution())
-                    return true;
-            }
+            double toi_neg = (-b - sqrt_rad) / (2 * a);
+            double toi_pos = (-b + sqrt_rad) / (2 * a);
+            bool toi_neg_valid = check_solution(toi_neg);
+            bool toi_pos_valid = check_solution(toi_pos);
+
+            toi = toi_neg_valid && toi_pos_valid
+                ? std::min(toi_neg, toi_pos)
+                : (toi_neg_valid ? toi_neg : toi_pos);
+            return toi_pos_valid || toi_neg_valid;
         }
     } else if (std::abs(b) > EPSILON) { // Is the equation truly linear?
         // Linear equation
         // bt + c = 0 => t = -c / b
         toi = -c / b;
-        return check_solution();
+        return check_solution(toi);
     } else if (std::abs(c) < EPSILON) {
         // a = b = c = 0 => infinite solutions, but may not be on the edge.
         // Find the spatial locations along the line at t=0 and t=1
