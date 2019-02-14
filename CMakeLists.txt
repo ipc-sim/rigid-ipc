@@ -22,6 +22,7 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"          ON)
 
 # project-options
 option(BUILD_UNIT_TESTS                 "Build unit-tests"   ON)
+option(BUILD_COVERAGE                   "Build coverage"     OFF)
 
 ################################################################################
 # Fixing Collisions Library
@@ -47,8 +48,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC include src)
 project_autogen(${PROJECT_NAME} collision_volume.py collision_volume.tpp auto_collision_volume)
 project_autogen(${PROJECT_NAME} test_function.py test_function.tpp auto_test_function)
 set(AUTOGEN
-    src/autogen/auto_collision_volume.cpp
-    src/autogen/auto_test_function.cpp)
+    ${PROJECT_SOURCE_DIR}/src/autogen/auto_collision_volume.cpp
+    ${PROJECT_SOURCE_DIR}/src/autogen/auto_test_function.cpp)
 target_sources(${PROJECT_NAME} PUBLIC ${AUTOGEN})
 
 ################################################################################
@@ -64,7 +65,7 @@ set(VIEWER_FILES
 
 add_executable(${PROJECT_NAME}_bin ${VIEWER_FILES})
 target_include_directories(${PROJECT_NAME}_bin PRIVATE src)
-target_link_libraries(${PROJECT_NAME}_bin ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_bin PUBLIC ${PROJECT_NAME})
 
 # Fixtures folder ---------------------------------------------------------
 add_custom_command(TARGET ${PROJECT_NAME}_bin POST_BUILD
@@ -86,7 +87,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
 # Json Parser
 add_library(json INTERFACE)
 target_include_directories(json SYSTEM INTERFACE ${THIRD_PARTY_DIR}/json/include)
-target_link_libraries(${PROJECT_NAME}_bin json)
+target_link_libraries(${PROJECT_NAME}_bin PUBLIC json)
 
 
 ################################################################################
