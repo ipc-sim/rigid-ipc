@@ -12,6 +12,40 @@ TEST_CASE("Test Continous Collision Detection", "[ccd]")
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> displacements;
     Eigen::Matrix<int, 1, 2, Eigen::RowMajor> edges;
     edges.row(0) << 1, 2;
+    SECTION("Edge becomes degenerate")
+    {
+        vertices.row(0) << 0, 1;
+        vertices.row(1) << -1, 0;
+        vertices.row(2) << 1, 0;
+        SECTION("Edge degenerates before impact")
+        {
+            displacements.row(0) << 0, -2;
+            displacements.row(1) << 4, 0;
+            displacements.row(2) << -4, 0;
+            // The edge will become degenerate at t=0.25
+        }
+        SECTION("Edge degenerates at impact")
+        {
+            displacements.row(0) << 0, -2;
+            displacements.row(1) << 2, 0;
+            displacements.row(2) << -2, 0;
+        }
+        SECTION("Edge degenerates after impact")
+        {
+            displacements.row(0) << 0, -2;
+            displacements.row(1) << 1.5, 0;
+            displacements.row(2) << -1.5, 0;
+            // The edge will become degenerate at t=2/3
+        }
+        // The point will collide with the edge at t=0.5
+        auto impacts = ccd::detect_edge_vertex_collisions(
+            vertices, displacements, edges);
+        REQUIRE(impacts->size() == 1);
+        REQUIRE(impacts->front()->time == Approx(0.5));
+        REQUIRE(impacts->front()->alpha == Approx(0.5));
+        REQUIRE(impacts->front()->vertex_index == 0);
+        REQUIRE(impacts->front()->edge_index == 0);
+    }
     SECTION("Edge moving right; point moving left")
     {
         vertices.row(0) << -1, 0;

@@ -17,15 +17,15 @@
 namespace ccd {
 
 // Convert a temporal parameterization to a spatial parameterization.
-bool temporal_parameterization_to_spatial(const Eigen::VectorXd& vertex0,
-    const Eigen::VectorXd& displacement0, const Eigen::VectorXd& edge_vertex1,
-    const Eigen::VectorXd& edge_displacement1,
-    const Eigen::VectorXd& edge_vertex2,
-    const Eigen::VectorXd& edge_displacement2, const double t, double& alpha)
+bool temporal_parameterization_to_spatial(const Eigen::Vector2d& vertex0,
+    const Eigen::Vector2d& displacement0, const Eigen::Vector2d& edge_vertex1,
+    const Eigen::Vector2d& edge_displacement1,
+    const Eigen::Vector2d& edge_vertex2,
+    const Eigen::Vector2d& edge_displacement2, const double t, double& alpha)
 {
-    Eigen::MatrixXd numerator
+    Eigen::Vector2d numerator
         = edge_vertex1 - vertex0 + t * (edge_displacement1 - displacement0);
-    Eigen::MatrixXd denominator = edge_vertex1 - edge_vertex2
+    Eigen::Vector2d denominator = edge_vertex1 - edge_vertex2
         + t * (edge_displacement1 - edge_displacement2);
     assert(numerator.size() == denominator.size());
 
@@ -34,6 +34,11 @@ bool temporal_parameterization_to_spatial(const Eigen::VectorXd& vertex0,
         return true;
     } else if (std::abs(denominator(1)) > EPSILON) {
         alpha = numerator(1) / denominator(1);
+        return true;
+    } else if (numerator.isZero(EPSILON)) {
+        // The points are all equal at a time t.
+        // I can prove n/d = 0/0 <=> p0(t) = p1(t) = p2(t).
+        alpha = 0.5; // Any alpha will work, so I arbitrarily choose 0.5.
         return true;
     }
     return false;
@@ -48,15 +53,14 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
 {
     // In 2D the intersecton of a point and edge moving through time is the a
     // quadratic equation, at^2 + bt + c = 0. A sketch for the geometric proof
-    // is: the point forms a line in space-time and the edge forms a
-    // bilinear surface in space-time, so the impact is an intersection of the
-    // line and bilinear surface. There can possibly 0, 1, 2, or infinite such
+    // is: the point forms a line in space-time and the edge forms a bilinear
+    // surface in space-time, so the impact is an intersection of the line and
+    // bilinear surface. There can possibly 0, 1, 2, or infinite such
     // intersections. Therefore, the function for time of impact is a quadratic
-    // equation.
-    // Importantly, this function only works for a 2D point and edge. In order
-    // to extend this function to 3D one would have to solve a cubic function.
-    // These coefficients were found using `python/intersections.py` which uses
-    // sympy to compute a polynomial in terms of t.
+    // equation. Importantly, this function only works for a 2D point and edge.
+    // In order to extend this function to 3D one would have to solve a cubic
+    // function. These coefficients were found using `python/intersections.py`
+    // which uses sympy to compute a polynomial in terms of t.
     double a
         = displacement0(0) * (edge_displacement2(1) - edge_displacement1(1))
         + displacement0(1) * (edge_displacement1(0) - edge_displacement2(0))
@@ -183,5 +187,4 @@ EdgeVertexImpactsPtr detect_edge_vertex_collisions_hash_map(
     throw NotImplementedError(
         "Hash Map collision detection is not implemented yet.");
 }
-
 }
