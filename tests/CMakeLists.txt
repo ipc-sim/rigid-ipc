@@ -22,15 +22,3 @@ target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} catch warnings::all)
 set(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS ON)
 include(Catch)
 catch_discover_tests(unit_tests)
-
-
-
-if(BUILD_COVERAGE)
-    include(CodeCoverage)
-    APPEND_COVERAGE_COMPILER_FLAGS()
-    SETUP_TARGET_FOR_COVERAGE_LCOV(
-        NAME ${PROJECT_NAME}_coverage EXECUTABLE unit_tests DEPENDS ${PROJECT_NAME})
-# might work too ... but just as bad
-#    SETUP_TARGET_FOR_COVERAGE_LCOV(
-#        NAME ${PROJECT_NAME}_coverage EXECUTABLE ctest)
-endif()
