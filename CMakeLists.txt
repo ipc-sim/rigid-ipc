@@ -94,6 +94,16 @@ target_link_libraries(${PROJECT_NAME}_bin PUBLIC json)
 ################################################################################
 # Tests
 ################################################################################
+if (CODE_COVERAGE)
+    message("Building with code coverage")
+    include(CodeCoverage)
+    add_code_coverage_all_targets()
+
+    target_code_coverage(${PROJECT_NAME})
+    target_code_coverage(${PROJECT_NAME}_bin)
+
+endif()
+
 if(BUILD_UNIT_TESTS)
     # catch - for testing
     download_catch2()
@@ -105,12 +115,7 @@ if(BUILD_UNIT_TESTS)
     add_subdirectory(tests)
 
     if (CODE_COVERAGE)
-        include(CodeCoverage)
-        add_code_coverage_all_targets()
-
-        target_code_coverage(${PROJECT_NAME})
         target_code_coverage(unit_tests AUTO ALL)
-
     endif()
 endif()
 
