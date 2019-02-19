@@ -5,61 +5,213 @@
 
 #include <autodiff/finitediff.hpp>
 #include <autogen/collision_volume.hpp>
+#include <ccd/collision_volume.hpp>
+#include <ccd/collision_volume_diff.hpp>
 
 using namespace ccd;
 
-TEST_CASE("Test Autogen Collision Volume", "[autogen][collision_volume]")
+// ---------------------------------------------------
+// Helper functions
+// ---------------------------------------------------
+/// Compares the volume of different implementations
+/// against the expected volume.
+/// Functions:
+///     - ccd::collision_volume
+///     - ccd::autogen::collision_volume
+///     - ccd::autodiff::collision_volume<double>
+///     - ccd::autodiff::collision_volume<DScalar>
+/// The last two are higher-level functions and will
+/// recompute toi & alpha.
+
+void check_volume(
+    const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk, const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk,
+    const double toi, const double alpha, const double epsilon,
+    const double expected_vol);
+
+/// Compares the autodiff gradient vs finite differences
+void check_gradient(
+    const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk, const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk,
+    const double epsilon);
+
+// ---------------------------------------------------
+// Tests
+// ---------------------------------------------------
+
+TEST_CASE("CollisionVolume", "[collision_volume][no-grad]")
 {
-    Eigen::Vector2d Xi, Xj, Xk, Xl; // positions
-    Eigen::Vector2d Ui, Uj, Uk, Ul; // velocities
+    Eigen::Vector2d Vi, Vj, Vk; // positions
+    Eigen::Vector2d Ui, Uj, Uk; // velocities
     double epsilon = 1.0;
 
-    Eigen::Vector2d* X[4] = { &Xi, &Xj, &Xk, &Xl };
-    Eigen::Vector2d* U[4] = { &Ui, &Uj, &Uk, &Ul };
+    Eigen::Vector2d* V[3] = { &Vi, &Vj, &Vk };
+    Eigen::Vector2d* U[3] = { &Ui, &Uj, &Uk };
 
-    for (size_t i = 0; i < 4; i++) {
-        X[i]->setZero();
+    for (size_t i = 0; i < 3; i++) {
+        V[i]->setZero();
         U[i]->setZero();
     }
 
-    // NOTE: time of collision and lambda are harcoded
-
-    SECTION("Compare gradient with finite diff")
+    SECTION("PerpendicularImpact") //  (alpha=0.5)
     {
-        srand(0);
+        Vi << -1.0, 0.0;
+        Vj << 1.0, 0.0;
+        Vk << 0.0, 1.0;
 
-        // initialize with random data
-        epsilon = 1.0;
-        for (size_t i = 0; i < 4; i++) {
-            (*X[i]) = Eigen::Vector2d::Random();
-            (*U[i]) = Eigen::Vector2d::Random();
+        double edge_length = 2.0;
+        double alpha = 0.5;
+
+        SECTION("VertexMoving")
+        {
+            // touches, intersects, passes-trough
+            auto vel = GENERATE(1.1, 2.0, 4.0);
+            Uk << 0.0, -vel;
+            double toi = 1.0 / vel;
+
+            // volume = - (1.0 - t) * eps * || edge ||
+            double expected_vol = -(1.0 - toi) * epsilon * edge_length;
+            check_volume(Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha, epsilon, expected_vol);
         }
-        Eigen::VectorXd expected;
-        Eigen::VectorXd x(8);
 
-        // wrap our function for easy handling on finite-differences
-        auto f = [Xi, Xj, Xk, Xl, epsilon](const Eigen::VectorXd& U) {
-            Eigen::Vector2d ui = U.segment(0, 2);
-            Eigen::Vector2d uj = U.segment(2, 2);
-            Eigen::Vector2d uk = U.segment(4, 2);
-            Eigen::Vector2d ul = U.segment(6, 2);
-            return ccd::autogen::collision_volume(Xi, Xj, Xk, Xl, ui, uj, uk, ul, epsilon);
-        };
+        SECTION("BothMoving")
+        {
+            // touches, intersects, passes-trough
+            auto vel = GENERATE(1.1, 2.0, 4.0);
+            // moving direction:
+            //  -> ->, -> -, -> <-, - <-, <- <-
+            auto j = GENERATE(0, 1, 2, 3, 4);
 
-        x.segment(0, 2) = Ui;
-        x.segment(2, 2) = Uj;
-        x.segment(4, 2) = Uk;
-        x.segment(6, 2) = Ul;
+            Uk << 0.0, -(3 - j) * vel / 2.0;
+            Ui << 0.0, (j - 1) * vel / 2.0;
+            Uj << 0.0, (j - 1) * vel / 2.0;
 
-        // compare finite differences
-        finite_gradient(x, f, expected);
-        Vector8d actual = ccd::autogen::collision_volume_grad(Xi, Xj, Xk, Xl, Ui, Uj, Uk, Ul, epsilon);
+            double toi = 1.0 / vel;
 
-        REQUIRE(expected.rows() == 8);
-        REQUIRE(actual.rows() == 8);
-        REQUIRE(actual.squaredNorm() != 0.0);
-        REQUIRE(!std::isnan(actual.squaredNorm()));
-        REQUIRE(compare_gradient(actual, expected));
-
+            // volume = - (1.0 - t) * sqrt( eps^2 + u_ij^2 ) * || edge ||
+            double expected_vol = -(1.0 - toi) * std::sqrt(epsilon * epsilon + Ui(1) * Ui(1)) * edge_length;
+            check_volume(Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha, epsilon, expected_vol);
+        }
     }
+}
+
+TEST_CASE("CollisionVolumeGradient", "[collision_volume][gradient]")
+{
+    Eigen::Vector2d Vi, Vj, Vk; // positions
+    Eigen::Vector2d Ui, Uj, Uk; // velocities
+    double epsilon = 1.0;
+
+    Eigen::Vector2d* V[3] = { &Vi, &Vj, &Vk };
+    Eigen::Vector2d* U[3] = { &Ui, &Uj, &Uk };
+
+    for (size_t i = 0; i < 3; i++) {
+        V[i]->setZero();
+        U[i]->setZero();
+    }
+
+    SECTION("PerpendicularImpact") //  (alpha=0.5)
+    {
+        Vi << -1.0, 0.0;
+        Vj << 1.0, 0.0;
+        Vk << 0.0, 1.0;
+
+        SECTION("VertexMoving")
+        {
+            // touches, intersects, passes-trough
+            auto vel = GENERATE(1.1, 2.0, 4.0);
+            Uk << 0.0, -vel;
+            check_gradient(Vi, Vj, Vk, Ui, Uj, Uk, epsilon);
+        }
+
+        SECTION("BothMoving")
+        {
+            // touches, intersects, passes-trough
+            auto vel = GENERATE(1.1, 2.0, 4.0);
+            // moving direction:
+            //  -> ->, -> -, -> <-, - <-, <- <-
+            auto j = GENERATE(0, 1, 2, 3, 4);
+
+            Uk << 0.0, -(3 - j) * vel / 2.0;
+
+            Ui << 0.0, (j - 1) * vel / 2.0;
+            Uj << 0.0, (j - 1) * vel / 2.0;
+
+            check_gradient(Vi, Vj, Vk, Ui, Uj, Uk, epsilon);
+        }
+
+        SECTION("Extending")
+        {
+            auto dx = GENERATE(0.5, 0.0, -0.5);
+            Uk << 0.0, -2.0;
+
+            Ui << -dx, 0.0;
+            Uj << dx, 0.0;
+            check_gradient(Vi, Vj, Vk, Ui, Uj, Uk, epsilon);
+        }
+
+        SECTION("DoubleImpact") // (rotating edge)
+        {
+            // See fixtures/double-impact.json
+
+            Vi << -1.0, 0.0;
+            Vj << 1.0, 0.0;
+            Vk << 0.0, 0.5;
+
+            Ui << 1.6730970740318298, 0.8025388419628143;
+            Uj << -1.616142749786377, -0.6420311331748962;
+            Uk << 0.0, -1.0;
+
+            check_gradient(Vi, Vj, Vk, Ui, Uj, Uk, epsilon);
+        }
+    }
+}
+
+void check_volume(
+    const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk, const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk,
+    const double toi, const double alpha, const double epsilon,
+    const double expected_vol)
+{
+
+    double actual_vol = ccd::collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
+    CHECK(actual_vol == Approx(expected_vol));
+
+    double autogen_vol = ccd::autogen::collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
+    CHECK(autogen_vol == Approx(expected_vol));
+
+    double autodiff_vol = ccd::autodiff::collision_volume(Vi, Vj, Vk, Ui, Uj, Uk, epsilon);
+    CHECK(autodiff_vol == Approx(expected_vol));
+
+    // check with autodiff variables
+    DiffScalarBase::setVariableCount(8);
+
+    DVector2 DUi = dvector(0, Ui);
+    DVector2 DUj = dvector(2, Uj);
+    DVector2 DUk = dvector(4, Uk);
+    DScalar(6, 0.0);
+    DScalar(7, 0.0);
+
+    DScalar dautodiff_vol = ccd::autodiff::collision_volume(Vi, Vj, Vk, DUi, DUj, DUk, epsilon);
+    CHECK(dautodiff_vol.getValue() == Approx(expected_vol));
+}
+
+void check_gradient(
+    const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk, const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk, const double epsilon)
+{
+    Vector8d grad, grad_fd;
+    grad = ccd::autodiff::collision_volume_grad(
+        Vi, Vj, Vk, Ui, Uj, Uk, epsilon);
+    REQUIRE(!std::isnan(grad.squaredNorm()));
+
+    grad_fd = ccd::autodiff::collision_volume_grad_fd(
+        Vi, Vj, Vk, Ui, Uj, Uk, epsilon);
+
+    REQUIRE(!std::isnan(grad_fd.squaredNorm()));
+
+    CHECK(compare_gradient(grad, grad_fd));
 }

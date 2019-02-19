@@ -1,7 +1,8 @@
 #include "time_of_impact.hpp"
 
 #include <autodiff/finitediff.hpp>
-#include <autogen/collision_volume.hpp>
+
+#include <autogen/time_of_impact_coeff.hpp>
 
 namespace ccd {
 namespace autodiff {
@@ -129,7 +130,7 @@ namespace autodiff {
         const Eigen::Vector2d& Uk,
         Vector8d& grad)
     {
-        auto f = [Vi, Vj, Vk](const Eigen::VectorXd& U) {
+        auto f = [&](const Eigen::VectorXd& U) {
             Eigen::Vector2d ui = U.segment(0, 2);
             Eigen::Vector2d uj = U.segment(2, 2);
             Eigen::Vector2d uk = U.segment(4, 2);
