@@ -2,9 +2,9 @@
 // Includes continous collision detection to compute the time of impact.
 // Supported geometry: point vs edge
 
-#include <FixingCollisions/collision_detection.hpp>
-#include <FixingCollisions/degenerate_edge_error.hpp>
-#include <FixingCollisions/not_implemented_error.hpp>
+#include <ccd/collision_detection.hpp>
+#include <ccd/degenerate_edge_error.hpp>
+#include <ccd/not_implemented_error.hpp>
 
 #include <iostream>
 

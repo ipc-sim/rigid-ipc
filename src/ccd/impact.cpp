@@ -1,5 +1,5 @@
 // Data structures for impacts between different geometry.
-#include <FixingCollisions/impact.hpp>
+#include <ccd/impact.hpp>
 
 namespace ccd {
 

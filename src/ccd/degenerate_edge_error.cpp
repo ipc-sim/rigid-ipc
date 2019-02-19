@@ -1,4 +1,4 @@
-#include <FixingCollisions/degenerate_edge_error.hpp>
+#include <ccd/degenerate_edge_error.hpp>
 
 namespace ccd {
 DegenerateEdgeError::DegenerateEdgeError(const char* error_message)

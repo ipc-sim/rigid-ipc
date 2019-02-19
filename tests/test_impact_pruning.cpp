@@ -3,8 +3,8 @@
 
 #include <catch.hpp>
 
-#include <FixingCollisions/impact.hpp>
-#include <FixingCollisions/prune_impacts.hpp>
+#include <ccd/impact.hpp>
+#include <ccd/prune_impacts.hpp>
 
 using namespace ccd;
 

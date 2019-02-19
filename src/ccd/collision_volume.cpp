@@ -1,4 +1,4 @@
-#include <FixingCollisions/collision_volume.hpp>
+#include <ccd/collision_volume.hpp>
 
 namespace ccd {
 

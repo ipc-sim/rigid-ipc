@@ -2,10 +2,11 @@
 
 #include "state.hpp"
 
-#include <FixingCollisions/collision_volume.hpp>
-#include <FixingCollisions/prune_impacts.hpp>
-#include <read_scene.hpp>
-#include <write_scene.hpp>
+#include <ccd/collision_volume.hpp>
+#include <ccd/prune_impacts.hpp>
+
+#include <io/read_scene.hpp>
+#include <io/write_scene.hpp>
 
 namespace ccd {
 State::State()
@@ -89,7 +90,6 @@ void State::detect_edge_vertex_collisions()
         EdgeVertexImpact::compare_impacts_by_time);
 }
 
-// Full Pipeline
 void State::run_full_pipeline()
 {
     this->detect_edge_vertex_collisions();
@@ -98,7 +98,7 @@ void State::run_full_pipeline()
             edges, impacts);
     auto e_impacts = ccd::prune_impacts(ee_impacts);
     for (auto e_impact : *e_impacts) {
-        auto edge = edges.row(e_impact.first);
+//        auto edge = edges.row(e_impact.first);
         // TODO: Link up the volume and gradient of volume computation
         volumes(e_impact.first) = ccd::collision_volume(
             vertices, displacements, edges, e_impact.second, 0.1, volume_grad);

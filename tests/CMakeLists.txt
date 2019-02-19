@@ -6,8 +6,7 @@ set(test_sources
     test_ccd.cpp
     test_impact_pruning.cpp
     test_collision_volume.cpp
-    test_autogen.cpp
-    test_compute_edge_vertex_time_of_impact.cpp
+    test_time_of_impact.cpp
 )
 
 add_executable(unit_tests ${test_sources})

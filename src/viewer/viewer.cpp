@@ -4,8 +4,9 @@
 #include <igl/opengl/MeshGL.h>
 #include <igl/unproject_onto_mesh.h>
 
-#include "read_scene.hpp"
-#include <FixingCollisions/not_implemented_error.hpp>
+#include <ccd/not_implemented_error.hpp>
+
+#include <io/read_scene.hpp>
 
 namespace ccd {
 

@@ -1,6 +1,6 @@
 #include <igl/opengl/glfw/Viewer.h>
 
-#include "viewer.hpp"
+#include <viewer/viewer.hpp>
 
 int main(int argc, char* argv[])
 {
