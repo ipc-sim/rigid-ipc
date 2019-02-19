@@ -346,6 +346,16 @@ void ViewerMenu::detect_edge_vertex_collisions()
     }
 }
 
+void ViewerMenu::compute_collision_volumes()
+{
+    try {
+        state.compute_collision_volumes();
+    } catch (NotImplementedError e) {
+        last_action_message = e.what();
+        last_action_success = false;
+    }
+}
+
 void ViewerMenu::goto_impact(const int impact)
 {
     if (impact == -1) {
@@ -477,7 +487,6 @@ void ViewerMenu::add_graph_vertex(const unsigned long data_id,
     const Eigen::MatrixXd& vertices, const Eigen::RowVector2d& vertex,
     const Eigen::RowVector3d& color)
 {
-
     viewer->data_list[data_id].set_vertices(vertices);
     Eigen::MatrixXd nz(state.vertices.rows(), 3);
     nz.col(2).setConstant(1.0);

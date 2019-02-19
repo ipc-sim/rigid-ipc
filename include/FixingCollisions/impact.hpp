@@ -10,18 +10,27 @@ namespace ccd {
 
 // Forward declarations and typedefs
 class Impact;
+/** Pointer to an impact. */
 typedef std::shared_ptr<Impact> ImpactPtr;
+/** A vector of impact pointers. */
 typedef std::vector<ImpactPtr> Impacts;
+/** A pointer to a vector of impact pointers. */
 typedef std::shared_ptr<Impacts> ImpactsPtr;
 
 class EdgeVertexImpact;
+/** Pointer to an edge-vertex impact. */
 typedef std::shared_ptr<EdgeVertexImpact> EdgeVertexImpactPtr;
+/** A vector of edge-vertex impact pointers. */
 typedef std::vector<EdgeVertexImpactPtr> EdgeVertexImpacts;
+/** A pointer to a vector of edge-vertex impact pointers. */
 typedef std::shared_ptr<EdgeVertexImpacts> EdgeVertexImpactsPtr;
 
 class EdgeEdgeImpact;
+/** Pointer to an edge-edge impact. */
 typedef std::shared_ptr<EdgeEdgeImpact> EdgeEdgeImpactPtr;
+/** A vector of edge-edge impact pointers. */
 typedef std::vector<EdgeEdgeImpactPtr> EdgeEdgeImpacts;
+/** A pointer to a vector of edge-edge impact pointers. */
 typedef std::shared_ptr<EdgeEdgeImpacts> EdgeEdgeImpactsPtr;
 
 /** Class representing an abstract impact. */

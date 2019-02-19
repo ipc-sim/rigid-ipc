@@ -17,13 +17,15 @@ enum ViewerEditMode {
     add_chain,
 };
 
-static const std::array<ViewerEditMode, 4> ViewerEditModeAll = { { select, translate, add_node, add_chain } };
-static const std::array<std::string, 4> ViewerEditModeNames = { { "Select", "Translate", "Add Node", "Add Chain" } };
+static const std::array<ViewerEditMode, 4> ViewerEditModeAll
+    = { { select, translate, add_node, add_chain } };
+static const std::array<std::string, 4> ViewerEditModeNames
+    = { { "Select", "Translate", "Add Node", "Add Chain" } };
 
-
-static const std::array<DetectionMethod, 2> DetectionMethodAll = { { BRUTE_FORCE} };
-static const std::array<std::string, 2> DetectionMethodNames = { { "BRUTE_FORCE"} };
-
+static const std::array<DetectionMethod, 2> DetectionMethodAll
+    = { { BRUTE_FORCE } };
+static const std::array<std::string, 2> DetectionMethodNames
+    = { { "BRUTE_FORCE" } };
 
 class ViewerMenu : public igl::opengl::glfw::imgui::ImGuiMenu {
 private:
@@ -44,7 +46,8 @@ public:
     void load_state();
 
     void resize_canvas();
-    void clicked_on_canvas(const int button, const int modifier, const Eigen::RowVector2d& coord);
+    void clicked_on_canvas(
+        const int button, const int modifier, const Eigen::RowVector2d& coord);
     void recolor_vertices();
     void redraw_vertices();
     void redraw_displacements();
@@ -52,14 +55,19 @@ public:
 
     // CRUD actions
     void connect_selected_vertices();
-    void clicked__select(const int button, const int modifier, const Eigen::RowVector2d& coord);
-    void clicked__translate(const int button, const int modifier, const Eigen::RowVector2d& coord);
-    void clicked__add_node(const int button, const int modifier, const Eigen::RowVector2d& coord);
-    void clicked__add_chain(const int button, const int modifier, const Eigen::RowVector2d& coord);
+    void clicked__select(
+        const int button, const int modifier, const Eigen::RowVector2d& coord);
+    void clicked__translate(
+        const int button, const int modifier, const Eigen::RowVector2d& coord);
+    void clicked__add_node(
+        const int button, const int modifier, const Eigen::RowVector2d& coord);
+    void clicked__add_chain(
+        const int button, const int modifier, const Eigen::RowVector2d& coord);
     void undo();
 
     // CCD actions
     void detect_edge_vertex_collisions();
+    void compute_collision_volumes();
     void goto_impact(const int impact);
 
     // menu windows
@@ -69,24 +77,37 @@ public:
     void draw_ccd_steps();
 
     // utils functions
-    void update_vector_field(const unsigned long data_id, const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta);
-    void extend_vector_field(const unsigned long data_id, const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta, const int last, const Eigen::RowVector3d& color);
-    void update_graph(const unsigned long data_id, const Eigen::MatrixXd& nodes, const Eigen::MatrixXi& edges);
-    void add_graph_vertex(const unsigned long data_id, const Eigen::MatrixXd& vertices, const Eigen::RowVector2d& vertex, const Eigen::RowVector3d& color);
-    void add_graph_edges(const unsigned long data_id, const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& new_edges, const Eigen::RowVector3d& color);
-    void color_points(const unsigned long data_id, const Eigen::RowVector3d& color);
-    void highlight_points(const unsigned long data_id, const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl);
+    void update_vector_field(const unsigned long data_id,
+        const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta);
+    void extend_vector_field(const unsigned long data_id,
+        const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta, const int last,
+        const Eigen::RowVector3d& color);
+    void update_graph(const unsigned long data_id, const Eigen::MatrixXd& nodes,
+        const Eigen::MatrixXi& edges);
+    void add_graph_vertex(const unsigned long data_id,
+        const Eigen::MatrixXd& vertices, const Eigen::RowVector2d& vertex,
+        const Eigen::RowVector3d& color);
+    void add_graph_edges(const unsigned long data_id,
+        const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& new_edges,
+        const Eigen::RowVector3d& color);
+    void color_points(
+        const unsigned long data_id, const Eigen::RowVector3d& color);
+    void highlight_points(const unsigned long data_id,
+        const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl);
 
     // fixed on libigl viewer functions
-    void viewer_set_edges(const unsigned long data_id, const Eigen::MatrixXd& P, const Eigen::MatrixXi& E, const Eigen::MatrixXd& C);
+    void viewer_set_edges(const unsigned long data_id, const Eigen::MatrixXd& P,
+        const Eigen::MatrixXi& E, const Eigen::MatrixXd& C);
 
     State state;
     std::vector<State> state_history;
 
     ViewerEditMode edit_mode;
 
-    Eigen::RowVector3d color_vtx, color_edge, color_displ, color_grad, color_canvas, color_sl;
-    unsigned long canvas_data_id, surface_data_id, displ_data_id, gradient_data_id;
+    Eigen::RowVector3d color_vtx, color_edge, color_displ, color_grad,
+        color_canvas, color_sl;
+    unsigned long canvas_data_id, surface_data_id, displ_data_id,
+        gradient_data_id;
 
     Eigen::MatrixXd vertices_colors;
     Eigen::MatrixXd canvas_nodes;

@@ -41,6 +41,7 @@ public:
 
     // ----------------------------------- SCENE CCD
     void detect_edge_vertex_collisions();
+    void compute_collision_volumes();
     void run_full_pipeline();
 
     // --------------------------------------- UI
