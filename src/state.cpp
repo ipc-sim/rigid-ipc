@@ -1,20 +1,13 @@
 #include <algorithm> // std::sort
+#include <iostream>
 
 #include "state.hpp"
 
-<<<<<<< HEAD
-#include <FixingCollisions/collision_volume.hpp>
-#include <FixingCollisions/prune_impacts.hpp>
-#include <iostream>
-#include <read_scene.hpp>
-#include <write_scene.hpp>
-=======
 #include <ccd/collision_volume.hpp>
 #include <ccd/prune_impacts.hpp>
 
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
->>>>>>> 8cdb2fb1a84b4512da93632bc8ffa01937f5e049
 
 namespace ccd {
 State::State()
@@ -98,14 +91,13 @@ void State::detect_edge_vertex_collisions()
         EdgeVertexImpact::compare_impacts_by_time);
 }
 
-<<<<<<< HEAD
 void State::compute_collision_volumes()
 {
     EdgeEdgeImpactsPtr ee_impacts
         = ccd::EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
             this->edges, this->impacts);
     auto pruned_impacts = ccd::prune_impacts(ee_impacts);
-    std::cout << "# of Impacts:" << pruned_impacts->size() << std::endl;
+    std::cout << "# of Impacts: " << pruned_impacts->size() << std::endl;
     for (auto impact : *pruned_impacts) {
         // impact = (edge_index, edge_edge_collision)
         this->volumes(impact.first) = ccd::collision_volume(vertices,
@@ -120,21 +112,6 @@ void State::run_full_pipeline()
 {
     this->detect_edge_vertex_collisions();
     this->compute_collision_volumes();
-=======
-void State::run_full_pipeline()
-{
-    this->detect_edge_vertex_collisions();
-    auto ee_impacts
-        = ccd::EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
-            edges, impacts);
-    auto e_impacts = ccd::prune_impacts(ee_impacts);
-    for (auto e_impact : *e_impacts) {
-//        auto edge = edges.row(e_impact.first);
-        // TODO: Link up the volume and gradient of volume computation
-        volumes(e_impact.first) = ccd::collision_volume(
-            vertices, displacements, edges, e_impact.second, 0.1, volume_grad);
-    }
->>>>>>> 8cdb2fb1a84b4512da93632bc8ffa01937f5e049
 }
 
 }
