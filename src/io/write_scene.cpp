@@ -1,4 +1,4 @@
-#include <write_scene.hpp>
+#include "io/write_scene.hpp"
 
 #include <fstream>
 #include <iomanip> // std::setw

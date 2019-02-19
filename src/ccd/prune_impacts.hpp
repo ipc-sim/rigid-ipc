@@ -4,7 +4,7 @@
 
 #include <unordered_map>
 
-#include <FixingCollisions/impact.hpp>
+#include <ccd/impact.hpp>
 
 namespace ccd {
 

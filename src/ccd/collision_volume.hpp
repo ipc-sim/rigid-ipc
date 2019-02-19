@@ -2,7 +2,8 @@
 #define CCD_COLLISION_VOLUME_H
 
 #include <Eigen/Core>
-#include <FixingCollisions/collision_detection.hpp>
+
+#include <ccd/collision_detection.hpp>
 
 namespace ccd {
 

@@ -2,7 +2,7 @@
 
 #include <catch.hpp>
 
-#include <FixingCollisions/collision_detection.hpp>
+#include <ccd/collision_detection.hpp>
 
 using namespace ccd;
 

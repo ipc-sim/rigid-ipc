@@ -4,8 +4,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
-#include <FixingCollisions/collision_detection.hpp>
-#include <FixingCollisions/impact.hpp>
+#include <ccd/collision_detection.hpp>
+#include <ccd/impact.hpp>
 
 namespace ccd {
 

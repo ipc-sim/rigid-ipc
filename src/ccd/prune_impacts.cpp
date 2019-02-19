@@ -1,5 +1,5 @@
 // Prune impacts based on earliest contacts.
-#include <FixingCollisions/prune_impacts.hpp>
+#include <ccd/prune_impacts.hpp>
 
 namespace ccd {
 

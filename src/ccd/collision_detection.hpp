@@ -9,7 +9,7 @@ Supported geometry: point vs edge
 
 #include <Eigen/Core>
 
-#include <FixingCollisions/impact.hpp>
+#include <ccd/impact.hpp>
 
 namespace ccd {
 
