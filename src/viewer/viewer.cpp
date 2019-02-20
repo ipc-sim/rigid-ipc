@@ -363,12 +363,12 @@ void ViewerMenu::goto_impact(const int impact)
         state.time = 0.0;
         state.current_impact = impact;
         redraw_at_time();
-    } else if (state.impacts != nullptr && state.impacts->size() > 0) {
+    } else if (state.ev_impacts != nullptr && state.ev_impacts->size() > 0) {
         state.current_impact = impact;
-        state.current_impact %= state.impacts->size();
+        state.current_impact %= state.ev_impacts->size();
 
         state.time
-            = float(state.impacts->at(size_t(state.current_impact))->time);
+            = float(state.ev_impacts->at(size_t(state.current_impact))->time);
         redraw_at_time();
     }
 }

@@ -15,7 +15,7 @@ bool compare_gradient(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
 
     for (long d = 0; d < x.rows(); ++d) {
         double scale = std::max(std::max(fabs(x[d]), fabs(y[d])), double(1.0));
-        if (fabs(x[d] - y[d]) > 1e-6 * scale)
+        if (fabs(x[d] - y[d]) > 1e-4 * scale)
             return false;
     }
     return true;
@@ -26,7 +26,7 @@ void finite_gradient(const Eigen::VectorXd& x,
     std::function<double(const Eigen::VectorXd&)> value, Eigen::VectorXd& grad,
     AccuracyOrder accuracy)
 {
-    const double eps = 2.2204e-6;
+    const double eps = 1.0e-8;
     // Create an array of the coefficients for finite differences.
     // See: https://en.wikipedia.org/wiki/Finite_difference_coefficient
     // clang-format off

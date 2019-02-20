@@ -137,10 +137,10 @@ void ViewerMenu::draw_ccd_steps()
             detect_edge_vertex_collisions();
         }
 
-        if (state.impacts != nullptr && state.impacts->size()) {
+        if (state.ev_impacts != nullptr && state.ev_impacts->size()) {
             int impact_id = state.current_impact + 1;
             ImGui::Text("impact %i/%i", state.current_impact + 1,
-                int(state.impacts->size()));
+                int(state.ev_impacts->size()));
 
             if (ImGui::InputInt("", &impact_id)) {
                 goto_impact(impact_id - 1);
@@ -152,7 +152,7 @@ void ViewerMenu::draw_ccd_steps()
         }
         ImGui::Separator();
 
-        if (state.impacts != nullptr && state.impacts->size()) {
+        if (state.ev_impacts != nullptr && state.ev_impacts->size()) {
             if (ImGui::Button("Compute Collision Volumes", ImVec2(-1, 0))) {
                 compute_collision_volumes();
             }

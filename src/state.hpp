@@ -9,6 +9,9 @@
 
 namespace ccd {
 
+/**
+ * @brief The State class keeps the full state of the UI and the collisions.
+ */
 class State {
 public:
     static const int kDIM = 2;
@@ -16,17 +19,27 @@ public:
     State();
     virtual ~State() = default;
 
+    ///@brief #V,2 vertices positions
     Eigen::MatrixX2d vertices;
+    ///@brief #E,2 vertices connnectivity
     Eigen::MatrixX2i edges;
+    ///@brief #V,2 vertices displacements
     Eigen::MatrixX2d displacements;
+
+    ///@brief All edge-vertex contact
+    EdgeVertexImpactsPtr ev_impacts;
+    ///@brief #E,1 contact volume for each edge
     Eigen::VectorXd volumes;
+    ///@brief #V,NC contact gradient for each contact
     Eigen::MatrixX2d volume_grad;
 
-    EdgeVertexImpactsPtr impacts;
+    ///@brief method to use for contact detection
     DetectionMethod detection_method;
-    double epsilon = 0.0;
+    ///@brief epsilon use on volume computation
+    double epsilon = 1.0;
 
-    // ----------------------------------- SCENE CRUD
+    // SCENE CRUD
+    // ----------------------------------------------------------------------
     void load_scene(const std::string filename);
     void save_scene(const std::string filename);
 
@@ -39,20 +52,22 @@ public:
     void move_displacement(
         const int vertex_idx, const Eigen::RowVector2d& delta);
 
-    // ----------------------------------- SCENE CCD
+    // SCENE CCD
+    // ----------------------------------------------------------------------
     void detect_edge_vertex_collisions();
     void compute_collision_volumes();
     void run_full_pipeline();
 
-    // --------------------------------------- UI
-    // Background rectangle to detect clicks
+    // UI
+    // ----------------------------------------------------------------------
+    /// @brief Background rectangle to detect clicks
     double canvas_width, canvas_height;
-    // We show the scene at time=`time` between 0 and 1
+    /// @brief We show the scene at time=`time` between 0 and 1
     float time;
-    // Current user-selection of vertex and displacement points
+    /// @brief Current user-selection of vertex and displacement points
     std::vector<int> selected_points, selected_displacements;
-    // Use for any functionallity that requires showing only one impact
-    // e.g goto time_of_impact
+    /// @brief Use for any functionallity that requires showing only one impact
+    /// e.g goto time_of_impact
     int current_impact;
 };
 

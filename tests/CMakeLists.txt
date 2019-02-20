@@ -7,9 +7,11 @@ set(test_sources
     test_impact_pruning.cpp
     test_collision_volume.cpp
     test_time_of_impact.cpp
+    collision_generator.cpp
 )
 
 add_executable(unit_tests ${test_sources})
+target_include_directories(unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 foreach(source IN ITEMS ${test_sources})
    source_group("tests" FILES "${source}")
