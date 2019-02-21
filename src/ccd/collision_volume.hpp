@@ -14,6 +14,7 @@ namespace ccd {
 *     @param displacements    : All vertices displacements.
 *     @param edges            : Edges as pair of vertex indices
 *     @param impact           : An impact between two edges.
+*     @param edge_id          : The edge for which we are computing the volume
 *     @param epsilon          : The time scale used for minimal volume.
 *
 * @return                     : The space-time interference volume.
@@ -23,6 +24,7 @@ double collision_volume(
     const Eigen::MatrixX2d& displacements,
     const Eigen::MatrixX2i& edges,
     const EdgeEdgeImpactPtr impact,
+    const int edge_id,
     const double epsilon);
 
 /**

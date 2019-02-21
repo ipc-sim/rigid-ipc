@@ -49,9 +49,10 @@ public:
     void clicked_on_canvas(
         const int button, const int modifier, const Eigen::RowVector2d& coord);
     void recolor_vertices();
-    void redraw_vertices();
+    void redraw_scene();
     void redraw_displacements();
     void redraw_at_time();
+    void redraw_volumes();
 
     // CRUD actions
     void connect_selected_vertices();
@@ -79,25 +80,34 @@ public:
     // utils functions
     void update_vector_field(const unsigned long data_id,
         const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta);
+
     void extend_vector_field(const unsigned long data_id,
         const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta, const int last,
         const Eigen::RowVector3d& color);
-    void update_graph(const unsigned long data_id, const Eigen::MatrixXd& nodes,
-        const Eigen::MatrixXi& edges);
+
+    void update_graph(const unsigned long data_id,
+        const Eigen::MatrixXd& nodes, const Eigen::MatrixXi& edges);
+
     void add_graph_vertex(const unsigned long data_id,
         const Eigen::MatrixXd& vertices, const Eigen::RowVector2d& vertex,
         const Eigen::RowVector3d& color);
+
     void add_graph_edges(const unsigned long data_id,
         const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& new_edges,
         const Eigen::RowVector3d& color);
-    void color_points(
-        const unsigned long data_id, const Eigen::RowVector3d& color);
+
+    void color_points(const unsigned long data_id,
+        const Eigen::RowVector3d& color);
+
     void highlight_points(const unsigned long data_id,
         const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl);
 
     // fixed on libigl viewer functions
-    void viewer_set_edges(const unsigned long data_id, const Eigen::MatrixXd& P,
-        const Eigen::MatrixXi& E, const Eigen::MatrixXd& C);
+    void viewer_set_edges(const unsigned long data_id,
+        const Eigen::MatrixXd& P, const Eigen::MatrixXi& E, const Eigen::MatrixXd& C);
+
+    void viewer_set_vertices(const unsigned long data_id,
+        const Eigen::MatrixXd& V);
 
     State state;
     std::vector<State> state_history;
@@ -106,10 +116,12 @@ public:
 
     Eigen::RowVector3d color_vtx, color_edge, color_displ, color_grad,
         color_canvas, color_sl;
-    unsigned long canvas_data_id, surface_data_id, displ_data_id,
-        gradient_data_id;
+    unsigned long canvas_data_id;
+    unsigned long surface_data_id;
+    unsigned long displ_data_id;
+    unsigned long gradient_data_id;
+    unsigned long volume_data_id;
 
-    Eigen::MatrixXd vertices_colors;
     Eigen::MatrixXd canvas_nodes;
     Eigen::MatrixXi canvas_faces;
 

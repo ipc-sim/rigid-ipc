@@ -100,7 +100,7 @@ void ViewerMenu::draw_ui_settings()
 
         ImGui::Checkbox(
             "show surface", &(viewer->data_list[surface_data_id].show_overlay));
-        // TODO: This option crashes the viewer
+
         ImGui::Checkbox("show vertex id",
             &(viewer->data_list[surface_data_id].show_vertid));
         ImGui::InputFloat("point size ##surface",
@@ -110,6 +110,12 @@ void ViewerMenu::draw_ui_settings()
             &(viewer->data_list[displ_data_id].show_overlay));
         ImGui::InputFloat("point size ##displ",
             &(viewer->data_list[displ_data_id].point_size));
+
+        ImGui::Checkbox("show volumes",
+            &(viewer->data_list[volume_data_id].show_faces));
+        ImGui::Checkbox("show volumes border",
+            &(viewer->data_list[volume_data_id].show_lines));
+
         ImGui::Checkbox("show gradient",
             &(viewer->data_list[gradient_data_id].show_overlay));
 
@@ -137,7 +143,7 @@ void ViewerMenu::draw_ccd_steps()
             detect_edge_vertex_collisions();
         }
 
-        if (state.ev_impacts != nullptr && state.ev_impacts->size()) {
+        if (state.ev_impacts != nullptr && state.ev_impacts->size() > 0) {
             int impact_id = state.current_impact + 1;
             ImGui::Text("impact %i/%i", state.current_impact + 1,
                 int(state.ev_impacts->size()));

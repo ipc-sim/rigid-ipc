@@ -30,6 +30,9 @@ public:
     EdgeVertexImpactsPtr ev_impacts;
     ///@brief #E,1 contact volume for each edge
     Eigen::VectorXd volumes;
+    ///@brief #E,1 impact for each edge
+    Eigen::Matrix<EdgeEdgeImpactPtr, Eigen::Dynamic, 1> edges_impact;
+
     ///@brief #V,NC contact gradient for each contact
     Eigen::MatrixX2d volume_grad;
 
@@ -42,6 +45,7 @@ public:
     // ----------------------------------------------------------------------
     void load_scene(const std::string filename);
     void save_scene(const std::string filename);
+    void reset_scene();
 
     void add_vertex(const Eigen::RowVector2d& vertex);
     void add_edges(const Eigen::MatrixX2i& edges);
@@ -51,6 +55,8 @@ public:
     void move_vertex(const int vertex_idx, const Eigen::RowVector2d& delta);
     void move_displacement(
         const int vertex_idx, const Eigen::RowVector2d& delta);
+
+    void reset_impacts();
 
     // SCENE CCD
     // ----------------------------------------------------------------------
@@ -69,6 +75,8 @@ public:
     /// @brief Use for any functionallity that requires showing only one impact
     /// e.g goto time_of_impact
     int current_impact;
+
+    double min_edge_width;
 };
 
 }

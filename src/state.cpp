@@ -14,14 +14,25 @@ State::State()
     : canvas_width(10)
     , canvas_height(10)
     , current_impact(-1)
+    , min_edge_width(0.0)
 {
 }
 
 void State::load_scene(std::string filename)
 {
     io::read_scene(filename, vertices, edges, displacements);
+
+    reset_scene();
+}
+
+void State::reset_scene()
+{
     volumes.resize(edges.rows());
     volumes.setZero();
+
+    edges_impact.resize(edges.rows());
+    edges_impact.setConstant(nullptr);
+
     volume_grad.resize(vertices.rows(), kDIM);
     volume_grad.setZero();
 
@@ -50,6 +61,9 @@ void State::add_vertex(const Eigen::RowVector2d& position)
 
     volume_grad.conservativeResize(lastid + 1, kDIM);
     volume_grad.row(lastid).setConstant(0.0);
+
+    reset_impacts();
+
 }
 
 void State::add_edges(const Eigen::MatrixX2i& new_edges)
@@ -63,30 +77,45 @@ void State::add_edges(const Eigen::MatrixX2i& new_edges)
 
     // Add a new rows to the volume vector
     volumes.conservativeResize(lastid + new_edges.rows());
-    // Add zero volumes for each new edge
-    for (unsigned i = 0; i < new_edges.rows(); ++i)
-        volumes(lastid + i) = 0.0;
+    edges_impact.conservativeResize(lastid + new_edges.rows());
+
+    reset_impacts();
 }
 
 void State::set_vertex_position(
     const int vertex_idx, const Eigen::RowVector2d& position)
 {
     vertices.row(vertex_idx) = position;
+    reset_impacts();
 }
 
 void State::move_vertex(const int vertex_idx, const Eigen::RowVector2d& delta)
 {
     vertices.row(vertex_idx) += delta;
+    reset_impacts();
 }
 void State::move_displacement(
     const int vertex_idx, const Eigen::RowVector2d& delta)
 {
     displacements.row(vertex_idx) += delta;
+    reset_impacts();
 }
 
 // -----------------------------------------------------------------------------
 // CCD
 // -----------------------------------------------------------------------------
+void State::reset_impacts(){
+
+    volumes.setZero();
+    volume_grad.setZero();
+    edges_impact.setConstant(nullptr);
+
+    if (ev_impacts != nullptr){
+        ev_impacts->clear();
+    }
+
+}
+
 void State::detect_edge_vertex_collisions()
 {
     ev_impacts = ccd::detect_edge_vertex_collisions(
@@ -108,13 +137,14 @@ void State::compute_collision_volumes()
         int edge_id = impact.first;
         EdgeEdgeImpactPtr ee_impact = impact.second;
 
+        this->edges_impact[edge_id] = ee_impact;
         this->volumes(edge_id) = ccd::collision_volume(
-            vertices, displacements, edges, ee_impact, this->epsilon);
+            vertices, displacements, edges, ee_impact, edge_id, this->epsilon);
 
-        // TODO: Add gradient of volume computation
     }
 
-    std::cout << "Collision Volumes:\n" << (this->volumes) << std::endl;
+    std::cout << "Collision Volumes:\n"
+              << (this->volumes) << std::endl;
 }
 
 void State::run_full_pipeline()

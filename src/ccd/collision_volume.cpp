@@ -7,9 +7,18 @@ double collision_volume(
     const Eigen::MatrixX2d& displacements,
     const Eigen::MatrixX2i& edges,
     const EdgeEdgeImpactPtr impact,
+    const int edge_id,
     const double epsilon)
 {
-    Eigen::Vector2i e_ij = edges.row(impact->impacted_edge_index);
+    double alpha;
+    if (edge_id == impact->impacted_edge_index) {
+        alpha = impact->impacted_alpha;
+    } else if (edge_id == impact->impacting_edge_index) {
+        alpha = impact->impacting_alpha;
+    } else {
+        return 0;
+    }
+    Eigen::Vector2i e_ij = edges.row(edge_id);
 
     // we get the position and velocity of the edge vertices
     Eigen::Vector2d Vi = vertices.row(e_ij(0));
@@ -18,10 +27,10 @@ double collision_volume(
     Eigen::Vector2d Uj = displacements.row(e_ij(1));
 
     double toi = impact->time;
-    double alpha = impact->impacted_alpha;
 
     return collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
 }
+
 
 double collision_volume(
     const Eigen::Vector2d& Vi,
@@ -50,7 +59,7 @@ double collision_volume(
     assert(epsilon > 0 || std::abs(U_ij_dot_e_rot90_toi) > 0);
 
     // volume = (1-t)\sqrt{\epsilon^2 \|e(t)\|^2 + (U_{ij} \cdot e(t)^\perp)^2}
-    double volume = - (1.0 - toi)
+    double volume = -(1.0 - toi)
         * std::sqrt(epsilon * epsilon * e_length_toi * e_length_toi
               + U_ij_dot_e_rot90_toi * U_ij_dot_e_rot90_toi);
 
