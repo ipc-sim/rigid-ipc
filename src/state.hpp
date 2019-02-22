@@ -28,13 +28,18 @@ public:
 
     ///@brief All edge-vertex contact
     EdgeVertexImpactsPtr ev_impacts;
+
+    ///@brief All edge-edge contact
+    EdgeEdgeImpactsPtr ee_impacts;
+
     ///@brief #E,1 contact volume for each edge
     Eigen::VectorXd volumes;
+
     ///@brief #E,1 impact for each edge
     Eigen::Matrix<EdgeEdgeImpactPtr, Eigen::Dynamic, 1> edges_impact;
 
-    ///@brief #V,NC contact gradient for each contact
-    Eigen::MatrixX2d volume_grad;
+    ///@brief #2V,NV contact gradient for each volume
+    Eigen::MatrixXd volume_grad;
 
     ///@brief method to use for contact detection
     DetectionMethod detection_method;
@@ -58,6 +63,9 @@ public:
 
     void reset_impacts();
 
+    Eigen::MatrixX2d get_volume_grad();
+    Eigen::MatrixX2d get_vertex_at_time();
+
     // SCENE CCD
     // ----------------------------------------------------------------------
     void detect_edge_vertex_collisions();
@@ -72,9 +80,12 @@ public:
     float time;
     /// @brief Current user-selection of vertex and displacement points
     std::vector<int> selected_points, selected_displacements;
-    /// @brief Use for any functionallity that requires showing only one impact
-    /// e.g goto time_of_impact
-    int current_impact;
+
+    /// @brief Use for any functionallity that requires showing only one ev impact
+    int current_ev_impact;
+
+    /// @brief Use for any functionallity that requires showing only one ee impact
+    int current_ee_impact;
 
     double min_edge_width;
 };

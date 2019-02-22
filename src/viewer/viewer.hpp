@@ -53,6 +53,7 @@ public:
     void redraw_displacements();
     void redraw_at_time();
     void redraw_volumes();
+    void redraw_volumes_grad();
 
     // CRUD actions
     void connect_selected_vertices();
@@ -69,7 +70,8 @@ public:
     // CCD actions
     void detect_edge_vertex_collisions();
     void compute_collision_volumes();
-    void goto_impact(const int impact);
+    void goto_ev_impact(const int ev_impact);
+    void goto_ee_impact(const int ee_impact);
 
     // menu windows
     void draw_io();
@@ -128,9 +130,9 @@ public:
     std::string scene_file;
     std::string default_scene = R"(
                                 {
-                                    "vertices":[[-1.0, 0.0],[1.0,0.0],[0.0,0.5]],
-                                    "edges":[[0,1]],
-                                    "displacements":[[0.0,0.5],[0.0,0.5],[0.0,-1.0]]
+                                "vertices":[[-1.0, 0.0],[1.0,0.0],[0.0,0.5],[0.0,1.5]],
+                                "edges":[[0,1],[2,3]],
+                                "displacements":[[0.0,0.5],[0.0,0.5],[0.0,-1.0],[0.0,-1.0]]
                                 })";
     std::string last_action_message;
     bool last_action_success;

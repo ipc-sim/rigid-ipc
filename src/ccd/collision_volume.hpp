@@ -27,6 +27,15 @@ double collision_volume(
     const int edge_id,
     const double epsilon);
 
+void collision_volume_grad(
+    const Eigen::MatrixX2d& vertices,
+    const Eigen::MatrixX2d& displacements,
+    const Eigen::MatrixX2i& edges,
+    const EdgeEdgeImpactPtr impact,
+    const int edge_id,
+    const double epsilon,
+    Eigen::VectorXd& grad);
+
 /**
 * Compute the volume of intersection for an edge given a time
 * of intersection (toi) and position of intersection (alpha)
