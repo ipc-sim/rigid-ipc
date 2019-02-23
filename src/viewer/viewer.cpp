@@ -14,12 +14,12 @@ namespace ccd {
 
 ViewerMenu::ViewerMenu(std::string scene_file)
     : edit_mode(ViewerEditMode::select)
-    , color_vtx(1.0, 0.0, 0.0)
-    , color_edge(1.0, 0.0, 0.0)
-    , color_displ(0.0, 1.0, 0.0)
-    , color_grad(0.0, 0.0, 1.0)
+    , color_vtx(1.0, 0.0, 0.0) // #ff0000
+    , color_edge(1.0, 0.0, 0.0) // #ff0000
+    , color_displ(0.0, 1.0, 0.0) // #00ff00
+    , color_grad(1.0, 0.75, 0.0) // #ffc000
     , color_canvas(0.3, 0.3, 0.5) // #4c4c80
-    , color_sl(1.0, 1.0, 0.0)
+    , color_sl(1.0, 1.0, 0.0) // #ffff00
     , scene_file(scene_file)
     , last_action_message("")
     , last_action_success(true)
@@ -368,7 +368,6 @@ void ViewerMenu::detect_edge_vertex_collisions()
 void ViewerMenu::compute_collision_volumes()
 {
     try {
-        state.prune_impacts();
         state.compute_collision_volumes();
         std::ostringstream volumes_string;
         volumes_string << "Space Time Volume Intersections:\n" << state.volumes;
@@ -392,7 +391,7 @@ void ViewerMenu::goto_ev_impact(const int impact)
         state.current_ev_impact %= state.ev_impacts.size();
 
         state.time
-            = float(state.ev_impacts->at(size_t(state.current_ev_impact)).time);
+            = float(state.ev_impacts[size_t(state.current_ev_impact)].time);
         redraw_at_time();
     }
 }
@@ -407,7 +406,7 @@ void ViewerMenu::goto_ee_impact(const int impact)
         state.current_ee_impact %= state.ee_impacts.size();
 
         state.time
-            = float(state.ee_impacts->at(size_t(state.current_ee_impact)).time);
+            = float(state.ee_impacts[size_t(state.current_ee_impact)].time);
         redraw_at_time();
     }
 }
@@ -463,10 +462,10 @@ void ViewerMenu::redraw_volumes()
 
     for (int i = 0; i < num_edges; ++i) {
 
-        if (state.edges_impact[i] != nullptr) {
-            auto impact = state.edges_impact[i];
+        if (state.edges_impact[i] != -1) {
+            auto impact = state.ee_impacts[state.edges_impact[i]];
             auto vertices_toi
-                = state.vertices + state.displacements * impact->time;
+                = state.vertices + state.displacements * impact.time;
             auto v_i_toi = vertices_toi.row(state.edges(i, 0));
             auto v_j_toi = vertices_toi.row(state.edges(i, 1));
             nodes_s.row(i) << v_i_toi;

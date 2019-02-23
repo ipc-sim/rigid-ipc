@@ -165,7 +165,7 @@ void ViewerMenu::draw_ccd_steps()
             }
             ImGui::InputDouble("vol. epsilon", &state.epsilon);
 
-            if (state.ee_impacts != nullptr && state.ee_impacts->size()) {
+            if (state.ee_impacts.size()) {
                 if (ImGui::InputInt(
                         "EE##ee_impact", &state.current_ee_impact)) {
                     goto_ee_impact(state.current_ee_impact);

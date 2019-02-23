@@ -5,13 +5,13 @@ namespace ccd {
 
 double collision_volume(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
-    const EdgeEdgeImpactPtr impact, const int edge_id, const double epsilon)
+    const EdgeEdgeImpact& impact, const int edge_id, const double epsilon)
 {
     double alpha;
-    if (edge_id == impact->impacted_edge_index) {
-        alpha = impact->impacted_alpha;
-    } else if (edge_id == impact->impacting_edge_index) {
-        alpha = impact->impacting_alpha;
+    if (edge_id == impact.impacted_edge_index) {
+        alpha = impact.impacted_alpha;
+    } else if (edge_id == impact.impacting_edge_index) {
+        alpha = impact.impacting_alpha;
     } else {
         return 0;
     }
@@ -23,14 +23,14 @@ double collision_volume(const Eigen::MatrixX2d& vertices,
     Eigen::Vector2d Ui = displacements.row(e_ij(0));
     Eigen::Vector2d Uj = displacements.row(e_ij(1));
 
-    double toi = impact->time;
+    double toi = impact.time;
 
     return collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
 }
 
 void collision_volume_grad(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
-    const EdgeEdgeImpactPtr impact, const int edge_id, const double epsilon,
+    const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
     Eigen::VectorXd& grad)
 {
     ccd::autodiff::ImpactNode impact_node;
@@ -40,17 +40,17 @@ void collision_volume_grad(const Eigen::MatrixX2d& vertices,
 
     Eigen::Vector2i e_ij = edges.row(edge_id);
     Eigen::Vector2i e_kl;
-    if (edge_id == impact->impacted_edge_index) {
+    if (edge_id == impact.impacted_edge_index) {
         // impacted edge is this edge, and the impacting node is in
         // the other edge.
-        e_kl = edges.row(impact->impacting_edge_index);
-        impact_node = impact->impacting_alpha < 0.5 ? ccd::autodiff::vK
-                                                    : ccd::autodiff::vL;
+        e_kl = edges.row(impact.impacting_edge_index);
+        impact_node = impact.impacting_alpha < 0.5 ? ccd::autodiff::vK
+                                                   : ccd::autodiff::vL;
 
-    } else if (edge_id == impact->impacting_edge_index) {
-        e_kl = edges.row(impact->impacted_edge_index);
-        impact_node = impact->impacting_alpha < 0.5 ? ccd::autodiff::vI
-                                                    : ccd::autodiff::vJ;
+    } else if (edge_id == impact.impacting_edge_index) {
+        e_kl = edges.row(impact.impacted_edge_index);
+        impact_node = impact.impacting_alpha < 0.5 ? ccd::autodiff::vI
+                                                   : ccd::autodiff::vJ;
     } else {
         return;
     }

@@ -28,16 +28,16 @@ public:
     Eigen::MatrixX2d displacements;
 
     ///@brief All edge-vertex contact
-    EdgeVertexImpactsPtr ev_impacts;
+    EdgeVertexImpacts ev_impacts;
 
     ///@brief All edge-edge contact
-    EdgeEdgeImpactsPtr ee_impacts;
+    EdgeEdgeImpacts ee_impacts;
 
     ///@brief #E,1 contact volume for each edge
     Eigen::VectorXd volumes;
 
-    ///@brief #E,1 impact for each edge
-    Eigen::Matrix<EdgeEdgeImpact, Eigen::Dynamic, 1> edges_impact;
+    ///@brief #E,1 impact index for each edge
+    Eigen::VectorXi edges_impact;
 
     ///@brief #2V,NV contact gradient for each volume
     Eigen::MatrixXd volume_grad;

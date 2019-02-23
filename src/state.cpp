@@ -31,7 +31,7 @@ void State::reset_scene()
     volumes.setZero();
 
     edges_impact.resize(edges.rows());
-    edges_impact.setConstant(nullptr);
+    edges_impact.setConstant(-1);
 
     volume_grad.resize(0, 0);
     volume_grad.setZero();
@@ -123,61 +123,59 @@ void State::reset_impacts()
 
     volumes.setZero();
     volume_grad.resize(0, 0);
-    edges_impact.setConstant(nullptr);
+    edges_impact.setConstant(-1);
 
-    if (ev_impacts != nullptr) {
-        ev_impacts->clear();
-    }
-    if (ee_impacts != nullptr) {
-        ee_impacts->clear();
-    }
+    ev_impacts.clear();
+    ee_impacts.clear();
 }
 
 void State::detect_edge_vertex_collisions()
 {
     // get impacts between vertex and edge
-    ev_impacts = ccd::detect_edge_vertex_collisions(
-        vertices, displacements, edges, detection_method);
+    ccd::detect_edge_vertex_collisions(
+        vertices, displacements, edges, ev_impacts, detection_method);
 
-    std::sort(ev_impacts->begin(), ev_impacts->end(),
-        EdgeVertexImpact::compare_impacts_by_time);
+    // sort impacts by time
+    std::sort(ev_impacts.begin(), ev_impacts.end(),
+        compare_impacts_by_time<EdgeVertexImpact>);
 
     // transform to impacts between two edges
-    EdgeEdgeImpactsPtr ee_impacts;
-    ee_impacts = ccd::EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
-        this->edges, this->ev_impacts);
+    EdgeEdgeImpacts ee_impacts;
+    convert_edge_vertex_to_edge_edge_impacts(
+        this->edges, this->ev_impacts, ee_impacts);
 
     // assign first impact to each edge
-    auto pruned_impacts = ccd::prune_impacts(ee_impacts);
-    std::cout << "# of EE-Impacts: " << pruned_impacts->size() << std::endl;
+    EdgeToImpactMap pruned_impacts;
+    ccd::prune_impacts(ee_impacts, pruned_impacts);
+    std::cout << "# of EE-Impacts: " << pruned_impacts.size() << std::endl;
 
     // we store one impact for each edge on edges_impact
     // and the impacts in ee_impacts;
-    this->ee_impacts = std::make_shared<EdgeEdgeImpacts>();
-    for (auto impact : *pruned_impacts) {
+    this->ee_impacts.clear();
+    for (auto impact : pruned_impacts) {
         int edge_id = impact.first;
-        EdgeEdgeImpactPtr ee_impact = impact.second;
-        this->edges_impact[edge_id] = ee_impact;
-        this->ee_impacts->push_back(ee_impact);
+        EdgeEdgeImpact ee_impact = impact.second;
+        this->edges_impact[edge_id] = this->ee_impacts.size();
+        this->ee_impacts.push_back(ee_impact);
     }
 
-    std::sort(ee_impacts->begin(), ee_impacts->end(),
-        EdgeEdgeImpact::compare_impacts_by_time);
+    std::sort(ee_impacts.begin(), ee_impacts.end(),
+        compare_impacts_by_time<EdgeEdgeImpact>);
 }
 
 void State::compute_collision_volumes()
 {
-
-    size_t num_impacts = this->ee_impacts->size();
+    size_t num_impacts = this->ee_impacts.size();
     this->volume_grad.resize(kDIM * this->vertices.rows(), long(num_impacts));
 
     for (long i = 0; i < this->edges_impact.rows(); ++i) {
-        EdgeEdgeImpactPtr ee_impact = this->edges_impact[i];
-
-        if (ee_impact == nullptr) {
+        if (this->edges_impact[i] == -1) {
             this->volumes(i) = 0;
             continue;
         }
+
+        EdgeEdgeImpact ee_impact = this->ee_impacts[this->edges_impact[i]];
+
         // get collision volume for this edge
         this->volumes(i) = ccd::collision_volume(
             vertices, displacements, edges, ee_impact, int(i), this->epsilon);
@@ -194,7 +192,6 @@ void State::compute_collision_volumes()
 void State::run_full_pipeline()
 {
     this->detect_edge_vertex_collisions();
-    this->prune_impacts();
     this->compute_collision_volumes();
 }
 }
