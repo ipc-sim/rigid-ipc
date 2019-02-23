@@ -8,18 +8,15 @@
 
 namespace ccd {
 
-/// An unordered map from an edge index to an edge edge impact pointer.
-typedef std::unordered_map<int, EdgeEdgeImpact> EdgeToImpactMap;
-
 /// Prune the impacts to only include the earliest impact for each edge.
 ///
 /// @param all_impacts All of the impacts to be pruned.
-/// @param pruned_impacts Reference for the EdgeToImpactMap for where to store
-///     the pruned impacts.
+/// @param pruned_impact_indices A vector of lengeth the numbe of edges. Store
+/// the index of the earliest impact in this vector.
 /// @return A subset of provided impacts where only the earliest impact per edge
-///     is included are stored in pruned_impacts.
+///     is included are stored in pruned_impact_indices.
 void prune_impacts(
-    const EdgeEdgeImpacts& all_impacts, EdgeToImpactMap& pruned_impacts);
+    const EdgeEdgeImpacts& all_impacts, Eigen::VectorXi& pruned_impact_indices);
 
 }
 

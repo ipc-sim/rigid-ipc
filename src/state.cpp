@@ -140,27 +140,24 @@ void State::detect_edge_vertex_collisions()
         compare_impacts_by_time<EdgeVertexImpact>);
 
     // transform to impacts between two edges
-    EdgeEdgeImpacts ee_impacts;
+    EdgeEdgeImpacts all_impacts;
     convert_edge_vertex_to_edge_edge_impacts(
-        this->edges, this->ev_impacts, ee_impacts);
+        this->edges, this->ev_impacts, all_impacts);
+    // Sort for convient visualization
+    // std::sort(all_impacts.begin(), all_impacts.end(),
+    //     compare_impacts_by_time<EdgeEdgeImpact>);
 
-    // assign first impact to each edge
-    EdgeToImpactMap pruned_impacts;
-    ccd::prune_impacts(ee_impacts, pruned_impacts);
-    std::cout << "# of EE-Impacts: " << pruned_impacts.size() << std::endl;
+    // assign first impact to each edge; we store one impact for each edge on
+    // edges_impact and the impacts in ee_impacts
+    ccd::prune_impacts(all_impacts, this->edges_impact);
 
-    // we store one impact for each edge on edges_impact
-    // and the impacts in ee_impacts;
+    // Prune the list of impacts
     this->ee_impacts.clear();
-    for (auto impact : pruned_impacts) {
-        int edge_id = impact.first;
-        EdgeEdgeImpact ee_impact = impact.second;
-        this->edges_impact[edge_id] = this->ee_impacts.size();
-        this->ee_impacts.push_back(ee_impact);
+    for (int i = 0; i < this->edges_impact.rows(); i++) {
+        if (this->edges_impact[i] >= 0) {
+            this->ee_impacts.push_back(all_impacts[this->edges_impact[i]]);
+        }
     }
-
-    std::sort(ee_impacts.begin(), ee_impacts.end(),
-        compare_impacts_by_time<EdgeEdgeImpact>);
 }
 
 void State::compute_collision_volumes()

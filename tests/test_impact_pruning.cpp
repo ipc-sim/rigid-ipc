@@ -40,7 +40,8 @@ TEST_CASE("Test edge vertex impact to edge edge impact", "[impact_pruning]")
             convert_edge_vertex_to_edge_edge_impacts(
                 edges, ev_impacts, ee_impacts);
             REQUIRE(ee_impacts.size() == 1);
-            CHECK(ee_impacts.front().impacting_alpha == Approx(0.0).margin(1e-3));
+            CHECK(
+                ee_impacts.front().impacting_alpha == Approx(0.0).margin(1e-3));
         }
         SECTION("impacting_alpha = 1")
         {
@@ -131,7 +132,7 @@ TEST_CASE("Test impact pruning", "[impact_pruning]")
         rand_norm_double(), impacting_edge_index, 0.0 };
     EdgeEdgeImpact late_impact = { late_time, impacted_edge_index,
         rand_norm_double(), edge2_index, 0.0 };
-    EdgeToImpactMap pruned_impacts;
+    Eigen::VectorXi pruned_impacts(3);
     SECTION("Two impacts against edge 0")
     {
         SECTION("Early then late impact")
@@ -146,18 +147,16 @@ TEST_CASE("Test impact pruning", "[impact_pruning]")
             all_impacts.push_back(early_impact);
             prune_impacts(all_impacts, pruned_impacts);
         }
-        REQUIRE(pruned_impacts.size() == 3);
-        for (auto impact : pruned_impacts) {
-            auto other
-                = impact.first == edge2_index ? late_impact : early_impact;
-            CHECK(impact.second.time == Approx(other.time));
+        for (int i = 0; i < pruned_impacts.rows(); i++) {
+            EdgeEdgeImpact ee_impact = all_impacts[pruned_impacts[i]];
+            EdgeEdgeImpact actual
+                = i == edge2_index ? late_impact : early_impact;
+            CHECK(ee_impact.time == Approx(actual.time));
+            CHECK(ee_impact.impacted_edge_index == actual.impacted_edge_index);
+            CHECK(ee_impact.impacted_alpha == Approx(actual.impacted_alpha));
             CHECK(
-                impact.second.impacted_edge_index == other.impacted_edge_index);
-            CHECK(impact.second.impacted_alpha == Approx(other.impacted_alpha));
-            CHECK(impact.second.impacting_edge_index
-                == other.impacting_edge_index);
-            CHECK(
-                impact.second.impacting_alpha == Approx(other.impacting_alpha));
+                ee_impact.impacting_edge_index == actual.impacting_edge_index);
+            CHECK(ee_impact.impacting_alpha == Approx(actual.impacting_alpha));
         }
     }
 }
