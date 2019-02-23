@@ -7,6 +7,7 @@ set(test_sources
     test_impact_pruning.cpp
     test_collision_volume.cpp
     test_time_of_impact.cpp
+    test_opt.cpp
 )
 
 add_executable(unit_tests ${test_sources})
@@ -15,6 +16,8 @@ foreach(source IN ITEMS ${test_sources})
    source_group("tests" FILES "${source}")
 endforeach()
 
+# include_directories(/usr/local/include)
+# target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} catch warnings::all ${NLOPT_LIBRARIES})
 target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} catch warnings::all)
 
 # Register tests

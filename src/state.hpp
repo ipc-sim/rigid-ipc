@@ -6,6 +6,7 @@
 
 #include <ccd/collision_detection.hpp>
 #include <ccd/impact.hpp>
+#include <ccd/prune_impacts.hpp>
 
 namespace ccd {
 
@@ -22,7 +23,8 @@ public:
     Eigen::VectorXd volumes;
     Eigen::MatrixX2d volume_grad;
 
-    EdgeVertexImpactsPtr impacts;
+    EdgeVertexImpacts impacts;
+    EdgeToImpactMap pruned_impacts;
     DetectionMethod detection_method;
     double epsilon = 0.0;
 
@@ -41,6 +43,7 @@ public:
 
     // ----------------------------------- SCENE CCD
     void detect_edge_vertex_collisions();
+    void prune_impacts();
     void compute_collision_volumes();
     void run_full_pipeline();
 

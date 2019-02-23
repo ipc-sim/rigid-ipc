@@ -1,4 +1,5 @@
 #include "viewer.hpp"
+#include <sstream>
 
 #include <igl/bounding_box.h>
 #include <igl/opengl/MeshGL.h>
@@ -350,7 +351,12 @@ void ViewerMenu::detect_edge_vertex_collisions()
 void ViewerMenu::compute_collision_volumes()
 {
     try {
+        state.prune_impacts();
         state.compute_collision_volumes();
+        std::ostringstream volumes_string;
+        volumes_string << "Space Time Volume Intersections:\n" << state.volumes;
+        last_action_message = volumes_string.str();
+        last_action_success = true;
     } catch (NotImplementedError e) {
         last_action_message = e.what();
         last_action_success = false;
@@ -363,12 +369,11 @@ void ViewerMenu::goto_impact(const int impact)
         state.time = 0.0;
         state.current_impact = impact;
         redraw_at_time();
-    } else if (state.impacts != nullptr && state.impacts->size() > 0) {
+    } else if (state.impacts.size() > 0) {
         state.current_impact = impact;
-        state.current_impact %= state.impacts->size();
+        state.current_impact %= state.impacts.size();
 
-        state.time
-            = float(state.impacts->at(size_t(state.current_impact))->time);
+        state.time = float(state.impacts.at(size_t(state.current_impact)).time);
         redraw_at_time();
     }
 }

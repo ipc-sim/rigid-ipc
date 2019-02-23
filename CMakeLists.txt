@@ -36,6 +36,7 @@ set(SRCFILES
     src/ccd/collision_volume.cpp
     src/ccd/collision_volume_diff.cpp
     src/ccd/time_of_impact.cpp
+    src/ccd/optimization.cpp
 
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp)
@@ -96,6 +97,9 @@ add_library(json INTERFACE)
 target_include_directories(json SYSTEM INTERFACE ${THIRD_PARTY_DIR}/json/include)
 target_link_libraries(${PROJECT_NAME}_bin PUBLIC json)
 
+# NLOPT
+# find_package(NLOPT REQUIRED QUIET)
+# target_link_libraries(${PROJECT_NAME} PUBLIC ${NLOPT_LIBRARIES})
 
 ################################################################################
 # Tests
@@ -124,4 +128,3 @@ if(BUILD_UNIT_TESTS)
         target_code_coverage(unit_tests AUTO ALL)
     endif()
 endif()
-

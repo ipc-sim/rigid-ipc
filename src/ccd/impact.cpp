@@ -3,70 +3,63 @@
 
 namespace ccd {
 
-// Construct an abstract impact.
-Impact::Impact(double time)
-    : time(time)
-{
-}
-
 // Compare two edge-vertex impacts to determine if impact0 comes before impact1.
-bool Impact::compare_impacts_by_time(ImpactPtr impact0, ImpactPtr impact1)
+template <typename Impact>
+bool compare_impacts_by_time(Impact impact0, Impact impact1)
 {
-    return impact0->time <= impact1->time;
+    return impact0.time <= impact1.time;
 }
 
-// Construct an edge-vertex impact.
-EdgeVertexImpact::EdgeVertexImpact(
-    double time, int edge_index, double alpha, int vertex_index)
-    : Impact(time)
-    , edge_index(edge_index)
-    , alpha(alpha)
-    , vertex_index(vertex_index)
-{
-}
+// Template instantiations
+template bool compare_impacts_by_time<EdgeVertexImpact>(
+    EdgeVertexImpact impact0, EdgeVertexImpact impact1);
+template bool compare_impacts_by_time<EdgeEdgeImpact>(
+    EdgeEdgeImpact impact0, EdgeEdgeImpact impact1);
 
-// Construct an edge-vertex impact.
-EdgeVertexImpact::EdgeVertexImpact(
-    const Eigen::MatrixX2i& edges, const EdgeEdgeImpactPtr ee_impact)
-    : Impact(ee_impact->time)
-    , edge_index(ee_impact->impacted_edge_index)
-    , alpha(ee_impact->impacted_alpha)
-    , vertex_index(edges.row(ee_impact->impacting_edge_index)(
-          int(ee_impact->impacting_alpha + 0.5)))
+// Convert all edge-vertex impacts to correspoding edge-edge impacts. There may
+// be multiple edge-edge impacts per edge-vertex impact depending on the
+// connectivity.
+void convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
+    const EdgeVertexImpacts& ev_impacts, EdgeEdgeImpacts& ee_impacts)
 {
-}
-
-// Construct an edge-edge impact.
-EdgeEdgeImpact::EdgeEdgeImpact(double time, int impacted_edge_index,
-    double impacted_alpha, int impacting_edge_index, double impacting_alpha)
-    : Impact(time)
-    , impacted_edge_index(impacted_edge_index)
-    , impacted_alpha(impacted_alpha)
-    , impacting_edge_index(impacting_edge_index)
-    , impacting_alpha(impacting_alpha)
-{
-}
-
-// Convert all edge-vertex impacts to correspoding edge-edge impacts.
-// There may be multiple edge-edge impacts per edge-vertex impact
-// depending on the connectivity.
-EdgeEdgeImpactsPtr EdgeEdgeImpact::convert_edge_vertex_to_edge_edge_impacts(
-    const Eigen::MatrixX2i& edges, const EdgeVertexImpactsPtr ev_impacts)
-{
-    EdgeEdgeImpactsPtr ee_impacts = std::make_shared<EdgeEdgeImpacts>();
-    for (EdgeVertexImpactPtr& ev_impact : *ev_impacts) {
+    ee_impacts.clear();
+    EdgeEdgeImpact ee_impact;
+    for (EdgeVertexImpact ev_impact : ev_impacts) {
         for (int edge_index = 0; edge_index < edges.rows(); edge_index++) {
             auto edge = edges.row(edge_index);
-            if (edge(0) == ev_impact->vertex_index
-                || edge(1) == ev_impact->vertex_index) {
-                ee_impacts->push_back(EdgeEdgeImpactPtr(
-                    std::make_shared<EdgeEdgeImpact>(ev_impact->time,
-                        ev_impact->edge_index, ev_impact->alpha, edge_index,
-                        edge(0) == ev_impact->vertex_index ? 0 : 1)));
+            if (edge(0) == ev_impact.vertex_index
+                || edge(1) == ev_impact.vertex_index) {
+
+                ee_impact.time = ev_impact.time;
+                ee_impact.impacted_edge_index = ev_impact.edge_index;
+                ee_impact.impacted_alpha = ev_impact.alpha;
+                ee_impact.impacting_edge_index = edge_index;
+                ee_impact.impacting_alpha
+                    = edge(0) == ev_impact.vertex_index ? 0.0 : 1.0;
+
+                ee_impacts.push_back(ee_impact);
             }
         }
     }
-    return ee_impacts;
 }
 
+// Convert all edge-edge impacts to correspoding edge-vertex impacts. There may
+// be multiple edge-vertex impacts per edge-edge impact depending on the
+// connectivity.
+void convert_edge_edge_to_edge_vertex_impacts(const Eigen::MatrixX2i& edges,
+    const EdgeEdgeImpacts& ee_impacts, EdgeVertexImpacts& ev_impacts)
+{
+    ev_impacts.clear();
+    EdgeVertexImpact ev_impact;
+    for (EdgeEdgeImpact ee_impact : ee_impacts) {
+
+        ev_impact.time = ee_impact.time;
+        ev_impact.edge_index = ee_impact.impacted_edge_index;
+        ev_impact.alpha = ee_impact.impacted_alpha;
+        ev_impact.vertex_index = edges.row(ee_impact.impacting_edge_index)(
+            int(ee_impact.impacting_alpha + 0.5));
+
+        ev_impacts.push_back(ev_impact);
+    }
+}
 }

@@ -135,29 +135,32 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
 }
 
 // Find all edge-vertex collisions in one time step.
-EdgeVertexImpactsPtr detect_edge_vertex_collisions(
-    const Eigen::MatrixXd& vertices, const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixX2i& edges, DetectionMethod method)
+void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
+    EdgeVertexImpacts& ev_impacts, DetectionMethod method)
 {
     assert(vertices.size() == displacements.size());
     switch (method) {
     case BRUTE_FORCE:
-        return detect_edge_vertex_collisions_brute_force(
-            vertices, displacements, edges);
+        detect_edge_vertex_collisions_brute_force(
+            vertices, displacements, edges, ev_impacts);
+        break;
     case HASH_MAP:
-        return detect_edge_vertex_collisions_hash_map(
-            vertices, displacements, edges);
+        detect_edge_vertex_collisions_hash_map(
+            vertices, displacements, edges, ev_impacts);
+        break;
     }
 }
 
 // Find all edge-vertex collisions in one time step using brute-force
 // comparisons of all edges and all vertices.
-EdgeVertexImpactsPtr detect_edge_vertex_collisions_brute_force(
-    const Eigen::MatrixXd& vertices, const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixX2i& edges)
+void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
+    EdgeVertexImpacts& ev_impacts)
 {
-    EdgeVertexImpactsPtr impacts = std::make_shared<EdgeVertexImpacts>();
     double toi, alpha;
+    ev_impacts.clear();
+    EdgeVertexImpact ev_impact;
     for (int edge_index = 0; edge_index < edges.rows(); edge_index++) {
         auto edge = edges.row(edge_index);
         for (int vertex_index = 0; vertex_index < vertices.rows();
@@ -168,23 +171,28 @@ EdgeVertexImpactsPtr detect_edge_vertex_collisions_brute_force(
                         displacements.row(vertex_index), vertices.row(edge(0)),
                         displacements.row(edge(0)), vertices.row(edge(1)),
                         displacements.row(edge(1)), toi, alpha)) {
-                    impacts->push_back(std::make_shared<EdgeVertexImpact>(
-                        toi, edge_index, alpha, vertex_index));
+
+                    ev_impact.time = toi;
+                    ev_impact.edge_index = edge_index;
+                    ev_impact.alpha = alpha;
+                    ev_impact.vertex_index = vertex_index;
+
+                    ev_impacts.push_back(ev_impact);
                 }
             }
         }
     }
-    return impacts;
 }
 
 // Find all edge-vertex collisions in one time step using spatial-hashing to
 // only compare points and edge in the same cells.
-EdgeVertexImpactsPtr detect_edge_vertex_collisions_hash_map(
+void detect_edge_vertex_collisions_hash_map(
     const Eigen::MatrixXd& /* vertices */,
     const Eigen::MatrixXd& /* displacements */,
-    const Eigen::MatrixX2i& /* edges */)
+    const Eigen::MatrixX2i& /* edges */, EdgeVertexImpacts& /* ev_impacts */)
 {
     throw NotImplementedError(
         "Hash Map collision detection is not implemented yet.");
 }
+
 }
