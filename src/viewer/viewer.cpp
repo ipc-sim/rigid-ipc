@@ -8,6 +8,7 @@
 #include <ccd/not_implemented_error.hpp>
 
 #include <io/read_scene.hpp>
+#include <viewer/edges_to_rectangles.hpp>
 
 namespace ccd {
 
@@ -40,15 +41,19 @@ void ViewerMenu::init(igl::opengl::glfw::Viewer* _viewer)
 {
     Super::init(_viewer);
 
-    // STRUCTURE
-    {
-        surface_data_id = viewer->data_list.size() - 1;
-        viewer->append_mesh();
-        displ_data_id = viewer->data_list.size() - 1;
-        viewer->append_mesh();
-        gradient_data_id = viewer->data_list.size() - 1;
-        load_scene(scene_file);
-    }
+    // first added is drawn in front
+    gradient_data_id = viewer->data_list.size() - 1;
+
+    viewer->append_mesh();
+    surface_data_id = viewer->data_list.size() - 1;
+
+    viewer->append_mesh();
+    displ_data_id = viewer->data_list.size() - 1;
+
+    viewer->append_mesh();
+    volume_data_id = viewer->data_list.size() - 1;
+
+    load_scene(scene_file);
 
     // CANVAS
     {
@@ -84,6 +89,8 @@ bool ViewerMenu::load_scene(const std::string filename)
     if (filename.empty()) {
         io::read_scene_from_str(
             default_scene, state.vertices, state.edges, state.displacements);
+        state.reset_scene();
+
     } else {
         state.load_scene(filename);
     }
@@ -97,15 +104,20 @@ bool ViewerMenu::load_scene(const std::string filename)
 
 void ViewerMenu::load_state()
 {
+
+    // surface - edges & nodes
+    // -------------------------------------------------------------------
     viewer->data_list[surface_data_id].set_points(state.vertices, color_vtx);
     viewer_set_edges(surface_data_id, state.vertices, state.edges, color_edge);
     viewer->data_list[surface_data_id].point_size = 10 * pixel_ratio();
     // only needed to show vertex_ids
-    viewer->data_list[surface_data_id].set_vertices(state.vertices);
+    viewer_set_vertices(surface_data_id, state.vertices);
     Eigen::MatrixXd nz(state.vertices.rows(), 3);
     nz.col(2).setConstant(1.0);
     viewer->data_list[surface_data_id].set_normals(nz);
 
+    // displacements
+    // -------------------------------------------------------------------
     viewer->data_list[displ_data_id].set_points(
         state.vertices + state.displacements, color_displ);
     viewer->data_list[displ_data_id].set_edges(
@@ -114,14 +126,18 @@ void ViewerMenu::load_state()
         state.vertices, state.vertices + state.displacements, color_displ);
     viewer->data_list[displ_data_id].point_size = 10 * pixel_ratio();
 
+    // collisions - volumes & gradient
+    // -------------------------------------------------------------------
+    viewer->data_list[volume_data_id].clear();
+    viewer->data_list[volume_data_id].show_lines = false;
+    redraw_volumes();
+
     viewer->data_list[gradient_data_id].set_points(state.vertices, color_grad);
     viewer->data_list[gradient_data_id].set_edges(
         Eigen::MatrixXd(), Eigen::MatrixXi(), color_grad);
     viewer->data_list[gradient_data_id].add_edges(
         state.vertices, state.vertices, color_grad);
     viewer->data_list[gradient_data_id].point_size = 1;
-
-    vertices_colors.resize(state.vertices.rows(), 3);
 
     recolor_vertices();
     redraw_at_time();
@@ -160,6 +176,7 @@ void ViewerMenu::connect_selected_vertices()
     }
     state.add_edges(new_edges);
     add_graph_edges(surface_data_id, state.vertices, new_edges, color_edge);
+    redraw_volumes();
     state_history.push_back(state);
 }
 
@@ -234,7 +251,7 @@ void ViewerMenu::clicked__translate(
         for (size_t i = 0; i < num_sl; ++i) {
             state.move_vertex(state.selected_points[i], delta);
         }
-        redraw_vertices();
+        redraw_scene();
     } else {
         size_t num_sl = state.selected_displacements.size();
         if (num_sl > 0) {
@@ -356,24 +373,41 @@ void ViewerMenu::compute_collision_volumes()
         std::ostringstream volumes_string;
         volumes_string << "Space Time Volume Intersections:\n" << state.volumes;
         last_action_message = volumes_string.str();
-        last_action_success = true;
+        redraw_volumes();
+        redraw_volumes_grad();
     } catch (NotImplementedError e) {
         last_action_message = e.what();
         last_action_success = false;
     }
 }
 
-void ViewerMenu::goto_impact(const int impact)
+void ViewerMenu::goto_ev_impact(const int impact)
 {
     if (impact == -1) {
         state.time = 0.0;
-        state.current_impact = impact;
+        state.current_ev_impact = impact;
         redraw_at_time();
-    } else if (state.impacts.size() > 0) {
-        state.current_impact = impact;
-        state.current_impact %= state.impacts.size();
+    } else if (state.ev_impacts.size() > 0) {
+        state.current_ev_impact = impact;
+        state.current_ev_impact %= state.ev_impacts.size();
 
-        state.time = float(state.impacts.at(size_t(state.current_impact)).time);
+        state.time
+            = float(state.ev_impacts->at(size_t(state.current_ev_impact)).time);
+        redraw_at_time();
+    }
+}
+void ViewerMenu::goto_ee_impact(const int impact)
+{
+    if (impact == -1) {
+        state.time = 0.0;
+        state.current_ee_impact = impact;
+        redraw_at_time();
+    } else if (state.ee_impacts.size() > 0) {
+        state.current_ee_impact = impact;
+        state.current_ee_impact %= state.ee_impacts.size();
+
+        state.time
+            = float(state.ee_impacts->at(size_t(state.current_ee_impact)).time);
         redraw_at_time();
     }
 }
@@ -390,16 +424,19 @@ void ViewerMenu::recolor_vertices()
     highlight_points(displ_data_id, state.selected_displacements, color_sl);
 }
 
-void ViewerMenu::redraw_vertices()
+void ViewerMenu::redraw_scene()
 {
-    // surface
+    // surface - edges
     update_graph(surface_data_id, state.vertices, state.edges);
 
     // displacements
     update_vector_field(displ_data_id, state.vertices, state.displacements);
 
-    // volume_gradient: reset to zero
-    update_vector_field(gradient_data_id, state.vertices, Eigen::MatrixXd());
+    // collision - volumes
+    redraw_volumes();
+
+    // collision - gradient
+    redraw_volumes_grad();
 }
 
 void ViewerMenu::redraw_displacements()
@@ -409,8 +446,55 @@ void ViewerMenu::redraw_displacements()
 
 void ViewerMenu::redraw_at_time()
 {
-    update_graph(surface_data_id,
-        state.vertices + state.displacements * double(state.time), state.edges);
+    update_graph(surface_data_id, state.get_vertex_at_time(), state.edges);
+    redraw_volumes_grad();
+}
+
+void ViewerMenu::redraw_volumes()
+{
+
+    Eigen::MatrixXd V;
+    Eigen::MatrixXi F;
+    bool update_mesh
+        = viewer->data_list[volume_data_id].V.rows() != state.edges.rows() * 4;
+
+    long num_edges = state.edges.rows();
+    Eigen::MatrixX2d nodes_s(num_edges, 2), nodes_f(num_edges, 2);
+
+    for (int i = 0; i < num_edges; ++i) {
+
+        if (state.edges_impact[i] != nullptr) {
+            auto impact = state.edges_impact[i];
+            auto vertices_toi
+                = state.vertices + state.displacements * impact->time;
+            auto v_i_toi = vertices_toi.row(state.edges(i, 0));
+            auto v_j_toi = vertices_toi.row(state.edges(i, 1));
+            nodes_s.row(i) << v_i_toi;
+            nodes_f.row(i) << v_j_toi;
+
+        } else {
+            nodes_s.row(i) << state.vertices.row(state.edges(i, 0));
+            nodes_f.row(i) << state.vertices.row(state.edges(i, 1));
+        }
+    }
+
+    Eigen::VectorXd widths
+        = -state.volumes.array() / (nodes_f - nodes_s).rowwise().norm().array();
+    ccd::widgets::lines_to_rectangles(nodes_s, nodes_f, widths,
+        state.min_edge_width, V, F, /*nodes_only=*/!update_mesh);
+
+    if (update_mesh) {
+        viewer->data_list[volume_data_id].clear();
+        viewer->data_list[volume_data_id].set_mesh(V, F);
+    } else {
+        viewer->data_list[volume_data_id].set_vertices(V);
+    }
+}
+
+void ViewerMenu::redraw_volumes_grad()
+{
+    update_vector_field(
+        gradient_data_id, state.get_vertex_at_time(), state.get_volume_grad());
 }
 
 void ViewerMenu::update_vector_field(const unsigned long data_id,
@@ -444,7 +528,14 @@ void ViewerMenu::extend_vector_field(const unsigned long data_id,
     const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta, const int count,
     const Eigen::RowVector3d& color)
 {
-    Eigen::MatrixXd x1 = x0 + delta;
+    assert(delta.size() == 0
+        || (delta.rows() == x0.rows() && delta.cols() == x0.cols()));
+
+    Eigen::MatrixXd x1 = x0;
+    if (delta.size() > 0) {
+        x1 += delta;
+    }
+
     for (int i = 0; i < count; ++i) {
         int j = int(x0.rows()) - 1 - i;
         viewer->data_list[data_id].add_points(x1.row(j), color);
@@ -457,7 +548,8 @@ void ViewerMenu::update_graph(const unsigned long data_id,
 {
     long dim = vertices.cols();
 
-    viewer->data_list[data_id].set_vertices(vertices);
+    viewer_set_vertices(data_id, vertices);
+
     Eigen::MatrixXd& points = viewer->data_list[data_id].points;
     for (unsigned i = 0; i < points.rows(); ++i) {
         points.row(i).segment(0, dim) = vertices.row(i);
@@ -493,7 +585,7 @@ void ViewerMenu::add_graph_vertex(const unsigned long data_id,
     const Eigen::MatrixXd& vertices, const Eigen::RowVector2d& vertex,
     const Eigen::RowVector3d& color)
 {
-    viewer->data_list[data_id].set_vertices(vertices);
+    viewer_set_vertices(data_id, vertices);
     Eigen::MatrixXd nz(state.vertices.rows(), 3);
     nz.col(2).setConstant(1.0);
     viewer->data_list[surface_data_id].set_normals(nz);
@@ -537,5 +629,19 @@ void ViewerMenu::viewer_set_edges(const unsigned long data_id,
         P_temp = P;
     }
     viewer->data_list[data_id].set_edges(P_temp, E, C);
+}
+void ViewerMenu::viewer_set_vertices(
+    const unsigned long data_id, const Eigen::MatrixXd& V)
+{
+    Eigen::MatrixXd V_temp;
+
+    // If P only has two columns, pad with a column of zeros
+    if (V.cols() == 2) {
+        V_temp = Eigen::MatrixXd::Zero(V.rows(), 3);
+        V_temp.block(0, 0, V.rows(), 2) = V;
+    } else {
+        V_temp = V;
+    }
+    viewer->data_list[data_id].set_vertices(V_temp);
 }
 }

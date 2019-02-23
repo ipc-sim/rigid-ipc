@@ -49,9 +49,11 @@ public:
     void clicked_on_canvas(
         const int button, const int modifier, const Eigen::RowVector2d& coord);
     void recolor_vertices();
-    void redraw_vertices();
+    void redraw_scene();
     void redraw_displacements();
     void redraw_at_time();
+    void redraw_volumes();
+    void redraw_volumes_grad();
 
     // CRUD actions
     void connect_selected_vertices();
@@ -68,7 +70,8 @@ public:
     // CCD actions
     void detect_edge_vertex_collisions();
     void compute_collision_volumes();
-    void goto_impact(const int impact);
+    void goto_ev_impact(const int ev_impact);
+    void goto_ee_impact(const int ee_impact);
 
     // menu windows
     void draw_io();
@@ -79,25 +82,34 @@ public:
     // utils functions
     void update_vector_field(const unsigned long data_id,
         const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta);
+
     void extend_vector_field(const unsigned long data_id,
         const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta, const int last,
         const Eigen::RowVector3d& color);
-    void update_graph(const unsigned long data_id, const Eigen::MatrixXd& nodes,
-        const Eigen::MatrixXi& edges);
+
+    void update_graph(const unsigned long data_id,
+        const Eigen::MatrixXd& nodes, const Eigen::MatrixXi& edges);
+
     void add_graph_vertex(const unsigned long data_id,
         const Eigen::MatrixXd& vertices, const Eigen::RowVector2d& vertex,
         const Eigen::RowVector3d& color);
+
     void add_graph_edges(const unsigned long data_id,
         const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& new_edges,
         const Eigen::RowVector3d& color);
-    void color_points(
-        const unsigned long data_id, const Eigen::RowVector3d& color);
+
+    void color_points(const unsigned long data_id,
+        const Eigen::RowVector3d& color);
+
     void highlight_points(const unsigned long data_id,
         const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl);
 
     // fixed on libigl viewer functions
-    void viewer_set_edges(const unsigned long data_id, const Eigen::MatrixXd& P,
-        const Eigen::MatrixXi& E, const Eigen::MatrixXd& C);
+    void viewer_set_edges(const unsigned long data_id,
+        const Eigen::MatrixXd& P, const Eigen::MatrixXi& E, const Eigen::MatrixXd& C);
+
+    void viewer_set_vertices(const unsigned long data_id,
+        const Eigen::MatrixXd& V);
 
     State state;
     std::vector<State> state_history;
@@ -106,19 +118,21 @@ public:
 
     Eigen::RowVector3d color_vtx, color_edge, color_displ, color_grad,
         color_canvas, color_sl;
-    unsigned long canvas_data_id, surface_data_id, displ_data_id,
-        gradient_data_id;
+    unsigned long canvas_data_id;
+    unsigned long surface_data_id;
+    unsigned long displ_data_id;
+    unsigned long gradient_data_id;
+    unsigned long volume_data_id;
 
-    Eigen::MatrixXd vertices_colors;
     Eigen::MatrixXd canvas_nodes;
     Eigen::MatrixXi canvas_faces;
 
     std::string scene_file;
     std::string default_scene = R"(
                                 {
-                                    "vertices":[[-1.0, 0.0],[1.0,0.0],[0.0,0.5]],
-                                    "edges":[[0,1]],
-                                    "displacements":[[0.0,0.5],[0.0,0.5],[0.0,-1.0]]
+                                "vertices":[[-1.0, 0.0],[1.0,0.0],[0.0,0.5],[0.0,1.5]],
+                                "edges":[[0,1],[2,3]],
+                                "displacements":[[0.0,0.5],[0.0,0.5],[0.0,-1.0],[0.0,-1.0]]
                                 })";
     std::string last_action_message;
     bool last_action_success;

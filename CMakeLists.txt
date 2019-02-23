@@ -64,6 +64,7 @@ set(VIEWER_FILES
     src/io/read_scene.cpp
     src/io/write_scene.cpp
 
+    src/viewer/edges_to_rectangles.cpp
     src/viewer/viewer.cpp
     src/viewer/viewer_menu.cpp
 

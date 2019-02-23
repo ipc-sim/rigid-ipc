@@ -1,11 +1,12 @@
 #include <iostream>
-#include <stdlib.h> /* srand, rand */
 
 #include <catch.hpp>
 
 #include <autodiff/finitediff.hpp>
 #include <ccd/collision_detection.hpp>
 #include <ccd/time_of_impact.hpp>
+
+#include "collision_generator.hpp"
 
 using namespace ccd;
 
@@ -19,15 +20,13 @@ using namespace ccd;
 ///     - ccd::compute_edge_vertex_time_of_impact(...)
 ///     - ccd::autodiff::compute_edge_vertex_time_of_impact<double>(...)
 ///     - ccd::autodiff::compute_edge_vertex_time_of_impact<DScalar>(...)
-void check_toi(
-    const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
+void check_toi(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
     const Eigen::Vector2d& Vk, const Eigen::Vector2d& Ui,
     const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk,
     const double toi_expected);
 
 /// Compares the autodiff gradient vs finite differences
-void check_gradient(
-    const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
+void check_gradient(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
     const Eigen::Vector2d& Vk, const Eigen::Vector2d& Ui,
     const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk);
 
@@ -69,10 +68,7 @@ TEST_CASE("TimeOfImpact", "[collision_detection][toi][no-grad]")
         double toi = 1.0 / vel;
         check_toi(Vi, Vj, Vk, Ui, Uj, Uk, toi);
 
-        SECTION("flipped")
-        {
-            check_toi(Vj, Vi, Vk, Uj, Ui, Uk, toi);
-        }
+        SECTION("flipped") { check_toi(Vj, Vi, Vk, Uj, Ui, Uk, toi); }
     }
 
     SECTION("DoubleImpact") // (rotating edge)
@@ -89,10 +85,7 @@ TEST_CASE("TimeOfImpact", "[collision_detection][toi][no-grad]")
 
         check_toi(Vi, Vj, Vk, Ui, Uj, Uk, 0.4482900963);
 
-        SECTION("flipped")
-        {
-            check_toi(Vj, Vi, Vk, Uj, Ui, Uk, 0.4482900963);
-        }
+        SECTION("flipped") { check_toi(Vj, Vi, Vk, Uj, Ui, Uk, 0.4482900963); }
     }
 }
 
@@ -171,6 +164,44 @@ TEST_CASE("TimeOfImpactGradient", "[collision_detection][toi][gradient]")
     }
 }
 
+TEST_CASE("TimeOfImpactRandom", "[collision_detection][toi][random]")
+{
+
+    SECTION("TimeOfImpactRigid")
+    {
+        using namespace ccd::unittests;
+
+        auto impact = GENERATE(random_impacts(100, /*rigid=*/true));
+        check_toi(impact.Vi, impact.Vj, impact.Vk, impact.Ui, impact.Uj,
+            impact.Uk, impact.toi);
+
+        SECTION("flipped")
+        {
+            check_toi(impact.Vj, impact.Vi, impact.Vk, impact.Uj, impact.Ui,
+                impact.Uk, impact.toi);
+        }
+    }
+
+    // NOTE: we can't tests TOI for non-rigids since the toi we generate
+    // might be the second impact.
+
+    SECTION("GradientRigid")
+    {
+        using namespace ccd::unittests;
+        auto impact = GENERATE(random_impacts(100, /*rigid=*/true));
+        check_gradient(
+            impact.Vi, impact.Vj, impact.Vk, impact.Ui, impact.Uj, impact.Uk);
+    }
+
+    SECTION("GradientNonRigid")
+    {
+        using namespace ccd::unittests;
+        auto impact = GENERATE(random_impacts(100, /*rigid=*/false));
+        check_gradient(
+            impact.Vi, impact.Vj, impact.Vk, impact.Ui, impact.Uj, impact.Uk);
+    }
+}
+
 TEST_CASE("TimeOfImpact-TODO", "[collision_detection][toi][!shouldfail]")
 {
     Eigen::Vector2d Vi, Vj, Vk; // positions
@@ -218,8 +249,7 @@ TEST_CASE("TimeOfImpact-TODO", "[collision_detection][toi][!shouldfail]")
 // ---------------------------------------------------
 // Helper functions
 // ---------------------------------------------------
-void check_toi(
-    const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
+void check_toi(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
     const Eigen::Vector2d& Vk, const Eigen::Vector2d& Ui,
     const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk,
     const double toi_expected)
@@ -254,8 +284,7 @@ void check_toi(
     CHECK(toi_expected == Approx(dtoi_actual.getValue()));
 }
 
-void check_gradient(
-    const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
+void check_gradient(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
     const Eigen::Vector2d& Vk, const Eigen::Vector2d& Ui,
     const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk)
 {
@@ -269,5 +298,10 @@ void check_gradient(
 
     REQUIRE(!std::isnan(grad_fd.squaredNorm()));
 
-    CHECK(compare_gradient(grad, grad_fd));
+    bool compare_grad = compare_gradient(grad, grad_fd);
+    if (!compare_grad){
+        std::cout << " grad    " << grad.transpose() << std::endl;
+        std::cout << " grad_fd " << grad_fd.transpose() << std::endl;
+    }
+    CHECK(compare_grad);
 }

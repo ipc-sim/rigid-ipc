@@ -1,12 +1,21 @@
 #include <ccd/collision_volume.hpp>
+#include <ccd/collision_volume_diff.hpp>
 
 namespace ccd {
 
 double collision_volume(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
-    const EdgeEdgeImpact& impact, const double epsilon)
+    const EdgeEdgeImpactPtr impact, const int edge_id, const double epsilon)
 {
-    Eigen::Vector2i e_ij = edges.row(impact.impacted_edge_index);
+    double alpha;
+    if (edge_id == impact->impacted_edge_index) {
+        alpha = impact->impacted_alpha;
+    } else if (edge_id == impact->impacting_edge_index) {
+        alpha = impact->impacting_alpha;
+    } else {
+        return 0;
+    }
+    Eigen::Vector2i e_ij = edges.row(edge_id);
 
     // we get the position and velocity of the edge vertices
     Eigen::Vector2d Vi = vertices.row(e_ij(0));
@@ -14,10 +23,66 @@ double collision_volume(const Eigen::MatrixX2d& vertices,
     Eigen::Vector2d Ui = displacements.row(e_ij(0));
     Eigen::Vector2d Uj = displacements.row(e_ij(1));
 
-    double toi = impact.time;
-    double alpha = impact.impacted_alpha;
+    double toi = impact->time;
 
     return collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
+}
+
+void collision_volume_grad(const Eigen::MatrixX2d& vertices,
+    const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
+    const EdgeEdgeImpactPtr impact, const int edge_id, const double epsilon,
+    Eigen::VectorXd& grad)
+{
+    ccd::autodiff::ImpactNode impact_node;
+
+    grad.resize(vertices.rows() * 2);
+    grad.setZero();
+
+    Eigen::Vector2i e_ij = edges.row(edge_id);
+    Eigen::Vector2i e_kl;
+    if (edge_id == impact->impacted_edge_index) {
+        // impacted edge is this edge, and the impacting node is in
+        // the other edge.
+        e_kl = edges.row(impact->impacting_edge_index);
+        impact_node = impact->impacting_alpha < 0.5 ? ccd::autodiff::vK
+                                                    : ccd::autodiff::vL;
+
+    } else if (edge_id == impact->impacting_edge_index) {
+        e_kl = edges.row(impact->impacted_edge_index);
+        impact_node = impact->impacting_alpha < 0.5 ? ccd::autodiff::vI
+                                                    : ccd::autodiff::vJ;
+    } else {
+        return;
+    }
+
+    // we get the position and velocity of the edge vertices
+    Eigen::Vector2d Vi = vertices.row(e_ij(0));
+    Eigen::Vector2d Vj = vertices.row(e_ij(1));
+    Eigen::Vector2d Ui = displacements.row(e_ij(0));
+    Eigen::Vector2d Uj = displacements.row(e_ij(1));
+
+    Eigen::Vector2d Vk = vertices.row(e_kl(0));
+    Eigen::Vector2d Vl = vertices.row(e_kl(1));
+    Eigen::Vector2d Uk = displacements.row(e_kl(0));
+    Eigen::Vector2d Ul = displacements.row(e_kl(1));
+
+    Vector8d el_grad = ccd::autodiff::collision_volume_grad(
+        Vi, Vj, Vk, Vl, Ui, Uj, Uk, Ul, impact_node, epsilon);
+    // NOTE: local gradient is in format xy, xy, xy, xy
+    // while global gradient is in format x,x,x,x ... y, y, y, y
+    // TODO: change local gradient format for _consistency_
+    auto num_v = vertices.rows();
+    grad(e_ij(0)) = el_grad(0);
+    grad(num_v + e_ij(0)) = el_grad(1);
+
+    grad(e_ij(1)) = el_grad(2);
+    grad(num_v + e_ij(1)) = el_grad(3);
+
+    grad(e_kl(0)) = el_grad(4);
+    grad(num_v + e_kl(0)) = el_grad(5);
+
+    grad(e_kl(1)) = el_grad(6);
+    grad(num_v + e_kl(1)) = el_grad(7);
 }
 
 double collision_volume(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,

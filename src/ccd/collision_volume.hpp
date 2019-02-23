@@ -8,6 +8,7 @@
 namespace ccd {
 
 /**
+<<<<<<< HEAD
  * Compute the collision volume for an edge-edge impact
  *
  *     @param vertices         : All vertices positions.
@@ -21,6 +22,35 @@ namespace ccd {
 double collision_volume(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
     const EdgeEdgeImpact& impact, const double epsilon);
+=======
+* Compute the collision volume for an edge-edge impact
+*
+*     @param vertices         : All vertices positions.
+*     @param displacements    : All vertices displacements.
+*     @param edges            : Edges as pair of vertex indices
+*     @param impact           : An impact between two edges.
+*     @param edge_id          : The edge for which we are computing the volume
+*     @param epsilon          : The time scale used for minimal volume.
+*
+* @return                     : The space-time interference volume.
+*/
+double collision_volume(
+    const Eigen::MatrixX2d& vertices,
+    const Eigen::MatrixX2d& displacements,
+    const Eigen::MatrixX2i& edges,
+    const EdgeEdgeImpactPtr impact,
+    const int edge_id,
+    const double epsilon);
+>>>>>>> 043fbcfd294debefece7603053592beabf6c14ef
+
+void collision_volume_grad(
+    const Eigen::MatrixX2d& vertices,
+    const Eigen::MatrixX2d& displacements,
+    const Eigen::MatrixX2i& edges,
+    const EdgeEdgeImpactPtr impact,
+    const int edge_id,
+    const double epsilon,
+    Eigen::VectorXd& grad);
 
 /**
  * Compute the volume of intersection for an edge given a time
