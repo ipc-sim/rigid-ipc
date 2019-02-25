@@ -131,33 +131,21 @@ void State::reset_impacts()
 
 void State::detect_edge_vertex_collisions()
 {
-    // get impacts between vertex and edge
+    // Get impacts between vertex and edge
     ccd::detect_edge_vertex_collisions(
         vertices, displacements, edges, ev_impacts, detection_method);
-
-    // sort impacts by time
+    // Sort impacts by time for convient visualization
     std::sort(ev_impacts.begin(), ev_impacts.end(),
         compare_impacts_by_time<EdgeVertexImpact>);
 
-    // transform to impacts between two edges
-    EdgeEdgeImpacts all_impacts;
+    // Transform to impacts between two edges
     convert_edge_vertex_to_edge_edge_impacts(
-        this->edges, this->ev_impacts, all_impacts);
-    // Sort for convient visualization
-    // std::sort(all_impacts.begin(), all_impacts.end(),
-    //     compare_impacts_by_time<EdgeEdgeImpact>);
+        this->edges, this->ev_impacts, this->ee_impacts);
 
-    // assign first impact to each edge; we store one impact for each edge on
+    // Assign first impact to each edge; we store one impact for each edge on
     // edges_impact and the impacts in ee_impacts
-    ccd::prune_impacts(all_impacts, this->edges_impact);
-
-    // Prune the list of impacts
-    this->ee_impacts.clear();
-    for (int i = 0; i < this->edges_impact.rows(); i++) {
-        if (this->edges_impact[i] >= 0) {
-            this->ee_impacts.push_back(all_impacts[this->edges_impact[i]]);
-        }
-    }
+    this->num_pruned_impacts
+        = ccd::prune_impacts(this->ee_impacts, this->edges_impact);
 }
 
 void State::compute_collision_volumes()

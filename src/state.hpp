@@ -33,11 +33,13 @@ public:
     ///@brief All edge-edge contact
     EdgeEdgeImpacts ee_impacts;
 
+    ///@brief #E,1 indices of the edges' first impact
+    Eigen::VectorXi edges_impact;
+    ///@brief The current number of pruned impacts
+    int num_pruned_impacts;
+
     ///@brief #E,1 contact volume for each edge
     Eigen::VectorXd volumes;
-
-    ///@brief #E,1 impact index for each edge
-    Eigen::VectorXi edges_impact;
 
     ///@brief #2V,NV contact gradient for each volume
     Eigen::MatrixXd volume_grad;

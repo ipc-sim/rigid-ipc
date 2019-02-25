@@ -87,8 +87,8 @@ public:
         const Eigen::MatrixXd& x0, const Eigen::MatrixXd& delta, const int last,
         const Eigen::RowVector3d& color);
 
-    void update_graph(const unsigned long data_id,
-        const Eigen::MatrixXd& nodes, const Eigen::MatrixXi& edges);
+    void update_graph(const unsigned long data_id, const Eigen::MatrixXd& nodes,
+        const Eigen::MatrixXi& edges);
 
     void add_graph_vertex(const unsigned long data_id,
         const Eigen::MatrixXd& vertices, const Eigen::RowVector2d& vertex,
@@ -98,18 +98,18 @@ public:
         const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& new_edges,
         const Eigen::RowVector3d& color);
 
-    void color_points(const unsigned long data_id,
-        const Eigen::RowVector3d& color);
+    void color_points(
+        const unsigned long data_id, const Eigen::RowVector3d& color);
 
     void highlight_points(const unsigned long data_id,
         const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl);
 
     // fixed on libigl viewer functions
-    void viewer_set_edges(const unsigned long data_id,
-        const Eigen::MatrixXd& P, const Eigen::MatrixXi& E, const Eigen::MatrixXd& C);
+    void viewer_set_edges(const unsigned long data_id, const Eigen::MatrixXd& P,
+        const Eigen::MatrixXi& E, const Eigen::MatrixXd& C);
 
-    void viewer_set_vertices(const unsigned long data_id,
-        const Eigen::MatrixXd& V);
+    void viewer_set_vertices(
+        const unsigned long data_id, const Eigen::MatrixXd& V);
 
     State state;
     std::vector<State> state_history;

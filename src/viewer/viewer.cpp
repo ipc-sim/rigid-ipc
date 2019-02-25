@@ -397,17 +397,26 @@ void ViewerMenu::goto_ev_impact(const int impact)
 }
 void ViewerMenu::goto_ee_impact(const int impact)
 {
-    if (impact == -1) {
+    if (impact < 0) { // Reset the time to zero
         state.time = 0.0;
-        state.current_ee_impact = impact;
+        state.current_ee_impact = -1;
         redraw_at_time();
-    } else if (state.ee_impacts.size() > 0) {
-        state.current_ee_impact = impact;
-        state.current_ee_impact %= state.ee_impacts.size();
-
-        state.time
-            = float(state.ee_impacts[size_t(state.current_ee_impact)].time);
-        redraw_at_time();
+    } else if (state.num_pruned_impacts > 0) {
+        int modded_impact = impact % state.num_pruned_impacts;
+        int tmp = 0;
+        for (int i = 0; i <= state.edges_impact.rows(); i++) {
+            if (state.edges_impact[i] < 0)
+                continue;
+            if (tmp++ == modded_impact) {
+                state.current_ee_impact = modded_impact;
+                state.time = float(
+                    state
+                        .ee_impacts[state.edges_impact[state.current_ee_impact]]
+                        .time);
+                redraw_at_time();
+                return;
+            }
+        }
     }
 }
 

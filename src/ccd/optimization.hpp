@@ -35,6 +35,8 @@ namespace opt {
      *  \f$(s \in (0, 1])\f$
      */
     double phi_spline(double x, double s);
+    double phi_spline_gradient(double x, double s);
+    double phi_spline_hessian(double x, double s);
 
     /**
      * Function that grows to infinity as x approaches 0 from the right.
@@ -48,7 +50,9 @@ namespace opt {
      * for the original definition and a discussion.
      * @param x The x value at which to evaluate \f$\phi_{\log}(x)\f$.
      */
-    double phi_log(double x);
+    double phi_log(double x, double s);
+    double phi_log_gradient(double x, double s);
+    double phi_log_hessian(double x, double s);
 
     /**
      * Function that grows to infinity as x approaches 0 from the right.
@@ -66,17 +70,19 @@ namespace opt {
      *  \f$(s \in (0, 1])\f$
      */
     double phi_hookean(double x, double s);
+    double phi_hookean_gradient(double x, double s);
+    double phi_hookean_hessian(double x, double s);
 
     double constrained_line_search(const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir, std::function<double(Eigen::VectorXd)> f,
         std::function<bool(Eigen::VectorXd)> constraint);
 
     Eigen::VectorXd newtons_method(const Eigen::VectorXd& x0,
-        std::function<double(Eigen::VectorXd)> f,
-        std::function<Eigen::VectorXd(Eigen::VectorXd)> gradient,
-        std::function<Eigen::MatrixXd(Eigen::VectorXd)> hessian,
-        std::function<bool(Eigen::VectorXd)> constraint, double mu = 1e-5,
-        double epsilon = 1e-12);
+        const std::function<double(const Eigen::VectorXd&)>& f,
+        const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& gradient,
+        const std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>& hessian,
+        const std::function<bool(const Eigen::VectorXd&)>& constraint,
+        double mu = 1e-5, double epsilon = 1e-12);
 
 }
 }
