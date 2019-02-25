@@ -51,7 +51,7 @@ namespace autodiff {
         const ImpactNode impact_node,
         const double epsilon);
 
-    Vector8d collision_volume_grad(
+    void collision_volume_grad(
         const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj,
         const Eigen::Vector2d& Vk,
@@ -61,9 +61,11 @@ namespace autodiff {
         const Eigen::Vector2d& Uk,
         const Eigen::Vector2d& Ul,
         const ImpactNode impact_node,
-        const double epsilon);
+        const double epsilon,
+        Vector8d& grad,
+        Matrix8d& hessian);
 
-    Vector8d collision_volume_grad_fd(
+    void collision_volume_grad_fd(
         const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj,
         const Eigen::Vector2d& Vk,
@@ -73,7 +75,8 @@ namespace autodiff {
         const Eigen::Vector2d& Uk,
         const Eigen::Vector2d& Ul,
         const ImpactNode impact_node,
-        const double epsilon);
+        const double epsilon,
+        Vector8d& grad);
 
 }
 
