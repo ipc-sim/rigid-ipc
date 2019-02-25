@@ -163,23 +163,6 @@ void ViewerMenu::undo()
     }
 }
 
-void ViewerMenu::connect_selected_vertices()
-{
-    size_t num_sl = state.selected_points.size();
-    if (num_sl < 2) {
-        return;
-    }
-    Eigen::MatrixXi new_edges(num_sl - 1, 2);
-    for (uint i = 0; i < num_sl - 1; ++i) {
-        new_edges.row(i) << state.selected_points[i],
-            state.selected_points[i + 1];
-    }
-    state.add_edges(new_edges);
-    add_graph_edges(surface_data_id, state.vertices, new_edges, color_edge);
-    redraw_volumes();
-    state_history.push_back(state);
-}
-
 bool update_selection(const Eigen::MatrixXd& points, const int modifier,
     const Eigen::RowVector2d& click_coord, const double thr,
     std::vector<int>& selection)
@@ -240,6 +223,24 @@ void ViewerMenu::clicked__select(
     recolor_vertices();
 }
 
+void ViewerMenu::connect_selected_vertices()
+{
+    size_t num_sl = state.selected_points.size();
+    if (num_sl < 2) {
+        return;
+    }
+    Eigen::MatrixXi new_edges(num_sl - 1, 2);
+    for (uint i = 0; i < num_sl - 1; ++i) {
+        new_edges.row(i) << state.selected_points[i],
+            state.selected_points[i + 1];
+    }
+    state.add_edges(new_edges);
+    add_graph_edges(surface_data_id, state.vertices, new_edges, color_edge);
+
+    state_history.push_back(state);
+    redraw_scene();
+}
+
 void ViewerMenu::clicked__translate(
     const int /*button*/, const int modifier, const Eigen::RowVector2d& coord)
 {
@@ -251,7 +252,7 @@ void ViewerMenu::clicked__translate(
         for (size_t i = 0; i < num_sl; ++i) {
             state.move_vertex(state.selected_points[i], delta);
         }
-        redraw_scene();
+
     } else {
         size_t num_sl = state.selected_displacements.size();
         if (num_sl > 0) {
@@ -261,7 +262,6 @@ void ViewerMenu::clicked__translate(
             for (size_t i = 0; i < num_sl; ++i) {
                 state.move_displacement(state.selected_displacements[i], delta);
             }
-            redraw_displacements();
         }
     }
 }
@@ -274,7 +274,7 @@ void ViewerMenu::clicked__add_node(const int /*button*/, const int /*modifier*/,
     extend_vector_field(
         displ_data_id, state.vertices, state.displacements, 1, color_displ);
     extend_vector_field(
-        gradient_data_id, state.vertices, state.volume_grad, 1, color_grad);
+        gradient_data_id, state.vertices, state.get_volume_grad(), 1, color_grad);
 }
 
 void ViewerMenu::clicked__add_chain(const int /*button*/,
@@ -303,6 +303,7 @@ void ViewerMenu::clicked_on_canvas(
     }
     if (edit_mode == translate || edit_mode == add_node) {
         state_history.push_back(state);
+        redraw_scene();
     }
 }
 
@@ -359,6 +360,8 @@ void ViewerMenu::detect_edge_vertex_collisions()
 {
     try {
         state.detect_edge_vertex_collisions();
+        state_history.push_back(state);
+
     } catch (NotImplementedError e) {
         last_action_message = e.what();
         last_action_success = false;
@@ -370,10 +373,13 @@ void ViewerMenu::compute_collision_volumes()
     try {
         state.compute_collision_volumes();
         std::ostringstream volumes_string;
-        volumes_string << "Space Time Volume Intersections:\n" << state.volumes;
+        volumes_string << "Space Time Volume Intersections:\n"
+                       << state.volumes;
         last_action_message = volumes_string.str();
         redraw_volumes();
         redraw_volumes_grad();
+        state_history.push_back(state);
+
     } catch (NotImplementedError e) {
         last_action_message = e.what();
         last_action_success = false;
@@ -382,10 +388,11 @@ void ViewerMenu::compute_collision_volumes()
 
 void ViewerMenu::goto_ev_impact(const int impact)
 {
-    if (impact == -1) {
+    if (impact < 0) {
         state.time = 0.0;
-        state.current_ev_impact = impact;
+        state.current_ev_impact = -1;
         redraw_at_time();
+
     } else if (state.ev_impacts.size() > 0) {
         state.current_ev_impact = impact;
         state.current_ev_impact %= state.ev_impacts.size();
@@ -395,29 +402,35 @@ void ViewerMenu::goto_ev_impact(const int impact)
         redraw_at_time();
     }
 }
+
 void ViewerMenu::goto_ee_impact(const int impact)
 {
     if (impact < 0) { // Reset the time to zero
         state.time = 0.0;
-        state.current_ee_impact = -1;
+        state.current_edge = -1;
         redraw_at_time();
+
     } else if (state.num_pruned_impacts > 0) {
-        int modded_impact = impact % state.num_pruned_impacts;
-        int tmp = 0;
-        for (int i = 0; i <= state.edges_impact.rows(); i++) {
-            if (state.edges_impact[i] < 0)
-                continue;
-            if (tmp++ == modded_impact) {
-                state.current_ee_impact = modded_impact;
-                state.time = float(
-                    state
-                        .ee_impacts[state.edges_impact[state.current_ee_impact]]
-                        .time);
-                redraw_at_time();
-                return;
+        state.current_edge = impact % state.edges.rows();
+        if (state.skip_no_impact_edge) { // find edge with impact
+            int s = state.current_edge;
+            while (state.edge_impact_map[state.current_edge] < 0) {
+                state.current_edge += 1;
+                state.current_edge %= state.edges.rows();
+                if (s == state.current_edge) {
+                    state.current_edge = -1;
+                    state.time = 0.0;
+                    break;
+                }
             }
+        } else if (state.edge_impact_map[state.current_edge] < 0) {
+            state.time = 0.0;
+        } else {
+            state.time = float(state.get_edge_impact(state.current_edge).time);
         }
+        redraw_at_time();
     }
+    recolor_edges();
 }
 
 // ----------------------------------------------------------------------------------------------------------------------------
@@ -430,6 +443,14 @@ void ViewerMenu::recolor_vertices()
 
     color_points(displ_data_id, color_displ);
     highlight_points(displ_data_id, state.selected_displacements, color_sl);
+}
+
+void ViewerMenu::recolor_edges()
+{
+    color_edges(surface_data_id, color_edge);
+    if (state.current_edge >= 0) {
+        highlight_edge(surface_data_id, state.current_edge, color_sl);
+    }
 }
 
 void ViewerMenu::redraw_scene()
@@ -471,8 +492,8 @@ void ViewerMenu::redraw_volumes()
 
     for (int i = 0; i < num_edges; ++i) {
 
-        if (state.edges_impact[i] != -1) {
-            auto impact = state.ee_impacts[state.edges_impact[i]];
+        if (state.edge_impact_map[i] != -1) {
+            auto impact = state.ee_impacts[size_t(state.edge_impact_map[i])];
             auto vertices_toi
                 = state.vertices + state.displacements * impact.time;
             auto v_i_toi = vertices_toi.row(state.edges(i, 0));
@@ -620,6 +641,23 @@ void ViewerMenu::highlight_points(const unsigned long data_id,
 
     viewer->data_list[data_id].dirty
         |= igl::opengl::MeshGL::DIRTY_OVERLAY_POINTS;
+}
+void ViewerMenu::color_edges(
+    const unsigned long data_id, const Eigen::RowVector3d& color)
+{
+    Eigen::MatrixXd& lines = viewer->data_list[data_id].lines;
+    lines.block(0, 6, lines.rows(), 3).rowwise() = color;
+    viewer->data_list[data_id].dirty
+        |= igl::opengl::MeshGL::DIRTY_OVERLAY_LINES;
+}
+void ViewerMenu::highlight_edge(const unsigned long data_id,
+    const int edge, const Eigen::RowVector3d& color_hl)
+{
+    Eigen::MatrixXd& lines = viewer->data_list[data_id].lines;
+    lines.row(edge).segment(6, 3) = color_hl;
+
+    viewer->data_list[data_id].dirty
+        |= igl::opengl::MeshGL::DIRTY_OVERLAY_LINES;
 }
 
 // FIX of LIBIGL VIEWER FUNCTIONS

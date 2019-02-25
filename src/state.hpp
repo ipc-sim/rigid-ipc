@@ -34,18 +34,20 @@ public:
     EdgeEdgeImpacts ee_impacts;
 
     ///@brief #E,1 indices of the edges' first impact
-    Eigen::VectorXi edges_impact;
+    Eigen::VectorXi edge_impact_map;
+
     ///@brief The current number of pruned impacts
     int num_pruned_impacts;
 
     ///@brief #E,1 contact volume for each edge
     Eigen::VectorXd volumes;
 
-    ///@brief #2V,NV contact gradient for each volume
+    ///@brief 2*V,#E contact gradient for each edge
     Eigen::MatrixXd volume_grad;
 
     ///@brief method to use for contact detection
     DetectionMethod detection_method;
+
     ///@brief epsilon use on volume computation
     double epsilon = 1.0;
 
@@ -60,7 +62,8 @@ public:
 
     void set_vertex_position(
         const int vertex_idx, const Eigen::RowVector2d& position);
-    void move_vertex(const int vertex_idx, const Eigen::RowVector2d& delta);
+    void move_vertex(
+        const int vertex_idx, const Eigen::RowVector2d& delta);
     void move_displacement(
         const int vertex_idx, const Eigen::RowVector2d& delta);
 
@@ -68,6 +71,7 @@ public:
 
     Eigen::MatrixX2d get_volume_grad();
     Eigen::MatrixX2d get_vertex_at_time();
+    const EdgeEdgeImpact& get_edge_impact(const int edge_id);
 
     // SCENE CCD
     // ----------------------------------------------------------------------
@@ -89,9 +93,12 @@ public:
     /// impact
     int current_ev_impact;
 
-    /// @brief Use for any functionallity that requires showing only one ee
-    /// impact
-    int current_ee_impact;
+    /// @brief Use for any functionallity that requires showing info of only
+    /// one edge
+    int current_edge;
+
+    /// when going to next edge, skip edges with no impact
+    bool skip_no_impact_edge;
 
     double min_edge_width;
 };

@@ -40,14 +40,15 @@ void collision_volume_grad(const Eigen::MatrixX2d& vertices,
 
     Eigen::Vector2i e_ij = edges.row(edge_id);
     Eigen::Vector2i e_kl;
+
     if (edge_id == impact.impacted_edge_index) {
-        // impacted edge is this edge, and the impacting node is in
-        // the other edge.
+        // IJ is the impactED edge. The impacting node is K or L.
         e_kl = edges.row(impact.impacting_edge_index);
         impact_node = impact.impacting_alpha < 0.5 ? ccd::autodiff::vK
                                                    : ccd::autodiff::vL;
 
     } else if (edge_id == impact.impacting_edge_index) {
+        // IJ is the impactING edge
         e_kl = edges.row(impact.impacted_edge_index);
         impact_node = impact.impacting_alpha < 0.5 ? ccd::autodiff::vI
                                                    : ccd::autodiff::vJ;
@@ -66,23 +67,23 @@ void collision_volume_grad(const Eigen::MatrixX2d& vertices,
     Eigen::Vector2d Uk = displacements.row(e_kl(0));
     Eigen::Vector2d Ul = displacements.row(e_kl(1));
 
-    Vector8d el_grad = ccd::autodiff::collision_volume_grad(
-        Vi, Vj, Vk, Vl, Ui, Uj, Uk, Ul, impact_node, epsilon);
-    // NOTE: local gradient is in format xy, xy, xy, xy
-    // while global gradient is in format x,x,x,x ... y, y, y, y
-    // TODO: change local gradient format for _consistency_
-    auto num_v = vertices.rows();
-    grad(e_ij(0)) = el_grad(0);
-    grad(num_v + e_ij(0)) = el_grad(1);
+    // LOCAL gradient and hessian. Indices refer to the 4 vertices involded
+    // in the collision
+    Vector8d el_grad;
+    Matrix8d el_hessian;
 
-    grad(e_ij(1)) = el_grad(2);
-    grad(num_v + e_ij(1)) = el_grad(3);
+    ccd::autodiff::collision_volume_grad(
+        Vi, Vj, Vk, Vl, Ui, Uj, Uk, Ul, impact_node, epsilon, el_grad, el_hessian);
 
-    grad(e_kl(0)) = el_grad(4);
-    grad(num_v + e_kl(0)) = el_grad(5);
-
-    grad(e_kl(1)) = el_grad(6);
-    grad(num_v + e_kl(1)) = el_grad(7);
+    // Assemble into GLOBAL gradient and hessian
+    auto num_vertices = vertices.rows();
+    int nodes[4] = { e_ij(0), e_ij(1), e_kl(0), e_kl(1) };
+    // Note: global gradient is sorted as x,x,x,...y,y,y
+    // while local gradient is sorted as x,y,x,y,...,x,y
+    for (int i = 0; i < 4; i++) {
+        grad(nodes[i]) = el_grad(2 * i);
+        grad(nodes[i] + num_vertices) = el_grad(2 * i + 1);
+    }
 }
 
 double collision_volume(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
@@ -109,7 +110,7 @@ double collision_volume(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
     // volume = (1-t)\sqrt{\epsilon^2 \|e(t)\|^2 + (U_{ij} \cdot e(t)^\perp)^2}
     double volume = -(1.0 - toi)
         * std::sqrt(epsilon * epsilon * e_length_toi * e_length_toi
-            + U_ij_dot_e_rot90_toi * U_ij_dot_e_rot90_toi);
+              + U_ij_dot_e_rot90_toi * U_ij_dot_e_rot90_toi);
 
     return volume;
 }

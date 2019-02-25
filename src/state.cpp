@@ -13,7 +13,7 @@ State::State()
     : canvas_width(10)
     , canvas_height(10)
     , current_ev_impact(-1)
-    , current_ee_impact(-1)
+    , current_edge(-1)
     , min_edge_width(0.0)
 {
 }
@@ -27,16 +27,9 @@ void State::load_scene(std::string filename)
 
 void State::reset_scene()
 {
-    volumes.resize(edges.rows());
-    volumes.setZero();
+    reset_impacts();
 
-    edges_impact.resize(edges.rows());
-    edges_impact.setConstant(-1);
-
-    volume_grad.resize(0, 0);
-    volume_grad.setZero();
-
-    current_ee_impact = -1;
+    current_edge = -1;
     current_ev_impact = -1;
     time = 0.0;
     selected_displacements.clear();
@@ -72,7 +65,7 @@ void State::add_edges(const Eigen::MatrixX2i& new_edges)
         edges.row(lastid + i) << new_edges.row(i);
 
     // Add a new rows to the volume vector
-    edges_impact.conservativeResize(lastid + new_edges.rows());
+    edge_impact_map.conservativeResize(lastid + new_edges.rows());
     volumes.conservativeResize(lastid + new_edges.rows());
 
     reset_impacts();
@@ -106,13 +99,19 @@ Eigen::MatrixX2d State::get_vertex_at_time()
 
 Eigen::MatrixX2d State::get_volume_grad()
 {
-    if (current_ee_impact < 0 || volume_grad.cols() == 0) {
+    if (current_edge < 0 || volume_grad.cols() == 0) {
         return Eigen::MatrixX2d::Zero(vertices.rows(), kDIM);
     }
-    Eigen::MatrixXd grad = volume_grad.col(current_ee_impact);
+    Eigen::MatrixXd grad = volume_grad.col(current_edge);
     grad.resize(grad.rows() / kDIM, kDIM);
 
     return grad;
+}
+
+const EdgeEdgeImpact& State::get_edge_impact(const int edge_id){
+    size_t ee_impact_id = size_t(edge_impact_map[edge_id]);
+    assert(ee_impact_id >=0);
+    return ee_impacts[ee_impact_id];
 }
 
 // -----------------------------------------------------------------------------
@@ -121,9 +120,14 @@ Eigen::MatrixX2d State::get_volume_grad()
 void State::reset_impacts()
 {
 
+    volumes.resize(edges.rows());
     volumes.setZero();
-    volume_grad.resize(0, 0);
-    edges_impact.setConstant(-1);
+
+    edge_impact_map.resize(edges.rows());
+    edge_impact_map.setConstant(-1);
+
+    volume_grad.resize(vertices.size(), edges.rows());
+    volume_grad.setZero();
 
     ev_impacts.clear();
     ee_impacts.clear();
@@ -145,21 +149,22 @@ void State::detect_edge_vertex_collisions()
     // Assign first impact to each edge; we store one impact for each edge on
     // edges_impact and the impacts in ee_impacts
     this->num_pruned_impacts
-        = ccd::prune_impacts(this->ee_impacts, this->edges_impact);
+        = ccd::prune_impacts(this->ee_impacts, this->edge_impact_map);
 }
 
 void State::compute_collision_volumes()
 {
-    size_t num_impacts = this->ee_impacts.size();
-    this->volume_grad.resize(kDIM * this->vertices.rows(), long(num_impacts));
+    assert(this->volume_grad.cols() == this->edges.rows());
+    assert(this->volume_grad.rows() == this->vertices.size());
 
-    for (long i = 0; i < this->edges_impact.rows(); ++i) {
-        if (this->edges_impact[i] == -1) {
+    for (long i = 0; i < this->edge_impact_map.rows(); ++i) {
+        if (this->edge_impact_map[i] == -1) {
             this->volumes(i) = 0;
+            this->volume_grad.col(i).setZero();
             continue;
         }
 
-        EdgeEdgeImpact ee_impact = this->ee_impacts[this->edges_impact[i]];
+        EdgeEdgeImpact ee_impact = this->ee_impacts[size_t(this->edge_impact_map[i])];
 
         // get collision volume for this edge
         this->volumes(i) = ccd::collision_volume(

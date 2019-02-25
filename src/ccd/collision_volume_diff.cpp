@@ -4,6 +4,8 @@
 #include <autogen/collision_volume.hpp>
 #include <ccd/time_of_impact.hpp>
 
+#include <iostream>
+
 namespace ccd {
 namespace autodiff {
     template <typename T>
@@ -46,7 +48,7 @@ namespace autodiff {
         return ccd::autogen::collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
     }
 
-    Vector8d collision_volume_grad(
+    void collision_volume_grad(
         const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj,
         const Eigen::Vector2d& Vk,
@@ -56,7 +58,9 @@ namespace autodiff {
         const Eigen::Vector2d& Uk,
         const Eigen::Vector2d& Ul,
         const ImpactNode impact_node,
-        const double epsilon)
+        const double epsilon,
+        Vector8d& grad,
+        Matrix8d& hessian)
     {
         // All definitions using DScalar must be done after setVariableCount
         DiffScalarBase::setVariableCount(8);
@@ -68,10 +72,11 @@ namespace autodiff {
         DScalar volume(0.0);
 
         volume = collision_volume(Vi, Vj, Vk, Vl, DUi, DUj, DUk, DUl, impact_node, epsilon);
-
-        return volume.getGradient();
+        grad = volume.getGradient();
+        hessian = volume.getHessian();
     }
-    Vector8d collision_volume_grad_fd(
+
+    void collision_volume_grad_fd(
         const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj,
         const Eigen::Vector2d& Vk,
@@ -81,7 +86,8 @@ namespace autodiff {
         const Eigen::Vector2d& Uk,
         const Eigen::Vector2d& Ul,
         const ImpactNode impact_node,
-        const double epsilon)
+        const double epsilon,
+        Vector8d& grad)
     {
         auto f = [&](const Eigen::VectorXd& U) {
             Eigen::Vector2d ui = U.segment(0, 2);
@@ -93,7 +99,6 @@ namespace autodiff {
             return volume;
         };
 
-        Vector8d grad;
         Eigen::VectorXd finite_diff;
         Vector8d x;
         x.segment(0, 2) = Ui;
@@ -102,7 +107,7 @@ namespace autodiff {
         x.segment(6, 2) = Ul;
         ccd::finite_gradient(x, f, finite_diff);
         grad << finite_diff;
-        return grad;
+
     }
 
     template double collision_volume<double>(
