@@ -144,33 +144,27 @@ void ViewerMenu::draw_ccd_steps()
         }
 
         if (state.ev_impacts.size()) {
-            int impact_id = state.current_ev_impact + 1;
-            ImGui::Text("ev impact %i/%i", state.current_ev_impact + 1,
-                int(state.ev_impacts.size()));
-
-            if (ImGui::InputInt("##ev_impact", &impact_id)) {
-                goto_ev_impact(impact_id - 1);
-            }
-
-            if (ImGui::Button("Goto Next EV impact", ImVec2(-1, 0))) {
-                goto_ev_impact(state.current_ev_impact + 1);
+            if (ImGui::InputInt("VE Impact##ev_impact", &state.current_ev_impact)) {
+                goto_ev_impact(state.current_ev_impact);
             }
         }
-
+        if (state.ee_impacts.size()) {
+            if (ImGui::InputInt(
+                    "EE Impact##ee_impact", &state.current_edge)) {
+                goto_ee_impact(state.current_edge);
+            }
+            ImGui::Checkbox("skip empty", &state.skip_no_impact_edge);
+        }
         ImGui::Separator();
 
         if (state.ev_impacts.size()) {
+            ImGui::InputDouble("vol. epsilon", &state.epsilon);
             if (ImGui::Button("Compute Collision Volumes", ImVec2(-1, 0))) {
                 compute_collision_volumes();
             }
-            ImGui::InputDouble("vol. epsilon", &state.epsilon);
 
-            if (state.ee_impacts.size()) {
-                if (ImGui::InputInt(
-                        "EE##ee_impact", &state.current_ee_impact)) {
-                    goto_ee_impact(state.current_ee_impact);
-                }
-            }
+
+
         }
     }
 }

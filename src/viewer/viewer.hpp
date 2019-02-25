@@ -49,6 +49,7 @@ public:
     void clicked_on_canvas(
         const int button, const int modifier, const Eigen::RowVector2d& coord);
     void recolor_vertices();
+    void recolor_edges();
     void redraw_scene();
     void redraw_displacements();
     void redraw_at_time();
@@ -103,6 +104,12 @@ public:
 
     void highlight_points(const unsigned long data_id,
         const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl);
+
+    void color_edges(
+        const unsigned long data_id, const Eigen::RowVector3d& color);
+
+    void highlight_edge(const unsigned long data_id,
+        const int edge, const Eigen::RowVector3d& color_hl);
 
     // fixed on libigl viewer functions
     void viewer_set_edges(const unsigned long data_id, const Eigen::MatrixXd& P,
