@@ -7,7 +7,8 @@
 // #include <nlopt.hpp>
 
 #include <autodiff/finitediff.hpp>
-#include <ccd/optimization.hpp>
+#include <opt/barrier.hpp>
+#include <opt/newtons_method.hpp>
 
 using namespace ccd::opt;
 
@@ -23,23 +24,23 @@ TEST_CASE("Test ϕ and its derivatives", "[opt]")
     std::function<double(double, double)> phi;
     std::function<double(double, double)> phi_gradient;
     std::function<double(double, double)> phi_hessian;
-    SECTION("Test phi_spline")
+    SECTION("Test spline_barrier")
     {
-        phi = phi_spline;
-        phi_gradient = phi_spline_gradient;
-        phi_hessian = phi_spline_hessian;
+        phi = spline_barrier;
+        phi_gradient = spline_barrier_gradient;
+        phi_hessian = spline_barrier_hessian;
     }
-    SECTION("Test phi_log")
+    SECTION("Test log_barrier")
     {
-        phi = phi_log;
-        phi_gradient = phi_log_gradient;
-        phi_hessian = phi_log_hessian;
+        phi = log_barrier;
+        phi_gradient = log_barrier_gradient;
+        phi_hessian = log_barrier_hessian;
     }
-    SECTION("Test phi_hookean")
+    SECTION("Test hookean_barrier")
     {
-        phi = phi_hookean;
-        phi_gradient = phi_hookean_gradient;
-        phi_hessian = phi_hookean_hessian;
+        phi = hookean_barrier;
+        phi_gradient = hookean_barrier_gradient;
+        phi_hessian = hookean_barrier_hessian;
     }
 
     // Will be used to obtain a seed for the random number engine
@@ -75,26 +76,26 @@ TEST_CASE("Simple tests of Newton's Method", "[opt]")
     auto hessian = [](const Eigen::VectorXd& x) {
         return 2 * Eigen::MatrixXd::Identity(x.rows(), x.rows());
     };
-    Eigen::VectorXd x0;
+    Eigen::VectorXd x;
     SECTION("Dim = 1")
     {
-        x0 = Eigen::VectorXd(1);
-        x0 << 100;
+        x = Eigen::VectorXd(1);
+        x << 100;
     }
     SECTION("Dim = 3")
     {
-        x0 = Eigen::VectorXd(3);
-        x0 << 1, 2, 3;
+        x = Eigen::VectorXd(3);
+        x << 1, 2, 3;
     }
     SECTION("Dim = 10")
     {
-        x0 = Eigen::VectorXd(10);
-        x0 << 1, 2, 3, 4, 5, 6, 7, 8, 9, 0;
+        x = Eigen::VectorXd(10);
+        x << 1, 2, 3, 4, 5, 6, 7, 8, 9, 0;
     }
-    Eigen::VectorXd min = newtons_method(
-        x0, f, gradient, hessian, [](const Eigen::VectorXd&) { return true; });
-    CHECK(min.squaredNorm() == Approx(0).margin(1e-10));
-    CHECK(f(min) == Approx(0).margin(1e-10));
+    auto no_constraint = [](const Eigen::VectorXd&) { return true; };
+    newtons_method(x, f, gradient, hessian, no_constraint);
+    CHECK(x.squaredNorm() == Approx(0).margin(1e-10));
+    CHECK(f(x) == Approx(0).margin(1e-10));
 }
 
 TEST_CASE("Simple tests of Newton's Method with inequlity constraints", "[opt]")
@@ -117,21 +118,21 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints", "[opt]")
 
     double s = 1e-6;
     auto E = [&f, &g, &s](const Eigen::VectorXd& x) {
-        return f(x) + phi_spline(g(x), s);
+        return f(x) + spline_barrier(g(x), s);
     };
     auto E_gradient = [&](const Eigen::VectorXd& x) {
-        return f_gradient(x) + phi_spline_gradient(g(x), s) * g_gradient(x);
+        return f_gradient(x) + spline_barrier_gradient(g(x), s) * g_gradient(x);
     };
     auto E_hessian = [&](const Eigen::VectorXd& x) {
         return f_hessian(x)
-            + phi_spline_hessian(g(x), s) * g_gradient(x)
+            + spline_barrier_hessian(g(x), s) * g_gradient(x)
             * g_gradient(x).transpose()
-            + phi_spline_gradient(g(x), s) * g_hessian(x);
+            + spline_barrier_gradient(g(x), s) * g_hessian(x);
     };
 
-    Eigen::VectorXd x0(1);
-    x0[0] = 5;
-    Eigen::VectorXd min = newtons_method(x0, E, E_gradient, E_hessian,
+    Eigen::VectorXd x(1);
+    x[0] = 5;
+    newtons_method(x, E, E_gradient, E_hessian,
         [&g](const Eigen::VectorXd& x) { return g(x) >= 0; });
-    CHECK(min(0) == Approx(1.0));
+    CHECK(x[0] == Approx(1.0));
 }

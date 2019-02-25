@@ -10,7 +10,7 @@ class DegenerateEdgeError : public std::logic_error {
 public:
     /**
      * Create a degenerate edge error.
-
+     *
      * @param error_message Message describing the error.
      */
     DegenerateEdgeError(
