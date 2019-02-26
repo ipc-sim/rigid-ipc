@@ -1,6 +1,6 @@
 # https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 BasedOnStyle: WebKit
 ColumnLimit: 80
-AlignTrailingComments: false
+AlignTrailingComments: true
 FixNamespaceComments: false
 ReflowComments: true

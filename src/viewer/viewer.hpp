@@ -74,11 +74,15 @@ public:
     void goto_ev_impact(const int ev_impact);
     void goto_ee_impact(const int ee_impact);
 
+    // OPT actions
+    void single_optimization_step();
+
     // menu windows
     void draw_io();
     void draw_edit_modes();
     void draw_ui_settings();
     void draw_ccd_steps();
+    void draw_optimization();
 
     // utils functions
     void update_vector_field(const unsigned long data_id,

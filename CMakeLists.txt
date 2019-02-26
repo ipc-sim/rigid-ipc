@@ -36,8 +36,10 @@ set(SRCFILES
     src/ccd/collision_volume.cpp
     src/ccd/collision_volume_diff.cpp
     src/ccd/time_of_impact.cpp
+
     src/opt/barrier.cpp
     src/opt/newtons_method.cpp
+    src/opt/displacements_opt.cpp
 
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp)

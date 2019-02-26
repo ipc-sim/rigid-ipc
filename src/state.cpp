@@ -4,6 +4,9 @@
 #include "state.hpp"
 
 #include <ccd/collision_volume.hpp>
+#include <ccd/collision_volume_diff.hpp>
+
+#include <opt/displacements_opt.hpp>
 
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
@@ -108,9 +111,10 @@ Eigen::MatrixX2d State::get_volume_grad()
     return grad;
 }
 
-const EdgeEdgeImpact& State::get_edge_impact(const int edge_id){
+const EdgeEdgeImpact& State::get_edge_impact(const int edge_id)
+{
     size_t ee_impact_id = size_t(edge_impact_map[edge_id]);
-    assert(ee_impact_id >=0);
+    assert(ee_impact_id >= 0);
     return ee_impacts[ee_impact_id];
 }
 
@@ -138,6 +142,7 @@ void State::detect_edge_vertex_collisions()
     // Get impacts between vertex and edge
     ccd::detect_edge_vertex_collisions(
         vertices, displacements, edges, ev_impacts, detection_method);
+
     // Sort impacts by time for convient visualization
     std::sort(ev_impacts.begin(), ev_impacts.end(),
         compare_impacts_by_time<EdgeVertexImpact>);
@@ -156,27 +161,11 @@ void State::compute_collision_volumes()
 {
     assert(this->volume_grad.cols() == this->edges.rows());
     assert(this->volume_grad.rows() == this->vertices.size());
+    ccd::compute_volumes(vertices, displacements, edges, ee_impacts,
+        edge_impact_map, volume_epsilon, volumes);
 
-    for (long i = 0; i < this->edge_impact_map.rows(); ++i) {
-        if (this->edge_impact_map[i] == -1) {
-            this->volumes(i) = 0;
-            this->volume_grad.col(i).setZero();
-            continue;
-        }
-
-        EdgeEdgeImpact ee_impact = this->ee_impacts[size_t(this->edge_impact_map[i])];
-
-        // get collision volume for this edge
-        this->volumes(i) = ccd::collision_volume(
-            vertices, displacements, edges, ee_impact, int(i), this->epsilon);
-
-        // get collision volume gradient for this edge
-        Eigen::VectorXd grad;
-        ccd::collision_volume_grad(vertices, displacements, edges, ee_impact,
-            int(i), this->epsilon, grad);
-        assert(grad.rows() == this->volume_grad.rows());
-        this->volume_grad.col(i) = grad;
-    }
+    ccd::autodiff::compute_volumes_gradient(vertices, displacements, edges,
+        ee_impacts, edge_impact_map, volume_epsilon, volume_grad);
 }
 
 void State::run_full_pipeline()
@@ -184,4 +173,17 @@ void State::run_full_pipeline()
     this->detect_edge_vertex_collisions();
     this->compute_collision_volumes();
 }
+
+// -----------------------------------------------------------------------------
+// OPT
+// -----------------------------------------------------------------------------
+
+void State::single_optimization_step()
+{
+    opt_displacements.resizeLike(displacements);
+
+    ccd::opt::displacements_optimization_step(vertices, displacements, edges,
+        volume_epsilon, opt_barrier_s, opt_barrier_beta, detection_method, opt_displacements);
+}
+
 }

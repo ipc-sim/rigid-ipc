@@ -27,6 +27,9 @@ public:
     ///@brief #V,2 vertices displacements
     Eigen::MatrixX2d displacements;
 
+    ///@brief #V,2 optimized vertices displacements
+    Eigen::MatrixX2d opt_displacements;
+
     ///@brief All edge-vertex contact
     EdgeVertexImpacts ev_impacts;
 
@@ -49,7 +52,14 @@ public:
     DetectionMethod detection_method;
 
     ///@brief epsilon use on volume computation
-    double epsilon = 1.0;
+    double volume_epsilon = 1.0;
+
+    ///@brief variable s to use in optimization barrier
+    double opt_barrier_s =  1.0;
+
+    ///@brief variable beta to use in optimization barrier
+    double opt_barrier_beta =  1.0;
+
 
     // SCENE CRUD
     // ----------------------------------------------------------------------
@@ -79,6 +89,10 @@ public:
     void prune_impacts();
     void compute_collision_volumes();
     void run_full_pipeline();
+
+    // SCENE OPT
+    // ----------------------------------------------------------------------
+    void single_optimization_step();
 
     // UI
     // ----------------------------------------------------------------------

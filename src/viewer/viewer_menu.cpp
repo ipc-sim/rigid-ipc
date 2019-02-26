@@ -11,6 +11,8 @@ void ViewerMenu::draw_menu()
     ImGui::SetNextWindowSizeConstraints(
         ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
     bool _viewer_menu_visible = true;
+
+    // ---------------------------------------------------------------------------------
     ImGui::Begin("CCD Viewer", &_viewer_menu_visible,
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
@@ -23,12 +25,27 @@ void ViewerMenu::draw_menu()
     ImGui::PopItemWidth();
     ImGui::End();
 
+    // ---------------------------------------------------------------------------------
     ImGui::SetNextWindowPos(
         ImVec2(menu_width + 10.0f, 0.0f), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(
+        ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
+    bool _opt_menu_visible = true;
+
+    ImGui::Begin("Optimization", &_opt_menu_visible,
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
+    draw_optimization();
+    ImGui::End();
+
+    // ---------------------------------------------------------------------------------
+    ImGui::SetNextWindowPos(
+        ImVec2(2*menu_width + 10.0f, 0.0f), ImGuiSetCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(800.0f, 50.0f), ImGuiSetCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(
         ImVec2(200.0f, 30.0f), ImVec2(800.0f, -1.0f));
     bool _message_menu_visible = true;
+
     ImGui::Begin("CCD Message", &_message_menu_visible,
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
     static ImVec4 color_ok(0.0, 1.0, 0.0, 1.0);
@@ -158,13 +175,22 @@ void ViewerMenu::draw_ccd_steps()
         ImGui::Separator();
 
         if (state.ev_impacts.size()) {
-            ImGui::InputDouble("vol. epsilon", &state.epsilon);
+            ImGui::InputDouble("vol. epsilon", &state.volume_epsilon);
             if (ImGui::Button("Compute Collision Volumes", ImVec2(-1, 0))) {
                 compute_collision_volumes();
             }
 
 
 
+        }
+    }
+}
+
+void ViewerMenu::draw_optimization()
+{
+    if (ImGui::CollapsingHeader("Displacement Opt", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (ImGui::Button("Step##Opt", ImVec2(-1, 0))) {
+            single_optimization_step();
         }
     }
 }

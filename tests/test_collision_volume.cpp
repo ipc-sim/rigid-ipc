@@ -240,10 +240,9 @@ bool check_gradient(
     const double epsilon)
 {
     Vector8d grad, grad_fd;
-    Matrix8d hessian;
 
-    ccd::autodiff::collision_volume_grad(
-        Vi, Vj, Vk, Vl, Ui, Uj, Uk, Ul, ccd::autodiff::ImpactNode::vK, epsilon, grad, hessian);
+    grad = ccd::autodiff::collision_volume_differentiable(
+        Vi, Vj, Vk, Vl, Ui, Uj, Uk, Ul, ccd::autodiff::ImpactNode::vK, epsilon).getGradient();
     REQUIRE(!std::isnan(grad.squaredNorm()));
 
     ccd::autodiff::collision_volume_grad_fd(
