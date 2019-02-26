@@ -77,7 +77,7 @@ namespace opt {
         const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& gradient,
         const std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>& hessian,
         const std::function<bool(const Eigen::VectorXd&)>& constraint,
-        double mu = 1e-5, double epsilon = 1e-12);
+        double mu = 1e-5, double epsilon = 1e-12, int max_iter = 1000);
 
 }
 }

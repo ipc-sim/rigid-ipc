@@ -54,11 +54,13 @@ namespace opt {
         const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& gradient,
         const std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>& hessian,
         const std::function<bool(const Eigen::VectorXd&)>& constraint,
-        double mu, double epsilon)
+        double mu, double epsilon, int max_iter)
     {
-        while (newtons_method_step(
+        int i = 0;
+        while (i++ < max_iter
+            && newtons_method_step(
                    x, f, gradient, hessian, constraint, mu, epsilon)
-            > epsilon)
+                > epsilon)
             ;
     }
 

@@ -273,8 +273,8 @@ void ViewerMenu::clicked__add_node(const int /*button*/, const int /*modifier*/,
     add_graph_vertex(surface_data_id, state.vertices, coord, color_vtx);
     extend_vector_field(
         displ_data_id, state.vertices, state.displacements, 1, color_displ);
-    extend_vector_field(
-        gradient_data_id, state.vertices, state.get_volume_grad(), 1, color_grad);
+    extend_vector_field(gradient_data_id, state.vertices,
+        state.get_volume_grad(), 1, color_grad);
 }
 
 void ViewerMenu::clicked__add_chain(const int /*button*/,
@@ -373,8 +373,7 @@ void ViewerMenu::compute_collision_volumes()
     try {
         state.compute_collision_volumes();
         std::ostringstream volumes_string;
-        volumes_string << "Space Time Volume Intersections:\n"
-                       << state.volumes;
+        volumes_string << "Space Time Volume Intersections:\n" << state.volumes;
         last_action_message = volumes_string.str();
         redraw_volumes();
         redraw_volumes_grad();
@@ -423,10 +422,11 @@ void ViewerMenu::goto_ee_impact(const int impact)
                     break;
                 }
             }
-        } else if (state.edge_impact_map[state.current_edge] < 0) {
-            state.time = 0.0;
-        } else {
-            state.time = float(state.get_edge_impact(state.current_edge).time);
+        }
+        if (state.current_edge >= 0) {
+            state.time = state.edge_impact_map[state.current_edge] < 0
+                ? 0.0
+                : float(state.get_edge_impact(state.current_edge).time);
         }
         redraw_at_time();
     }
@@ -650,8 +650,8 @@ void ViewerMenu::color_edges(
     viewer->data_list[data_id].dirty
         |= igl::opengl::MeshGL::DIRTY_OVERLAY_LINES;
 }
-void ViewerMenu::highlight_edge(const unsigned long data_id,
-    const int edge, const Eigen::RowVector3d& color_hl)
+void ViewerMenu::highlight_edge(const unsigned long data_id, const int edge,
+    const Eigen::RowVector3d& color_hl)
 {
     Eigen::MatrixXd& lines = viewer->data_list[data_id].lines;
     lines.row(edge).segment(6, 3) = color_hl;
