@@ -17,11 +17,13 @@ def main(args=None):
     parser = argparse.ArgumentParser(args)
     parser.add_argument("output", type=str, help="path to the output folder")
     parser.add_argument("--num_links","-n", type=int, default=2)
-    parser.add_argument("--dt", "-d", type=float, default=0.5)
+    parser.add_argument("--dt", "-d", type=float, default=1e-2)
+    parser.add_argument("--time", "-t", type=float, nargs=2, default=[45,46])
     args = parser.parse_args()
 
     num_links = args.num_links
     output = args.output
+    t0, t1 = args.time
 
     dt = args.dt
     gravity = np.array([0.0, -9.81], dtype=np.float64)
@@ -40,18 +42,27 @@ def main(args=None):
     displ = np.empty((0, 2), dtype=np.float64)
     edges = np.empty((0, 2), dtype=np.int32)
 
-    def add_link(x, y, delta):
+    def add_link(x, y, dynamic):
         nonlocal vertices
         nonlocal edges
         nonlocal displ
 
+        if dynamic:
+            delta0 = gravity / 2.0 * ((t0 * dt) ** 2)
+            delta1 = gravity / 2.0 * ((t1 * dt) ** 2) - delta0
+        else:
+            delta0 = [0.0,0.0]
+            delta1 = [0.0,0.0]
+
+        new_vertices = V + [x,y]
+        new_vertices += delta0
         edges = np.append(edges, EVb + vertices.shape[0], axis=0)
-        vertices = np.append(vertices, V + [x,y], axis=0)
-        displ = np.append(displ, np.ones_like(V) * delta, axis=0)
+        vertices = np.append(vertices, new_vertices, axis=0)
+        displ = np.append(displ, np.ones_like(V) * delta1, axis=0)
 
     y = 40.0
     for i in range(0, num_links):
-        add_link(0.0, y, (delta if i > 0 else [0.0, 0.0]))
+        add_link(0.0, y, (True if i > 0 else False))
         y -= 9.0
 
     # scale to fit in our window 10 x 10 window

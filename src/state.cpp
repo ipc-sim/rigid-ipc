@@ -25,6 +25,19 @@ void State::load_scene(std::string filename)
 {
     io::read_scene(filename, vertices, edges, displacements);
 
+    // fit scene to canvas
+    Eigen::MatrixX2d all_vertices(vertices.rows() * 2, 2);
+    all_vertices  << vertices, vertices + displacements;
+
+    Eigen::Vector2d v_min = all_vertices.colwise().minCoeff();
+    Eigen::Vector2d v_max = all_vertices.colwise().maxCoeff();
+    Eigen::RowVector2d center = all_vertices.colwise().mean();
+    double scale = (v_max - v_min).norm();
+    double canvas_scale = std::sqrt(canvas_width * canvas_width +  canvas_height * canvas_height);
+
+    vertices = (vertices.rowwise() - center) * canvas_scale / scale;
+    displacements = displacements * canvas_scale / scale;
+
     reset_scene();
 }
 
