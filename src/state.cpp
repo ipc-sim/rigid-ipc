@@ -6,6 +6,7 @@
 #include <ccd/collision_volume.hpp>
 #include <ccd/collision_volume_diff.hpp>
 
+#include <opt/displacements_nlopt.hpp>
 #include <opt/displacements_opt.hpp>
 
 #include <io/read_scene.hpp>
@@ -27,13 +28,14 @@ void State::load_scene(std::string filename)
 
     // fit scene to canvas
     Eigen::MatrixX2d all_vertices(vertices.rows() * 2, 2);
-    all_vertices  << vertices, vertices + displacements;
+    all_vertices << vertices, vertices + displacements;
 
     Eigen::Vector2d v_min = all_vertices.colwise().minCoeff();
     Eigen::Vector2d v_max = all_vertices.colwise().maxCoeff();
     Eigen::RowVector2d center = all_vertices.colwise().mean();
     double scale = (v_max - v_min).norm();
-    double canvas_scale = std::sqrt(canvas_width * canvas_width +  canvas_height * canvas_height);
+    double canvas_scale = std::sqrt(
+        canvas_width * canvas_width + canvas_height * canvas_height);
 
     vertices = (vertices.rowwise() - center) * canvas_scale / scale;
     displacements = displacements * canvas_scale / scale;
@@ -195,8 +197,11 @@ void State::single_optimization_step()
 {
     opt_displacements.resizeLike(displacements);
 
-    ccd::opt::displacements_optimization_step(vertices, displacements, edges,
-        volume_epsilon, opt_barrier_s, opt_barrier_beta, detection_method, opt_displacements);
+    // ccd::opt::displacements_optimization_step(vertices, displacements, edges,
+    //     volume_epsilon, opt_barrier_s, opt_barrier_beta, detection_method,
+    //     opt_displacements);
+    ccd::opt::displacements_nlopt_step(vertices, displacements, edges,
+        volume_epsilon, detection_method, opt_displacements);
 }
 
 }

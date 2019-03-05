@@ -15,13 +15,14 @@ namespace opt {
     // Search along a search direction to find a scalar gamma in [0, 1] such
     // that f(x + gamma * dir) ≤ f(x).
     double constrained_line_search(const Eigen::VectorXd& x,
-        const Eigen::VectorXd& dir, std::function<double(Eigen::VectorXd)> f,
-        std::function<bool(Eigen::VectorXd)> constraint)
+        const Eigen::VectorXd& dir,
+        const std::function<double(const Eigen::VectorXd&)>& f,
+        const std::function<bool(const Eigen::VectorXd&)>& constraint)
     {
         double gamma = 1.0;
         double fx = f(x);
         for (int i = 0; i <= 32; i++) {
-            if (f(x + gamma * dir) <= fx && constraint(x + gamma * dir))
+            if (f(x + gamma * dir) < fx && constraint(x + gamma * dir))
                 return gamma;
             gamma /= 2.0;
         }

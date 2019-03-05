@@ -18,9 +18,7 @@ foreach(source IN ITEMS ${test_sources})
    source_group("tests" FILES "${source}")
 endforeach()
 
-# include_directories(/usr/local/include)
-# target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} catch warnings::all ${NLOPT_LIBRARIES})
-target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} catch warnings::all)
+target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} catch warnings::all ${NLOPT_LIBRARIES})
 
 # Register tests
 set(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS ON)

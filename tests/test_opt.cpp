@@ -4,7 +4,7 @@
 
 #include <Eigen/Core>
 #include <catch.hpp>
-// #include <nlopt.hpp>
+#include <nlopt.hpp>
 
 #include <autodiff/finitediff.hpp>
 #include <opt/barrier.hpp>
@@ -12,12 +12,36 @@
 
 using namespace ccd::opt;
 
-// TEST_CASE("Simple tests of NLOPT", "[nlopt]")
-// {
-//     auto f = [](Eigen::VectorXd x) { return x.squaredNorm(); };
-//     auto df = [](Eigen::VectorXd x) { return 2 * x; };
-//     nlopt::opt opt(nlopt::algorithm::NLOPT_LD_SLSQP, 10);
-// }
+double test_func(const std::vector<double>& x, std::vector<double>& grad,
+    void* /* my_func_data */)
+{
+    Eigen::VectorXd X
+        = Eigen::Map<const Eigen::VectorXd>(x.data(), long(x.size()));
+    if (!grad.empty()) {
+        Eigen::VectorXd gradX = 2 * X;
+        assert(size_t(gradX.size()) == size_t(grad.size()));
+        for (int i = 0; i < int(grad.size()); i++) {
+            grad[size_t(i)] = gradX[i];
+        }
+    }
+    return X.squaredNorm();
+}
+
+TEST_CASE("Simple tests of NLOPT", "[nlopt]")
+{
+    const int DIM = 10;
+    nlopt::opt opt(nlopt::LD_MMA, DIM);
+    std::vector<double> lb(DIM, -HUGE_VAL); // lower bounds
+    lb[0] = 1;
+    opt.set_lower_bounds(lb);
+    opt.set_min_objective(test_func, nullptr);
+    opt.set_xtol_rel(1e-12);
+    std::vector<double> x(DIM, 100); // some initial guess
+    double minf;                     // the minimum objective value, upon return
+    nlopt::result result = opt.optimize(x, minf);
+    CHECK(x[0] == Approx(1.0));
+    CHECK(minf == Approx(1.0));
+}
 
 TEST_CASE("Test ϕ and its derivatives", "[opt]")
 {
