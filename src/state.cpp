@@ -33,12 +33,15 @@ void State::load_scene(std::string filename)
     Eigen::Vector2d v_min = all_vertices.colwise().minCoeff();
     Eigen::Vector2d v_max = all_vertices.colwise().maxCoeff();
     Eigen::RowVector2d center = all_vertices.colwise().mean();
-    double scale = (v_max - v_min).norm();
-    double canvas_scale = std::sqrt(
-        canvas_width * canvas_width + canvas_height * canvas_height);
 
-    vertices = (vertices.rowwise() - center) * canvas_scale / scale;
-    displacements = displacements * canvas_scale / scale;
+    Eigen::Vector2d bbox = v_max - v_min;
+    if (bbox[0] > canvas_width || bbox[1] > canvas_height) {
+        double scale = std::min(
+            canvas_width * 0.5 / bbox[0], canvas_height * 0.5 / bbox[1]);
+
+        vertices = (vertices.rowwise() - center) * scale;
+        displacements = displacements * scale;
+    }
 
     reset_scene();
 }
@@ -52,6 +55,9 @@ void State::reset_scene()
     time = 0.0;
     selected_displacements.clear();
     selected_points.clear();
+
+    opt_displacements.resizeLike(displacements);
+    opt_displacements.setZero();
 }
 
 void State::save_scene(std::string filename)
@@ -69,6 +75,9 @@ void State::add_vertex(const Eigen::RowVector2d& position)
 
     displacements.conservativeResize(lastid + 1, kDIM);
     displacements.row(lastid) << 0.0, -0.1;
+
+    opt_displacements.conservativeResize(lastid + 1, kDIM);
+    opt_displacements.setZero();
 
     reset_impacts();
 }

@@ -51,7 +51,7 @@ public:
     void recolor_vertices();
     void recolor_edges();
     void redraw_scene();
-    void redraw_displacements();
+    void redraw_opt_displacements();
     void redraw_at_time();
     void redraw_volumes();
     void redraw_volumes_grad();
@@ -128,10 +128,11 @@ public:
     ViewerEditMode edit_mode;
 
     Eigen::RowVector3d color_vtx, color_edge, color_displ, color_grad,
-        color_canvas, color_sl;
+        color_opt_displ, color_canvas, color_sl;
     unsigned long canvas_data_id;
     unsigned long surface_data_id;
     unsigned long displ_data_id;
+    unsigned long opt_displ_data_id;
     unsigned long gradient_data_id;
     unsigned long volume_data_id;
 
