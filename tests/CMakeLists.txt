@@ -8,6 +8,7 @@ set(test_sources
     test_collision_volume.cpp
     test_time_of_impact.cpp
     test_opt.cpp
+    test_displacements_opt.cpp
     collision_generator.cpp
 )
 

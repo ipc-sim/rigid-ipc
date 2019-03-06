@@ -394,7 +394,6 @@ void ViewerMenu::compute_collision_volumes()
         redraw_volumes();
         redraw_volumes_grad();
         state_history.push_back(state);
-
     } catch (NotImplementedError e) {
         last_action_message = e.what();
         last_action_success = false;
@@ -455,6 +454,11 @@ void ViewerMenu::goto_ee_impact(const int impact)
 void ViewerMenu::single_optimization_step()
 {
     state.single_optimization_step();
+    std::ostringstream message;
+    message.precision(3);
+    message << "Optimal Displacments:\n"
+            << std::fixed << state.opt_displacements;
+    this->last_action_message = message.str();
     redraw_opt_displacements();
 }
 // ----------------------------------------------------------------------------------------------------------------------------

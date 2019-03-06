@@ -127,11 +127,6 @@ namespace opt {
         // We want volumes[i] ≥ 0, but NLopt expects constraints(x) ≤ 0,
         // so negate the volume and volume gradient.
         assert(size_t(volumes.size()) == size_t(m));
-        // Log the resulting volumes.
-        std::cout << "Volumes: " << std::endl;
-        for (unsigned i = 0; i < m; i++) {
-            std::cout << -volumes[i] << std::endl;
-        }
         // Store the volumes in the results.
         Eigen::VectorXd::Map(results, m) = -volumes;
     }
@@ -162,7 +157,6 @@ namespace opt {
             = Eigen::Map<Eigen::VectorXd>(x.data(), long(x.size()));
         Xopt.resize(Xopt.rows() / 2, 2);
         Uopt = Xopt;
-        std::cout << "Optimal Displacments:\n" << Uopt << std::endl;
     }
 
 }
