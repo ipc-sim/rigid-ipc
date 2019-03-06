@@ -43,7 +43,7 @@ namespace opt {
         Eigen::VectorXd delta_x = H.lu().solve(-g);
         double gamma = constrained_line_search(x, delta_x, f, constraint);
         if (gamma <= epsilon)
-            return 0; // ToDo: Figure out a better way to return this case.
+            return 0; // TODO: Figure out a better way to return this case.
         x += gamma * delta_x; // Store the return value for x_{n+1} in x
         assert(constraint(x));
         return g.squaredNorm();

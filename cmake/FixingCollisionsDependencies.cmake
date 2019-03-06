@@ -12,3 +12,22 @@ set(FIXING_COLLISIONS_EXTERNAL "${FIXING_COLLISIONS_ROOT}/3rd_party")
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
 list(REMOVE_DUPLICATES CMAKE_MODULE_PATH)
 include(FixingCollisionsDownloadExternal)
+
+################################################################################
+# Required libraries
+################################################################################
+
+# NLopt library
+if(NOT TARGET nlopt)
+    download_nlopt()
+    find_package(NLopt QUIET)
+    if(NLOPT_FOUND)
+        add_library(nlopt_nlopt INTERFACE)
+        target_link_libraries(nlopt_nlopt INTERFACE ${NLOPT_LIBRARIES})
+        target_compile_definitions(nlopt_nlopt INTERFACE -DHAS_NLOPT)
+        add_library(nlopt::nlopt ALIAS nlopt_nlopt)
+    else()
+        message(STATUS "NLopt not found!")
+        add_library(nlopt::nlopt INTERFACE IMPORTED)
+    endif()
+endif()

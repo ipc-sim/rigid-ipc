@@ -51,15 +51,15 @@ namespace opt {
      * @param[in] u Optimization variable for which to compute \f$f(u)\f$ and
      *              \f$\nabla f(u)\f$.
      * @param[out] grad Location to store \f$\nabla f(x)\f$.
-     * @param[in] data A pointer to the flattend initial displacments.
+     * @param[in] u_flat A pointer to the flattend initial displacments.
      * @return Returns the value \f$\|U - U_0\|^2\f$.
      */
     double objective(
-        const std::vector<double>& u, std::vector<double>& grad, void* data)
+        const std::vector<double>& u, std::vector<double>& grad, void* u_flat)
     {
-        assert(data); // Need the inital displacments to compute anything.
+        assert(u_flat); // Need the inital displacments to compute anything.
         const Eigen::MatrixXd U_FLAT
-            = *static_cast<const Eigen::MatrixXd*>(data);
+            = *static_cast<const Eigen::MatrixXd*>(u_flat);
         // Map the input displacment ot a Eigen Vector.
         const Eigen::VectorXd U
             = Eigen::Map<const Eigen::VectorXd>(u.data(), long(u.size()));
@@ -70,7 +70,7 @@ namespace opt {
             // This should always be true according to NLopt.
             assert(size_t(grad.size()) == size_t(DIFF_U.size()));
             // ∇f(U) = ∇ (U - U0)^T * (U - U0) = 2 * (U - U0)
-            Eigen::VectorXd::Map(&grad[0], grad.size()) = 2 * DIFF_U;
+            Eigen::VectorXd::Map(&grad[0], long(grad.size())) = 2 * DIFF_U;
         }
         return DIFF_U.squaredNorm(); // f(U) = (U - U0)^T * (U - U0)
     }

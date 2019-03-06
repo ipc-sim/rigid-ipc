@@ -14,13 +14,13 @@ namespace ccd {
 
 ViewerMenu::ViewerMenu(std::string scene_file)
     : edit_mode(ViewerEditMode::select)
-    , color_vtx(1.0, 0.0, 0.0) // #ff0000
-    , color_edge(1.0, 0.0, 0.0) // #ff0000
-    , color_displ(0.0, 1.0, 0.0) // #00ff00
-    , color_grad(1.0, 0.75, 0.0) // #ffc000
-    , color_opt_displ(0.0, 0.8, 0.0) // #00bb00
-    , color_canvas(0.3, 0.3, 0.5) // #4c4c80
-    , color_sl(1.0, 1.0, 0.0) // #ffff00
+    , color_vtx(1.0, 0.0, 0.0)             // #ff0000
+    , color_edge(1.0, 0.0, 0.0)            // #ff0000
+    , color_displ(0.0, 1.0, 0.0)           // #00ff00
+    , color_grad(1.0, 0.5, 0.0)            // #ff8000
+    , color_opt_displ(0.1875, 0.5, 0.1875) // #308030
+    , color_canvas(0.3, 0.3, 0.5)          // #4c4c80
+    , color_sl(1.0, 1.0, 0.0)              // #ffff00
     , scene_file(scene_file)
     , last_action_message("")
     , last_action_success(true)
@@ -49,10 +49,10 @@ void ViewerMenu::init(igl::opengl::glfw::Viewer* _viewer)
     surface_data_id = viewer->data_list.size() - 1;
 
     viewer->append_mesh();
-    displ_data_id = viewer->data_list.size() - 1;
+    opt_displ_data_id = viewer->data_list.size() - 1;
 
     viewer->append_mesh();
-    opt_displ_data_id = viewer->data_list.size() - 1;
+    displ_data_id = viewer->data_list.size() - 1;
 
     viewer->append_mesh();
     volume_data_id = viewer->data_list.size() - 1;
@@ -136,8 +136,8 @@ void ViewerMenu::load_state()
         state.vertices + state.opt_displacements, color_opt_displ);
     viewer->data_list[opt_displ_data_id].set_edges(
         Eigen::MatrixXd(), Eigen::MatrixXi(), color_edge);
-    viewer->data_list[opt_displ_data_id].add_edges(
-        state.vertices, state.vertices + state.opt_displacements, color_opt_displ);
+    viewer->data_list[opt_displ_data_id].add_edges(state.vertices,
+        state.vertices + state.opt_displacements, color_opt_displ);
     viewer->data_list[opt_displ_data_id].point_size = 1;
 
     // collisions - volumes & gradient
@@ -287,8 +287,8 @@ void ViewerMenu::clicked__add_node(const int /*button*/, const int /*modifier*/,
     add_graph_vertex(surface_data_id, state.vertices, coord, color_vtx);
     extend_vector_field(
         displ_data_id, state.vertices, state.displacements, 1, color_displ);
-    extend_vector_field(
-        opt_displ_data_id, state.vertices, state.opt_displacements, 1, color_displ);
+    extend_vector_field(opt_displ_data_id, state.vertices,
+        state.opt_displacements, 1, color_displ);
     extend_vector_field(gradient_data_id, state.vertices,
         state.get_volume_grad(), 1, color_grad);
 }
@@ -452,10 +452,10 @@ void ViewerMenu::goto_ee_impact(const int impact)
 // ----------------------------------------------------------------------------------------------------------------------------
 // OPT USER ACTIONS
 // ----------------------------------------------------------------------------------------------------------------------------
-void ViewerMenu::single_optimization_step(){
+void ViewerMenu::single_optimization_step()
+{
     state.single_optimization_step();
     redraw_opt_displacements();
-
 }
 // ----------------------------------------------------------------------------------------------------------------------------
 // DRAWING
@@ -486,7 +486,8 @@ void ViewerMenu::redraw_scene()
     update_vector_field(displ_data_id, state.vertices, state.displacements);
 
     // opt displacements
-    update_vector_field(opt_displ_data_id, state.vertices, state.opt_displacements);
+    update_vector_field(
+        opt_displ_data_id, state.vertices, state.opt_displacements);
 
     // collision - volumes
     redraw_volumes();
@@ -495,8 +496,10 @@ void ViewerMenu::redraw_scene()
     redraw_volumes_grad();
 }
 
-void ViewerMenu::redraw_opt_displacements(){
-    update_vector_field(opt_displ_data_id, state.vertices, state.opt_displacements);
+void ViewerMenu::redraw_opt_displacements()
+{
+    update_vector_field(
+        opt_displ_data_id, state.vertices, state.opt_displacements);
 }
 
 void ViewerMenu::redraw_at_time()

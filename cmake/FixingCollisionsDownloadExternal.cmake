@@ -29,3 +29,11 @@ function(download_catch2)
         GIT_TAG        v2.4.2
     )
 endfunction()
+
+## nlopt
+function(download_nlopt)
+    custom_download_project(nlopt
+        GIT_REPOSITORY https://github.com/stevengj/nlopt.git
+        GIT_TAG        master
+    )
+endfunction()

@@ -99,6 +99,7 @@ fixtures/auto_*.json
 
 3rd_party/.cache/
 3rd_party/Catch2
+3rd_party/nlopt
 
 ## Documentation
 docs

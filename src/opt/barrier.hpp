@@ -17,9 +17,9 @@ namespace ccd {
 namespace opt {
 
     enum BarrierType {
-        SPLINE, ///< A piecewise C2 function
-        LOG, ///< Negative log piecewise C0 function
-        HOOKEAN ///< Log squared function
+        SPLINE, ///< @brief A piecewise C2 function
+        LOG,    ///< @brief Negative log piecewise C0 function
+        HOOKEAN ///< @brief Log squared function
     };
 
     /**
