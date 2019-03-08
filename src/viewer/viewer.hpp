@@ -23,9 +23,12 @@ static const std::array<std::string, 4> ViewerEditModeNames
     = { { "Select", "Translate", "Add Node", "Add Chain" } };
 
 static const std::array<DetectionMethod, 2> DetectionMethodAll
-    = { { BRUTE_FORCE } };
-static const std::array<std::string, 2> DetectionMethodNames
-    = { { "BRUTE_FORCE" } };
+    = { BRUTE_FORCE, HASH_MAP };
+static const char* DetectionMethodNames = "BRUTE_FORCE\0HASH_MAP\0";
+
+static const std::array<opt::OptimizationMethod, 3> OptimizationMethodAll
+    = { opt::SLSQP, opt::MMA, opt::IP };
+static const char* OptimizationMethodNames = "SLSQP\0MMA\0IP\0";
 
 class ViewerMenu : public igl::opengl::glfw::imgui::ImGuiMenu {
 private:
@@ -75,7 +78,7 @@ public:
     void goto_ee_impact(const int ee_impact);
 
     // OPT actions
-    void single_optimization_step();
+    void optimize_displacements();
 
     // menu windows
     void draw_io();
@@ -112,8 +115,8 @@ public:
     void color_edges(
         const unsigned long data_id, const Eigen::RowVector3d& color);
 
-    void highlight_edge(const unsigned long data_id,
-        const int edge, const Eigen::RowVector3d& color_hl);
+    void highlight_edge(const unsigned long data_id, const int edge,
+        const Eigen::RowVector3d& color_hl);
 
     // fixed on libigl viewer functions
     void viewer_set_edges(const unsigned long data_id, const Eigen::MatrixXd& P,

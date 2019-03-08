@@ -35,7 +35,11 @@ void ViewerMenu::draw_menu()
 
     ImGui::Begin("Optimization", &_opt_menu_visible,
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
+
     draw_optimization();
+
+    ImGui::PopItemWidth();
     ImGui::End();
 
     // ---------------------------------------------------------------------------------
@@ -146,13 +150,9 @@ void ViewerMenu::draw_ccd_steps()
 {
     static int idx_detection_method = 0;
     if (ImGui::CollapsingHeader("CCD Steps", ImGuiTreeNodeFlags_DefaultOpen)) {
-        std::string combo_options;
-        for (const auto& piece : DetectionMethodNames)
-            combo_options += piece + "\0";
-        combo_options += "\0";
 
         if (ImGui::Combo(
-                "Method", &idx_detection_method, combo_options.c_str())) {
+                "method##ccd", &idx_detection_method, DetectionMethodNames)) {
             state.detection_method
                 = DetectionMethodAll[size_t(idx_detection_method)];
         }
@@ -185,10 +185,33 @@ void ViewerMenu::draw_ccd_steps()
 
 void ViewerMenu::draw_optimization()
 {
+    static int idx_optimization_method = 0;
     if (ImGui::CollapsingHeader(
-            "Displacement Opt", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (ImGui::Button("Step##Opt", ImVec2(-1, 0))) {
-            single_optimization_step();
+            "Displacement Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+        if (ImGui::Combo("method##opt", &idx_optimization_method,
+                OptimizationMethodNames)) {
+            state.opt_method
+                = OptimizationMethodAll[size_t(idx_optimization_method)];
+            // state.opt_displacements.setZero();
+        }
+
+        int opt_max_iter = state.opt_max_iter;
+        ImGui::InputInt("max iter##opt", &opt_max_iter);
+        if (opt_max_iter >= 0) {
+            state.opt_max_iter = unsigned(opt_max_iter);
+        }
+
+        ImGui::Checkbox(
+            "continue optimization##opt", &(state.reuse_opt_displacements));
+
+        if (ImGui::Button("Optimize##opt", ImVec2(-1, 0))) {
+            optimize_displacements();
+        }
+
+        if (ImGui::Button("Go To Optimal Displacments", ImVec2(-1, 0))) {
+            update_graph(surface_data_id,
+                state.vertices + state.opt_displacements, state.edges);
         }
     }
 }

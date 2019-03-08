@@ -11,10 +11,16 @@ namespace ccd {
  */
 namespace opt {
 
-    void displacements_optimization_step(const Eigen::MatrixX2d& V,
+    enum OptimizationMethod {
+        MMA,   ///<@brief Method of Moving Asymptotes (NLopt)
+        SLSQP, ///<@brief Sequential Least-Squares Quadratic Programming (NLopt)
+        IP     ///<@brief Interior-Point Method (Ipopt)
+    };
+
+    void displacements_optimization(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const double volume_epsilon, const double barrier_s,
-        const double barrier_beta, const DetectionMethod ccd_detection_method,
+        const double volume_epsilon, const DetectionMethod ccd_detection_method,
+        const OptimizationMethod opt_method, const unsigned max_iter,
         Eigen::MatrixX2d& Uopt);
 
     void detect_collisions(const Eigen::MatrixX2d& V, const Eigen::MatrixX2d& U,

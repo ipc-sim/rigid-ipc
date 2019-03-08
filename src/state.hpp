@@ -8,6 +8,8 @@
 #include <ccd/impact.hpp>
 #include <ccd/prune_impacts.hpp>
 
+#include <opt/displacements_opt.hpp>
+
 namespace ccd {
 
 /**
@@ -26,9 +28,6 @@ public:
     Eigen::MatrixX2i edges;
     ///@brief #V,2 vertices displacements
     Eigen::MatrixX2d displacements;
-
-    ///@brief #V,2 optimized vertices displacements
-    Eigen::MatrixX2d opt_displacements;
 
     ///@brief All edge-vertex contact
     EdgeVertexImpacts ev_impacts;
@@ -54,12 +53,23 @@ public:
     ///@brief epsilon use on volume computation
     double volume_epsilon = 1.0;
 
+    // TODO: Remove these fields unless we reuse them
     ///@brief variable s to use in optimization barrier
-    double opt_barrier_s =  1.0;
-
+    // double opt_barrier_s = 1.0;
     ///@brief variable beta to use in optimization barrier
-    double opt_barrier_beta =  1.0;
+    // double opt_barrier_beta = 1.0;
 
+    ///@brief #V,2 optimized vertices displacements
+    Eigen::MatrixX2d opt_displacements;
+
+    ///@brief Optimization method for displacment optimization
+    opt::OptimizationMethod opt_method = opt::SLSQP;
+
+    ///@brief Max number of iterations during optimization
+    unsigned opt_max_iter = 500;
+
+    ///@brief Reuse the current opt_displacements for initial optimization
+    bool reuse_opt_displacements = false;
 
     // SCENE CRUD
     // ----------------------------------------------------------------------
@@ -72,8 +82,7 @@ public:
 
     void set_vertex_position(
         const int vertex_idx, const Eigen::RowVector2d& position);
-    void move_vertex(
-        const int vertex_idx, const Eigen::RowVector2d& delta);
+    void move_vertex(const int vertex_idx, const Eigen::RowVector2d& delta);
     void move_displacement(
         const int vertex_idx, const Eigen::RowVector2d& delta);
 
@@ -92,7 +101,7 @@ public:
 
     // SCENE OPT
     // ----------------------------------------------------------------------
-    void single_optimization_step();
+    void optimize_displacements();
 
     // UI
     // ----------------------------------------------------------------------

@@ -6,9 +6,6 @@
 #include <ccd/collision_volume.hpp>
 #include <ccd/collision_volume_diff.hpp>
 
-#include <opt/displacements_nlopt.hpp>
-#include <opt/displacements_opt.hpp>
-
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
 
@@ -121,7 +118,6 @@ void State::move_displacement(
 Eigen::MatrixX2d State::get_vertex_at_time()
 {
     return vertices + displacements * double(time);
-    ;
 }
 
 Eigen::MatrixX2d State::get_volume_grad()
@@ -202,15 +198,15 @@ void State::run_full_pipeline()
 // OPT
 // -----------------------------------------------------------------------------
 
-void State::single_optimization_step()
+void State::optimize_displacements()
 {
     opt_displacements.resizeLike(displacements);
-
-    // ccd::opt::displacements_optimization_step(vertices, displacements, edges,
-    //     volume_epsilon, opt_barrier_s, opt_barrier_beta, detection_method,
-    //     opt_displacements);
-    ccd::opt::displacements_nlopt_step(vertices, displacements, edges,
-        volume_epsilon, detection_method, opt_displacements);
+    if (!this->reuse_opt_displacements) {
+        opt_displacements.setZero();
+    }
+    ccd::opt::displacements_optimization(vertices, displacements, edges,
+        volume_epsilon, detection_method, opt_method, opt_max_iter,
+        opt_displacements);
 }
 
 }

@@ -21,6 +21,8 @@ namespace opt {
         const double volume_epsilon; ///< @brief Epsilon for STIV computation.
         /// @brief Collision detection method
         const DetectionMethod ccd_detection_method;
+        const EdgeEdgeImpacts& ee_impacts;
+        const Eigen::VectorXi& edge_impact_map;
 
         /**
          * @brief Store the data needed for optimization.
@@ -35,12 +37,16 @@ namespace opt {
          */
         OptData(const Eigen::MatrixX2d& V, const Eigen::MatrixX2d& U,
             const Eigen::MatrixX2i& E, const double volume_epsilon,
-            const DetectionMethod ccd_detection_method)
+            const DetectionMethod ccd_detection_method,
+            const EdgeEdgeImpacts& ee_impacts,
+            const Eigen::VectorXi& edge_impact_map)
             : V(V)
             , U(U)
             , E(E)
             , volume_epsilon(volume_epsilon)
             , ccd_detection_method(ccd_detection_method)
+            , ee_impacts(ee_impacts)
+            , edge_impact_map(edge_impact_map)
         {
         }
     };
@@ -102,6 +108,8 @@ namespace opt {
         U.resize(U.rows() / 2, 2);
 
         // Detect the collisions for the input displacments.
+        // const EdgeEdgeImpacts& ee_impacts = _->ee_impacts;
+        // const Eigen::VectorXi& edge_impact_map = _->edge_impact_map;
         EdgeEdgeImpacts ee_impacts;
         Eigen::VectorXi edge_impact_map(E.rows());
         detect_collisions(
@@ -132,31 +140,45 @@ namespace opt {
     }
 
     // Optimize the displacments using NLopt.
-    void displacements_nlopt_step(const Eigen::MatrixX2d& V,
+    void displacements_optimization_nlopt(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const double volume_epsilon, const DetectionMethod ccd_detection_method,
-        Eigen::MatrixX2d& Uopt, const nlopt::algorithm opt_method)
+        const nlopt::algorithm opt_method, const unsigned max_iter,
+        Eigen::MatrixX2d& Uopt)
     {
         Eigen::MatrixXd U_flat = U;
         U_flat.resize(U.size(), 1);
 
+        EdgeEdgeImpacts ee_impacts;
+        Eigen::VectorXi edge_impact_map(E.rows());
+        detect_collisions(
+            V, U, E, ccd_detection_method, ee_impacts, edge_impact_map);
+
         // Construct the data class to pass to the optimization.
-        OptData data(V, U, E, volume_epsilon, ccd_detection_method);
+        OptData data(V, U, E, volume_epsilon, ccd_detection_method, ee_impacts,
+            edge_impact_map);
 
         nlopt::opt opt(opt_method, unsigned(U.size())); // Optimization object
         opt.set_min_objective(objective, &U_flat);
         std::vector<double> tol(unsigned(E.rows()), 1e-8); // Tolerances
+
         // m volume constraints
         opt.add_inequality_mconstraint(volume_constraints, &data, tol);
-        opt.set_xtol_rel(1e-12);
-        opt.set_maxeval(1000);
-        std::vector<double> x(size_t(U.size()), 0); // initial guess is zero
-        double minf; // the minimum objective value, upon return
-        opt.optimize(x, minf);
-        Eigen::MatrixXd Xopt
-            = Eigen::Map<Eigen::VectorXd>(x.data(), long(x.size()));
-        Xopt.resize(Xopt.rows() / 2, 2);
-        Uopt = Xopt;
+
+        // Stopping criteria
+        opt.set_xtol_rel(1e-8);
+        // opt.set_xtol_abs(1e-6);
+        opt.set_maxeval(int(max_iter));
+
+        // Initial guess is the value of Uopt
+        std::vector<double> x(Uopt.data(), Uopt.data() + Uopt.size());
+        double minf; // The minimum objective value, upon return
+
+        opt.optimize(x, minf); // Optimize the displacments
+
+        Uopt.col(0) = Eigen::Map<Eigen::VectorXd>(x.data(), Uopt.rows());
+        Uopt.col(1)
+            = Eigen::Map<Eigen::VectorXd>(x.data() + Uopt.rows(), Uopt.rows());
     }
 
 }

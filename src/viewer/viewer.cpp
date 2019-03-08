@@ -451,15 +451,29 @@ void ViewerMenu::goto_ee_impact(const int impact)
 // ----------------------------------------------------------------------------------------------------------------------------
 // OPT USER ACTIONS
 // ----------------------------------------------------------------------------------------------------------------------------
-void ViewerMenu::single_optimization_step()
+void ViewerMenu::optimize_displacements()
 {
-    state.single_optimization_step();
-    std::ostringstream message;
-    message.precision(3);
-    message << "Optimal Displacments:\n"
-            << std::fixed << state.opt_displacements;
-    this->last_action_message = message.str();
-    redraw_opt_displacements();
+    try {
+        state.optimize_displacements();
+        std::ostringstream message;
+        message.precision(3);
+        Eigen::MatrixXd U = state.opt_displacements;
+        U.resize(U.size(), 1);
+        Eigen::MatrixXd U0 = state.displacements;
+        U0.resize(U0.size(), 1);
+        message << "||U-U0||² = " << (U - U0).squaredNorm() << std::endl;
+        message << "Optimal Displacments:\n"
+                << std::fixed << state.opt_displacements;
+        this->last_action_message = message.str();
+        redraw_opt_displacements();
+        last_action_success = true;
+    } catch (NotImplementedError e) {
+        last_action_message = e.what();
+        last_action_success = false;
+    } catch (std::runtime_error e) {
+        last_action_message = e.what();
+        last_action_success = false;
+    }
 }
 // ----------------------------------------------------------------------------------------------------------------------------
 // DRAWING

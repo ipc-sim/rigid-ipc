@@ -199,16 +199,14 @@ namespace autodiff {
         case vK:
             success = compute_edge_vertex_time_of_impact(
                 Vi, Vj, Vk, Ui, Uj, Uk, toi);
-            success = success
-                && temporal_parameterization_to_spatial(
-                       Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha);
+            success &= temporal_parameterization_to_spatial(
+                Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha);
             break;
         case vL:
             success = compute_edge_vertex_time_of_impact(
                 Vi, Vj, Vl, Ui, Uj, Ul, toi);
-            success = success
-                && temporal_parameterization_to_spatial(
-                       Vi, Vj, Vl, Ui, Uj, Ul, toi, alpha);
+            success &= temporal_parameterization_to_spatial(
+                Vi, Vj, Vl, Ui, Uj, Ul, toi, alpha);
             break;
         case vI:
             success = compute_edge_vertex_time_of_impact(
@@ -222,7 +220,9 @@ namespace autodiff {
             break;
         }
 
-        assert(success);
+        // assert(success);
+        if (!success)
+            return T(0.0);
 
         return ccd::autogen::collision_volume(
             Vi, Vj, Ui, Uj, toi, alpha, epsilon);
