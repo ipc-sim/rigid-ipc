@@ -27,7 +27,7 @@ double test_func(const std::vector<double>& x, std::vector<double>& grad,
     return X.squaredNorm();
 }
 
-TEST_CASE("Simple tests of NLOPT", "[nlopt]")
+TEST_CASE("Simple tests of NLOPT", "[opt][nlopt]")
 {
     const int DIM = 10;
     nlopt::opt opt(nlopt::LD_MMA, DIM);
@@ -43,7 +43,7 @@ TEST_CASE("Simple tests of NLOPT", "[nlopt]")
     CHECK(minf == Approx(1.0));
 }
 
-TEST_CASE("Test ϕ and its derivatives", "[opt]")
+TEST_CASE("Test ϕ and its derivatives", "[opt][barrier]")
 {
     std::function<double(double, double)> phi;
     std::function<double(double, double)> phi_gradient;

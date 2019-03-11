@@ -3,13 +3,15 @@ cmake_minimum_required(VERSION 3.1)
 
 set(test_sources
     main.cpp
+    collision_generator.cpp
     test_ccd.cpp
     test_impact_pruning.cpp
     test_collision_volume.cpp
     test_time_of_impact.cpp
-    test_opt.cpp
-    test_displacements_opt.cpp
-    collision_generator.cpp
+
+    opt/test_displacements_opt.cpp
+    opt/test_opt.cpp
+    opt/test_IpEigenInterfaceTNLP.cpp
 )
 
 add_executable(unit_tests ${test_sources})

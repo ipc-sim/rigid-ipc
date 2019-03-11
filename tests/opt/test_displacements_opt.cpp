@@ -9,7 +9,7 @@
 using namespace ccd;
 using namespace opt;
 
-TEST_CASE("Displacment optimization test", "[!shouldfail][opt]")
+TEST_CASE("Displacment optimization test", "[!shouldfail][opt][displacements]")
 {
     Eigen::MatrixX2d V;
     V.resize(4, 2);
