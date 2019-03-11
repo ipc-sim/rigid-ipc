@@ -1,3 +1,5 @@
+#ifdef BUILD_WITH_IPOPT
+
 #include "IpEigenInterfaceTNLP.hpp"
 
 #include "IpIpoptApplication.hpp"
@@ -259,3 +261,4 @@ namespace opt {
 }
 
 }
+#endif

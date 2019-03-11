@@ -1,9 +1,11 @@
+#ifdef BUILD_WITH_IPOPT
+
 #include <iomanip>
 #include <iostream>
 
 #include <catch.hpp>
 
-#ifdef BUILD_IPOPT
+
 
 #include <opt/IpEigenInterfaceTNLP.hpp>
 
