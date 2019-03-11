@@ -41,7 +41,7 @@ set(SRCFILES
     src/opt/barrier.cpp
     src/opt/newtons_method.cpp
     src/opt/displacements_opt.cpp
-    src/opt/displacements_nlopt.cpp
+    src/opt/displacements_opt_nlopt.cpp
 
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp)
@@ -101,7 +101,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
 # Json Parser
 add_library(json INTERFACE)
 target_include_directories(json SYSTEM INTERFACE ${THIRD_PARTY_DIR}/json/include)
-target_link_libraries(${PROJECT_NAME}_bin PUBLIC json)
+target_link_libraries(${PROJECT_NAME} PUBLIC json)
 
 # NLopt
 target_link_libraries(${PROJECT_NAME} PUBLIC nlopt::nlopt)

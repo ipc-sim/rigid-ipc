@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>Optimization Comparison</title>
+    <script type="text/javascript" src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <div id="MMAFigure"></div>
+    <div id="SLSQPFigure"></div>
+    <script type="text/javascript">
+        var layout = {
+            xaxis: {
+                title: "Iteration #"
+            },
+            yaxis: {
+                // title: "||U-U₀||²"
+            }
+        };
+
+        function objective_vs_constraints(method_name, figure) {
+            var objectives = {
+                x: figure.data.x,
+                y: figure.data.objectives,
+                name: method_name + " Objectives"
+            };
+            var constraints = {
+                x: figure.data.x,
+                y: figure.data.constraints,
+                name: method_name + " Constraints"
+            };
+            var m_layout = Object.assign({}, layout);
+            m_layout.title = method_name + " Optimization Method";
+            Plotly.plot(method_name + "Figure", [objectives, constraints],
+                m_layout);
+        };
+
+        Plotly.d3.json("mma-opt-steps.json", function(figure) {
+            objective_vs_constraints("MMA", figure)
+        });
+        Plotly.d3.json("slsqp-opt-steps.json", function(figure) {
+            objective_vs_constraints("SLSQP", figure)
+        });
+    </script>
+</body>
+
+</html>

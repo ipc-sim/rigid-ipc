@@ -198,13 +198,13 @@ void State::run_full_pipeline()
 // OPT
 // -----------------------------------------------------------------------------
 
-void State::optimize_displacements()
+double State::optimize_displacements()
 {
     opt_displacements.resizeLike(displacements);
     if (!this->reuse_opt_displacements) {
         opt_displacements.setZero();
     }
-    ccd::opt::displacements_optimization(vertices, displacements, edges,
+    return ccd::opt::displacements_optimization(vertices, displacements, edges,
         volume_epsilon, detection_method, opt_method, opt_max_iter,
         opt_displacements);
 }

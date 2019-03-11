@@ -24,8 +24,9 @@ namespace opt {
      * @param[in] max_iter Maximum number of optimization iterations.
      * @param[in,out] Uopt Inital value for optimization and optimal
      *                     displacments to return at termination.
+     * @return The value of the objective for the minimum found.
      */
-    void displacements_optimization_nlopt(const Eigen::MatrixX2d& V,
+    double displacements_optimization_nlopt(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const double volume_epsilon, const DetectionMethod ccd_detection_method,
         const nlopt::algorithm opt_method, const unsigned max_iter,

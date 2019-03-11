@@ -16,6 +16,7 @@ namespace ccd {
  */
 namespace opt {
 
+    /// @brief Barriers for enforcing inequality constraints.
     enum BarrierType {
         SPLINE, ///< @brief A piecewise C2 function
         LOG,    ///< @brief Negative log piecewise C0 function
