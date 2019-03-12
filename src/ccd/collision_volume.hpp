@@ -18,10 +18,10 @@ namespace ccd {
  *
  *  @param[out] volumes     : The space-time interference volume for each edge.
  */
-void compute_volumes(const Eigen::MatrixX2d& V, const Eigen::MatrixX2d& U,
-    const Eigen::MatrixX2i& E, const EdgeEdgeImpacts& ee_impacts,
-    const Eigen::VectorXi& edge_impact_map, const double epsilon,
-    Eigen::VectorXd& volumes);
+void compute_volumes_fixed_toi(const Eigen::MatrixX2d& V,
+    const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+    const EdgeEdgeImpacts& ee_impacts, const Eigen::VectorXi& edge_impact_map,
+    const double epsilon, Eigen::VectorXd& volumes);
 
 /**
  * Compute the collision volume for an edge-edge impact
@@ -35,7 +35,7 @@ void compute_volumes(const Eigen::MatrixX2d& V, const Eigen::MatrixX2d& U,
  *
  *  @return                     : The space-time interference volume.
  */
-double collision_volume(const Eigen::MatrixX2d& vertices,
+double collision_volume_fixed_toi(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
     const EdgeEdgeImpact& impact, const int edge_id, const double epsilon);
 
@@ -53,8 +53,8 @@ double collision_volume(const Eigen::MatrixX2d& vertices,
  *
  *  @return                : The space-time interference volume.
  */
-double collision_volume(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
-    const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj, const double& toi,
-    const double& alpha, const double epsilon);
+double space_time_collision_volume(const Eigen::Vector2d& Vi,
+    const Eigen::Vector2d& Vj, const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj, const double& toi, const double& alpha,
+    const double epsilon);
 }
-

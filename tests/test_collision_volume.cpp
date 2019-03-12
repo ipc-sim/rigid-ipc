@@ -210,11 +210,11 @@ void check_volume(
 {
 
     double actual_vol
-        = ccd::collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
+        = ccd::space_time_collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
     CHECK(actual_vol == Approx(expected_vol));
 
     double autogen_vol
-        = ccd::autogen::collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
+        = ccd::autogen::space_time_collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
     CHECK(autogen_vol == Approx(expected_vol));
 
     double autodiff_vol = ccd::autodiff::collision_volume(

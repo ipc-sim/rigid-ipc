@@ -155,7 +155,7 @@ namespace opt {
 
         // Compute the STIVs
         Eigen::VectorXd volumes;
-        ccd::compute_volumes(constraint_data->V, U, constraint_data->E,
+        ccd::compute_volumes_fixed_toi(constraint_data->V, U, constraint_data->E,
             ee_impacts, edge_impact_map, constraint_data->VOLUME_EPSILON,
             volumes);
 
@@ -289,7 +289,7 @@ namespace opt {
         detect_collisions(
             V, Uopt, E, ccd_detection_method, ee_impacts, edge_impact_map);
         Eigen::VectorXd volumes;
-        ccd::compute_volumes(
+        ccd::compute_volumes_fixed_toi(
             V, Uopt, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
 
         bool solve_successful

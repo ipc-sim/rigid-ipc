@@ -43,6 +43,7 @@ set(SRCFILES
     src/opt/newtons_method.cpp
     src/opt/displacements_opt.cpp
     src/opt/displacements_opt_nlopt.cpp
+    src/opt/displacements_opt_ipopt.cpp
     src/opt/IpEigenInterfaceTNLP.cpp
 
     src/autodiff/finitediff.cpp
@@ -111,7 +112,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC nlopt::nlopt)
 if(ENABLE_IPOPT)
     find_package(IPOPT)
     if (IPOPT_FOUND)
-        message("Including Ipopt")
         add_definitions(-DBUILD_WITH_IPOPT)
         target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${IPOPT_INCLUDE_DIR} )
         link_directories(${IPOPT_LIBRARY_DIR})

@@ -45,7 +45,7 @@ namespace opt {
         typedef std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>
             callback_jac_g;
         typedef std::function<void(const Eigen::VectorXd& x,
-            const double obj_value, const int iteration)>
+            const double obj_value, const Eigen::VectorXd& dual, const int iteration)>
             callback_intermediate;
 
         struct IpoptResult {

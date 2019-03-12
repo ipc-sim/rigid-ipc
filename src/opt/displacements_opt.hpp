@@ -58,6 +58,7 @@ namespace opt {
         const Eigen::MatrixX2i& E, const ccd::DetectionMethod detection_method,
         EdgeEdgeImpacts& ee_impacts, Eigen::VectorXi& edge_impact_map);
 
+    void export_intermediate(const OptimizationMethod method, const std::vector<double>& objectives, const std::vector<double>& constraints);
 }
 
 }

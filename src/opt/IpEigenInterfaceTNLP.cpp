@@ -31,13 +31,6 @@ namespace opt {
 
             ApplicationReturnStatus app_status;
             app_status = app->Initialize();
-            if (app_status != Solve_Succeeded) {
-                IpoptResult result;
-                result.x = x0;
-                result.app_status = app_status;
-                result.success = false;
-                return result;
-            }
 
             SmartPtr<EigenInterfaceTNLP> nlp
                 = new EigenInterfaceTNLP(f, x0, grad_f, x_lower, x_upper,
@@ -236,10 +229,11 @@ namespace opt {
                             GetRawPtr(orignlp->nlp()));
                 }
                 Eigen::VectorXd primals(num_vars);
+                Eigen::VectorXd dualeqs(num_constraints);
                 tnlp_adapter->ResortX(*ip_data->curr()->x(), primals.data());
-
+                tnlp_adapter->ResortG(*ip_data->curr()->y_c(), *ip_data->curr()->y_d(), dualeqs.data());
                 if (intermediate_cb_) {
-                    intermediate_cb_(primals, obj_value, iter);
+                    intermediate_cb_(primals, obj_value, dualeqs, iter);
                 }
             }
             return true;
@@ -254,6 +248,8 @@ namespace opt {
             result.x = Eigen::Map<const Eigen::VectorXd>(&x[0], num_vars);
             result.value = obj_value;
             result.status = status;
+            std::cout << "solver_return: " << SolverReturnStrings[status] << std::endl;
+            std::cout << result.x.transpose() << std::endl;
         }
 
     }

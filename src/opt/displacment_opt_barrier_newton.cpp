@@ -45,7 +45,7 @@ void displacements_optimization_step(const Eigen::MatrixX2d& V,
             V, u, E, ccd_detection_method, ee_impacts, edge_impact_map);
 
         Eigen::VectorXd volumes;
-        ccd::compute_volumes(
+        ccd::compute_volumes_fixed_toi(
             V, u, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
 
         Eigen::MatrixXd U_flat;
@@ -69,7 +69,7 @@ void displacements_optimization_step(const Eigen::MatrixX2d& V,
             V, u, E, ccd_detection_method, ee_impacts, edge_impact_map);
 
         Eigen::VectorXd volumes;
-        ccd::compute_volumes(
+        ccd::compute_volumes_fixed_toi(
             V, u, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
 
         Eigen::MatrixXd volume_gradient;
@@ -106,7 +106,7 @@ void displacements_optimization_step(const Eigen::MatrixX2d& V,
             edge_impact_map, volume_epsilon, volume_hessian);
 
         Eigen::VectorXd volumes;
-        ccd::compute_volumes(
+        ccd::compute_volumes_fixed_toi(
             V, u, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
 
         Eigen::MatrixXd volume_gradient;

@@ -13,6 +13,27 @@ namespace autodiff {
     // ALL IMPACTS GLOBAL Volumes Derivatives
     // -----------------------------------------------------------------------------
 
+    void compute_volumes_refresh_toi(const Eigen::MatrixX2d& V, const Eigen::MatrixX2d& U,
+        const Eigen::MatrixX2i& E, const EdgeEdgeImpacts& ee_impacts,
+        const Eigen::VectorXi& edge_impact_map, const double epsilon,
+        Eigen::VectorXd& volumes)
+    {
+
+        volumes.resize(E.rows());
+
+        for (long i = 0; i < edge_impact_map.rows(); ++i) {
+            if (edge_impact_map[i] == -1) {
+                volumes(i) = 0.0;
+                continue;
+            }
+
+            EdgeEdgeImpact ee_impact = ee_impacts[size_t(edge_impact_map[i])];
+
+            volumes(i) = collision_volume_refresh_toi(
+                V, U, E, ee_impact, int(i), epsilon);
+        }
+    }
+
     void compute_volumes_gradient(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
@@ -62,8 +83,47 @@ namespace autodiff {
     }
 
     // -----------------------------------------------------------------------------
-    // SINGLE IMPACT GLOBAL Volumes Derivatives
+    // SINGLE IMPACT GLOBAL Volumes & Derivatives
     // -----------------------------------------------------------------------------
+    double collision_volume_refresh_toi(const Eigen::MatrixX2d& vertices,
+        const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
+        const EdgeEdgeImpact& impact, const int edge_id, const double epsilon)
+    {
+        ccd::autodiff::ImpactNode impact_node;
+        // We need to figure out which one is the impact node
+        Eigen::Vector2i e_ij = edges.row(edge_id);
+        Eigen::Vector2i e_kl;
+
+        if (edge_id == impact.impacted_edge_index) {
+            // IJ is the impactED edge. The impacting node is K or L.
+            e_kl = edges.row(impact.impacting_edge_index);
+            impact_node = impact.impacting_alpha < 0.5 ? ccd::autodiff::vK
+                                                       : ccd::autodiff::vL;
+
+        } else if (edge_id == impact.impacting_edge_index) {
+            // IJ is the impactING edge
+            e_kl = edges.row(impact.impacted_edge_index);
+            impact_node = impact.impacting_alpha < 0.5 ? ccd::autodiff::vI
+                                                       : ccd::autodiff::vJ;
+        } else {
+            return 0.0;
+        }
+
+        // Then we get the position and velocity of the edge vertices
+        Eigen::Vector2d Vi = vertices.row(e_ij(0));
+        Eigen::Vector2d Vj = vertices.row(e_ij(1));
+        Eigen::Vector2d Ui = displacements.row(e_ij(0));
+        Eigen::Vector2d Uj = displacements.row(e_ij(1));
+
+        Eigen::Vector2d Vk = vertices.row(e_kl(0));
+        Eigen::Vector2d Vl = vertices.row(e_kl(1));
+        Eigen::Vector2d Uk = displacements.row(e_kl(0));
+        Eigen::Vector2d Ul = displacements.row(e_kl(1));
+
+        return collision_volume(
+            Vi, Vj, Vk, Vl, Ui, Uj, Uk, Ul, impact_node, epsilon);
+    }
+
     void collision_volume_grad(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
@@ -220,11 +280,11 @@ namespace autodiff {
             break;
         }
 
-        // assert(success);
-        if (!success)
+        if (!success) {
             return T(0.0);
+        }
 
-        return ccd::autogen::collision_volume(
+        return ccd::autogen::space_time_collision_volume(
             Vi, Vj, Ui, Uj, toi, alpha, epsilon);
     }
 
