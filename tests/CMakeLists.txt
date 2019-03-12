@@ -21,7 +21,7 @@ foreach(source IN ITEMS ${test_sources})
    source_group("tests" FILES "${source}")
 endforeach()
 
-target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} catch warnings::all ${NLOPT_LIBRARIES})
+target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} catch warnings::all)
 
 # Register tests
 set(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS ON)

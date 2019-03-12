@@ -209,9 +209,9 @@ void ViewerMenu::draw_optimization()
             optimize_displacements();
         }
 
-        if (ImGui::Button("Go To Optimal Displacments", ImVec2(-1, 0))) {
-            update_graph(surface_data_id,
-                state.vertices + state.opt_displacements, state.edges);
+        if (ImGui::SliderFloat("time##opt", &(state.opt_time), 0.0, 1.0)) {
+            update_graph(
+                surface_data_id, state.get_opt_vertex_at_time(), state.edges);
         }
     }
 }

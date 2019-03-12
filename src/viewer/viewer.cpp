@@ -494,12 +494,15 @@ void ViewerMenu::recolor_edges()
 void ViewerMenu::redraw_scene()
 {
     // surface - edges
-    update_graph(surface_data_id, state.vertices, state.edges);
+    // state.time = 0;
+    redraw_at_time();
 
     // displacements
     update_vector_field(displ_data_id, state.vertices, state.displacements);
 
     // opt displacements
+    state.opt_time = 0;
+    state.opt_displacements.setZero();
     update_vector_field(
         opt_displ_data_id, state.vertices, state.opt_displacements);
 

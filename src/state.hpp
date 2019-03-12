@@ -71,6 +71,9 @@ public:
     ///@brief Reuse the current opt_displacements for initial optimization
     bool reuse_opt_displacements = false;
 
+    ///@breif Time along the optimal displacments
+    float opt_time;
+
     // SCENE CRUD
     // ----------------------------------------------------------------------
     void load_scene(const std::string filename);
@@ -90,6 +93,7 @@ public:
 
     Eigen::MatrixX2d get_volume_grad();
     Eigen::MatrixX2d get_vertex_at_time();
+    Eigen::MatrixX2d get_opt_vertex_at_time();
     const EdgeEdgeImpact& get_edge_impact(const int edge_id);
 
     // SCENE CCD

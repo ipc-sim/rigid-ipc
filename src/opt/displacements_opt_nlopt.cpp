@@ -217,21 +217,48 @@ namespace opt {
             volume_constraints, &constraint_data, tol);
 
         // Stopping criteria
-        opt.set_xtol_rel(1e-8);
-        // opt.set_xtol_abs(1e-6);
+        double epsilon = 1e-8;
+        opt.set_xtol_rel(epsilon);
         opt.set_maxeval(int(max_iter));
+        // opt.set_maxtime(1);
 
         // Initial guess is the value of Uopt
         std::vector<double> u(Uopt.data(), Uopt.data() + Uopt.size());
         double minf; // The minimum objective value, upon return
 
-        opt.optimize(u, minf); // Optimize the displacments
+        // Optimize the displacments
+        nlopt::result r = opt.optimize(u, minf);
+        switch (r) {
+        case nlopt::XTOL_REACHED:
+            std::cout << "Optimization terminated because the relative change "
+                         "was less than "
+                      << opt.get_xtol_rel() << "." << std::endl;
+            break;
+        case nlopt::MAXEVAL_REACHED:
+            std::cout << "Optimization terminated because the number of "
+                         "evaluations exceeded "
+                      << opt.get_maxeval() << "." << std::endl;
+            break;
+        case nlopt::MAXTIME_REACHED:
+            std::cout << "Optimization terminated because the runtime exceeded "
+                      << opt.get_maxtime() << " seconds." << std::endl;
+            break;
+        default:
+            std::cout << "Optimization terminated because of code " << r
+                      << " (see "
+                         "https://nlopt.readthedocs.io/en/latest/"
+                         "NLopt_Reference/#return-values)."
+                      << std::endl;
+            break;
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // Save JSON file of optimization objectives per iteration.
         {
-            std::vector<int> x;
-            for (int i = 0; i < objective_per_iteration.size(); i++) {
+            assert(objective_per_iteration.size()
+                == sum_constraints_per_iteration.size());
+            std::vector<unsigned> x;
+            for (unsigned i = 0; i < objective_per_iteration.size(); i++) {
                 x.push_back(i);
             }
             using nlohmann::json;
@@ -256,6 +283,20 @@ namespace opt {
         Uopt.col(0) = Eigen::Map<Eigen::VectorXd>(u.data(), Uopt.rows());
         Uopt.col(1)
             = Eigen::Map<Eigen::VectorXd>(u.data() + Uopt.rows(), Uopt.rows());
+
+        // Recompute the collision volumes to make sure the constraints were
+        // satisfied.
+        detect_collisions(
+            V, Uopt, E, ccd_detection_method, ee_impacts, edge_impact_map);
+        Eigen::VectorXd volumes;
+        ccd::compute_volumes(
+            V, Uopt, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
+
+        bool solve_successful
+            = r > 0 && volumes.cwiseAbs().maxCoeff() < epsilon;
+        assert(solve_successful);
+
+        // return solve_successful;
         return minf;
     }
 

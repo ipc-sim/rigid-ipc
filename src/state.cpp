@@ -50,6 +50,7 @@ void State::reset_scene()
     current_edge = -1;
     current_ev_impact = -1;
     time = 0.0;
+    opt_time = 0.0;
     selected_displacements.clear();
     selected_points.clear();
 
@@ -118,6 +119,11 @@ void State::move_displacement(
 Eigen::MatrixX2d State::get_vertex_at_time()
 {
     return vertices + displacements * double(time);
+}
+
+Eigen::MatrixX2d State::get_opt_vertex_at_time()
+{
+    return vertices + opt_displacements * double(opt_time);
 }
 
 Eigen::MatrixX2d State::get_volume_grad()
