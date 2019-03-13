@@ -5,8 +5,6 @@
 
 #include <catch.hpp>
 
-
-
 #include <opt/IpEigenInterfaceTNLP.hpp>
 
 // ---------------------------------------------------
@@ -181,8 +179,10 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
     };
 
     callback_intermediate callback
-        = [](const Eigen::VectorXd& x, const double obj_value, const int iteration) -> void {
-       std::cout << "it=" << iteration<< " x=" << x.transpose() << " obj=" << obj_value << std::endl;
+        = [](const Eigen::VectorXd& x, const double obj_value,
+              const int iteration) -> void {
+        std::cout << "it=" << iteration << " x=" << x.transpose()
+                  << " obj=" << obj_value << std::endl;
     };
 
     Eigen::VectorXd expected(2);
@@ -190,7 +190,8 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
     expected[1] = 0.0;
 
     auto result = ccd::opt::ip::minimize_ipopt(f, x0, grad_f, x_lower, x_upper,
-        num_constraints, g, jac_g, g_lower, g_upper, /*verbosity=*/0, /*max_iter=*/3000, callback);
+        num_constraints, g, jac_g, g_lower, g_upper, /*verbosity=*/0,
+        /*max_iter=*/3000, callback);
     CHECK((result.x - expected).norm() < 1e-6);
 }
 #endif

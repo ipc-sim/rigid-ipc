@@ -58,8 +58,14 @@ set(MY_FLAGS
 		-Wstack-protector
 		-Wstrict-aliasing
 		-Wstrict-aliasing=2
-		-Wswitch-default
-		-Wswitch-enum
+
+		# Warn whenever a switch statement has an index of enumerated type and
+		# lacks a case for one or more of the named codes of that enumeration.
+		-Wswitch
+		# This is annoying if all cases are already covered.
+		# -Wswitch-default
+		# This is annoying if there is a default that covers the rest.
+		# -Wswitch-enum
 		-Wswitch-unreachable
 
 		-Wcast-align
@@ -103,7 +109,7 @@ set(MY_FLAGS
 		#-Wdocumentation
 		#-Wdocumentation-unknown-command
 		#-Wfloat-equal
-		#-Wcovered-switch-default
+		-Wcovered-switch-default
 
 		#-Wglobal-constructors
 		#-Wexit-time-destructors

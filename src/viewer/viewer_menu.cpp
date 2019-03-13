@@ -1,5 +1,7 @@
 ﻿#include "viewer.hpp"
 
+#include <opt/linearized_constraint_solve.hpp>
+
 namespace ccd {
 void ViewerMenu::draw_menu()
 {
@@ -213,7 +215,16 @@ void ViewerMenu::draw_optimization()
             update_graph(
                 surface_data_id, state.get_opt_vertex_at_time(), state.edges);
         }
+
+#ifdef BUILD_WITH_OSQP
+        if (ImGui::Button(
+                "Optimize Linearized Constraints##opt", ImVec2(-1, 0))) {
+            opt::linearized_constraint_solve(state.vertices,
+                state.displacements, state.edges, state.detection_method,
+                state.volume_epsilon);
+        }
+#endif
     }
 }
 
-}
+} // namespace ccd

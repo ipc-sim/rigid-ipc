@@ -9,10 +9,12 @@ set(test_sources
     test_collision_volume.cpp
     test_time_of_impact.cpp
 
-    opt/test_displacements_opt.cpp
+    # opt/test_displacements_opt.cpp
     opt/test_opt.cpp
     opt/test_IpEigenInterfaceTNLP.cpp
+    opt/test_osqp.cpp
 )
+
 
 add_executable(unit_tests ${test_sources})
 target_include_directories(unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

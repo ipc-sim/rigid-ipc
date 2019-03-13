@@ -25,6 +25,7 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"          ON)
 # project-options
 option(BUILD_UNIT_TESTS                 "Build unit-tests"      ON)
 option(ENABLE_IPOPT                     "Enable Ipopt Library"  ON)
+option(ENABLE_OSQP                      "Enable OSQP Library"   OFF)
 
 ################################################################################
 # Fixing Collisions Library
@@ -44,6 +45,7 @@ set(SRCFILES
     src/opt/displacements_opt.cpp
     src/opt/displacements_opt_nlopt.cpp
     src/opt/IpEigenInterfaceTNLP.cpp
+    src/opt/linearized_constraint_solve.cpp
 
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp)
@@ -108,6 +110,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC json)
 # NLopt
 target_link_libraries(${PROJECT_NAME} PUBLIC nlopt::nlopt)
 
+# Ipopt
 if(ENABLE_IPOPT)
     find_package(IPOPT)
     if (IPOPT_FOUND)
@@ -117,6 +120,13 @@ if(ENABLE_IPOPT)
         link_directories(${IPOPT_LIBRARY_DIR})
         target_link_libraries(${PROJECT_NAME} PUBLIC ${IPOPT_LIBRARY})
     endif()
+endif()
+
+# OSQP
+if(ENABLE_OSQP)
+    message("Including OSQP")
+    add_definitions(-DBUILD_WITH_OSQP)
+    target_link_libraries(${PROJECT_NAME} PUBLIC osqp::osqp)
 endif()
 
 ################################################################################
