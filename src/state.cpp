@@ -187,7 +187,7 @@ void State::compute_collision_volumes()
 {
     assert(this->volume_grad.cols() == this->edges.rows());
     assert(this->volume_grad.rows() == this->vertices.size());
-    ccd::compute_volumes(vertices, displacements, edges, ee_impacts,
+    ccd::compute_volumes_fixed_toi(vertices, displacements, edges, ee_impacts,
         edge_impact_map, volume_epsilon, volumes);
 
     ccd::autodiff::compute_volumes_gradient(vertices, displacements, edges,

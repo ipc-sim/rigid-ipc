@@ -15,7 +15,6 @@ set(test_sources
     opt/test_osqp.cpp
 )
 
-
 add_executable(unit_tests ${test_sources})
 target_include_directories(unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

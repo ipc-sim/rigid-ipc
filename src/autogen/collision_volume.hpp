@@ -24,7 +24,7 @@ namespace autogen {
     * @return                     : The space-time interference volume.
     */
     template <typename T>
-    T collision_volume(
+    T space_time_collision_volume(
         const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj,
         const Vector2T<T>& Ui,

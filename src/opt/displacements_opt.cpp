@@ -1,10 +1,18 @@
 #include <opt/displacements_opt.hpp>
+
+#include <fstream>
+#include <iomanip> // std::setw
+#include <iostream>
+
+#include <nlohmann/json.hpp>
+
 #include <opt/displacements_opt_nlopt.hpp>
+#ifdef BUILD_WITH_IPOPT
+#include <opt/displacements_opt_ipopt.hpp>
+#endif
 
 #include <ccd/not_implemented_error.hpp>
 #include <ccd/prune_impacts.hpp>
-
-#include <iostream>
 
 namespace ccd {
 namespace opt {
@@ -24,10 +32,15 @@ namespace opt {
                 ccd_detection_method,
                 opt_method == MMA ? nlopt::LD_MMA : nlopt::LD_SLSQP, max_iter,
                 Uopt);
+#ifdef BUILD_WITH_IPOPT
         case IP:
             // Implemented in Ipopt
-            throw NotImplementedError(
-                "Interior Point optimization method not implemented yet.");
+            return displacements_optimization_ipopt(
+                V, U, E, volume_epsilon, ccd_detection_method, max_iter, Uopt);
+#else
+        default:
+            throw NotImplementedError("IPOPT not Enabled");
+#endif
         }
     }
 
@@ -43,5 +56,39 @@ namespace opt {
         ccd::prune_impacts(ee_impacts, edge_impact_map);
     }
 
+    void export_intermediate(const OptimizationMethod method,
+        const std::vector<double>& objectives,
+        const std::vector<double>& constraints)
+    {
+        using nlohmann::json;
+
+        std::vector<int> it(objectives.size());
+        std::iota(it.begin(), it.end(), 0);
+
+        json data;
+        data["x"] = it;
+        data["objectives"] = objectives;
+        data["constraints"] = constraints;
+        json figure;
+        figure["data"] = data;
+        std::ofstream out_file;
+        switch (method) {
+        case MMA:
+            out_file = std::ofstream(
+                "../figures/optimization-iterations/mma-opt-steps.json");
+            break;
+        case SLSQP:
+            out_file = std::ofstream(
+                "../figures/optimization-iterations/mma-opt-steps.json");
+            break;
+        case IP:
+            out_file = std::ofstream(
+                "./ip-opt-steps.json");
+             std::cout << "./ip-opt-steps.json" << std::endl;
+            break;
+        }
+
+        out_file << std::setw(4) << figure << std::endl;
+    }
 }
 }

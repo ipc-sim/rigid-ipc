@@ -51,10 +51,18 @@ namespace autodiff {
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         std::vector<Eigen::MatrixXd>& volume_hessian);
 
+    void compute_volumes_refresh_toi(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+        const EdgeEdgeImpacts& ee_impacts,
+        const Eigen::VectorXi& edge_impact_map, const double epsilon,
+        Eigen::VectorXd& volumes);
+
     // -----------------------------------------------------------------------------
     // SINGLE IMPACT GLOBAL Volumes Derivatives
     // -----------------------------------------------------------------------------
-
+    double collision_volume_refresh_toi(const Eigen::MatrixX2d& vertices,
+        const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
+        const EdgeEdgeImpact& impact, const int edge_id, const double epsilon);
     /**
      * Compute the first or second derivative of the collision volume for an
      * edge-edge impact

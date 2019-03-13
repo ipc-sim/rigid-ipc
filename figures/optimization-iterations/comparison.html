@@ -10,6 +10,7 @@
 <body>
     <div id="MMAFigure"></div>
     <div id="SLSQPFigure"></div>
+    <div id="IPOPTFigure"></div>
     <script type="text/javascript">
         var layout = {
             xaxis: {
@@ -37,11 +38,14 @@
                 m_layout);
         };
 
-        Plotly.d3.json("mma-opt-steps.json", function(figure) {
+        Plotly.d3.json("mma-opt-steps.json?" + (new Date()).getTime(), function(figure) {
             objective_vs_constraints("MMA", figure)
         });
-        Plotly.d3.json("slsqp-opt-steps.json", function(figure) {
+        Plotly.d3.json("slsqp-opt-steps.json?" + (new Date()).getTime(), function(figure) {
             objective_vs_constraints("SLSQP", figure)
+        });
+        Plotly.d3.json("ip-opt-steps.json?" + (new Date()).getTime(), function(figure) {
+            objective_vs_constraints("IPOPT", figure)
         });
     </script>
 </body>

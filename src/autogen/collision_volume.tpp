@@ -9,7 +9,7 @@ namespace ccd {
 namespace autogen {
 
     template <typename T>
-    T collision_volume(
+    T space_time_collision_volume(
         const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj,
         const Vector2T<T>& Ui,
@@ -24,12 +24,12 @@ namespace autogen {
         return volume;
     }
 
-    template double collision_volume<double>(
+    template double space_time_collision_volume<double>(
         Eigen::Vector2d const&, Eigen::Vector2d const&,
         Eigen::Vector2d const&, Eigen::Vector2d const&,
         const double&, const double&, double);
 
-    template DScalar collision_volume<DScalar>(
+    template DScalar space_time_collision_volume<DScalar>(
         Eigen::Vector2d const&, Eigen::Vector2d const&,
         DVector2 const&, DVector2 const&,
         const DScalar&, const DScalar&, double);

@@ -2,10 +2,10 @@
 
 namespace ccd {
 
-void compute_volumes(const Eigen::MatrixX2d& V, const Eigen::MatrixX2d& U,
-    const Eigen::MatrixX2i& E, const EdgeEdgeImpacts& ee_impacts,
-    const Eigen::VectorXi& edge_impact_map, const double epsilon,
-    Eigen::VectorXd& volumes)
+void compute_volumes_fixed_toi(const Eigen::MatrixX2d& V,
+    const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+    const EdgeEdgeImpacts& ee_impacts, const Eigen::VectorXi& edge_impact_map,
+    const double epsilon, Eigen::VectorXd& volumes)
 {
 
     volumes.resize(E.rows());
@@ -18,11 +18,12 @@ void compute_volumes(const Eigen::MatrixX2d& V, const Eigen::MatrixX2d& U,
 
         EdgeEdgeImpact ee_impact = ee_impacts[size_t(edge_impact_map[i])];
 
-        volumes(i) = collision_volume(V, U, E, ee_impact, int(i), epsilon);
+        volumes(i)
+            = collision_volume_fixed_toi(V, U, E, ee_impact, int(i), epsilon);
     }
 }
 
-double collision_volume(const Eigen::MatrixX2d& vertices,
+double collision_volume_fixed_toi(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
     const EdgeEdgeImpact& impact, const int edge_id, const double epsilon)
 {
@@ -44,12 +45,13 @@ double collision_volume(const Eigen::MatrixX2d& vertices,
 
     double toi = impact.time;
 
-    return collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
+    return space_time_collision_volume(Vi, Vj, Ui, Uj, toi, alpha, epsilon);
 }
 
-double collision_volume(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
-    const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj, const double& toi,
-    const double& alpha, const double epsilon)
+double space_time_collision_volume(const Eigen::Vector2d& Vi,
+    const Eigen::Vector2d& Vj, const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj, const double& toi, const double& alpha,
+    const double epsilon)
 {
 
     assert(toi >= 0.0 && toi <= 1.0);

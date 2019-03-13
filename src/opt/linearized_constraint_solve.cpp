@@ -47,7 +47,7 @@ namespace opt {
             V, U, E, CCD_DETECTION_METHOD, ee_impacts, edge_impact_map);
         Eigen::VectorXd volumes;
         Eigen::MatrixXd volume_gradient;
-        compute_volumes(
+        compute_volumes_fixed_toi(
             V, U, E, ee_impacts, edge_impact_map, VOLUME_EPSILON, volumes);
         autodiff::compute_volumes_gradient(V, U, E, ee_impacts, edge_impact_map,
             VOLUME_EPSILON, volume_gradient);
