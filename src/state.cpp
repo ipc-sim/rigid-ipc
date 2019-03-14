@@ -9,6 +9,8 @@
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
 
+#include <opt/displacements_opt.hpp>
+
 namespace ccd {
 State::State()
     : canvas_width(10)
@@ -210,9 +212,20 @@ double State::optimize_displacements()
     if (!this->reuse_opt_displacements) {
         opt_displacements.setZero();
     }
+
+    if (opt_method == ccd::opt::IP) {
+        ccd::opt::setup_displacement_optimization(vertices, displacements,
+            edges, volume_epsilon, detection_method, opt_problem);
+        // TODO: add opt callback on construction
+        // TODO: cleanup this
+        opt_problem.max_iter = int(opt_max_iter);
+        auto result = ccd::opt::displacements_optimization(opt_method, opt_displacements, opt_problem);
+        opt_displacements = result.x;
+        return result.fun;
+    }
     return ccd::opt::displacements_optimization(vertices, displacements, edges,
         volume_epsilon, detection_method, opt_method, opt_max_iter,
         opt_displacements);
 }
 
-}
+} // namespace ccd

@@ -44,8 +44,8 @@ set(SRCFILES
     src/opt/newtons_method.cpp
     src/opt/displacements_opt.cpp
     src/opt/displacements_opt_nlopt.cpp
-    src/opt/displacements_opt_ipopt.cpp
     src/opt/IpEigenInterfaceTNLP.cpp
+    src/opt/minimize.cpp
     src/opt/linearized_constraint_solve.cpp
 
     src/autodiff/finitediff.cpp

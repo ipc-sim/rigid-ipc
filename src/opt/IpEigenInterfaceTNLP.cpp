@@ -10,14 +10,8 @@
 
 namespace ccd {
 namespace opt {
-    namespace ip {
-        IpoptResult minimize_ipopt(const callback_f f,
-            const Eigen::VectorXd& x0, const callback_grad_f grad_f,
-            const Eigen::VectorXd& x_lower, const Eigen::VectorXd& x_upper,
-            const int num_constraints, const callback_g& g,
-            const callback_jac_g& jac_g, const Eigen::VectorXd& g_lower,
-            const Eigen::VectorXd& g_upper, const int verbosity,
-            const int max_iter, const callback_intermediate callback)
+
+        OptimizationResult minimize_ipopt(const OptimizationProblem& problem)
         {
 
             SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
@@ -26,80 +20,36 @@ namespace opt {
             app->Options()->SetStringValue(
                 "hessian_approximation", "limited-memory");
             app->Options()->SetStringValue("derivative_test", "first-order");
-            app->Options()->SetIntegerValue("print_level", verbosity);
-            app->Options()->SetIntegerValue("max_iter", max_iter);
+            app->Options()->SetIntegerValue("print_level", problem.verbosity);
+            app->Options()->SetIntegerValue("max_iter", problem.max_iter);
 
             ApplicationReturnStatus app_status;
             app_status = app->Initialize();
 
-            SmartPtr<EigenInterfaceTNLP> nlp
-                = new EigenInterfaceTNLP(f, x0, grad_f, x_lower, x_upper,
-                    num_constraints, g, jac_g, g_lower, g_upper, callback);
+            SmartPtr<EigenInterfaceTNLP> nlp = new EigenInterfaceTNLP(problem);
             app_status = app->OptimizeTNLP(nlp);
 
-            IpoptResult result = nlp->result;
-            result.app_status = app_status;
+            OptimizationResult result = nlp->result;
             result.success = (app_status == Solve_Succeeded);
             return result;
         }
 
-        EigenInterfaceTNLP::EigenInterfaceTNLP(const callback_f f,
-            const Eigen::VectorXd& x0, const callback_grad_f grad_f,
-            const Eigen::VectorXd& x_lower, const Eigen::VectorXd& x_upper,
-            const int num_constraints, const callback_g& g,
-            const callback_jac_g& jac_g, const Eigen::VectorXd& g_lower,
-            const Eigen::VectorXd& g_upper,
-            const callback_intermediate callback)
-            : num_vars(int(x0.rows()))
-            , num_constraints(num_constraints)
-            , x0(x0)
-            , x_l(x_lower)
-            , x_u(x_upper)
-            , g_l(g_lower)
-            , g_u(g_upper)
-            , eval_f_(f)
-            , eval_grad_f_(grad_f)
-            , eval_g_(g)
-            , eval_jac_g_(jac_g)
-            , intermediate_cb_(callback)
+        EigenInterfaceTNLP::EigenInterfaceTNLP(const OptimizationProblem& problem)
+            : problem(problem)
         {
-            assert(num_vars == x_l.rows() || x_l.size() == 0);
-            assert(num_vars == x_u.rows() || x_u.size() == 0);
-            assert(num_constraints == g_l.rows() || g_l.size() == 0);
-            assert(num_constraints == g_u.rows() || g_u.size() == 0);
-            assert((g == nullptr) == (jac_g == nullptr));
-            assert(f != nullptr);
-            assert(grad_f != nullptr);
 
-            if (x_l.size() == 0) {
-                x_l.resize(num_vars);
-                x_l.setConstant(NO_LOWER_BOUND); // no-lower-bound
-            }
-            if (x_u.size() == 0) {
-                x_u.resize(num_vars);
-                x_u.setConstant(NO_UPPER_BOUND); // no-upper-bound
-            }
-            if (g_l.size() == 0) {
-                g_l.resize(num_constraints);
-                g_l.setConstant(NO_LOWER_BOUND); // no-lower-bound
-            }
-            if (g_u.size() == 0) {
-                g_l.resize(num_constraints);
-                g_l.setConstant(NO_UPPER_BOUND); // no-upper-bound
-            }
-
-            result.x = x0;
+            result.x = problem.x0;
         }
 
         bool EigenInterfaceTNLP::get_nlp_info(Index& n, Index& m,
             Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style)
         {
-            n = num_vars;
-            m = num_constraints;
+            n = problem.num_vars;
+            m = problem.num_constraints;
 
             // TODO: we need to know the constraints to fill this in
             // if we want to make it sparse
-            nnz_jac_g = num_constraints * num_vars;
+            nnz_jac_g = problem.num_constraints * problem.num_vars;
 
             // we are using hessian-approximation
             nnz_h_lag = 0;
@@ -112,16 +62,16 @@ namespace opt {
         bool EigenInterfaceTNLP::get_bounds_info(Index n, Number* x_lower,
             Number* x_upper, Index m, Number* g_lower, Number* g_upper)
         {
-            assert(n == num_vars);
-            assert(m == num_constraints);
+            assert(n == problem.num_vars);
+            assert(m == problem.num_constraints);
 
-            Eigen::Map<Eigen::VectorXd>(&x_lower[0], num_vars) = this->x_l;
-            Eigen::Map<Eigen::VectorXd>(&x_upper[0], num_vars) = this->x_u;
+            Eigen::Map<Eigen::VectorXd>(&x_lower[0], problem.num_vars) = problem.x_lower;
+            Eigen::Map<Eigen::VectorXd>(&x_upper[0], problem.num_vars) = problem.x_upper;
 
-            Eigen::Map<Eigen::VectorXd>(&g_lower[0], num_constraints)
-                = this->g_l;
-            Eigen::Map<Eigen::VectorXd>(&g_upper[0], num_constraints)
-                = this->g_u;
+            Eigen::Map<Eigen::VectorXd>(&g_lower[0], problem.num_constraints)
+                = problem.g_lower;
+            Eigen::Map<Eigen::VectorXd>(&g_upper[0], problem.num_constraints)
+                = problem.g_upper;
 
             return true;
         }
@@ -130,14 +80,14 @@ namespace opt {
             double* x, bool init_z, double* /*z_L*/, double* /*z_U*/,
             Index /*m*/, bool init_lambda, double* /*lambda*/)
         {
-            assert(n == num_vars);
+            assert(n == problem.num_vars);
 
             // We assume we only have starting values for x
             assert(init_x == true);
             assert(init_z == false);
             assert(init_lambda == false);
 
-            Eigen::Map<Eigen::VectorXd>(&x[0], x0.rows()) = this->x0;
+            Eigen::Map<Eigen::VectorXd>(&x[0], n) = problem.x0;
 
             return true;
         }
@@ -145,9 +95,9 @@ namespace opt {
         bool EigenInterfaceTNLP::eval_f(
             Index n, const double* x, bool /*new_x*/, double& obj_value)
         {
-            assert(n == num_vars);
-            auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], num_vars);
-            obj_value = eval_f_(xk);
+            assert(n == problem.num_vars);
+            auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
+            obj_value = problem.f(xk);
 
             return true;
         }
@@ -155,10 +105,10 @@ namespace opt {
         bool EigenInterfaceTNLP::eval_grad_f(
             Index n, const Number* x, bool /*new_x*/, Number* grad_f_val)
         {
-            assert(n == num_vars);
+            assert(n == problem.num_vars);
 
-            auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], num_vars);
-            Eigen::VectorXd grad = eval_grad_f_(xk);
+            auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
+            Eigen::VectorXd grad = problem.grad_f(xk);
             Eigen::Map<Eigen::MatrixXd>(grad_f_val, n, 1) = grad;
 
             return true;
@@ -167,12 +117,12 @@ namespace opt {
         bool EigenInterfaceTNLP::eval_g(
             Index n, const Number* x, bool /*new_x*/, Index m, Number* gval)
         {
-            assert(n == num_vars);
-            assert(m == num_constraints);
+            assert(n == problem.num_vars);
+            assert(m == problem.num_constraints);
 
-            if (eval_g_) {
-                auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], num_vars);
-                Eigen::VectorXd gk = eval_g_(xk);
+            if (problem.g) {
+                auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
+                Eigen::VectorXd gk = problem.g(xk);
                 assert(gk.rows() == m);
 
                 Eigen::Map<Eigen::MatrixXd>(gval, m, 1) = gk;
@@ -185,26 +135,29 @@ namespace opt {
             bool /*new_x*/, Index m, Index nele_jac, Index* iRow, Index* jCol,
             Number* values)
         {
-            assert(n == num_vars);
-            assert(m == num_constraints);
-            assert(nele_jac == num_constraints * num_vars); // dense
+            assert(n == problem.num_vars);
+            assert(m == problem.num_constraints);
+            assert(nele_jac == n * m); // dense
 
             if (values == nullptr) {
                 // dense jacobian
-                for (int i = 0; i < num_constraints; ++i) {
-                    for (int j = 0; j < num_vars; ++j) {
-                        iRow[i * num_vars + j] = i;
-                        jCol[i * num_vars + j] = j;
+                for (int i = 0; i < m; ++i) {
+                    for (int j = 0; j < n; ++j) {
+                        iRow[i * n + j] = i;
+                        jCol[i * n + j] = j;
                     }
                 }
-            } else if (eval_jac_g_) {
-                auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], num_vars);
+            } else if (problem.jac_g) {
+                auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
                 Eigen::MatrixXd jac_g_val;
-                jac_g_val = eval_jac_g_(xk);
 
-                for (int i = 0; i < num_constraints; ++i) {
-                    for (int j = 0; j < num_vars; ++j) {
-                        values[i * num_vars + j] = jac_g_val(i, j);
+                // the derivative of constraint g^{(i)} with respect to variable
+                // x^{(j)} is placed in row i and column j.
+                jac_g_val = problem.jac_g(xk).transpose();
+
+                for (int i = 0; i < m; ++i) {
+                    for (int j = 0; j < n; ++j) {
+                        values[i * n + j] = jac_g_val(i, j);
                     }
                 }
             }
@@ -228,33 +181,33 @@ namespace opt {
                         tnlp_adapter = dynamic_cast<TNLPAdapter*>(
                             GetRawPtr(orignlp->nlp()));
                 }
-                Eigen::VectorXd primals(num_vars);
-                Eigen::VectorXd dualeqs(num_constraints);
+                Eigen::VectorXd primals(problem.num_vars);
+                Eigen::VectorXd dualeqs(problem.num_constraints);
                 tnlp_adapter->ResortX(*ip_data->curr()->x(), primals.data());
                 tnlp_adapter->ResortG(*ip_data->curr()->y_c(), *ip_data->curr()->y_d(), dualeqs.data());
-                if (intermediate_cb_) {
-                    intermediate_cb_(primals, obj_value, dualeqs, iter);
+                if (problem.intermediate_cb) {
+                    problem.intermediate_cb(primals, obj_value, dualeqs, iter);
                 }
             }
             return true;
         }
 
         void EigenInterfaceTNLP::finalize_solution(SolverReturn status,
-            Index /*n*/, const Number* x, const Number* /*z_L*/,
+            Index n, const Number* x, const Number* /*z_L*/,
             const Number* /*z_U*/, Index /*m*/, const Number* /*g*/,
             const Number* /*lambda*/, Number obj_value,
             const IpoptData* /*ip_data*/, IpoptCalculatedQuantities* /*ip_cq*/)
         {
-            result.x = Eigen::Map<const Eigen::VectorXd>(&x[0], num_vars);
-            result.value = obj_value;
-            result.status = status;
+            assert(n == problem.num_vars);
+            result.x = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
+            result.fun = obj_value;
             std::cout << "solver_return: " << SolverReturnStrings[status] << std::endl;
             std::cout << result.x.transpose() << std::endl;
         }
 
     }
 
-}
+
 
 }
 #endif

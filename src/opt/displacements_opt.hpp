@@ -8,6 +8,7 @@
 #include <Eigen/Core>
 
 #include <ccd/collision_detection.hpp>
+#include <opt/minimize.hpp>
 
 namespace ccd {
 
@@ -17,12 +18,35 @@ namespace ccd {
  */
 namespace opt {
 
-    /// @brief Methods available for non-linear constrained optimization.
-    enum OptimizationMethod {
-        MMA,   ///<@brief Method of Moving Asymptotes (NLopt)
-        SLSQP, ///<@brief Sequential Least-Squares Quadratic Programming (NLopt)
-        IP     ///<@brief Interior-Point Method (Ipopt)
-    };
+    /**
+     * @brief Creates an Optimization problem for displacements C(U) ≤ 0.
+     *      Min ||U - Uk||^2
+     *      s.t V(U) >= 0
+     * @param[in] V     : Vertices
+     * @param[in] U     : Displacments
+     * @param[in] E     : Edges
+     * @param[in] volume_epsilon    : Epsilon value for volume computation.
+     * @param[in] detection_method  : Method of detecting collisions.
+     *
+     * @param[out] problem          : The optimization problem.
+     */
+    void setup_displacement_optimization(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+        const double volume_epsilon, const DetectionMethod ccd_detection_method,
+        OptimizationProblem& problem);
+
+    /**
+     * @brief Runs the optimization problem for the given method and initial
+     * value
+     * @param[in] opt_method:   Optimization method
+     * @param[in] U0:           Initial displacements
+     * @param[in,out] problem:  Optimization problem (possibly modified for validation)
+     *
+     * @return Optimization Result of the optimization
+     * */
+    OptimizationResult displacements_optimization(
+        const OptimizationMethod& opt_method, const Eigen::MatrixX2d& U0,
+        OptimizationProblem& problem);
 
     /**
      * @brief Optimize the displacments with the volume constraint C(U) ≤ 0.
@@ -58,7 +82,9 @@ namespace opt {
         const Eigen::MatrixX2i& E, const ccd::DetectionMethod detection_method,
         EdgeEdgeImpacts& ee_impacts, Eigen::VectorXi& edge_impact_map);
 
-    void export_intermediate(const OptimizationMethod method, const std::vector<double>& objectives, const std::vector<double>& constraints);
-}
+    void export_intermediate(const OptimizationMethod method,
+        const std::vector<double>& objectives,
+        const std::vector<double>& constraints);
+} // namespace opt
 
-}
+} // namespace ccd

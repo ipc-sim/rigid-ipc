@@ -74,6 +74,8 @@ public:
     ///@breif Time along the optimal displacments
     float opt_time;
 
+    ccd::opt::OptimizationProblem opt_problem;
+
     // SCENE CRUD
     // ----------------------------------------------------------------------
     void load_scene(const std::string filename);

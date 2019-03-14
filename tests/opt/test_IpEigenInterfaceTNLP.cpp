@@ -13,7 +13,7 @@
 
 TEST_CASE("IPOPT_hello_world", "[opt][Ipopt][Ipopt-Interface]")
 {
-    using namespace ccd::opt::ip;
+    using namespace ccd::opt;
 
     // Our example problem has 4 variables (n), and 2 constraints (m).
     Eigen::VectorXd x0(4), x_lower(4), x_upper(4);
@@ -22,8 +22,9 @@ TEST_CASE("IPOPT_hello_world", "[opt][Ipopt][Ipopt-Interface]")
     x_lower.setConstant(1.0);
     x_upper.setConstant(5.0);
 
+    int num_constraints = 2;
     g_lower[0] = 25;
-    g_upper[0] = ccd::opt::ip::NO_UPPER_BOUND;
+    g_upper[0] = NO_UPPER_BOUND;
     g_lower[1] = g_upper[1] = 40.0;
 
     x0 << 1.0, 5.0, 5.0, 0.0;
@@ -69,14 +70,18 @@ TEST_CASE("IPOPT_hello_world", "[opt][Ipopt][Ipopt-Interface]")
     expected[2] = 3.821149978948624959;
     expected[3] = 1.379408293215359738;
 
-    auto result = ccd::opt::ip::minimize_ipopt(f, x0, grad_f, x_lower, x_upper,
-        2, g, jac_g, g_lower, g_upper, /*verbosity=*/0);
+
+    OptimizationProblem problem(x0, f, grad_f, x_lower, x_upper,
+                                num_constraints, g, jac_g, g_lower, g_upper);
+    problem.verbosity = 0;
+
+    auto result = ccd::opt::minimize_ipopt(problem);
     CHECK((result.x - expected).norm() == Approx(0.0));
 }
 
 TEST_CASE("IPOPT_quadratic_linear_cnstr", "[opt][Ipopt][Ipopt-Interface]")
 {
-    using namespace ccd::opt::ip;
+    using namespace ccd::opt;
 
     // Our example problem has 2 variables (n), and 0 constraints (m).
     // Example 16.4 from Nocedal, J, and S J Wright. 2006. Numerical
@@ -134,14 +139,17 @@ TEST_CASE("IPOPT_quadratic_linear_cnstr", "[opt][Ipopt][Ipopt-Interface]")
     expected[0] = 1.4;
     expected[1] = 1.7;
 
-    auto result = ccd::opt::ip::minimize_ipopt(f, x0, grad_f, x_lower, x_upper,
-        num_constraints, g, jac_g, g_lower, g_upper, /*verbosity=*/0);
+    OptimizationProblem problem(x0, f, grad_f, x_lower, x_upper,
+                                num_constraints, g, jac_g, g_lower, g_upper);
+    problem.verbosity = 0;
+
+    auto result = ccd::opt::minimize_ipopt(problem);
 
     CHECK((result.x - expected).norm() < 1e-6);
 }
 TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
 {
-    using namespace ccd::opt::ip;
+    using namespace ccd::opt;
 
     int num_vars = 2, num_constraints = 0;
 
@@ -190,9 +198,12 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
     expected[0] = 0.0;
     expected[1] = 0.0;
 
-    auto result = ccd::opt::ip::minimize_ipopt(f, x0, grad_f, x_lower, x_upper,
-        num_constraints, g, jac_g, g_lower, g_upper, /*verbosity=*/0,
-        /*max_iter=*/3000, callback);
+    OptimizationProblem problem(x0, f, grad_f, x_lower, x_upper,
+                                num_constraints, g, jac_g, g_lower, g_upper);
+    problem.verbosity = 0;
+    problem.max_iter = 3000;
+
+    auto result = ccd::opt::minimize_ipopt(problem);
     CHECK((result.x - expected).norm() < 1e-6);
 }
 #endif
