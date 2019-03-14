@@ -4,8 +4,6 @@
 #include <catch.hpp>
 #include <osqp.h>
 
-// #include <opt/linearized_constraint_solve.hpp>
-
 #define INF_D (std::numeric_limits<double>::infinity())
 
 TEST_CASE("Simple tests of OSQP", "[opt][nlopt]")
@@ -61,8 +59,8 @@ TEST_CASE("Simple tests of OSQP", "[opt][nlopt]")
 
     // Define Solver settings as default
     OSQPSettings settings;
-    settings.alpha = 1.0; // Change alpha parameter
     osqp_set_default_settings(&settings);
+    settings.alpha = 1.0; // Change alpha parameter
 
     // Setup workspace
     OSQPWorkspace* work(osqp_setup(&data, &settings)); // Workspace

@@ -42,11 +42,11 @@ set(SRCFILES
 
     src/opt/barrier.cpp
     src/opt/newtons_method.cpp
-    src/opt/displacements_opt.cpp
-    src/opt/displacements_opt_nlopt.cpp
-    src/opt/displacements_opt_ipopt.cpp
+    src/opt/solver.cpp
+    src/opt/nlopt_solver.cpp
+    src/opt/ipopt_solver.cpp
+    src/opt/linearized_constraint_solver.cpp
     src/opt/IpEigenInterfaceTNLP.cpp
-    src/opt/linearized_constraint_solve.cpp
 
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp)

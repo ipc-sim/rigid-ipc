@@ -1,20 +1,18 @@
-#include <opt/displacements_opt.hpp>
-#include <opt/displacements_opt_nlopt.hpp>
+// Solve a optimization problem with NLopt.
+#include <opt/nlopt_solver.hpp>
+#include <opt/solver.hpp>
 
 #include <ccd/collision_volume.hpp>
 #include <ccd/collision_volume_diff.hpp>
 
-#include <fstream>
-#include <iomanip> // std::setw
 #include <iostream>
-#include <nlohmann/json.hpp>
 
 namespace ccd {
 namespace opt {
 
     /**
      * @brief Class for storing objective data.
-     * This is passed to the obbjective
+     * This is passed to the objective
      */
     class ObjectiveData {
     public:
@@ -146,8 +144,9 @@ namespace opt {
         U.resize(U.rows() / 2, 2);
 
         // Detect the collisions for the input displacments.
-        // const EdgeEdgeImpacts& ee_impacts = _->ee_impacts;
-        // const Eigen::VectorXi& edge_impact_map = _->edge_impact_map;
+        // const EdgeEdgeImpacts& ee_impacts = constraint_data->EE_IMPACTS;
+        // const Eigen::VectorXi& edge_impact_map
+        //     = constraint_data->EDGE_IMPACT_MAP;
         EdgeEdgeImpacts ee_impacts;
         Eigen::VectorXi edge_impact_map(constraint_data->E.rows());
         detect_collisions(constraint_data->V, U, constraint_data->E,
@@ -155,9 +154,9 @@ namespace opt {
 
         // Compute the STIVs
         Eigen::VectorXd volumes;
-        ccd::compute_volumes_fixed_toi(constraint_data->V, U, constraint_data->E,
-            ee_impacts, edge_impact_map, constraint_data->VOLUME_EPSILON,
-            volumes);
+        ccd::autodiff::compute_volumes_refresh_toi(constraint_data->V, U,
+            constraint_data->E, ee_impacts, edge_impact_map,
+            constraint_data->VOLUME_EPSILON, volumes);
 
         // Only compute the gradient as needed.
         if (grad) {
@@ -184,7 +183,7 @@ namespace opt {
     }
 
     // Optimize the displacments using NLopt.
-    double displacements_optimization_nlopt(const Eigen::MatrixX2d& V,
+    bool solve_problem_with_nlopt(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const double volume_epsilon, const DetectionMethod ccd_detection_method,
         const nlopt::algorithm opt_method, const unsigned max_iter,
@@ -195,8 +194,8 @@ namespace opt {
 
         EdgeEdgeImpacts ee_impacts;
         Eigen::VectorXi edge_impact_map(E.rows());
-        // detect_collisions(
-        //     V, U, E, ccd_detection_method, ee_impacts, edge_impact_map);
+        detect_collisions(
+            V, U, E, ccd_detection_method, ee_impacts, edge_impact_map);
 
         std::vector<double> objective_per_iteration;
         // Construct the data class to pass to the objective.
@@ -227,8 +226,37 @@ namespace opt {
         double minf; // The minimum objective value, upon return
 
         // Optimize the displacments
-        nlopt::result r = opt.optimize(u, minf);
-        switch (r) {
+        nlopt::result result = opt.optimize(u, minf);
+        print_nlopt_termination_reason(opt, result);
+
+        // Save JSON file of optimization objectives per iteration.
+        assert(objective_per_iteration.size()
+            == sum_constraints_per_iteration.size());
+        OptimizationMethod m_method = opt_method == nlopt::LD_MMA ? MMA : SLSQP;
+        export_intermediate(
+            m_method, objective_per_iteration, sum_constraints_per_iteration);
+
+        // Store solution in Uopt
+        Uopt.col(0) = Eigen::Map<Eigen::VectorXd>(u.data(), Uopt.rows());
+        Uopt.col(1) = Eigen::Map<Eigen::VectorXd>(
+            &(u.data()[Uopt.rows()]), Uopt.rows());
+
+        // Recompute the collision volumes to make sure the constraints were
+        // satisfied.
+        detect_collisions(
+            V, Uopt, E, ccd_detection_method, ee_impacts, edge_impact_map);
+        Eigen::VectorXd volumes;
+        ccd::compute_volumes_fixed_toi(
+            V, Uopt, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
+
+        return result > 0 && minf >= 0
+            && volumes.cwiseAbs().maxCoeff() < epsilon;
+    }
+
+    void print_nlopt_termination_reason(
+        const nlopt::opt& opt, const nlopt::result result)
+    {
+        switch (result) {
         case nlopt::XTOL_REACHED:
             std::cout << "Optimization terminated because the relative change "
                          "was less than "
@@ -244,61 +272,14 @@ namespace opt {
                       << opt.get_maxtime() << " seconds." << std::endl;
             break;
         default:
-            std::cout << "Optimization terminated because of code " << r
+            std::cout << "Optimization terminated because of code " << result
                       << " (see "
                          "https://nlopt.readthedocs.io/en/latest/"
                          "NLopt_Reference/#return-values)."
                       << std::endl;
             break;
         }
-
-        ////////////////////////////////////////////////////////////////////////
-        // Save JSON file of optimization objectives per iteration.
-        {
-            assert(objective_per_iteration.size()
-                == sum_constraints_per_iteration.size());
-            std::vector<unsigned> x;
-            for (unsigned i = 0; i < objective_per_iteration.size(); i++) {
-                x.push_back(i);
-            }
-            using nlohmann::json;
-            json data;
-            data["x"] = x;
-            data["objectives"] = objective_per_iteration;
-            data["constraints"] = sum_constraints_per_iteration;
-            json figure;
-            figure["data"] = data;
-            std::ofstream out_file;
-            if (opt_method == nlopt::LD_MMA) {
-                out_file = std::ofstream(
-                    "../figures/optimization-iterations/mma-opt-steps.json");
-            } else {
-                out_file = std::ofstream(
-                    "../figures/optimization-iterations/slsqp-opt-steps.json");
-            }
-            out_file << std::setw(4) << figure << std::endl;
-        }
-        ////////////////////////////////////////////////////////////////////////
-
-        Uopt.col(0) = Eigen::Map<Eigen::VectorXd>(u.data(), Uopt.rows());
-        Uopt.col(1)
-            = Eigen::Map<Eigen::VectorXd>(u.data() + Uopt.rows(), Uopt.rows());
-
-        // Recompute the collision volumes to make sure the constraints were
-        // satisfied.
-        detect_collisions(
-            V, Uopt, E, ccd_detection_method, ee_impacts, edge_impact_map);
-        Eigen::VectorXd volumes;
-        ccd::compute_volumes_fixed_toi(
-            V, Uopt, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
-
-        bool solve_successful
-            = r > 0 && volumes.cwiseAbs().maxCoeff() < epsilon;
-        assert(solve_successful);
-
-        // return solve_successful;
-        return minf;
     }
 
-}
-}
+} // namespace opt
+} // namespace ccd

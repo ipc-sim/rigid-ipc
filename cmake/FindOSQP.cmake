@@ -6,7 +6,6 @@
 
 # Erase what has been found in favor of local version
 if(NOT TARGET osqp)
-	# set(PRINTING OFF CACHE BOOL "print OSQP information" FORCE)
 	add_subdirectory(${THIRD_PARTY_DIR}/osqp osqp EXCLUDE_FROM_ALL)
 	target_compile_options(osqp PRIVATE "-Wno-deprecated-declarations")
 endif()

@@ -26,11 +26,11 @@ namespace opt {
      *                     displacments to return at termination.
      * @return The value of the objective for the minimum found.
      */
-    double displacements_optimization_ipopt(const Eigen::MatrixX2d& V,
+    bool solve_problem_with_ipopt(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const double volume_epsilon, const DetectionMethod ccd_detection_method,
         const unsigned max_iter, Eigen::MatrixX2d& Uopt);
 
-}
+} // namespace opt
 
-}
+} // namespace ccd

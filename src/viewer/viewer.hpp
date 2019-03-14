@@ -6,6 +6,8 @@
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/opengl/glfw/imgui/ImGuiMenu.h>
 
+#include <opt/linearized_constraint_solver.hpp>
+
 #include "state.hpp"
 
 namespace ccd {
@@ -26,9 +28,14 @@ static const std::array<DetectionMethod, 2> DetectionMethodAll
     = { BRUTE_FORCE, HASH_MAP };
 static const char* DetectionMethodNames = "BRUTE_FORCE\0HASH_MAP\0";
 
-static const std::array<opt::OptimizationMethod, 3> OptimizationMethodAll
-    = { opt::SLSQP, opt::MMA, opt::IP };
-static const char* OptimizationMethodNames = "SLSQP\0MMA\0IP\0";
+static const std::array<opt::OptimizationMethod, 5> OptimizationMethodAll
+    = { opt::SLSQP, opt::MMA, opt::IP, opt::LINEARIZED_CONSTRAINTS, opt::NCP };
+static const char* OptimizationMethodNames
+    = "SLSQP\0MMA\0IP\0Linearized Constraints\0NCP\0";
+
+static const std::array<opt::QPSolver, 2> QPSolverAll
+    = { opt::OSQP, opt::MOSEK };
+static const char* QPSolverNames = "OSQP\0Mosek\0";
 
 class ViewerMenu : public igl::opengl::glfw::imgui::ImGuiMenu {
 private:
@@ -152,6 +159,6 @@ public:
     std::string last_action_message;
     bool last_action_success;
 };
-}
+} // namespace ccd
 
 #endif

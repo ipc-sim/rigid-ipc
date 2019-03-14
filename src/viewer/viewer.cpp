@@ -454,15 +454,21 @@ void ViewerMenu::goto_ee_impact(const int impact)
 void ViewerMenu::optimize_displacements()
 {
     try {
-        double minf = state.optimize_displacements();
+        last_action_success = state.optimize_displacements();
         std::ostringstream message;
         message.precision(3);
-        message << "||U-U0||² = " << minf << std::endl;
+        message << "Optimization " << (last_action_success ? "" : "un")
+                << "successful" << std::endl;
+        Eigen::MatrixXd U_flat = state.displacements;
+        U_flat.resize(U_flat.size(), 1);
+        Eigen::MatrixXd Uopt_flat = state.opt_displacements;
+        Uopt_flat.resize(Uopt_flat.size(), 1);
+        message << "||U-U0||² = " << (Uopt_flat - U_flat).squaredNorm()
+                << std::endl;
         message << "Optimal Displacments:\n"
                 << std::fixed << state.opt_displacements;
         this->last_action_message = message.str();
         redraw_opt_displacements();
-        last_action_success = true;
     } catch (NotImplementedError e) {
         last_action_message = e.what();
         last_action_success = false;
@@ -736,4 +742,4 @@ void ViewerMenu::viewer_set_vertices(
     }
     viewer->data_list[data_id].set_vertices(V_temp);
 }
-}
+} // namespace ccd

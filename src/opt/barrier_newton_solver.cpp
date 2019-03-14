@@ -5,7 +5,7 @@
 #include <ccd/collision_volume.hpp>
 #include <ccd/collision_volume_diff.hpp>
 
-void displacements_optimization_step(const Eigen::MatrixX2d& V,
+void solve_problem_with_barrier_newton(const Eigen::MatrixX2d& V,
     const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
     const double volume_epsilon, const double barrier_s,
     const double barrier_beta, const DetectionMethod ccd_detection_method,

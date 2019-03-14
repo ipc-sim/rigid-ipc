@@ -43,6 +43,5 @@ function(download_osqp)
     custom_download_project(osqp
         GIT_REPOSITORY https://github.com/oxfordcontrol/osqp.git
         GIT_TAG        master
-
     )
 endfunction()

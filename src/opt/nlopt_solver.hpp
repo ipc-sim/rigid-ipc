@@ -1,3 +1,4 @@
+/// Solve a optimization problem with NLopt.
 #pragma once
 
 #include <Eigen/Core>
@@ -6,10 +7,6 @@
 #include <ccd/collision_detection.hpp>
 
 namespace ccd {
-/**
- * @namespace ccd::opt
- * @brief Functions for optimizing functions.
- */
 namespace opt {
 
     /**
@@ -26,12 +23,20 @@ namespace opt {
      *                     displacments to return at termination.
      * @return The value of the objective for the minimum found.
      */
-    double displacements_optimization_nlopt(const Eigen::MatrixX2d& V,
+    bool solve_problem_with_nlopt(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const double volume_epsilon, const DetectionMethod ccd_detection_method,
         const nlopt::algorithm opt_method, const unsigned max_iter,
         Eigen::MatrixX2d& Uopt);
 
-}
+    /**
+     * @brief Output the reason for NLopt's termination.
+     *
+     * @param[in] opt Optimizer object.
+     * @param[in] reuslt Optimization result to parse.
+     */
+    void print_nlopt_termination_reason(
+        const nlopt::opt& opt, const nlopt::result result);
 
-}
+} // namespace opt
+} // namespace ccd

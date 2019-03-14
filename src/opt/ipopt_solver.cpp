@@ -12,7 +12,9 @@
 
 namespace ccd {
 namespace opt {
-    double displacements_optimization_ipopt(const Eigen::MatrixX2d& V,
+
+    // Optimize the displacments using Ipopt.
+    bool solve_problem_with_ipopt(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const double volume_epsilon, const DetectionMethod ccd_detection_method,
         const unsigned max_iter, Eigen::MatrixX2d& Uopt)
@@ -74,7 +76,6 @@ namespace opt {
             return volume_gradient.transpose();
         };
 
-
         std::vector<double> f_history;
         std::vector<double> g_history;
         callback_intermediate callback;
@@ -83,7 +84,7 @@ namespace opt {
                        const int iteration) -> void {
             f_history.push_back(obj_value);
             g_history.push_back(g(x).sum());
-            std::cout << "len "<< f_history.size() << std::endl;
+            std::cout << "len " << f_history.size() << std::endl;
             std::cout << "it " << iteration << std::endl;
         };
 
@@ -100,11 +101,20 @@ namespace opt {
         x0 = result.x;
         x0.resize(U.rows(), 2);
         Uopt = x0;
-        return result.value;
+        // return result.value;
+
+        // Recompute the collision volumes to make sure the constraints were
+        // satisfied.
+        detect_collisions(
+            V, Uopt, E, ccd_detection_method, ee_impacts, edge_impact_map);
+        Eigen::VectorXd volumes;
+        ccd::compute_volumes_fixed_toi(
+            V, Uopt, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
+
+        return result.value >= 0 && volumes.cwiseAbs().maxCoeff() < 1e-8;
     }
 
-}
-
-}
+} // namespace opt
+} // namespace ccd
 
 #endif

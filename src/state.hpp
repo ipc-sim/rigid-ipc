@@ -8,7 +8,7 @@
 #include <ccd/impact.hpp>
 #include <ccd/prune_impacts.hpp>
 
-#include <opt/displacements_opt.hpp>
+#include <opt/solver.hpp>
 
 namespace ccd {
 
@@ -71,6 +71,9 @@ public:
     ///@brief Reuse the current opt_displacements for initial optimization
     bool reuse_opt_displacements = false;
 
+    ///@brief Reuse the current opt_displacements for initial optimization
+    bool refresh_collisions = true;
+
     ///@breif Time along the optimal displacments
     float opt_time;
 
@@ -105,7 +108,7 @@ public:
 
     // SCENE OPT
     // ----------------------------------------------------------------------
-    double optimize_displacements();
+    bool optimize_displacements();
 
     // UI
     // ----------------------------------------------------------------------
@@ -130,5 +133,5 @@ public:
     double min_edge_width;
 };
 
-}
+} // namespace ccd
 #endif

@@ -231,7 +231,8 @@ namespace opt {
                 Eigen::VectorXd primals(num_vars);
                 Eigen::VectorXd dualeqs(num_constraints);
                 tnlp_adapter->ResortX(*ip_data->curr()->x(), primals.data());
-                tnlp_adapter->ResortG(*ip_data->curr()->y_c(), *ip_data->curr()->y_d(), dualeqs.data());
+                tnlp_adapter->ResortG(*ip_data->curr()->y_c(),
+                    *ip_data->curr()->y_d(), dualeqs.data());
                 if (intermediate_cb_) {
                     intermediate_cb_(primals, obj_value, dualeqs, iter);
                 }
@@ -248,13 +249,15 @@ namespace opt {
             result.x = Eigen::Map<const Eigen::VectorXd>(&x[0], num_vars);
             result.value = obj_value;
             result.status = status;
-            std::cout << "solver_return: " << SolverReturnStrings[status] << std::endl;
+            std::cout << "solver_return: " << SolverReturnStrings[status]
+                      << std::endl;
             std::cout << result.x.transpose() << std::endl;
         }
 
-    }
+    } // namespace ip
 
-}
+} // namespace opt
 
-}
+} // namespace ccd
+
 #endif

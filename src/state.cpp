@@ -204,15 +204,15 @@ void State::run_full_pipeline()
 // OPT
 // -----------------------------------------------------------------------------
 
-double State::optimize_displacements()
+bool State::optimize_displacements()
 {
     opt_displacements.resizeLike(displacements);
     if (!this->reuse_opt_displacements) {
         opt_displacements.setZero();
     }
-    return ccd::opt::displacements_optimization(vertices, displacements, edges,
+    return ccd::opt::solve_problem(vertices, displacements, edges,
         volume_epsilon, detection_method, opt_method, opt_max_iter,
         opt_displacements);
 }
 
-}
+} // namespace ccd

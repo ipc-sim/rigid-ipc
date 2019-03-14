@@ -19,9 +19,16 @@ namespace opt {
 
     /// @brief Methods available for non-linear constrained optimization.
     enum OptimizationMethod {
-        MMA,   ///<@brief Method of Moving Asymptotes (NLopt)
-        SLSQP, ///<@brief Sequential Least-Squares Quadratic Programming (NLopt)
-        IP     ///<@brief Interior-Point Method (Ipopt)
+        /// @brief Method of Moving Asymptotes (NLopt)
+        MMA,
+        /// @brief Sequential Least-Squares Quadratic Programming (NLopt)
+        SLSQP,
+        /// @brief Interior-Point Method (Ipopt)
+        IP,
+        /// @breif Linearize the constraints and solve the QP (OSQP/Mosek)
+        LINEARIZED_CONSTRAINTS,
+        /// @breif Nonlinear Complementarity Problem
+        NCP
     };
 
     /**
@@ -31,16 +38,16 @@ namespace opt {
      * @param[in] U Displacments
      * @param[in] E Edges
      * @param[in] volume_epsilon Epsilon value for volume computation.
-     * @param[in] detection_method Method of detecting collisions.
+     * @param[in] ccd_detection_method Method of detecting collisions.
      * @param[in] opt_method Method of non-linear constrained optimization.
      * @param[in] max_iter Maximum number of iteration to take.
      * @param[in,out] Uopt Initial value for the optimization and storage for
      * the optimal displacments.
      * @return The value of the objective for the minimum found.
      */
-    double displacements_optimization(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const double volume_epsilon, const DetectionMethod ccd_detection_method,
+    bool solve_problem(const Eigen::MatrixX2d& V, const Eigen::MatrixX2d& U,
+        const Eigen::MatrixX2i& E, const double volume_epsilon,
+        const DetectionMethod ccd_detection_method,
         const OptimizationMethod opt_method, const unsigned max_iter,
         Eigen::MatrixX2d& Uopt);
 
@@ -58,7 +65,16 @@ namespace opt {
         const Eigen::MatrixX2i& E, const ccd::DetectionMethod detection_method,
         EdgeEdgeImpacts& ee_impacts, Eigen::VectorXi& edge_impact_map);
 
-    void export_intermediate(const OptimizationMethod method, const std::vector<double>& objectives, const std::vector<double>& constraints);
-}
+    /**
+     * @brief Save JSON file of optimization objectives per iteration.
+     *
+     * @param[in] method Optimization method used.
+     * @param[in] objectives Vector of objective values per iteration.
+     * @param[in] objectives Vector of sum of constraint values per iteration.
+     */
+    void export_intermediate(const OptimizationMethod method,
+        const std::vector<double>& objectives,
+        const std::vector<double>& constraints);
+} // namespace opt
 
-}
+} // namespace ccd

@@ -1,7 +1,5 @@
 ﻿#include "viewer.hpp"
 
-#include <opt/linearized_constraint_solve.hpp>
-
 namespace ccd {
 void ViewerMenu::draw_menu()
 {
@@ -188,6 +186,8 @@ void ViewerMenu::draw_ccd_steps()
 void ViewerMenu::draw_optimization()
 {
     static int idx_optimization_method = 0;
+    static int idx_qp_solver = 0;
+    static opt::QPSolver qp_solver; // TODO: Store this in state
     if (ImGui::CollapsingHeader(
             "Displacement Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
 
@@ -195,7 +195,12 @@ void ViewerMenu::draw_optimization()
                 OptimizationMethodNames)) {
             state.opt_method
                 = OptimizationMethodAll[size_t(idx_optimization_method)];
-            // state.opt_displacements.setZero();
+        }
+
+        if (state.opt_method == opt::LINEARIZED_CONSTRAINTS) {
+            if (ImGui::Combo("QP solver##opt", &idx_qp_solver, QPSolverNames)) {
+                qp_solver = QPSolverAll[size_t(idx_qp_solver)];
+            }
         }
 
         int opt_max_iter = state.opt_max_iter;
@@ -207,23 +212,18 @@ void ViewerMenu::draw_optimization()
         ImGui::Checkbox(
             "continue optimization##opt", &(state.reuse_opt_displacements));
 
+        ImGui::Checkbox("refresh collisions##opt", &(state.refresh_collisions));
+
         if (ImGui::Button("Optimize##opt", ImVec2(-1, 0))) {
             optimize_displacements();
+            update_graph(
+                surface_data_id, state.get_opt_vertex_at_time(), state.edges);
         }
 
         if (ImGui::SliderFloat("time##opt", &(state.opt_time), 0.0, 1.0)) {
             update_graph(
                 surface_data_id, state.get_opt_vertex_at_time(), state.edges);
         }
-
-#ifdef BUILD_WITH_OSQP
-        if (ImGui::Button(
-                "Optimize Linearized Constraints##opt", ImVec2(-1, 0))) {
-            opt::linearized_constraint_solve(state.vertices,
-                state.displacements, state.edges, state.detection_method,
-                state.volume_epsilon);
-        }
-#endif
     }
 }
 
