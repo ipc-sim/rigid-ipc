@@ -193,20 +193,20 @@ void ViewerMenu::draw_optimization()
 
         if (ImGui::Combo("method##opt", &idx_optimization_method,
                 OptimizationMethodNames)) {
-            state.opt_method
+            state.solver_settings.method
                 = OptimizationMethodAll[size_t(idx_optimization_method)];
         }
 
-        if (state.opt_method == opt::LINEARIZED_CONSTRAINTS) {
+        if (state.solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
             if (ImGui::Combo("QP solver##opt", &idx_qp_solver, QPSolverNames)) {
                 qp_solver = QPSolverAll[size_t(idx_qp_solver)];
             }
         }
 
-        int opt_max_iter = state.opt_max_iter;
+        int opt_max_iter = state.solver_settings.max_iter;
         ImGui::InputInt("max iter##opt", &opt_max_iter);
         if (opt_max_iter >= 0) {
-            state.opt_max_iter = unsigned(opt_max_iter);
+            state.solver_settings.max_iter = opt_max_iter;
         }
 
         ImGui::Checkbox(

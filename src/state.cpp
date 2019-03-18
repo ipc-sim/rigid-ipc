@@ -9,6 +9,8 @@
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
 
+#include <opt/displacement_opt.hpp>
+
 namespace ccd {
 State::State()
     : canvas_width(10)
@@ -54,8 +56,10 @@ void State::reset_scene()
     selected_displacements.clear();
     selected_points.clear();
 
-    opt_displacements.resizeLike(displacements);
-    opt_displacements.setZero();
+    opt_results.x.resizeLike(displacements);
+    opt_results.x.setZero();
+    opt_results.minf = 2e19;
+    opt_results.success = false;
 }
 
 void State::save_scene(std::string filename)
@@ -74,8 +78,8 @@ void State::add_vertex(const Eigen::RowVector2d& position)
     displacements.conservativeResize(lastid + 1, kDIM);
     displacements.row(lastid) << 0.0, -0.1;
 
-    opt_displacements.conservativeResize(lastid + 1, kDIM);
-    opt_displacements.setZero();
+    opt_results.x.conservativeResize(lastid + 1, kDIM);
+    opt_results.x.setZero();
 
     reset_impacts();
 }
@@ -123,7 +127,7 @@ Eigen::MatrixX2d State::get_vertex_at_time()
 
 Eigen::MatrixX2d State::get_opt_vertex_at_time()
 {
-    return vertices + opt_displacements * double(opt_time);
+    return vertices + opt_results.x * double(opt_time);
 }
 
 Eigen::MatrixX2d State::get_volume_grad()
@@ -204,15 +208,22 @@ void State::run_full_pipeline()
 // OPT
 // -----------------------------------------------------------------------------
 
-bool State::optimize_displacements()
+void State::optimize_displacements()
 {
-    opt_displacements.resizeLike(displacements);
+    opt_results.x.resizeLike(displacements);
     if (!this->reuse_opt_displacements) {
-        opt_displacements.setZero();
+        opt_results.x.setZero();
     }
-    return ccd::opt::solve_problem(vertices, displacements, edges,
-        volume_epsilon, detection_method, opt_method, opt_max_iter,
-        opt_displacements);
+    ccd::opt::setup_displacement_optimization_problem(vertices, displacements,
+        edges, volume_epsilon, detection_method, opt_problem);
+    Eigen::MatrixX2d U0;
+    if (solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
+        U0 = displacements;
+    } else {
+        U0 = opt_results.x;
+    }
+    opt_results
+        = ccd::opt::displacement_optimization(opt_problem, U0, solver_settings);
 }
 
 } // namespace ccd

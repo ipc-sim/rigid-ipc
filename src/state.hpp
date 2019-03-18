@@ -1,8 +1,7 @@
 #ifndef CCD_STATE_HPP
 #define CCD_STATE_HPP
 
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
+#include <Eigen/Core>
 
 #include <ccd/collision_detection.hpp>
 #include <ccd/impact.hpp>
@@ -22,61 +21,59 @@ public:
     State();
     virtual ~State() = default;
 
-    ///@brief #V,2 vertices positions
+    /// @brief #V,2 vertices positions
     Eigen::MatrixX2d vertices;
-    ///@brief #E,2 vertices connnectivity
+    /// @brief #E,2 vertices connnectivity
     Eigen::MatrixX2i edges;
-    ///@brief #V,2 vertices displacements
+    /// @brief #V,2 vertices displacements
     Eigen::MatrixX2d displacements;
 
-    ///@brief All edge-vertex contact
+    /// @brief All edge-vertex contact
     EdgeVertexImpacts ev_impacts;
 
-    ///@brief All edge-edge contact
+    /// @brief All edge-edge contact
     EdgeEdgeImpacts ee_impacts;
 
-    ///@brief #E,1 indices of the edges' first impact
+    /// @brief #E,1 indices of the edges' first impact
     Eigen::VectorXi edge_impact_map;
 
-    ///@brief The current number of pruned impacts
+    /// @brief The current number of pruned impacts
     int num_pruned_impacts;
 
-    ///@brief #E,1 contact volume for each edge
+    /// @brief #E,1 contact volume for each edge
     Eigen::VectorXd volumes;
 
-    ///@brief 2*V,#E contact gradient for each edge
+    /// @brief 2*V,#E contact gradient for each edge
     Eigen::MatrixXd volume_grad;
 
-    ///@brief method to use for contact detection
+    /// @brief method to use for contact detection
     DetectionMethod detection_method;
 
-    ///@brief epsilon use on volume computation
+    /// @brief epsilon use on volume computation
     double volume_epsilon = 1.0;
 
-    // TODO: Remove these fields unless we reuse them
-    ///@brief variable s to use in optimization barrier
-    // double opt_barrier_s = 1.0;
-    ///@brief variable beta to use in optimization barrier
-    // double opt_barrier_beta = 1.0;
+    ////////////////////////////////////////////////////////////////////////////
+    // Optimization Fields
 
-    ///@brief #V,2 optimized vertices displacements
-    Eigen::MatrixX2d opt_displacements;
+    /// @brief Optimization problem to solve
+    opt::OptimizationProblem opt_problem;
 
-    ///@brief Optimization method for displacment optimization
-    opt::OptimizationMethod opt_method = opt::SLSQP;
+    /// @brief #V,2 optimized vertices displacements
+    opt::OptimizationResults opt_results;
 
-    ///@brief Max number of iterations during optimization
-    unsigned opt_max_iter = 500;
+    /// @brief Settings for the problem solver
+    opt::SolverSettings solver_settings;
 
-    ///@brief Reuse the current opt_displacements for initial optimization
+    /// @brief Reuse the current opt_displacements for initial optimization
     bool reuse_opt_displacements = false;
 
-    ///@brief Reuse the current opt_displacements for initial optimization
+    /// @brief Reuse the current opt_displacements for initial optimization
     bool refresh_collisions = true;
 
-    ///@breif Time along the optimal displacments
+    /// @brief Time along the optimal displacments
     float opt_time;
 
+    ////////////////////////////////////////////////////////////////////////////
     // SCENE CRUD
     // ----------------------------------------------------------------------
     void load_scene(const std::string filename);
@@ -99,6 +96,7 @@ public:
     Eigen::MatrixX2d get_opt_vertex_at_time();
     const EdgeEdgeImpact& get_edge_impact(const int edge_id);
 
+    ////////////////////////////////////////////////////////////////////////////
     // SCENE CCD
     // ----------------------------------------------------------------------
     void detect_edge_vertex_collisions();
@@ -106,10 +104,12 @@ public:
     void compute_collision_volumes();
     void run_full_pipeline();
 
+    ////////////////////////////////////////////////////////////////////////////
     // SCENE OPT
     // ----------------------------------------------------------------------
-    bool optimize_displacements();
+    void optimize_displacements();
 
+    ////////////////////////////////////////////////////////////////////////////
     // UI
     // ----------------------------------------------------------------------
     /// @brief Background rectangle to detect clicks

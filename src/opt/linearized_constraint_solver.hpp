@@ -2,7 +2,9 @@
 
 #include <Eigen/Core>
 
-#include <ccd/collision_detection.hpp>
+#include <opt/OptimizationProblem.hpp>
+#include <opt/OptimizationResults.hpp>
+#include <opt/SolverSettings.hpp>
 
 namespace ccd {
 /**
@@ -17,23 +19,13 @@ namespace opt {
     };
 
     /**
-     * @brief Optimize the displacments using a linearized constraint.
+     * @brief Optimize the displacments using linearized constraints
      *
-     * @param[in] V Vertices
-     * @param[in] U Displacments
-     * @param[in] E Edges
-     * @param[in] VOLUME_EPSILON Epsilon value for volume computation.
-     * @param[in] DETECTION_METHOD Method of detecting collisions.
-     * @param[in] opt_method Method of non-linear constrained optimization.
-     * @param[in] max_iter Maximum number of iteration to take.
-     * @param[in,out] Uopt Initial value for the optimization and storage for
-     * the optimal displacments.
-     * @return The value of the objective for the minimum found.
+     * @param[in,out] problem Optimization problem to solve
+     * @return The results of the optimization
      */
-    bool solve_problem_with_linearized_constraints(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const double VOLUME_EPSILON, const DetectionMethod CCD_DETECTION_METHOD,
-        const int max_iter, Eigen::MatrixX2d& Uopt);
+    OptimizationResults solve_problem_with_linearized_constraints(
+        const OptimizationProblem& problem, const SolverSettings& settings);
 
 } // namespace opt
 

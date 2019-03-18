@@ -1,0 +1,28 @@
+#include <opt/SolverSettings.hpp>
+
+namespace ccd {
+namespace opt {
+
+    SolverSettings::SolverSettings()
+        : SolverSettings::SolverSettings(SLSQP)
+    {
+    }
+
+    SolverSettings::SolverSettings(const OptimizationMethod method,
+        const int verbosity, const int max_iter,
+        const double relative_tolerance, const double absolute_tolerance,
+        const double constraint_tolerance, const double max_time,
+        const callback_intermediate intermediate_cb)
+        : method(method)
+        , verbosity(verbosity)
+        , max_iter(max_iter)
+        , relative_tolerance(relative_tolerance)
+        , absolute_tolerance(absolute_tolerance)
+        , constraint_tolerance(constraint_tolerance)
+        , max_time(max_time)
+        , intermediate_cb(intermediate_cb)
+    {
+    }
+
+} // namespace opt
+} // namespace ccd

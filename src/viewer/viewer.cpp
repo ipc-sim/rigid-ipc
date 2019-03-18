@@ -133,11 +133,11 @@ void ViewerMenu::load_state()
     // optimized displacements
     // -------------------------------------------------------------------
     viewer->data_list[opt_displ_data_id].set_points(
-        state.vertices + state.opt_displacements, color_opt_displ);
+        state.vertices + state.opt_results.x, color_opt_displ);
     viewer->data_list[opt_displ_data_id].set_edges(
         Eigen::MatrixXd(), Eigen::MatrixXi(), color_edge);
-    viewer->data_list[opt_displ_data_id].add_edges(state.vertices,
-        state.vertices + state.opt_displacements, color_opt_displ);
+    viewer->data_list[opt_displ_data_id].add_edges(
+        state.vertices, state.vertices + state.opt_results.x, color_opt_displ);
     viewer->data_list[opt_displ_data_id].point_size = 1;
 
     // collisions - volumes & gradient
@@ -287,8 +287,8 @@ void ViewerMenu::clicked__add_node(const int /*button*/, const int /*modifier*/,
     add_graph_vertex(surface_data_id, state.vertices, coord, color_vtx);
     extend_vector_field(
         displ_data_id, state.vertices, state.displacements, 1, color_displ);
-    extend_vector_field(opt_displ_data_id, state.vertices,
-        state.opt_displacements, 1, color_displ);
+    extend_vector_field(
+        opt_displ_data_id, state.vertices, state.opt_results.x, 1, color_displ);
     extend_vector_field(gradient_data_id, state.vertices,
         state.get_volume_grad(), 1, color_grad);
 }
@@ -454,19 +454,15 @@ void ViewerMenu::goto_ee_impact(const int impact)
 void ViewerMenu::optimize_displacements()
 {
     try {
-        last_action_success = state.optimize_displacements();
+        state.optimize_displacements();
+        last_action_success = state.opt_results.success;
         std::ostringstream message;
         message.precision(3);
         message << "Optimization " << (last_action_success ? "" : "un")
                 << "successful" << std::endl;
-        Eigen::MatrixXd U_flat = state.displacements;
-        U_flat.resize(U_flat.size(), 1);
-        Eigen::MatrixXd Uopt_flat = state.opt_displacements;
-        Uopt_flat.resize(Uopt_flat.size(), 1);
-        message << "||U-U0||² = " << (Uopt_flat - U_flat).squaredNorm()
-                << std::endl;
+        message << "Objective value: " << state.opt_results.minf << std::endl;
         message << "Optimal Displacments:\n"
-                << std::fixed << state.opt_displacements;
+                << std::fixed << state.opt_results.x;
         this->last_action_message = message.str();
         redraw_opt_displacements();
     } catch (NotImplementedError e) {
@@ -508,9 +504,8 @@ void ViewerMenu::redraw_scene()
 
     // opt displacements
     state.opt_time = 0;
-    state.opt_displacements.setZero();
-    update_vector_field(
-        opt_displ_data_id, state.vertices, state.opt_displacements);
+    state.opt_results.x.setZero();
+    update_vector_field(opt_displ_data_id, state.vertices, state.opt_results.x);
 
     // collision - volumes
     redraw_volumes();
@@ -521,8 +516,7 @@ void ViewerMenu::redraw_scene()
 
 void ViewerMenu::redraw_opt_displacements()
 {
-    update_vector_field(
-        opt_displ_data_id, state.vertices, state.opt_displacements);
+    update_vector_field(opt_displ_data_id, state.vertices, state.opt_results.x);
 }
 
 void ViewerMenu::redraw_at_time()

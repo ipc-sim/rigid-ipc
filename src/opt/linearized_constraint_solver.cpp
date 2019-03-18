@@ -11,92 +11,27 @@
 
 #include <iostream>
 
-#define INF_D (std::numeric_limits<double>::infinity())
-
 namespace ccd {
 namespace opt {
 
-    bool solve_problem_with_linearized_constraints(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const double VOLUME_EPSILON, const DetectionMethod CCD_DETECTION_METHOD,
-        const int max_iter, Eigen::MatrixX2d& Uopt)
+    bool solve_qp_with_osqp(
+        Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int>& P,
+        Eigen::Matrix<c_float, Eigen::Dynamic, 1>& q,
+        Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int>& A,
+        Eigen::Matrix<c_float, Eigen::Dynamic, 1>& l,
+        Eigen::Matrix<c_float, Eigen::Dynamic, 1>& u, Eigen::MatrixXd& x,
+        const SolverSettings& settings)
     {
-        assert(V.size() == U.size());
-        assert(U.size() == Uopt.size());
-
-        Eigen::MatrixXd U_flat = U;
-        U_flat.resize(U_flat.size(), 1);
-
-        // Load problem data
-        const c_int NUM_VARIABLES = U_flat.size();
-
-        // Quadratic Energy
-        // || U - U0 ||^2 = (U - U0)^T * (U - U0) = U^T * U - 2 * U0^T * U + C
-        // Quadratic matrix
-        // P = 2 * I
-        Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int> P(
-            NUM_VARIABLES, NUM_VARIABLES);
-        P.setIdentity();
-        P *= 2;
-        // Quadratic linear term
-        // q = - 2 * U0
-        Eigen::VectorXd q = -2 * U_flat;
-
-        Eigen::Matrix<c_float, 1, 1> x1 = (0.5 * U_flat.transpose() * P * U_flat
-            + q.transpose() * U_flat + U_flat.transpose() * U_flat);
-        c_float x2 = c_float((U_flat - U_flat).squaredNorm());
-        assert(abs(x1[0] - x2) < 1e-8);
-
-        // Linear constraints
-        bool use_constraints = true;
-        const c_int NUM_CONSTRAINTS
-            = use_constraints ? E.rows() : NUM_VARIABLES;
-        Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int> A;
-        Eigen::Matrix<c_float, Eigen::Dynamic, 1> l, u;
-        if (use_constraints) {
-            // Collision Volumes
-            EdgeEdgeImpacts ee_impacts;
-            Eigen::VectorXi edge_impact_map(E.rows());
-            detect_collisions(
-                V, U, E, CCD_DETECTION_METHOD, ee_impacts, edge_impact_map);
-            Eigen::VectorXd volumes;
-            Eigen::MatrixXd volume_gradient;
-            compute_volumes_fixed_toi(
-                V, U, E, ee_impacts, edge_impact_map, VOLUME_EPSILON, volumes);
-            autodiff::compute_volumes_gradient(V, U, E, ee_impacts,
-                edge_impact_map, VOLUME_EPSILON, volume_gradient);
-
-            // V(U0) + ∇V(U0)(U - U0) ≥ 0 →
-            // -V(U0) + ∇V(U0) * U0 ≤ ∇V(U0) * U ≤ ∞
-            // Linear constraint matrix
-            // A = ∇V(U0) ∈ R^(m × n)
-            A = volume_gradient.transpose().sparseView();
-            // Linear constraint lower bounds
-            // ℓ = -V(U0) + ∇V(U0) * U0 ∈ R^m
-            l = -volumes + volume_gradient.transpose() * U_flat;
-            // Linear constraint upper bounds
-            // u = ∞ ∈ R^m
-            u = Eigen::Matrix<c_float, Eigen::Dynamic, 1>(NUM_CONSTRAINTS);
-            u.setOnes();
-            u *= INF_D;
-        } else {
-            A = Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int>(
-                NUM_CONSTRAINTS, NUM_VARIABLES);
-            A.setIdentity();
-            // Linear constraint lower bounds
-            l = Eigen::Matrix<c_float, Eigen::Dynamic, 1>(NUM_CONSTRAINTS);
-            l.setOnes();
-            l *= -INF_D;
-            // Linear constraint upper bounds
-            u = Eigen::Matrix<c_float, Eigen::Dynamic, 1>(NUM_CONSTRAINTS);
-            u.setOnes();
-            u *= INF_D;
-        }
+        c_int n = q.rows(), m = l.rows();
+        assert(P.rows() == n && P.cols() == n);
+        assert(A.rows() == m && A.cols() == n);
+        assert(u.rows() == m);
+        assert(x.size() == n);
 
         // Populate data
         OSQPData data; // OSQPData
-        data.n = NUM_VARIABLES;
-        data.m = NUM_CONSTRAINTS;
+        data.n = n;
+        data.m = m;
         P.makeCompressed();
         data.P = csc_matrix(P.rows(), P.cols(), P.nonZeros(), P.valuePtr(),
             P.innerIndexPtr(), P.outerIndexPtr());
@@ -108,42 +43,84 @@ namespace opt {
         data.u = u.data();
 
         // Define Solver settings as default
-        OSQPSettings settings;
-        osqp_set_default_settings(&settings);
-        settings.max_iter = max_iter;
-        double epsilon = 1e-8;
-        settings.eps_abs = epsilon;
-        settings.eps_rel = epsilon;
-        settings.eps_prim_inf = epsilon / 10;
-        settings.eps_dual_inf = epsilon / 10;
-        settings.polish = true;
+        OSQPSettings osqp_settings;
+        osqp_set_default_settings(&osqp_settings);
+        osqp_settings.max_iter = settings.max_iter;
+        osqp_settings.eps_abs = settings.absolute_tolerance;
+        osqp_settings.eps_rel = settings.relative_tolerance;
+        osqp_settings.eps_prim_inf = settings.relative_tolerance / 10;
+        osqp_settings.eps_dual_inf = settings.relative_tolerance / 10;
+        osqp_settings.polish = true;
 
         // Setup workspace
-        OSQPWorkspace* work(osqp_setup(&data, &settings)); // Workspace
+        OSQPWorkspace* work(osqp_setup(&data, &osqp_settings)); // Workspace
 
         // Solve Problem
         c_int exit_flag = osqp_solve(work);
 
-        Eigen::Map<Eigen::VectorXd> x(work->solution->x, NUM_VARIABLES);
-
-        Uopt.col(0)
-            = Eigen::Map<Eigen::VectorXd>(work->solution->x, Uopt.rows());
-        Uopt.col(1) = Eigen::Map<Eigen::VectorXd>(
-            &(work->solution->x[Uopt.rows()]), Uopt.rows());
-
-        // Check the solve was successful
-        bool solve_successful = true;
-        Eigen::VectorXd lhs = A * x;
-        int i = 0;
-        while (solve_successful && i < lhs.size()) {
-            solve_successful &= l[i] <= (lhs[i] + 10 * epsilon)
-                && (lhs[i] - 10 * epsilon) <= u[i];
-            i++;
-        }
+        // Save solution
+        x = Eigen::Map<Eigen::VectorXd>(work->solution->x, n);
 
         // Cleanup
         osqp_cleanup(work);
-        return solve_successful;
+        return exit_flag >= 0;
+    }
+
+    // Optimize the displacments using linearized constraints
+    OptimizationResults solve_problem_with_linearized_constraints(
+        const OptimizationProblem& problem, const SolverSettings& settings)
+    {
+        // Quadratic Energy
+        // || U - U0 ||^2 = (U - U0)^T * (U - U0) = U^T * U - 2 * U0^T * U + C
+        // Quadratic matrix
+        // P = 2 * I
+        Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int> P(
+            problem.num_vars, problem.num_vars);
+        P.setIdentity();
+        P *= 2;
+        // Quadratic linear term
+        // q = - 2 * U0
+        Eigen::VectorXd q = -2 * problem.x0;
+
+        // Check that the QP is properly expressed
+        assert(((0.5 * problem.x0.transpose() * P * problem.x0
+                    + q.transpose() * problem.x0
+                    + problem.x0.transpose() * problem.x0)
+                    .array()
+                    .abs()
+            < 1e-8)
+                   .all());
+
+        // Linearized constraints
+        // ℓ ≤ g(x0) + ∇g(x0)(x - x0) ≤ u →
+        // ℓ - g(x0) + ∇g(x0) * x0 ≤ ∇g(x0) * x ≤ u
+        // Linear constraint matrix
+        // A = ∇g(x0) ∈ R^(m × n)
+        Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int> A
+            = problem.jac_g(problem.x0).transpose().sparseView();
+        // Linear constraint lower bounds
+        // (ℓ - g(x0) + ∇g(x0) * x0) ∈ R^m
+        Eigen::VectorXd l
+            = problem.g_lower - problem.g(problem.x0) + A * problem.x0;
+        // Linear constraint upper bounds
+        // u ∈ R^m
+        Eigen::VectorXd u = problem.g_upper;
+
+        OptimizationResults results;
+        results.x.resize(problem.num_vars, 1);
+        results.success
+            = solve_qp_with_osqp(P, q, A, l, u, results.x, settings);
+
+        // Compute objective at x
+        results.minf = problem.f(results.x);
+
+        // Check the solve was successful
+        auto lhs = (A * results.x).array();
+        results.success &= results.minf >= 0
+            && ((l.array() - 10 * settings.relative_tolerance) <= lhs).all()
+            && (lhs <= (u.array() + 10 * settings.relative_tolerance)).all();
+
+        return results;
     }
 
 } // namespace opt

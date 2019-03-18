@@ -42,14 +42,18 @@ set(SRCFILES
 
     src/opt/barrier.cpp
     src/opt/newtons_method.cpp
+    src/opt/OptimizationProblem.cpp
+    src/opt/OptimizationResults.cpp
+    src/opt/SolverSettings.cpp
     src/opt/solver.cpp
     src/opt/nlopt_solver.cpp
-    src/opt/ipopt_solver.cpp
     src/opt/linearized_constraint_solver.cpp
     src/opt/IpEigenInterfaceTNLP.cpp
+    src/opt/displacement_opt.cpp
 
     src/autodiff/finitediff.cpp
-    src/autodiff/autodiff.cpp)
+    src/autodiff/autodiff.cpp
+)
 
 set(TMPFILES
      src/autogen/time_of_impact_coeff.tpp
@@ -74,12 +78,13 @@ set(VIEWER_FILES
     src/io/read_scene.cpp
     src/io/write_scene.cpp
 
+    src/state.cpp
+
     src/viewer/edges_to_rectangles.cpp
     src/viewer/viewer.cpp
     src/viewer/viewer_menu.cpp
 
     src/main.cpp
-    src/state.cpp
     )
 
 add_executable(${PROJECT_NAME}_bin ${VIEWER_FILES})
