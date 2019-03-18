@@ -6,6 +6,7 @@
 #include <ccd/collision_volume.hpp>
 #include <ccd/collision_volume_diff.hpp>
 
+#include <io/opt_results.hpp>
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
 
@@ -125,11 +126,6 @@ Eigen::MatrixX2d State::get_vertex_at_time()
     return vertices + displacements * double(time);
 }
 
-Eigen::MatrixX2d State::get_opt_vertex_at_time()
-{
-    return vertices + opt_results.x * double(opt_time);
-}
-
 Eigen::MatrixX2d State::get_volume_grad()
 {
     if (current_edge < 0 || volume_grad.cols() == 0) {
@@ -210,20 +206,79 @@ void State::run_full_pipeline()
 
 void State::optimize_displacements()
 {
+    // reset results
+    opt_results.minf = 1E10;
+    opt_results.x = Eigen::MatrixXd();
+    opt_results.success = false;
+    opt_results.finished = false;
+    u_history.clear();
+    f_history.clear();
+    g_history.clear();
+
     opt_results.x.resizeLike(displacements);
     if (!this->reuse_opt_displacements) {
         opt_results.x.setZero();
     }
+
     ccd::opt::setup_displacement_optimization_problem(vertices, displacements,
         edges, volume_epsilon, detection_method, opt_problem);
+
     Eigen::MatrixX2d U0;
     if (solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
         U0 = displacements;
     } else {
         U0 = opt_results.x;
     }
-    opt_results
-        = ccd::opt::displacement_optimization(opt_problem, U0, solver_settings);
+
+    opt_results = ccd::opt::displacement_optimization(
+        opt_problem, U0, u_history, f_history, g_history, solver_settings);
+
+    opt_results.method = solver_settings.method;
+    opt_results.finished = true;
+
+    // ui elements
+    opt_time = 1.0;
+    opt_iteration = -1;
+}
+
+Eigen::MatrixX2d State::get_opt_vertex_at_time(const int iteration)
+{
+    return vertices + get_opt_displacements(iteration) * double(opt_time);
+}
+
+Eigen::MatrixX2d State::get_opt_displacements(const int iteration)
+{
+    auto displ = opt_results.x;
+    if (iteration >= 0 && u_history.size() > 0) {
+        opt_iteration %= u_history.size();
+        displ = u_history[size_t(opt_iteration)];
+    }
+    return displ;
+}
+
+double State::get_opt_functional(const int iteration)
+{
+    auto fun = opt_results.minf;
+    if (iteration >= 0 && f_history.size() > 0) {
+        opt_iteration %= f_history.size();
+        fun = f_history[size_t(opt_iteration)];
+    }
+    return fun;
+}
+
+void State::save_optimization(std::string filename)
+{
+    io::write_opt_results(
+        filename, opt_results, u_history, f_history, g_history);
+}
+
+void State::load_optimization(std::string filename)
+{
+    io::read_opt_results(
+        filename, opt_results, u_history, f_history, g_history);
+
+    opt_iteration = -1;
+    opt_time = 1.0;
 }
 
 } // namespace ccd

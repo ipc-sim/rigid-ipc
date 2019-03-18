@@ -58,7 +58,9 @@ namespace opt {
      * @return Optimization Result of the optimization
      * */
     OptimizationResults displacement_optimization(OptimizationProblem& problem,
-        const Eigen::MatrixX2d& U0, SolverSettings& settings);
+        const Eigen::MatrixX2d& U0, std::vector<Eigen::MatrixX2d>& u_history,
+        std::vector<double>& f_history, std::vector<double>& g_history,
+        SolverSettings& settings);
 
     /**
      * @brief Save JSON file of optimization objectives per iteration.

@@ -130,26 +130,39 @@ namespace opt {
             Eigen::Map<Eigen::MatrixXd>(gval, m, 1) = gk;
         }
 
-        return true;
-    }
+        bool EigenInterfaceTNLP::eval_jac_g(Index n, const Number* x,
+            bool /*new_x*/, Index m, Index nele_jac, Index* iRow, Index* jCol,
+            Number* values)
+        {
+            assert(n == problem.num_vars);
+            assert(m == problem.num_constraints);
+            assert(nele_jac == n * m); // dense
 
-    bool EigenInterfaceTNLP::eval_jac_g(Index n, const Number* x,
-        bool /*new_x*/, Index m, Index nele_jac, Index* iRow, Index* jCol,
-        Number* values)
-    {
-        assert(n == problem.num_vars);
-        assert(m == problem.num_constraints);
-        assert(nele_jac == n * m); // dense
+            if (values == nullptr) {
+                // dense jacobian
+                for (int i = 0; i < m; ++i) {
+                    for (int j = 0; j < n; ++j) {
+                        iRow[i * n + j] = i;
+                        jCol[i * n + j] = j;
+                    }
+                }
+            } else if (problem.jac_g) {
+                auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
+                Eigen::MatrixXd jac_g_val;
 
-        if (values == nullptr) {
-            // dense jacobian
-            for (int i = 0; i < m; ++i) {
-                for (int j = 0; j < n; ++j) {
-                    iRow[i * n + j] = i;
-                    jCol[i * n + j] = j;
+                // the derivative of constraint g^{(i)} with respect to variable
+                // x^{(j)} is placed in row i and column j.
+                jac_g_val = problem.jac_g(xk);
+
+                for (int i = 0; i < m; ++i) {
+                    for (int j = 0; j < n; ++j) {
+                        values[i * n + j] = jac_g_val(i, j);
+                    }
                 }
             }
-        } else if (problem.jac_g) {
+        }
+        else if (problem.jac_g)
+        {
             auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
             Eigen::MatrixXd jac_g_val;
 

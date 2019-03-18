@@ -21,6 +21,9 @@ namespace opt {
         NCP                     ///< @brief Nonlinear Complementarity Problem
     };
 
+    static const char* OptimizationMethodStrings[]
+        = { "mma", "slsqp", "ipopt", "linearized constraints", "ncp" };
+
     struct SolverSettings {
         OptimizationMethod method;   ///< @brief Optimization method to use
         int verbosity;               ///< @brief Verbosity of output

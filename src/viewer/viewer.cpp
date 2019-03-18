@@ -460,11 +460,9 @@ void ViewerMenu::optimize_displacements()
         message.precision(3);
         message << "Optimization " << (last_action_success ? "" : "un")
                 << "successful" << std::endl;
-        message << "Objective value: " << state.opt_results.minf << std::endl;
-        message << "Optimal Displacments:\n"
-                << std::fixed << state.opt_results.x;
         this->last_action_message = message.str();
         redraw_opt_displacements();
+        redraw_at_opt_time();
     } catch (NotImplementedError e) {
         last_action_message = e.what();
         last_action_success = false;
@@ -473,6 +471,33 @@ void ViewerMenu::optimize_displacements()
         last_action_success = false;
     }
 }
+
+void ViewerMenu::load_optimization()
+{
+    std::string fname = igl::file_dialog_open();
+    if (fname.length() == 0) {
+        return;
+    }
+    state.load_optimization(fname);
+    redraw_opt_displacements();
+    redraw_at_opt_time();
+}
+
+void ViewerMenu::save_optimization()
+{
+    std::string fname = igl::file_dialog_save();
+    if (fname.length() == 0) {
+        return;
+    }
+    return state.save_optimization(fname);
+}
+
+void ViewerMenu::redraw_at_opt_time()
+{
+    update_graph(surface_data_id,
+        state.get_opt_vertex_at_time(state.opt_iteration), state.edges);
+}
+
 // ----------------------------------------------------------------------------------------------------------------------------
 // DRAWING
 // ----------------------------------------------------------------------------------------------------------------------------
@@ -516,7 +541,8 @@ void ViewerMenu::redraw_scene()
 
 void ViewerMenu::redraw_opt_displacements()
 {
-    update_vector_field(opt_displ_data_id, state.vertices, state.opt_results.x);
+    update_vector_field(
+        opt_displ_data_id, state.vertices, state.get_opt_displacements(-1));
 }
 
 void ViewerMenu::redraw_at_time()

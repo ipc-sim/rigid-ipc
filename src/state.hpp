@@ -70,10 +70,15 @@ public:
     /// @brief Reuse the current opt_displacements for initial optimization
     bool refresh_collisions = true;
 
-    /// @brief Time along the optimal displacments
-    float opt_time;
+    ///@brief Optimization step history for displacements
+    std::vector<Eigen::MatrixX2d> u_history;
 
-    ////////////////////////////////////////////////////////////////////////////
+    ///@brief Optimization step history for functional
+    std::vector<double> f_history;
+
+    ///@brief Optimization step history for constraints
+    std::vector<double> g_history;
+
     // SCENE CRUD
     // ----------------------------------------------------------------------
     void load_scene(const std::string filename);
@@ -93,7 +98,7 @@ public:
 
     Eigen::MatrixX2d get_volume_grad();
     Eigen::MatrixX2d get_vertex_at_time();
-    Eigen::MatrixX2d get_opt_vertex_at_time();
+
     const EdgeEdgeImpact& get_edge_impact(const int edge_id);
 
     ////////////////////////////////////////////////////////////////////////////
@@ -109,7 +114,12 @@ public:
     // ----------------------------------------------------------------------
     void optimize_displacements();
 
-    ////////////////////////////////////////////////////////////////////////////
+    void load_optimization(const std::string filename);
+    void save_optimization(const std::string filename);
+    double get_opt_functional(const int iteration);
+    Eigen::MatrixX2d get_opt_displacements(const int iteration);
+    Eigen::MatrixX2d get_opt_vertex_at_time(const int iteration);
+
     // UI
     // ----------------------------------------------------------------------
     /// @brief Background rectangle to detect clicks
@@ -131,6 +141,14 @@ public:
     bool skip_no_impact_edge;
 
     double min_edge_width;
+
+    // UI OPT
+    // ----------------------------------------------------------------------
+    ///@brief Time along the optimal displacments
+    float opt_time = 0.0;
+
+    ///@brief we show the values of this iteration
+    int opt_iteration = 0;
 };
 
 } // namespace ccd

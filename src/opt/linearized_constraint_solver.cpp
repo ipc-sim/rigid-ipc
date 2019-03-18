@@ -97,7 +97,7 @@ namespace opt {
         // Linear constraint matrix
         // A = ∇g(x0) ∈ R^(m × n)
         Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int> A
-            = problem.jac_g(problem.x0).transpose().sparseView();
+            = problem.jac_g(problem.x0).sparseView();
         // Linear constraint lower bounds
         // (ℓ - g(x0) + ∇g(x0) * x0) ∈ R^m
         Eigen::VectorXd l

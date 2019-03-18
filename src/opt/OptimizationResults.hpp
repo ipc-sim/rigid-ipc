@@ -2,6 +2,8 @@
 
 #include <Eigen/Core>
 
+#include <opt/SolverSettings.hpp>
+
 namespace ccd {
 namespace opt {
 
@@ -10,6 +12,8 @@ namespace opt {
         double minf;       ///< @brief value of the objective function
         bool success;      ///< @brief whether or not the optimizer exited
                            ///< successfully.
+        OptimizationMethod method; ///<@brief method used to generate results
+        bool finished = false;
 
         OptimizationResults();
         OptimizationResults(Eigen::MatrixXd x, double minf, bool success);

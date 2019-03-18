@@ -127,25 +127,29 @@ namespace opt {
             assert(volume_gradient.rows() == num_vars);
             assert(volume_gradient.cols() == num_constraints);
 
-            return volume_gradient;
+            // Note: standard is to be num_constraints x num_vars
+            return volume_gradient.transpose();
         };
     }
 
     // Optimize the displacment opt problem with the given method and starting
     // value.
     OptimizationResults displacement_optimization(OptimizationProblem& problem,
-        const Eigen::MatrixX2d& U0, SolverSettings& settings)
+        const Eigen::MatrixX2d& U0, std::vector<Eigen::MatrixX2d>& u_history,
+        std::vector<double>& f_history, std::vector<double>& g_history,
+        SolverSettings& settings)
     {
-        std::vector<double> f_history;
-        std::vector<double> g_history;
         if (settings.verbosity) {
-            settings.intermediate_cb
-                = [&f_history, &g_history, &problem](const Eigen::VectorXd& x,
-                      const double obj_value, const Eigen::VectorXd& /*dual*/,
-                      const int /*iteration*/) {
-                      f_history.push_back(obj_value);
-                      g_history.push_back(problem.g(x).sum());
-                  };
+            settings.intermediate_cb =
+                [&u_history, &f_history, &g_history, &problem](
+                    const Eigen::VectorXd& x, const double obj_value,
+                    const Eigen::VectorXd& /*dual*/, const int /*iteration*/) {
+                    Eigen::MatrixXd u = x;
+                    u.resize(problem.num_vars / 2, 2);
+                    u_history.push_back(u);
+                    f_history.push_back(obj_value);
+                    g_history.push_back(problem.g(x).sum());
+                };
         }
 
         // initial value
@@ -155,16 +159,11 @@ namespace opt {
 
         OptimizationResults result = solve_problem(problem, settings);
         result.x.resize(U0.rows(), 2); // Unflatten displacments
-
-        if (settings.verbosity) {
-            export_intermediate(settings.method, f_history, g_history);
-        }
-
         return result;
-    }
+    } // namespace opt
 
-    // Save JSON file of optimization objectives per iteration.
-    void export_intermediate(const OptimizationMethod method,
+    void export_intermediate(const std::string filename,
+        const std::vector<Eigen::Matrix2d>& displacements,
         const std::vector<double>& objectives,
         const std::vector<double>& constraints)
     {
@@ -173,36 +172,15 @@ namespace opt {
         std::vector<int> it(objectives.size());
         std::iota(it.begin(), it.end(), 0); // Initalize it with range(0, n)
 
-        json data;
+        json figure, data, disp;
+
         data["x"] = it;
         data["objectives"] = objectives;
         data["constraints"] = constraints;
-        json figure;
-        figure["data"] = data;
-        std::ofstream out_file;
-        switch (method) {
-        case MMA:
-            out_file = std::ofstream(
-                "../figures/optimization-iterations/mma-opt-steps.json");
-            break;
-        case SLSQP:
-            out_file = std::ofstream(
-                "../figures/optimization-iterations/mma-opt-steps.json");
-            break;
-        case IP:
-            out_file = std::ofstream("./ip-opt-steps.json");
-            std::cout << "./ip-opt-steps.json" << std::endl;
-            break;
-        case LINEARIZED_CONSTRAINTS:
-            out_file = std::ofstream("./linearized-constraints-opt-steps.json");
-            std::cout << "./linearized-constraints-opt-steps.json" << std::endl;
-            break;
-        case NCP:
-            out_file = std::ofstream("./ncp-opt-steps.json");
-            std::cout << "./ncp-opt-steps.json" << std::endl;
-            break;
-        }
 
+        figure["data"] = data;
+
+        std::ofstream out_file(filename);
         out_file << std::setw(4) << figure << std::endl;
     }
 } // namespace opt

@@ -1,13 +1,19 @@
-#ifndef CCD_WRITE_SCENE_HPP
-#define CCD_WRITE_SCENE_HPP
+#pragma once
 
 #include <Eigen/Dense>
 #include <nlohmann/json.hpp>
 
 namespace ccd {
 namespace io {
-    void write_scene(const std::string filename, const Eigen::MatrixXd& vertices, const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& displacements);
-    nlohmann::json write_scene(const Eigen::MatrixXd& vertices, const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& displacements);
-}
-}
-#endif
+    template <typename type>
+    std::vector<std::vector<type>> to_vec2(
+        const Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic>& matrix);
+
+    void write_scene(const std::string filename,
+        const Eigen::MatrixXd& vertices, const Eigen::MatrixX2i& edges,
+        const Eigen::MatrixXd& displacements);
+    nlohmann::json write_scene(const Eigen::MatrixXd& vertices,
+        const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& displacements);
+} // namespace io
+} // namespace ccd
+

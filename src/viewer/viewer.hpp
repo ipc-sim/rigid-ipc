@@ -86,6 +86,9 @@ public:
 
     // OPT actions
     void optimize_displacements();
+    void load_optimization();
+    void save_optimization();
+    void redraw_at_opt_time();
 
     // menu windows
     void draw_io();
@@ -93,6 +96,7 @@ public:
     void draw_ui_settings();
     void draw_ccd_steps();
     void draw_optimization();
+    void draw_optimization_results();
 
     // utils functions
     void update_vector_field(const unsigned long data_id,

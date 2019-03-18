@@ -132,7 +132,7 @@ namespace opt {
         // Only compute the gradient as needed.
         if (grad) {
             // Gradient of the volumes (n x m)
-            Eigen::MatrixXd dgx = problem->jac_g(X);
+            Eigen::MatrixXd dgx = problem->jac_g(X).transpose();
             // Check that the sizes match up
             assert(size_t(m * n) == size_t(2 * dgx.size()));
             // Flatten the Jacobian
