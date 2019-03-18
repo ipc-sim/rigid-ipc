@@ -2,7 +2,7 @@
 
 #include <opt/nlopt_solver.hpp>
 #ifdef BUILD_WITH_IPOPT
-#include <opt/ipopt_solver.hpp>
+#include <opt/IpEigenInterfaceTNLP.hpp>
 #endif
 #ifdef BUILD_WITH_OSQP
 #include <opt/linearized_constraint_solver.hpp>
@@ -24,12 +24,10 @@ namespace opt {
         switch (settings.method) {
         case MMA:
         case SLSQP:
-            // Implemented in NLopt
             return solve_problem_with_nlopt(problem, settings);
         case IP:
 #ifdef BUILD_WITH_IPOPT
-            // Implemented in Ipopt
-            return ccd::opt::minimize_ipopt(problem);
+            return minimize_ipopt(problem, settings);
 #else
             throw NotImplementedError("IPOPT not Enabled");
 #endif

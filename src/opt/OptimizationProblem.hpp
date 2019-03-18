@@ -1,17 +1,10 @@
-/**
- *  We handle optimization problems of the form
- *      MIN     f(x)      x ∈ Rⁿ
- *
- *   s.t.       g_L ≤ g(x) ≤ g_U
- *              x_L ≤  x   ≤ x_U
- *
- */
 #pragma once
 
 #include <Eigen/Core>
 
 namespace ccd {
 namespace opt {
+
 
     ///@brief default value for no upper bound
     static const double NO_UPPER_BOUND = 2e19;
@@ -29,6 +22,14 @@ namespace opt {
     typedef std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>
         callback_jac_g;
 
+    /**
+     *  Defines the optimization problems of the form
+     *      MIN     f(x)      x ∈ Rⁿ
+     *
+     *   s.t.       g_L ≤ g(x) ≤ g_U
+     *              x_L ≤  x   ≤ x_U
+     *
+     **/
     struct OptimizationProblem {
         int num_vars;            ///< @brief Number of variables
         int num_constraints;     ///< @brief Number of constraints

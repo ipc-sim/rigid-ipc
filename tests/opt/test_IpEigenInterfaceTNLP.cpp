@@ -73,9 +73,10 @@ TEST_CASE("IPOPT_hello_world", "[opt][Ipopt][Ipopt-Interface]")
 
     OptimizationProblem problem(x0, f, grad_f, x_lower, x_upper,
                                 num_constraints, g, jac_g, g_lower, g_upper);
-    problem.verbosity = 0;
+    SolverSettings settings;
+    settings.verbosity = 0;
 
-    auto result = ccd::opt::minimize_ipopt(problem);
+    auto result = ccd::opt::minimize_ipopt(problem, settings);
     CHECK((result.x - expected).norm() == Approx(0.0));
 }
 
@@ -141,9 +142,10 @@ TEST_CASE("IPOPT_quadratic_linear_cnstr", "[opt][Ipopt][Ipopt-Interface]")
 
     OptimizationProblem problem(x0, f, grad_f, x_lower, x_upper,
                                 num_constraints, g, jac_g, g_lower, g_upper);
-    problem.verbosity = 0;
+    SolverSettings settings;
+    settings.verbosity = 0;
 
-    auto result = ccd::opt::minimize_ipopt(problem);
+    auto result = ccd::opt::minimize_ipopt(problem, settings);
 
     CHECK((result.x - expected).norm() < 1e-6);
 }
@@ -200,10 +202,11 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
 
     OptimizationProblem problem(x0, f, grad_f, x_lower, x_upper,
                                 num_constraints, g, jac_g, g_lower, g_upper);
-    problem.verbosity = 0;
-    problem.max_iter = 3000;
+    SolverSettings settings;
+    settings.verbosity = 0;
+    settings.max_iter = 3000;
 
-    auto result = ccd::opt::minimize_ipopt(problem);
+    auto result = ccd::opt::minimize_ipopt(problem, settings);
     CHECK((result.x - expected).norm() < 1e-6);
 }
 #endif

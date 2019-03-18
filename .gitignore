@@ -96,6 +96,7 @@ __pycache__
 src/autogen/*.cpp
 #src/autogen/*.hpp
 fixtures/auto_*.json
+figures/*.data
 
 3rd_party/*
 !3rd_party/json

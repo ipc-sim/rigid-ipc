@@ -11,7 +11,8 @@
 namespace ccd {
 namespace opt {
 
-    OptimizationResult minimize_ipopt(const OptimizationProblem& problem)
+    OptimizationResults minimize_ipopt(
+        const OptimizationProblem& problem, const SolverSettings& settings)
     {
 
         SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
@@ -20,22 +21,25 @@ namespace opt {
         app->Options()->SetStringValue(
             "hessian_approximation", "limited-memory");
         app->Options()->SetStringValue("derivative_test", "first-order");
-        app->Options()->SetIntegerValue("print_level", problem.verbosity);
-        app->Options()->SetIntegerValue("max_iter", problem.max_iter);
+        app->Options()->SetIntegerValue("print_level", settings.verbosity);
+        app->Options()->SetIntegerValue("max_iter", settings.max_iter);
 
         ApplicationReturnStatus app_status;
         app_status = app->Initialize();
 
-        SmartPtr<EigenInterfaceTNLP> nlp = new EigenInterfaceTNLP(problem);
+        SmartPtr<EigenInterfaceTNLP> nlp
+            = new EigenInterfaceTNLP(problem, settings);
         app_status = app->OptimizeTNLP(nlp);
 
-        OptimizationResult result = nlp->result;
+        OptimizationResults result = nlp->result;
         result.success = (app_status == Solve_Succeeded);
         return result;
     }
 
-    EigenInterfaceTNLP::EigenInterfaceTNLP(const OptimizationProblem& problem)
-        : problem(problem)
+    EigenInterfaceTNLP::EigenInterfaceTNLP(
+        const OptimizationProblem& problem, const SolverSettings& settings)
+        : settings(settings)
+        , problem(problem)
     {
 
         result.x = problem.x0;
@@ -130,45 +134,32 @@ namespace opt {
             Eigen::Map<Eigen::MatrixXd>(gval, m, 1) = gk;
         }
 
-        bool EigenInterfaceTNLP::eval_jac_g(Index n, const Number* x,
-            bool /*new_x*/, Index m, Index nele_jac, Index* iRow, Index* jCol,
-            Number* values)
-        {
-            assert(n == problem.num_vars);
-            assert(m == problem.num_constraints);
-            assert(nele_jac == n * m); // dense
+        return true;
+    }
 
-            if (values == nullptr) {
-                // dense jacobian
-                for (int i = 0; i < m; ++i) {
-                    for (int j = 0; j < n; ++j) {
-                        iRow[i * n + j] = i;
-                        jCol[i * n + j] = j;
-                    }
-                }
-            } else if (problem.jac_g) {
-                auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
-                Eigen::MatrixXd jac_g_val;
+    bool EigenInterfaceTNLP::eval_jac_g(Index n, const Number* x,
+        bool /*new_x*/, Index m, Index nele_jac, Index* iRow, Index* jCol,
+        Number* values)
+    {
+        assert(n == problem.num_vars);
+        assert(m == problem.num_constraints);
+        assert(nele_jac == n * m); // dense
 
-                // the derivative of constraint g^{(i)} with respect to variable
-                // x^{(j)} is placed in row i and column j.
-                jac_g_val = problem.jac_g(xk);
-
-                for (int i = 0; i < m; ++i) {
-                    for (int j = 0; j < n; ++j) {
-                        values[i * n + j] = jac_g_val(i, j);
-                    }
+        if (values == nullptr) {
+            // dense jacobian
+            for (int i = 0; i < m; ++i) {
+                for (int j = 0; j < n; ++j) {
+                    iRow[i * n + j] = i;
+                    jCol[i * n + j] = j;
                 }
             }
-        }
-        else if (problem.jac_g)
-        {
+        } else if (problem.jac_g) {
             auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
             Eigen::MatrixXd jac_g_val;
 
             // the derivative of constraint g^{(i)} with respect to variable
             // x^{(j)} is placed in row i and column j.
-            jac_g_val = problem.jac_g(xk).transpose();
+            jac_g_val = problem.jac_g(xk);
 
             for (int i = 0; i < m; ++i) {
                 for (int j = 0; j < n; ++j) {
@@ -179,7 +170,6 @@ namespace opt {
 
         return true;
     }
-
     bool EigenInterfaceTNLP::intermediate_callback(AlgorithmMode mode,
         Index iter, Number obj_value, Number /*inf_pr*/, Number /*inf_du*/,
         Number /*mu*/, Number /*d_norm*/, Number /*regularization_size*/,
@@ -201,8 +191,8 @@ namespace opt {
             tnlp_adapter->ResortX(*ip_data->curr()->x(), primals.data());
             tnlp_adapter->ResortG(*ip_data->curr()->y_c(),
                 *ip_data->curr()->y_d(), dualeqs.data());
-            if (problem.intermediate_cb) {
-                problem.intermediate_cb(primals, obj_value, dualeqs, iter);
+            if (settings.intermediate_cb) {
+                settings.intermediate_cb(primals, obj_value, dualeqs, iter);
             }
         }
         return true;
@@ -216,13 +206,13 @@ namespace opt {
     {
         assert(n == problem.num_vars);
         result.x = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
-        result.fun = obj_value;
+        result.minf = obj_value;
         std::cout << "solver_return: " << SolverReturnStrings[status]
                   << std::endl;
         std::cout << result.x.transpose() << std::endl;
     }
 
 } // namespace opt
-} // namespace ccd
 
+} // namespace ccd
 #endif

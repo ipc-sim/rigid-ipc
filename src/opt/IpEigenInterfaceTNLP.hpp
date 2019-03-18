@@ -5,7 +5,8 @@
 
 #include <IpTNLP.hpp>
 
-#include <opt/minimize.hpp>
+#include <opt/OptimizationProblem.hpp>
+#include <opt/OptimizationResults.hpp>
 
 namespace ccd {
 /**
@@ -43,7 +44,7 @@ namespace opt {
     };
 
 
-    OptimizationResult minimize_ipopt(const OptimizationProblem& problem);
+    OptimizationResults minimize_ipopt(const OptimizationProblem& problem, const SolverSettings& settings);
 
     /**
      * @brief Class for interfacing IPOPT TNLP problem
@@ -52,9 +53,10 @@ namespace opt {
     class EigenInterfaceTNLP : public TNLP {
 
     public:
-        EigenInterfaceTNLP(const OptimizationProblem& problem);
+        EigenInterfaceTNLP(const OptimizationProblem& problem, const SolverSettings& settings);
 
-        OptimizationResult result;
+        SolverSettings settings;
+        OptimizationResults result;
         OptimizationProblem problem;
 
         /**
