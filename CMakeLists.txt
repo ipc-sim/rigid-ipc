@@ -40,6 +40,10 @@ set(SRCFILES
     src/ccd/collision_volume_diff.cpp
     src/ccd/time_of_impact.cpp
 
+    src/io/read_scene.cpp
+    src/io/write_scene.cpp
+    src/io/opt_results.cpp
+
     src/opt/barrier.cpp
     src/opt/newtons_method.cpp
     src/opt/displacements_opt.cpp
@@ -67,12 +71,13 @@ set(AUTOGEN
 prepend_path(${PROJECT_SOURCE_DIR} AUTOGEN)
 target_sources(${PROJECT_NAME} PUBLIC ${AUTOGEN})
 
+set(OPT_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/figures/data")
+add_definitions(-DOPT_OUTPUT_DIR=\"${OPT_OUTPUT_DIR}\")
+
 ################################################################################
 # Fixing Collisions Executable
 ################################################################################
 set(VIEWER_FILES
-    src/io/read_scene.cpp
-    src/io/write_scene.cpp
 
     src/viewer/edges_to_rectangles.cpp
     src/viewer/viewer.cpp
@@ -91,8 +96,6 @@ add_custom_command(TARGET ${PROJECT_NAME}_bin POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/fixtures
         $<TARGET_FILE_DIR:${PROJECT_NAME}_bin>/fixtures)
-
-
 ################################################################################
 # Required Libraries
 ################################################################################

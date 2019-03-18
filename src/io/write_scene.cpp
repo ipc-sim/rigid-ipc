@@ -6,7 +6,8 @@
 namespace ccd {
 namespace io {
     template <typename type>
-    std::vector<std::vector<type>> to_vec2(const Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic>& matrix)
+    std::vector<std::vector<type>> to_vec2(
+        const Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic>& matrix)
     {
         size_t num_rows = size_t(matrix.rows());
         size_t num_cols = size_t(matrix.cols());
@@ -21,7 +22,9 @@ namespace io {
         return vec;
     }
 
-    void write_scene(const std::string filename, const Eigen::MatrixXd& vertices, const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& displacements)
+    void write_scene(const std::string filename,
+        const Eigen::MatrixXd& vertices, const Eigen::MatrixX2i& edges,
+        const Eigen::MatrixXd& displacements)
     {
         using nlohmann::json;
         json scene = write_scene(vertices, edges, displacements);
@@ -30,7 +33,8 @@ namespace io {
         o << std::setw(4) << scene << std::endl;
     }
 
-    nlohmann::json write_scene(const Eigen::MatrixXd& vertices, const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& displacements)
+    nlohmann::json write_scene(const Eigen::MatrixXd& vertices,
+        const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& displacements)
     {
         using nlohmann::json;
         json scene;
@@ -39,5 +43,5 @@ namespace io {
         scene["edges"] = to_vec2<int>(edges);
         return scene;
     }
-}
-}
+} // namespace io
+} // namespace ccd

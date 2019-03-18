@@ -42,11 +42,16 @@ namespace opt {
         IP     ///<@brief Interior-Point Method (Ipopt)
     };
 
+    static const char* OptimizationMethodStrings[]
+        = { "mma", "slsqp", "ipopt" };
+
     struct OptimizationResult {
         Eigen::MatrixXd x; ///<@brief the solution of the optimization.
         double fun;        ///<@brief value of the objective function
         bool success;      ///<@brief whether or not the optimizer exited
                            ///< successfully.
+        OptimizationMethod method; ///<@brief method used to generate results
+        bool finished = false;
     };
 
     struct OptimizationProblem {

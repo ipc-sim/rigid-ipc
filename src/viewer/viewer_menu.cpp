@@ -40,6 +40,7 @@ void ViewerMenu::draw_menu()
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
 
     draw_optimization();
+    draw_optimization_results();
 
     ImGui::PopItemWidth();
     ImGui::End();
@@ -211,11 +212,6 @@ void ViewerMenu::draw_optimization()
             optimize_displacements();
         }
 
-        if (ImGui::SliderFloat("time##opt", &(state.opt_time), 0.0, 1.0)) {
-            update_graph(
-                surface_data_id, state.get_opt_vertex_at_time(), state.edges);
-        }
-
 #ifdef BUILD_WITH_OSQP
         if (ImGui::Button(
                 "Optimize Linearized Constraints##opt", ImVec2(-1, 0))) {
@@ -224,6 +220,58 @@ void ViewerMenu::draw_optimization()
                 state.volume_epsilon);
         }
 #endif
+    }
+}
+void ViewerMenu::draw_optimization_results()
+{
+    if (ImGui::CollapsingHeader(
+            "Opt Results", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (state.opt_result.finished) {
+            ImGui::BeginChild("Opt Results Detail",
+                ImVec2(ImGui::GetWindowContentRegionWidth() * 0.9f, 100),
+                false);
+            ImGui::Text("method = %s",
+                ccd::opt::OptimizationMethodStrings[state.opt_result.method]);
+            ImGui::Text(
+                "energy = %.3g", state.get_opt_functional(state.opt_iteration));
+
+            ImGui::Text("displacements");
+            Eigen::MatrixX2d disp
+                = state.get_opt_displacements(state.opt_iteration);
+            ImGui::Columns(2, /*id=*/nullptr, /*border=*/false);
+            for (uint i = 0; i < disp.rows(); i++) {
+                ImGui::Text("%.3g", disp(i, 0));
+                ImGui::NextColumn();
+                ImGui::Text("%.3g", disp(i, 1));
+                ImGui::NextColumn();
+            }
+            ImGui::Columns(1);
+            ImGui::EndChild();
+
+            ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.7f);
+            if (ImGui::SliderFloat(
+                    "time##opt-results", &(state.opt_time), 0.0, 1.0)) {
+                redraw_at_opt_time();
+            }
+            ImGui::PopItemWidth();
+            if (state.u_history.size() > 0) {
+                if (ImGui::InputInt(
+                        "step##opt-results", &(state.opt_iteration), 1, 10)) {
+                    redraw_opt_displacements();
+                    redraw_at_opt_time();
+                }
+            }
+        }
+
+        float w = ImGui::GetContentRegionAvailWidth();
+        float p = ImGui::GetStyle().FramePadding.x;
+        if (ImGui::Button("Load##opt-results", ImVec2((w - p) / 2.f, 0))) {
+            load_optimization();
+        }
+        ImGui::SameLine(0, p);
+        if (ImGui::Button("Save##opt-results", ImVec2((w - p) / 2.f, 0))) {
+            save_optimization();
+        }
     }
 }
 

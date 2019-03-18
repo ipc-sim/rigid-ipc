@@ -71,10 +71,20 @@ public:
     ///@brief Reuse the current opt_displacements for initial optimization
     bool reuse_opt_displacements = false;
 
-    ///@breif Time along the optimal displacments
-    float opt_time;
-
+    ///@brief Optimization problem to solve
     ccd::opt::OptimizationProblem opt_problem;
+
+    ///@brief Result of the last optimization
+    ccd::opt::OptimizationResult opt_result;
+
+    ///@brief Optimization step history for displacements
+    std::vector<Eigen::MatrixX2d> u_history;
+
+    ///@brief Optimization step history for functional
+    std::vector<double> f_history;
+
+    ///@brief Optimization step history for constraints
+    std::vector<double> g_history;
 
     // SCENE CRUD
     // ----------------------------------------------------------------------
@@ -95,7 +105,7 @@ public:
 
     Eigen::MatrixX2d get_volume_grad();
     Eigen::MatrixX2d get_vertex_at_time();
-    Eigen::MatrixX2d get_opt_vertex_at_time();
+
     const EdgeEdgeImpact& get_edge_impact(const int edge_id);
 
     // SCENE CCD
@@ -108,6 +118,12 @@ public:
     // SCENE OPT
     // ----------------------------------------------------------------------
     double optimize_displacements();
+
+    void load_optimization(const std::string filename);
+    void save_optimization(const std::string filename);
+    double get_opt_functional(const int iteration);
+    Eigen::MatrixX2d get_opt_displacements(const int iteration);
+    Eigen::MatrixX2d get_opt_vertex_at_time(const int iteration);
 
     // UI
     // ----------------------------------------------------------------------
@@ -130,7 +146,16 @@ public:
     bool skip_no_impact_edge;
 
     double min_edge_width;
+
+
+    // UI OPT
+    // ----------------------------------------------------------------------
+    ///@brief Time along the optimal displacments
+    float opt_time = 0.0;
+
+    ///@brief we show the values of this iteration
+    int opt_iteration = 0;
 };
 
-}
+} // namespace ccd
 #endif

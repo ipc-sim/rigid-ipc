@@ -6,6 +6,7 @@
 #include <ccd/collision_volume.hpp>
 #include <ccd/collision_volume_diff.hpp>
 
+#include <io/opt_results.hpp>
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
 
@@ -123,11 +124,6 @@ Eigen::MatrixX2d State::get_vertex_at_time()
     return vertices + displacements * double(time);
 }
 
-Eigen::MatrixX2d State::get_opt_vertex_at_time()
-{
-    return vertices + opt_displacements * double(opt_time);
-}
-
 Eigen::MatrixX2d State::get_volume_grad()
 {
     if (current_edge < 0 || volume_grad.cols() == 0) {
@@ -208,6 +204,16 @@ void State::run_full_pipeline()
 
 double State::optimize_displacements()
 {
+
+    // reset results
+    opt_result.fun = 1E10;
+    opt_result.x = Eigen::MatrixXd();
+    opt_result.success = false;
+    opt_result.finished = false;
+    u_history.clear();
+    f_history.clear();
+    g_history.clear();
+
     opt_displacements.resizeLike(displacements);
     if (!this->reuse_opt_displacements) {
         opt_displacements.setZero();
@@ -216,16 +222,71 @@ double State::optimize_displacements()
     if (opt_method == ccd::opt::IP) {
         ccd::opt::setup_displacement_optimization(vertices, displacements,
             edges, volume_epsilon, detection_method, opt_problem);
-        // TODO: add opt callback on construction
-        // TODO: cleanup this
         opt_problem.max_iter = int(opt_max_iter);
-        auto result = ccd::opt::displacements_optimization(opt_method, opt_displacements, opt_problem);
-        opt_displacements = result.x;
-        return result.fun;
+
+        u_history.clear();
+        f_history.clear();
+        g_history.clear();
+
+        opt_result = ccd::opt::displacements_optimization(opt_method,
+            opt_displacements, opt_problem, u_history, f_history, g_history);
+        opt_displacements = opt_result.x;
+    } else {
+        auto fun = ccd::opt::displacements_optimization(vertices, displacements,
+            edges, volume_epsilon, detection_method, opt_method, opt_max_iter,
+            opt_displacements);
+        opt_result.success = true;
+        opt_result.x = opt_displacements;
+        opt_result.fun = fun;
     }
-    return ccd::opt::displacements_optimization(vertices, displacements, edges,
-        volume_epsilon, detection_method, opt_method, opt_max_iter,
-        opt_displacements);
+    opt_result.method = opt_method;
+    opt_result.finished = true;
+
+    // ui elements
+    opt_time = 1.0;
+    opt_iteration = -1;
+
+    return opt_result.fun;
+}
+
+Eigen::MatrixX2d State::get_opt_vertex_at_time(const int iteration)
+{
+    return vertices + get_opt_displacements(iteration) * double(opt_time);
+}
+
+Eigen::MatrixX2d State::get_opt_displacements(const int iteration)
+{
+    auto displ = opt_displacements;
+    if (iteration >= 0 && u_history.size() > 0) {
+        opt_iteration %= u_history.size();
+        displ = u_history[size_t(opt_iteration)];
+    }
+    return displ;
+}
+
+double State::get_opt_functional(const int iteration)
+{
+    auto fun = opt_result.fun;
+    if (iteration >= 0 && f_history.size() > 0) {
+        opt_iteration %= f_history.size();
+        fun = f_history[size_t(opt_iteration)];
+    }
+    return fun;
+}
+
+void State::save_optimization(std::string filename)
+{
+    io::write_opt_results(
+        filename, opt_result, u_history, f_history, g_history);
+}
+
+void State::load_optimization(std::string filename) {
+    io::read_opt_results(
+        filename, opt_result, u_history, f_history, g_history);
+
+    opt_displacements = opt_result.x;
+    opt_iteration = -1;
+    opt_time = 1.0;
 }
 
 } // namespace ccd

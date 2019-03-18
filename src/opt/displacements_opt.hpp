@@ -40,13 +40,18 @@ namespace opt {
      * value
      * @param[in] opt_method:   Optimization method
      * @param[in] U0:           Initial displacements
-     * @param[in,out] problem:  Optimization problem (possibly modified for validation)
+     * @param[in,out] problem:  Optimization problem (possibly modified for
+     * validation)
+     * @param[out] u_history:   Optimization steps for displacements
+     * @param[out] f_history:   Optimization steps for functional
+     * @param[out] g_history:   Optimization steps for constraints
      *
      * @return Optimization Result of the optimization
      * */
     OptimizationResult displacements_optimization(
         const OptimizationMethod& opt_method, const Eigen::MatrixX2d& U0,
-        OptimizationProblem& problem);
+        OptimizationProblem& problem, std::vector<Eigen::MatrixX2d>& u_history,
+        std::vector<double>& f_history, std::vector<double>& g_history);
 
     /**
      * @brief Optimize the displacments with the volume constraint C(U) ≤ 0.

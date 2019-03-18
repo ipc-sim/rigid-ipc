@@ -153,7 +153,7 @@ namespace opt {
 
                 // the derivative of constraint g^{(i)} with respect to variable
                 // x^{(j)} is placed in row i and column j.
-                jac_g_val = problem.jac_g(xk).transpose();
+                jac_g_val = problem.jac_g(xk);
 
                 for (int i = 0; i < m; ++i) {
                     for (int j = 0; j < n; ++j) {

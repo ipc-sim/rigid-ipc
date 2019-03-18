@@ -454,15 +454,12 @@ void ViewerMenu::goto_ee_impact(const int impact)
 void ViewerMenu::optimize_displacements()
 {
     try {
-        double minf = state.optimize_displacements();
-        std::ostringstream message;
-        message.precision(3);
-        message << "||U-U0||² = " << minf << std::endl;
-        message << "Optimal Displacments:\n"
-                << std::fixed << state.opt_displacements;
-        this->last_action_message = message.str();
+        state.optimize_displacements();
         redraw_opt_displacements();
+        redraw_at_opt_time();
+
         last_action_success = true;
+
     } catch (NotImplementedError e) {
         last_action_message = e.what();
         last_action_success = false;
@@ -471,6 +468,33 @@ void ViewerMenu::optimize_displacements()
         last_action_success = false;
     }
 }
+
+void ViewerMenu::load_optimization()
+{
+    std::string fname = igl::file_dialog_open();
+    if (fname.length() == 0) {
+        return;
+    }
+    state.load_optimization(fname);
+    redraw_opt_displacements();
+    redraw_at_opt_time();
+}
+
+void ViewerMenu::save_optimization()
+{
+    std::string fname = igl::file_dialog_save();
+    if (fname.length() == 0) {
+        return;
+    }
+    return state.save_optimization(fname);
+}
+
+void ViewerMenu::redraw_at_opt_time()
+{
+    update_graph(surface_data_id,
+        state.get_opt_vertex_at_time(state.opt_iteration), state.edges);
+}
+
 // ----------------------------------------------------------------------------------------------------------------------------
 // DRAWING
 // ----------------------------------------------------------------------------------------------------------------------------
@@ -515,8 +539,8 @@ void ViewerMenu::redraw_scene()
 
 void ViewerMenu::redraw_opt_displacements()
 {
-    update_vector_field(
-        opt_displ_data_id, state.vertices, state.opt_displacements);
+    update_vector_field(opt_displ_data_id, state.vertices,
+        state.get_opt_displacements(state.opt_iteration));
 }
 
 void ViewerMenu::redraw_at_time()
@@ -736,4 +760,4 @@ void ViewerMenu::viewer_set_vertices(
     }
     viewer->data_list[data_id].set_vertices(V_temp);
 }
-}
+} // namespace ccd

@@ -82,20 +82,26 @@ namespace opt {
             assert(volume_gradient.rows() == num_vars);
             assert(volume_gradient.cols() == num_constraints);
 
-            return volume_gradient;
+            // Note: standard is to be num_constraints x num_vars
+            return volume_gradient.transpose();
         };
     }
 
     OptimizationResult displacements_optimization(
         const OptimizationMethod& opt_method, const Eigen::MatrixX2d& U0,
-        OptimizationProblem& problem)
+        OptimizationProblem& problem, std::vector<Eigen::MatrixX2d>& u_history,
+        std::vector<double>& f_history, std::vector<double>& g_history)
     {
-        std::vector<double> f_history;
-        std::vector<double> g_history;
+
         problem.intermediate_cb
-            = [&f_history, &g_history, &problem](const Eigen::VectorXd& x,
-                  const double obj_value, const Eigen::VectorXd& /*dual*/,
+            = [&u_history, &f_history, &g_history, &problem](
+                  const Eigen::VectorXd& x, const double obj_value,
+                  const Eigen::VectorXd& /*dual*/,
                   const int /*iteration*/) -> void {
+            Eigen::MatrixXd u = x;
+            u.resize(x.rows() / 2, 2);
+
+            u_history.push_back(u);
             f_history.push_back(obj_value);
             g_history.push_back(problem.g(x).sum());
         };
@@ -107,6 +113,7 @@ namespace opt {
 
         OptimizationResult result = minimize(opt_method, problem);
         result.x.resize(U0.rows(), 2);
+
         return result;
     }
 
@@ -142,7 +149,8 @@ namespace opt {
         ccd::prune_impacts(ee_impacts, edge_impact_map);
     }
 
-    void export_intermediate(const OptimizationMethod method,
+    void export_intermediate(const std::string filename,
+        const std::vector<Eigen::Matrix2d>& displacements,
         const std::vector<double>& objectives,
         const std::vector<double>& constraints)
     {
@@ -151,28 +159,15 @@ namespace opt {
         std::vector<int> it(objectives.size());
         std::iota(it.begin(), it.end(), 0);
 
-        json data;
+        json figure, data, disp;
+
         data["x"] = it;
         data["objectives"] = objectives;
         data["constraints"] = constraints;
-        json figure;
-        figure["data"] = data;
-        std::ofstream out_file;
-        switch (method) {
-        case MMA:
-            out_file = std::ofstream(
-                "../figures/optimization-iterations/mma-opt-steps.json");
-            break;
-        case SLSQP:
-            out_file = std::ofstream(
-                "../figures/optimization-iterations/mma-opt-steps.json");
-            break;
-        case IP:
-            out_file = std::ofstream("./ip-opt-steps.json");
-            std::cout << "./ip-opt-steps.json" << std::endl;
-            break;
-        }
 
+        figure["data"] = data;
+
+        std::ofstream out_file(filename);
         out_file << std::setw(4) << figure << std::endl;
     }
 } // namespace opt
