@@ -61,6 +61,7 @@ void State::reset_scene()
     opt_results.x.setZero();
     opt_results.minf = 2e19;
     opt_results.success = false;
+    opt_results.finished = false;
 }
 
 void State::save_scene(std::string filename)

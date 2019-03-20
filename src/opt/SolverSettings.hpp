@@ -21,11 +21,17 @@ namespace opt {
         NCP                     ///< @brief Nonlinear Complementarity Problem
     };
 
+    enum QPSolver {
+        OSQP, ///< @brief Use OSQP to solve the qudratic program.
+        MOSEK ///< @brief Use Mosek to solve the qudratic program.
+    };
+
     static const char* OptimizationMethodStrings[]
         = { "mma", "slsqp", "ipopt", "linearized constraints", "ncp" };
 
     struct SolverSettings {
         OptimizationMethod method;   ///< @brief Optimization method to use
+        QPSolver qp_solver;          ///< @brief Quadratic programming solver
         int verbosity;               ///< @brief Verbosity of output
         int max_iter;                ///< @brief Maximum number of iterations
         double relative_tolerance;   ///< @brief Relative tolerance for x
@@ -35,11 +41,9 @@ namespace opt {
         callback_intermediate intermediate_cb; ///< @brief Callback function,
                                                ///< called every outer iteration
 
-        /// @brief Default constructor
-        SolverSettings();
-
         /// @brief Construct the solver settings
-        SolverSettings(const OptimizationMethod method, const int verbosity = 0,
+        SolverSettings(const OptimizationMethod method = SLSQP,
+            const QPSolver qp_solver = OSQP, const int verbosity = 0,
             const int max_iter = 3000, const double relative_tolerance = 1e-8,
             const double absolute_tolerance = 1e-8,
             const double constraint_tolerance = 1e-8,

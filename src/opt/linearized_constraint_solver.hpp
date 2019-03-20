@@ -13,11 +13,6 @@ namespace ccd {
  */
 namespace opt {
 
-    enum QPSolver {
-        OSQP, ///< @brief Use OSQP to solve the qudratic program.
-        MOSEK ///< @brief Use Mosek to solve the qudratic program.
-    };
-
     /**
      * @brief Optimize the displacments using linearized constraints
      *

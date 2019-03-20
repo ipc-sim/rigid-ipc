@@ -1,28 +1,33 @@
-#ifdef BUILD_WITH_OSQP
-
 #include <opt/linearized_constraint_solver.hpp>
 #include <opt/solver.hpp>
 
 #include <Eigen/SparseCore>
+#ifdef BUILD_WITH_OSQP
 #include <osqp.h>
+#endif
+#if BUILD_WITH_MOSEK
+#include <igl/mosek/mosek_quadprog.h>
+#endif
 
 #include <ccd/collision_volume.hpp>
 #include <ccd/collision_volume_diff.hpp>
+#include <ccd/not_implemented_error.hpp>
 
 #include <iostream>
 
 namespace ccd {
 namespace opt {
 
+#ifdef BUILD_WITH_OSQP
     bool solve_qp_with_osqp(
-        Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int>& P,
-        Eigen::Matrix<c_float, Eigen::Dynamic, 1>& q,
-        Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int>& A,
-        Eigen::Matrix<c_float, Eigen::Dynamic, 1>& l,
-        Eigen::Matrix<c_float, Eigen::Dynamic, 1>& u, Eigen::MatrixXd& x,
+        Eigen::SparseMatrix<double, Eigen::ColMajor, int>& P,
+        Eigen::Matrix<double, Eigen::Dynamic, 1>& q,
+        Eigen::SparseMatrix<double, Eigen::ColMajor, int>& A,
+        Eigen::Matrix<double, Eigen::Dynamic, 1>& l,
+        Eigen::Matrix<double, Eigen::Dynamic, 1>& u, Eigen::MatrixXd& x,
         const SolverSettings& settings)
     {
-        c_int n = q.rows(), m = l.rows();
+        int n = q.rows(), m = l.rows();
         assert(P.rows() == n && P.cols() == n);
         assert(A.rows() == m && A.cols() == n);
         assert(u.rows() == m);
@@ -56,7 +61,7 @@ namespace opt {
         OSQPWorkspace* work(osqp_setup(&data, &osqp_settings)); // Workspace
 
         // Solve Problem
-        c_int exit_flag = osqp_solve(work);
+        int exit_flag = osqp_solve(work);
 
         // Save solution
         x = Eigen::Map<Eigen::VectorXd>(work->solution->x, n);
@@ -65,28 +70,33 @@ namespace opt {
         osqp_cleanup(work);
         return exit_flag >= 0;
     }
+#endif
 
     // Optimize the displacments using linearized constraints
     OptimizationResults solve_problem_with_linearized_constraints(
         const OptimizationProblem& problem, const SolverSettings& settings)
     {
         // Quadratic Energy
-        // || U - U0 ||^2 = (U - U0)^T * (U - U0) = U^T * U - 2 * U0^T * U + C
-        // Quadratic matrix
-        // P = 2 * I
-        Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int> P(
-            problem.num_vars, problem.num_vars);
+        // 1/2 * || U - U0 ||^2 = (U - U0)^T * (U - U0) =
+        //      1/2 * U^T * I * U - U0^T * U + 1/2 * U0^T * U0
+
+        // Quadratic matrix P = I
+        Eigen::SparseMatrix<double> P(problem.num_vars, problem.num_vars);
         P.setIdentity();
-        P *= 2;
-        // Quadratic linear term
-        // q = - 2 * U0
-        Eigen::VectorXd q = -2 * problem.x0;
+
+        // Linear term
+        // q = -U0
+        Eigen::VectorXd q = -problem.x0;
+
+        // Constant term
+        // c = 1/2 * U0^T * U0
+        double c = 0.5 * problem.x0.transpose() * problem.x0;
 
         // Check that the QP is properly expressed
-        assert(((0.5 * problem.x0.transpose() * P * problem.x0
-                    + q.transpose() * problem.x0
-                    + problem.x0.transpose() * problem.x0)
-                    .array()
+        assert((((0.5 * problem.x0.transpose() * P * problem.x0
+                     + q.transpose() * problem.x0)
+                        .array()
+                    + c)
                     .abs()
             < 1e-8)
                    .all());
@@ -96,8 +106,7 @@ namespace opt {
         // ℓ - g(x0) + ∇g(x0) * x0 ≤ ∇g(x0) * x ≤ u
         // Linear constraint matrix
         // A = ∇g(x0) ∈ R^(m × n)
-        Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int> A
-            = problem.jac_g(problem.x0).sparseView();
+        Eigen::SparseMatrix<double> A = problem.jac_g(problem.x0).sparseView();
         // Linear constraint lower bounds
         // (ℓ - g(x0) + ∇g(x0) * x0) ∈ R^m
         Eigen::VectorXd l
@@ -108,8 +117,28 @@ namespace opt {
 
         OptimizationResults results;
         results.x.resize(problem.num_vars, 1);
-        results.success
-            = solve_qp_with_osqp(P, q, A, l, u, results.x, settings);
+
+        switch (settings.qp_solver) {
+        case OSQP:
+#ifdef BUILD_WITH_OSQP
+            results.success
+                = solve_qp_with_osqp(P, q, A, l, u, results.x, settings);
+            break;
+#else
+            throw NotImplementedError("OSQP is not enabled");
+#endif
+        case MOSEK:
+#ifdef BUILD_WITH_MOSEK
+            igl::mosek::MosekData mosek_data;
+            Eigen::VectorXd x(problem.num_vars);
+            results.success = igl::mosek::mosek_quadprog(P, q, c, A, l, u,
+                problem.x_lower, problem.x_upper, mosek_data, x);
+            results.x = x;
+            break;
+#else
+            throw NotImplementedError("Mosek is not enabled");
+#endif
+        }
 
         // Compute objective at x
         results.minf = problem.f(results.x);
@@ -125,5 +154,3 @@ namespace opt {
 
 } // namespace opt
 } // namespace ccd
-
-#endif

@@ -4,9 +4,7 @@
 #ifdef BUILD_WITH_IPOPT
 #include <opt/IpEigenInterfaceTNLP.hpp>
 #endif
-#ifdef BUILD_WITH_OSQP
 #include <opt/linearized_constraint_solver.hpp>
-#endif
 // #include <opt/ncp_solver.hpp> // TODO: Create this file
 
 #include <ccd/not_implemented_error.hpp>
@@ -29,14 +27,10 @@ namespace opt {
 #ifdef BUILD_WITH_IPOPT
             return minimize_ipopt(problem, settings);
 #else
-            throw NotImplementedError("IPOPT not Enabled");
+            throw NotImplementedError("IPOPT is not enabled");
 #endif
         case LINEARIZED_CONSTRAINTS:
-#ifdef BUILD_WITH_OSQP
             return solve_problem_with_linearized_constraints(problem, settings);
-#else
-            throw NotImplementedError("OSQP not Enabled");
-#endif
         case NCP:
             throw NotImplementedError(
                 "Nonlinear complementarity problem not implemented");

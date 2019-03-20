@@ -26,6 +26,7 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"          ON)
 option(BUILD_UNIT_TESTS                 "Build unit-tests"      ON)
 option(ENABLE_IPOPT                     "Enable Ipopt Library"  ON)
 option(ENABLE_OSQP                      "Enable OSQP Library"   OFF)
+option(ENABLE_MOSEK                     "Enable Mosek Library"  OFF)
 
 ################################################################################
 # Fixing Collisions Library
@@ -49,11 +50,11 @@ set(SRCFILES
     src/opt/OptimizationProblem.cpp
     src/opt/OptimizationResults.cpp
     src/opt/SolverSettings.cpp
-    src/opt/solver.cpp
     src/opt/nlopt_solver.cpp
     src/opt/linearized_constraint_solver.cpp
     src/opt/IpEigenInterfaceTNLP.cpp
     src/opt/displacement_opt.cpp
+    src/opt/solver.cpp
 
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp
@@ -123,6 +124,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC nlopt::nlopt)
 if(ENABLE_IPOPT)
     find_package(IPOPT)
     if (IPOPT_FOUND)
+        message("Including IPOPT")
         add_definitions(-DBUILD_WITH_IPOPT)
         target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${IPOPT_INCLUDE_DIR} )
         link_directories(${IPOPT_LIBRARY_DIR})
@@ -134,6 +136,12 @@ endif()
 if(ENABLE_OSQP)
     add_definitions(-DBUILD_WITH_OSQP)
     target_link_libraries(${PROJECT_NAME} PUBLIC osqp::osqp)
+endif()
+
+# Mosek
+if(ENABLE_MOSEK)
+    add_definitions(-DBUILD_WITH_MOSEK)
+    target_link_libraries(${PROJECT_NAME} PUBLIC mosek::mosek)
 endif()
 
 ################################################################################

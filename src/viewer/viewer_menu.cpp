@@ -186,7 +186,6 @@ void ViewerMenu::draw_optimization()
 {
     static int idx_optimization_method = 0;
     static int idx_qp_solver = 0;
-    static opt::QPSolver qp_solver; // TODO: Store this in state
     if (ImGui::CollapsingHeader(
             "Displacement Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
 
@@ -198,7 +197,8 @@ void ViewerMenu::draw_optimization()
 
         if (state.solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
             if (ImGui::Combo("QP solver##opt", &idx_qp_solver, QPSolverNames)) {
-                qp_solver = QPSolverAll[size_t(idx_qp_solver)];
+                state.solver_settings.qp_solver
+                    = QPSolverAll[size_t(idx_qp_solver)];
             }
         }
 
@@ -211,7 +211,8 @@ void ViewerMenu::draw_optimization()
         ImGui::Checkbox(
             "continue optimization##opt", &(state.reuse_opt_displacements));
 
-        ImGui::Checkbox("refresh collisions##opt", &(state.refresh_collisions));
+        // ImGui::Checkbox("refresh collisions##opt",
+        // &(state.refresh_collisions));
 
         if (ImGui::Button("Optimize##opt", ImVec2(-1, 0))) {
             optimize_displacements();

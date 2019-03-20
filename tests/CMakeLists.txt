@@ -13,6 +13,7 @@ set(test_sources
     opt/test_opt.cpp
     opt/test_IpEigenInterfaceTNLP.cpp
     opt/test_osqp.cpp
+    opt/test_mosek.cpp
 )
 
 add_executable(unit_tests ${test_sources})

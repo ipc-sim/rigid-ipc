@@ -13,7 +13,7 @@
 #include <ccd/not_implemented_error.hpp>
 #include <ccd/prune_impacts.hpp>
 
-#define FIXED_TOI true
+#define USE_FIXED_TOI false
 
 namespace ccd {
 namespace opt {
@@ -77,7 +77,7 @@ namespace opt {
         };
 
         problem.g = [V, E, volume_epsilon
-#if FIXED_TOI
+#if USE_FIXED_TOI
                         ,
                         ccd_detection_method
 #else
@@ -89,7 +89,7 @@ namespace opt {
             Uk.resize(x.rows() / 2, 2);
 
             Eigen::VectorXd volumes;
-#if FIXED_TOI
+#if USE_FIXED_TOI
             EdgeEdgeImpacts ee_impacts;
             Eigen::VectorXi edge_impact_map(E.rows());
             detect_collisions(
@@ -103,7 +103,7 @@ namespace opt {
         };
 
         problem.jac_g = [V, E, volume_epsilon, num_vars, num_constraints
-#if FIXED_TOI
+#if USE_FIXED_TOI
                             ,
                             ccd_detection_method
 #else
@@ -114,7 +114,7 @@ namespace opt {
             Eigen::MatrixXd Uk = x;
             Uk.resize(x.rows() / 2, 2);
 
-#if FIXED_TOI
+#if USE_FIXED_TOI
             EdgeEdgeImpacts ee_impacts;
             Eigen::VectorXi edge_impact_map(E.rows());
             detect_collisions(

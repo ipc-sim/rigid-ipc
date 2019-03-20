@@ -3,13 +3,8 @@
 namespace ccd {
 namespace opt {
 
-    SolverSettings::SolverSettings()
-        : SolverSettings::SolverSettings(SLSQP)
-    {
-    }
-
     SolverSettings::SolverSettings(const OptimizationMethod method,
-        const int verbosity, const int max_iter,
+        const QPSolver qp_solver, const int verbosity, const int max_iter,
         const double relative_tolerance, const double absolute_tolerance,
         const double constraint_tolerance, const double max_time,
         const callback_intermediate intermediate_cb)

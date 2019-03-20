@@ -1,5 +1,4 @@
 #ifdef BUILD_WITH_IPOPT
-
 #include "IpEigenInterfaceTNLP.hpp"
 
 #include "IpIpoptApplication.hpp"
@@ -16,7 +15,7 @@ namespace opt {
     {
 
         SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
-        app->Options()->SetNumericValue("tol", 1e-9);
+        app->Options()->SetNumericValue("tol", settings.relative_tolerance);
         app->Options()->SetStringValue("mu_strategy", "adaptive");
         app->Options()->SetStringValue(
             "hessian_approximation", "limited-memory");
@@ -213,6 +212,5 @@ namespace opt {
     }
 
 } // namespace opt
-
 } // namespace ccd
 #endif
