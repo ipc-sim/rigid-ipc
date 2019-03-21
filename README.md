@@ -17,12 +17,12 @@ make
 
 ### Dependencies
 
-Fixing Collisions includes some option and non-optional dependencies.
+Fixing Collisions includes some optional and non-optional dependencies.
 
 #### NLopt
 
 **ToDo:** add a build option to enable/disable NLopt
-(**Build Option:** `-DENABLE_MOSEK=ON`)
+(**Build Option:** `-DENABLE_NLOPT=ON`)
 
 NLopt is **automatically downloaded** through CMake.
 
@@ -39,7 +39,7 @@ brew tap udacity/CarND-MPC-Project https://github.com/udacity/CarND-MPC-Project
 brew install ipopt --with-openblas
 ```
 
-Ipopt is used for non-linear optimization of out constrained objective function. Ipopt is **not required** to make the project, but it is recommended in order to use the interior point optimization method.
+Ipopt is used for non-linear optimization of our constrained objective function. Ipopt is **not required** to make the project, but it is recommended in order to use the interior point optimization method.
 
 #### OSQP
 
@@ -47,7 +47,7 @@ Ipopt is used for non-linear optimization of out constrained objective function.
 
 When OSQP is enabled for the first time, it is **downloaded automatically** through CMake.
 
-OSQP is used for quadratic programming of the linearized constraints and the interior iterations of the nonlinear complementary problem. OSQP is not required to make the project, but it is recommended in order to use the linearized constraints.
+OSQP is used for quadratic programming of the linearized constraints and the interior iterations of the nonlinear complementarity problem. OSQP is not required to make the project, but it is recommended in order to use the linearized constraints.
 
 #### MOSEK
 
@@ -55,7 +55,7 @@ OSQP is used for quadratic programming of the linearized constraints and the int
 
 Currently, MOSEK must be installed manually (steps below).
 
-MOSEK is used for quadratic programming of the linearized constraints and the interior iterations of the nonlinear complementary problem. MOSEK is **not required** to make the project, but it is recommended in order to use the linearized constraints.
+MOSEK is used for quadratic programming of the linearized constraints and the interior iterations of the nonlinear complementarity problem. MOSEK is **not required** to make the project, but it is recommended in order to use the linearized constraints.
 
 *Currently, only MOSEK 7 works on macOS. MOSEK 8 gives the following error even after following all the installation instructions.*
 
