@@ -35,7 +35,7 @@ static const char* OptimizationMethodNames
 
 static const std::array<opt::QPSolver, 2> QPSolverAll
     = { opt::OSQP, opt::MOSEK };
-static const char* QPSolverNames = "OSQP\0Mosek\0";
+static const char* QPSolverNames = "OSQP\0MOSEK\0";
 
 class ViewerMenu : public igl::opengl::glfw::imgui::ImGuiMenu {
 private:

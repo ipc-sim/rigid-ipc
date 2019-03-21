@@ -55,13 +55,13 @@ if(ENABLE_OSQP)
     endif()
 endif()
 
-# Mosek library
+# MOSEK library
 if(ENABLE_MOSEK)
     if(NOT TARGET mosek)
         # download_mosek()
         find_package(mosek QUIET)
         if(MOSEK_FOUND)
-            message("Including Mosek")
+            message("Including MOSEK")
             # Make sure libigl uses mosek
             set(LIBIGL_WITH_MOSEK ON CACHE BOOL "Use MOSEK" FORCE)
             # Create a library for mosek
@@ -71,7 +71,7 @@ if(ENABLE_MOSEK)
             target_compile_definitions(mosek_mosek INTERFACE -DHAS_MOSEK)
             add_library(mosek::mosek ALIAS mosek_mosek)
         else()
-            message(WARNING "Mosek not found!")
+            message(WARNING "MOSEK not found!")
             add_library(mosek::mosek INTERFACE IMPORTED)
         endif()
     endif()

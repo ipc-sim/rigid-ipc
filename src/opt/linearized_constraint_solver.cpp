@@ -136,7 +136,7 @@ namespace opt {
             results.x = x;
             break;
 #else
-            throw NotImplementedError("Mosek is not enabled");
+            throw NotImplementedError("MOSEK is not enabled");
 #endif
         }
 

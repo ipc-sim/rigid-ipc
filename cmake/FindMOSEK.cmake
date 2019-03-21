@@ -35,7 +35,7 @@ find_library(MOSEK_LIBRARIES NAMES mosek64e
   NO_DEFAULT_PATH
   PATH_SUFFIXES a bin lib dylib)
 
-# Check that Mosek was successfully found
+# Check that MOSEK was successfully found
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
   MOSEK DEFAULT_MSG MOSEK_LIBRARIES MOSEK_INCLUDE_DIR

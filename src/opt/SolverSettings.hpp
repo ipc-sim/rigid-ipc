@@ -17,13 +17,13 @@ namespace opt {
                ///< (NLopt)
         IP,    ///< @brief Interior-Point Method (Ipopt)
         LINEARIZED_CONSTRAINTS, ///< @brief Linearize the constraints and solve
-                                ///< the QP (OSQP/Mosek)
+                                ///< the QP (OSQP/MOSEK)
         NCP                     ///< @brief Nonlinear Complementarity Problem
     };
 
     enum QPSolver {
         OSQP, ///< @brief Use OSQP to solve the qudratic program.
-        MOSEK ///< @brief Use Mosek to solve the qudratic program.
+        MOSEK ///< @brief Use MOSEK to solve the qudratic program.
     };
 
     static const char* OptimizationMethodStrings[]
