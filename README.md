@@ -84,9 +84,11 @@ export MOSEK_DIR="<MSKHOME>/mosek/7/tools/platform/osx64x86"
 
 #### Catch2
 
+**Build Option:** `-DBUILD_UNIT_TESTS=ON`
+
 Catch2 is **automatically downloaded** through CMake.
 
-Catch2 is used for unit tests and is required to make the project.
+Catch2 is used for unit tests. Catch2 is not required to make the project, but it is recommended in order to test the build.
 
 #### libigl
 
