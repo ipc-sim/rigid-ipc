@@ -12,6 +12,20 @@ namespace ccd {
 
 namespace opt {
 
+    bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
+        const std::function<double(const Eigen::VectorXd&)>& f, const double fx,
+        double& gamma)
+    {
+        gamma = 1.0;
+        for (int i = 0; i <= 32; i++) {
+            if (f(x + gamma * dir) < fx) {
+                return true;
+            }
+            gamma /= 2.0;
+        }
+        return false;
+    }
+
     // Search along a search direction to find a scalar gamma in [0, 1] such
     // that f(x + gamma * dir) ≤ f(x).
     double constrained_line_search(const Eigen::VectorXd& x,
@@ -65,5 +79,5 @@ namespace opt {
             ;
     }
 
-}
-}
+} // namespace opt
+} // namespace ccd

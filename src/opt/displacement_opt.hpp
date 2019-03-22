@@ -19,22 +19,6 @@ namespace ccd {
 namespace opt {
 
     /**
-     * @brief Creates an Optimization problem for displacements C(U) ≤ 0.
-     *      Min ||U - Uk||^2
-     *      s.t V(U) >= 0
-     * @param[in] V                : Vertices
-     * @param[in] U                : Displacments
-     * @param[in] E                : Edges
-     * @param[in] volume_epsilon   : Epsilon value for volume computation.
-     * @param[in] detection_method : Method of detecting collisions.
-     * @param[out] problem         : The optimization problem.
-     */
-    void setup_displacement_optimization_problem(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const double volume_epsilon, const DetectionMethod ccd_detection_method,
-        OptimizationProblem& problem);
-
-    /**
      * @brief Run the entire CCD pipeline.
      *
      * @param[in] V                : Vertices
@@ -49,6 +33,22 @@ namespace opt {
         EdgeEdgeImpacts& ee_impacts, Eigen::VectorXi& edge_impact_map);
 
     /**
+     * @brief Creates an Optimization problem for displacements C(U) ≤ 0.
+     *      Min ||U - Uk||^2
+     *      s.t V(U) >= 0
+     * @param[in] V                : Vertices
+     * @param[in] U                : Displacments
+     * @param[in] E                : Edges
+     * @param[in] volume_epsilon   : Epsilon value for volume computation.
+     * @param[in] detection_method : Method of detecting collisions.
+     * @param[out] problem         : The optimization problem.
+     */
+    void setup_displacement_optimization_problem(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+        const double volume_epsilon, const DetectionMethod ccd_detection_method,
+        const bool recompute_collision_set, OptimizationProblem& problem);
+
+    /**
      * @brief Runs the optimization problem for the given method and initial
      * value
      * @param[in,out] problem : Optimization problem (possibly modified for
@@ -61,18 +61,6 @@ namespace opt {
         const Eigen::MatrixX2d& U0, std::vector<Eigen::MatrixX2d>& u_history,
         std::vector<double>& f_history, std::vector<double>& g_history,
         SolverSettings& settings);
-
-    /**
-     * @brief Save JSON file of optimization objectives per iteration.
-     *
-     * @param[in] method      : Optimization method used.
-     * @param[in] objectives  : Vector of objective values per iteration.
-     * @param[in] constraints : Vector of sum of constraint values per
-     *                          iteration.
-     */
-    void export_intermediate(const OptimizationMethod method,
-        const std::vector<double>& objectives,
-        const std::vector<double>& constraints);
 
 } // namespace opt
 } // namespace ccd

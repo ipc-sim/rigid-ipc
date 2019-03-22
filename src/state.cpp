@@ -222,7 +222,7 @@ void State::optimize_displacements()
     }
 
     ccd::opt::setup_displacement_optimization_problem(vertices, displacements,
-        edges, volume_epsilon, detection_method, opt_problem);
+        edges, volume_epsilon, detection_method, recompute_collision_set, opt_problem);
 
     Eigen::MatrixX2d U0;
     if (solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {

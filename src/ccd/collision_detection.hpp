@@ -8,6 +8,7 @@
 #define COLLISION_DETECTION_H
 
 #include <Eigen/Core>
+#include <array>
 
 #include <ccd/impact.hpp>
 
@@ -18,6 +19,8 @@ enum DetectionMethod {
     BRUTE_FORCE, ///< Use brute-force to detect all collisions.
     HASH_MAP     ///< Use a spatial data structure to detect all collisions.
 };
+
+static const char* DetectionMethodNames[] = { "BRUTE_FORCE", "HASH_MAP" };
 
 /**
  * Convert a temporal parameterization to a spatial parameterization.

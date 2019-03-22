@@ -50,11 +50,13 @@ set(SRCFILES
     src/opt/OptimizationProblem.cpp
     src/opt/OptimizationResults.cpp
     src/opt/SolverSettings.cpp
-    src/opt/nlopt_solver.cpp
-    src/opt/linearized_constraint_solver.cpp
-    src/opt/IpEigenInterfaceTNLP.cpp
     src/opt/displacement_opt.cpp
     src/opt/solver.cpp
+    src/opt/nlopt_solver.cpp
+    src/opt/linearized_constraint_solver.cpp
+    src/opt/ipopt_solver.cpp
+    src/opt/ncp_solver.cpp
+    src/opt/lcp_solver.cpp
 
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp

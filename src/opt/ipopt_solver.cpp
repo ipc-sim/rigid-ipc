@@ -1,5 +1,5 @@
 #ifdef BUILD_WITH_IPOPT
-#include "IpEigenInterfaceTNLP.hpp"
+#include "ipopt_solver.hpp"
 
 #include "IpIpoptApplication.hpp"
 #include "IpIpoptCalculatedQuantities.hpp"
