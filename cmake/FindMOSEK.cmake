@@ -25,7 +25,7 @@ find_path(MOSEK_INCLUDE_DIR mosek.h
 )
 
 set(MOSEK_LIBRARIES)
-find_library(MOSEK_LIBRARIES NAMES mosek64e
+find_library(MOSEK_LIBRARIES NAMES mosek64
   HINT
     "${MOSEK_INCLUDE_DIR}"
     "${MOSEK_INCLUDE_DIR}/../bin"
