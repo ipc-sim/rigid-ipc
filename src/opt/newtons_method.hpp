@@ -15,6 +15,10 @@ namespace ccd {
  */
 namespace opt {
 
+    bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
+        const std::function<double(const Eigen::VectorXd&)>& f, const double fx,
+        double& gamma);
+
     /**
      * @brief Search along a search direction to find a scalar \f$\gamma \in [0,
      * 1]\f$ such that \f$f(x + \gamma \vec{dir}) \leq f(x)\f$.
@@ -82,5 +86,5 @@ namespace opt {
         const std::function<bool(const Eigen::VectorXd&)>& constraint,
         double mu = 1e-5, double epsilon = 1e-12, int max_iter = 1000);
 
-}
-}
+} // namespace opt
+} // namespace ccd

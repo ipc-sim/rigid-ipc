@@ -13,8 +13,6 @@
 #include <ccd/not_implemented_error.hpp>
 #include <ccd/prune_impacts.hpp>
 
-#define USE_FIXED_TOI false
-
 namespace ccd {
 namespace opt {
 
@@ -34,7 +32,7 @@ namespace opt {
     void setup_displacement_optimization_problem(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const double volume_epsilon, const DetectionMethod ccd_detection_method,
-        OptimizationProblem& problem)
+        const bool recompute_collision_set, OptimizationProblem& problem)
     {
         // Detect initial collisions
         // we will keep this set fixed during the optimization
@@ -44,7 +42,7 @@ namespace opt {
         detect_collisions(
             V, U, E, ccd_detection_method, ee_impacts, edge_impact_map);
 
-        /// Min ||U - Uk||^2
+        /// Min 1/2||U - Uk||^2
         /// s.t V(U) >= 0
         Eigen::MatrixXd u_ = U; // U_flat
         u_.resize(U.size(), 1);
@@ -67,59 +65,34 @@ namespace opt {
         problem.g_upper.setConstant(NO_UPPER_BOUND);
 
         // we use lambda by copy [=] to fix the entried to current values
-
         problem.f = [u_](const Eigen::VectorXd& x) -> double {
-            return (x - u_).squaredNorm();
+            return (x - u_).squaredNorm() / 2;
         };
 
         problem.grad_f = [u_](const Eigen::VectorXd& x) -> Eigen::VectorXd {
             return 2.0 * (x - u_);
         };
 
-        problem.g = [V, E, volume_epsilon
-#if USE_FIXED_TOI
-                        ,
-                        ccd_detection_method
-#else
-                        ,
-                        ee_impacts, edge_impact_map
-#endif
-        ](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+
+        auto g
+            = [V, E, volume_epsilon](const Eigen::VectorXd& x,
+                  const EdgeEdgeImpacts& ee_impacts,
+                  const Eigen::VectorXi& edge_impact_map) -> Eigen::VectorXd {
+
             Eigen::MatrixXd Uk = x;
             Uk.resize(x.rows() / 2, 2);
-
             Eigen::VectorXd volumes;
-#if USE_FIXED_TOI
-            EdgeEdgeImpacts ee_impacts;
-            Eigen::VectorXi edge_impact_map(E.rows());
-            detect_collisions(
-                V, Uk, E, ccd_detection_method, ee_impacts, edge_impact_map);
-            ccd::compute_volumes_fixed_toi(
-#else
             ccd::autodiff::compute_volumes_refresh_toi(
-#endif
                 V, Uk, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
             return volumes;
         };
 
-        problem.jac_g = [V, E, volume_epsilon, num_vars, num_constraints
-#if USE_FIXED_TOI
-                            ,
-                            ccd_detection_method
-#else
-                            ,
-                            ee_impacts, edge_impact_map
-#endif
-        ](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
+        auto jac_g
+            = [V, E, volume_epsilon, num_vars, num_constraints](
+                  const Eigen::VectorXd& x, const EdgeEdgeImpacts& ee_impacts,
+                  const Eigen::VectorXi& edge_impact_map) -> Eigen::MatrixXd {
             Eigen::MatrixXd Uk = x;
             Uk.resize(x.rows() / 2, 2);
-
-#if USE_FIXED_TOI
-            EdgeEdgeImpacts ee_impacts;
-            Eigen::VectorXi edge_impact_map(E.rows());
-            detect_collisions(
-                V, Uk, E, ccd_detection_method, ee_impacts, edge_impact_map);
-#endif
 
             Eigen::MatrixXd volume_gradient;
             ccd::autodiff::compute_volumes_gradient(V, Uk, E, ee_impacts,
@@ -130,6 +103,30 @@ namespace opt {
             // Note: standard is to be num_constraints x num_vars
             return volume_gradient.transpose();
         };
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+        problem.g = [=](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+            if (recompute_collision_set) {
+                EdgeEdgeImpacts new_ee_impacts;
+                Eigen::VectorXi new_edge_impact_map(num_constraints);
+                detect_collisions(
+                    V, U, E, ccd_detection_method, new_ee_impacts, new_edge_impact_map);
+                return g(x, ee_impacts, edge_impact_map);
+            }
+            return g(x, ee_impacts, edge_impact_map);
+        };
+
+        problem.jac_g = [=](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
+            if (recompute_collision_set) {
+                EdgeEdgeImpacts new_ee_impacts;
+                Eigen::VectorXi new_edge_impact_map(num_constraints);
+                detect_collisions(
+                    V, U, E, ccd_detection_method, new_ee_impacts, new_edge_impact_map);
+                return jac_g(x, ee_impacts, edge_impact_map);
+            }
+            return jac_g(x, ee_impacts, edge_impact_map);
+        };
+#pragma clang diagnostic pop
     }
 
     // Optimize the displacment opt problem with the given method and starting
@@ -162,26 +159,5 @@ namespace opt {
         return result;
     } // namespace opt
 
-    void export_intermediate(const std::string filename,
-        const std::vector<Eigen::Matrix2d>& displacements,
-        const std::vector<double>& objectives,
-        const std::vector<double>& constraints)
-    {
-        using nlohmann::json;
-
-        std::vector<int> it(objectives.size());
-        std::iota(it.begin(), it.end(), 0); // Initalize it with range(0, n)
-
-        json figure, data, disp;
-
-        data["x"] = it;
-        data["objectives"] = objectives;
-        data["constraints"] = constraints;
-
-        figure["data"] = data;
-
-        std::ofstream out_file(filename);
-        out_file << std::setw(4) << figure << std::endl;
-    }
 } // namespace opt
 } // namespace ccd

@@ -15,7 +15,7 @@ namespace opt {
         MMA,   ///< @brief Method of Moving Asymptotes (NLopt)
         SLSQP, ///< @brief Sequential Least-Squares Quadratic Programming
                ///< (NLopt)
-        IP,    ///< @brief Interior-Point Method (Ipopt)
+        IPOPT, ///< @brief Interior-Point Method (Ipopt)
         LINEARIZED_CONSTRAINTS, ///< @brief Linearize the constraints and solve
                                 ///< the QP (OSQP/MOSEK)
         NCP                     ///< @brief Nonlinear Complementarity Problem
@@ -26,8 +26,10 @@ namespace opt {
         MOSEK ///< @brief Use MOSEK to solve the qudratic program.
     };
 
-    static const char* OptimizationMethodStrings[]
-        = { "mma", "slsqp", "ipopt", "linearized constraints", "ncp" };
+    static const char* OptimizationMethodNames[]
+        = { "MMA", "SLSQP", "IPOPT", "linearized const.", "NCP" };
+
+    static const char* QPSolverNames[] = { "OSQP", "MOSEK" };
 
     struct SolverSettings {
         OptimizationMethod method;   ///< @brief Optimization method to use

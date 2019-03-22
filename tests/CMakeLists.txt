@@ -11,7 +11,8 @@ set(test_sources
 
     # opt/test_displacements_opt.cpp
     opt/test_opt.cpp
-    opt/test_IpEigenInterfaceTNLP.cpp
+    opt/test_ipopt_solver.cpp
+    opt/test_ncp_solver.cpp
     opt/test_osqp.cpp
     opt/test_mosek.cpp
 )

@@ -5,7 +5,6 @@
 namespace ccd {
 namespace opt {
 
-
     ///@brief default value for no upper bound
     static const double NO_UPPER_BOUND = 2e19;
     ///@brief default value for no lower bound

@@ -5,7 +5,7 @@
 
 #include <catch.hpp>
 
-#include <opt/IpEigenInterfaceTNLP.hpp>
+#include <opt/ipopt_solver.hpp>
 
 // ---------------------------------------------------
 // Tests
@@ -164,7 +164,6 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
 
     callback_f f = [](const Eigen::VectorXd& x) -> double {
         // x1^2 + (x2 + 1)^2
-        // NOTE: doesn't work if
         return (x[0] + 1) * (x[0] + 1) + (x[1] + 1) * (x[1] + 1);
     };
 

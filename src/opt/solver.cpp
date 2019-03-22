@@ -2,10 +2,9 @@
 
 #include <opt/nlopt_solver.hpp>
 #ifdef BUILD_WITH_IPOPT
-#include <opt/IpEigenInterfaceTNLP.hpp>
+#include <opt/ipopt_solver.hpp>
 #endif
 #include <opt/linearized_constraint_solver.hpp>
-// #include <opt/ncp_solver.hpp> // TODO: Create this file
 
 #include <ccd/not_implemented_error.hpp>
 
@@ -23,7 +22,7 @@ namespace opt {
         case MMA:
         case SLSQP:
             return solve_problem_with_nlopt(problem, settings);
-        case IP:
+        case IPOPT:
 #ifdef BUILD_WITH_IPOPT
             return minimize_ipopt(problem, settings);
 #else

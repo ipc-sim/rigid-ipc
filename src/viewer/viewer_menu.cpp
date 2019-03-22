@@ -1,6 +1,9 @@
 ﻿#include "viewer.hpp"
 
+#define CCD_IM_ARRAYSIZE(_ARR) (int(sizeof(_ARR) / sizeof(*_ARR)))
+
 namespace ccd {
+
 void ViewerMenu::draw_menu()
 {
     float menu_width = 180.f * menu_scaling();
@@ -150,10 +153,11 @@ void ViewerMenu::draw_ccd_steps()
     static int idx_detection_method = 0;
     if (ImGui::CollapsingHeader("CCD Steps", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-        if (ImGui::Combo(
-                "method##ccd", &idx_detection_method, DetectionMethodNames)) {
+        if (ImGui::Combo("method##ccd", &idx_detection_method,
+                ccd::DetectionMethodNames,
+                CCD_IM_ARRAYSIZE(ccd::DetectionMethodNames))) {
             state.detection_method
-                = DetectionMethodAll[size_t(idx_detection_method)];
+                = static_cast<ccd::DetectionMethod>(idx_detection_method);
         }
         if (ImGui::Button("Detect EV Collisions", ImVec2(-1, 0))) {
             detect_edge_vertex_collisions();
@@ -184,21 +188,27 @@ void ViewerMenu::draw_ccd_steps()
 
 void ViewerMenu::draw_optimization()
 {
-    static int idx_optimization_method = 0;
-    static int idx_qp_solver = 0;
+    int idx_optimization_method = state.solver_settings.method;
+    int idx_qp_solver = state.solver_settings.qp_solver;
+
     if (ImGui::CollapsingHeader(
             "Displacement Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
 
         if (ImGui::Combo("method##opt", &idx_optimization_method,
-                OptimizationMethodNames)) {
+                ccd::opt::OptimizationMethodNames,
+                CCD_IM_ARRAYSIZE(ccd::opt::OptimizationMethodNames))) {
             state.solver_settings.method
-                = OptimizationMethodAll[size_t(idx_optimization_method)];
+                = static_cast<ccd::opt::OptimizationMethod>(
+                    idx_optimization_method);
         }
 
         if (state.solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
-            if (ImGui::Combo("QP solver##opt", &idx_qp_solver, QPSolverNames)) {
+
+            if (ImGui::Combo("QP solver##opt", &idx_qp_solver,
+                    ccd::opt::QPSolverNames,
+                    CCD_IM_ARRAYSIZE(ccd::opt::QPSolverNames))) {
                 state.solver_settings.qp_solver
-                    = QPSolverAll[size_t(idx_qp_solver)];
+                    = static_cast<ccd::opt::QPSolver>(idx_qp_solver);
             }
         }
 
@@ -211,8 +221,8 @@ void ViewerMenu::draw_optimization()
         ImGui::Checkbox(
             "continue optimization##opt", &(state.reuse_opt_displacements));
 
-        // ImGui::Checkbox("refresh collisions##opt",
-        // &(state.refresh_collisions));
+        ImGui::Checkbox(
+            "recompute col. set##opt", &(state.recompute_collision_set));
 
         if (ImGui::Button("Optimize##opt", ImVec2(-1, 0))) {
             optimize_displacements();
@@ -231,7 +241,7 @@ void ViewerMenu::draw_optimization_results()
                 ImVec2(ImGui::GetWindowContentRegionWidth() * 0.9f, 100),
                 false);
             ImGui::Text("method = %s",
-                ccd::opt::OptimizationMethodStrings[state.opt_results.method]);
+                ccd::opt::OptimizationMethodNames[state.opt_results.method]);
             ImGui::Text(
                 "energy = %.3g", state.get_opt_functional(state.opt_iteration));
 

@@ -64,11 +64,13 @@ public:
     /// @brief Settings for the problem solver
     opt::SolverSettings solver_settings;
 
-    /// @brief Reuse the current opt_displacements for initial optimization
+    /// @brief if True, reuse the current opt_displacements for initial
+    /// optimization
     bool reuse_opt_displacements = false;
 
-    /// @brief Reuse the current opt_displacements for initial optimization
-    bool refresh_collisions = true;
+    /// @brief if True, recompute collision set on each evaluation of the
+    /// collision volume and gradient
+    bool recompute_collision_set = false;
 
     ///@brief Optimization step history for displacements
     std::vector<Eigen::MatrixX2d> u_history;

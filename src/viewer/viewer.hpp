@@ -24,19 +24,6 @@ static const std::array<ViewerEditMode, 4> ViewerEditModeAll
 static const std::array<std::string, 4> ViewerEditModeNames
     = { { "Select", "Translate", "Add Node", "Add Chain" } };
 
-static const std::array<DetectionMethod, 2> DetectionMethodAll
-    = { BRUTE_FORCE, HASH_MAP };
-static const char* DetectionMethodNames = "BRUTE_FORCE\0HASH_MAP\0";
-
-static const std::array<opt::OptimizationMethod, 5> OptimizationMethodAll
-    = { opt::SLSQP, opt::MMA, opt::IP, opt::LINEARIZED_CONSTRAINTS, opt::NCP };
-static const char* OptimizationMethodNames
-    = "SLSQP\0MMA\0IP\0Linearized Constraints\0NCP\0";
-
-static const std::array<opt::QPSolver, 2> QPSolverAll
-    = { opt::OSQP, opt::MOSEK };
-static const char* QPSolverNames = "OSQP\0MOSEK\0";
-
 class ViewerMenu : public igl::opengl::glfw::imgui::ImGuiMenu {
 private:
     typedef igl::opengl::glfw::imgui::ImGuiMenu Super;
