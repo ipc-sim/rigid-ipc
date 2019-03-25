@@ -1,24 +1,24 @@
 #include "lcp_solver.hpp"
 
+#if BUILD_WITH_MOSEK
+#include <igl/mosek/mosek_quadprog.h>
+#include <opt/OptimizationProblem.hpp> // no-upper-bound
+#endif
 #include <iostream>
 
 namespace ccd {
 namespace opt {
-    /**
-     *  We handle the LCP problem LCP(M,q), which seeks vectors
-     *  s and x which satisfy the following constraints
-     *      s = N (M x + p) + q
-     *      x >=0, s >=0, x^T s = 0
-     */
-    void lcp_solve(const Eigen::VectorXd& q, const Eigen::MatrixXd& N,
-        const Eigen::VectorXd& p, const Eigen::MatrixXd& M,
+
+    bool lcp_solve(const Eigen::VectorXd& q, const Eigen::MatrixXd& N,
+        const Eigen::MatrixXd& M, const Eigen::VectorXd& p,
         const LCPSolver solver, Eigen::VectorXd& x)
     {
         switch (solver) {
         case LCP_GAUSS_SEIDEL:
-            return lcp_gauss_seidel(q, N, p, M, x);
+            return lcp_gauss_seidel(q, N, M, p, x);
         case LCP_MOSEK:
-            return;
+            //  s = q + N*(M * x + p) --> N* M x + (N*p + q)
+            return lcp_mosek(N * M, N*p + q, x);
         }
     }
 
@@ -34,9 +34,12 @@ namespace opt {
         return sqrt(fb);
     }
 
-    void lcp_gauss_seidel(const Eigen::VectorXd& q, const Eigen::MatrixXd& N,
-        const Eigen::VectorXd& p, const Eigen::MatrixXd& M, Eigen::VectorXd& x)
+    bool lcp_gauss_seidel(const Eigen::VectorXd& q, const Eigen::MatrixXd& N,
+        const Eigen::MatrixXd& M, const Eigen::VectorXd& p, Eigen::VectorXd& x)
     {
+        // LCP Problem:
+        //      s = q + N*(M * x + p)
+        //      0 <= x \perp s >=0
 
         const long num_constraints = q.rows();
         const long dof = p.rows();
@@ -88,7 +91,46 @@ namespace opt {
         if (FB >= 1e-4) {
             std::cerr << "gs_convergence=" << FB
                       << " num_constraints=" << num_constraints << std::endl;
+            return false;
         }
+        return true;
+    }
+
+    bool lcp_mosek(
+        const Eigen::MatrixXd& M, const Eigen::VectorXd& q, Eigen::VectorXd& x)
+    {
+        // LCP Problem:
+        //      s = (M * x + q)
+        //      0 <= x \perp s >=0
+        // Equivalent EQ porblem:
+        //      Min  x^T M x + x^T q
+        //      s.t  (Mx + q) >= 0 ----> -q <= Mx <= inf
+        //                  x >= 0 ----> 0 <= x <= inf
+
+        //
+        // Minimize: 1/2 * x^T * Q * x + c^T * x + cf
+        //
+        // Subject to: lc ≤ Ax ≤ uc
+        //             lx ≤ x ≤ ux
+        const int x_dof = int(x.rows());
+        const int q_dof = int(q.rows());
+        assert(M.cols() == x_dof);
+        assert(M.rows() == q_dof);
+
+        Eigen::SparseMatrix<double> A = M.sparseView();
+        const Eigen::VectorXd& lc = -q;
+        Eigen::VectorXd uc(q_dof);
+        uc.setConstant(NO_UPPER_BOUND);
+
+        Eigen::VectorXd lx(x_dof), ux(x_dof);
+        lx.setZero();
+        ux.setConstant(NO_UPPER_BOUND);
+
+        igl::mosek::MosekData mosek_data;
+        bool success = igl::mosek::mosek_quadprog(
+            A, q, /*cf=*/0.0, A, lc, uc, lx, ux, mosek_data, x);
+
+        return success;
 
     }
 

@@ -45,3 +45,17 @@ function(download_osqp)
         GIT_TAG        master
     )
 endfunction()
+
+function(download_fmt)
+    custom_download_project(fmt
+        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+        GIT_TAG        5.3.0
+    )
+endfunction()
+
+function(download_spdlog)
+    custom_download_project(spdlog
+       GIT_REPOSITORY https://github.com/gabime/spdlog.git
+       GIT_TAG        v1.3.1
+    )
+endfunction()

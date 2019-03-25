@@ -40,6 +40,7 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
   MOSEK DEFAULT_MSG MOSEK_LIBRARIES MOSEK_INCLUDE_DIR
 )
+
 set(MOSEK_INCLUDE_DIRS ${MOSEK_INCLUDE_DIR})
 
 # Hide variables from CMake-Gui options

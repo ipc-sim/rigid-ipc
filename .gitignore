@@ -97,6 +97,7 @@ src/autogen/*.cpp
 #src/autogen/*.hpp
 fixtures/auto_*.json
 figures/*.data
+tests_output/*.csv
 
 3rd_party/*
 !3rd_party/json

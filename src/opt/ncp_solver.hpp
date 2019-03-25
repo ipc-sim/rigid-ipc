@@ -5,6 +5,7 @@
 
 #include <opt/OptimizationProblem.hpp>
 #include <opt/OptimizationResults.hpp>
+#include <opt/lcp_solver.hpp>
 
 namespace ccd {
 namespace opt {
@@ -40,7 +41,7 @@ namespace opt {
     bool solve_ncp(const Eigen::SparseMatrix<double>& A, Eigen::VectorXd& b,
         const callback_g& g, const callback_jac_g& jac_g, const int max_iter,
         const callback_intermediate_ncp& callback, const UpdateType update_type,
-        Eigen::VectorXd& x, Eigen::VectorXd& alpha);
+        const LCPSolver lcp_solver, Eigen::VectorXd& x, Eigen::VectorXd& alpha);
 
 } // namespace opt
 } // namespace ccd

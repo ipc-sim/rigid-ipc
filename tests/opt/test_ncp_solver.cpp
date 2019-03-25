@@ -1,16 +1,38 @@
 #include <opt/ncp_solver.hpp>
 
-#include <iomanip>
+#include <fstream>
+#include <iomanip> // std::setw
 #include <iostream>
 
 #include <catch.hpp>
+#include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
 #include <autodiff/autodiff_types.hpp>
 namespace ccd {
 namespace unittests {
 
-    Eigen::IOFormat CommaFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ",
-        ", ", "", "", "", "");
+    std::string fmt_red(const std::string& s)
+    {
+        return "\033[1;31m" + s + "\033[0m";
+    }
+
+    std::string fmt_bool(const bool s)
+    {
+        if (!s) {
+            return fmt_red("F");
+        }
+        return "T";
+    }
+    static const Eigen::IOFormat CommaFmt(Eigen::StreamPrecision,
+        Eigen::DontAlignCols, ", ", ", ", "", "", "", "");
+
+    std::string fmt_eigen(const Eigen::MatrixXd& x, const int precision = 10)
+    {
+        std::stringstream ssx;
+        ssx << std::setprecision(precision) << x.format(CommaFmt);
+        return ssx.str();
+    }
 
     typedef std::function<double(const Eigen::VectorXd& x)> callback_f;
     typedef std::function<Eigen::VectorXd(const Eigen::VectorXd& x)> callback_g;
@@ -60,6 +82,8 @@ namespace unittests {
     {
         auto constraint = GENERATE(0, 1, 2, 3, 4);
         auto update_type = GENERATE(ccd::opt::GRADIENT_ONLY, ccd::opt::OTHER);
+        auto lcp_solver
+            = GENERATE(ccd::opt::LCP_GAUSS_SEIDEL, ccd::opt::LCP_MOSEK);
 
         using namespace ccd::opt;
         const int num_vars = 2;
@@ -78,9 +102,10 @@ namespace unittests {
         A.setIdentity();
         b << -1, -2.5;
         const char* tests[]
-            = { "linear", "quadratic", "abs value", "circle", "max" };
+            = { "LINEAR", "QUADRATIC", "ABS_VALUE", "CIRCLE", "MAX" };
 
-        auto g_diff = [constraint](const Eigen::VectorXd& x) -> VectorXT<dscalar> {
+        auto g_diff
+            = [constraint](const Eigen::VectorXd& x) -> VectorXT<dscalar> {
             VectorXT<dscalar> gx(num_constraints);
             dscalar x0(0, x[0]);
             dscalar x1(1, x[1]);
@@ -159,52 +184,70 @@ namespace unittests {
                   it_gamma.push_back(gamma);
               };
 
-        bool success = solve_ncp(
-            A, b, g, jac_g, /*max_iter=*/100, callback, update_type, x, alpha);
+        bool success = solve_ncp(A, b, g, jac_g, /*max_iter=*/100, callback,
+            update_type, lcp_solver, x, alpha);
 
-        // get some data to log
-        callback(expected, Eigen::Vector2d::Zero(), 0.0);
+        // ------------------------------------------------------------------------
+        // DEBUG INFO
+        // ------------------------------------------------------------------------
+        // --- save to file
+        const std::string base_dir = TEST_OUTPUT_DIR;
+        std::string test_name = fmt::format("ncp_case_{0}_{1}_{2}.csv",
+            tests[constraint], update_type, LCPSolverNames[lcp_solver]);
+        std::ofstream o(base_dir + "/" + test_name);
+
+        o << "it,x1,x2,alpha1,alpha2,gamma,f(xi),g(xi)1,g(xi)2" << std::endl;
+
+        for (uint i = 0; i < it_x.size(); i++) {
+            o << i << ",";
+            o << it_x[i].format(CommaFmt) << ",";
+            o << it_alpha[i].format(CommaFmt) << ",";
+            o << it_gamma[i] << ",";
+            o << f(it_x[i]) << ",";
+            o << g(it_x[i]).format(CommaFmt) << ",";
+            o << jac_g(it_x[i]).format(CommaFmt) << std::endl;
+        }
+        // expected
+        o << "expected" << ",";
+        o << expected.format(CommaFmt) << ",";
+        o << "0.0,0.0" << ",";
+        o << "0.0" << ",";
+        o << f(expected) << ",";
+        o << g(expected).format(CommaFmt) << ",";
+        o << jac_g(expected).format(CommaFmt) << std::endl;
+
+        // --- Log
         auto diff = (x - expected).squaredNorm();
         auto fx_is_optimal = f(x) == Approx(f(expected)).epsilon(1E-16);
 
-        std::cout << "CASE:" << tests[constraint] << " update_type:" << update_type
-                  << std::endl;
-        std::cout << "\tnum_it:" << it_x.size() << std::endl;
-        std::cout << "\tsuccess:" << (success ? "T" : "\033[1;31mF\033[0m") << std::endl;
-        std::cout << "\toptimal:" << (fx_is_optimal ? "T" : "\033[1;31mF\033[0m") << std::endl;
+        spdlog::info("CASE={} UPDATE_TYPE={} LCP_SOLVER={}\n"
+                     "\tnum_it:{}\n"
+                     "\tsucess:{}\n"
+                     "\toptimal:{}",
+            tests[constraint], update_type, LCPSolverNames[lcp_solver],
+            it_x.size(), fmt_bool(success), fmt_bool(fx_is_optimal));
 
-//        if (!success) {
-//            std::cout << "g(expected) "
-//                      << (g(expected).array() >= 0).transpose() << std::endl;
-//            std::cout << "it,x1,x2,alpha1,alpha2,gamma,f(xi),g(xi)1,g(xi)2"
-//                      << std::endl;
-
-//            for (uint i = 0; i < it_x.size(); i++) {
-//                std::cout << i << ",";
-//                std::cout << it_x[i].format(CommaFmt) << ",";
-//                std::cout << it_alpha[i].format(CommaFmt) << ",";
-//                std::cout << it_gamma[i] << ",";
-//                std::cout << f(it_x[i]) << ",";
-//                std::cout << g(it_x[i]).format(CommaFmt) << ",";
-//                ;
-//                std::cout << jac_g(it_x[i]).format(CommaFmt) << std::endl;
-//            }
-//        }
-
-        REQUIRE(success);
-
-        if (diff > 1e-16 || !fx_is_optimal) {
-            std::cout << "x*:" << x.transpose() << std::endl;
-            std::cout << "e*:" << expected.transpose() << std::endl;
+        if (success && (diff > 1e-16 || !fx_is_optimal)) {
             auto fx = f(x);
             auto fe = f(expected);
-            std::cout << std::setprecision(10) << "f(x*) " << fx << std::endl;
-            std::cout << std::setprecision(10) << "f(e*) " << fe << std::endl;
+            std::stringstream ssx;
+            ssx << std::setprecision(10) << x.format(CommaFmt);
+
+            spdlog::info("Actual vs Expected\n"
+                         "\tx*:{}\n"
+                         "\te*:{}\n"
+                         "\tf(x*):{:.10f}\n"
+                         "\tf(e*):{:.10f}",
+                fmt_eigen(x), fmt_eigen(expected), fx, fe);
             // if results are different, the expected one should be smaller
             // otherwise expected value is not optimal.
             REQUIRE(fx > fe);
         }
 
+        // ------------------------------------------------------------------------
+        // CHECK OPTIMALITY CONDITIONS
+        // ------------------------------------------------------------------------
+        REQUIRE(success);
         REQUIRE(fx_is_optimal);
 
         // Check KKT conditions

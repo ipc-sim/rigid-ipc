@@ -10,7 +10,8 @@ namespace opt {
     bool solve_ncp(const Eigen::SparseMatrix<double>& A, Eigen::VectorXd& b,
         const callback_g& g, const callback_jac_g& jac_g, const int max_iter,
         const callback_intermediate_ncp& callback, const UpdateType update_type,
-        Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i)
+        const LCPSolver lcp_solver, Eigen::VectorXd& xi,
+        Eigen::VectorXd& alpha_i)
     {
         Eigen::SparseLU<Eigen::SparseMatrix<double>> Asolver;
         // We solve the NCP problem
@@ -84,7 +85,7 @@ namespace opt {
             for (uint ci = 0; ci < num_constraints; ++ci) {
                 M.col(ci) = Ainv(jac_g_xi.row(ci));
             }
-            lcp_solve(/*q=*/g_xi, /*N=*/jac_g_xi, p, M, LCP_GAUSS_SEIDEL, alpha_i);
+            lcp_solve(/*q=*/g_xi, /*N=*/jac_g_xi, M, p, lcp_solver, alpha_i);
 
             Eigen::VectorXd delta_x = M * alpha_i + p;
 
