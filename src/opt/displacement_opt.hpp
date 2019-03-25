@@ -34,7 +34,7 @@ namespace opt {
 
     /**
      * @brief Creates an Optimization problem for displacements C(U) ≤ 0.
-     *      Min ||U - Uk||^2
+     *      Min 1/2||U - Uk||^2
      *      s.t V(U) >= 0
      * @param[in] V                : Vertices
      * @param[in] U                : Displacments
@@ -61,6 +61,14 @@ namespace opt {
         const Eigen::MatrixX2d& U0, std::vector<Eigen::MatrixX2d>& u_history,
         std::vector<double>& f_history, std::vector<double>& g_history,
         SolverSettings& settings);
+
+    /**
+     * @brief Solves the KKT conditions of the Optimization Problem
+     *      (U - Uk) = \nabla g(U)
+     *      s.t V(U) >= 0
+     */
+    OptimizationResults solve_ncp_displacement_optimization(
+        OptimizationProblem& problem, SolverSettings& settings);
 
 } // namespace opt
 } // namespace ccd

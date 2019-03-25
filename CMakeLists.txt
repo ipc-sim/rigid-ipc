@@ -61,6 +61,7 @@ set(SRCFILES
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp
 
+    src/logger.cpp
 )
 
 set(TMPFILES

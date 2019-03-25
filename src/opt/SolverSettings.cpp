@@ -9,6 +9,8 @@ namespace opt {
         const double constraint_tolerance, const double max_time,
         const callback_intermediate intermediate_cb)
         : method(method)
+        , qp_solver(qp_solver)
+        , lcp_solver(LCP_MOSEK)
         , verbosity(verbosity)
         , max_iter(max_iter)
         , relative_tolerance(relative_tolerance)

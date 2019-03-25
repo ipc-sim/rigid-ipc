@@ -13,6 +13,10 @@
 #include <ccd/not_implemented_error.hpp>
 #include <ccd/prune_impacts.hpp>
 
+#include <opt/ncp_solver.hpp>
+
+#include <logger.hpp>
+
 namespace ccd {
 namespace opt {
 
@@ -66,21 +70,18 @@ namespace opt {
 
         // we use lambda by copy [=] to fix the entried to current values
         problem.f = [u_](const Eigen::VectorXd& x) -> double {
-            return (x - u_).squaredNorm() / 2;
+            return  (x - u_).squaredNorm() / 2.0;
         };
 
         problem.grad_f = [u_](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-            return 2.0 * (x - u_);
+            return (x - u_);
         };
 
-
         auto g
-            = [V, E, volume_epsilon](const Eigen::VectorXd& x,
+            = [V, E, volume_epsilon](const Eigen::MatrixXd& Uk,
                   const EdgeEdgeImpacts& ee_impacts,
                   const Eigen::VectorXi& edge_impact_map) -> Eigen::VectorXd {
 
-            Eigen::MatrixXd Uk = x;
-            Uk.resize(x.rows() / 2, 2);
             Eigen::VectorXd volumes;
             ccd::autodiff::compute_volumes_refresh_toi(
                 V, Uk, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
@@ -89,10 +90,8 @@ namespace opt {
 
         auto jac_g
             = [V, E, volume_epsilon, num_vars, num_constraints](
-                  const Eigen::VectorXd& x, const EdgeEdgeImpacts& ee_impacts,
+                  const Eigen::MatrixXd& Uk, const EdgeEdgeImpacts& ee_impacts,
                   const Eigen::VectorXi& edge_impact_map) -> Eigen::MatrixXd {
-            Eigen::MatrixXd Uk = x;
-            Uk.resize(x.rows() / 2, 2);
 
             Eigen::MatrixXd volume_gradient;
             ccd::autodiff::compute_volumes_gradient(V, Uk, E, ee_impacts,
@@ -106,25 +105,30 @@ namespace opt {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"
         problem.g = [=](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+            Eigen::MatrixXd Uk = x;
+            Uk.resize(x.rows() / 2, 2);
+
             if (recompute_collision_set) {
                 EdgeEdgeImpacts new_ee_impacts;
                 Eigen::VectorXi new_edge_impact_map(num_constraints);
-                detect_collisions(
-                    V, U, E, ccd_detection_method, new_ee_impacts, new_edge_impact_map);
-                return g(x, ee_impacts, edge_impact_map);
+                detect_collisions(V, Uk, E, ccd_detection_method, new_ee_impacts,
+                    new_edge_impact_map);
+                return g(Uk, new_ee_impacts, new_edge_impact_map);
             }
-            return g(x, ee_impacts, edge_impact_map);
+            return g(Uk, ee_impacts, edge_impact_map);
         };
 
         problem.jac_g = [=](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
+            Eigen::MatrixXd Uk = x;
+            Uk.resize(x.rows() / 2, 2);
             if (recompute_collision_set) {
                 EdgeEdgeImpacts new_ee_impacts;
                 Eigen::VectorXi new_edge_impact_map(num_constraints);
-                detect_collisions(
-                    V, U, E, ccd_detection_method, new_ee_impacts, new_edge_impact_map);
-                return jac_g(x, ee_impacts, edge_impact_map);
+                detect_collisions(V, Uk, E, ccd_detection_method, new_ee_impacts,
+                    new_edge_impact_map);
+                return jac_g(Uk, new_ee_impacts, new_edge_impact_map);
             }
-            return jac_g(x, ee_impacts, edge_impact_map);
+            return jac_g(Uk, ee_impacts, edge_impact_map);
         };
 #pragma clang diagnostic pop
     }
@@ -136,28 +140,70 @@ namespace opt {
         std::vector<double>& f_history, std::vector<double>& g_history,
         SolverSettings& settings)
     {
-        if (settings.verbosity) {
-            settings.intermediate_cb =
-                [&u_history, &f_history, &g_history, &problem](
-                    const Eigen::VectorXd& x, const double obj_value,
-                    const Eigen::VectorXd& /*dual*/, const int /*iteration*/) {
-                    Eigen::MatrixXd u = x;
-                    u.resize(problem.num_vars / 2, 2);
-                    u_history.push_back(u);
-                    f_history.push_back(obj_value);
-                    g_history.push_back(problem.g(x).sum());
-                };
-        }
+        settings.intermediate_cb
+            = [&u_history, &f_history, &g_history, &problem, &settings](
+                  const Eigen::VectorXd& x, const double obj_value,
+                  const Eigen::VectorXd& /*dual*/, const int iteration) {
+                  Eigen::MatrixXd u = x;
+                  u.resize(problem.num_vars / 2, 2);
+                  u_history.push_back(u);
+                  f_history.push_back(obj_value);
+                  auto gx = problem.g(x);
+                  g_history.push_back(gx.sum());
+                  if (settings.verbosity > 0) {
+                      spdlog::info(
+                          "it={} x={}", iteration, ccd::log::fmt_eigen(x));
+                      spdlog::info(
+                          "it={} g(x)={}", iteration, ccd::log::fmt_eigen(gx));
+                      spdlog::info("it={} f(x)={:.10f}", iteration, obj_value);
+                  }
+              };
 
         // initial value
         Eigen::MatrixXd x0 = U0;
         x0.resize(U0.size(), 1); // Flatten displacements
         problem.x0 = x0;
 
-        OptimizationResults result = solve_problem(problem, settings);
+        OptimizationResults result;
+        if (settings.method == NCP) {
+            result = solve_ncp_displacement_optimization(problem, settings);
+        } else {
+            result = solve_problem(problem, settings);
+        }
         result.x.resize(U0.rows(), 2); // Unflatten displacments
         return result;
     } // namespace opt
+
+    OptimizationResults solve_ncp_displacement_optimization(
+        OptimizationProblem& problem, SolverSettings& settings)
+    {
+        // Solves the KKT conditions of the Optimization Problem
+        //  (U - Uk) = \nabla g(U)
+        //  s.t V(U) >= 0
+        int num_vars = int(problem.x0.rows());
+        Eigen::SparseMatrix<double> A(num_vars, num_vars);
+        A.setIdentity();
+
+        Eigen::VectorXd b, x_opt, lambda_opt;
+        // obtain Uk from grad_f using x=0
+        b = -problem.grad_f(Eigen::VectorXd::Zero(num_vars));
+
+        int num_it = 0;
+        callback_intermediate_ncp callback
+            = [&problem, &settings, &num_it](const Eigen::VectorXd& x,
+                  const Eigen::VectorXd& alpha, const double /*gamma*/) {
+                  settings.intermediate_cb(x, problem.f(x), alpha, num_it);
+                  num_it += 1;
+              };
+        OptimizationResults result;
+        result.success = solve_ncp(A, b, problem.g, problem.jac_g,
+            settings.max_iter, callback, GRADIENT_ONLY, settings.lcp_solver,
+            x_opt, lambda_opt);
+        result.x = x_opt;
+        result.minf = problem.f(x_opt);
+
+        return result;
+    }
 
 } // namespace opt
 } // namespace ccd

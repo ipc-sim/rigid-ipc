@@ -50,7 +50,7 @@ public:
     DetectionMethod detection_method;
 
     /// @brief epsilon use on volume computation
-    double volume_epsilon = 1.0;
+    double volume_epsilon;
 
     ////////////////////////////////////////////////////////////////////////////
     // Optimization Fields

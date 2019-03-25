@@ -80,6 +80,7 @@ namespace unittests {
     // ---------------------------------------------------
     TEST_CASE("NCP 0 gradient_only", "[opt][NCP][NCP-Interface][gradient_only]")
     {
+
         auto constraint = GENERATE(0, 1, 2, 3, 4);
         auto update_type = GENERATE(ccd::opt::GRADIENT_ONLY, ccd::opt::OTHER);
         auto lcp_solver
@@ -208,10 +209,13 @@ namespace unittests {
             o << jac_g(it_x[i]).format(CommaFmt) << std::endl;
         }
         // expected
-        o << "expected" << ",";
+        o << "expected"
+          << ",";
         o << expected.format(CommaFmt) << ",";
-        o << "0.0,0.0" << ",";
-        o << "0.0" << ",";
+        o << "0.0,0.0"
+          << ",";
+        o << "0.0"
+          << ",";
         o << f(expected) << ",";
         o << g(expected).format(CommaFmt) << ",";
         o << jac_g(expected).format(CommaFmt) << std::endl;
@@ -227,27 +231,27 @@ namespace unittests {
             tests[constraint], update_type, LCPSolverNames[lcp_solver],
             it_x.size(), fmt_bool(success), fmt_bool(fx_is_optimal));
 
-        if (success && (diff > 1e-16 || !fx_is_optimal)) {
-            auto fx = f(x);
-            auto fe = f(expected);
-            std::stringstream ssx;
-            ssx << std::setprecision(10) << x.format(CommaFmt);
+        auto fx = f(x);
+        auto fe = f(expected);
+        std::stringstream ssx;
+        ssx << std::setprecision(10) << x.format(CommaFmt);
 
-            spdlog::info("Actual vs Expected\n"
-                         "\tx*:{}\n"
-                         "\te*:{}\n"
-                         "\tf(x*):{:.10f}\n"
-                         "\tf(e*):{:.10f}",
-                fmt_eigen(x), fmt_eigen(expected), fx, fe);
-            // if results are different, the expected one should be smaller
-            // otherwise expected value is not optimal.
-            REQUIRE(fx > fe);
-        }
+        spdlog::info("Actual vs Expected\n"
+                     "\tx*:{}\n"
+                     "\te*:{}\n"
+                     "\tf(x*):{:.10f}\n"
+                     "\tf(e*):{:.10f}",
+            fmt_eigen(x), fmt_eigen(expected), fx, fe);
 
         // ------------------------------------------------------------------------
         // CHECK OPTIMALITY CONDITIONS
         // ------------------------------------------------------------------------
         REQUIRE(success);
+        if (success && (diff > 1e-16 || !fx_is_optimal)) {
+            // if results are different, the expected one should be smaller
+            // otherwise expected value is not optimal.
+            REQUIRE(fx > fe);
+        }
         REQUIRE(fx_is_optimal);
 
         // Check KKT conditions
@@ -261,6 +265,5 @@ namespace unittests {
         CHECK(kkt_grad.squaredNorm() < 1e-16);
         CHECK(std::abs(kkt_cp) < 1E-16);
     }
-
 } // namespace unittests
 } // namespace ccd

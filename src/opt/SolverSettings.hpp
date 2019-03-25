@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <opt/lcp_solver.hpp>
 
 namespace ccd {
 namespace opt {
@@ -34,6 +35,7 @@ namespace opt {
     struct SolverSettings {
         OptimizationMethod method;   ///< @brief Optimization method to use
         QPSolver qp_solver;          ///< @brief Quadratic programming solver
+        LCPSolver lcp_solver;        ///< @brief LCP solver
         int verbosity;               ///< @brief Verbosity of output
         int max_iter;                ///< @brief Maximum number of iterations
         double relative_tolerance;   ///< @brief Relative tolerance for x

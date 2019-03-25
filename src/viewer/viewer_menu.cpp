@@ -159,6 +159,8 @@ void ViewerMenu::draw_ccd_steps()
             state.detection_method
                 = static_cast<ccd::DetectionMethod>(idx_detection_method);
         }
+        ImGui::InputDouble("vol. epsilon", &state.volume_epsilon);
+
         if (ImGui::Button("Detect EV Collisions", ImVec2(-1, 0))) {
             detect_edge_vertex_collisions();
         }
@@ -178,7 +180,6 @@ void ViewerMenu::draw_ccd_steps()
         ImGui::Separator();
 
         if (state.ev_impacts.size()) {
-            ImGui::InputDouble("vol. epsilon", &state.volume_epsilon);
             if (ImGui::Button("Compute Collision Volumes", ImVec2(-1, 0))) {
                 compute_collision_volumes();
             }
@@ -212,11 +213,8 @@ void ViewerMenu::draw_optimization()
             }
         }
 
-        int opt_max_iter = state.solver_settings.max_iter;
-        ImGui::InputInt("max iter##opt", &opt_max_iter);
-        if (opt_max_iter >= 0) {
-            state.solver_settings.max_iter = opt_max_iter;
-        }
+        ImGui::InputInt("max iter##opt", &state.solver_settings.max_iter);
+        ImGui::InputInt("verbosity##opt", &state.solver_settings.verbosity);
 
         ImGui::Checkbox(
             "continue optimization##opt", &(state.reuse_opt_displacements));

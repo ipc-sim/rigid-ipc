@@ -14,11 +14,14 @@
 
 namespace ccd {
 State::State()
-    : canvas_width(10)
+    : volume_epsilon(1E-3)
+    , recompute_collision_set(false)
+    , canvas_width(10)
     , canvas_height(10)
     , current_ev_impact(-1)
     , current_edge(-1)
     , min_edge_width(0.0)
+
 {
 }
 
@@ -222,7 +225,8 @@ void State::optimize_displacements()
     }
 
     ccd::opt::setup_displacement_optimization_problem(vertices, displacements,
-        edges, volume_epsilon, detection_method, recompute_collision_set, opt_problem);
+        edges, volume_epsilon, detection_method, recompute_collision_set,
+        opt_problem);
 
     Eigen::MatrixX2d U0;
     if (solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
