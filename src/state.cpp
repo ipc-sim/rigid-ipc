@@ -10,6 +10,8 @@
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
 
+#include <logger.hpp>
+
 #include <opt/displacement_opt.hpp>
 
 namespace ccd {
@@ -210,38 +212,109 @@ void State::run_full_pipeline()
 
 void State::optimize_displacements()
 {
-    // reset results
-    opt_results.minf = 1E10;
-    opt_results.x = Eigen::MatrixXd();
-    opt_results.success = false;
-    opt_results.finished = false;
-    u_history.clear();
-    f_history.clear();
-    g_history.clear();
-
-    opt_results.x.resizeLike(displacements);
-    if (!this->reuse_opt_displacements) {
-        opt_results.x.setZero();
-    }
-
+    // 1. setup problems
     ccd::opt::setup_displacement_optimization_problem(vertices, displacements,
         edges, volume_epsilon, detection_method, recompute_collision_set,
         opt_problem);
 
-    Eigen::MatrixX2d U0;
-    if (solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
-        U0 = displacements;
-    } else {
-        U0 = opt_results.x;
+    // 2. reset results
+    opt_results.success = false;
+    opt_results.finished = false;
+    bool dirty = opt_results.x.size() == 0
+        || opt_results.x.rows() != displacements.rows();
+    if (dirty || !reuse_opt_displacements) {
+        u_history.clear();
+        f_history.clear();
+        g_history.clear();
+        opt_results.minf = 1E10;
+        opt_results.x.resizeLike(displacements);
     }
 
-    opt_results = ccd::opt::displacement_optimization(
-        opt_problem, U0, u_history, f_history, g_history, solver_settings);
+    // 3. set initial value
+    Eigen::MatrixXd U0(displacements.rows(), 2);
+    if (solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
+        U0 = displacements;
+    } else if (reuse_opt_displacements) {
+        U0 = opt_results.x;
+    } else {
+        U0.setZero();
+    }
+    opt_results.x = U0;
+
+    // 4. setup callback
+    std::vector<Eigen::VectorXd> it_x;
+    std::vector<Eigen::VectorXd> it_lambda;
+    std::vector<double> it_gamma;
+
+    solver_settings.intermediate_cb
+        = [&](const Eigen::VectorXd& x, const double obj_value,
+              const Eigen::VectorXd& dual, const double gamma,
+              const int /*iteration*/) {
+              Eigen::MatrixXd u = x;
+              u.resize(displacements.rows() / 2, 2);
+              u_history.push_back(u);
+              f_history.push_back(obj_value);
+              auto gx = opt_problem.g(x);
+              g_history.push_back(gx.sum());
+
+              it_x.push_back(x);
+              it_lambda.push_back(dual);
+              it_gamma.push_back(gamma);
+          };
+    // 5. run optimization
+    opt_results
+        = ccd::opt::displacement_optimization(opt_problem, U0, solver_settings);
+
+    // LOGGING for testing only --- -should move somewhere else
+    const Eigen::IOFormat CommaFmt(Eigen::StreamPrecision,
+        Eigen::DontAlignCols, ", ", ", ", "", "", "", "");
+    const std::string base_dir = TEST_OUTPUT_DIR;
+    std::string uuid = ccd::log::now();
+    std::string file_name = fmt::format("opt_{0}.csv", uuid);
+    std::ofstream o(base_dir + "/" + file_name);
+
+    // print table header
+    o << ccd::opt::OptimizationMethodNames[solver_settings.method] << ",";
+    o << ccd::opt::LCPSolverNames[solver_settings.lcp_solver] << std::endl;
+    o << "it";
+    for (uint i=0; i < opt_problem.num_vars; i++){
+        o << ",x_" << i ;
+    }
+    for (uint i=0; i < opt_problem.num_constraints; i++){
+        o << ",lambda_" << i;
+    }
+    o << ",gamma, f(x)";
+    for (uint i=0; i < opt_problem.num_constraints; i++){
+        o << ",gx_" << i;
+    }
+    o << ",||jac_g(x)||"  << std::endl;
+
+    // print initial value
+    Eigen::MatrixXd d = displacements;
+    d.resize(d.size(), 1);
+    o << 0 << ",";
+    o << d.format(CommaFmt) << ",";
+    o << Eigen::VectorXd::Zero(opt_problem.num_constraints).format(CommaFmt) << ",";
+    o << 0.0 << ",";
+    o << opt_problem.f(d) << ",";
+    o << opt_problem.g(d).format(CommaFmt) << ",";
+    o << opt_problem.jac_g(d).squaredNorm() << std::endl << std::endl;
+
+    // print steps
+    for (uint i = 0; i < it_x.size(); i++) {
+        o << i + 1 << ",";
+        o << it_x[i].format(CommaFmt) << ",";
+        o << it_lambda[i].format(CommaFmt) << ",";
+        o << it_gamma[i] << ",";
+        o << opt_problem.f(it_x[i]) << ",";
+        o << opt_problem.g(it_x[i]).format(CommaFmt) << ",";
+        o << opt_problem.jac_g(it_x[i]).squaredNorm() << std::endl;
+    }
 
     opt_results.method = solver_settings.method;
     opt_results.finished = true;
 
-    // ui elements
+    // update ui elements
     opt_time = 1.0;
     opt_iteration = -1;
 }

@@ -11,6 +11,7 @@
 
 namespace ccd {
 
+
 /**
  * @brief The State class keeps the full state of the UI and the collisions.
  */

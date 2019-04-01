@@ -70,7 +70,7 @@ namespace opt {
 
         // we use lambda by copy [=] to fix the entried to current values
         problem.f = [u_](const Eigen::VectorXd& x) -> double {
-            return  (x - u_).squaredNorm() / 2.0;
+            return (x - u_).squaredNorm() / 2.0;
         };
 
         problem.grad_f = [u_](const Eigen::VectorXd& x) -> Eigen::VectorXd {
@@ -81,7 +81,6 @@ namespace opt {
             = [V, E, volume_epsilon](const Eigen::MatrixXd& Uk,
                   const EdgeEdgeImpacts& ee_impacts,
                   const Eigen::VectorXi& edge_impact_map) -> Eigen::VectorXd {
-
             Eigen::VectorXd volumes;
             ccd::autodiff::compute_volumes_refresh_toi(
                 V, Uk, E, ee_impacts, edge_impact_map, volume_epsilon, volumes);
@@ -92,7 +91,6 @@ namespace opt {
             = [V, E, volume_epsilon, num_vars, num_constraints](
                   const Eigen::MatrixXd& Uk, const EdgeEdgeImpacts& ee_impacts,
                   const Eigen::VectorXi& edge_impact_map) -> Eigen::MatrixXd {
-
             Eigen::MatrixXd volume_gradient;
             ccd::autodiff::compute_volumes_gradient(V, Uk, E, ee_impacts,
                 edge_impact_map, volume_epsilon, volume_gradient);
@@ -111,8 +109,8 @@ namespace opt {
             if (recompute_collision_set) {
                 EdgeEdgeImpacts new_ee_impacts;
                 Eigen::VectorXi new_edge_impact_map(num_constraints);
-                detect_collisions(V, Uk, E, ccd_detection_method, new_ee_impacts,
-                    new_edge_impact_map);
+                detect_collisions(V, Uk, E, ccd_detection_method,
+                    new_ee_impacts, new_edge_impact_map);
                 return g(Uk, new_ee_impacts, new_edge_impact_map);
             }
             return g(Uk, ee_impacts, edge_impact_map);
@@ -124,8 +122,8 @@ namespace opt {
             if (recompute_collision_set) {
                 EdgeEdgeImpacts new_ee_impacts;
                 Eigen::VectorXi new_edge_impact_map(num_constraints);
-                detect_collisions(V, Uk, E, ccd_detection_method, new_ee_impacts,
-                    new_edge_impact_map);
+                detect_collisions(V, Uk, E, ccd_detection_method,
+                    new_ee_impacts, new_edge_impact_map);
                 return jac_g(Uk, new_ee_impacts, new_edge_impact_map);
             }
             return jac_g(Uk, ee_impacts, edge_impact_map);
@@ -136,28 +134,8 @@ namespace opt {
     // Optimize the displacment opt problem with the given method and starting
     // value.
     OptimizationResults displacement_optimization(OptimizationProblem& problem,
-        const Eigen::MatrixX2d& U0, std::vector<Eigen::MatrixX2d>& u_history,
-        std::vector<double>& f_history, std::vector<double>& g_history,
-        SolverSettings& settings)
+        const Eigen::MatrixX2d& U0, SolverSettings& settings)
     {
-        settings.intermediate_cb
-            = [&u_history, &f_history, &g_history, &problem, &settings](
-                  const Eigen::VectorXd& x, const double obj_value,
-                  const Eigen::VectorXd& /*dual*/, const int iteration) {
-                  Eigen::MatrixXd u = x;
-                  u.resize(problem.num_vars / 2, 2);
-                  u_history.push_back(u);
-                  f_history.push_back(obj_value);
-                  auto gx = problem.g(x);
-                  g_history.push_back(gx.sum());
-                  if (settings.verbosity > 0) {
-                      spdlog::info(
-                          "it={} x={}", iteration, ccd::log::fmt_eigen(x));
-                      spdlog::info(
-                          "it={} g(x)={}", iteration, ccd::log::fmt_eigen(gx));
-                      spdlog::info("it={} f(x)={:.10f}", iteration, obj_value);
-                  }
-              };
 
         // initial value
         Eigen::MatrixXd x0 = U0;
@@ -189,16 +167,16 @@ namespace opt {
         b = -problem.grad_f(Eigen::VectorXd::Zero(num_vars));
 
         int num_it = 0;
-        callback_intermediate_ncp callback
-            = [&problem, &settings, &num_it](const Eigen::VectorXd& x,
-                  const Eigen::VectorXd& alpha, const double /*gamma*/) {
-                  settings.intermediate_cb(x, problem.f(x), alpha, num_it);
-                  num_it += 1;
-              };
+        callback_intermediate_ncp callback =
+            [&problem, &settings, &num_it](const Eigen::VectorXd& x,
+                const Eigen::VectorXd& alpha, const double gamma) {
+                settings.intermediate_cb(x, problem.f(x), alpha, gamma, num_it);
+                num_it += 1;
+            };
         OptimizationResults result;
         result.success = solve_ncp(A, b, problem.g, problem.jac_g,
             settings.max_iter, callback, GRADIENT_ONLY, settings.lcp_solver,
-            x_opt, lambda_opt);
+            x_opt, lambda_opt, /*check_convergence=*/false);
         result.x = x_opt;
         result.minf = problem.f(x_opt);
 

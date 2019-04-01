@@ -172,7 +172,7 @@ namespace opt {
     bool EigenInterfaceTNLP::intermediate_callback(AlgorithmMode mode,
         Index iter, Number obj_value, Number /*inf_pr*/, Number /*inf_du*/,
         Number /*mu*/, Number /*d_norm*/, Number /*regularization_size*/,
-        Number /*alpha_du*/, Number /*alpha_pr*/, Index /*ls_trials*/,
+        Number /*alpha_du*/, Number alpha_pr, Index /*ls_trials*/,
         const IpoptData* ip_data, IpoptCalculatedQuantities* ip_cq)
     {
         if (mode == RegularMode) {
@@ -191,7 +191,7 @@ namespace opt {
             tnlp_adapter->ResortG(*ip_data->curr()->y_c(),
                 *ip_data->curr()->y_d(), dualeqs.data());
             if (settings.intermediate_cb) {
-                settings.intermediate_cb(primals, obj_value, dualeqs, iter);
+                settings.intermediate_cb(primals, obj_value, dualeqs, /*gamma=*/alpha_pr, iter);
             }
         }
         return true;

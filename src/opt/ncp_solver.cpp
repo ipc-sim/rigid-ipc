@@ -11,7 +11,7 @@ namespace opt {
         const callback_g& g, const callback_jac_g& jac_g, const int max_iter,
         const callback_intermediate_ncp& callback, const UpdateType update_type,
         const LCPSolver lcp_solver, Eigen::VectorXd& xi,
-        Eigen::VectorXd& alpha_i)
+        Eigen::VectorXd& alpha_i, const bool check_convergence)
     {
         Eigen::SparseLU<Eigen::SparseMatrix<double>> Asolver;
         // We solve the NCP problem
@@ -49,7 +49,9 @@ namespace opt {
         // 2. solve constraints with successive linearizations
         for (int i = 0; i < max_iter; ++i) {
             // Step 2 ends when all constraints are satisfied
-            if ((g_xi.array() >= 0).all()) {
+            // check equality condition is converging
+            Eigen::VectorXd eq = A * xi - (b + jac_g_xi.transpose() * alpha_i);
+            if ((g_xi.array() >= 0).all() && (eq.squaredNorm() < 1E-16 || ! check_convergence)) {
                 break;
             }
 

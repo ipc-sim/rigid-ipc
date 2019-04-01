@@ -6,9 +6,17 @@
 namespace ccd {
 namespace opt {
 
-    ///@brief function type for callback, called once on each iteration
+    /**
+     * @brief function type for callback, called once on each iteration
+     * @param x             : current iterate of the optimization
+     * @param obj_value     : value of the objective function
+     * @param dual          : value of the dual variables
+     * @param gamma         : last line-search step size
+     * @param iteration     : current iteration number
+     */
     typedef std::function<void(const Eigen::VectorXd& x, const double obj_value,
-        const Eigen::VectorXd& dual, const int iteration)>
+        const Eigen::VectorXd& dual, const double gamma, const int iteration
+        )>
         callback_intermediate;
 
     /// @brief Methods available for non-linear constrained optimization.

@@ -16,13 +16,17 @@ namespace unittests {
     {
         return "\033[1;31m" + s + "\033[0m";
     }
+    std::string fmt_green(const std::string& s)
+    {
+        return "\033[1;32m" + s + "\033[0m";
+    }
 
     std::string fmt_bool(const bool s)
     {
         if (!s) {
             return fmt_red("F");
         }
-        return "T";
+        return fmt_green("T");
     }
     static const Eigen::IOFormat CommaFmt(Eigen::StreamPrecision,
         Eigen::DontAlignCols, ", ", ", ", "", "", "", "");
@@ -81,10 +85,11 @@ namespace unittests {
     TEST_CASE("NCP 0 gradient_only", "[opt][NCP][NCP-Interface][gradient_only]")
     {
 
-        auto constraint = GENERATE(0, 1, 2, 3, 4);
+        auto constraint = GENERATE(0, 1, 2, 3, 4, 5);
         auto update_type = GENERATE(ccd::opt::GRADIENT_ONLY, ccd::opt::OTHER);
         auto lcp_solver
             = GENERATE(ccd::opt::LCP_GAUSS_SEIDEL, ccd::opt::LCP_MOSEK);
+        bool check_convergence = true;
 
         using namespace ccd::opt;
         const int num_vars = 2;
@@ -102,8 +107,8 @@ namespace unittests {
         // s.t
         A.setIdentity();
         b << -1, -2.5;
-        const char* tests[]
-            = { "LINEAR", "QUADRATIC", "ABS_VALUE", "CIRCLE", "MAX" };
+        const char* tests[] = { "LINEAR", "QUADRATIC", "ABS_VALUE", "CIRCLE",
+            "MAX", "SMOOTH_MAX" };
 
         auto g_diff
             = [constraint](const Eigen::VectorXd& x) -> VectorXT<dscalar> {
@@ -111,33 +116,39 @@ namespace unittests {
             dscalar x0(0, x[0]);
             dscalar x1(1, x[1]);
 
-            switch (constraint) {
-            default:
-            case 0: // x0, x1 >= 0
+            if (constraint == 0) {
                 gx(0) = x0;
                 gx(1) = x1;
-                break;
-            case 1: // x0^2 <= 0.04, x1^2 <= 0.09
+            } else if (constraint == 1) { // x0^2 <= 0.04, x1^2 <= 0.09
                 gx(0) = 0.04 - x0 * x0;
                 gx(1) = 0.09 - x1 * x1;
-                break;
-            case 2: // |x0| <= 0.2, |x1| <= 0.3
+            } else if (constraint == 2) { // |x0| <= 0.2, |x1| <= 0.3
                 gx(0) = 0.2 - (x0 > 0 ? x0 : -x0);
                 gx(1) = 0.3 - (x1 > 0 ? x1 : -x1);
-                break;
-            case 3: // (x0 - 1)^2 <= 1, (x1 - 2.5)^2 <= 1
+
+            } else if (constraint == 3) { // (x0 - 1)^2 <= 1, (x1 - 2.5)^2 <= 1
                 gx(0) = 1.0 - (x0 - 1.0) * (x0 - 1.0);
                 gx(1) = 1.0 - (x1 - 2.5) * (x1 - 2.5);
-                break;
-            case 4: // max(x1^2,1) <=1, max(x2^2,1) <=1
+
+            } else if (constraint == 4) { // max(x1^2,1) <=1, max(x2^2,1) <=1
                 auto aux1 = x1 * x1;
                 auto aux0 = x0 * x0;
                 gx(0) = 1.0 - (aux0 > 1 ? aux0 : dscalar(1.0));
                 gx(1) = 1.0 - (aux1 > 1 ? aux1 : dscalar(1.0));
-                break;
+
+            } else if (constraint == 5) { // (x - x/abs(x)*min(abs(x),1))^2 <= 0
+                auto abs_x0 = x0 > 0 ? x0 : -x0;
+                auto abs_x1 = x1 > 0 ? x1 : -x1;
+                auto min_x0 = abs_x0 <= 1 ? abs_x0 : dscalar(1.0);
+                auto min_x1 = abs_x1 <= 1 ? abs_x1 : dscalar(1.0);
+                auto aux_x0 = (x0 - x0 / abs_x0 * min_x0);
+                auto aux_x1 = (x1 - x1 / abs_x1 * min_x1);
+                gx(0) = -aux_x0 * aux_x0;
+                gx(1) = -aux_x1 * aux_x1;
             }
             return gx;
         };
+
         switch (constraint) {
         default:
         case 0:
@@ -151,6 +162,9 @@ namespace unittests {
             expected << 0.0, 1.5;
             break;
         case 4:
+            expected << -1.0, -1.0;
+            break;
+        case 5:
             expected << -1.0, -1.0;
             break;
         }
@@ -185,8 +199,8 @@ namespace unittests {
                   it_gamma.push_back(gamma);
               };
 
-        bool success = solve_ncp(A, b, g, jac_g, /*max_iter=*/100, callback,
-            update_type, lcp_solver, x, alpha);
+        bool success = solve_ncp(A, b, g, jac_g, /*max_iter=*/300, callback,
+            update_type, lcp_solver, x, alpha, check_convergence);
 
         // ------------------------------------------------------------------------
         // DEBUG INFO
@@ -224,46 +238,47 @@ namespace unittests {
         auto diff = (x - expected).squaredNorm();
         auto fx_is_optimal = f(x) == Approx(f(expected)).epsilon(1E-16);
 
-        spdlog::info("CASE={} UPDATE_TYPE={} LCP_SOLVER={}\n"
-                     "\tnum_it:{}\n"
-                     "\tsucess:{}\n"
-                     "\toptimal:{}",
-            tests[constraint], update_type, LCPSolverNames[lcp_solver],
-            it_x.size(), fmt_bool(success), fmt_bool(fx_is_optimal));
-
         auto fx = f(x);
         auto fe = f(expected);
         std::stringstream ssx;
         ssx << std::setprecision(10) << x.format(CommaFmt);
 
-        spdlog::info("Actual vs Expected\n"
+        spdlog::info("CASE={} UPDATE_TYPE={} LCP_SOLVER={} \n"
+                     "\tnum_it:{}\n"
+                     "\tsucess:{}\n"
+                     "\toptimal:{}\n"
                      "\tx*:{}\n"
                      "\te*:{}\n"
                      "\tf(x*):{:.10f}\n"
-                     "\tf(e*):{:.10f}",
-            fmt_eigen(x), fmt_eigen(expected), fx, fe);
+                     "\tf(e*):{:.10f}\n"
+                     "\tg(x*):{}\n"
+                     "\tg(e*):{}",
+            tests[constraint], update_type, LCPSolverNames[lcp_solver],
+            it_x.size(), fmt_bool(success), fmt_bool(fx_is_optimal),
+            fmt_eigen(x), fmt_eigen(expected), fx, fe, fmt_eigen(g(x)),
+            fmt_eigen(g(expected)));
 
         // ------------------------------------------------------------------------
         // CHECK OPTIMALITY CONDITIONS
         // ------------------------------------------------------------------------
-        REQUIRE(success);
+        CHECK(success);
         if (success && (diff > 1e-16 || !fx_is_optimal)) {
             // if results are different, the expected one should be smaller
             // otherwise expected value is not optimal.
-            REQUIRE(fx > fe);
+            CHECK(fx > fe);
         }
-        REQUIRE(fx_is_optimal);
+        CHECK(fx_is_optimal);
 
         // Check KKT conditions
         // (1) grad f = grad g.T \alpha
         // (2) g(x) >= 0
         // (3) \alpha.T g(x) == 0
         Eigen::VectorXd kkt_grad = grad_f(x) - jac_g(x).transpose() * alpha;
-        double kkt_cp = alpha.transpose() * g(x);
+        double kkt_lcp = alpha.transpose() * g(x);
 
         CHECK((g(x).array() >= 0).all());
         CHECK(kkt_grad.squaredNorm() < 1e-16);
-        CHECK(std::abs(kkt_cp) < 1E-16);
+        CHECK(std::abs(kkt_lcp) < 1E-16);
     }
 } // namespace unittests
 } // namespace ccd

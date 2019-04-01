@@ -188,7 +188,7 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
 
     callback_intermediate callback
         = [](const Eigen::VectorXd& x, const double obj_value,
-              const Eigen::VectorXd& dual, const int iteration) -> void {
+              const Eigen::VectorXd& dual, const double gamma, const int iteration) -> void {
         std::cout << "it=" << iteration << " x=" << x.transpose()
                   << " obj=" << obj_value << " y=" << dual.transpose()
                   << std::endl;

@@ -6,6 +6,8 @@
 #endif
 #include <iostream>
 
+#include <logger.hpp>
+
 namespace ccd {
 namespace opt {
 
@@ -13,13 +15,23 @@ namespace opt {
         const Eigen::MatrixXd& M, const Eigen::VectorXd& p,
         const LCPSolver solver, Eigen::VectorXd& x)
     {
+        bool success = false;
         switch (solver) {
         case LCP_GAUSS_SEIDEL:
-            return lcp_gauss_seidel(q, N, M, p, x);
+            success = lcp_gauss_seidel(q, N, M, p, x);
+            break;
         case LCP_MOSEK:
             //  s = q + N*(M * x + p) --> N* M x + (N*p + q)
-            return lcp_mosek(N * M, N*p + q, x);
+            success = lcp_mosek(N * M, N * p + q, x);
+            break;
         }
+        if (success) {
+            Eigen::VectorXd s = q + N * (M * x + p);
+            double err = x.transpose() * s;
+            spdlog::debug("lcp_solve={} x={} s={} x^Ts={}", LCPSolverNames[solver], ccd::log::fmt_eigen(x),
+                ccd::log::fmt_eigen(s), err);
+        }
+        return success;
     }
 
     double get_fischer_burmeister(Eigen::VectorXd& x, Eigen::VectorXd& s)
@@ -131,7 +143,6 @@ namespace opt {
             A, q, /*cf=*/0.0, A, lc, uc, lx, ux, mosek_data, x);
 
         return success;
-
     }
 
 } // namespace opt
