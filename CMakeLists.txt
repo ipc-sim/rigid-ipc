@@ -24,6 +24,7 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"          ON)
 
 # project-options
 option(BUILD_UNIT_TESTS                 "Build unit-tests"      ON)
+option(BUILD_SCRIPTS                    "Build scripts"         ON)
 option(ENABLE_IPOPT                     "Enable Ipopt Library"  ON)
 option(ENABLE_OSQP                      "Enable OSQP Library"   ON)
 option(ENABLE_MOSEK                     "Enable Mosek Library"  OFF)
@@ -106,6 +107,10 @@ add_custom_command(TARGET ${PROJECT_NAME}_bin POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/fixtures
         $<TARGET_FILE_DIR:${PROJECT_NAME}_bin>/fixtures)
+
+# Default output folder ----------------------------------------------------
+set(DATA_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
+add_definitions(-DDATA_OUTPUT_DIR=\"${DATA_OUTPUT_DIR}\")
 ################################################################################
 # Required Libraries
 ################################################################################
@@ -165,9 +170,6 @@ if (CODE_COVERAGE)
 endif()
 
 if(BUILD_UNIT_TESTS)
-    set(TEST_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests_output")
-    add_definitions(-DTEST_OUTPUT_DIR=\"${TEST_OUTPUT_DIR}\")
-
     # catch - for testing
     download_catch2()
     add_library(catch INTERFACE)
@@ -180,4 +182,11 @@ if(BUILD_UNIT_TESTS)
     if (CODE_COVERAGE)
         target_code_coverage(unit_tests AUTO ALL)
     endif()
+endif()
+
+################################################################################
+# Scripts
+################################################################################
+if(BUILD_SCRIPTS)
+    add_subdirectory(scripts)
 endif()

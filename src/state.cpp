@@ -17,6 +17,7 @@
 namespace ccd {
 State::State()
     : volume_epsilon(1E-3)
+    , output_dir(DATA_OUTPUT_DIR)
     , recompute_collision_set(false)
     , canvas_width(10)
     , canvas_height(10)
@@ -30,6 +31,22 @@ State::State()
 void State::load_scene(std::string filename)
 {
     io::read_scene(filename, vertices, edges, displacements);
+    fit_scene_to_canvas();
+    reset_scene();
+}
+
+void State::load_scene(const Eigen::MatrixX2d& vertices,
+    const Eigen::MatrixX2i& edges, const Eigen::MatrixX2d& displacements)
+{
+    this->vertices = vertices;
+    this->edges = edges;
+    this->displacements = displacements;
+
+    reset_scene();
+}
+
+void State::fit_scene_to_canvas()
+{
 
     // fit scene to canvas
     Eigen::MatrixX2d all_vertices(vertices.rows() * 2, 2);
@@ -47,8 +64,6 @@ void State::load_scene(std::string filename)
         vertices = (vertices.rowwise() - center) * scale;
         displacements = displacements * scale;
     }
-
-    reset_scene();
 }
 
 void State::reset_scene()
@@ -212,6 +227,13 @@ void State::run_full_pipeline()
 
 void State::optimize_displacements()
 {
+    std::string uuid = ccd::log::now();
+    std::string file_name = fmt::format("opt_{0}.csv", uuid);
+    optimize_displacements(this->output_dir + "/" + file_name);
+}
+
+void State::optimize_displacements(const std::string filename)
+{
     // 1. setup problems
     ccd::opt::setup_displacement_optimization_problem(vertices, displacements,
         edges, volume_epsilon, detection_method, recompute_collision_set,
@@ -264,37 +286,48 @@ void State::optimize_displacements()
     // 5. run optimization
     opt_results
         = ccd::opt::displacement_optimization(opt_problem, U0, solver_settings);
+    log_optimization_steps(filename, it_x, it_lambda, it_gamma);
 
+    opt_results.method = solver_settings.method;
+    opt_results.finished = true;
+
+    // update ui elements
+    opt_time = 1.0;
+    opt_iteration = -1;
+}
+
+void State::log_optimization_steps(const std::string filename,
+    std::vector<Eigen::VectorXd>& it_x, std::vector<Eigen::VectorXd>& it_lambda,
+    std::vector<double>& it_gamma)
+{
     // LOGGING for testing only --- -should move somewhere else
-    const Eigen::IOFormat CommaFmt(Eigen::StreamPrecision,
-        Eigen::DontAlignCols, ", ", ", ", "", "", "", "");
-    const std::string base_dir = TEST_OUTPUT_DIR;
-    std::string uuid = ccd::log::now();
-    std::string file_name = fmt::format("opt_{0}.csv", uuid);
-    std::ofstream o(base_dir + "/" + file_name);
+    const Eigen::IOFormat CommaFmt(Eigen::StreamPrecision, Eigen::DontAlignCols,
+        ", ", ", ", "", "", "", "");
+    std::ofstream o(filename);
 
     // print table header
     o << ccd::opt::OptimizationMethodNames[solver_settings.method] << ",";
     o << ccd::opt::LCPSolverNames[solver_settings.lcp_solver] << std::endl;
     o << "it";
-    for (uint i=0; i < opt_problem.num_vars; i++){
-        o << ",x_" << i ;
+    for (int i = 0; i < opt_problem.num_vars; i++) {
+        o << ",x_" << i;
     }
-    for (uint i=0; i < opt_problem.num_constraints; i++){
+    for (int i = 0; i < opt_problem.num_constraints; i++) {
         o << ",lambda_" << i;
     }
     o << ",gamma, f(x)";
-    for (uint i=0; i < opt_problem.num_constraints; i++){
+    for (int i = 0; i < opt_problem.num_constraints; i++) {
         o << ",gx_" << i;
     }
-    o << ",||jac_g(x)||"  << std::endl;
+    o << ",||jac_g(x)||" << std::endl;
 
     // print initial value
     Eigen::MatrixXd d = displacements;
     d.resize(d.size(), 1);
     o << 0 << ",";
     o << d.format(CommaFmt) << ",";
-    o << Eigen::VectorXd::Zero(opt_problem.num_constraints).format(CommaFmt) << ",";
+    o << Eigen::VectorXd::Zero(opt_problem.num_constraints).format(CommaFmt)
+      << ",";
     o << 0.0 << ",";
     o << opt_problem.f(d) << ",";
     o << opt_problem.g(d).format(CommaFmt) << ",";
@@ -310,13 +343,6 @@ void State::optimize_displacements()
         o << opt_problem.g(it_x[i]).format(CommaFmt) << ",";
         o << opt_problem.jac_g(it_x[i]).squaredNorm() << std::endl;
     }
-
-    opt_results.method = solver_settings.method;
-    opt_results.finished = true;
-
-    // update ui elements
-    opt_time = 1.0;
-    opt_iteration = -1;
 }
 
 Eigen::MatrixX2d State::get_opt_vertex_at_time(const int iteration)

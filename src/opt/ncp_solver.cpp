@@ -7,7 +7,7 @@
 namespace ccd {
 namespace opt {
 
-    bool solve_ncp(const Eigen::SparseMatrix<double>& A, Eigen::VectorXd& b,
+    bool solve_ncp(const Eigen::SparseMatrix<double>& A, const Eigen::VectorXd& b,
         const callback_g& g, const callback_jac_g& jac_g, const int max_iter,
         const callback_intermediate_ncp& callback, const UpdateType update_type,
         const LCPSolver lcp_solver, Eigen::VectorXd& xi,

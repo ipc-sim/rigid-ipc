@@ -130,7 +130,9 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints", "[opt]")
         return 2 * Eigen::MatrixXd::Identity(x.rows(), x.rows());
     };
 
-    auto g = [](const Eigen::VectorXd& x) { return x[0] - 1; };
+    auto g = [](const Eigen::VectorXd& x) {
+        return x[0] - 1;
+    };
     auto g_gradient = [](Eigen::VectorXd x) {
         Eigen::VectorXd dg = Eigen::VectorXd::Zero(x.rows());
         dg[0] = 1;
@@ -144,10 +146,10 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints", "[opt]")
     auto E = [&f, &g, &s](const Eigen::VectorXd& x) {
         return f(x) + spline_barrier(g(x), s);
     };
-    auto E_gradient = [&](const Eigen::VectorXd& x) {
+    auto E_gradient = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
         return f_gradient(x) + spline_barrier_gradient(g(x), s) * g_gradient(x);
     };
-    auto E_hessian = [&](const Eigen::VectorXd& x) {
+    auto E_hessian = [&](const Eigen::VectorXd& x) -> Eigen::MatrixXd  {
         return f_hessian(x)
             + spline_barrier_hessian(g(x), s) * g_gradient(x)
             * g_gradient(x).transpose()

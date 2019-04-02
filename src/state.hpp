@@ -11,7 +11,6 @@
 
 namespace ccd {
 
-
 /**
  * @brief The State class keeps the full state of the UI and the collisions.
  */
@@ -53,6 +52,8 @@ public:
     /// @brief epsilon use on volume computation
     double volume_epsilon;
 
+    std::string output_dir;
+
     ////////////////////////////////////////////////////////////////////////////
     // Optimization Fields
 
@@ -85,8 +86,11 @@ public:
     // SCENE CRUD
     // ----------------------------------------------------------------------
     void load_scene(const std::string filename);
+    void load_scene(const Eigen::MatrixX2d& vertices,
+        const Eigen::MatrixX2i& edges, const Eigen::MatrixX2d& displacements);
     void save_scene(const std::string filename);
     void reset_scene();
+    void fit_scene_to_canvas();
 
     void add_vertex(const Eigen::RowVector2d& vertex);
     void add_edges(const Eigen::MatrixX2i& edges);
@@ -115,6 +119,7 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // SCENE OPT
     // ----------------------------------------------------------------------
+    void optimize_displacements(const std::string filename);
     void optimize_displacements();
 
     void load_optimization(const std::string filename);
@@ -122,6 +127,13 @@ public:
     double get_opt_functional(const int iteration);
     Eigen::MatrixX2d get_opt_displacements(const int iteration);
     Eigen::MatrixX2d get_opt_vertex_at_time(const int iteration);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // SCENE OUTPUT
+    // ----------------------------------------------------------------------
+    void log_optimization(const std::string filename, std::vector<Eigen::VectorXd>& it_x,
+                          std::vector<Eigen::VectorXd>& it_lambda,
+                          std::vector<double>& it_gamma);
 
     // UI
     // ----------------------------------------------------------------------
