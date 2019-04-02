@@ -23,7 +23,6 @@ int main(int argc, char* argv[])
     Eigen::MatrixX2i edges;
     Eigen::MatrixX2d displacements;
 
-
     state.load_scene(vertices, edges, displacements);
     state.optimize_displacements();
 

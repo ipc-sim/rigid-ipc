@@ -62,6 +62,7 @@ set(SRCFILES
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp
 
+    src/state.cpp
     src/logger.cpp
 )
 
@@ -88,8 +89,6 @@ add_definitions(-DOPT_OUTPUT_DIR=\"${OPT_OUTPUT_DIR}\")
 # Fixing Collisions Executable
 ################################################################################
 set(VIEWER_FILES
-
-    src/state.cpp
 
     src/viewer/edges_to_rectangles.cpp
     src/viewer/viewer.cpp

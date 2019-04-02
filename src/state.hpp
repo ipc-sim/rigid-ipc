@@ -131,9 +131,9 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // SCENE OUTPUT
     // ----------------------------------------------------------------------
-    void log_optimization(const std::string filename, std::vector<Eigen::VectorXd>& it_x,
-                          std::vector<Eigen::VectorXd>& it_lambda,
-                          std::vector<double>& it_gamma);
+    void log_optimization_steps(const std::string filename,
+        std::vector<Eigen::VectorXd>& it_x,
+        std::vector<Eigen::VectorXd>& it_lambda, std::vector<double>& it_gamma);
 
     // UI
     // ----------------------------------------------------------------------
