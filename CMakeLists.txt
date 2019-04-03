@@ -25,6 +25,7 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"          ON)
 # project-options
 option(BUILD_UNIT_TESTS                 "Build unit-tests"      ON)
 option(BUILD_SCRIPTS                    "Build scripts"         ON)
+option(ENABLE_DERIVATIVE_CHECK            "Check Derivatives"     ON)
 option(ENABLE_IPOPT                     "Enable Ipopt Library"  ON)
 option(ENABLE_OSQP                      "Enable OSQP Library"   ON)
 option(ENABLE_MOSEK                     "Enable Mosek Library"  OFF)
@@ -84,6 +85,10 @@ target_sources(${PROJECT_NAME} PUBLIC ${AUTOGEN})
 
 set(OPT_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/figures/data")
 add_definitions(-DOPT_OUTPUT_DIR=\"${OPT_OUTPUT_DIR}\")
+
+if(ENABLE_DERIVATIVE_CHECK)
+    add_definitions(-DWITH_DERIVATIVE_CHECK)
+endif()
 
 ################################################################################
 # Fixing Collisions Executable

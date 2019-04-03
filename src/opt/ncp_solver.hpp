@@ -3,8 +3,6 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
-#include <opt/OptimizationProblem.hpp>
-#include <opt/OptimizationResults.hpp>
 #include <opt/lcp_solver.hpp>
 
 namespace ccd {
@@ -14,10 +12,17 @@ namespace opt {
         const Eigen::VectorXd& alpha, const double gamma)>
         callback_intermediate_ncp;
 
-    enum UpdateType {
-        GRADIENT_ONLY,
-        OTHER,
+    /**
+     * @brief Method for updating candidate solution during NCP iterations
+     *  Update:
+     *      x_{i+1} = x_{i} + delta_x
+     */
+    enum class NcpUpdate {
+        G_GRADIENT, ///> delta_x = A^{-1} jac_x(x_i)^T \alpha_i
+        LINEARIZED, ///> delta_x = A^{-1} jac_x(x_i)^T \alpha_i + A^{-1}b - x_i
     };
+
+    static const char* NcpUpdateNames[] = { "G_GRADIENT", "LINEARIZED" };
 
     /**
      * @brief solves the optimization problem
@@ -38,10 +43,13 @@ namespace opt {
      * @param alpha     : the solution of the dual problem.
 
      */
-    bool solve_ncp(const Eigen::SparseMatrix<double>& A, const Eigen::VectorXd& b,
-        const callback_g& g, const callback_jac_g& jac_g, const int max_iter,
-        const callback_intermediate_ncp& callback, const UpdateType update_type,
-        const LCPSolver lcp_solver, Eigen::VectorXd& x, Eigen::VectorXd& alpha,
+    bool solve_ncp(const Eigen::SparseMatrix<double>& A,
+        const Eigen::VectorXd& b,
+        const std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>& g,
+        const std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>& jac_g,
+        const int max_iter, const callback_intermediate_ncp& callback,
+        const NcpUpdate update_type, const LCPSolver lcp_solver,
+        Eigen::VectorXd& x, Eigen::VectorXd& alpha,
         const bool check_convergence);
 
 } // namespace opt

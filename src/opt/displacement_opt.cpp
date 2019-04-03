@@ -13,6 +13,7 @@
 #include <ccd/not_implemented_error.hpp>
 #include <ccd/prune_impacts.hpp>
 
+#include <autodiff/finitediff.hpp>
 #include <opt/ncp_solver.hpp>
 
 #include <logger.hpp>
@@ -119,14 +120,30 @@ namespace opt {
         problem.jac_g = [=](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
             Eigen::MatrixXd Uk = x;
             Uk.resize(x.rows() / 2, 2);
+
+            Eigen::MatrixXd jac_gx;
             if (recompute_collision_set) {
                 EdgeEdgeImpacts new_ee_impacts;
                 Eigen::VectorXi new_edge_impact_map(num_constraints);
                 detect_collisions(V, Uk, E, ccd_detection_method,
                     new_ee_impacts, new_edge_impact_map);
-                return jac_g(Uk, new_ee_impacts, new_edge_impact_map);
+                jac_gx = jac_g(Uk, new_ee_impacts, new_edge_impact_map);
             }
-            return jac_g(Uk, ee_impacts, edge_impact_map);
+            jac_gx = jac_g(Uk, ee_impacts, edge_impact_map);
+
+#ifdef WITH_DERIVATIVE_CHECK
+            Eigen::MatrixXd fd_jac_gx;
+            ccd::finite_jacobian(x, problem.g, fd_jac_gx);
+            if (!ccd::compare_jacobian(jac_gx, fd_jac_gx)) {
+
+                spdlog::warn("Displ Optimization CHECK_GRADIENT FAILED\n"
+                             "\tgrad={}\n"
+                             "\tfd  ={}",
+                    ccd::log::fmt_eigen(jac_gx),
+                    ccd::log::fmt_eigen(fd_jac_gx));
+            }
+#endif
+            return jac_gx;
         };
 #pragma clang diagnostic pop
     }
@@ -174,9 +191,10 @@ namespace opt {
                 num_it += 1;
             };
         OptimizationResults result;
-        result.success = solve_ncp(A, b, problem.g, problem.jac_g,
-            settings.max_iter, callback, GRADIENT_ONLY, settings.lcp_solver,
-            x_opt, lambda_opt, /*check_convergence=*/false);
+        result.success
+            = solve_ncp(A, b, problem.g, problem.jac_g, settings.max_iter,
+                callback, NcpUpdate::G_GRADIENT, settings.lcp_solver, x_opt,
+                lambda_opt, /*check_convergence=*/false);
         result.x = x_opt;
         result.minf = problem.f(x_opt);
 

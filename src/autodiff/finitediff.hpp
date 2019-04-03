@@ -16,8 +16,8 @@ corresponding integer values are used internally and should be ignored.
 enum AccuracyOrder {
     SECOND = 0, /*!< Second order accuracy. */
     FOURTH = 1, /*!< Fourth order accuracy. */
-    SIXTH = 2, /*!< Sixth order accuracy. */
-    EIGHTH = 3 /*!< Eighth order accuracy. */
+    SIXTH = 2,  /*!< Sixth order accuracy. */
+    EIGHTH = 3  /*!< Eighth order accuracy. */
 };
 
 /**
@@ -28,7 +28,7 @@ Compare if two gradients are close enough.
 @return A boolean for if x and y are close to the same value.
 */
 bool compare_gradient(const Eigen::VectorXd& x, const Eigen::VectorXd& y);
-
+bool compare_jacobian(const Eigen::MatrixXd& x, const Eigen::MatrixXd& y);
 /**
 Compute the gradient of a function at a point using finite differences.
 
@@ -43,5 +43,9 @@ Compute the gradient of a function at a point using finite differences.
 void finite_gradient(const Eigen::VectorXd& x,
     std::function<double(const Eigen::VectorXd&)> value, Eigen::VectorXd& grad,
     AccuracyOrder accuracy = SECOND);
-}
+
+void finite_jacobian(const Eigen::VectorXd& x,
+    std::function<Eigen::VectorXd(const Eigen::VectorXd&)> value,
+    Eigen::MatrixXd& jac, AccuracyOrder accuracy = SECOND);
+} // namespace ccd
 #endif

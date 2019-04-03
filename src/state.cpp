@@ -14,6 +14,7 @@
 
 #include <opt/displacement_opt.hpp>
 
+
 namespace ccd {
 State::State()
     : volume_epsilon(1E-3)
@@ -343,6 +344,7 @@ void State::log_optimization_steps(const std::string filename,
         o << opt_problem.g(it_x[i]).format(CommaFmt) << ",";
         o << opt_problem.jac_g(it_x[i]).squaredNorm() << std::endl;
     }
+    spdlog::debug("Optimization Log saved to file://{}", filename);
 }
 
 Eigen::MatrixX2d State::get_opt_vertex_at_time(const int iteration)

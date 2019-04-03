@@ -8,6 +8,7 @@
 #include <spdlog/spdlog.h>
 
 #include <autodiff/autodiff_types.hpp>
+#include <autodiff/finitediff.hpp>
 
 // ---------------------------------------------------
 // format for logs
@@ -181,11 +182,12 @@ void get_smooth_max_case(Eigen::VectorXd& expected,
 // ---------------------------------------------------
 // Helper Implementation
 // ---------------------------------------------------
-void eval_ncp(const GxCases gx_case, const ccd::opt::UpdateType update_type,
+void eval_ncp(const GxCases gx_case, const ccd::opt::NcpUpdate update_type,
     const ccd::opt::LCPSolver lcp_solver, const bool check_convergence,
     const std::string outfile)
 {
 
+    using namespace ccd::opt;
     DiffScalarBase::setVariableCount(size_t(NUM_VARS));
 
     Eigen::SparseMatrix<double> A(NUM_VARS, NUM_VARS);
@@ -228,7 +230,7 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::UpdateType update_type,
         return (A * x - b);
     };
 
-    auto g = [g_diff](const Eigen::VectorXd x) -> Eigen::VectorXd {
+    auto g = [&g_diff](const Eigen::VectorXd x) -> Eigen::VectorXd {
         DVector gx = g_diff(x);
         Eigen::VectorXd g(gx.rows());
         for (int i = 0; i < gx.rows(); ++i) {
@@ -238,13 +240,23 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::UpdateType update_type,
         return g;
     };
 
-    auto jac_g = [g_diff](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
+    auto jac_g
+        = [&g_diff, &g, &gx_case](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
         DVector gx = g_diff(x);
         Eigen::MatrixXd jac_gx(gx.rows(), NUM_VARS);
         for (int i = 0; i < gx.rows(); ++i) {
             jac_gx.row(i) = gx(i).getGradient();
         }
+        Eigen::MatrixXd fd_jac_gx;
+        ccd::finite_jacobian(x, g, fd_jac_gx);
+        if (!ccd::compare_jacobian(jac_gx, fd_jac_gx)) {
 
+            spdlog::warn("CASE {} CHECK_GRADIENT FAILED\n"
+                         "\tgrad={}\n"
+                         "\tfd  ={}",
+                GxCasesNames[static_cast<int>(gx_case)], fmt_eigen(jac_gx),
+                fmt_eigen(fd_jac_gx));
+        }
         return jac_gx;
     };
 
@@ -308,19 +320,20 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::UpdateType update_type,
     double kkt_lcp = alpha.transpose() * g(x);
 
     spdlog::info("CASE={} UPDATE_TYPE={} LCP_SOLVER={} \n"
-                  "\tnum_it:{}\n"
-                  "\tsucess:{}\n"
-                  "\toptimal:{}\n"
-                  "\tx*:{}\n"
-                  "\te*:{}\n"
-                  "\tf(x*):{:.10f}\n"
-                  "\tf(e*):{:.10f}\n"
-                  "\tg(x*):{}\n"
-                  "\tg(e*):{}\n"
-                  "\tkkt_grad:{}\n"
-                  "\tkkt_lcp:{}",
-        GxCasesNames[static_cast<int>(gx_case)], update_type,
-        ccd::opt::LCPSolverNames[lcp_solver], it_x.size(), fmt_bool(success),
+                 "\tnum_it:{}\n"
+                 "\tsucess:{}\n"
+                 "\toptimal:{}\n"
+                 "\tx*:{}\n"
+                 "\te*:{}\n"
+                 "\tf(x*):{:.10f}\n"
+                 "\tf(e*):{:.10f}\n"
+                 "\tg(x*):{}\n"
+                 "\tg(e*):{}\n"
+                 "\tkkt_grad:{}\n"
+                 "\tkkt_lcp:{}",
+        GxCasesNames[static_cast<int>(gx_case)],
+        NcpUpdateNames[static_cast<int>(update_type)],
+        LCPSolverNames[lcp_solver], it_x.size(), fmt_bool(success),
         fmt_bool(fx_is_optimal), fmt_eigen(x), fmt_eigen(expected), fx, fe,
         fmt_eigen(g(x)), fmt_eigen(g(expected)), fmt_eigen(kkt_grad), kkt_lcp);
 }
@@ -332,18 +345,18 @@ int main(int argc, char* argv[])
         out_dir = argv[1];
     }
 
-    ccd::opt::UpdateType update_types[]
-        = { ccd::opt::GRADIENT_ONLY, ccd::opt::OTHER };
-    ccd::opt::LCPSolver lcp_solvers[]
-        = { ccd::opt::LCP_GAUSS_SEIDEL, ccd::opt::LCP_MOSEK };
-
+    using namespace ccd::opt;
+    LCPSolver lcp_solvers[] = { LCP_GAUSS_SEIDEL, LCP_MOSEK };
+    NcpUpdate update_types[] = { NcpUpdate::G_GRADIENT, NcpUpdate::LINEARIZED };
     bool check_convergence = true;
 
     for (const auto& gx_case : GxCasesAll) {
         for (const auto& update_type : update_types) {
             for (const auto& lcp_solver : lcp_solvers) {
                 std::string case_name = fmt::format("ncp_case_{0}_{1}_{2}.csv",
-                    GxCasesNames[static_cast<int>(gx_case)], update_type, ccd::opt::LCPSolverNames[lcp_solver]);
+                    GxCasesNames[static_cast<int>(gx_case)],
+                    NcpUpdateNames[static_cast<int>(update_type)],
+                    LCPSolverNames[lcp_solver]);
 
                 std::string filename = out_dir + "/" + case_name;
                 eval_ncp(gx_case, update_type, lcp_solver, check_convergence,

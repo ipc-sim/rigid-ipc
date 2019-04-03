@@ -11,6 +11,7 @@ namespace opt {
         : method(method)
         , qp_solver(qp_solver)
         , lcp_solver(LCP_MOSEK)
+        , ncp_update_method(NcpUpdate::LINEARIZED)
         , verbosity(verbosity)
         , max_iter(max_iter)
         , relative_tolerance(relative_tolerance)

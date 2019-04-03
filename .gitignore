@@ -99,6 +99,8 @@ fixtures/auto_*.json
 figures/*.data
 data/**/*.data
 data/**/*.csv
+data/**/*.json
+data/**/*.pdf
 data/**/*.xlsx
 
 3rd_party/*

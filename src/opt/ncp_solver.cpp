@@ -7,11 +7,14 @@
 namespace ccd {
 namespace opt {
 
-    bool solve_ncp(const Eigen::SparseMatrix<double>& A, const Eigen::VectorXd& b,
-        const callback_g& g, const callback_jac_g& jac_g, const int max_iter,
-        const callback_intermediate_ncp& callback, const UpdateType update_type,
-        const LCPSolver lcp_solver, Eigen::VectorXd& xi,
-        Eigen::VectorXd& alpha_i, const bool check_convergence)
+    bool solve_ncp(const Eigen::SparseMatrix<double>& A,
+        const Eigen::VectorXd& b,
+        const std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>& g,
+        const std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>& jac_g,
+        const int max_iter, const callback_intermediate_ncp& callback,
+        const NcpUpdate update_type, const LCPSolver lcp_solver,
+        Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i,
+        const bool check_convergence)
     {
         Eigen::SparseLU<Eigen::SparseMatrix<double>> Asolver;
         // We solve the NCP problem
@@ -51,7 +54,8 @@ namespace opt {
             // Step 2 ends when all constraints are satisfied
             // check equality condition is converging
             Eigen::VectorXd eq = A * xi - (b + jac_g_xi.transpose() * alpha_i);
-            if ((g_xi.array() >= 0).all() && (eq.squaredNorm() < 1E-16 || ! check_convergence)) {
+            if ((g_xi.array() >= 0).all()
+                && (eq.squaredNorm() < 1E-16 || !check_convergence)) {
                 break;
             }
 
@@ -73,7 +77,7 @@ namespace opt {
             //      s = g(x_i) + jac_g(x_i) [ A^{-1} jac_x(x_i)^T \alpha_i + A^{-1}b - x_i]
             // clang-format on
             Eigen::VectorXd p(dof);
-            if (update_type == GRADIENT_ONLY) {
+            if (update_type == NcpUpdate::G_GRADIENT) {
                 p.setZero();
             } else {
                 p = Ainv(b) - xi;

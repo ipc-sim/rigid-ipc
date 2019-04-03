@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <opt/lcp_solver.hpp>
+#include <opt/ncp_solver.hpp>
 
 namespace ccd {
 namespace opt {
@@ -44,6 +45,7 @@ namespace opt {
         OptimizationMethod method;   ///< @brief Optimization method to use
         QPSolver qp_solver;          ///< @brief Quadratic programming solver
         LCPSolver lcp_solver;        ///< @brief LCP solver
+        NcpUpdate ncp_update_method;
         int verbosity;               ///< @brief Verbosity of output
         int max_iter;                ///< @brief Maximum number of iterations
         double relative_tolerance;   ///< @brief Relative tolerance for x

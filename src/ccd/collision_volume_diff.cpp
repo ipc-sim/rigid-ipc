@@ -13,8 +13,9 @@ namespace autodiff {
     // ALL IMPACTS GLOBAL Volumes Derivatives
     // -----------------------------------------------------------------------------
 
-    void compute_volumes_refresh_toi(const Eigen::MatrixX2d& V, const Eigen::MatrixX2d& U,
-        const Eigen::MatrixX2i& E, const EdgeEdgeImpacts& ee_impacts,
+    void compute_volumes_refresh_toi(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+        const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         Eigen::VectorXd& volumes)
     {
@@ -52,8 +53,7 @@ namespace autodiff {
             EdgeEdgeImpact ee_impact = ee_impacts[size_t(edge_impact_map[i])];
 
             Eigen::VectorXd grad;
-            ccd::autodiff::collision_volume_grad(
-                V, U, E, ee_impact, int(i), epsilon, grad);
+            collision_volume_grad(V, U, E, ee_impact, int(i), epsilon, grad);
             volume_grad.col(i) = grad;
         }
     }
@@ -75,7 +75,7 @@ namespace autodiff {
             } else {
                 EdgeEdgeImpact ee_impact
                     = ee_impacts[size_t(edge_impact_map[i])];
-                ccd::autodiff::collision_volume_hessian(
+                collision_volume_hessian(
                     V, U, E, ee_impact, int(i), epsilon, hessian);
             }
             volume_hessian.push_back(hessian);
@@ -198,6 +198,7 @@ namespace autodiff {
             derivative.resize(vertices.size(), 1);
             derivative.setZero();
             Vector8d el_grad = v.getGradient();
+
             for (int i = 0; i < 4; i++) {
                 derivative(nodes[i], 0) = el_grad(2 * i);
                 derivative(nodes[i] + num_vertices, 0) = el_grad(2 * i + 1);
@@ -335,5 +336,5 @@ namespace autodiff {
         const Eigen::MatrixX2i&, const EdgeEdgeImpact&, const int, const double,
         const int, Eigen::MatrixXd&);
 
-}
-}
+} // namespace autodiff
+} // namespace ccd
