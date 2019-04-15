@@ -97,6 +97,8 @@ set(VIEWER_FILES
 
     src/viewer/edges_to_rectangles.cpp
     src/viewer/viewer.cpp
+    src/viewer/viewer_crud.cpp
+    src/viewer/viewer_draw.cpp
     src/viewer/viewer_menu.cpp
 
     src/main.cpp

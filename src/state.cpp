@@ -12,8 +12,8 @@
 
 #include <logger.hpp>
 
+#include <autodiff/finitediff.hpp>
 #include <opt/displacement_opt.hpp>
-
 
 namespace ccd {
 State::State()
@@ -24,10 +24,16 @@ State::State()
     , canvas_height(10)
     , current_ev_impact(-1)
     , current_edge(-1)
-    , min_edge_width(0.0)
-
+    , grad_scaling(1.0f)
+    , use_opt_gradient(false)
+    , current_opt_time(0.0)
+    , current_opt_iteration(-1)
 {
 }
+
+// -----------------------------------------------------------------------------
+// CRUD Scene
+// -----------------------------------------------------------------------------
 
 void State::load_scene(std::string filename)
 {
@@ -36,12 +42,12 @@ void State::load_scene(std::string filename)
     reset_scene();
 }
 
-void State::load_scene(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2i& edges, const Eigen::MatrixX2d& displacements)
+void State::load_scene(const Eigen::MatrixX2d& v, const Eigen::MatrixX2i& e,
+    const Eigen::MatrixX2d& d)
 {
-    this->vertices = vertices;
-    this->edges = edges;
-    this->displacements = displacements;
+    this->vertices = v;
+    this->edges = e;
+    this->displacements = d;
 
     reset_scene();
 }
@@ -73,8 +79,8 @@ void State::reset_scene()
 
     current_edge = -1;
     current_ev_impact = -1;
-    time = 0.0;
-    opt_time = 0.0;
+    current_time = 0.0;
+    current_opt_time = 0.0;
     selected_displacements.clear();
     selected_points.clear();
 
@@ -89,9 +95,7 @@ void State::save_scene(std::string filename)
 {
     io::write_scene(filename, vertices, edges, displacements);
 }
-// -----------------------------------------------------------------------------
-// CRUD Scene
-// -----------------------------------------------------------------------------
+
 void State::add_vertex(const Eigen::RowVector2d& position)
 {
     long lastid = vertices.rows();
@@ -143,102 +147,166 @@ void State::move_displacement(
     reset_impacts();
 }
 
-Eigen::MatrixX2d State::get_vertex_at_time()
-{
-    return vertices + displacements * double(time);
-}
-
-Eigen::MatrixX2d State::get_volume_grad()
-{
-    if (current_edge < 0 || volume_grad.cols() == 0) {
-        return Eigen::MatrixX2d::Zero(vertices.rows(), kDIM);
-    }
-    Eigen::MatrixXd grad = volume_grad.col(current_edge);
-    grad.resize(grad.rows() / kDIM, kDIM);
-
-    return grad;
-}
-
-const EdgeEdgeImpact& State::get_edge_impact(const int edge_id)
-{
-    size_t ee_impact_id = size_t(edge_impact_map[edge_id]);
-    assert(ee_impact_id >= 0);
-    return ee_impacts[ee_impact_id];
-}
-
 // -----------------------------------------------------------------------------
 // CCD
 // -----------------------------------------------------------------------------
 void State::reset_impacts()
 {
-
     volumes.resize(edges.rows());
     volumes.setZero();
 
     edge_impact_map.resize(edges.rows());
     edge_impact_map.setConstant(-1);
 
-    volume_grad.resize(vertices.size(), edges.rows());
-    volume_grad.setZero();
-
     ev_impacts.clear();
     ee_impacts.clear();
+
+    volume_grad.resize(vertices.size(), edges.rows());
+    volume_grad.setZero();
 }
 
-void State::detect_edge_vertex_collisions()
+void State::run_ccd_pipeline()
 {
-    // Get impacts between vertex and edge
-    ccd::detect_edge_vertex_collisions(
-        vertices, displacements, edges, ev_impacts, detection_method);
+    detect_collisions(displacements);
+    volumes = get_collision_volume(displacements, /*recompute_set=*/true);
+    volume_grad
+        = get_collision_jac_volume(displacements, /*recompute_set=*/true);
+    current_edge = 0;
+    current_ev_impact = ev_impacts.size() > 0 ? 0 : -1;
 
-    // Sort impacts by time for convient visualization
-    std::sort(ev_impacts.begin(), ev_impacts.end(),
-        compare_impacts_by_time<EdgeVertexImpact>);
+    const Eigen::IOFormat CommaFmt(
+        Eigen::StreamPrecision, Eigen::DontAlignCols, ",", ",", "", "", "", "");
 
-    // Transform to impacts between two edges
-    convert_edge_vertex_to_edge_edge_impacts(
-        this->edges, this->ev_impacts, this->ee_impacts);
-
-    // Assign first impact to each edge; we store one impact for each edge on
-    // edges_impact and the impacts in ee_impacts
-    this->num_pruned_impacts
-        = ccd::prune_impacts(this->ee_impacts, this->edge_impact_map);
+    spdlog::debug("grad_vol\n{}", ccd::log::fmt_eigen(volume_grad, 4));
 }
 
-void State::compute_collision_volumes()
+void State::detect_collisions(const Eigen::MatrixXd& displ)
 {
-    assert(this->volume_grad.cols() == this->edges.rows());
-    assert(this->volume_grad.rows() == this->vertices.size());
-    ccd::compute_volumes_fixed_toi(vertices, displacements, edges, ee_impacts,
-        edge_impact_map, volume_epsilon, volumes);
-
-    ccd::autodiff::compute_volumes_gradient(vertices, displacements, edges,
-        ee_impacts, edge_impact_map, volume_epsilon, volume_grad);
+    using namespace ccd;
+    detect_edge_vertex_collisions(
+        vertices, displ, edges, ev_impacts, detection_method);
+    convert_edge_vertex_to_edge_edge_impacts(edges, ev_impacts, ee_impacts);
+    num_pruned_impacts = prune_impacts(ee_impacts, edge_impact_map);
 }
 
-void State::run_full_pipeline()
+Eigen::VectorXd State::get_collision_volume(
+    const Eigen::MatrixXd& Uk, const bool recompute_set)
 {
-    this->detect_edge_vertex_collisions();
-    this->compute_collision_volumes();
+    Eigen::VectorXd volume;
+    if (recompute_set) {
+        detect_collisions(Uk);
+    }
+    ccd::autodiff::compute_volumes_refresh_toi(vertices, Uk, edges, ee_impacts,
+        edge_impact_map, volume_epsilon, volume);
+    return volume;
 }
 
+Eigen::MatrixXd State::get_collision_jac_volume(
+    const Eigen::MatrixXd& Uk, const bool recompute_set)
+{
+    Eigen::MatrixXd volume_gradient;
+    if (recompute_set) {
+        detect_collisions(Uk);
+    }
+
+    ccd::autodiff::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
+        edge_impact_map, volume_epsilon, volume_gradient);
+
+    assert(volume_gradient.rows() == Uk.size());
+    assert(volume_gradient.cols() == edges.rows());
+
+    // Note: standard is to be num_constraints x num_vars
+    return volume_gradient.transpose();
+}
+
+void State::goto_following_collision_edge(
+    const bool next, const bool opt_volume)
+{
+    double vol = 0.0;
+    int n = next ? 1 : -1;
+    for (long i = 0; i < edges.rows(); ++i) {
+        if (current_edge < 0) {
+            current_edge = int(edges.rows()) + current_edge;
+        }
+        vol = (opt_volume ? get_opt_volume() : volumes)[current_edge];
+        if (vol < 0) {
+            break;
+        }
+        current_edge = (current_edge + n) % edges.rows();
+    }
+}
 // -----------------------------------------------------------------------------
 // OPT
 // -----------------------------------------------------------------------------
 
-void State::optimize_displacements()
+void State::reset_optimization_problem()
 {
-    std::string uuid = ccd::log::now();
-    std::string file_name = fmt::format("opt_{0}.csv", uuid);
-    optimize_displacements(this->output_dir + "/" + file_name);
+
+    using namespace ccd::opt;
+
+    reset_impacts();
+    detect_collisions(displacements);
+
+    /// Min 1/2||U - Uk||^2
+    /// s.t V(U) >= 0
+    Eigen::MatrixXd u_ = displacements; // U_flat
+    u_.resize(displacements.size(), 1);
+
+    int num_vars, num_constraints;
+    opt_problem.num_vars = num_vars = int(u_.size());
+    opt_problem.num_constraints = num_constraints = int(edges.rows());
+
+    opt_problem.x0.resize(num_vars);
+    opt_problem.x_lower.resize(num_vars);
+    opt_problem.x_upper.resize(num_vars);
+    opt_problem.g_lower.resize(num_constraints);
+    opt_problem.g_upper.resize(num_constraints);
+
+    opt_problem.x_lower.setConstant(NO_LOWER_BOUND);
+    opt_problem.x_upper.setConstant(NO_UPPER_BOUND);
+    opt_problem.g_lower.setConstant(0.0);
+    opt_problem.g_upper.setConstant(NO_UPPER_BOUND);
+
+    opt_problem.f = [u_](const Eigen::VectorXd& x) -> double {
+        return (x - u_).squaredNorm() / 2.0;
+    };
+
+    opt_problem.grad_f = [u_](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+        return (x - u_);
+    };
+
+    opt_problem.g = [=](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        return this->get_collision_volume(Uk, recompute_collision_set);
+    };
+
+    opt_problem.jac_g = [=](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        Eigen::MatrixXd jac_gx;
+        jac_gx = this->get_collision_jac_volume(Uk, recompute_collision_set);
+
+#ifdef WITH_DERIVATIVE_CHECK
+        Eigen::MatrixXd fd_jac_gx;
+        ccd::finite_jacobian(x, opt_problem.g, fd_jac_gx);
+        if (!ccd::compare_jacobian(jac_gx, fd_jac_gx)) {
+
+            spdlog::warn("Displ Optimization CHECK_GRADIENT FAILED\n"
+                         "\tgrad={}\n"
+                         "\tfd  ={}",
+                ccd::log::fmt_eigen(jac_gx), ccd::log::fmt_eigen(fd_jac_gx));
+        }
+#endif
+        return jac_gx;
+    };
 }
 
 void State::optimize_displacements(const std::string filename)
 {
-    // 1. setup problems
-    ccd::opt::setup_displacement_optimization_problem(vertices, displacements,
-        edges, volume_epsilon, detection_method, recompute_collision_set,
-        opt_problem);
+    reset_optimization_problem();
 
     // 2. reset results
     opt_results.success = false;
@@ -248,7 +316,8 @@ void State::optimize_displacements(const std::string filename)
     if (dirty || !reuse_opt_displacements) {
         u_history.clear();
         f_history.clear();
-        g_history.clear();
+        gsum_history.clear();
+        jac_g_history.clear();
         opt_results.minf = 1E10;
         opt_results.x.resizeLike(displacements);
     }
@@ -274,16 +343,20 @@ void State::optimize_displacements(const std::string filename)
               const Eigen::VectorXd& dual, const double gamma,
               const int /*iteration*/) {
               Eigen::MatrixXd u = x;
-              u.resize(displacements.rows() / 2, 2);
+              u.resize(x.rows() / 2, 2);
               u_history.push_back(u);
               f_history.push_back(obj_value);
-              auto gx = opt_problem.g(x);
-              g_history.push_back(gx.sum());
+
+              Eigen::VectorXd gx = opt_problem.g(x);
+              g_history.push_back(gx);
+              gsum_history.push_back(gx.sum());
+              jac_g_history.push_back(opt_problem.jac_g(x));
 
               it_x.push_back(x);
               it_lambda.push_back(dual);
               it_gamma.push_back(gamma);
           };
+
     // 5. run optimization
     opt_results
         = ccd::opt::displacement_optimization(opt_problem, U0, solver_settings);
@@ -293,98 +366,162 @@ void State::optimize_displacements(const std::string filename)
     opt_results.finished = true;
 
     // update ui elements
-    opt_time = 1.0;
-    opt_iteration = -1;
+    current_opt_time = 1.0;
+    current_opt_iteration = -1;
+}
+
+void State::save_optimization(std::string filename)
+{
+    io::write_opt_results(
+        filename, opt_results, u_history, f_history, gsum_history);
+}
+
+void State::load_optimization(std::string filename)
+{
+    io::read_opt_results(
+        filename, opt_results, u_history, f_history, gsum_history);
+
+    current_opt_iteration = -1;
+    current_opt_time = 1.0;
 }
 
 void State::log_optimization_steps(const std::string filename,
     std::vector<Eigen::VectorXd>& it_x, std::vector<Eigen::VectorXd>& it_lambda,
     std::vector<double>& it_gamma)
 {
+
+    std::ofstream o;
+    std::string sep = ",";
+    if (filename.empty()) {
+        o.copyfmt(std::cout);
+        o.clear(std::cout.rdstate());
+        o.basic_ios<char>::rdbuf(std::cout.rdbuf());
+        sep = "\t";
+    } else {
+        o.open(filename);
+    }
+
     // LOGGING for testing only --- -should move somewhere else
-    const Eigen::IOFormat CommaFmt(Eigen::StreamPrecision, Eigen::DontAlignCols,
-        ", ", ", ", "", "", "", "");
-    std::ofstream o(filename);
+    const Eigen::IOFormat CommaFmt(
+        Eigen::StreamPrecision, Eigen::DontAlignCols, sep, sep, "", "", "", "");
 
     // print table header
-    o << ccd::opt::OptimizationMethodNames[solver_settings.method] << ",";
+    o << ccd::opt::OptimizationMethodNames[solver_settings.method] << sep;
     o << ccd::opt::LCPSolverNames[solver_settings.lcp_solver] << std::endl;
     o << "it";
     for (int i = 0; i < opt_problem.num_vars; i++) {
-        o << ",x_" << i;
+        o << sep << "x_" << i;
     }
     for (int i = 0; i < opt_problem.num_constraints; i++) {
-        o << ",lambda_" << i;
+        o << sep << "lambda_" << i;
     }
-    o << ",gamma, f(x)";
+    o << sep << "gamma" << sep << "f(x)";
     for (int i = 0; i < opt_problem.num_constraints; i++) {
-        o << ",gx_" << i;
+        o << sep << "gx_" << i;
     }
-    o << ",||jac_g(x)||" << std::endl;
+    o << sep << "||jac_g(x)||" << std::endl;
 
     // print initial value
     Eigen::MatrixXd d = displacements;
     d.resize(d.size(), 1);
-    o << 0 << ",";
-    o << d.format(CommaFmt) << ",";
+    o << 0 << sep;
+    o << std::scientific << std::setprecision(2) << d.format(CommaFmt) << sep;
     o << Eigen::VectorXd::Zero(opt_problem.num_constraints).format(CommaFmt)
-      << ",";
-    o << 0.0 << ",";
-    o << opt_problem.f(d) << ",";
-    o << opt_problem.g(d).format(CommaFmt) << ",";
-    o << opt_problem.jac_g(d).squaredNorm() << std::endl << std::endl;
+      << sep;
+    o << 0.0 << sep;
+    o << opt_problem.f(d) << sep;
+    o << opt_problem.g(d).format(CommaFmt) << sep;
+
+    Eigen::MatrixXd jac_gx = opt_problem.jac_g(d);
+    o << jac_gx.squaredNorm() << sep;
+    o << jac_gx.format(CommaFmt) << std::endl << std::endl;
 
     // print steps
     for (uint i = 0; i < it_x.size(); i++) {
-        o << i + 1 << ",";
-        o << it_x[i].format(CommaFmt) << ",";
-        o << it_lambda[i].format(CommaFmt) << ",";
-        o << it_gamma[i] << ",";
-        o << opt_problem.f(it_x[i]) << ",";
-        o << opt_problem.g(it_x[i]).format(CommaFmt) << ",";
-        o << opt_problem.jac_g(it_x[i]).squaredNorm() << std::endl;
+        o << i + 1 << sep;
+        o << it_x[i].format(CommaFmt) << sep;
+        o << it_lambda[i].format(CommaFmt) << sep;
+        o << it_gamma[i] << sep;
+        o << opt_problem.f(it_x[i]) << sep;
+        o << opt_problem.g(it_x[i]).format(CommaFmt) << sep;
+        jac_gx = opt_problem.jac_g(it_x[i]);
+        o << jac_gx.squaredNorm() << sep;
+        o << jac_gx.format(CommaFmt) << std::endl;
     }
     spdlog::debug("Optimization Log saved to file://{}", filename);
 }
 
-Eigen::MatrixX2d State::get_opt_vertex_at_time(const int iteration)
+// -----------------------------------------------------------------------------
+// UI Getters
+// -----------------------------------------------------------------------------
+Eigen::MatrixX2d State::get_vertex_at_time()
 {
-    return vertices + get_opt_displacements(iteration) * double(opt_time);
+    return vertices + displacements * double(current_time);
 }
 
-Eigen::MatrixX2d State::get_opt_displacements(const int iteration)
+Eigen::MatrixX2d State::get_volume_grad()
+{
+    if (current_edge < 0 || volume_grad.rows() == 0) {
+        return Eigen::MatrixX2d::Zero(vertices.rows(), kDIM);
+    }
+
+    Eigen::MatrixXd grad = volume_grad.row(current_edge).transpose();
+    grad.resize(grad.rows() / kDIM, kDIM);
+
+    return grad;
+}
+
+const EdgeEdgeImpact& State::get_edge_impact()
+{
+    size_t ee_impact_id = size_t(edge_impact_map[current_edge]);
+    assert(ee_impact_id >= 0);
+    return ee_impacts[ee_impact_id];
+}
+
+Eigen::MatrixX2d State::get_opt_vertex_at_time()
+{
+    return vertices + get_opt_displacements() * double(current_opt_time);
+}
+
+Eigen::MatrixX2d State::get_opt_displacements()
 {
     auto displ = opt_results.x;
-    if (iteration >= 0 && u_history.size() > 0) {
-        opt_iteration %= u_history.size();
-        displ = u_history[size_t(opt_iteration)];
+    if (current_opt_iteration >= 0 && u_history.size() > 0) {
+        current_opt_iteration %= u_history.size();
+        displ = u_history[size_t(current_opt_iteration)];
     }
     return displ;
 }
 
-double State::get_opt_functional(const int iteration)
+Eigen::MatrixX2d State::get_opt_volume_grad()
+{
+    if (current_edge < 0 || current_opt_iteration < 0
+        || jac_g_history.size() == 0) {
+        return Eigen::MatrixX2d::Zero(vertices.rows(), kDIM);
+    }
+    auto& grad_volume = jac_g_history[size_t(current_opt_iteration)];
+    Eigen::MatrixXd grad = grad_volume.row(current_edge).transpose();
+    grad.resize(grad.rows() / kDIM, kDIM);
+
+    return grad;
+}
+
+Eigen::VectorXd State::get_opt_volume()
+{
+    if (current_opt_iteration < 0 || gsum_history.size() == 0) {
+        return Eigen::VectorXd::Zero(edges.rows());
+    } else {
+        return g_history[size_t(current_opt_iteration)];
+    }
+}
+
+double State::get_opt_functional()
 {
     auto fun = opt_results.minf;
-    if (iteration >= 0 && f_history.size() > 0) {
-        opt_iteration %= f_history.size();
-        fun = f_history[size_t(opt_iteration)];
+    if (current_opt_iteration >= 0 && f_history.size() > 0) {
+        current_opt_iteration %= f_history.size();
+        fun = f_history[size_t(current_opt_iteration)];
     }
     return fun;
 }
-
-void State::save_optimization(std::string filename)
-{
-    io::write_opt_results(
-        filename, opt_results, u_history, f_history, g_history);
-}
-
-void State::load_optimization(std::string filename)
-{
-    io::read_opt_results(
-        filename, opt_results, u_history, f_history, g_history);
-
-    opt_iteration = -1;
-    opt_time = 1.0;
-}
-
 } // namespace ccd

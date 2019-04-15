@@ -1,8 +1,35 @@
 ﻿#include "viewer.hpp"
 
+#include <logger.hpp>
+
 #define CCD_IM_ARRAYSIZE(_ARR) (int(sizeof(_ARR) / sizeof(*_ARR)))
 
 namespace ccd {
+
+/**
+ * @brief double_color_edit: util function to draw a colorwheel
+ * @param label
+ * @param color
+ */
+bool double_color_edit(const char* label, Eigen::RowVector3d& color)
+{
+    Eigen::Vector3f color_f = color.cast<float>();
+    bool changed = false;
+    if (ImGui::ColorEdit3(label, color_f.data(),
+            ImGuiColorEditFlags_NoInputs
+                | ImGuiColorEditFlags_PickerHueWheel)) {
+        color = color_f.cast<double>();
+        changed = true;
+    }
+    return changed;
+}
+
+void color_button()
+{
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5, 0.0, 0.0, 1.0));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.0, 0.0, 1.0));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0, 0.0, 0.0, 1.0));
+}
 
 void ViewerMenu::draw_menu()
 {
@@ -21,34 +48,25 @@ void ViewerMenu::draw_menu()
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
 
     draw_io();
-    draw_edit_modes();
-    draw_ui_settings();
+
+    ImGui::Separator();
+    ImGui::Separator();
     draw_ccd_steps();
 
+    ImGui::Separator();
+    ImGui::Separator();
+    draw_optimization();
+    draw_optimization_results();
+
+    ImGui::Separator();
+    ImGui::Separator();
+    draw_edit_modes();
     ImGui::PopItemWidth();
     ImGui::End();
 
     // ---------------------------------------------------------------------------------
     ImGui::SetNextWindowPos(
         ImVec2(menu_width + 10.0f, 0.0f), ImGuiSetCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
-    ImGui::SetNextWindowSizeConstraints(
-        ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
-    bool _opt_menu_visible = true;
-
-    ImGui::Begin("Optimization", &_opt_menu_visible,
-        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
-
-    draw_optimization();
-    draw_optimization_results();
-
-    ImGui::PopItemWidth();
-    ImGui::End();
-
-    // ---------------------------------------------------------------------------------
-    ImGui::SetNextWindowPos(
-        ImVec2(2 * menu_width + 10.0f, 0.0f), ImGuiSetCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(800.0f, 50.0f), ImGuiSetCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(
         ImVec2(200.0f, 30.0f), ImVec2(800.0f, -1.0f));
@@ -62,8 +80,116 @@ void ViewerMenu::draw_menu()
     ImGui::TextColored(last_action_success ? color_ok : color_error, "%s",
         last_action_message.c_str());
     ImGui::End();
+
+    // ---------------------------------------------------------------------------------
+    float legends_width = 250.f * menu_scaling();
+    ImGui::SetNextWindowPos(
+        ImVec2(ImGui::GetIO().DisplaySize.x - legends_width, 0.0f),
+        ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(
+        ImVec2(200.0f, 30.0f), ImVec2(legends_width, -1.0f));
+    bool _colors_menu_visible = true;
+
+    ImGui::Begin("UI", &_colors_menu_visible,
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
+    draw_legends();
+    ImGui::End();
 }
 
+// //////////////////////////////////////////////////////////////////////////
+// LEGENDS MENU
+// //////////////////////////////////////////////////////////////////////////
+void ViewerMenu::draw_legends()
+{
+    float slider_width = ImGui::GetWindowWidth() * 0.25f;
+    // ------------------------------------------------------------------
+    // EDGES
+    // ------------------------------------------------------------------
+    {
+
+        ImGui::Checkbox(
+            "##edges-UI", &viewer->data_list[edges_data_id].show_overlay);
+        ImGui::SameLine();
+        if (double_color_edit("edge##UI", color_edge)) {
+            recolor_edges();
+        }
+        ImGui::SameLine();
+        ImGui::PushItemWidth(slider_width);
+        float point_size
+            = viewer->data_list[edges_data_id].point_size / pixel_ratio();
+        if (ImGui::SliderFloat(
+                "##edges_scaling", &point_size, 0.00f, 10.0f, "%1.f")) {
+            viewer->data_list[edges_data_id].point_size
+                = point_size * pixel_ratio();
+        }
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+        ImGui::Checkbox("vertex-id##edges-UI",
+            &viewer->data_list[edges_data_id].show_vertid);
+    }
+    // ------------------------------------------------------------------
+    // DISPL
+    // ------------------------------------------------------------------
+    {
+        ImGui::Checkbox(
+            "##displ-UI", &viewer->data_list[displ_data_id].show_overlay);
+        ImGui::SameLine();
+        if (double_color_edit("displ##UI", color_displ)) {
+            recolor_displacements();
+        }
+        ImGui::SameLine();
+        ImGui::PushItemWidth(slider_width);
+        float point_size
+            = viewer->data_list[displ_data_id].point_size / pixel_ratio();
+        if (ImGui::SliderFloat(
+                "##displ_point_scaling", &point_size, 0.00f, 10.0f, "%1.f")) {
+            viewer->data_list[displ_data_id].point_size
+                = point_size * pixel_ratio();
+        }
+        ImGui::PopItemWidth();
+    }
+    // ------------------------------------------------------------------
+    // GRAD
+    // ------------------------------------------------------------------
+    {
+
+        ImGui::Checkbox(
+            "##grad-UI", &viewer->data_list[gradient_data_id].show_overlay);
+        ImGui::SameLine();
+        if (double_color_edit("grad##UI", color_grad)) {
+            recolor_grad_volume();
+        }
+        ImGui::SameLine();
+        ImGui::PushItemWidth(slider_width);
+        if (ImGui::SliderFloat(
+                "##grad_scaling", &state.grad_scaling, 0.00f, 5.0f, "%1.f")) {
+            redraw_grad_volume(state.use_opt_gradient);
+        }
+        ImGui::PopItemWidth();
+    }
+
+    // ------------------------------------------------------------------
+    // OPT DISPL
+    // ------------------------------------------------------------------
+    {
+        ImGui::Checkbox("##opt displ-UI",
+            &viewer->data_list[opt_displ_data_id].show_overlay);
+        ImGui::SameLine();
+        if (double_color_edit("opt displ##UI", color_opt_displ)) {
+            recolor_opt_displacements();
+        }
+    }
+    ImGui::Separator();
+    if (double_color_edit("selection##UI", color_sl)) {
+        recolor_edges();
+        recolor_displacements();
+    };
+}
+
+// //////////////////////////////////////////////////////////////////////////
+// IO MENU
+// //////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_io()
 {
     // Scene
@@ -80,13 +206,9 @@ void ViewerMenu::draw_io()
     }
 }
 
-void color_button()
-{
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5, 0.0, 0.0, 1.0));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.0, 0.0, 1.0));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0, 0.0, 0.0, 1.0));
-}
-
+// //////////////////////////////////////////////////////////////////////////
+// EDIT MODE
+// //////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_edit_modes()
 {
     if (ImGui::CollapsingHeader("Edit Mode", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -102,7 +224,11 @@ void ViewerMenu::draw_edit_modes()
             char buf[100];
             sprintf(buf, "%s##Edit", ViewerEditModeNames[i].c_str());
             if (ImGui::Button(buf, ImVec2((w - p) / 2.f, 0))) {
-                edit_mode = ViewerEditModeAll[i];
+                if (edit_mode == ViewerEditModeAll[i]) {
+                    edit_mode = none;
+                } else {
+                    edit_mode = ViewerEditModeAll[i];
+                }
             }
             if (needs_pop)
                 ImGui::PopStyleColor(3);
@@ -111,47 +237,24 @@ void ViewerMenu::draw_edit_modes()
             }
         }
     }
+
     if (ImGui::Button("Connect##Edit", ImVec2(-1, 0))) {
         connect_selected_vertices();
     }
 }
 
-void ViewerMenu::draw_ui_settings()
-{
-    if (ImGui::CollapsingHeader(
-            "UI Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
-
-        ImGui::Checkbox(
-            "show surface", &(viewer->data_list[surface_data_id].show_overlay));
-
-        ImGui::Checkbox("show vertex id",
-            &(viewer->data_list[surface_data_id].show_vertid));
-        ImGui::InputFloat("point size ##surface",
-            &(viewer->data_list[surface_data_id].point_size));
-
-        ImGui::Checkbox("show displacements",
-            &(viewer->data_list[displ_data_id].show_overlay));
-        ImGui::InputFloat("point size ##displ",
-            &(viewer->data_list[displ_data_id].point_size));
-
-        ImGui::Checkbox(
-            "show volumes", &(viewer->data_list[volume_data_id].show_faces));
-        ImGui::Checkbox("show volumes border",
-            &(viewer->data_list[volume_data_id].show_lines));
-
-        ImGui::Checkbox("show gradient",
-            &(viewer->data_list[gradient_data_id].show_overlay));
-
-        if (ImGui::SliderFloat("time", &(state.time), 0.0, 1.0)) {
-            redraw_at_time();
-        }
-    }
-}
-
+// //////////////////////////////////////////////////////////////////////////
+// CCD STEPS
+// //////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_ccd_steps()
 {
+
     static int idx_detection_method = 0;
-    if (ImGui::CollapsingHeader("CCD Steps", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("CCD", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+        if (ImGui::SliderFloat("time", &(state.current_time), 0.0, 1.0)) {
+            redraw_at_time();
+        }
 
         if (ImGui::Combo("method##ccd", &idx_detection_method,
                 ccd::DetectionMethodNames,
@@ -159,38 +262,41 @@ void ViewerMenu::draw_ccd_steps()
             state.detection_method
                 = static_cast<ccd::DetectionMethod>(idx_detection_method);
         }
+
         ImGui::InputDouble("vol. epsilon", &state.volume_epsilon);
 
-        if (ImGui::Button("Detect EV Collisions", ImVec2(-1, 0))) {
-            detect_edge_vertex_collisions();
+        if (ImGui::Button("Run CCD", ImVec2(-1, 0))) {
+            compute_collisions();
         }
 
-        if (state.ev_impacts.size()) {
-            if (ImGui::InputInt(
-                    "VE Impact##ev_impact", &state.current_ev_impact)) {
-                goto_ev_impact(state.current_ev_impact);
-            }
-        }
         if (state.ee_impacts.size()) {
-            if (ImGui::InputInt("EE Impact##ee_impact", &state.current_edge)) {
-                goto_ee_impact(state.current_edge);
+            int current_edge = state.current_edge;
+            if (ImGui::InputInt("edge##ee_impact", &current_edge)) {
+                bool next = current_edge > state.current_edge;
+                state.current_edge = current_edge % state.edges.rows();
+                if (state.skip_no_impact_edge) {
+                    state.goto_following_collision_edge(next, /*opt=*/false);
+                }
+
+                redraw_grad_volume(/*opt_gradient=*/false);
             }
             ImGui::Checkbox("skip empty", &state.skip_no_impact_edge);
-        }
-        ImGui::Separator();
-
-        if (state.ev_impacts.size()) {
-            if (ImGui::Button("Compute Collision Volumes", ImVec2(-1, 0))) {
-                compute_collision_volumes();
-            }
+            ImGui::Text(
+                "||jac_j(i)|| = \t%.3g", state.get_volume_grad().norm());
         }
     }
-}
+} // namespace ccd
 
+// //////////////////////////////////////////////////////////////////////////
+// OPTIMIZATION
+// //////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_optimization()
 {
     int idx_optimization_method = state.solver_settings.method;
     int idx_qp_solver = state.solver_settings.qp_solver;
+    int idx_lcp_solver = state.solver_settings.lcp_solver;
+    int idx_ncp_update
+        = static_cast<int>(state.solver_settings.ncp_update_method);
 
     if (ImGui::CollapsingHeader(
             "Displacement Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -213,8 +319,29 @@ void ViewerMenu::draw_optimization()
             }
         }
 
+        if (state.solver_settings.method == opt::NCP) {
+
+            if (ImGui::Combo("LCP solver##opt", &idx_lcp_solver,
+                    ccd::opt::LCPSolverNames,
+                    CCD_IM_ARRAYSIZE(ccd::opt::LCPSolverNames))) {
+                state.solver_settings.lcp_solver
+                    = static_cast<ccd::opt::LCPSolver>(idx_lcp_solver);
+            }
+            if (ImGui::Combo("NCP Update##opt", &idx_ncp_update,
+                    ccd::opt::NcpUpdateNames,
+                    CCD_IM_ARRAYSIZE(ccd::opt::NcpUpdateNames))) {
+                state.solver_settings.ncp_update_method
+                    = static_cast<ccd::opt::NcpUpdate>(idx_ncp_update);
+            }
+        }
+
         ImGui::InputInt("max iter##opt", &state.solver_settings.max_iter);
-        ImGui::InputInt("verbosity##opt", &state.solver_settings.verbosity);
+        if (ImGui::InputInt(
+                "verbosity##opt", &state.solver_settings.verbosity)) {
+            if (state.solver_settings.verbosity > 0) {
+                spdlog::set_level(spdlog::level::debug);
+            }
+        }
 
         ImGui::Checkbox(
             "continue optimization##opt", &(state.reuse_opt_displacements));
@@ -224,62 +351,83 @@ void ViewerMenu::draw_optimization()
 
         if (ImGui::Button("Optimize##opt", ImVec2(-1, 0))) {
             optimize_displacements();
-            update_graph(
-                surface_data_id, state.get_opt_vertex_at_time(-1), state.edges);
         }
     }
 }
 
+// //////////////////////////////////////////////////////////////////////////
+// OPTIMIZATION RESULTS
+// //////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_optimization_results()
 {
-    if (ImGui::CollapsingHeader(
+    if (!ImGui::CollapsingHeader(
             "Opt Results", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (state.opt_results.finished) {
-            ImGui::BeginChild("Opt Results Detail",
-                ImVec2(ImGui::GetWindowContentRegionWidth() * 0.9f, 100),
-                false);
-            ImGui::Text("method = %s",
-                ccd::opt::OptimizationMethodNames[state.opt_results.method]);
-            ImGui::Text(
-                "energy = %.3g", state.get_opt_functional(state.opt_iteration));
+        return;
+    }
+    if (state.opt_results.finished) {
+        // -------------------------------------------------------------------
+        // DETAILS
+        // -------------------------------------------------------------------
+        ImGui::BeginChild("Opt Results Detail",
+            ImVec2(ImGui::GetWindowContentRegionWidth() * 0.9f, 100), false);
+        ImGui::Text("method = %s",
+            ccd::opt::OptimizationMethodNames[state.opt_results.method]);
+        ImGui::Text("energy = %.3g", state.get_opt_functional());
 
-            ImGui::Text("displacements");
-            Eigen::MatrixX2d disp
-                = state.get_opt_displacements(state.opt_iteration);
-            ImGui::Columns(2, /*id=*/nullptr, /*border=*/false);
-            for (uint i = 0; i < disp.rows(); i++) {
-                ImGui::Text("%.3g", disp(i, 0));
-                ImGui::NextColumn();
-                ImGui::Text("%.3g", disp(i, 1));
-                ImGui::NextColumn();
-            }
-            ImGui::Columns(1);
-            ImGui::EndChild();
+        ImGui::Text("displacements");
+        Eigen::MatrixX2d disp = state.get_opt_displacements();
+        ImGui::Columns(2, /*id=*/nullptr, /*border=*/false);
+        for (uint i = 0; i < disp.rows(); i++) {
+            ImGui::Text("%.3g", disp(i, 0));
+            ImGui::NextColumn();
+            ImGui::Text("%.3g", disp(i, 1));
+            ImGui::NextColumn();
+        }
+        ImGui::Columns(1);
+        ImGui::EndChild();
 
-            ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.7f);
-            if (ImGui::SliderFloat(
-                    "time##opt-results", &(state.opt_time), 0.0, 1.0)) {
-                redraw_at_opt_time();
-            }
-            ImGui::PopItemWidth();
-            if (state.u_history.size() > 0) {
-                if (ImGui::InputInt(
-                        "step##opt-results", &(state.opt_iteration), 1, 10)) {
-                    redraw_opt_displacements();
-                    redraw_at_opt_time();
-                }
-            }
+        // -------------------------------------------------------------------
+        // EXPLORE
+        // -------------------------------------------------------------------
+        ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.7f);
+        if (ImGui::SliderFloat(
+                "time##opt-results", &(state.current_opt_time), 0.0, 1.0)) {
+            redraw_at_opt_time();
+        }
+        ImGui::PopItemWidth();
+        if (state.u_history.size() > 0
+            && ImGui::InputInt("step##opt-results",
+                   &(state.current_opt_iteration), 1, 10)) {
+
+            redraw_opt_displacements();
+            redraw_grad_volume(/*opt_gradient=*/true);
+            redraw_at_opt_time();
         }
 
-        float w = ImGui::GetContentRegionAvailWidth();
-        float p = ImGui::GetStyle().FramePadding.x;
-        if (ImGui::Button("Load##opt-results", ImVec2((w - p) / 2.f, 0))) {
-            load_optimization();
+        int current_edge = state.current_edge;
+        if (ImGui::InputInt("edge##ee_opt", &current_edge)) {
+            bool next = current_edge > state.current_edge;
+            state.current_edge = current_edge % state.edges.rows();
+            if (state.skip_no_impact_edge) {
+                state.goto_following_collision_edge(next, /*opt=*/true);
+            }
+
+            redraw_grad_volume(/*opt_gradient=*/true);
         }
-        ImGui::SameLine(0, p);
-        if (ImGui::Button("Save##opt-results", ImVec2((w - p) / 2.f, 0))) {
-            save_optimization();
-        }
+        ImGui::Checkbox("skip empty##edge_opt", &state.skip_no_impact_edge);
+    }
+
+    // -------------------------------------------------------------------
+    // LOAD/SAVE
+    // -------------------------------------------------------------------
+    float w = ImGui::GetContentRegionAvailWidth();
+    float p = ImGui::GetStyle().FramePadding.x;
+    if (ImGui::Button("Load##opt-results", ImVec2((w - p) / 2.f, 0))) {
+        load_optimization();
+    }
+    ImGui::SameLine(0, p);
+    if (ImGui::Button("Save##opt-results", ImVec2((w - p) / 2.f, 0))) {
+        save_optimization();
     }
 }
 
