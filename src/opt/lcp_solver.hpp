@@ -7,12 +7,19 @@ namespace ccd {
 namespace opt {
 
     /**
-     *  We handle the LCP problem LCP(A, b), which seeks vectors
-     *  s and x which satisfy the following constraints
-     *      s = A * x + b
-     *      0 <= x \perp s >=0
+     * We handle the LCP problem LCP(A, b), which seeks vectors
+     * s and x which satisfy the following constraints
+     * \begin{align*}
+     *     s = A x + b \\\\
+     *     0 \leq x \perp s \geq 0
+     * \end{align*}
      */
-    enum LCPSolver { LCP_GAUSS_SEIDEL, LCP_MOSEK };
+    enum LCPSolver {
+        /// Solve the LCP using the Guass-Seidel method
+        LCP_GAUSS_SEIDEL,
+        /// Solve the LCP as a QP using Mosek
+        LCP_MOSEK
+    };
     static const char* LCPSolverNames[] = { "LCP_GAUSS_SEIDEL", "LCP_MOSEK" };
 
     bool lcp_solve(const Eigen::VectorXd& q, const Eigen::MatrixXd& N,

@@ -14,12 +14,14 @@ namespace opt {
 
     /**
      * @brief Method for updating candidate solution during NCP iterations
-     *  Update:
-     *      x_{i+1} = x_{i} + delta_x
+     *
+     * Update: \f$ x_{i+1} = x_{i} + \Delta x \f$
      */
     enum class NcpUpdate {
-        G_GRADIENT, ///> delta_x = A^{-1} jac_x(x_i)^T \alpha_i
-        LINEARIZED, ///> delta_x = A^{-1} jac_x(x_i)^T \alpha_i + A^{-1}b - x_i
+        /// \f$\Delta x = A^{-1} jac_x(x_i)^T \alpha_i\f$
+        G_GRADIENT,
+        /// \f$\Delta x = A^{-1} jac_x(x_i)^T \alpha_i + A^{-1}b - x_i\f$
+        LINEARIZED
     };
 
     static const char* NcpUpdateNames[] = { "G_GRADIENT", "LINEARIZED" };
@@ -41,7 +43,6 @@ namespace opt {
      * @param callback  : callback function called after each iteration
      * @param x         : the solution of the problem.
      * @param alpha     : the solution of the dual problem.
-
      */
     bool solve_ncp(const Eigen::SparseMatrix<double>& A,
         const Eigen::VectorXd& b,

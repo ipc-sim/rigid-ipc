@@ -78,6 +78,11 @@ namespace opt {
             return (x - u_);
         };
 
+        problem.hessian_f = [](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
+            throw NotImplementedError(
+                "Hessian of the objective is not implemented!");
+        };
+
         auto g
             = [V, E, volume_epsilon](const Eigen::MatrixXd& Uk,
                   const EdgeEdgeImpacts& ee_impacts,
@@ -128,8 +133,9 @@ namespace opt {
                 detect_collisions(V, Uk, E, ccd_detection_method,
                     new_ee_impacts, new_edge_impact_map);
                 jac_gx = jac_g(Uk, new_ee_impacts, new_edge_impact_map);
+            } else {
+                jac_gx = jac_g(Uk, ee_impacts, edge_impact_map);
             }
-            jac_gx = jac_g(Uk, ee_impacts, edge_impact_map);
 
 #ifdef WITH_DERIVATIVE_CHECK
             Eigen::MatrixXd fd_jac_gx;
@@ -144,6 +150,12 @@ namespace opt {
             }
 #endif
             return jac_gx;
+        };
+
+        problem.hessian_g
+            = [](const Eigen::VectorXd& x) -> std::vector<Eigen::MatrixXd> {
+            throw NotImplementedError(
+                "Hessian of the constraint is not implemented!");
         };
 #pragma clang diagnostic pop
     }

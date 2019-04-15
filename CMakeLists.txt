@@ -65,6 +65,10 @@ set(SRCFILES
 
     src/state.cpp
     src/logger.cpp
+
+    src/opt/barrier_newton_solver.cpp
+    src/ccd/collision_penalty_diff.cpp
+    src/opt/alternative_displacement_opt.cpp
 )
 
 set(TMPFILES

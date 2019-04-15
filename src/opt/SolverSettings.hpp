@@ -16,8 +16,7 @@ namespace opt {
      * @param iteration     : current iteration number
      */
     typedef std::function<void(const Eigen::VectorXd& x, const double obj_value,
-        const Eigen::VectorXd& dual, const double gamma, const int iteration
-        )>
+        const Eigen::VectorXd& dual, const double gamma, const int iteration)>
         callback_intermediate;
 
     /// @brief Methods available for non-linear constrained optimization.
@@ -31,13 +30,13 @@ namespace opt {
         NCP                     ///< @brief Nonlinear Complementarity Problem
     };
 
-    enum QPSolver {
-        OSQP, ///< @brief Use OSQP to solve the qudratic program.
-        MOSEK ///< @brief Use MOSEK to solve the qudratic program.
-    };
-
     static const char* OptimizationMethodNames[]
-        = { "MMA", "SLSQP", "IPOPT", "linearized const.", "NCP" };
+        = { "MMA", "SLSQP", "IPOPT", "Linearized Const.", "NCP" };
+
+    enum QPSolver {
+        OSQP, ///< @brief Use OSQP to solve the qudratic program
+        MOSEK ///< @brief Use MOSEK to solve the qudratic program
+    };
 
     static const char* QPSolverNames[] = { "OSQP", "MOSEK" };
 
@@ -45,7 +44,7 @@ namespace opt {
         OptimizationMethod method;   ///< @brief Optimization method to use
         QPSolver qp_solver;          ///< @brief Quadratic programming solver
         LCPSolver lcp_solver;        ///< @brief LCP solver
-        NcpUpdate ncp_update_method;
+        NcpUpdate ncp_update_method; ///< @brief Method to update NCP solution
         int verbosity;               ///< @brief Verbosity of output
         int max_iter;                ///< @brief Maximum number of iterations
         double relative_tolerance;   ///< @brief Relative tolerance for x

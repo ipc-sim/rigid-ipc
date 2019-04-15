@@ -8,65 +8,14 @@
 
 #include <autodiff/finitediff.hpp>
 #include <opt/barrier.hpp>
+#include <opt/barrier_newton_solver.hpp>
 #include <opt/newtons_method.hpp>
 
-using namespace ccd::opt;
-
-double test_func(const std::vector<double>& x, std::vector<double>& grad,
-    void* /* my_func_data */)
-{
-    Eigen::VectorXd X
-        = Eigen::Map<const Eigen::VectorXd>(x.data(), long(x.size()));
-    if (!grad.empty()) {
-        Eigen::VectorXd gradX = 2 * X;
-        assert(size_t(gradX.size()) == size_t(grad.size()));
-        for (int i = 0; i < int(grad.size()); i++) {
-            grad[size_t(i)] = gradX[i];
-        }
-    }
-    return X.squaredNorm();
-}
-
-TEST_CASE("Simple tests of NLOPT", "[opt][nlopt]")
-{
-    const int DIM = 10;
-    nlopt::opt opt(nlopt::LD_MMA, DIM);
-    std::vector<double> lb(DIM, -HUGE_VAL); // lower bounds
-    lb[0] = 1;
-    opt.set_lower_bounds(lb);
-    opt.set_min_objective(test_func, nullptr);
-    opt.set_xtol_rel(1e-12);
-    std::vector<double> x(DIM, 100); // some initial guess
-    double minf;                     // the minimum objective value, upon return
-    nlopt::result result = opt.optimize(x, minf);
-    CHECK(x[0] == Approx(1.0));
-    CHECK(minf == Approx(1.0));
-}
+using namespace ccd;
+using namespace opt;
 
 TEST_CASE("Test ϕ and its derivatives", "[opt][barrier]")
 {
-    std::function<double(double, double)> phi;
-    std::function<double(double, double)> phi_gradient;
-    std::function<double(double, double)> phi_hessian;
-    SECTION("Test spline_barrier")
-    {
-        phi = spline_barrier;
-        phi_gradient = spline_barrier_gradient;
-        phi_hessian = spline_barrier_hessian;
-    }
-    SECTION("Test log_barrier")
-    {
-        phi = log_barrier;
-        phi_gradient = log_barrier_gradient;
-        phi_hessian = log_barrier_hessian;
-    }
-    SECTION("Test hookean_barrier")
-    {
-        phi = hookean_barrier;
-        phi_gradient = hookean_barrier_gradient;
-        phi_hessian = hookean_barrier_hessian;
-    }
-
     // Will be used to obtain a seed for the random number engine
     std::random_device rd;
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
@@ -74,91 +23,193 @@ TEST_CASE("Test ϕ and its derivatives", "[opt][barrier]")
     std::uniform_real_distribution<double> dis(1e-8, 10);
     double s = dis(gen);
 
+    std::function<double(double)> phi;
+    std::function<double(double)> phi_gradient;
+    std::function<double(double)> phi_hessian;
+    SECTION("Test spline_barrier")
+    {
+        phi = [&s](double x) { return spline_barrier(x, s); };
+        phi_gradient = [&s](double x) { return spline_barrier_gradient(x, s); };
+        phi_hessian = [&s](double x) { return spline_barrier_hessian(x, s); };
+    }
+    SECTION("Test log_barrier")
+    {
+        phi = [&s](double x) { return log_barrier(x, s); };
+        phi_gradient = [&s](double x) { return log_barrier_gradient(x, s); };
+        phi_hessian = [&s](double x) { return log_barrier_hessian(x, s); };
+    }
+    SECTION("Test hookean_barrier")
+    {
+        phi = [&s](double x) { return hookean_barrier(x, s); };
+        phi_gradient
+            = [&s](double x) { return hookean_barrier_gradient(x, s); };
+        phi_hessian = [&s](double x) { return hookean_barrier_hessian(x, s); };
+    }
+
     Eigen::VectorXd x(1);
     dis = std::uniform_real_distribution<double>(1e-8, s - 0.1);
     x[0] = dis(gen);
 
     Eigen::VectorXd fgrad(1);
     ccd::finite_gradient(
-        x, [&phi, &s](const Eigen::VectorXd& x) { return phi(x[0], s); },
-        fgrad);
-    auto grad = phi_gradient(x[0], s);
-    CHECK(fgrad[0] == Approx(grad));
+        x, [&phi](const Eigen::VectorXd& x) { return phi(x[0]); }, fgrad);
+    Eigen::VectorXd grad = x.unaryExpr(phi_gradient);
+    CHECK(compare_gradient(fgrad, grad));
+
     ccd::finite_gradient(
         x,
-        [&phi_gradient, &s](
-            const Eigen::VectorXd& x) { return phi_gradient(x[0], s); },
-        fgrad, ccd::AccuracyOrder::EIGHTH);
-    auto hessian = phi_hessian(x[0], s);
-    CHECK(fgrad[0] == Approx(hessian));
+        [&phi_gradient](
+            const Eigen::VectorXd& x) { return phi_gradient(x[0]); },
+        fgrad);
+    Eigen::VectorXd hessian = x.unaryExpr(phi_hessian);
+    CHECK(compare_gradient(fgrad, hessian));
 }
 
-TEST_CASE("Simple tests of Newton's Method", "[opt]")
+TEST_CASE("Simple tests of Newton's Method", "[opt][newtons method]")
 {
-    auto f = [](const Eigen::VectorXd& x) { return x.squaredNorm(); };
-    auto gradient = [](const Eigen::VectorXd& x) { return 2 * x; };
-    auto hessian = [](const Eigen::VectorXd& x) {
-        return 2 * Eigen::MatrixXd::Identity(x.rows(), x.rows());
-    };
-    Eigen::VectorXd x;
-    SECTION("Dim = 1")
-    {
-        x = Eigen::VectorXd(1);
-        x << 100;
-    }
-    SECTION("Dim = 3")
-    {
-        x = Eigen::VectorXd(3);
-        x << 1, 2, 3;
-    }
-    SECTION("Dim = 10")
-    {
-        x = Eigen::VectorXd(10);
-        x << 1, 2, 3, 4, 5, 6, 7, 8, 9, 0;
-    }
-    auto no_constraint = [](const Eigen::VectorXd&) { return true; };
-    newtons_method(x, f, gradient, hessian, no_constraint);
-    CHECK(x.squaredNorm() == Approx(0).margin(1e-10));
-    CHECK(f(x) == Approx(0).margin(1e-10));
-}
+    // Setup problem
+    // -----------------------------------------------------------------
+    int num_vars = GENERATE(1, 10, 100), num_constraints = 0;
+    OptimizationProblem problem(num_vars, num_constraints);
+    problem.x0.setRandom();
 
-TEST_CASE("Simple tests of Newton's Method with inequlity constraints", "[opt]")
-{
-    auto f = [](const Eigen::VectorXd& x) { return x.squaredNorm(); };
-    auto f_gradient = [](const Eigen::VectorXd& x) { return 2 * x; };
-    auto f_hessian = [](const Eigen::VectorXd& x) {
+    problem.f = [](const Eigen::VectorXd& x) { return x.squaredNorm(); };
+    problem.grad_f = [](const Eigen::VectorXd& x) { return 2 * x; };
+    problem.hessian_f = [](const Eigen::VectorXd& x) {
         return 2 * Eigen::MatrixXd::Identity(x.rows(), x.rows());
     };
 
-    auto g = [](const Eigen::VectorXd& x) {
-        return x[0] - 1;
+    REQUIRE(problem.validate_problem());
+
+    SolverSettings settings;
+    OptimizationResults results = newtons_method(problem, settings);
+    REQUIRE(results.success);
+    CHECK(results.x.squaredNorm()
+        == Approx(0).margin(settings.absolute_tolerance));
+    CHECK(results.minf == Approx(0).margin(settings.absolute_tolerance));
+}
+
+TEST_CASE("Check barrier problem derivatives")
+{
+    // TODO: Generate a random problem and test the derivatives
+    int num_vars = GENERATE(1, 2, 5, 10), num_constraints = 1;
+    OptimizationProblem problem(num_vars, num_constraints);
+
+    problem.f = [](const Eigen::VectorXd& x) { return x.squaredNorm() / 2; };
+    problem.grad_f = [](const Eigen::VectorXd& x) { return x; };
+    problem.hessian_f = [](const Eigen::VectorXd& x) {
+        return Eigen::MatrixXd::Identity(x.rows(), x.rows());
     };
-    auto g_gradient = [](Eigen::VectorXd x) {
-        Eigen::VectorXd dg = Eigen::VectorXd::Zero(x.rows());
-        dg[0] = 1;
+
+    problem.g = [&problem](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+        Eigen::VectorXd gx(problem.num_constraints);
+        gx.setConstant(problem.f(x));
+        return gx;
+    };
+    problem.jac_g = [&problem](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
+        return problem.grad_f(x).transpose();
+    };
+    problem.hessian_g = [&problem](const Eigen::VectorXd& x) {
+        std::vector<Eigen::MatrixXd> hessian;
+        for (long i = 0; i < problem.num_constraints; i++) {
+            hessian.push_back(problem.hessian_f(x));
+        }
+        return hessian;
+    };
+
+    problem.x_lower.setConstant(GENERATE(double(NO_LOWER_BOUND), -2.0));
+    problem.x_upper.setConstant(GENERATE(double(NO_UPPER_BOUND), 2.0));
+    problem.g_lower.setConstant(GENERATE(double(NO_LOWER_BOUND), 0.5));
+    problem.g_upper.setConstant(GENERATE(double(NO_UPPER_BOUND), 4.0));
+
+    REQUIRE(problem.validate_problem());
+
+    OptimizationProblem barrier_problem;
+    double epsilon = GENERATE(1.0, 0.5, 1e-1, 5e-2);
+    setup_barrier_problem(problem, epsilon, barrier_problem);
+    REQUIRE(barrier_problem.validate_problem());
+
+    Eigen::VectorXd x(num_vars);
+    x.setConstant(GENERATE(-1.0, 1.0) * GENERATE(1e-1, 1.0, 2.0 - 1e-3, 4.0));
+
+    // If the function evaluates to infinity then the finite differences will
+    // not work. I assume in the definition of the barrier gradient that
+    // d/dx ∞ = 0.
+    if (!isinf(barrier_problem.f(x))) {
+        // Use a higher order finite difference method because the function near
+        // the boundary becomes very non-linear. This problem worsens as the ϵ
+        // of the boundary gets smaller.
+
+        // Test ∇f
+        Eigen::VectorXd finite_grad(barrier_problem.num_vars);
+        finite_gradient(
+            x, barrier_problem.f, finite_grad, AccuracyOrder::SECOND);
+        Eigen::VectorXd analytic_grad = barrier_problem.grad_f(x);
+        CHECK(compare_gradient(finite_grad, analytic_grad));
+
+        // Test ∇²f
+        Eigen::MatrixXd finite_hessian(
+            barrier_problem.num_vars, barrier_problem.num_vars);
+        finite_jacobian(
+            x, barrier_problem.grad_f, finite_hessian, AccuracyOrder::SECOND);
+        Eigen::MatrixXd analytic_hessian = barrier_problem.hessian_f(x);
+        CHECK(compare_jacobian(finite_hessian, analytic_hessian));
+
+        CAPTURE(x, problem.x_lower, problem.x_upper, problem.g(x),
+            problem.g_lower, problem.g_upper, epsilon, barrier_problem.f(x),
+            finite_grad, analytic_grad, finite_hessian, analytic_hessian);
+    }
+}
+
+TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
+    "[opt][barrier]")
+{
+    // Setup problem
+    // -----------------------------------------------------------------
+    int num_vars = 1, num_constraints = num_vars;
+    OptimizationProblem constrained_problem(num_vars, num_constraints);
+
+    SECTION("Constraint is in g(x)") { constrained_problem.g_lower(0) = 1; }
+    SECTION("Constraint is in x_lower") { constrained_problem.x_lower(0) = 1; }
+
+    constrained_problem.f
+        = [](const Eigen::VectorXd& x) { return x.squaredNorm() / 2; };
+    constrained_problem.grad_f = [](const Eigen::VectorXd& x) { return x; };
+    constrained_problem.hessian_f = [](const Eigen::VectorXd& x) {
+        return Eigen::MatrixXd::Identity(x.rows(), x.rows());
+    };
+
+    constrained_problem.g = [](const Eigen::VectorXd& x) {
+        Eigen::VectorXd gx = Eigen::VectorXd::Zero(x.rows());
+        gx(0) = x(0);
+        return gx;
+    };
+    constrained_problem.jac_g = [](const Eigen::VectorXd& x) {
+        Eigen::VectorXd dg = Eigen::MatrixXd::Zero(x.rows(), x.rows());
+        dg(0, 0) = 1;
         return dg;
     };
-    auto g_hessian = [](Eigen::VectorXd x) {
-        return Eigen::MatrixXd::Zero(x.rows(), x.rows());
+    constrained_problem.hessian_g = [](const Eigen::VectorXd& x) {
+        std::vector<Eigen::MatrixXd> hessian;
+        for (long i = 0; i < x.rows(); i++) {
+            hessian.push_back(Eigen::MatrixXd::Zero(x.rows(), x.rows()));
+        }
+        return hessian;
     };
 
+    REQUIRE(constrained_problem.validate_problem());
+
+    OptimizationProblem unconstrained_problem;
     double s = 1e-6;
-    auto E = [&f, &g, &s](const Eigen::VectorXd& x) {
-        return f(x) + spline_barrier(g(x), s);
-    };
-    auto E_gradient = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-        return f_gradient(x) + spline_barrier_gradient(g(x), s) * g_gradient(x);
-    };
-    auto E_hessian = [&](const Eigen::VectorXd& x) -> Eigen::MatrixXd  {
-        return f_hessian(x)
-            + spline_barrier_hessian(g(x), s) * g_gradient(x)
-            * g_gradient(x).transpose()
-            + spline_barrier_gradient(g(x), s) * g_hessian(x);
-    };
+    setup_barrier_problem(constrained_problem, s, unconstrained_problem);
 
-    Eigen::VectorXd x(1);
-    x[0] = 5;
-    newtons_method(x, E, E_gradient, E_hessian,
-        [&g](const Eigen::VectorXd& x) { return g(x) >= 0; });
-    CHECK(x[0] == Approx(1.0));
+    unconstrained_problem.x0(0) = 5;
+
+    REQUIRE(unconstrained_problem.validate_problem());
+
+    SolverSettings settings;
+    OptimizationResults results
+        = newtons_method(unconstrained_problem, settings);
+    REQUIRE(results.success);
+    CHECK(results.x(0) == Approx(1.0).margin(settings.absolute_tolerance));
 }

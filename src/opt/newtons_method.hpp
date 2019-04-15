@@ -7,6 +7,10 @@
 
 #include <Eigen/Core>
 
+#include <opt/OptimizationProblem.hpp>
+#include <opt/OptimizationResults.hpp>
+#include <opt/SolverSettings.hpp>
+
 namespace ccd {
 
 /**
@@ -37,54 +41,35 @@ namespace opt {
         const std::function<bool(const Eigen::VectorXd&)>& constraint);
 
     /**
-     * @brief Perform a single step of Newton's Method to minimize a function
-     * \f$f(x)\f$.
+     * @brief Perform a single step of Newton's Method to minimize the
+     *        objective, \f$f(x)\f$, of the problem unconstrained.
      *
-     * @param[in, out] x The starting value for optimization and the place to
-     * store the resulting updated value.
-     * @param[in] f A function \f$f: \mathbb{R}^n \rightarrow \mathbb{R}\f$ to
-     * minimize.
-     * @param[in] gradient A function to compute the gradient of \f$f(x)\f$,
-     * \f$\nabla f: \mathbb{R}^n \rightarrow \mathbb{R}^n\f$
-     * @param[in] hessian A function to compute the hessian of \f$f(x)\f$,
-     * \f$H(f): \mathbb{R}^n \rightarrow \mathbb{R}^{n \times n}\f$
-     * @param[in] constraint A boolean function to check if the constraints are
-     * satisfied.
-     * @param[in] mu A small value to add to the hessian diagonal to prevent it
-     * from being singular.
-     * @param epsilon A small value to check for close enough to zero.
-     * @return The squared norm of the gradient at x.
+     * @param[in] problem The optimization problem to minimize unconstrained.
+     * @param[in] mu      A small value to add to the hessian diagonal to
+     *                    prevent it from being singular.
+     * @param[in, out] x  The starting value for optimization and the place to
+     *                    store the resulting updated value.
+     *
+     * @return A boolean for if the step was successful.
      */
-    double newtons_method_step(Eigen::VectorXd& x,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& gradient,
-        const std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>& hessian,
-        const std::function<bool(const Eigen::VectorXd&)>& constraint,
-        double mu = 1e-5, double epsilon = 1e-12);
+    bool newtons_method_step(const OptimizationProblem& problem,
+        Eigen::VectorXd& x, const double mu = 1e-5);
 
     /**
-     * @brief Performa a Newton's Method to minimize a function \f$f(x)\f$.
+     * @brief Perform Newton's Method to minimize the objective, \f$f(x)\f$, of
+     * the problem unconstrained.
      *
-     * @param[in, out] x The starting value for optimization and the place to
-     * store the resulting minimum value.
-     * @param[in] f A function \f$f: \mathbb{R}^n \rightarrow \mathbb{R}\f$ to
-     * minimize.
-     * @param[in] gradient A function to compute the gradient of \f$f(x)\f$,
-     * \f$\nabla f: \mathbb{R}^n \rightarrow \mathbb{R}^n\f$
-     * @param[in] hessian A function to compute the hessian of \f$f(x)\f$,
-     * \f$H(f): \mathbb{R}^n \rightarrow \mathbb{R}^{n \times n}\f$
-     * @param[in] constraint A boolean function to check if the constraints are
-     * satisfied.
-     * @param[in] mu A small value to add to the hessian diagonal to prevent it
-     * from being singular.
-     * @param[in] epsilon A small value to check for close enough to zero.
+     * @param[in] problem  The optimization problem to minimize unconstrained.
+     * @param[in] settings The settings of the optimization (tolerances and
+     *                     maximum number of iterations).
+     * @param[in] mu       A small value to add to the hessian diagonal to
+     *                     prevent it from being singular.
+     *
+     * @return The results of the optimization including the minimizer, minimum,
+     *         and if the optimization was successful.
      */
-    void newtons_method(Eigen::VectorXd& x,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& gradient,
-        const std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>& hessian,
-        const std::function<bool(const Eigen::VectorXd&)>& constraint,
-        double mu = 1e-5, double epsilon = 1e-12, int max_iter = 1000);
+    OptimizationResults newtons_method(const OptimizationProblem& problem,
+        const SolverSettings& settings, const double mu = 1e-5);
 
 } // namespace opt
 } // namespace ccd

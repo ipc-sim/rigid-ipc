@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <vector>
 
 namespace ccd {
 namespace opt {
@@ -15,11 +16,19 @@ namespace opt {
     ///@brief function type for gradient of functional \nabla f(x)
     typedef std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>
         callback_grad_f;
+    ///@brief function type for hessian of functional \f$\nabla^2 f(x)\f$
+    typedef std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>
+        callback_hessian_f;
     ///@brief function type for constraints g(x)
     typedef std::function<Eigen::VectorXd(const Eigen::VectorXd& x)> callback_g;
     ///@brief function type for jacobian of constraints \nabla g(x)
     typedef std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>
         callback_jac_g;
+    ///@brief function type for direvative of the jacobian of constraints
+    /// \f$\nabla^2 g(x)\f$
+    typedef std::function<std::vector<Eigen::MatrixXd>(
+        const Eigen::VectorXd& x)>
+        callback_hessian_g;
 
     /**
      *  Defines the optimization problems of the form
@@ -39,11 +48,17 @@ namespace opt {
         Eigen::VectorXd g_upper; ///< @brief Upper bound of the constraint
         callback_f f;            ///< @brief Objective function
         callback_grad_f grad_f;  ///< @brief Gradient of the objective function
-        callback_g g;            ///< @brief Constraint function
-        callback_jac_g jac_g;    ///< @brief Jacobian of the constraint function
+        callback_hessian_f
+            hessian_f;        ///< @brief Hessian of the objective function
+        callback_g g;         ///< @brief Constraint function
+        callback_jac_g jac_g; ///< @brief Jacobian of the constraint function
+        callback_hessian_g
+            hessian_g; ///< @brief Hessian of the constraint function
 
         /// @brief Default constructor
         OptimizationProblem();
+        /// @brief Resize fields accordingly
+        OptimizationProblem(int num_vars, int num_constraints);
         /// @brief Construct an optimization problem
         OptimizationProblem(const Eigen::VectorXd& x0, const callback_f f,
             const callback_grad_f grad_f,
@@ -51,6 +66,17 @@ namespace opt {
             const Eigen::VectorXd& x_upper = Eigen::VectorXd(),
             const int num_constraints = 0, const callback_g& g = nullptr,
             const callback_jac_g& jac_g = nullptr,
+            const Eigen::VectorXd& g_lower = Eigen::VectorXd(),
+            const Eigen::VectorXd& g_upper = Eigen::VectorXd());
+        /// @brief Construct an optimization problem with hessians
+        OptimizationProblem(const Eigen::VectorXd& x0, const callback_f f,
+            const callback_grad_f grad_f,
+            const callback_hessian_f& hessian_f = nullptr,
+            const Eigen::VectorXd& x_lower = Eigen::VectorXd(),
+            const Eigen::VectorXd& x_upper = Eigen::VectorXd(),
+            const int num_constraints = 0, const callback_g& g = nullptr,
+            const callback_jac_g& jac_g = nullptr,
+            const callback_hessian_g& hessian_g = nullptr,
             const Eigen::VectorXd& g_lower = Eigen::VectorXd(),
             const Eigen::VectorXd& g_upper = Eigen::VectorXd());
         /// @brief Check that the problem is valid and initalized

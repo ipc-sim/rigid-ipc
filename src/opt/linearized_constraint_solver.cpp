@@ -27,7 +27,7 @@ namespace opt {
         Eigen::Matrix<double, Eigen::Dynamic, 1>& u, Eigen::MatrixXd& x,
         const SolverSettings& settings)
     {
-        int n = q.rows(), m = l.rows();
+        int n = int(q.rows()), m = int(l.rows());
         assert(P.rows() == n && P.cols() == n);
         assert(A.rows() == m && A.cols() == n);
         assert(u.rows() == m);

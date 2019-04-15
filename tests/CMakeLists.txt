@@ -11,9 +11,12 @@ set(test_sources
 
     # opt/test_displacements_opt.cpp
     opt/test_newton_solver.cpp
+    opt/test_nlopt.cpp
     opt/test_ipopt_solver.cpp
     opt/test_osqp.cpp
     opt/test_mosek.cpp
+
+    opt/test_alternative_displacements_opt.cpp
 )
 
 add_executable(unit_tests ${test_sources})

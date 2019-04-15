@@ -1,3 +1,4 @@
+#include <ccd/not_implemented_error.hpp>
 #include <opt/OptimizationProblem.hpp>
 
 namespace ccd {
@@ -46,11 +47,53 @@ namespace opt {
         , x_upper()
         , g_lower()
         , g_upper()
-        , f()
-        , grad_f()
-        , g()
-        , jac_g()
     {
+        this->f = [](const Eigen::VectorXd&) -> double {
+            throw NotImplementedError("Objective function not implemented!");
+        };
+        this->grad_f = [](const Eigen::VectorXd&) -> Eigen::VectorXd {
+            throw NotImplementedError(
+                "Gradient of the objective function not implemented!");
+        };
+        this->hessian_f = [](const Eigen::VectorXd&) -> Eigen::MatrixXd {
+            throw NotImplementedError(
+                "Hessian of the objective function not implemented!");
+        };
+        this->g = [](const Eigen::VectorXd&) -> Eigen::VectorXd {
+            throw NotImplementedError("Constraint function not implemented!");
+        };
+        this->jac_g = [](const Eigen::VectorXd&) -> Eigen::MatrixXd {
+            throw NotImplementedError(
+                "Jacobian of the constraint function not implemented!");
+        };
+        this->hessian_g
+            = [](const Eigen::VectorXd&) -> std::vector<Eigen::MatrixXd> {
+            throw NotImplementedError("Second derivative of the constraint "
+                                      "function not implemented!");
+        };
+    }
+
+    // Resize fields accordingly
+    OptimizationProblem::OptimizationProblem(int num_vars, int num_constraints)
+        : OptimizationProblem()
+    {
+        this->num_vars = num_vars;
+        this->num_constraints = num_constraints;
+
+        this->x0.resize(num_vars);
+        this->x0.setConstant(0.0);
+
+        this->x_lower.resize(this->num_vars);
+        x_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
+
+        this->x_upper.resize(this->num_vars);
+        x_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
+
+        this->g_lower.resize(this->num_constraints);
+        g_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
+
+        this->g_upper.resize(this->num_constraints);
+        g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
     }
 
     OptimizationProblem::OptimizationProblem(const Eigen::VectorXd& x0,
@@ -59,18 +102,31 @@ namespace opt {
         const int num_constraints, const callback_g& g,
         const callback_jac_g& jac_g, const Eigen::VectorXd& g_lower,
         const Eigen::VectorXd& g_upper)
-        : num_vars(int(x0.rows()))
-        , num_constraints(num_constraints)
-        , x0(x0)
-        , x_lower(x_lower)
-        , x_upper(x_upper)
-        , g_lower(g_lower)
-        , g_upper(g_upper)
-        , f(f)
-        , grad_f(grad_f)
-        , g(g)
-        , jac_g(jac_g)
+        : OptimizationProblem(int(x0.rows()), num_constraints)
     {
+        this->x0 = x0;
+        this->x_lower = x_lower;
+        this->x_upper = x_upper;
+        this->g_lower = g_lower;
+        this->g_upper = g_upper;
+        this->f = f;
+        this->grad_f = grad_f;
+        this->g = g;
+        this->jac_g = jac_g;
+    }
+
+    OptimizationProblem::OptimizationProblem(const Eigen::VectorXd& x0,
+        const callback_f f, const callback_grad_f grad_f,
+        const callback_hessian_f& hessian_f, const Eigen::VectorXd& x_lower,
+        const Eigen::VectorXd& x_upper, const int num_constraints,
+        const callback_g& g, const callback_jac_g& jac_g,
+        const callback_hessian_g& hessian_g, const Eigen::VectorXd& g_lower,
+        const Eigen::VectorXd& g_upper)
+        : OptimizationProblem(x0, f, grad_f, x_lower, x_upper, num_constraints,
+            g, jac_g, g_lower, g_upper)
+    {
+        this->hessian_f = hessian_f;
+        this->hessian_g = hessian_g;
     }
 
 } // namespace opt

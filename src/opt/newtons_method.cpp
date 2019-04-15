@@ -9,7 +9,6 @@
 #include <opt/newtons_method.hpp>
 
 namespace ccd {
-
 namespace opt {
 
     bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
@@ -43,40 +42,34 @@ namespace opt {
         return 0.0;
     }
 
-    // Perform a single step of Newton's Method to minimize a function f(x).
-    double newtons_method_step(Eigen::VectorXd& x,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& gradient,
-        const std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>& hessian,
-        const std::function<bool(const Eigen::VectorXd&)>& constraint,
-        double mu, double epsilon)
+    // Perform a single step of Newton's Method to minimize the objective
+    // unconstrained.
+    bool newtons_method_step(
+        const OptimizationProblem& problem, Eigen::VectorXd& x, const double mu)
     {
-        Eigen::VectorXd g = gradient(x);
-        Eigen::MatrixXd H = hessian(x);
+        Eigen::VectorXd g = problem.grad_f(x);
+        Eigen::MatrixXd H = problem.hessian_f(x);
         H.diagonal().array() += mu;
         Eigen::VectorXd delta_x = H.lu().solve(-g);
-        double gamma = constrained_line_search(x, delta_x, f, constraint);
-        if (gamma <= epsilon)
-            return 0; // TODO: Figure out a better way to return this case.
+        double gamma;
+        if (!line_search(x, delta_x, problem.f, problem.f(x), gamma))
+            return false;     // Newton step unsuccessful
         x += gamma * delta_x; // Store the return value for x_{n+1} in x
-        assert(constraint(x));
-        return g.squaredNorm();
+        return true;          // Newton step successful
     }
 
-    // Performa a Newton's Method to minimize a function f(x).
-    void newtons_method(Eigen::VectorXd& x,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& gradient,
-        const std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>& hessian,
-        const std::function<bool(const Eigen::VectorXd&)>& constraint,
-        double mu, double epsilon, int max_iter)
+    // Performa Newton's Method to minimize the objective unconstrained.
+    OptimizationResults newtons_method(const OptimizationProblem& problem,
+        const SolverSettings& settings, const double mu)
     {
+        Eigen::VectorXd x = problem.x0;
+
         int i = 0;
-        while (i++ < max_iter
-            && newtons_method_step(
-                   x, f, gradient, hessian, constraint, mu, epsilon)
-                > epsilon)
+        while (i++ < settings.max_iter && newtons_method_step(problem, x, mu)
+            && problem.grad_f(x).squaredNorm() > settings.absolute_tolerance)
             ;
+
+        return OptimizationResults(x, problem.f(x), true);
     }
 
 } // namespace opt
