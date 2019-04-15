@@ -49,6 +49,8 @@ namespace opt {
         alpha_i.resize(num_constraints);
         alpha_i.setZero();
 
+        callback(xi, alpha_i, 1.0);
+
         // 2. solve constraints with successive linearizations
         for (int i = 0; i < max_iter; ++i) {
             // Step 2 ends when all constraints are satisfied
@@ -106,7 +108,7 @@ namespace opt {
             // 2.3 Update:
             xi = xi + delta_x * gamma;
             g_xi = g(xi);
-            jac_g(xi);
+            jac_g_xi = jac_g(xi);
 
             callback(xi, alpha_i, gamma);
         }

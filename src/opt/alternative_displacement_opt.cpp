@@ -2,14 +2,28 @@
 // constraint.
 #include <opt/alternative_displacement_opt.hpp>
 
+#include <logger.hpp>
+
 #include <autodiff/finitediff.hpp>
 #include <ccd/collision_penalty_diff.hpp>
-#include <logger.hpp>
+#include <ccd/prune_impacts.hpp>
 #include <opt/barrier_newton_solver.hpp>
 
 namespace ccd {
 namespace opt {
     namespace alt {
+
+        void detect_collisions(const Eigen::MatrixX2d& V,
+            const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+            const ccd::DetectionMethod detection_method,
+            EdgeEdgeImpacts& ee_impacts, Eigen::VectorXi& edge_impact_map)
+        {
+            EdgeVertexImpacts ev_impacts;
+            ccd::detect_edge_vertex_collisions(
+                V, U, E, ev_impacts, detection_method);
+            convert_edge_vertex_to_edge_edge_impacts(E, ev_impacts, ee_impacts);
+            ccd::prune_impacts(ee_impacts, edge_impact_map);
+        }
 
         // Create a OptimizationProblem for displacment optimization
         void setup_displacement_optimization_problem(const Eigen::MatrixX2d& V,
