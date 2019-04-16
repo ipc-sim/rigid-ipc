@@ -69,7 +69,7 @@ void case_vertical_displacements(const std::string& dirname,
 {
     Eigen::MatrixX2d expected(NUM_VERTICES, 2);
     double alpha = 0.5;
-    std::string out_dir = dirname + "/vert_displ_ncp_e1-8";
+    std::string out_dir = dirname + "/vert_displ_ncp";
 
     std::string summary = out_dir + "/summary.csv";
     std::ofstream o(summary);
@@ -187,8 +187,8 @@ int main(int argc, char* argv[])
 
     Eigen::MatrixX2d expected(NUM_VERTICES, 2);
 
-//    case_vertical_displacements(out_dir, edges, vertices, displacements, state);
-    case_diagonal_displacements(out_dir, edges, vertices, displacements, state);
+    case_vertical_displacements(out_dir, edges, vertices, displacements, state);
+    //case_diagonal_displacements(out_dir, edges, vertices, displacements, state);
 
     return 0;
 }

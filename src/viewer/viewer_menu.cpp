@@ -333,6 +333,8 @@ void ViewerMenu::draw_optimization()
                 state.solver_settings.ncp_update_method
                     = static_cast<ccd::opt::NcpUpdate>(idx_ncp_update);
             }
+            ImGui::InputDouble("tol. ",
+                &state.solver_settings.absolute_tolerance, 0.0, 0.0, "%.3g");
         }
 
         ImGui::InputInt("max iter##opt", &state.solver_settings.max_iter);

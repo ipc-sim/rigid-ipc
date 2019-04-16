@@ -14,7 +14,8 @@ namespace opt {
         const int max_iter, const callback_intermediate_ncp& callback,
         const NcpUpdate update_type, const LCPSolver lcp_solver,
         Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i,
-        const bool check_convergence)
+        const bool check_convergence, const bool check_convergence_unfeasible,
+        const double convergence_tolerance)
     {
         Eigen::SparseLU<Eigen::SparseMatrix<double>> Asolver;
         // We solve the NCP problem
@@ -54,10 +55,12 @@ namespace opt {
         // 2. solve constraints with successive linearizations
         for (int i = 0; i < max_iter; ++i) {
             // Step 2 ends when all constraints are satisfied
-            // check equality condition is converging
+            // and [optional] when the equality condition converges
             Eigen::VectorXd eq = A * xi - (b + jac_g_xi.transpose() * alpha_i);
+            std::cout << "eq " << eq.squaredNorm() << std::endl;
+
             if ((g_xi.array() >= 0).all()
-                && (eq.squaredNorm() < 1E-16 || !check_convergence)) {
+                && (eq.squaredNorm() < convergence_tolerance || !check_convergence)) {
                 break;
             }
 
@@ -105,7 +108,28 @@ namespace opt {
                 // ?????
             }
 
-            // 2.3 Update:
+            // 2.3 [optinal] Enforce staying in the unfeasible domain until
+            // we converge to a point that solve the equality constraint.
+            if (check_convergence_unfeasible) {
+                Eigen::VectorXd x_next;
+                for (int j = 0; j < 32; j++) {
+                    x_next = xi + delta_x * gamma;
+                    g_xi = g(x_next);
+                    if (!(g_xi.array() >= 0).all()) {
+                        break;
+                    }
+                    gamma /= 2.0;
+                }
+                // check if point satisfy equality constraint, then
+                // find the point that should have also satisfied g(x)>0
+                jac_g_xi = jac_g(x_next);
+                eq = A * x_next - (b + jac_g_xi.transpose() * alpha_i);
+                if (eq.squaredNorm() < convergence_tolerance) {
+                    gamma *= 2.0;
+                }
+            }
+
+            // 2.4 Update candidate:
             xi = xi + delta_x * gamma;
             g_xi = g(xi);
             jac_g_xi = jac_g(xi);

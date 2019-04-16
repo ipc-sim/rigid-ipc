@@ -273,7 +273,8 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::NcpUpdate update_type,
     // make the call
     Eigen::VectorXd x(NUM_VARS), alpha(NUM_CONSTRAINTS);
     bool success = solve_ncp(A, b, g, jac_g, /*max_iter=*/300, callback,
-        update_type, lcp_solver, x, alpha, check_convergence);
+        update_type, lcp_solver, x, alpha, check_convergence,
+        /*check_convergence_unfeasible=*/false);
 
     // ------------------------------------------------------------------------
     // DEBUG INFO
