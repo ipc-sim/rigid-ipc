@@ -88,19 +88,32 @@ namespace opt {
 
     // Performa Newton's Method to minimize a function f(x).
     OptimizationResults solve_problem_with_barrier_newton(
-        const OptimizationProblem& problem, const SolverSettings& settings)
+        const OptimizationProblem& general_problem,
+        const SolverSettings& settings)
     {
         // TODO: Replace this with maximal displacement over all vertices
-        // double epsilon = general_problem.starting_epsilon;
-        double epsilon = 1;
-
-        // auto compute_objective[&](const Eigen::VectorXd& x,
-        //     Eigen::VectorXd* gradient, Eigen::MatrixXd* hessian){}
+        double epsilon = settings.starting_barrier_epsilon;
 
         OptimizationProblem barrier_problem;
-        setup_barrier_problem(problem, epsilon, barrier_problem);
+        setup_barrier_problem(general_problem, epsilon, barrier_problem);
 
-        return newtons_method(barrier_problem, settings, /*mu = */ 1e-5);
+        OptimizationResults results;
+        int iteration_count = 0;
+        do {
+            results = newtons_method(barrier_problem, settings);
+            // Save the original problems objective
+            results.minf = general_problem.f(results.x);
+            // Save intermedtiate results
+            settings.intermediate_cb(results.x, results.minf,
+                Eigen::VectorXd::Constant(results.x.size(), -1), -1,
+                iteration_count++);
+            // Steepen the barrier
+            epsilon /= 2;
+            // Start next iteration from the ending optimal position
+            barrier_problem.x0 = results.x;
+        } while (epsilon > 1e-12);
+
+        return results;
     }
 
 } // namespace opt

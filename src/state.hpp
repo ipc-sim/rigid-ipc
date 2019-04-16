@@ -47,7 +47,7 @@ public:
     Eigen::MatrixXd volume_grad;
 
     /// @brief method to use for contact detection
-    DetectionMethod detection_method;
+    DetectionMethod detection_method = DetectionMethod::BRUTE_FORCE;
 
     /// @brief epsilon use on volume computation
     double volume_epsilon;
@@ -73,6 +73,9 @@ public:
     /// @brief if True, recompute collision set on each evaluation of the
     /// collision volume and gradient
     bool recompute_collision_set = false;
+
+    /// @breif Use the alternate penalty definition of volume with a barrier
+    bool use_alternative_formulation = false;
 
     ///@brief Optimization step history for displacements
     std::vector<Eigen::MatrixX2d> u_history;

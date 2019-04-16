@@ -7,7 +7,8 @@ namespace opt {
         const QPSolver qp_solver, const int verbosity, const int max_iter,
         const double relative_tolerance, const double absolute_tolerance,
         const double constraint_tolerance, const double max_time,
-        const callback_intermediate intermediate_cb)
+        const callback_intermediate intermediate_cb,
+        const double starting_barrier_epsilon)
         : method(method)
         , qp_solver(qp_solver)
         , lcp_solver(LCP_GAUSS_SEIDEL)
@@ -19,6 +20,7 @@ namespace opt {
         , constraint_tolerance(constraint_tolerance)
         , max_time(max_time)
         , intermediate_cb(intermediate_cb)
+        , starting_barrier_epsilon(starting_barrier_epsilon)
     {
     }
 

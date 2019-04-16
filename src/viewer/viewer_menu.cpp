@@ -301,6 +301,9 @@ void ViewerMenu::draw_optimization()
     if (ImGui::CollapsingHeader(
             "Displacement Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
 
+        ImGui::Checkbox(
+            "use alt formulation##opt", &(state.use_alternative_formulation));
+
         if (ImGui::Combo("method##opt", &idx_optimization_method,
                 ccd::opt::OptimizationMethodNames,
                 CCD_IM_ARRAYSIZE(ccd::opt::OptimizationMethodNames))) {
@@ -396,8 +399,8 @@ void ViewerMenu::draw_optimization_results()
         }
         ImGui::PopItemWidth();
         if (state.u_history.size() > 0
-            && ImGui::InputInt("step##opt-results",
-                   &(state.current_opt_iteration), 1, 10)) {
+            && ImGui::InputInt(
+                "step##opt-results", &(state.current_opt_iteration), 1, 10)) {
 
             redraw_opt_displacements();
             redraw_grad_volume(/*opt_gradient=*/true);

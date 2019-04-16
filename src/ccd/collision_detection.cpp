@@ -140,6 +140,8 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     EdgeVertexImpacts& ev_impacts, DetectionMethod method)
 {
     assert(vertices.size() == displacements.size());
+    assert(method == DetectionMethod::BRUTE_FORCE
+        || method == DetectionMethod::HASH_MAP);
     switch (method) {
     case BRUTE_FORCE:
         detect_edge_vertex_collisions_brute_force(
@@ -195,4 +197,4 @@ void detect_edge_vertex_collisions_hash_map(
         "Hash Map collision detection is not implemented yet.");
 }
 
-}
+} // namespace ccd

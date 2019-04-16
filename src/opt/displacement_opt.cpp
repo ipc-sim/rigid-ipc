@@ -25,7 +25,6 @@ namespace opt {
     OptimizationResults displacement_optimization(OptimizationProblem& problem,
         const Eigen::MatrixX2d& U0, SolverSettings& settings)
     {
-
         // initial value
         Eigen::MatrixXd x0 = U0;
         x0.resize(U0.size(), 1); // Flatten displacements

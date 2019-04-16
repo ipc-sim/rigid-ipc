@@ -3,70 +3,80 @@
 #include <catch.hpp>
 
 #include <autodiff/finitediff.hpp>
-#include <opt/alternative_displacement_opt.hpp>
+#include <state.hpp>
 
 using namespace ccd;
 using namespace opt;
 
 TEST_CASE("Test the setup", "[opt][displacements]")
 {
-    Eigen::MatrixX2d V(4, 2);
-    Eigen::MatrixX2d U(4, 2);
-    Eigen::MatrixX2i E(2, 2);
+    State state;
+    state.use_alternative_formulation = GENERATE(false, true);
 
-    V << -1, 1, 1, 1, -2, 0, 2, 0;
-    U << 0, -2, 0, -2, 0, 0, 0, 0;
-    E << 0, 1, 2, 3;
+    state.vertices.resize(4, 2);
+    state.displacements.resize(4, 2);
+    state.edges.resize(2, 2);
 
-    bool recompute_collision_set = GENERATE(false, true);
-    DetectionMethod ccd_detection_method = DetectionMethod::BRUTE_FORCE;
+    state.vertices << -1, 1, 1, 1, -2, 0, 2, 0;
+    state.displacements << 0, -2, 0, -2, 0, 0, 0, 0;
+    state.edges << 0, 1, 2, 3;
 
-    OptimizationProblem problem;
-    alt::setup_displacement_optimization_problem(
-        V, U, E, ccd_detection_method, recompute_collision_set, problem);
+    state.recompute_collision_set = GENERATE(false, true);
+    state.detection_method = DetectionMethod::BRUTE_FORCE;
 
-    CHECK(problem.num_vars == U.size());
-    CHECK(problem.num_constraints == E.rows());
+    state.reset_optimization_problem();
 
-    CHECK(problem.x0.size() == U.size());
-    CHECK(problem.x_lower.size() == U.size());
-    CHECK(problem.x_upper.size() == U.size());
-    CHECK(problem.g_lower.size() == E.rows());
-    CHECK(problem.g_upper.size() == E.rows());
+    CHECK(state.opt_problem.num_vars == state.displacements.size());
+    CHECK(state.opt_problem.num_constraints == state.edges.rows());
 
-    Eigen::VectorXd x(problem.num_vars);
-    x.setRandom();
+    CHECK(state.opt_problem.x0.size() == state.opt_problem.num_vars);
+    CHECK(state.opt_problem.x_lower.size() == state.opt_problem.num_vars);
+    CHECK(state.opt_problem.x_upper.size() == state.opt_problem.num_vars);
+    CHECK(
+        state.opt_problem.g_lower.size() == state.opt_problem.num_constraints);
+    CHECK(
+        state.opt_problem.g_upper.size() == state.opt_problem.num_constraints);
+
+    state.opt_problem.x0.setRandom();
 
     // Test ∇f
-    Eigen::VectorXd finite_grad(problem.num_vars);
-    finite_gradient(x, problem.f, finite_grad);
-    Eigen::VectorXd analytic_grad = problem.grad_f(x);
+    Eigen::VectorXd finite_grad(state.opt_problem.num_vars);
+    finite_gradient(state.opt_problem.x0, state.opt_problem.f, finite_grad);
+    Eigen::VectorXd analytic_grad
+        = state.opt_problem.grad_f(state.opt_problem.x0);
     CHECK(compare_gradient(finite_grad, analytic_grad));
 
     // Test ∇²f
-    Eigen::MatrixXd finite_hessian(problem.num_vars, problem.num_vars);
-    finite_jacobian(x, problem.grad_f, finite_hessian);
-    Eigen::MatrixXd analytic_hessian = problem.hessian_f(x);
+    Eigen::MatrixXd finite_hessian(
+        state.opt_problem.num_vars, state.opt_problem.num_vars);
+    finite_jacobian(
+        state.opt_problem.x0, state.opt_problem.grad_f, finite_hessian);
+    Eigen::MatrixXd analytic_hessian
+        = state.opt_problem.hessian_f(state.opt_problem.x0);
     CHECK(compare_jacobian(finite_hessian, analytic_hessian));
 
     // Test ∇g
-    Eigen::MatrixXd finite_jac(problem.num_constraints, problem.num_vars);
-    finite_jacobian(x, problem.g, finite_jac);
-    Eigen::MatrixXd analytic_jac = problem.jac_g(x);
+    Eigen::MatrixXd finite_jac(
+        state.opt_problem.num_constraints, state.opt_problem.num_vars);
+    finite_jacobian(state.opt_problem.x0, state.opt_problem.g, finite_jac);
+    Eigen::MatrixXd analytic_jac
+        = state.opt_problem.jac_g(state.opt_problem.x0);
     CHECK(compare_jacobian(finite_jac, analytic_jac));
 
     // Test ∇²g
-    Eigen::MatrixXd finite_hessian_gi(problem.num_vars, problem.num_vars);
+    Eigen::MatrixXd finite_hessian_gi(
+        state.opt_problem.num_vars, state.opt_problem.num_vars);
     finite_hessian_gi.setOnes();
     long i;
     auto diff_i = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-        assert(i >= 0 && i < problem.num_constraints);
-        auto jac = problem.jac_g(x);
+        assert(i >= 0 && i < state.opt_problem.num_constraints);
+        auto jac = state.opt_problem.jac_g(x);
         return jac.row(i);
     };
-    std::vector<Eigen::MatrixXd> analytic_hessian_g = problem.hessian_g(x);
-    for (i = 0; i < problem.num_constraints; i++) {
-        finite_jacobian(x, diff_i, finite_hessian_gi);
+    std::vector<Eigen::MatrixXd> analytic_hessian_g
+        = state.opt_problem.hessian_g(state.opt_problem.x0);
+    for (i = 0; i < state.opt_problem.num_constraints; i++) {
+        finite_jacobian(state.opt_problem.x0, diff_i, finite_hessian_gi);
         CHECK(compare_jacobian(
             finite_hessian_gi, analytic_hessian_g[unsigned(i)]));
     }

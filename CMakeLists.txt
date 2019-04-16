@@ -41,6 +41,7 @@ set(SRCFILES
     src/ccd/prune_impacts.cpp
     src/ccd/collision_volume.cpp
     src/ccd/collision_volume_diff.cpp
+    src/ccd/collision_penalty_diff.cpp
     src/ccd/time_of_impact.cpp
 
     src/io/read_scene.cpp
@@ -59,16 +60,13 @@ set(SRCFILES
     src/opt/ipopt_solver.cpp
     src/opt/ncp_solver.cpp
     src/opt/lcp_solver.cpp
+    src/opt/barrier_newton_solver.cpp
 
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp
 
     src/state.cpp
     src/logger.cpp
-
-    src/opt/barrier_newton_solver.cpp
-    src/ccd/collision_penalty_diff.cpp
-    src/opt/alternative_displacement_opt.cpp
 )
 
 set(TMPFILES

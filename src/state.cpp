@@ -3,6 +3,7 @@
 
 #include "state.hpp"
 
+#include <ccd/collision_penalty_diff.hpp>
 #include <ccd/collision_volume.hpp>
 #include <ccd/collision_volume_diff.hpp>
 
@@ -17,7 +18,8 @@
 
 namespace ccd {
 State::State()
-    : volume_epsilon(1E-3)
+    : detection_method(DetectionMethod::BRUTE_FORCE)
+    , volume_epsilon(1E-3)
     , output_dir(DATA_OUTPUT_DIR)
     , recompute_collision_set(false)
     , canvas_width(10)
@@ -196,8 +198,13 @@ Eigen::VectorXd State::compute_collision_volume(
     if (recompute_set) {
         detect_collisions(Uk);
     }
-    ccd::autodiff::compute_volumes_refresh_toi(vertices, Uk, edges, ee_impacts,
-        edge_impact_map, volume_epsilon, volume);
+    if (use_alternative_formulation) {
+        ccd::autodiff::compute_penalties_refresh_toi(vertices, Uk, edges,
+            ee_impacts, edge_impact_map, volume_epsilon, volume);
+    } else {
+        ccd::autodiff::compute_volumes_refresh_toi(vertices, Uk, edges,
+            ee_impacts, edge_impact_map, volume_epsilon, volume);
+    }
     return volume;
 }
 
@@ -209,9 +216,13 @@ Eigen::MatrixXd State::compute_collision_jac_volume(
         detect_collisions(Uk);
     }
 
-    ccd::autodiff::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
-        edge_impact_map, volume_epsilon, volume_gradient);
-
+    if (use_alternative_formulation) {
+        ccd::autodiff::compute_penalties_gradient(vertices, Uk, edges,
+            ee_impacts, edge_impact_map, volume_epsilon, volume_gradient);
+    } else {
+        ccd::autodiff::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
+            edge_impact_map, volume_epsilon, volume_gradient);
+    }
     assert(volume_gradient.rows() == Uk.size());
     assert(volume_gradient.cols() == edges.rows());
 
@@ -227,8 +238,14 @@ std::vector<Eigen::MatrixXd> State::compute_collision_hessian_volume(
         detect_collisions(Uk);
     }
 
-    ccd::autodiff::compute_volumes_hessian(vertices, Uk, edges, ee_impacts,
-        edge_impact_map, volume_epsilon, volume_hessian);
+    if (use_alternative_formulation) {
+        ccd::autodiff::compute_penalties_hessian(vertices, Uk, edges,
+            ee_impacts, edge_impact_map,
+            solver_settings.starting_barrier_epsilon, volume_hessian);
+    } else {
+        ccd::autodiff::compute_volumes_hessian(vertices, Uk, edges, ee_impacts,
+            edge_impact_map, volume_epsilon, volume_hessian);
+    }
 
     const long num_vars = Uk.size(), num_constraints = edges.rows();
     assert(volume_hessian.size() == unsigned(num_constraints));
@@ -344,7 +361,25 @@ void State::reset_optimization_problem()
 
 void State::optimize_displacements(const std::string filename)
 {
+    // 1. reset the problem
     reset_optimization_problem();
+    if (solver_settings.method == opt::OptimizationMethod::BARRIER_NEWTON) {
+        // ToDo: Find a better way to provide a starting epsilon
+        detect_collisions(this->displacements);
+        solver_settings.starting_barrier_epsilon = -1;
+        for (long i = 0; i < this->edge_impact_map.size(); i++) {
+            if (this->edge_impact_map(i) >= 0) {
+                solver_settings.starting_barrier_epsilon
+                    = std::max(this->ee_impacts[this->edge_impact_map(i)].time,
+                        solver_settings.starting_barrier_epsilon);
+            }
+        }
+        // If no impacts were found
+        if (solver_settings.starting_barrier_epsilon > 1.0
+            || solver_settings.starting_barrier_epsilon < 0.0) {
+            solver_settings.starting_barrier_epsilon = 0.0;
+        }
+    }
 
     // 2. reset results
     opt_results.success = false;
@@ -376,29 +411,35 @@ void State::optimize_displacements(const std::string filename)
     std::vector<Eigen::VectorXd> it_lambda;
     std::vector<double> it_gamma;
 
-    solver_settings.intermediate_cb
-        = [&](const Eigen::VectorXd& x, const double obj_value,
-              const Eigen::VectorXd& dual, const double gamma,
-              const int /*iteration*/) {
-              Eigen::MatrixXd u = x;
-              u.resize(x.rows() / 2, 2);
-              u_history.push_back(u);
-              f_history.push_back(obj_value);
+    solver_settings.intermediate_cb = [&](const Eigen::VectorXd& x,
+                                          const double obj_value,
+                                          const Eigen::VectorXd& dual,
+                                          const double gamma,
+                                          const int /*iteration*/) {
+        Eigen::MatrixXd u = x;
+        u.resize(x.rows() / 2, 2);
+        u_history.push_back(u);
+        f_history.push_back(obj_value);
 
-              Eigen::VectorXd gx = opt_problem.g(x);
-              g_history.push_back(gx);
-              gsum_history.push_back(gx.sum());
-              jac_g_history.push_back(opt_problem.jac_g(x));
+        Eigen::VectorXd gx = opt_problem.g(x);
+        g_history.push_back(gx);
+        gsum_history.push_back(gx.sum());
+        jac_g_history.push_back(opt_problem.jac_g(x));
 
-              it_x.push_back(x);
-              it_lambda.push_back(dual);
-              it_gamma.push_back(gamma);
-          };
+        it_x.push_back(x);
+        it_lambda.push_back(dual);
+        it_gamma.push_back(gamma);
+        if (solver_settings.method == opt::OptimizationMethod::BARRIER_NEWTON) {
+            solver_settings.starting_barrier_epsilon /= 2;
+        }
+    };
 
     // 5. run optimization
     opt_results
         = ccd::opt::displacement_optimization(opt_problem, U0, solver_settings);
-    log_optimization_steps(filename, it_x, it_lambda, it_gamma);
+    if (solver_settings.verbosity) {
+        log_optimization_steps(filename, it_x, it_lambda, it_gamma);
+    }
 
     opt_results.method = solver_settings.method;
     opt_results.finished = true;
