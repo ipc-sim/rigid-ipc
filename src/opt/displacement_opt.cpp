@@ -62,10 +62,10 @@ namespace opt {
                 num_it += 1;
             };
         OptimizationResults result;
-        result.success
-            = solve_ncp(A, b, problem.g, problem.jac_g, settings.max_iter,
-                callback, NcpUpdate::G_GRADIENT, settings.lcp_solver, x_opt,
-                lambda_opt, /*check_convergence=*/false);
+        result.success = solve_ncp(A, b, problem.g, problem.jac_g,
+            settings.max_iter, callback, settings.ncp_update_method,
+            settings.lcp_solver, x_opt, lambda_opt, /*check_convergence=*/false,
+            /*check_convergence_unfeasible=*/true, settings.absolute_tolerance);
         result.x = x_opt;
         result.minf = problem.f(x_opt);
 

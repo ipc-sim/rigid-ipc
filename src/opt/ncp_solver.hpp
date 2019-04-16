@@ -28,8 +28,8 @@ namespace opt {
 
     /**
      * @brief solves the optimization problem
-     *      Ax = b + \nabla g(x)^T \alpha
-     *      alpha >=0, g(x) >=0   alpha^T g(x) = 0
+     *      Ax = b + \nabla g(x)^T \alpha           (1)
+     *      alpha >=0, g(x) >=0   alpha^T g(x) = 0  (2)
      *
      * It can be used to solve the optimization problem of the form
      *      Min 1/2 || Ax + b ||^2
@@ -43,6 +43,14 @@ namespace opt {
      * @param callback  : callback function called after each iteration
      * @param x         : the solution of the problem.
      * @param alpha     : the solution of the dual problem.
+     *
+     * @param check_convergence  :
+     *                  Solver ends when (1) and (2) are satisfied
+     * @param check_convergence_unfeasible:
+     *                  Used for g(x) that well defined only for g(x) <=0.
+     *                  Solver ends when (1) is satisfied but we stay in the
+     *                  unfeasible domain until an x satisfied (2)
+     * @param convergence_tolerance: used to evaluate (2)
      */
     bool solve_ncp(const Eigen::SparseMatrix<double>& A,
         const Eigen::VectorXd& b,
@@ -51,7 +59,8 @@ namespace opt {
         const int max_iter, const callback_intermediate_ncp& callback,
         const NcpUpdate update_type, const LCPSolver lcp_solver,
         Eigen::VectorXd& x, Eigen::VectorXd& alpha,
-        const bool check_convergence);
+        const bool check_convergence, const bool check_convergence_unfeasible,
+        const double convergence_tolerance = 1E-10);
 
 } // namespace opt
 } // namespace ccd
