@@ -13,8 +13,8 @@ const int NUM_VERTICES = 4;
 const int ANGLE_STEPS = 10;
 
 const std::string HEADER
-    = "theta, dy, f(x*), f(e*), sum g(x*), sum g(e*), num_it, x_feasible, "
-      "x_optimal, e_feasible, path";
+    = "theta,dy,f_x,f_e,sum_gx,sum_ge,num_it,x_feasible,"
+      "x_optimal,e_feasible,path";
 
 void inner_loop(const std::string scene_name, const std::string out_dir,
     const std::string row_prefix, const Eigen::MatrixX2d& expected,
@@ -27,8 +27,9 @@ void inner_loop(const std::string scene_name, const std::string out_dir,
 
     Eigen::MatrixXd e = expected;
     e.resize(e.size(), 1);
+    auto update_type = NcpUpdate::LINEARIZED;
 
-    for (const auto& update_type : update_types) {
+//    for (const auto& update_type : update_types) {
         for (const auto& lcp_solver : lcp_solvers) {
             state.solver_settings.ncp_update_method = update_type;
             state.solver_settings.lcp_solver = lcp_solver;
@@ -47,8 +48,6 @@ void inner_loop(const std::string scene_name, const std::string out_dir,
             double fx = state.opt_problem.f(u_);
             double gx_sum = state.opt_problem.g(u_).sum();
 
-            //            o << theta << ",";
-            //            o << dy << ",";
             o << row_prefix << ",";
             o << fx << ",";
             o << fe << ",";
@@ -58,10 +57,9 @@ void inner_loop(const std::string scene_name, const std::string out_dir,
             o << int(gx_sum >= 0) << ","; /// x_feasible
             o << int(fx <= fe) << ",";    /// x_optimal
             o << int(ge_sum >= 0) << ","; /// e_feasible
-            o << filename << ",";
-            o << std::endl;
+            o << filename <<  std::endl;
         }
-    }
+//    }
 }
 void case_vertical_displacements(const std::string& dirname,
     const Eigen::MatrixX2i& edges, Eigen::MatrixX2d vertices,
@@ -74,6 +72,7 @@ void case_vertical_displacements(const std::string& dirname,
     std::string summary = out_dir + "/summary.csv";
     std::ofstream o(summary);
     o << HEADER << std::endl;
+
 
     for (int i = 0; i < ANGLE_STEPS + 1; i++) {
         double theta = M_PI * i / 2.0 / ANGLE_STEPS;
@@ -115,7 +114,7 @@ void case_diagonal_displacements(const std::string& dirname,
 {
     Eigen::MatrixX2d expected(NUM_VERTICES, 2);
     double alpha = 0.5;
-    std::string out_dir = dirname + "/diag_displ_ncp_e1-8";
+    std::string out_dir = dirname + "/diag_displ_ncp";
 
     std::string summary = out_dir + "/summary.csv";
     std::ofstream o(summary);
@@ -167,9 +166,11 @@ int main(int argc, char* argv[])
     spdlog::set_level(spdlog::level::info);
 
     ccd::State state;
-    state.solver_settings.max_iter = 100;
+    state.solver_settings.max_iter = 200;
     state.solver_settings.method = ccd::opt::NCP;
+    state.solver_settings.absolute_tolerance = 1E-8;
     state.volume_epsilon = 1E-8;
+
 
     Eigen::MatrixX2d vertices(NUM_VERTICES, 2);
     Eigen::MatrixX2i edges(NUM_EDGES, 2);
@@ -187,8 +188,8 @@ int main(int argc, char* argv[])
 
     Eigen::MatrixX2d expected(NUM_VERTICES, 2);
 
-    case_vertical_displacements(out_dir, edges, vertices, displacements, state);
-    //case_diagonal_displacements(out_dir, edges, vertices, displacements, state);
+    //case_vertical_displacements(out_dir, edges, vertices, displacements, state);
+    case_diagonal_displacements(out_dir, edges, vertices, displacements, state);
 
     return 0;
 }

@@ -18,6 +18,7 @@
 
 namespace ccd {
 State::State()
+
     : detection_method(DetectionMethod::BRUTE_FORCE)
     , volume_epsilon(1E-3)
     , output_dir(DATA_OUTPUT_DIR)
@@ -512,8 +513,8 @@ void State::log_optimization_steps(const std::string filename,
     o << opt_problem.g(d).format(CommaFmt) << sep;
 
     Eigen::MatrixXd jac_gx = opt_problem.jac_g(d);
-    o << jac_gx.squaredNorm() << sep;
-    o << jac_gx.format(CommaFmt) << std::endl << std::endl;
+    o << jac_gx.squaredNorm() << std::endl << std::endl;
+
 
     // print steps
     for (uint i = 0; i < it_x.size(); i++) {
@@ -524,8 +525,8 @@ void State::log_optimization_steps(const std::string filename,
         o << opt_problem.f(it_x[i]) << sep;
         o << opt_problem.g(it_x[i]).format(CommaFmt) << sep;
         jac_gx = opt_problem.jac_g(it_x[i]);
-        o << jac_gx.squaredNorm() << sep;
-        o << jac_gx.format(CommaFmt) << std::endl;
+        o << jac_gx.squaredNorm() << std::endl;
+
     }
     spdlog::debug("Optimization Log saved to file://{}", filename);
 }

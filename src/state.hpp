@@ -47,7 +47,7 @@ public:
     Eigen::MatrixXd volume_grad;
 
     /// @brief method to use for contact detection
-    DetectionMethod detection_method = DetectionMethod::BRUTE_FORCE;
+    DetectionMethod detection_method;
 
     /// @brief epsilon use on volume computation
     double volume_epsilon;

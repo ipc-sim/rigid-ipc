@@ -4,6 +4,7 @@
 #include <opt/lcp_solver.hpp>
 #include <opt/newtons_method.hpp> //> line search
 
+#include <logger.hpp>
 namespace ccd {
 namespace opt {
 
@@ -57,10 +58,9 @@ namespace opt {
             // Step 2 ends when all constraints are satisfied
             // and [optional] when the equality condition converges
             Eigen::VectorXd eq = A * xi - (b + jac_g_xi.transpose() * alpha_i);
-            std::cout << "eq " << eq.squaredNorm() << std::endl;
-
             if ((g_xi.array() >= 0).all()
-                && (eq.squaredNorm() < convergence_tolerance || !check_convergence)) {
+                && (eq.squaredNorm() < convergence_tolerance
+                       || !check_convergence)) {
                 break;
             }
 
@@ -112,20 +112,30 @@ namespace opt {
             // we converge to a point that solve the equality constraint.
             if (check_convergence_unfeasible) {
                 Eigen::VectorXd x_next;
+                double gamma_prev = gamma;
+                std::cout << fmt::format("[{}] gamma_0={:.3e}", i, gamma);
                 for (int j = 0; j < 32; j++) {
                     x_next = xi + delta_x * gamma;
                     g_xi = g(x_next);
+                    if (j == 0) {
+                        std::cout << fmt::format(" gxi_0={}", g_xi.sum() > 0);
+                    }
                     if (!(g_xi.array() >= 0).all()) {
                         break;
                     }
+                    gamma_prev = gamma; // feasible gamma
                     gamma /= 2.0;
                 }
+
                 // check if point satisfy equality constraint, then
                 // find the point that should have also satisfied g(x)>0
                 jac_g_xi = jac_g(x_next);
                 eq = A * x_next - (b + jac_g_xi.transpose() * alpha_i);
+                std::cout << fmt::format(" gamma_n={:.3e} eq={:.3e} gxi_n={}\n",
+                    gamma, eq.squaredNorm(), g_xi.sum() > 0);
+
                 if (eq.squaredNorm() < convergence_tolerance) {
-                    gamma *= 2.0;
+                    gamma = gamma_prev;
                 }
             }
 
