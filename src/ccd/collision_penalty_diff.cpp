@@ -284,7 +284,10 @@ namespace autodiff {
             return T(10 * barrier_epsilon);
         }
 
-        return time_scale * toi - t;
+        return (time_scale * toi - t);
+        // return (time_scale * toi - t)
+        //     * (scaled_Ui.squaredNorm() + scaled_Uj.squaredNorm()
+        //         + scaled_Uk.squaredNorm() + scaled_Ul.squaredNorm());
     }
 
     void collision_penalty_grad_fd(const Eigen::Vector2d& Vi,

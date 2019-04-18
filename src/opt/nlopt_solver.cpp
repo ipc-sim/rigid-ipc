@@ -41,7 +41,7 @@ namespace opt {
 
         // Set inequality constraints if desired
         std::vector<double> tol(2 * problem.num_constraints,
-            settings.constraint_tolerance); // Tolerances
+            settings.absolute_tolerance); // Tolerances
         // Set the m-constraints function
         opt.add_inequality_mconstraint(
             nlopt_inequality_constraints, &problem, tol);
@@ -69,12 +69,8 @@ namespace opt {
         results.minf = minf;
         Eigen::ArrayXd gx = problem.g(results.x).array();
         results.success = r > 0 && minf >= 0
-            && (problem.g_lower.array() - 10 * settings.constraint_tolerance
-                <= gx)
-                   .all()
-            && (gx
-                <= problem.g_upper.array() + 10 * settings.constraint_tolerance)
-                   .all();
+            && problem.are_constraints_satisfied(
+                results.x, settings.absolute_tolerance);
         return results;
     }
 

@@ -60,7 +60,8 @@ namespace opt {
             std::cout << "eq " << eq.squaredNorm() << std::endl;
 
             if ((g_xi.array() >= 0).all()
-                && (eq.squaredNorm() < convergence_tolerance || !check_convergence)) {
+                && (eq.squaredNorm() < convergence_tolerance
+                    || !check_convergence)) {
                 break;
             }
 
@@ -102,9 +103,8 @@ namespace opt {
 
             // 2.2 Do line-search on delta to ensure volume is increased (-->0)
             auto eval_g = [&](const Eigen::VectorXd& y) { return -g(y).sum(); };
-            double fxi = -g_xi.sum();
             double gamma = 1.0;
-            if (!line_search(xi, delta_x, eval_g, fxi, gamma)) {
+            if (!line_search(xi, delta_x, eval_g, gamma)) {
                 // ?????
             }
 

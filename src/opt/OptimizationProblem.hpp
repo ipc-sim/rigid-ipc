@@ -37,7 +37,7 @@ namespace opt {
      *   s.t.       g_L ≤ g(x) ≤ g_U
      *              x_L ≤  x   ≤ x_U
      *
-     **/
+     */
     struct OptimizationProblem {
         int num_vars;            ///< @brief Number of variables
         int num_constraints;     ///< @brief Number of constraints
@@ -81,6 +81,9 @@ namespace opt {
             const Eigen::VectorXd& g_upper = Eigen::VectorXd());
         /// @brief Check that the problem is valid and initalized
         bool validate_problem();
+        /// @brief Check if all constraints are satisfied at a location.
+        bool are_constraints_satisfied(
+            const Eigen::VectorXd& x, const double tol) const;
     };
 
 } // namespace opt

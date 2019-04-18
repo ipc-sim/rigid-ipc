@@ -106,5 +106,7 @@ data/**/*.xlsx
 3rd_party/*
 !3rd_party/json
 
+.vscode
+
 ## Documentation
 docs

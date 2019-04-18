@@ -9,7 +9,32 @@
 namespace ccd {
 namespace opt {
 
-    // Create a OptimizationProblem for displacment optimization
+    // Performa Newton's Method to minimize a function f(x) + barrier(g(x)).
+    OptimizationResults solve_problem_with_barrier_newton(
+        const OptimizationProblem& general_problem, SolverSettings& settings)
+    {
+        OptimizationProblem barrier_problem;
+        setup_barrier_problem(
+            general_problem, settings.barrier_epsilon, barrier_problem);
+
+        OptimizationResults results;
+        int iteration_count = 0;
+        do {
+            results = newtons_method(barrier_problem, settings);
+            // Save the original problems objective
+            results.minf = general_problem.f(results.x);
+            // Steepen the barrier
+            settings.barrier_epsilon /= 2;
+            // Start next iteration from the ending optimal position
+            barrier_problem.x0 = results.x;
+        } while (settings.barrier_epsilon > settings.min_barrier_epsilon);
+
+        results.success = results.minf >= 0
+            && general_problem.are_constraints_satisfied(results.x, 0.0);
+        return results;
+    }
+
+    // Create a OptimizationProblem for the barrier Newton's method.
     void setup_barrier_problem(const OptimizationProblem& general_problem,
         double& epsilon, OptimizationProblem& barrier_problem)
     {
@@ -30,7 +55,7 @@ namespace opt {
         // Redefine the objective with the constraints as penalties
         barrier_problem.f
             = [&general_problem, barrier](const Eigen::VectorXd& x) {
-                  auto gx = general_problem.g(x);
+                  Eigen::VectorXd gx = general_problem.g(x);
                   return general_problem.f(x)
                       + (gx - general_problem.g_lower).unaryExpr(barrier).sum()
                       + (-gx + general_problem.g_upper).unaryExpr(barrier).sum()
@@ -41,16 +66,18 @@ namespace opt {
         // Redefine the objective gradient with the constraints as penalties
         barrier_problem.grad_f = [&general_problem, barrier_gradient](
                                      const Eigen::VectorXd& x) {
-            auto gx = general_problem.g(x);
-            auto dgx = general_problem.jac_g(x);
+            Eigen::VectorXd gx = general_problem.g(x);
+            Eigen::MatrixXd dgx = general_problem.jac_g(x);
 
-            auto grad = general_problem.grad_f(x);
-            for (long i = 0; i < general_problem.num_constraints; i++) {
-                grad += (barrier_gradient(gx(i) - general_problem.g_lower(i))
-                            - barrier_gradient(
-                                -gx(i) + general_problem.g_upper(i)))
-                    * dgx.row(i).transpose();
-            }
+            Eigen::VectorXd grad = general_problem.grad_f(x);
+
+            // Add constraint functions barrier(g(x))
+            Eigen::VectorXd coeffs
+                = (gx - general_problem.g_lower).unaryExpr(barrier_gradient)
+                - (-gx + general_problem.g_upper).unaryExpr(barrier_gradient);
+            grad += (coeffs.asDiagonal() * dgx).colwise().sum().transpose();
+
+            // Add value constraints barrier(x)
             // ∇ ∑ ϕ(x_i) = ∑ (∇ ϕ(x_i)) = ∑ [0 ... ϕ'(x_i) ... 0]^T
             //            = [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
             grad += (x - general_problem.x_lower).unaryExpr(barrier_gradient)
@@ -62,58 +89,29 @@ namespace opt {
         barrier_problem.hessian_f = [&general_problem, barrier_gradient,
                                         barrier_hessian](
                                         const Eigen::VectorXd& x) {
-            auto gx = general_problem.g(x);
-            auto dgx = general_problem.jac_g(x);
-            auto ddgx = general_problem.hessian_g(x);
+            Eigen::VectorXd gx = general_problem.g(x);
+            Eigen::MatrixXd dgx = general_problem.jac_g(x);
+            std::vector<Eigen::MatrixXd> ddgx = general_problem.hessian_g(x);
 
-            auto hessian = general_problem.hessian_f(x);
+            Eigen::MatrixXd hessian = general_problem.hessian_f(x);
+            Eigen::VectorXd hessian_coeffs
+                = (gx - general_problem.g_lower).unaryExpr(barrier_hessian)
+                + (-gx + general_problem.g_upper).unaryExpr(barrier_hessian);
+            Eigen::VectorXd grad_coeffs
+                = (gx - general_problem.g_lower).unaryExpr(barrier_gradient)
+                - (-gx + general_problem.g_upper).unaryExpr(barrier_gradient);
             for (long i = 0; i < general_problem.num_constraints; i++) {
-                hessian += (barrier_hessian(gx(i) - general_problem.g_lower(i))
-                               + barrier_hessian(
-                                   -gx(i) + general_problem.g_upper(i)))
-                        * dgx.row(i).transpose() * dgx.row(i)
-                    + (barrier_gradient(gx(i) - general_problem.g_lower(i))
-                          - barrier_gradient(
-                              -gx(i) + general_problem.g_upper(i)))
-                        * ddgx[unsigned(i)];
+                hessian
+                    += hessian_coeffs(i) * dgx.row(i).transpose() * dgx.row(i)
+                    + grad_coeffs(i) * ddgx[unsigned(i)];
             }
-            // \nabla [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
+            // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
             // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
             hessian.diagonal()
                 += (x - general_problem.x_lower).unaryExpr(barrier_hessian)
                 + (-x + general_problem.x_upper).unaryExpr(barrier_hessian);
             return hessian;
         };
-    }
-
-    // Performa Newton's Method to minimize a function f(x).
-    OptimizationResults solve_problem_with_barrier_newton(
-        const OptimizationProblem& general_problem,
-        const SolverSettings& settings)
-    {
-        // TODO: Replace this with maximal displacement over all vertices
-        double epsilon = settings.starting_barrier_epsilon;
-
-        OptimizationProblem barrier_problem;
-        setup_barrier_problem(general_problem, epsilon, barrier_problem);
-
-        OptimizationResults results;
-        int iteration_count = 0;
-        do {
-            results = newtons_method(barrier_problem, settings);
-            // Save the original problems objective
-            results.minf = general_problem.f(results.x);
-            // Save intermedtiate results
-            settings.intermediate_cb(results.x, results.minf,
-                Eigen::VectorXd::Constant(results.x.size(), -1), -1,
-                iteration_count++);
-            // Steepen the barrier
-            epsilon /= 2;
-            // Start next iteration from the ending optimal position
-            barrier_problem.x0 = results.x;
-        } while (epsilon > 1e-12);
-
-        return results;
     }
 
 } // namespace opt

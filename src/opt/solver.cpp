@@ -13,7 +13,7 @@ namespace ccd {
 namespace opt {
 
     OptimizationResults solve_problem(
-        OptimizationProblem& problem, const SolverSettings& settings)
+        OptimizationProblem& problem, SolverSettings& settings)
     {
         if (!problem.validate_problem()) {
             return OptimizationResults();

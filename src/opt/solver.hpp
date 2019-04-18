@@ -25,7 +25,7 @@ namespace opt {
      * \end{align}
      */
     OptimizationResults solve_problem(
-        OptimizationProblem& problem, const SolverSettings& settings);
+        OptimizationProblem& problem, SolverSettings& settings);
 
 } // namespace opt
 } // namespace ccd

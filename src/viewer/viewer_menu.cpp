@@ -4,6 +4,44 @@
 
 #define CCD_IM_ARRAYSIZE(_ARR) (int(sizeof(_ARR) / sizeof(*_ARR)))
 
+namespace ImGui {
+
+bool InputIntBounded(const char* label, int* val, int lower_bound = INT_MIN,
+    int upper_bound = INT_MAX, int step = 1, int step_fast = 100,
+    ImGuiInputTextFlags flags = 0)
+{
+    int unbounded_val = *val;
+    bool success
+        = ImGui::InputInt(label, &unbounded_val, step, step_fast, flags);
+    if (success) {
+        if (unbounded_val >= lower_bound && unbounded_val <= upper_bound) {
+            *val = unbounded_val;
+            return true;
+        }
+    }
+    return false;
+};
+
+bool InputDoubleBounded(const char* label, double* val,
+    double lower_bound = -std::numeric_limits<double>::infinity(),
+    double upper_bound = std::numeric_limits<double>::infinity(),
+    double step = 1, double step_fast = 100, const char* format = "%.6f",
+    ImGuiInputTextFlags flags = 0)
+{
+    double unbounded_val = *val;
+    bool success = ImGui::InputDouble(
+        label, &unbounded_val, step, step_fast, format, flags);
+    if (success) {
+        if (unbounded_val >= lower_bound && unbounded_val <= upper_bound) {
+            *val = unbounded_val;
+            return true;
+        }
+    }
+    return false;
+};
+
+} // namespace ImGui
+
 namespace ccd {
 
 /**
@@ -292,6 +330,7 @@ void ViewerMenu::draw_ccd_steps()
 // //////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_optimization()
 {
+    using namespace opt;
     int idx_optimization_method = state.solver_settings.method;
     int idx_qp_solver = state.solver_settings.qp_solver;
     int idx_lcp_solver = state.solver_settings.lcp_solver;
@@ -312,18 +351,17 @@ void ViewerMenu::draw_optimization()
                     idx_optimization_method);
         }
 
-        if (state.solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
-
+        switch (state.solver_settings.method) {
+        case opt::OptimizationMethod::LINEARIZED_CONSTRAINTS:
             if (ImGui::Combo("QP solver##opt", &idx_qp_solver,
                     ccd::opt::QPSolverNames,
                     CCD_IM_ARRAYSIZE(ccd::opt::QPSolverNames))) {
                 state.solver_settings.qp_solver
                     = static_cast<ccd::opt::QPSolver>(idx_qp_solver);
             }
-        }
+            break;
 
-        if (state.solver_settings.method == opt::NCP) {
-
+        case opt::OptimizationMethod::NCP:
             if (ImGui::Combo("LCP solver##opt", &idx_lcp_solver,
                     ccd::opt::LCPSolverNames,
                     CCD_IM_ARRAYSIZE(ccd::opt::LCPSolverNames))) {
@@ -338,14 +376,38 @@ void ViewerMenu::draw_optimization()
             }
             ImGui::InputDouble("tol. ",
                 &state.solver_settings.absolute_tolerance, 0.0, 0.0, "%.3g");
+            break;
+
+        case opt::OptimizationMethod::BARRIER_NEWTON:
+            ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
+            ImGui::InputDoubleBounded("barrier tol.##opt",
+                &state.solver_settings.min_barrier_epsilon, 0.0, 2e19, 0.0, 0.0,
+                "%.3g");
+            ImGui::InputDoubleBounded("line search tol.##opt",
+                &state.solver_settings.line_search_tolerance, 0.0, 2e19, 0.0,
+                0.0, "%.3g");
+            ImGui::PopItemWidth();
+            break;
+
+        default:
+            break;
         }
 
-        ImGui::InputInt("max iter##opt", &state.solver_settings.max_iter);
-        if (ImGui::InputInt(
-                "verbosity##opt", &state.solver_settings.verbosity)) {
-            if (state.solver_settings.verbosity > 0) {
-                spdlog::set_level(spdlog::level::debug);
+        if (ImGui::CollapsingHeader("Settings##opt")) {
+            if (ImGui::InputInt(
+                    "verbosity##opt", &state.solver_settings.verbosity)) {
+                if (state.solver_settings.verbosity > 0) {
+                    spdlog::set_level(spdlog::level::debug);
+                }
             }
+            ImGui::InputIntBounded(
+                "max iter##opt", &state.solver_settings.max_iter, 0);
+            ImGui::InputDoubleBounded("rel. tol.##opt",
+                &state.solver_settings.relative_tolerance, 0.0, 2e19, 0.0, 0.0,
+                "%.3g");
+            ImGui::InputDoubleBounded("abs. tol.##opt",
+                &state.solver_settings.absolute_tolerance, 0.0, 2e19, 0.0, 0.0,
+                "%.3g");
         }
 
         ImGui::Checkbox(
@@ -358,7 +420,7 @@ void ViewerMenu::draw_optimization()
             optimize_displacements();
         }
     }
-}
+} // namespace ccd
 
 // //////////////////////////////////////////////////////////////////////////
 // OPTIMIZATION RESULTS

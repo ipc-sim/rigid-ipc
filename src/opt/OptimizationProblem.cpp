@@ -4,41 +4,6 @@
 namespace ccd {
 namespace opt {
 
-    bool OptimizationProblem::validate_problem()
-    {
-        bool valid = true;
-        valid &= num_vars == x0.rows();
-        valid &= num_vars == x_lower.rows() || x_lower.size() == 0;
-        valid &= num_vars == x_upper.rows() || x_upper.size() == 0;
-        valid &= num_constraints == g_lower.rows() || g_lower.size() == 0;
-        valid &= num_constraints == g_upper.rows() || g_upper.size() == 0;
-        valid &= (g == nullptr) == (jac_g == nullptr);
-        valid &= f != nullptr;
-        valid &= grad_f != nullptr;
-
-        if (!valid) {
-            return false;
-        }
-
-        if (x_lower.size() == 0) {
-            x_lower.resize(num_vars);
-            x_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
-        }
-        if (x_upper.size() == 0) {
-            x_upper.resize(num_vars);
-            x_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
-        }
-        if (g_lower.size() == 0) {
-            g_lower.resize(num_constraints);
-            g_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
-        }
-        if (g_upper.size() == 0) {
-            g_upper.resize(num_constraints);
-            g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
-        }
-        return true;
-    }
-
     OptimizationProblem::OptimizationProblem()
         : num_vars()
         , num_constraints()
@@ -127,6 +92,52 @@ namespace opt {
     {
         this->hessian_f = hessian_f;
         this->hessian_g = hessian_g;
+    }
+
+    bool OptimizationProblem::validate_problem()
+    {
+        bool valid = true;
+        valid &= num_vars == x0.rows();
+        valid &= num_vars == x_lower.rows() || x_lower.size() == 0;
+        valid &= num_vars == x_upper.rows() || x_upper.size() == 0;
+        valid &= num_constraints == g_lower.rows() || g_lower.size() == 0;
+        valid &= num_constraints == g_upper.rows() || g_upper.size() == 0;
+        valid &= (g == nullptr) == (jac_g == nullptr);
+        valid &= f != nullptr;
+        valid &= grad_f != nullptr;
+
+        if (!valid) {
+            return false;
+        }
+
+        if (x_lower.size() == 0) {
+            x_lower.resize(num_vars);
+            x_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
+        }
+        if (x_upper.size() == 0) {
+            x_upper.resize(num_vars);
+            x_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
+        }
+        if (g_lower.size() == 0) {
+            g_lower.resize(num_constraints);
+            g_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
+        }
+        if (g_upper.size() == 0) {
+            g_upper.resize(num_constraints);
+            g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
+        }
+        return true;
+    }
+
+    // Check if all constraints are satisfied at a location.
+    bool OptimizationProblem::are_constraints_satisfied(
+        const Eigen::VectorXd& x, const double tol) const
+    {
+        Eigen::ArrayXd gx = this->g(x).array();
+        return (this->g_lower.array() - 10 * tol <= gx).all()
+            && (gx <= this->g_upper.array() + 10 * tol).all()
+            && (this->x_lower.array() - 10 * tol <= x.array()).all()
+            && (x.array() <= this->x_upper.array() + 10 * tol).all();
     }
 
 } // namespace opt

@@ -42,32 +42,49 @@ namespace opt {
     static const char* QPSolverNames[] = { "OSQP", "MOSEK" };
 
     struct SolverSettings {
-        OptimizationMethod method;   ///< @brief Optimization method to use
-        QPSolver qp_solver;          ///< @brief Quadratic programming solver
-        LCPSolver lcp_solver;        ///< @brief LCP solver
-        NcpUpdate ncp_update_method; ///< @brief Method to update NCP solution
-        int verbosity;               ///< @brief Verbosity of output
-        int max_iter;                ///< @brief Maximum number of iterations
-        double relative_tolerance;   ///< @brief Relative tolerance for x
-        double absolute_tolerance;   ///< @brief Absolute tolerance for x
-        double constraint_tolerance; ///< @brief Tolerance of the constraint
-        double max_time;             ///< @brief Max time to spend solving
+        OptimizationMethod method; ///< @brief Optimization method to use
+
+        int verbosity;             ///< @brief Verbosity of output
+        int max_iter;              ///< @brief Maximum number of iterations
+        double relative_tolerance; ///< @brief Relative tolerances
+        double absolute_tolerance; ///< @brief Absolute tolerances
+
+        // Currently this is only used by NLopt
+        double max_time; ///< @brief Max time to spend solving
+
         /// @brief Callback function, called every outer iteration
         callback_intermediate intermediate_cb;
 
+        // Linearized constraint specific settings
+        QPSolver qp_solver; ///< @brief Quadratic programming solver
+
+        // NCP specific settings
+        NcpUpdate ncp_update_method; ///< @brief Method to update NCP solution
+        LCPSolver lcp_solver;        ///< @brief LCP solver
+
+        // Barrier Newton specific settings
         // ToDo: Find a better place to store this
         /// @brief Starting epsilon for barrier methods using the spline_barrier
-        double starting_barrier_epsilon;
+        double barrier_epsilon;
+        /// @brief Minimum epsilon for barrier methods using the spline_barrier
+        double min_barrier_epsilon;
+        /// @brief Minimum scalar when conducting line search
+        double line_search_tolerance;
 
         /// @brief Construct the solver settings
-        SolverSettings(const OptimizationMethod method = SLSQP,
-            const QPSolver qp_solver = OSQP, const int verbosity = 0,
-            const int max_iter = 3000, const double relative_tolerance = 1e-8,
+        SolverSettings(
+            const OptimizationMethod method = OptimizationMethod::SLSQP,
+            const int verbosity = 0, const int max_iter = 3000,
+            const double relative_tolerance = 1e-8,
             const double absolute_tolerance = 1e-8,
-            const double constraint_tolerance = 1e-8,
             const double max_time = 2e19,
             const callback_intermediate intermediate_cb = nullptr,
-            const double starting_barrier_epsilon = 0.0);
+            const QPSolver qp_solver = QPSolver::OSQP,
+            const NcpUpdate ncp_update_method = NcpUpdate::LINEARIZED,
+            const LCPSolver lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL,
+            const double barrier_epsilon = 0.0,
+            const double min_barrier_epsilon = 1e-8,
+            const double line_search_tolerance = 1e-8);
     };
 
 } // namespace opt

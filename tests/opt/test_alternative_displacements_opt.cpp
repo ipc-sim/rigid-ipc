@@ -23,6 +23,7 @@ TEST_CASE("Test the setup", "[opt][displacements]")
 
     state.recompute_collision_set = GENERATE(false, true);
     state.detection_method = DetectionMethod::BRUTE_FORCE;
+    state.solver_settings.barrier_epsilon = 1.0;
 
     state.reset_optimization_problem();
 

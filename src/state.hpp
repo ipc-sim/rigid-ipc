@@ -129,6 +129,7 @@ public:
     // SCENE OPT
     // ----------------------------------------------------------------------
     void reset_optimization_problem();
+    void reset_barrier_epsilon();
     void optimize_displacements(const std::string filename = "");
 
     void load_optimization(const std::string filename);
