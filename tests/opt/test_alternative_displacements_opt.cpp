@@ -70,13 +70,12 @@ TEST_CASE("Test the setup", "[opt][displacements]")
     finite_hessian_gi.setOnes();
     long i;
     auto diff_i = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-        assert(i >= 0 && i < state.opt_problem.num_constraints);
         auto jac = state.opt_problem.jac_g(x);
         return jac.row(i);
     };
     std::vector<Eigen::MatrixXd> analytic_hessian_g
         = state.opt_problem.hessian_g(state.opt_problem.x0);
-    for (i = 0; i < state.opt_problem.num_constraints; i++) {
+    for (i = 0; i < long(analytic_hessian_g.size()); i++) {
         finite_jacobian(state.opt_problem.x0, diff_i, finite_hessian_gi);
         CHECK(compare_jacobian(
             finite_hessian_gi, analytic_hessian_g[unsigned(i)]));

@@ -14,17 +14,17 @@ int prune_impacts(
     // earliest.
     EdgeEdgeImpact ee_impact;
     int num_pruned_impacts = 0;
-    for (int i = 0; i < all_impacts.size(); i++) {
+    for (size_t i = 0; i < all_impacts.size(); i++) {
         ee_impact = all_impacts[i];
         for (int index :
             { ee_impact.impacted_edge_index, ee_impact.impacting_edge_index }) {
             // If the edge is not in the map or the current impact happens
             // later replace it in the pruned impacts.
             if (pruned_impact_indices[index] == -1
-                || all_impacts[pruned_impact_indices[index]].time
+                || all_impacts[size_t(pruned_impact_indices[index])].time
                     > ee_impact.time) {
                 num_pruned_impacts += int(pruned_impact_indices[index] == -1);
-                pruned_impact_indices[index] = i;
+                pruned_impact_indices[index] = int(i);
             }
         }
     }

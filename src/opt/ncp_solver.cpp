@@ -4,6 +4,7 @@
 #include <opt/lcp_solver.hpp>
 #include <opt/newtons_method.hpp> //> line search
 
+#include <logger.hpp>
 namespace ccd {
 namespace opt {
 
@@ -46,7 +47,6 @@ namespace opt {
 
         uint num_constraints = uint(g_xi.rows());
         uint dof = uint(xi.rows());
-        // no violation
         alpha_i.resize(num_constraints);
         alpha_i.setZero();
 
@@ -56,14 +56,21 @@ namespace opt {
         for (int i = 0; i < max_iter; ++i) {
             // Step 2 ends when all constraints are satisfied
             // and [optional] when the equality condition converges
-            Eigen::VectorXd eq = A * xi - (b + jac_g_xi.transpose() * alpha_i);
-            std::cout << "eq " << eq.squaredNorm() << std::endl;
 
-            if ((g_xi.array() >= 0).all()
-                && (eq.squaredNorm() < convergence_tolerance
-                    || !check_convergence)) {
+            // TODO: we need to be able to test this when recomputing the
+            // collision set
+            //            Eigen::VectorXd eq = A * xi - (b +
+            //            jac_g_xi.transpose() * alpha_i);
+            if ((g_xi.array() >= 0).all()) {
+                //              && (eq.squaredNorm() < convergence_tolerance ||
+                //              !check_convergence)
                 break;
             }
+
+            // number of constraints can change when we update the collision set
+            num_constraints = uint(g_xi.rows());
+            alpha_i.resize(num_constraints);
+            alpha_i.setZero();
 
             // 2.1 Linearize the problem and solve for \alpha
             // Linearization:
@@ -110,23 +117,40 @@ namespace opt {
 
             // 2.3 [optinal] Enforce staying in the unfeasible domain until
             // we converge to a point that solve the equality constraint.
+
+            // TODO: we would like to do this check with a FIXED set of
+            // collisions
             if (check_convergence_unfeasible) {
                 Eigen::VectorXd x_next;
+                double gamma_prev = gamma;
+                std::cout << fmt::format("[{}] gamma_0={:.3e}", i, gamma);
                 for (int j = 0; j < 32; j++) {
                     x_next = xi + delta_x * gamma;
                     g_xi = g(x_next);
+                    if (j == 0) {
+                        std::cout << fmt::format(" gxi_0={}\n", g_xi.sum() > 0);
+                    }
                     if (!(g_xi.array() >= 0).all()) {
                         break;
                     }
+                    gamma_prev = gamma; // feasible gamma
                     gamma /= 2.0;
                 }
+
                 // check if point satisfy equality constraint, then
                 // find the point that should have also satisfied g(x)>0
                 jac_g_xi = jac_g(x_next);
-                eq = A * x_next - (b + jac_g_xi.transpose() * alpha_i);
-                if (eq.squaredNorm() < convergence_tolerance) {
-                    gamma *= 2.0;
-                }
+                // TODO: we need to be able to test this when recomputing the
+                // collision set
+                //                eq = A * x_next - (b + jac_g_xi.transpose() *
+                //                alpha_i); std::cout << fmt::format("
+                //                gamma_n={:.3e} eq={:.3e} gxi_n={}\n",
+                //                    gamma, eq.squaredNorm(), g_xi.sum() > 0);
+
+                //                if (eq.squaredNorm() < convergence_tolerance)
+                //                {
+                //                    gamma = gamma_prev;
+                //                }
             }
 
             // 2.4 Update candidate:
