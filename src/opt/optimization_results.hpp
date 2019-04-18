@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-#include <opt/SolverSettings.hpp>
+#include <opt/solver_settings.hpp>
 
 namespace ccd {
 namespace opt {

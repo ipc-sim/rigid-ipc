@@ -2,7 +2,7 @@
 
 #if BUILD_WITH_MOSEK
 #include <igl/mosek/mosek_quadprog.h>
-#include <opt/OptimizationProblem.hpp> // no-upper-bound
+#include <opt/optimization_problem.hpp> // no-upper-bound
 #endif
 #include <iostream>
 

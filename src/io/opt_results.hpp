@@ -1,6 +1,6 @@
 #include <igl/serialize.h>
-#include <opt/OptimizationResults.hpp>
-#include <opt/SolverSettings.hpp>
+#include <opt/optimization_results.hpp>
+#include <opt/solver_settings.hpp>
 
 namespace ccd {
 namespace io {

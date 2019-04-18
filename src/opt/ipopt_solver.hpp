@@ -5,8 +5,8 @@
 
 #include <IpTNLP.hpp>
 
-#include <opt/OptimizationProblem.hpp>
-#include <opt/OptimizationResults.hpp>
+#include <opt/optimization_problem.hpp>
+#include <opt/optimization_results.hpp>
 
 namespace ccd {
 /**

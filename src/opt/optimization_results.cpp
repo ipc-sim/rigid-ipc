@@ -1,4 +1,4 @@
-#include <opt/OptimizationResults.hpp>
+#include <opt/optimization_results.hpp>
 
 namespace ccd {
 namespace opt {

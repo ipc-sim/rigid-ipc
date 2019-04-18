@@ -1,5 +1,5 @@
 #include <ccd/not_implemented_error.hpp>
-#include <opt/OptimizationProblem.hpp>
+#include <opt/optimization_problem.hpp>
 
 namespace ccd {
 namespace opt {

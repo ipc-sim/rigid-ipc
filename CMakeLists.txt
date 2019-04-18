@@ -50,9 +50,9 @@ set(SRCFILES
 
     src/opt/barrier.cpp
     src/opt/newtons_method.cpp
-    src/opt/OptimizationProblem.cpp
-    src/opt/OptimizationResults.cpp
-    src/opt/SolverSettings.cpp
+    src/opt/optimization_problem.cpp
+    src/opt/optimization_results.cpp
+    src/opt/solver_settings.cpp
     src/opt/displacement_opt.cpp
     src/opt/solver.cpp
     src/opt/nlopt_solver.cpp

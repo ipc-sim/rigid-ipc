@@ -3,9 +3,9 @@
 
 #include <nlopt.hpp>
 
-#include <opt/OptimizationProblem.hpp>
-#include <opt/OptimizationResults.hpp>
-#include <opt/SolverSettings.hpp>
+#include <opt/optimization_problem.hpp>
+#include <opt/optimization_results.hpp>
+#include <opt/solver_settings.hpp>
 
 namespace ccd {
 namespace opt {
