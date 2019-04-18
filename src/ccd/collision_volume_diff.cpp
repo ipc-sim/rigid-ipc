@@ -16,70 +16,69 @@ namespace autodiff {
     void compute_volumes_refresh_toi(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& edge_impact_map, const double epsilon,
+        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
         Eigen::VectorXd& volumes)
     {
 
-        volumes.resize(E.rows());
+        volumes.resize(int(2 * ee_impacts.size()));
 
-        for (long i = 0; i < edge_impact_map.rows(); ++i) {
-            if (edge_impact_map[i] == -1) {
-                volumes(i) = 0.0;
-                continue;
-            }
+        for (size_t i = 0; i < ee_impacts.size(); ++i) {
+            auto& ee_impact = ee_impacts[i];
 
-            EdgeEdgeImpact ee_impact = ee_impacts[size_t(edge_impact_map[i])];
+            volumes(2 * int(i)) = collision_volume_refresh_toi(
+                V, U, E, ee_impact, ee_impact.impacted_edge_index, epsilon);
 
-            volumes(i) = collision_volume_refresh_toi(
-                V, U, E, ee_impact, int(i), epsilon);
+            volumes(2 * int(i) + 1) = collision_volume_refresh_toi(
+                V, U, E, ee_impact, ee_impact.impacting_edge_index, epsilon);
         }
     }
 
     void compute_volumes_gradient(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& edge_impact_map, const double epsilon,
+        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
         Eigen::MatrixXd& volume_grad)
     {
 
-        volume_grad.resize(V.size(), E.rows());
+        volume_grad.resize(V.size(), int(2 * ee_impacts.size()));
 
-        for (long i = 0; i < edge_impact_map.rows(); ++i) {
-            if (edge_impact_map[i] == -1) {
-                volume_grad.col(i).setZero();
-                continue;
-            }
-
-            EdgeEdgeImpact ee_impact = ee_impacts[size_t(edge_impact_map[i])];
-
+        for (size_t i = 0; i < ee_impacts.size(); ++i) {
+            auto& ee_impact = ee_impacts[i];
             Eigen::VectorXd grad;
-            collision_volume_grad(V, U, E, ee_impact, int(i), epsilon, grad);
-            volume_grad.col(i) = grad;
+
+            collision_volume_grad(V, U, E, ee_impact,
+                ee_impact.impacted_edge_index, epsilon, grad);
+            volume_grad.col(2 * int(i)) = grad;
+
+            collision_volume_grad(V, U, E, ee_impact,
+                ee_impact.impacting_edge_index, epsilon, grad);
+            volume_grad.col(2 * int(i) + 1) = grad;
         }
     }
 
     void compute_volumes_hessian(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& edge_impact_map, const double epsilon,
+        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
         std::vector<Eigen::MatrixXd>& volume_hessian)
     {
 
         volume_hessian.clear();
-        volume_hessian.reserve(size_t(E.rows()));
+        volume_hessian.reserve(2 * ee_impacts.size());
 
-        for (long i = 0; i < edge_impact_map.rows(); ++i) {
-            Eigen::MatrixXd hessian = Eigen::MatrixXd::Zero(V.size(), V.size());
-            if (edge_impact_map[i] == -1) {
-                hessian.setZero();
-            } else {
-                EdgeEdgeImpact ee_impact
-                    = ee_impacts[size_t(edge_impact_map[i])];
-                collision_volume_hessian(
-                    V, U, E, ee_impact, int(i), epsilon, hessian);
-            }
+        for (size_t i = 0; i < ee_impacts.size(); ++i) {
+            auto& ee_impact = ee_impacts[i];
+            Eigen::MatrixXd hessian;
+
+            collision_volume_hessian(V, U, E, ee_impact,
+                ee_impact.impacted_edge_index, epsilon, hessian);
+            volume_hessian.push_back(hessian);
+
+            collision_volume_hessian(V, U, E, ee_impact,
+                ee_impact.impacting_edge_index, epsilon, hessian);
             volume_hessian.push_back(hessian);
         }
+
     }
 
     // -----------------------------------------------------------------------------

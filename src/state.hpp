@@ -121,10 +121,6 @@ public:
     std::vector<Eigen::MatrixXd> compute_collision_hessian_volume(
         const Eigen::MatrixXd& Uk, const bool recompute_collision_set);
 
-    /// finds the next/prev edge with a collision volume.
-    /// updates current_edge
-    void goto_following_collision_edge(const bool next, const bool opt_volume);
-
     ////////////////////////////////////////////////////////////////////////////
     // SCENE OPT
     // ----------------------------------------------------------------------
@@ -145,7 +141,6 @@ public:
     // UI
     // ----------------------------------------------------------------------
     Eigen::MatrixX2d get_vertex_at_time();
-    const EdgeEdgeImpact& get_edge_impact();
     Eigen::MatrixX2d get_volume_grad();
     // opt results
     double get_opt_functional();
@@ -168,8 +163,8 @@ public:
     int current_ev_impact;
 
     /// @brief Use for any functionallity that requires showing info of only
-    /// one edge
-    int current_edge;
+    /// one volume
+    int current_volume;
 
     /// when going to next edge, skip edges with no impact
     bool skip_no_impact_edge;

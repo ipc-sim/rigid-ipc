@@ -270,14 +270,7 @@ void ViewerMenu::draw_ccd_steps()
         }
 
         if (state.ee_impacts.size()) {
-            int current_edge = state.current_edge;
-            if (ImGui::InputInt("edge##ee_impact", &current_edge)) {
-                bool next = current_edge > state.current_edge;
-                state.current_edge = current_edge % state.edges.rows();
-                if (state.skip_no_impact_edge) {
-                    state.goto_following_collision_edge(next, /*opt=*/false);
-                }
-
+            if (ImGui::InputInt("volume##volume", &state.current_volume)) {
                 redraw_grad_volume(/*opt_gradient=*/false);
             }
             ImGui::Checkbox("skip empty", &state.skip_no_impact_edge);
@@ -401,22 +394,15 @@ void ViewerMenu::draw_optimization_results()
         }
         ImGui::PopItemWidth();
         if (state.u_history.size() > 0
-            && ImGui::InputInt(
-                "step##opt-results", &(state.current_opt_iteration), 1, 10)) {
+            && ImGui::InputInt("step##opt-results",
+                   &(state.current_opt_iteration), 1, 10)) {
 
             redraw_opt_displacements();
             redraw_grad_volume(/*opt_gradient=*/true);
             redraw_at_opt_time();
         }
 
-        int current_edge = state.current_edge;
-        if (ImGui::InputInt("edge##ee_opt", &current_edge)) {
-            bool next = current_edge > state.current_edge;
-            state.current_edge = current_edge % state.edges.rows();
-            if (state.skip_no_impact_edge) {
-                state.goto_following_collision_edge(next, /*opt=*/true);
-            }
-
+        if (ImGui::InputInt("volume##ee_opt", &state.current_volume)) {
             redraw_grad_volume(/*opt_gradient=*/true);
         }
         ImGui::Checkbox("skip empty##edge_opt", &state.skip_no_impact_edge);

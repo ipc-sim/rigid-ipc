@@ -26,7 +26,7 @@ State::State()
     , canvas_width(10)
     , canvas_height(10)
     , current_ev_impact(-1)
-    , current_edge(-1)
+    , current_volume(-1)
     , grad_scaling(1.0f)
     , use_opt_gradient(false)
     , current_opt_time(0.0)
@@ -80,7 +80,7 @@ void State::reset_scene()
 {
     reset_impacts();
 
-    current_edge = -1;
+    current_volume = -1;
     current_ev_impact = -1;
     current_time = 0.0;
     current_opt_time = 0.0;
@@ -174,7 +174,7 @@ void State::run_ccd_pipeline()
     volumes = compute_collision_volume(displacements, /*recompute_set=*/true);
     volume_grad
         = compute_collision_jac_volume(displacements, /*recompute_set=*/true);
-    current_edge = 0;
+    current_volume = 0;
     current_ev_impact = ev_impacts.size() > 0 ? 0 : -1;
 
     const Eigen::IOFormat CommaFmt(
@@ -220,12 +220,13 @@ Eigen::MatrixXd State::compute_collision_jac_volume(
     if (use_alternative_formulation) {
         ccd::autodiff::compute_penalties_gradient(vertices, Uk, edges,
             ee_impacts, edge_impact_map, volume_epsilon, volume_gradient);
+        assert(volume_gradient.cols() == edges.rows());
     } else {
         ccd::autodiff::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
             edge_impact_map, volume_epsilon, volume_gradient);
+        assert(volume_gradient.cols() == int(2 * ee_impacts.size()));
     }
     assert(volume_gradient.rows() == Uk.size());
-    assert(volume_gradient.cols() == edges.rows());
 
     // Note: standard is to be num_constraints x num_vars
     return volume_gradient.transpose();
@@ -256,22 +257,6 @@ std::vector<Eigen::MatrixXd> State::compute_collision_hessian_volume(
     return volume_hessian;
 }
 
-void State::goto_following_collision_edge(
-    const bool next, const bool opt_volume)
-{
-    double vol = 0.0;
-    int n = next ? 1 : -1;
-    for (long i = 0; i < edges.rows(); ++i) {
-        if (current_edge < 0) {
-            current_edge = int(edges.rows()) + current_edge;
-        }
-        vol = (opt_volume ? get_opt_volume() : volumes)[current_edge];
-        if (vol < 0) {
-            break;
-        }
-        current_edge = (current_edge + n) % edges.rows();
-    }
-}
 // -----------------------------------------------------------------------------
 // OPT
 // -----------------------------------------------------------------------------
@@ -515,7 +500,6 @@ void State::log_optimization_steps(const std::string filename,
     Eigen::MatrixXd jac_gx = opt_problem.jac_g(d);
     o << jac_gx.squaredNorm() << std::endl << std::endl;
 
-
     // print steps
     for (uint i = 0; i < it_x.size(); i++) {
         o << i + 1 << sep;
@@ -526,7 +510,6 @@ void State::log_optimization_steps(const std::string filename,
         o << opt_problem.g(it_x[i]).format(CommaFmt) << sep;
         jac_gx = opt_problem.jac_g(it_x[i]);
         o << jac_gx.squaredNorm() << std::endl;
-
     }
     spdlog::debug("Optimization Log saved to file://{}", filename);
 }
@@ -541,21 +524,14 @@ Eigen::MatrixX2d State::get_vertex_at_time()
 
 Eigen::MatrixX2d State::get_volume_grad()
 {
-    if (current_edge < 0 || volume_grad.rows() == 0) {
+    if (current_volume < 0 || volume_grad.rows() == 0) {
         return Eigen::MatrixX2d::Zero(vertices.rows(), kDIM);
     }
-
-    Eigen::MatrixXd grad = volume_grad.row(current_edge).transpose();
+    current_volume %= volume_grad.rows();
+    Eigen::MatrixXd grad = volume_grad.row(current_volume).transpose();
     grad.resize(grad.rows() / kDIM, kDIM);
 
     return grad;
-}
-
-const EdgeEdgeImpact& State::get_edge_impact()
-{
-    size_t ee_impact_id = size_t(edge_impact_map[current_edge]);
-    assert(ee_impact_id >= 0);
-    return ee_impacts[ee_impact_id];
 }
 
 Eigen::MatrixX2d State::get_opt_vertex_at_time()
@@ -575,12 +551,13 @@ Eigen::MatrixX2d State::get_opt_displacements()
 
 Eigen::MatrixX2d State::get_opt_volume_grad()
 {
-    if (current_edge < 0 || current_opt_iteration < 0
+    if (current_volume < 0 || current_opt_iteration < 0
         || jac_g_history.size() == 0) {
         return Eigen::MatrixX2d::Zero(vertices.rows(), kDIM);
     }
     auto& grad_volume = jac_g_history[size_t(current_opt_iteration)];
-    Eigen::MatrixXd grad = grad_volume.row(current_edge).transpose();
+    current_volume %= grad_volume.rows();
+    Eigen::MatrixXd grad = grad_volume.row(current_volume).transpose();
     grad.resize(grad.rows() / kDIM, kDIM);
 
     return grad;
