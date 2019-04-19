@@ -6,4 +6,4 @@ NotImplementedError::NotImplementedError(const char* error_message)
 {
 }
 
-}
+} // namespace ccd

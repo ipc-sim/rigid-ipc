@@ -10,9 +10,9 @@ namespace ccd {
 
 /// Data structure representing an impact of an edge and vertex.
 struct EdgeVertexImpact {
-    double time; ///< Time of impact
-    int edge_index; ///< Impacted edge
-    double alpha; ///< Parameter along the edge where the impact occured
+    double time;      ///< Time of impact
+    int edge_index;   ///< Impacted edge
+    double alpha;     ///< Parameter along the edge where the impact occured
     int vertex_index; ///< Impacting vertex
 };
 
@@ -76,6 +76,6 @@ void convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
 void convert_edge_edge_to_edge_vertex_impacts(const Eigen::MatrixX2i& edges,
     const EdgeEdgeImpacts& ee_impacts, EdgeVertexImpacts& ev_impacts);
 
-}
+} // namespace ccd
 
 #endif

@@ -17,6 +17,6 @@ public:
         const char* error_message = "Edge is a singular point!");
 };
 
-}
+} // namespace ccd
 
 #endif // DEGENERATE_EDGE_ERROR_H

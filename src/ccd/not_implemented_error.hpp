@@ -17,5 +17,5 @@ public:
         const char* error_message = "Functionality not yet implemented!");
 };
 
-}
+} // namespace ccd
 #endif // NOT_IMPLEMENTED_ERROR_H

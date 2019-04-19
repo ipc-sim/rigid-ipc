@@ -57,4 +57,4 @@ double space_time_collision_volume(const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj, const Eigen::Vector2d& Ui,
     const Eigen::Vector2d& Uj, const double& toi, const double& alpha,
     const double epsilon);
-}
+} // namespace ccd

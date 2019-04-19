@@ -6,4 +6,4 @@ DegenerateEdgeError::DegenerateEdgeError(const char* error_message)
 {
 }
 
-}
+} // namespace ccd

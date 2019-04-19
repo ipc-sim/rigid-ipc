@@ -73,9 +73,9 @@ double space_time_collision_volume(const Eigen::Vector2d& Vi,
     // volume = (1-t)\sqrt{\epsilon^2 \|e(t)\|^2 + (U_{ij} \cdot e(t)^\perp)^2}
     double volume = -(1.0 - toi)
         * std::sqrt(epsilon * epsilon * e_length_toi * e_length_toi
-              + U_ij_dot_e_rot90_toi * U_ij_dot_e_rot90_toi);
+            + U_ij_dot_e_rot90_toi * U_ij_dot_e_rot90_toi);
 
     return volume;
 }
 
-}
+} // namespace ccd

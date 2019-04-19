@@ -19,6 +19,6 @@ namespace ccd {
 int prune_impacts(
     const EdgeEdgeImpacts& all_impacts, Eigen::VectorXi& pruned_impact_indices);
 
-}
+} // namespace ccd
 
 #endif

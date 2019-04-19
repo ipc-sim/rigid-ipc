@@ -7,9 +7,10 @@ A project for robustly resolving collisions with a guarantee of no interpenetrat
 
 ## TODO
 
+* [ ] Have one constraint per collision instead of per edge
 * [ ] Line-search over each degree of freedom independently
-    * [ ] Replace γ, a scalar multiplier, with Γ, a diagonal matrix multiplier.
-* [ ] Update CCD to find all impacts where the time of impact is greater than or equal to t<sub>0</sub>
+    * [ ] Replace &gamma;, a scalar multiplier, with &Gamma;, a diagonal matrix multiplier.
+* [ ] Update CCD to find all impacts where the time of impact is greater than or equal to t<sub>0</sub> not bounded by ≤ t<sub>1</sub>
     * The time of impact is recomputed every time we compute the constraints anyways
 * [ ] Refactor OptimizationProblem
     * [ ] Compute **objective** value, gradient, and hessian in one function

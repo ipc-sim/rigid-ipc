@@ -32,4 +32,4 @@ int prune_impacts(
     return num_pruned_impacts;
 }
 
-}
+} // namespace ccd

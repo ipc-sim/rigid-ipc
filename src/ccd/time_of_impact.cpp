@@ -8,13 +8,9 @@ namespace ccd {
 namespace autodiff {
 
     template <typename T>
-    bool temporal_parameterization_to_spatial(
-        const Eigen::Vector2d& Vi,
-        const Eigen::Vector2d& Vj,
-        const Eigen::Vector2d& Vk,
-        const Vector2T<T>& Ui,
-        const Vector2T<T>& Uj,
-        const Vector2T<T>& Uk,
+    bool temporal_parameterization_to_spatial(const Eigen::Vector2d& Vi,
+        const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
+        const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,
         const T& toi, T& alpha)
     {
         static const double kEPSILON = 1E-8;
@@ -42,13 +38,9 @@ namespace autodiff {
     }
 
     template <typename T>
-    bool compute_edge_vertex_time_of_impact(
-        const Eigen::Vector2d& Vi,
-        const Eigen::Vector2d& Vj,
-        const Eigen::Vector2d& Vk,
-        const Vector2T<T>& Ui,
-        const Vector2T<T>& Uj,
-        const Vector2T<T>& Uk,
+    bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
+        const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
+        const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,
         T& toi)
     {
         static const double kEPSILON = 1E-8;
@@ -85,7 +77,7 @@ namespace autodiff {
         auto check_solution = [&](T t) {
             return t >= 0 && t <= 1
                 && temporal_parameterization_to_spatial(
-                       Vi, Vj, Vk, Ui, Uj, Uk, t, alpha)
+                    Vi, Vj, Vk, Ui, Uj, Uk, t, alpha)
                 && alpha >= 0 && alpha <= 1;
         };
         bool x1_valid = check_solution(x1);
@@ -95,14 +87,10 @@ namespace autodiff {
         return x1_valid || x2_valid;
     }
 
-    void compute_edge_vertex_time_of_impact_grad(
-        const Eigen::Vector2d& Vi,
-        const Eigen::Vector2d& Vj,
-        const Eigen::Vector2d& Vk,
-        const Eigen::Vector2d& Ui,
-        const Eigen::Vector2d& Uj,
-        const Eigen::Vector2d& Uk,
-        Vector8d& grad)
+    void compute_edge_vertex_time_of_impact_grad(const Eigen::Vector2d& Vi,
+        const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
+        const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
+        const Eigen::Vector2d& Uk, Vector8d& grad)
     {
 
         // All definitions using DScalar must be done after setVariableCount
@@ -121,14 +109,10 @@ namespace autodiff {
         grad = toi.getGradient();
     }
 
-    void compute_edge_vertex_time_of_impact_grad_fd(
-        const Eigen::Vector2d& Vi,
-        const Eigen::Vector2d& Vj,
-        const Eigen::Vector2d& Vk,
-        const Eigen::Vector2d& Ui,
-        const Eigen::Vector2d& Uj,
-        const Eigen::Vector2d& Uk,
-        Vector8d& grad)
+    void compute_edge_vertex_time_of_impact_grad_fd(const Eigen::Vector2d& Vi,
+        const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
+        const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
+        const Eigen::Vector2d& Uk, Vector8d& grad)
     {
         auto f = [&](const Eigen::VectorXd& U) {
             Eigen::Vector2d ui = U.segment(0, 2);
@@ -158,6 +142,6 @@ namespace autodiff {
         Eigen::Matrix<double, 2, 1, 0, 2, 1> const&,
         Eigen::Matrix<double, 2, 1, 0, 2, 1> const&,
         Eigen::Matrix<double, 2, 1, 0, 2, 1> const&, double&);
-}
+} // namespace autodiff
 
-}
+} // namespace ccd
