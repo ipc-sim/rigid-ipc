@@ -221,7 +221,6 @@ Eigen::MatrixXd State::compute_collision_jac_volume(
         ccd::autodiff::compute_penalties_gradient(vertices, Uk, edges,
             ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
             volume_gradient);
-        assert(volume_gradient.cols() == edges.rows());
     } else {
         ccd::autodiff::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
             edge_impact_map, volume_epsilon, volume_gradient);
@@ -241,15 +240,10 @@ std::vector<Eigen::MatrixXd> State::compute_collision_hessian_volume(
         detect_collisions(Uk * (1 + 2 * solver_settings.barrier_epsilon));
     }
 
-
     if (use_alternative_formulation) {
         ccd::autodiff::compute_penalties_hessian(vertices, Uk, edges,
             ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
             volume_hessian);
-        const long num_vars = Uk.size(), num_constraints = edges.rows();
-        assert(volume_hessian.size() == unsigned(num_constraints));
-        assert(volume_hessian.size() == 0 || volume_hessian[0].rows() == num_vars);
-        assert(volume_hessian.size() == 0 || volume_hessian[0].cols() == num_vars);
     } else {
         ccd::autodiff::compute_volumes_hessian(vertices, Uk, edges, ee_impacts,
             edge_impact_map, volume_epsilon, volume_hessian);
@@ -370,6 +364,7 @@ void State::reset_barrier_epsilon()
             if (!was_barrier_epsilon_reset
                 || val < solver_settings.barrier_epsilon) {
                 solver_settings.barrier_epsilon = val;
+                was_barrier_epsilon_reset = true;
             }
         }
     }

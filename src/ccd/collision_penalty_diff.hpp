@@ -3,8 +3,8 @@
 #include <Eigen/Core>
 
 #include <autodiff/autodiff_types.hpp>
+#include <ccd/collision_constraint_diff.hpp>
 #include <ccd/collision_detection.hpp>
-#include <ccd/collision_volume_diff.hpp>
 
 /**
  * @namespace ccd:
@@ -17,6 +17,24 @@ namespace ccd {
  * @brief CCD functions that use autodiff features
  */
 namespace autodiff {
+
+    /**
+     * Compute the penalty of intersection between for edge_ij for an impact
+     * with edge_kl
+     *
+     *  @param V_{ijkl}     : Vertices positions.
+     *  @param U_{ijkl}     : Vertices displacements.
+     *  @param impact_node  : The node (i,j,k or l) that caused the impact
+     *
+     *  @return             : The space-time interference penalty.
+     */
+    template <typename T>
+    T collision_penalty(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
+        const Eigen::Vector2d& Vk, const Eigen::Vector2d& Vl,
+        const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,
+        const Vector2T<T>& Ul, const ImpactNode impact_node,
+        const double barrier_epsilon);
+
     // ------------------------------------------------------------------------
     // ALL IMPACTS GLOBAL Penalties Derivatives
     // ------------------------------------------------------------------------
@@ -93,23 +111,6 @@ namespace autodiff {
     // ------------------------------------------------------------------------
     // SINGLE IMPACT LOCAL Penalties Derivatives
     // ------------------------------------------------------------------------
-
-    /**
-     * Compute the penalty of intersection between for edge_ij for an impact
-     * with edge_kl
-     *
-     *  @param V_{ijkl}     : Vertices positions.
-     *  @param U_{ijkl}     : Vertices displacements.
-     *  @param impact_node  : The node (i,j,k or l) that caused the impact
-     *
-     *  @return             : The space-time interference penalty.
-     */
-    template <typename T>
-    T collision_penalty(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
-        const Eigen::Vector2d& Vk, const Eigen::Vector2d& Vl,
-        const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,
-        const Vector2T<T>& Ul, const ImpactNode impact_node,
-        const double barrier_epsilon);
 
     DScalar collision_penalty_differentiable(const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,

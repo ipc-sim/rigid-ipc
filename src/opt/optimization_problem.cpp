@@ -134,8 +134,11 @@ namespace opt {
         const Eigen::VectorXd& x, const double tol) const
     {
         Eigen::ArrayXd gx = this->g(x).array();
-        return (this->g_lower.array() - 10 * tol <= gx).all()
-            && (gx <= this->g_upper.array() + 10 * tol).all()
+        // return (this->g_lower.array() - 10 * tol <= gx).all()
+        //     && (gx <= this->g_upper.array() + 10 * tol).all()
+        //     && (this->x_lower.array() - 10 * tol <= x.array()).all()
+        //     && (x.array() <= this->x_upper.array() + 10 * tol).all();
+        return (-10 * tol <= gx).all()
             && (this->x_lower.array() - 10 * tol <= x.array()).all()
             && (x.array() <= this->x_upper.array() + 10 * tol).all();
     }

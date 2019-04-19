@@ -40,6 +40,7 @@ set(SRCFILES
     src/ccd/collision_detection.cpp
     src/ccd/prune_impacts.cpp
     src/ccd/collision_volume.cpp
+    src/ccd/collision_constraint_diff.cpp
     src/ccd/collision_volume_diff.cpp
     src/ccd/collision_penalty_diff.cpp
     src/ccd/time_of_impact.cpp

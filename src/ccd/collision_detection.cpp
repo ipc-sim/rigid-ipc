@@ -10,10 +10,6 @@
 
 #define EPSILON (1e-8)
 
-#define EDGE_VERTEX_PARAMS                                                     \
-    vertex0, displacement0, edge_vertex1, edge_displacement1, edge_vertex2,    \
-        edge_displacement2
-
 namespace ccd {
 
 // Convert a temporal parameterization to a spatial parameterization.
@@ -77,10 +73,11 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
         + edge_vertex1(1) * edge_vertex2(0) - edge_vertex1(0) * edge_vertex2(1);
 
     auto check_solution = [&](double t, double& s) {
-        // clang-format off
-        return t >= 0 && t <= 1 && temporal_parameterization_to_spatial(
-                EDGE_VERTEX_PARAMS, t, s) && s >= 0 && s <= 1;
-        // clang-format on
+        return t >= 0 && t <= 1
+            && temporal_parameterization_to_spatial(vertex0, displacement0,
+                edge_vertex1, edge_displacement1, edge_vertex2,
+                edge_displacement2, t, s)
+            && s >= 0 && s <= 1;
     };
 
     if (std::abs(a) > EPSILON) { // Is the equation truly quadratic?
@@ -96,8 +93,8 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
             bool is_toi1_valid = check_solution(toi1, alpha1);
 
             if (is_toi0_valid) {
-                toi = (toi0 < toi1 || !is_toi1_valid) ? toi0 : toi1;
-                alpha = (toi0 < toi1 || !is_toi1_valid) ? alpha0 : alpha1;
+                toi = (!is_toi1_valid || toi0 < toi1) ? toi0 : toi1;
+                alpha = (!is_toi1_valid || toi0 < toi1) ? alpha0 : alpha1;
                 return true;
             } else if (is_toi1_valid) {
                 toi = toi1;
@@ -114,8 +111,12 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
         // a = b = c = 0 => infinite solutions, but may not be on the edge.
         // Find the spatial locations along the line at t=0 and t=1
         double s0(0.0), s1(0.0);
-        temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, 0, s0);
-        temporal_parameterization_to_spatial(EDGE_VERTEX_PARAMS, 1, s1);
+        temporal_parameterization_to_spatial(vertex0, displacement0,
+            edge_vertex1, edge_displacement1, edge_vertex2, edge_displacement2,
+            0, s0);
+        temporal_parameterization_to_spatial(vertex0, displacement0,
+            edge_vertex1, edge_displacement1, edge_vertex2, edge_displacement2,
+            1, s1);
 
         // Possible cases for trajectories:
         // - No impact to impact ():

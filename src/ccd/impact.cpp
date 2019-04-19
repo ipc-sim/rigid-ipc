@@ -52,7 +52,6 @@ void convert_edge_edge_to_edge_vertex_impacts(const Eigen::MatrixX2i& edges,
     ev_impacts.clear();
     EdgeVertexImpact ev_impact;
     for (EdgeEdgeImpact ee_impact : ee_impacts) {
-
         ev_impact.time = ee_impact.time;
         ev_impact.edge_index = ee_impact.impacted_edge_index;
         ev_impact.alpha = ee_impact.impacted_alpha;
@@ -62,4 +61,4 @@ void convert_edge_edge_to_edge_vertex_impacts(const Eigen::MatrixX2i& edges,
         ev_impacts.push_back(ev_impact);
     }
 }
-}
+} // namespace ccd
