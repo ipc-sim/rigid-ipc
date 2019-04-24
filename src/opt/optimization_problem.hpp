@@ -12,22 +12,21 @@ namespace opt {
     static const double NO_LOWER_BOUND = -2e19;
 
     ///@brief function type for functional f(x)
-    typedef std::function<double(const Eigen::VectorXd& x)> callback_f;
+    typedef std::function<double(const Eigen::VectorXd&)> callback_f;
     ///@brief function type for gradient of functional \nabla f(x)
-    typedef std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>
+    typedef std::function<Eigen::VectorXd(const Eigen::VectorXd&)>
         callback_grad_f;
     ///@brief function type for hessian of functional \f$\nabla^2 f(x)\f$
-    typedef std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>
+    typedef std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>
         callback_hessian_f;
     ///@brief function type for constraints g(x)
-    typedef std::function<Eigen::VectorXd(const Eigen::VectorXd& x)> callback_g;
+    typedef std::function<Eigen::VectorXd(const Eigen::VectorXd&)> callback_g;
     ///@brief function type for jacobian of constraints \nabla g(x)
-    typedef std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>
+    typedef std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>
         callback_jac_g;
     ///@brief function type for direvative of the jacobian of constraints
     /// \f$\nabla^2 g(x)\f$
-    typedef std::function<std::vector<Eigen::MatrixXd>(
-        const Eigen::VectorXd& x)>
+    typedef std::function<std::vector<Eigen::MatrixXd>(const Eigen::VectorXd&)>
         callback_hessian_g;
 
     /**

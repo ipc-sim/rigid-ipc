@@ -72,9 +72,14 @@ namespace autodiff {
         const Eigen::VectorXi& edge_impact_map, const double barrier_epsilon,
         Eigen::VectorXd& penalties)
     {
-        compute_constraints_per_edge_refresh_toi(V, U, E, ee_impacts,
-            edge_impact_map, barrier_epsilon, collision_penalty<double>,
-            penalties);
+        compute_constraints_refresh_toi(V, U, E, ee_impacts, edge_impact_map,
+            barrier_epsilon, collision_penalty<double>, penalties);
+
+        // Use a default value of 10 * barrier_epsilon because any value greater
+        // than epsilon results in zero penalty
+        // compute_constraints_per_edge_refresh_toi(V, U, E, ee_impacts,
+        //     edge_impact_map, barrier_epsilon, collision_penalty<double>,
+        //     10 * barrier_epsilon, penalties);
     }
 
     void compute_penalties_gradient(const Eigen::MatrixX2d& V,
@@ -83,9 +88,11 @@ namespace autodiff {
         const Eigen::VectorXi& edge_impact_map, const double barrier_epsilon,
         Eigen::MatrixXd& penalties_grad)
     {
-        compute_constraints_gradient_per_edge(V, U, E, ee_impacts,
-            edge_impact_map, barrier_epsilon, collision_penalty<DScalar>,
-            penalties_grad);
+        compute_constraints_gradient(V, U, E, ee_impacts, edge_impact_map,
+            barrier_epsilon, collision_penalty<DScalar>, penalties_grad);
+        // compute_constraints_gradient_per_edge(V, U, E, ee_impacts,
+        //     edge_impact_map, barrier_epsilon, collision_penalty<DScalar>,
+        //     penalties_grad);
     }
 
     void compute_penalties_hessian(const Eigen::MatrixX2d& V,
@@ -94,9 +101,11 @@ namespace autodiff {
         const Eigen::VectorXi& edge_impact_map, const double barrier_epsilon,
         std::vector<Eigen::MatrixXd>& penalties_hessian)
     {
-        compute_constraints_hessian_per_edge(V, U, E, ee_impacts,
-            edge_impact_map, barrier_epsilon, collision_penalty<DScalar>,
-            penalties_hessian);
+        compute_constraints_hessian(V, U, E, ee_impacts, edge_impact_map,
+            barrier_epsilon, collision_penalty<DScalar>, penalties_hessian);
+        // compute_constraints_hessian_per_edge(V, U, E, ee_impacts,
+        //     edge_impact_map, barrier_epsilon, collision_penalty<DScalar>,
+        //     penalties_hessian);
     }
 
     // -----------------------------------------------------------------------------

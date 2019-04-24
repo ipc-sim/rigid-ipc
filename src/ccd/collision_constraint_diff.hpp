@@ -54,6 +54,7 @@ namespace autodiff {
      *                                (e.g. volume epsilon or barrier epsilon)
      * @param[in] compute_constraint  A function to compute the constraint
      *                                locally
+     * @param[in] default_value       The value used when there is no collision
      *
      * @param[out] constraints A vector for the computed constraint values
      */
@@ -62,7 +63,7 @@ namespace autodiff {
         const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         const constraint_func<double>& compute_constraint,
-        Eigen::VectorXd& constraints);
+        const double default_value, Eigen::VectorXd& constraints);
 
     /**
      * @brief Compute the first derivative of the constraints globally where

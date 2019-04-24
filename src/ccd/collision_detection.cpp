@@ -138,7 +138,7 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& vertex0,
 // Find all edge-vertex collisions in one time step.
 void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
-    EdgeVertexImpacts& ev_impacts, DetectionMethod method)
+    EdgeVertexImpacts& ev_impacts, DetectionMethod method, bool reset_impacts)
 {
     assert(vertices.size() == displacements.size());
     assert(method == DetectionMethod::BRUTE_FORCE
@@ -146,11 +146,11 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     switch (method) {
     case BRUTE_FORCE:
         detect_edge_vertex_collisions_brute_force(
-            vertices, displacements, edges, ev_impacts);
+            vertices, displacements, edges, ev_impacts, reset_impacts);
         break;
     case HASH_MAP:
         detect_edge_vertex_collisions_hash_map(
-            vertices, displacements, edges, ev_impacts);
+            vertices, displacements, edges, ev_impacts, reset_impacts);
         break;
     }
 }
@@ -159,26 +159,45 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
 // comparisons of all edges and all vertices.
 void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
-    EdgeVertexImpacts& ev_impacts)
+    EdgeVertexImpacts& ev_impacts, bool reset_impacts)
 {
-    double toi, alpha;
-    ev_impacts.clear();
+    double toi = -1, alpha = -1;
+
+    if (reset_impacts) {
+        ev_impacts.clear();
+    }
+
+    Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+        was_impact_found = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic,
+            Eigen::RowMajor>::Constant(edges.rows(), vertices.rows(), false);
+
+    // If we do not recompute vertex impacts then we need to prevent duplicates
+    for (EdgeVertexImpact ev_impact : ev_impacts) {
+        was_impact_found(ev_impact.edge_index, ev_impact.vertex_index) = true;
+    }
+
     EdgeVertexImpact ev_impact;
-    for (int edge_index = 0; edge_index < edges.rows(); edge_index++) {
-        auto edge = edges.row(edge_index);
-        for (int vertex_index = 0; vertex_index < vertices.rows();
-             vertex_index++) {
-            if (vertex_index != edge(0) && vertex_index != edge(1)) {
-                if (compute_edge_vertex_time_of_impact(
-                        vertices.row(vertex_index),
-                        displacements.row(vertex_index), vertices.row(edge(0)),
-                        displacements.row(edge(0)), vertices.row(edge(1)),
-                        displacements.row(edge(1)), toi, alpha)) {
+    // Loop over all edges
+    for (int edge_idx = 0; edge_idx < edges.rows(); edge_idx++) {
+        // Get the edge endpoint indices
+        Eigen::Vector2i edge = edges.row(edge_idx);
+
+        // Loop over all vertices
+        for (int vertex_idx = 0; vertex_idx < vertices.rows(); vertex_idx++) {
+            // Check that the vertex is not an endpoint of the edge
+            if (vertex_idx != edge(0) && vertex_idx != edge(1)) {
+                // Check if there is a collision between the vertex and edge
+                if (!was_impact_found(edge_idx, vertex_idx)
+                    && compute_edge_vertex_time_of_impact(
+                        vertices.row(vertex_idx), displacements.row(vertex_idx),
+                        vertices.row(edge(0)), displacements.row(edge(0)),
+                        vertices.row(edge(1)), displacements.row(edge(1)), toi,
+                        alpha)) {
 
                     ev_impact.time = toi;
-                    ev_impact.edge_index = edge_index;
+                    ev_impact.edge_index = edge_idx;
                     ev_impact.alpha = alpha;
-                    ev_impact.vertex_index = vertex_index;
+                    ev_impact.vertex_index = vertex_idx;
 
                     ev_impacts.push_back(ev_impact);
                 }
@@ -192,7 +211,8 @@ void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
 void detect_edge_vertex_collisions_hash_map(
     const Eigen::MatrixXd& /* vertices */,
     const Eigen::MatrixXd& /* displacements */,
-    const Eigen::MatrixX2i& /* edges */, EdgeVertexImpacts& /* ev_impacts */)
+    const Eigen::MatrixX2i& /* edges */, EdgeVertexImpacts& /* ev_impacts */,
+    bool /* reset_impacts */)
 {
     throw NotImplementedError(
         "Hash Map collision detection is not implemented yet.");

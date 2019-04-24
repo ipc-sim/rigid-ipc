@@ -186,7 +186,7 @@ void State::detect_collisions(const Eigen::MatrixXd& displ)
 {
     using namespace ccd;
     detect_edge_vertex_collisions(
-        vertices, displ, edges, ev_impacts, detection_method);
+        vertices, displ, edges, ev_impacts, detection_method, false);
     convert_edge_vertex_to_edge_edge_impacts(edges, ev_impacts, ee_impacts);
     num_pruned_impacts = prune_impacts(ee_impacts, edge_impact_map);
 }
@@ -297,7 +297,7 @@ void State::reset_optimization_problem()
         return Eigen::MatrixXd::Identity(x.size(), x.size());
     };
 
-    opt_problem.g = [=](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+    opt_problem.g = [this](const Eigen::VectorXd& x) -> Eigen::VectorXd {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
@@ -305,7 +305,7 @@ void State::reset_optimization_problem()
         return this->compute_collision_volume(Uk, recompute_collision_set);
     };
 
-    opt_problem.jac_g = [=](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
+    opt_problem.jac_g = [this](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
@@ -566,6 +566,9 @@ Eigen::MatrixX2d State::get_opt_volume_grad()
         return Eigen::MatrixX2d::Zero(vertices.rows(), kDIM);
     }
     auto& grad_volume = jac_g_history[size_t(current_opt_iteration)];
+    if (grad_volume.size() == 0) {
+        return Eigen::MatrixX2d::Zero(vertices.rows(), kDIM);
+    }
     current_volume %= grad_volume.rows();
     Eigen::MatrixXd grad = grad_volume.row(current_volume).transpose();
     grad.resize(grad.rows() / kDIM, kDIM);

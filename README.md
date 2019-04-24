@@ -19,6 +19,10 @@ A project for robustly resolving collisions with a guarantee of no interpenetrat
     * [ ] Replace our objective with a more physically based one
     * [ ] Simple model (gravity, no friction, etc.)
     * [ ] Friction model
+* [ ] Add static objects (displacement is fixed to zero)
+    * [ ] Remove the variables from the optimization
+    * OR
+    * [ ] Set the displacements to zero every iteration (this might lead to intersections)
 * [ ] Add rigid bodies by limiting the degrees of freedom to one rotation and position per body. Solve the optimization on these variables.
     * [ ] Implement translation from rigid motion to point-wise linear trajectories per time-step
 * [ ] Add minimum separation distance

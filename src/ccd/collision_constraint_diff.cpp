@@ -48,10 +48,10 @@ namespace autodiff {
         const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         const constraint_func<double>& compute_constraint,
-        Eigen::VectorXd& constraints)
+        const double default_value, Eigen::VectorXd& constraints)
     {
         constraints.resize(E.rows());
-        constraints.setConstant(10 * epsilon);
+        constraints.setConstant(default_value);
         for (long i = 0; i < edge_impact_map.rows(); ++i) {
             if (edge_impact_map[i] >= 0) {
                 constraints(i) = collision_constraint_refresh_toi(V, U, E,
