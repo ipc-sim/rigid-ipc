@@ -1,3 +1,6 @@
+#define _USE_MATH_DEFINES
+
+#include <cmath>
 #include <iostream>
 
 #include <catch.hpp>
@@ -5,10 +8,14 @@
 #include <autodiff/finitediff.hpp>
 #include <state.hpp>
 
+#include <Eigen/Geometry>
+
+#define NUM_ANGLES (5)
+
 using namespace ccd;
 using namespace opt;
 
-TEST_CASE("Test the setup", "[opt][displacements]")
+TEST_CASE("test the setup", "[opt][displacements][barrier]")
 {
     State state;
     state.use_alternative_formulation = GENERATE(false, true);
@@ -24,6 +31,7 @@ TEST_CASE("Test the setup", "[opt][displacements]")
     state.recompute_collision_set = GENERATE(false, true);
     state.detection_method = DetectionMethod::BRUTE_FORCE;
     state.solver_settings.barrier_epsilon = 1.0;
+    state.solver_settings.method = OptimizationMethod::BARRIER_NEWTON;
 
     state.reset_optimization_problem();
 
@@ -82,49 +90,66 @@ TEST_CASE("Test the setup", "[opt][displacements]")
     }
 }
 
-// TEST_CASE("Displacment optimization test",
-// "[!shouldfail][opt][displacements]")
-// {
-//     Eigen::MatrixX2d V;
-//     V.resize(4, 2);
-//     Eigen::MatrixX2d U;
-//     U.resize(4, 2);
-//     Eigen::MatrixX2i E;
-//     E.resize(2, 2);
-//     double volume_epsilon = 1.0;
-//     DetectionMethod ccd_detection_method = DetectionMethod::BRUTE_FORCE;
-//     Eigen::MatrixX2d Uopt;
-//     Uopt.resize(4, 2);
-//     Eigen::MatrixX2d actual_Uopt;
-//     actual_Uopt.resize(4, 2);
-//     OptimizationMethod opt_method;
-//     unsigned max_iter = 1000;
-//
-//     SECTION("Horizontal edge falling")
-//     {
-//         // TODO: Fix this test
-//         SECTION("MMA Optimizer") { opt_method = OptimizationMethod::MMA; }
-//         SECTION("SLSQP Optimizer") { opt_method = OptimizationMethod::SLSQP;
-//         } SECTION("IP Optimizer") { opt_method = OptimizationMethod::IP; } V
-//         << -1, 1, 1, 1, -2, 0, 2, 0; U << 0, -2, 0, -2, 0, 0, 0, 0; E << 0,
-//         1, 2, 3; displacements_optimization(V, U, E, volume_epsilon,
-//             ccd_detection_method, opt_method, max_iter, Uopt);
-//         actual_Uopt << 0, -1, 0, -1, 0, 0, 0, 0;
-//         CHECK((Uopt - actual_Uopt).squaredNorm() ==
-//         Approx(0.0).margin(1e-8));
-//     }
-//     // SECTION("Vertical edge falling")
-//     // {
-//     //     V << 0, 2, 0, 1, -1, 0, 1, 0;
-//     //     U << 0, -3, 0, -3, 0, 0, 0, 0;
-//     //     E << 0, 1, 2, 3;
-//     //     displacements_nlopt_step(
-//     //         V, U, E, volume_epsilon, ccd_detection_method, Uopt);
-//     //     V(2, 0) *= 2;
-//     //     V(3, 0) *= 2;
-//     //     displacements_nlopt_step(
-//     //         V, U, E, volume_epsilon, ccd_detection_method, actual_Uopt);
-//     //     CHECK((Uopt - actual_Uopt).squaredNorm() ==
-//     //     Approx(0.0).margin(1e-8));
-//     // }
-// }
+TEST_CASE("two rotating edges", "[opt][displacements][barrier]")
+{
+    State state;
+    state.load_scene(std::string(FIXTURES_DIR) + "/single-falling-edge.json");
+
+    REQUIRE(state.vertices.rows() == 4);
+    REQUIRE(state.displacements.rows() == 4);
+    REQUIRE(state.edges.rows() == 2);
+
+    state.use_alternative_formulation = true;
+
+    state.recompute_collision_set = GENERATE(false, true);
+    state.detection_method = DetectionMethod::BRUTE_FORCE;
+    state.solver_settings.method = OptimizationMethod::BARRIER_NEWTON;
+
+    double theta1 = 2 * M_PI / NUM_ANGLES * GENERATE(range(0, NUM_ANGLES));
+    double theta2 = 2 * M_PI / NUM_ANGLES * GENERATE(range(0, NUM_ANGLES));
+
+    for (int i = 0; i < state.edges.rows(); i++) {
+        Eigen::Rotation2D<double> R(i == 0 ? theta1 : theta2);
+        Eigen::RowVector2d center = (state.vertices.row(state.edges(i, 1))
+                                        + state.vertices.row(state.edges(i, 0)))
+            / 2;
+        state.vertices.row(state.edges(i, 0))
+            = (R * (state.vertices.row(state.edges(i, 0)) - center).transpose())
+                  .transpose()
+            + center;
+        state.vertices.row(state.edges(i, 1))
+            = (R * (state.vertices.row(state.edges(i, 1)) - center).transpose())
+                  .transpose()
+            + center;
+    }
+
+    state.solver_settings.min_barrier_epsilon = 1e-3;
+    state.solver_settings.line_search_tolerance = 1e-4;
+    state.solver_settings.absolute_tolerance = 1e-3;
+
+    state.optimize_displacements("");
+    CHECK(state.opt_results.success);
+}
+
+TEST_CASE("corner case", "[opt][displacements][barrier]")
+{
+    State state;
+    state.load_scene(std::string(FIXTURES_DIR) + "/corner-case.json");
+
+    REQUIRE(state.vertices.rows() == 5);
+    REQUIRE(state.displacements.rows() == 5);
+    REQUIRE(state.edges.rows() == 3);
+
+    state.use_alternative_formulation = true;
+
+    state.recompute_collision_set = GENERATE(false, true);
+    state.detection_method = DetectionMethod::BRUTE_FORCE;
+    state.solver_settings.method = OptimizationMethod::BARRIER_NEWTON;
+
+    state.solver_settings.min_barrier_epsilon = 1e-3;
+    state.solver_settings.line_search_tolerance = 1e-4;
+    state.solver_settings.absolute_tolerance = 1e-3;
+
+    state.optimize_displacements("");
+    CHECK(state.opt_results.success);
+}

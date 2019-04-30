@@ -433,7 +433,7 @@ void State::optimize_displacements(const std::string filename)
     // 5. run optimization
     opt_results
         = ccd::opt::displacement_optimization(opt_problem, U0, solver_settings);
-    if (solver_settings.verbosity) {
+    if (solver_settings.verbosity > 0) {
         log_optimization_steps(filename, it_x, it_lambda, it_gamma);
     }
 

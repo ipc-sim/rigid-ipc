@@ -48,8 +48,8 @@ namespace opt {
 
         // Stopping criteria
         opt.set_xtol_rel(settings.relative_tolerance);
-        // This does not play well with MMA for some reason
-        // opt.set_xtol_abs(problem.xtol_abs);
+        // This may not play well with MMA for some reason
+        opt.set_xtol_abs(settings.absolute_tolerance);
         opt.set_maxeval(settings.max_iter);
         opt.set_maxtime(settings.max_time);
 

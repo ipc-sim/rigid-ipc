@@ -7,7 +7,7 @@ A project for robustly resolving collisions with a guarantee of no interpenetrat
 
 ## TODO
 
-* [ ] Have one constraint per collision instead of per edge
+* [x] Have one constraint per collision instead of per edge
 * [ ] Line-search over each degree of freedom independently
     * [ ] Replace &gamma;, a scalar multiplier, with &Gamma;, a diagonal matrix multiplier.
 * [ ] Update CCD to find all impacts where the time of impact is greater than or equal to t<sub>0</sub> not bounded by ≤ t<sub>1</sub>
