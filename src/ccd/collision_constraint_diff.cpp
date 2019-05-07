@@ -1,3 +1,4 @@
+// General code to compute the collision constraint and its derivative(s).
 #include <ccd/collision_constraint_diff.hpp>
 
 #include <autodiff/finitediff.hpp>
@@ -5,6 +6,19 @@
 #include <ccd/time_of_impact.hpp>
 
 #include <iostream>
+
+#include <profiler.hpp>
+#ifdef PROFILE_FUNCTIONS
+#include <igl/Timer.h>
+long number_of_constraint_calls = 0;
+double time_spent_computing_constraint = 0;
+
+long number_of_gradient_calls = 0;
+double time_spent_computing_gradient = 0;
+
+long number_of_hessian_calls = 0;
+double time_spent_computing_hessian = 0;
+#endif
 
 namespace ccd {
 namespace autodiff {
@@ -113,6 +127,12 @@ namespace autodiff {
         const constraint_func<double>& compute_constraint,
         Eigen::VectorXd& constraints)
     {
+#ifdef PROFILE_FUNCTIONS
+        number_of_constraint_calls++;
+        igl::Timer timer;
+        timer.start();
+#endif
+
         constraints.resize(int(2 * ee_impacts.size()));
 
         for (size_t i = 0; i < ee_impacts.size(); ++i) {
@@ -126,6 +146,11 @@ namespace autodiff {
                 E, ee_impact, ee_impact.impacting_edge_index, epsilon,
                 compute_constraint);
         }
+
+#ifdef PROFILE_FUNCTIONS
+        timer.stop();
+        time_spent_computing_constraint += timer.getElapsedTime();
+#endif
     }
 
     void compute_constraints_gradient(const Eigen::MatrixX2d& V,
@@ -135,6 +160,11 @@ namespace autodiff {
         const constraint_func<DScalar>& compute_constraint,
         Eigen::MatrixXd& constraint_grad)
     {
+#ifdef PROFILE_FUNCTIONS
+        number_of_gradient_calls++;
+        igl::Timer timer;
+        timer.start();
+#endif
 
         constraint_grad.resize(V.size(), int(2 * ee_impacts.size()));
 
@@ -152,6 +182,11 @@ namespace autodiff {
                 grad);
             constraint_grad.col(2 * int(i) + 1) = grad;
         }
+
+#ifdef PROFILE_FUNCTIONS
+        timer.stop();
+        time_spent_computing_gradient += timer.getElapsedTime();
+#endif
     }
 
     void compute_constraints_hessian(const Eigen::MatrixX2d& V,
@@ -161,6 +196,11 @@ namespace autodiff {
         const constraint_func<DScalar>& compute_constraint,
         std::vector<Eigen::MatrixXd>& constraint_hessian)
     {
+#ifdef PROFILE_FUNCTIONS
+        number_of_hessian_calls++;
+        igl::Timer timer;
+        timer.start();
+#endif
 
         constraint_hessian.clear();
         constraint_hessian.reserve(2 * ee_impacts.size());
@@ -179,6 +219,11 @@ namespace autodiff {
                 hessian);
             constraint_hessian.push_back(hessian);
         }
+
+#ifdef PROFILE_FUNCTIONS
+        timer.stop();
+        time_spent_computing_hessian += timer.getElapsedTime();
+#endif
     }
 
     // -----------------------------------------------------------------------------

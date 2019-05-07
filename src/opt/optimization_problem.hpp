@@ -53,6 +53,7 @@ namespace opt {
         callback_jac_g jac_g; ///< @brief Jacobian of the constraint function
         callback_hessian_g
             hessian_g; ///< @brief Hessian of the constraint function
+        Eigen::Array<bool, Eigen::Dynamic, 1> fixed_dof;
 
         /// @brief Default constructor
         OptimizationProblem();

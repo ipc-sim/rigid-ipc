@@ -145,9 +145,11 @@ void ViewerMenu::draw_legends()
     // EDGES
     // ------------------------------------------------------------------
     {
+        // Cast show_overlay to a bool because it is a unsigned int
+        bool tmp = bool(viewer->data_list[edges_data_id].show_overlay);
+        ImGui::Checkbox("##edges-UI", &tmp);
+        viewer->data_list[edges_data_id].show_overlay = unsigned(tmp);
 
-        ImGui::Checkbox(
-            "##edges-UI", &viewer->data_list[edges_data_id].show_overlay);
         ImGui::SameLine();
         if (double_color_edit("edge##UI", color_edge)) {
             recolor_edges();
@@ -170,8 +172,11 @@ void ViewerMenu::draw_legends()
     // DISPL
     // ------------------------------------------------------------------
     {
-        ImGui::Checkbox(
-            "##displ-UI", &viewer->data_list[displ_data_id].show_overlay);
+        // Cast show_overlay to a bool because it is a unsigned int
+        bool tmp = bool(viewer->data_list[displ_data_id].show_overlay);
+        ImGui::Checkbox("##displ-UI", &tmp);
+        viewer->data_list[displ_data_id].show_overlay = unsigned(tmp);
+
         ImGui::SameLine();
         if (double_color_edit("displ##UI", color_displ)) {
             recolor_displacements();
@@ -191,9 +196,11 @@ void ViewerMenu::draw_legends()
     // GRAD
     // ------------------------------------------------------------------
     {
+        // Cast show_overlay to a bool because it is a unsigned int
+        bool tmp = bool(viewer->data_list[gradient_data_id].show_overlay);
+        ImGui::Checkbox("##grad-UI", &tmp);
+        viewer->data_list[gradient_data_id].show_overlay = unsigned(tmp);
 
-        ImGui::Checkbox(
-            "##grad-UI", &viewer->data_list[gradient_data_id].show_overlay);
         ImGui::SameLine();
         if (double_color_edit("grad##UI", color_grad)) {
             recolor_grad_volume();
@@ -211,8 +218,11 @@ void ViewerMenu::draw_legends()
     // OPT DISPL
     // ------------------------------------------------------------------
     {
-        ImGui::Checkbox("##opt displ-UI",
-            &viewer->data_list[opt_displ_data_id].show_overlay);
+        // Cast show_overlay to a bool because it is a unsigned int
+        bool tmp = bool(viewer->data_list[opt_displ_data_id].show_overlay);
+        ImGui::Checkbox("##opt displ-UI", &tmp);
+        viewer->data_list[opt_displ_data_id].show_overlay = unsigned(tmp);
+
         ImGui::SameLine();
         if (double_color_edit("opt displ##UI", color_opt_displ)) {
             recolor_opt_displacements();
@@ -274,10 +284,39 @@ void ViewerMenu::draw_edit_modes()
                 ImGui::SameLine(0, p);
             }
         }
+
+        if (ImGui::Button("Connect##Edit", ImVec2(-1, 0))) {
+            connect_selected_vertices();
+        }
     }
 
-    if (ImGui::Button("Connect##Edit", ImVec2(-1, 0))) {
-        connect_selected_vertices();
+    // Menu for fixing vertex positions
+    if (state.selected_points.size() > 0
+        && ImGui::CollapsingHeader(
+            "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
+        // Initial button state is all(fixed_dof(selected_points))
+        bool x_fixed_originally = true, y_fixed_originally = true;
+        for (int point : state.selected_points) {
+            x_fixed_originally &= state.opt_problem.fixed_dof(point);
+            y_fixed_originally &= state.opt_problem.fixed_dof(
+                point + state.displacements.rows());
+        }
+        bool x_fixed = x_fixed_originally, y_fixed = y_fixed_originally;
+
+        ImGui::Checkbox("fixed x position##static", &x_fixed);
+        if (x_fixed != x_fixed_originally) {
+            for (int point : state.selected_points) {
+                state.opt_problem.fixed_dof(point) = x_fixed;
+            }
+        }
+
+        ImGui::Checkbox("fixed y position##static", &y_fixed);
+        if (y_fixed != y_fixed_originally) {
+            for (int point : state.selected_points) {
+                state.opt_problem.fixed_dof(point + state.displacements.rows())
+                    = y_fixed;
+            }
+        }
     }
 }
 
@@ -456,8 +495,8 @@ void ViewerMenu::draw_optimization_results()
         }
         ImGui::PopItemWidth();
         if (state.u_history.size() > 0
-            && ImGui::InputInt("step##opt-results",
-                   &(state.current_opt_iteration), 1, 10)) {
+            && ImGui::InputInt(
+                "step##opt-results", &(state.current_opt_iteration), 1, 10)) {
 
             redraw_opt_displacements();
             redraw_grad_volume(/*opt_gradient=*/true);

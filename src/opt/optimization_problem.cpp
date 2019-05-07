@@ -12,6 +12,7 @@ namespace opt {
         , x_upper()
         , g_lower()
         , g_upper()
+        , fixed_dof()
     {
         this->f = [](const Eigen::VectorXd&) -> double {
             throw NotImplementedError("Objective function not implemented!");
@@ -49,16 +50,19 @@ namespace opt {
         this->x0.setConstant(0.0);
 
         this->x_lower.resize(this->num_vars);
-        x_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
+        this->x_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
 
         this->x_upper.resize(this->num_vars);
-        x_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
+        this->x_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
 
         this->g_lower.resize(this->num_constraints);
-        g_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
+        this->g_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
 
         this->g_upper.resize(this->num_constraints);
-        g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
+        this->g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
+
+        this->fixed_dof.resize(this->num_vars);
+        this->fixed_dof.setConstant(false); // no-upper-bound
     }
 
     OptimizationProblem::OptimizationProblem(const Eigen::VectorXd& x0,

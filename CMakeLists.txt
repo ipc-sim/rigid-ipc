@@ -70,6 +70,7 @@ set(SRCFILES
 
     src/state.cpp
     src/logger.cpp
+    src/profiler.cpp
 )
 
 set(TMPFILES

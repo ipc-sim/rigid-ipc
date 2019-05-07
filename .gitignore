@@ -110,3 +110,6 @@ data/**/*.xlsx
 
 ## Documentation
 docs
+
+## Symbolic link to Google Drive folder
+results

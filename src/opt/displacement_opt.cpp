@@ -17,6 +17,8 @@
 
 #include <logger.hpp>
 
+#include <profiler.hpp>
+
 namespace ccd {
 namespace opt {
 
@@ -25,6 +27,12 @@ namespace opt {
     OptimizationResults displacement_optimization(OptimizationProblem& problem,
         const Eigen::MatrixX2d& U0, SolverSettings& settings)
     {
+#ifdef PROFILE_FUNCTIONS
+        reset_profiler();
+        igl::Timer timer;
+        timer.start();
+#endif
+
         // initial value
         Eigen::MatrixXd x0 = U0;
         x0.resize(U0.size(), 1); // Flatten displacements
@@ -37,12 +45,19 @@ namespace opt {
             result = solve_problem(problem, settings);
         }
         result.x.resize(U0.rows(), 2); // Unflatten displacments
+
+#ifdef PROFILE_FUNCTIONS
+        timer.stop();
+        print_profile(timer.getElapsedTime());
+#endif
+
         return result;
     } // namespace opt
 
     OptimizationResults solve_ncp_displacement_optimization(
         OptimizationProblem& problem, SolverSettings& settings)
     {
+
         // Solves the KKT conditions of the Optimization Problem
         //  (U - Uk) = \nabla g(U)
         //  s.t V(U) >= 0

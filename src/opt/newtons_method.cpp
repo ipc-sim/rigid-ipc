@@ -5,6 +5,8 @@
 
 #include <Eigen/LU>
 #include <Eigen/Sparse>
+#include <igl/slice.h>
+#include <igl/slice_into.h>
 
 #include <opt/newtons_method.hpp>
 
@@ -17,21 +19,45 @@ namespace opt {
     {
         Eigen::VectorXd x = problem.x0;
 
+        // Convert from the boolean vector to a vector of free dof indices
+        Eigen::VectorXi free_dof(problem.num_vars - problem.fixed_dof.count());
+        for (int i = 0, j = 0; i < problem.fixed_dof.size(); i++) {
+            if (!problem.fixed_dof(i)) {
+                free_dof(j++) = i;
+            }
+        }
+
         int i = 0;
-        Eigen::VectorXd g = problem.grad_f(x), delta_x;
-        Eigen::MatrixXd H;
+        Eigen::VectorXd g = problem.grad_f(x),
+                        delta_x = Eigen::VectorXd::Zero(problem.num_vars),
+                        g_free; // subset of g for free degrees of freedom
+        igl::slice(g, free_dof, 1, g_free); // Initialize g_free
+        Eigen::MatrixXd H, H_free;
         double gamma;
         while (i++ <= settings.max_iter
-            && g.squaredNorm() > settings.absolute_tolerance) {
+            && g_free.squaredNorm() > settings.absolute_tolerance) {
+            // Compute the full hessian
             H = problem.hessian_f(x);
             H.diagonal().array() += mu;
-            delta_x = H.lu().solve(-g);
+            // Remove rows and columns of fixed dof
+            igl::slice(H, free_dof, free_dof, H_free);
+
+            // Store the free dof back into delta_x
+            igl::slice_into(Eigen::VectorXd(H_free.lu().solve(-g_free)),
+                free_dof, 1, delta_x);
+
+            // Perform a line search along delta x to stay in the feasible realm
             if (!line_search(x, delta_x, problem.f, gamma,
                     settings.line_search_tolerance)) {
                 break; // Newton step unsuccessful
             }
-            x += gamma * delta_x;  // Update x
+
+            x += gamma * delta_x; // Update x
+
             g = problem.grad_f(x); // Recompute the gradient
+            // Remove rows of fixed dof
+            igl::slice(g, free_dof, 1, g_free);
+
             // Save intermedtiate results
             settings.intermediate_cb(
                 x, problem.f(x), Eigen::VectorXd::Zero(x.size()), 0, i);

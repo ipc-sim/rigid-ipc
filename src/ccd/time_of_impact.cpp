@@ -142,6 +142,12 @@ namespace autodiff {
         Eigen::Matrix<double, 2, 1, 0, 2, 1> const&,
         Eigen::Matrix<double, 2, 1, 0, 2, 1> const&,
         Eigen::Matrix<double, 2, 1, 0, 2, 1> const&, double&);
+
+    template bool temporal_parameterization_to_spatial<double>(
+        const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
+        const Eigen::Vector2d& Vk, const Vector2T<double>& Ui,
+        const Vector2T<double>& Uj, const Vector2T<double>& Uk,
+        const double& toi, double& alpha);
 } // namespace autodiff
 
 } // namespace ccd

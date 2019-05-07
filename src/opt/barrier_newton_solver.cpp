@@ -3,6 +3,8 @@
 
 #include <opt/barrier_newton_solver.hpp>
 
+#include <iostream>
+
 #include <opt/barrier.hpp>
 #include <opt/newtons_method.hpp>
 
@@ -30,6 +32,7 @@ namespace opt {
 
         results.success = results.minf >= 0
             && general_problem.are_constraints_satisfied(results.x, 0.0);
+
         return results;
     }
 
@@ -40,6 +43,7 @@ namespace opt {
         barrier_problem.num_vars = general_problem.num_vars;
         barrier_problem.num_constraints = general_problem.num_constraints;
         barrier_problem.x0 = general_problem.x0;
+        barrier_problem.fixed_dof = general_problem.fixed_dof;
 
         // Define the barrier function or a fixed epsilon
         auto barrier
@@ -104,6 +108,7 @@ namespace opt {
             //            = [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
             grad += (x - general_problem.x_lower).unaryExpr(barrier_gradient)
                 - (-x + general_problem.x_upper).unaryExpr(barrier_gradient);
+
             return grad;
         };
 

@@ -3,9 +3,9 @@
 
 namespace ccd {
 
-// ----------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // HELPER FUNCTIONS
-// ----------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 bool update_selection(const Eigen::MatrixXd& points, const int modifier,
     const Eigen::RowVector2d& click_coord, const double thr,
@@ -51,9 +51,9 @@ void translation_delta(const Eigen::MatrixXd& points, const int modifier,
     }
 }
 
-// ----------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // CLASS FUNCTIONS
-// ----------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 void ViewerMenu::undo()
 {
@@ -147,7 +147,6 @@ void ViewerMenu::clicked_on_canvas(
     default:
         break;
     }
-
 }
 
 bool ViewerMenu::mouse_down(int button, int modifier)
@@ -158,15 +157,15 @@ bool ViewerMenu::mouse_down(int button, int modifier)
 
     // pick a node
     double x = viewer->current_mouse_x;
-    double y = double(viewer->core.viewport(3)) - viewer->current_mouse_y;
+    double y = double(viewer->core().viewport(3)) - viewer->current_mouse_y;
 
     int face_id;
     Eigen::Vector3d barycentric_coords;
 
     Eigen::MatrixXd BV = viewer->data_list[canvas_data_id].V;
-    if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y), viewer->core.view,
-            viewer->core.proj, viewer->core.viewport, BV, canvas_faces, face_id,
-            barycentric_coords)) {
+    if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y), viewer->core().view,
+            viewer->core().proj, viewer->core().viewport, BV, canvas_faces,
+            face_id, barycentric_coords)) {
         Eigen::Vector3i face_nodes = canvas_faces.row(face_id);
         Eigen::RowVector3d coords
             = BV.row(face_nodes[0]) * barycentric_coords[0]

@@ -91,6 +91,9 @@ void State::reset_scene()
     opt_results.minf = 2e19;
     opt_results.success = false;
     opt_results.finished = false;
+
+    opt_problem.fixed_dof.resize(displacements.size());
+    opt_problem.fixed_dof.setConstant(false);
 }
 
 void State::save_scene(std::string filename)
@@ -258,7 +261,6 @@ std::vector<Eigen::MatrixXd> State::compute_collision_hessian_volume(
 
 void State::reset_optimization_problem()
 {
-
     using namespace ccd::opt;
 
     reset_impacts();

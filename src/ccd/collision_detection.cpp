@@ -8,6 +8,12 @@
 
 #include <iostream>
 
+#include <profiler.hpp>
+#ifdef PROFILE_FUNCTIONS
+long number_of_collision_detection_calls = 0;
+double time_spent_detecting_collisions = 0;
+#endif
+
 #define EPSILON (1e-8)
 
 namespace ccd {
@@ -140,6 +146,12 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
     EdgeVertexImpacts& ev_impacts, DetectionMethod method, bool reset_impacts)
 {
+#ifdef PROFILE_FUNCTIONS
+    number_of_collision_detection_calls++;
+    igl::Timer timer;
+    timer.start();
+#endif
+
     assert(vertices.size() == displacements.size());
     assert(method == DetectionMethod::BRUTE_FORCE
         || method == DetectionMethod::HASH_MAP);
@@ -153,6 +165,11 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
             vertices, displacements, edges, ev_impacts, reset_impacts);
         break;
     }
+
+#ifdef PROFILE_FUNCTIONS
+    timer.stop();
+    time_spent_detecting_collisions += timer.getElapsedTime();
+#endif
 }
 
 // Find all edge-vertex collisions in one time step using brute-force

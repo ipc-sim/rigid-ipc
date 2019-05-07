@@ -1,3 +1,6 @@
+/**
+ * General code to compute the collision constraint and its derivative(s).
+ */
 #pragma once
 
 #include <Eigen/Core>
@@ -183,7 +186,6 @@ namespace autodiff {
         const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         const constraint_func<DScalar>& compute_constraint,
-
         std::vector<Eigen::MatrixXd>& constraint_hessian);
 
     ///////////////////////////////////////////////////////////////////////////
