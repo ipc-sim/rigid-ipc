@@ -59,3 +59,7 @@ function(download_spdlog)
        GIT_TAG        v1.3.1
     )
 endfunction()
+
+## libigl
+## GIT_TAG dev
+## GIT_HASH aea868bd1fc64f71afecd2c51e51507a99d8e3e5

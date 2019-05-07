@@ -227,7 +227,7 @@ Eigen::MatrixXd State::compute_collision_jac_volume(
     } else {
         ccd::autodiff::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
             edge_impact_map, volume_epsilon, volume_gradient);
-        assert(volume_gradient.cols() == int(2 * ee_impacts.size()));
+//        assert(volume_gradient.cols() == int(2 * ee_impacts.size()));
     }
     assert(volume_gradient.rows() == Uk.size());
 

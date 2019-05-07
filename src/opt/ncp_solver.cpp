@@ -52,6 +52,8 @@ namespace opt {
 
         callback(xi, alpha_i, 1.0);
 
+        std::cout << "num_constraints" << num_constraints << std::endl;
+
         // 2. solve constraints with successive linearizations
         for (int i = 0; i < max_iter; ++i) {
             // Step 2 ends when all constraints are satisfied
@@ -68,9 +70,9 @@ namespace opt {
             }
 
             // number of constraints can change when we update the collision set
-            num_constraints = uint(g_xi.rows());
-            alpha_i.resize(num_constraints);
-            alpha_i.setZero();
+//            num_constraints = uint(g_xi.rows());
+//            alpha_i.resize(num_constraints);
+//            alpha_i.setZero();
 
             // 2.1 Linearize the problem and solve for \alpha
             // Linearization:
