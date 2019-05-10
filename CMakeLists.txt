@@ -108,6 +108,7 @@ set(VIEWER_FILES
     src/viewer/viewer_menu.cpp
     src/viewer/imgui_ext.cpp
     src/viewer/ncp_solver_view.cpp
+    src/viewer/ipopt_solver_view.cpp
 
     src/main.cpp
     )

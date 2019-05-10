@@ -3,6 +3,7 @@
 #include <viewer/imgui_ext.hpp>
 #include <logger.hpp>
 #include <viewer/ncp_solver_view.hpp>
+#include <viewer/ipopt_solver_view.hpp>
 
 namespace ccd {
 
@@ -327,9 +328,6 @@ void ViewerMenu::draw_optimization()
     using namespace opt;
     int idx_optimization_method = state.solver_settings.method;
     int idx_qp_solver = state.solver_settings.qp_solver;
-    int idx_lcp_solver = state.solver_settings.lcp_solver;
-    int idx_ncp_update
-        = static_cast<int>(state.solver_settings.ncp_update_method);
 
     if (ImGui::CollapsingHeader(
             "Displacement Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -357,21 +355,10 @@ void ViewerMenu::draw_optimization()
 
         case opt::OptimizationMethod::NCP:
             ncp_solver_menu(state.ncp_displ_solver);
+            break;
 
-//            if (ImGui::Combo("LCP solver##opt", &idx_lcp_solver,
-//                    ccd::opt::LCPSolverNames,
-//                    CCD_IM_ARRAYSIZE(ccd::opt::LCPSolverNames))) {
-//                state.solver_settings.lcp_solver
-//                    = static_cast<ccd::opt::LCPSolver>(idx_lcp_solver);
-//            }
-//            if (ImGui::Combo("NCP Update##opt", &idx_ncp_update,
-//                    ccd::opt::NcpUpdateNames,
-//                    CCD_IM_ARRAYSIZE(ccd::opt::NcpUpdateNames))) {
-//                state.solver_settings.ncp_update_method
-//                    = static_cast<ccd::opt::NcpUpdate>(idx_ncp_update);
-//            }
-//            ImGui::InputDouble("tol. ",
-//                &state.solver_settings.absolute_tolerance, 0.0, 0.0, "%.3g");
+        case opt::OptimizationMethod::IPOPT:
+            ipopt_solver_menu(state.ipopt_solver);
             break;
 
         case opt::OptimizationMethod::BARRIER_NEWTON:

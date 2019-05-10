@@ -9,6 +9,7 @@
 
 #include <opt/solver.hpp>
 #include <opt/displacement_opt.hpp>
+#include <opt/ipopt_solver.hpp>
 
 namespace ccd {
 
@@ -68,6 +69,7 @@ public:
     opt::SolverSettings solver_settings;
 
     opt::NCPDisplacementOptimization ncp_displ_solver;
+    opt::IpoptSolver ipopt_solver;
 
     /// @brief if True, reuse the current opt_displacements for initial
     /// optimization
