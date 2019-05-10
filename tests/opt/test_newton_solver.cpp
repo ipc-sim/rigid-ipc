@@ -169,6 +169,7 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
     int num_vars = 1, num_constraints = num_vars;
     OptimizationProblem constrained_problem(num_vars, num_constraints);
 
+
     SECTION("Constraint is in g(x)") { constrained_problem.g_lower(0) = 1; }
     SECTION("Constraint is in x_lower") { constrained_problem.x_lower(0) = 1; }
 

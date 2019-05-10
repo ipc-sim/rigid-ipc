@@ -70,8 +70,19 @@ TEST_CASE("IPOPT_hello_world", "[opt][Ipopt][Ipopt-Interface]")
     expected[2] = 3.821149978948624959;
     expected[3] = 1.379408293215359738;
 
-    OptimizationProblem problem(x0, f, grad_f, x_lower, x_upper,
-        num_constraints, g, jac_g, g_lower, g_upper);
+    OptimizationProblem problem;
+    problem.num_vars = int(x0.rows());
+    problem.x0 = x0;
+    problem.f = f;
+    problem.grad_f = grad_f;
+    problem.x_lower = x_lower;
+    problem.x_upper = x_upper;
+    problem.num_constraints = num_constraints;
+    problem.g = g;
+    problem.jac_g = jac_g;
+    problem.g_lower = g_lower;
+    problem.g_upper = g_upper;
+
     SolverSettings settings;
     settings.verbosity = 0;
 
@@ -139,8 +150,19 @@ TEST_CASE("IPOPT_quadratic_linear_cnstr", "[opt][Ipopt][Ipopt-Interface]")
     expected[0] = 1.4;
     expected[1] = 1.7;
 
-    OptimizationProblem problem(x0, f, grad_f, x_lower, x_upper,
-        num_constraints, g, jac_g, g_lower, g_upper);
+    OptimizationProblem problem;
+    problem.num_vars = int(x0.rows());
+    problem.x0 = x0;
+    problem.f = f;
+    problem.grad_f = grad_f;
+    problem.x_lower = x_lower;
+    problem.x_upper = x_upper;
+    problem.num_constraints = num_constraints;
+    problem.g = g;
+    problem.jac_g = jac_g;
+    problem.g_lower = g_lower;
+    problem.g_upper = g_upper;
+
     SolverSettings settings;
     settings.verbosity = 0;
 
@@ -188,7 +210,8 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
 
     callback_intermediate callback
         = [](const Eigen::VectorXd& x, const double obj_value,
-              const Eigen::VectorXd& dual, const double gamma, const int iteration) -> void {
+              const Eigen::VectorXd& dual, const double gamma,
+              const int iteration) -> void {
         std::cout << "it=" << iteration << " x=" << x.transpose()
                   << " obj=" << obj_value << " y=" << dual.transpose()
                   << std::endl;
@@ -198,8 +221,19 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
     expected[0] = 0.0;
     expected[1] = 0.0;
 
-    OptimizationProblem problem(x0, f, grad_f, x_lower, x_upper,
-        num_constraints, g, jac_g, g_lower, g_upper);
+    OptimizationProblem problem;
+    problem.num_vars = int(x0.rows());
+    problem.x0 = x0;
+    problem.f = f;
+    problem.grad_f = grad_f;
+    problem.x_lower = x_lower;
+    problem.x_upper = x_upper;
+    problem.num_constraints = num_constraints;
+    problem.g = g;
+    problem.jac_g = jac_g;
+    problem.g_lower = g_lower;
+    problem.g_upper = g_upper;
+
     SolverSettings settings;
     settings.verbosity = 0;
     settings.max_iter = 3000;

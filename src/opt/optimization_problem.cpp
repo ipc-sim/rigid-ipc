@@ -4,16 +4,11 @@
 namespace ccd {
 namespace opt {
 
+    OptProblem::~OptProblem() {}
+
     OptimizationProblem::OptimizationProblem()
-        : num_vars()
-        , num_constraints()
-        , x0()
-        , x_lower()
-        , x_upper()
-        , g_lower()
-        , g_upper()
-        , fixed_dof()
     {
+
         this->f = [](const Eigen::VectorXd&) -> double {
             throw NotImplementedError("Objective function not implemented!");
         };
@@ -38,8 +33,36 @@ namespace opt {
                                       "function not implemented!");
         };
     }
+    double OptimizationProblem::eval_f(const Eigen::VectorXd& x)
+    {
+        return f(x);
+    }
+    Eigen::VectorXd OptimizationProblem::eval_grad_f(const Eigen::VectorXd& x)
+    {
+        return grad_f(x);
+    }
+    Eigen::MatrixXd OptimizationProblem::eval_hessian_f(
+        const Eigen::VectorXd& x)
+    {
+        return hessian_f(x);
+    }
 
-    // Resize fields accordingly
+    Eigen::VectorXd OptimizationProblem::eval_g(const Eigen::VectorXd& x)
+    {
+        return g(x);
+    };
+
+    Eigen::MatrixXd OptimizationProblem::eval_jac_g(const Eigen::VectorXd& x)
+    {
+        return jac_g(x);
+    };
+
+    std::vector<Eigen::MatrixXd> OptimizationProblem::eval_hessian_g(
+        const Eigen::VectorXd& x)
+    {
+        return hessian_g(x);
+    };
+
     OptimizationProblem::OptimizationProblem(int num_vars, int num_constraints)
         : OptimizationProblem()
     {
@@ -65,38 +88,38 @@ namespace opt {
         this->fixed_dof.setConstant(false); // no-upper-bound
     }
 
-    OptimizationProblem::OptimizationProblem(const Eigen::VectorXd& x0,
-        const callback_f f, const callback_grad_f grad_f,
-        const Eigen::VectorXd& x_lower, const Eigen::VectorXd& x_upper,
-        const int num_constraints, const callback_g& g,
-        const callback_jac_g& jac_g, const Eigen::VectorXd& g_lower,
-        const Eigen::VectorXd& g_upper)
-        : OptimizationProblem(int(x0.rows()), num_constraints)
-    {
-        this->x0 = x0;
-        this->x_lower = x_lower;
-        this->x_upper = x_upper;
-        this->g_lower = g_lower;
-        this->g_upper = g_upper;
-        this->f = f;
-        this->grad_f = grad_f;
-        this->g = g;
-        this->jac_g = jac_g;
-    }
+    //    OptimizationProblem::OptimizationProblem(const Eigen::VectorXd& x0,
+    //        const callback_f f, const callback_grad_f grad_f,
+    //        const Eigen::VectorXd& x_lower, const Eigen::VectorXd& x_upper,
+    //        const int num_constraints, const callback_g& g,
+    //        const callback_jac_g& jac_g, const Eigen::VectorXd& g_lower,
+    //        const Eigen::VectorXd& g_upper)
+    //        : OptimizationProblem(int(x0.rows()), num_constraints)
+    //    {
+    //        this->x0 = x0;
+    //        this->x_lower = x_lower;
+    //        this->x_upper = x_upper;
+    //        this->g_lower = g_lower;
+    //        this->g_upper = g_upper;
+    //        this->f = f;
+    //        this->grad_f = grad_f;
+    //        this->g = g;
+    //        this->jac_g = jac_g;
+    //    }
 
-    OptimizationProblem::OptimizationProblem(const Eigen::VectorXd& x0,
-        const callback_f f, const callback_grad_f grad_f,
-        const callback_hessian_f& hessian_f, const Eigen::VectorXd& x_lower,
-        const Eigen::VectorXd& x_upper, const int num_constraints,
-        const callback_g& g, const callback_jac_g& jac_g,
-        const callback_hessian_g& hessian_g, const Eigen::VectorXd& g_lower,
-        const Eigen::VectorXd& g_upper)
-        : OptimizationProblem(x0, f, grad_f, x_lower, x_upper, num_constraints,
-            g, jac_g, g_lower, g_upper)
-    {
-        this->hessian_f = hessian_f;
-        this->hessian_g = hessian_g;
-    }
+    //    OptimizationProblem::OptimizationProblem(const Eigen::VectorXd& x0,
+    //        const callback_f f, const callback_grad_f grad_f,
+    //        const callback_hessian_f& hessian_f, const Eigen::VectorXd&
+    //        x_lower, const Eigen::VectorXd& x_upper, const int
+    //        num_constraints, const callback_g& g, const callback_jac_g& jac_g,
+    //        const callback_hessian_g& hessian_g, const Eigen::VectorXd&
+    //        g_lower, const Eigen::VectorXd& g_upper) : OptimizationProblem(x0,
+    //        f, grad_f, x_lower, x_upper, num_constraints,
+    //              g, jac_g, g_lower, g_upper)
+    //    {
+    //        this->hessian_f = hessian_f;
+    //        this->hessian_g = hessian_g;
+    //    }
 
     bool OptimizationProblem::validate_problem()
     {
