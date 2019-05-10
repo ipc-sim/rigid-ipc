@@ -8,6 +8,7 @@
 #include <ccd/prune_impacts.hpp>
 
 #include <opt/solver.hpp>
+#include <opt/displacement_opt.hpp>
 
 namespace ccd {
 
@@ -65,6 +66,8 @@ public:
 
     /// @brief Settings for the problem solver
     opt::SolverSettings solver_settings;
+
+    opt::NCPDisplacementOptimization ncp_displ_solver;
 
     /// @brief if True, reuse the current opt_displacements for initial
     /// optimization

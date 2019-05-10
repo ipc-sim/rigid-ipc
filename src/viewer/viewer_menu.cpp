@@ -1,46 +1,8 @@
 ﻿#include "viewer.hpp"
 
+#include <viewer/imgui_ext.hpp>
 #include <logger.hpp>
-
-#define CCD_IM_ARRAYSIZE(_ARR) (int(sizeof(_ARR) / sizeof(*_ARR)))
-
-namespace ImGui {
-
-bool InputIntBounded(const char* label, int* val, int lower_bound = INT_MIN,
-    int upper_bound = INT_MAX, int step = 1, int step_fast = 100,
-    ImGuiInputTextFlags flags = 0)
-{
-    int unbounded_val = *val;
-    bool success
-        = ImGui::InputInt(label, &unbounded_val, step, step_fast, flags);
-    if (success) {
-        if (unbounded_val >= lower_bound && unbounded_val <= upper_bound) {
-            *val = unbounded_val;
-            return true;
-        }
-    }
-    return false;
-};
-
-bool InputDoubleBounded(const char* label, double* val,
-    double lower_bound = -std::numeric_limits<double>::infinity(),
-    double upper_bound = std::numeric_limits<double>::infinity(),
-    double step = 1, double step_fast = 100, const char* format = "%.6f",
-    ImGuiInputTextFlags flags = 0)
-{
-    double unbounded_val = *val;
-    bool success = ImGui::InputDouble(
-        label, &unbounded_val, step, step_fast, format, flags);
-    if (success) {
-        if (unbounded_val >= lower_bound && unbounded_val <= upper_bound) {
-            *val = unbounded_val;
-            return true;
-        }
-    }
-    return false;
-};
-
-} // namespace ImGui
+#include <viewer/ncp_solver_view.hpp>
 
 namespace ccd {
 
@@ -394,20 +356,22 @@ void ViewerMenu::draw_optimization()
             break;
 
         case opt::OptimizationMethod::NCP:
-            if (ImGui::Combo("LCP solver##opt", &idx_lcp_solver,
-                    ccd::opt::LCPSolverNames,
-                    CCD_IM_ARRAYSIZE(ccd::opt::LCPSolverNames))) {
-                state.solver_settings.lcp_solver
-                    = static_cast<ccd::opt::LCPSolver>(idx_lcp_solver);
-            }
-            if (ImGui::Combo("NCP Update##opt", &idx_ncp_update,
-                    ccd::opt::NcpUpdateNames,
-                    CCD_IM_ARRAYSIZE(ccd::opt::NcpUpdateNames))) {
-                state.solver_settings.ncp_update_method
-                    = static_cast<ccd::opt::NcpUpdate>(idx_ncp_update);
-            }
-            ImGui::InputDouble("tol. ",
-                &state.solver_settings.absolute_tolerance, 0.0, 0.0, "%.3g");
+            ncp_solver_menu(state.ncp_displ_solver);
+
+//            if (ImGui::Combo("LCP solver##opt", &idx_lcp_solver,
+//                    ccd::opt::LCPSolverNames,
+//                    CCD_IM_ARRAYSIZE(ccd::opt::LCPSolverNames))) {
+//                state.solver_settings.lcp_solver
+//                    = static_cast<ccd::opt::LCPSolver>(idx_lcp_solver);
+//            }
+//            if (ImGui::Combo("NCP Update##opt", &idx_ncp_update,
+//                    ccd::opt::NcpUpdateNames,
+//                    CCD_IM_ARRAYSIZE(ccd::opt::NcpUpdateNames))) {
+//                state.solver_settings.ncp_update_method
+//                    = static_cast<ccd::opt::NcpUpdate>(idx_ncp_update);
+//            }
+//            ImGui::InputDouble("tol. ",
+//                &state.solver_settings.absolute_tolerance, 0.0, 0.0, "%.3g");
             break;
 
         case opt::OptimizationMethod::BARRIER_NEWTON:

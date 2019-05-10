@@ -13,7 +13,6 @@
 #include <ccd/not_implemented_error.hpp>
 
 #include <autodiff/finitediff.hpp>
-#include <opt/ncp_solver.hpp>
 
 #include <logger.hpp>
 
@@ -39,11 +38,7 @@ namespace opt {
         problem.x0 = x0;
 
         OptimizationResults result;
-        if (settings.method == NCP) {
-            result = solve_ncp_displacement_optimization(problem, settings);
-        } else {
-            result = solve_problem(problem, settings);
-        }
+        result = solve_problem(problem, settings);
         result.x.resize(U0.rows(), 2); // Unflatten displacments
 
 #ifdef PROFILE_FUNCTIONS
@@ -54,10 +49,19 @@ namespace opt {
         return result;
     } // namespace opt
 
-    OptimizationResults solve_ncp_displacement_optimization(
-        OptimizationProblem& problem, SolverSettings& settings)
+    NCPDisplacementOptimization::NCPDisplacementOptimization()
+        : max_iterations(100)
+        , update_method(NcpUpdate::LINEARIZED)
+        , lcp_solver(LCPSolver::LCP_GAUSS_SEIDEL)
+        , keep_in_unfeasible(true)
+        , check_convergence(false)
+        , convegence_tolerance(1e-6)
     {
+    }
 
+    OptimizationResults NCPDisplacementOptimization::solve(
+        OptimizationProblem& problem)
+    {
         // Solves the KKT conditions of the Optimization Problem
         //  (U - Uk) = \nabla g(U)
         //  s.t V(U) >= 0
@@ -70,17 +74,18 @@ namespace opt {
         b = -problem.grad_f(Eigen::VectorXd::Zero(num_vars));
 
         int num_it = 0;
-        callback_intermediate_ncp callback =
-            [&problem, &settings, &num_it](const Eigen::VectorXd& x,
-                const Eigen::VectorXd& alpha, const double gamma) {
-                settings.intermediate_cb(x, problem.f(x), alpha, gamma, num_it);
-                num_it += 1;
-            };
+        callback_intermediate_ncp callback
+            = [&](const Eigen::VectorXd& x, const Eigen::VectorXd& alpha,
+                  const double gamma) {
+                  // settings->intermediate_cb(x, problem->f(x), alpha, gamma,
+                  // num_it);
+                  num_it += 1;
+              };
         OptimizationResults result;
-        result.success = solve_ncp(A, b, problem.g, problem.jac_g,
-            settings.max_iter, callback, settings.ncp_update_method,
-            settings.lcp_solver, x_opt, lambda_opt, /*check_convergence=*/false,
-            /*check_convergence_unfeasible=*/true, settings.absolute_tolerance);
+        result.success
+            = solve_ncp(A, b, problem.g, problem.jac_g, max_iterations,
+                callback, update_method, lcp_solver, x_opt, lambda_opt,
+                keep_in_unfeasible, check_convergence, convegence_tolerance);
         result.x = x_opt;
         result.minf = problem.f(x_opt);
 

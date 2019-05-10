@@ -9,6 +9,7 @@
 
 #include <ccd/collision_detection.hpp>
 #include <opt/solver.hpp>
+#include <opt/ncp_solver.hpp>
 
 namespace ccd {
 
@@ -35,8 +36,22 @@ namespace opt {
      *      (U - Uk) = \nabla g(U)
      *      s.t V(U) >= 0
      */
-    OptimizationResults solve_ncp_displacement_optimization(
-        OptimizationProblem& problem, SolverSettings& settings);
 
+    class NCPDisplacementOptimization {
+    public:
+        NCPDisplacementOptimization();
+        OptimizationResults solve(OptimizationProblem& problem);
+
+        // ---------------
+        // Settings
+        // ---------------
+        int max_iterations;
+        NcpUpdate update_method;
+        LCPSolver lcp_solver;
+        bool keep_in_unfeasible;
+        bool check_convergence;
+        double convegence_tolerance;
+
+    };
 } // namespace opt
 } // namespace ccd

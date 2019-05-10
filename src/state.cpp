@@ -15,6 +15,7 @@
 
 #include <autodiff/finitediff.hpp>
 #include <opt/displacement_opt.hpp>
+#include <opt/ncp_solver.hpp>
 
 namespace ccd {
 State::State()
@@ -227,7 +228,7 @@ Eigen::MatrixXd State::compute_collision_jac_volume(
     } else {
         ccd::autodiff::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
             edge_impact_map, volume_epsilon, volume_gradient);
-//        assert(volume_gradient.cols() == int(2 * ee_impacts.size()));
+        //        assert(volume_gradient.cols() == int(2 * ee_impacts.size()));
     }
     assert(volume_gradient.rows() == Uk.size());
 
@@ -433,8 +434,18 @@ void State::optimize_displacements(const std::string filename)
           };
 
     // 5. run optimization
-    opt_results
-        = ccd::opt::displacement_optimization(opt_problem, U0, solver_settings);
+    if (solver_settings.method == ccd::opt::NCP) {
+//        ncp_displ_solver.max_iterations = solver_settings.max_iter;
+//        ncp_displ_solver.update_method = solver_settings.ncp_update_method;
+//        ncp_displ_solver.lcp_solver = solver_settings.lcp_solver;
+//        ncp_displ_solver.convegence_tolerance = solver_settings.absolute_tolerance;
+        opt_results = ncp_displ_solver.solve(opt_problem);
+        opt_results.x.resize(U0.rows(), 2); // Unflatten displacments
+    } else {
+        opt_results = ccd::opt::displacement_optimization(
+            opt_problem, U0, solver_settings);
+    }
+
     if (solver_settings.verbosity > 0) {
         log_optimization_steps(filename, it_x, it_lambda, it_gamma);
     }

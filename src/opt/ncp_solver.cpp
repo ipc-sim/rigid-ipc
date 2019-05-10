@@ -15,21 +15,21 @@ namespace opt {
         const int max_iter, const callback_intermediate_ncp& callback,
         const NcpUpdate update_type, const LCPSolver lcp_solver,
         Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i,
-        const bool check_convergence, const bool check_convergence_unfeasible,
+        const bool keep_in_unfeasible, const bool check_convergence,
         const double convergence_tolerance)
-        : A(A)
+        : keep_in_unfeasible(keep_in_unfeasible)
+        , check_convergence(check_convergence)
+        , convergence_tolerance(convergence_tolerance)
+        , update_type(update_type)
+        , lcp_solver(lcp_solver)
+        , max_iter(max_iter)
+        , A(A)
         , b(b)
         , g(g)
         , jac_g(jac_g)
-        , max_iter(max_iter)
         , callback(callback)
-        , update_type(update_type)
-        , lcp_solver(lcp_solver)
         , xi(xi)
         , alpha_i(alpha_i)
-        , check_convergence(check_convergence)
-        , check_convergence_unfeasible(check_convergence_unfeasible)
-        , convergence_tolerance(convergence_tolerance)
     {
     }
 
@@ -172,7 +172,7 @@ namespace opt {
                 // ?????
             }
 
-            if (check_convergence_unfeasible) {
+            if (keep_in_unfeasible) {
                 move_to_unfeasible_domain(delta_x, gamma);
             }
 

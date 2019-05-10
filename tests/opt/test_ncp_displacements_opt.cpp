@@ -14,9 +14,10 @@ const int ANGLE_STEPS = 1;
 TEST_CASE("NCP Displacements", "[opt][NCP][NCP-Displacements]")
 {
     ccd::State state;
-    state.solver_settings.max_iter = 200;
+
     state.solver_settings.method = ccd::opt::NCP;
-    state.solver_settings.absolute_tolerance = 1E-8;
+    state.ncp_displ_solver.max_iterations= 200;
+    state.ncp_displ_solver.convegence_tolerance  = 1E-8;
     state.volume_epsilon = 1E-8;
 
     Eigen::MatrixX2d vertices(NUM_VERTICES, 2);

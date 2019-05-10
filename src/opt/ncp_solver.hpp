@@ -36,8 +36,8 @@ namespace opt {
             const int max_iter, const callback_intermediate_ncp& callback,
             const NcpUpdate update_type, const LCPSolver lcp_solver,
             Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i,
+            const bool keep_in_unfeasible,
             const bool check_convergence,
-            const bool check_convergence_unfeasible,
             const double convergence_tolerance);
 
         bool compute();
@@ -51,8 +51,8 @@ namespace opt {
         // ---------------------
         // Configuration
         // ---------------------
+        bool keep_in_unfeasible;
         bool check_convergence;
-        bool check_convergence_unfeasible;
         double convergence_tolerance;
         NcpUpdate update_type;
         LCPSolver lcp_solver;
