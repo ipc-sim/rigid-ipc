@@ -15,6 +15,7 @@ set(test_sources
     opt/test_ipopt_solver.cpp
     opt/test_osqp.cpp
     opt/test_mosek.cpp
+    opt/test_ncp.cpp
 
     opt/test_alternative_displacements_opt.cpp
 )
