@@ -26,6 +26,62 @@ namespace opt {
 
     static const char* NcpUpdateNames[] = { "G_GRADIENT", "LINEARIZED" };
 
+    class NCPSolver {
+    public:
+        NCPSolver(const Eigen::SparseMatrix<double>& A,
+            const Eigen::VectorXd& b,
+            const std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>& g,
+            const std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>&
+                jac_g,
+            const int max_iter, const callback_intermediate_ncp& callback,
+            const NcpUpdate update_type, const LCPSolver lcp_solver,
+            Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i,
+            const bool check_convergence,
+            const bool check_convergence_unfeasible,
+            const double convergence_tolerance);
+
+        bool compute();
+        void initialize();
+        void solve_lcp(Eigen::VectorXd& delta_x);
+        void move_to_unfeasible_domain(Eigen::VectorXd& delta_x, double& gamma);
+        void update_candidate(Eigen::VectorXd& delta_x, double& gamma);
+
+        Eigen::VectorXd Ainv(const Eigen::VectorXd& x);
+
+        // ---------------------
+        // Configuration
+        // ---------------------
+        bool check_convergence;
+        bool check_convergence_unfeasible;
+        double convergence_tolerance;
+        NcpUpdate update_type;
+        LCPSolver lcp_solver;
+        int max_iter;
+
+        // ---------------------
+        // Optimization Specifics
+        // ---------------------
+        const Eigen::SparseMatrix<double>& A;
+        const Eigen::VectorXd& b;
+        const std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>& g;
+        const std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>& jac_g;
+        const callback_intermediate_ncp& callback;
+
+        // -----------------------
+        // Optimization Status
+        // -----------------------
+        Eigen::SparseLU<Eigen::SparseMatrix<double>> Asolver;
+        Eigen::VectorXd g_xi;
+        Eigen::MatrixXd jac_g_xi;
+
+        // ----------------------
+        // Optimization results
+        // ----------------------
+        Eigen::VectorXd& xi;
+        Eigen::VectorXd& alpha_i;
+
+    };
+
     /**
      * @brief solves the optimization problem
      *      Ax = b + \nabla g(x)^T \alpha           (1)
