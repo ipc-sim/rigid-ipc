@@ -55,7 +55,7 @@ namespace opt {
 
         /// @brief Check if all constraints are satisfied at a location.
         bool are_constraints_satisfied(
-            const Eigen::VectorXd& x, const double tol) const;
+            const Eigen::VectorXd& x, const double tol);
 
         /// \brief fixed_dof[i] == true indicates x[i] is not a variable
         Eigen::Array<bool, Eigen::Dynamic, 1> fixed_dof;
@@ -68,6 +68,7 @@ namespace opt {
         Eigen::VectorXd g_lower; ///< @brief Lower bound of the constraint
         Eigen::VectorXd g_upper; ///< @brief Upper bound of the constraint
     };
+
 
     class OptimizationProblem : public OptProblem {
     public:
@@ -94,11 +95,11 @@ namespace opt {
         /// @brief Resize fields accordingly
         OptimizationProblem(int num_vars, int num_constraints);
 
-        /// @brief Check that the problem is valid and initalized
-        bool validate_problem();
-        /// @brief Check if all constraints are satisfied at a location.
-        bool are_constraints_satisfied(
-            const Eigen::VectorXd& x, const double tol) const;
+//        /// @brief Check that the problem is valid and initalized
+//        bool validate_problem();
+//        /// @brief Check if all constraints are satisfied at a location.
+//        bool are_constraints_satisfied(
+//            const Eigen::VectorXd& x, const double tol) const;
     };
 
 } // namespace opt

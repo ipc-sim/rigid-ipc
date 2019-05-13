@@ -19,7 +19,7 @@ namespace opt {
      * @return The results of the optimization including x* and minf.
      */
     OptimizationResults solve_problem_with_barrier_newton(
-        const OptimizationProblem& problem, SolverSettings& settings);
+        OptimizationProblem& problem, SolverSettings& settings);
 
     /**
      * @brief Apply the constraints of the general problem as a barrier added to
@@ -32,7 +32,7 @@ namespace opt {
      * @paramp[out] barrier_problem Problem to store the modified objective of
      *                              the general problem.
      */
-    void setup_barrier_problem(const OptimizationProblem& general_problem,
+    void setup_barrier_problem(OptimizationProblem& general_problem,
         double& epsilon, OptimizationProblem& barrier_problem);
 
 } // namespace opt

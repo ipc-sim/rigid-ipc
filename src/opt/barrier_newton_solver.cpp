@@ -13,7 +13,7 @@ namespace opt {
 
     // Performa Newton's Method to minimize a function f(x) + barrier(g(x)).
     OptimizationResults solve_problem_with_barrier_newton(
-        const OptimizationProblem& general_problem, SolverSettings& settings)
+        OptimizationProblem& general_problem, SolverSettings& settings)
     {
         OptimizationProblem barrier_problem;
         setup_barrier_problem(
@@ -37,7 +37,7 @@ namespace opt {
     }
 
     // Create a OptimizationProblem for the barrier Newton's method.
-    void setup_barrier_problem(const OptimizationProblem& general_problem,
+    void setup_barrier_problem(OptimizationProblem& general_problem,
         double& epsilon, OptimizationProblem& barrier_problem)
     {
         barrier_problem.num_vars = general_problem.num_vars;

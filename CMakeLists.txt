@@ -64,6 +64,8 @@ set(SRCFILES
     src/opt/ncp_solver.cpp
     src/opt/lcp_solver.cpp
     src/opt/barrier_newton_solver.cpp
+    src/opt/volume_constraint.cpp
+    src/opt/barrier_constraint.cpp
 
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp

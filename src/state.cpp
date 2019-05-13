@@ -16,6 +16,8 @@
 #include <autodiff/finitediff.hpp>
 #include <opt/displacement_opt.hpp>
 #include <opt/ncp_solver.hpp>
+#include <opt/volume_constraint.hpp>
+#include <opt/barrier_constraint.hpp>
 
 namespace ccd {
 State::State()
@@ -203,11 +205,11 @@ Eigen::VectorXd State::compute_collision_volume(
         detect_collisions(Uk * (1 + 2 * solver_settings.barrier_epsilon));
     }
     if (use_alternative_formulation) {
-        ccd::autodiff::compute_penalties_refresh_toi(vertices, Uk, edges,
+        ccd::opt::compute_penalties_refresh_toi(vertices, Uk, edges,
             ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
             volume);
     } else {
-        ccd::autodiff::compute_volumes_refresh_toi(vertices, Uk, edges,
+        ccd::opt::compute_volumes_refresh_toi(vertices, Uk, edges,
             ee_impacts, edge_impact_map, volume_epsilon, volume);
     }
     return volume;
@@ -222,11 +224,11 @@ Eigen::MatrixXd State::compute_collision_jac_volume(
     }
 
     if (use_alternative_formulation) {
-        ccd::autodiff::compute_penalties_gradient(vertices, Uk, edges,
+        ccd::opt::compute_penalties_gradient(vertices, Uk, edges,
             ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
             volume_gradient);
     } else {
-        ccd::autodiff::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
+        ccd::opt::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
             edge_impact_map, volume_epsilon, volume_gradient);
         //        assert(volume_gradient.cols() == int(2 * ee_impacts.size()));
     }
@@ -245,11 +247,11 @@ std::vector<Eigen::MatrixXd> State::compute_collision_hessian_volume(
     }
 
     if (use_alternative_formulation) {
-        ccd::autodiff::compute_penalties_hessian(vertices, Uk, edges,
+        ccd::opt::compute_penalties_hessian(vertices, Uk, edges,
             ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
             volume_hessian);
     } else {
-        ccd::autodiff::compute_volumes_hessian(vertices, Uk, edges, ee_impacts,
+        ccd::opt::compute_volumes_hessian(vertices, Uk, edges, ee_impacts,
             edge_impact_map, volume_epsilon, volume_hessian);
     }
 
@@ -437,8 +439,7 @@ void State::optimize_displacements(const std::string filename)
     if (solver_settings.method == ccd::opt::NCP) {
         opt_results = ncp_displ_solver.solve(opt_problem);
         opt_results.x.resize(U0.rows(), 2);
-    }
-    else if (solver_settings.method == ccd::opt::IPOPT) {
+    } else if (solver_settings.method == ccd::opt::IPOPT) {
         ipopt_solver.max_iterations = solver_settings.max_iter;
         ipopt_solver.tolerance = solver_settings.relative_tolerance;
         ipopt_solver.print_level = solver_settings.verbosity;
