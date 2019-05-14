@@ -65,7 +65,7 @@ namespace opt {
         double epsilon;
     };
 
-    class BarrierNewtonSolver : OptimizationSolver {
+    class BarrierNewtonSolver : public OptimizationSolver {
     public:
         BarrierNewtonSolver();
         ~BarrierNewtonSolver() override;

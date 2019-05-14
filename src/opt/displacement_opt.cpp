@@ -16,38 +16,8 @@
 
 #include <logger.hpp>
 
-#include <profiler.hpp>
-
 namespace ccd {
 namespace opt {
-
-    // Optimize the displacment opt problem with the given method and starting
-    // value.
-    OptimizationResults displacement_optimization(OptimizationProblem& problem,
-        const Eigen::MatrixX2d& U0, SolverSettings& settings)
-    {
-#ifdef PROFILE_FUNCTIONS
-        reset_profiler();
-        igl::Timer timer;
-        timer.start();
-#endif
-
-        // initial value
-        Eigen::MatrixXd x0 = U0;
-        x0.resize(U0.size(), 1); // Flatten displacements
-        problem.x0 = x0;
-
-        OptimizationResults result;
-        result = solve_problem(problem, settings);
-        result.x.resize(U0.rows(), 2); // Unflatten displacments
-
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        print_profile(timer.getElapsedTime());
-#endif
-
-        return result;
-    } // namespace opt
 
     ParticlesDisplProblem::ParticlesDisplProblem()
         : constraint(nullptr)
@@ -104,6 +74,7 @@ namespace opt {
     {
         return Eigen::MatrixXd::Identity(x.size(), x.size());
     }
+
     Eigen::SparseMatrix<double> ParticlesDisplProblem::eval_hessian_f_sparse(
         const Eigen::VectorXd& x)
     {

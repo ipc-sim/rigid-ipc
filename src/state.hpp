@@ -140,6 +140,8 @@ public:
     // SCENE OPT
     // ----------------------------------------------------------------------
     opt::CollisionConstraint& getCollisionConstraint();
+    opt::OptimizationSolver& getOptimizationSolver();
+
     void reset_optimization_problem();
     void optimize_displacements(const std::string filename = "");
 

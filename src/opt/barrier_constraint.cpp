@@ -52,6 +52,7 @@ namespace opt {
             barrier_epsilon += 1e-4;
         }
     }
+
     void BarrierConstraint::compute_constraints(
         const Eigen::MatrixX2d& vertices, const Eigen::MatrixX2i& edges,
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers)
@@ -70,6 +71,7 @@ namespace opt {
             ccd::autodiff::collision_penalty<DScalar>, barriers_jacobian);
         barriers_jacobian.transposeInPlace();
     }
+
     void BarrierConstraint::compute_constraints_hessian(
         const Eigen::MatrixX2d& vertices, const Eigen::MatrixX2i& edges,
         const Eigen::MatrixXd& Uk,

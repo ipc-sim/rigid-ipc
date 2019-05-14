@@ -11,13 +11,14 @@
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
 
-#include <logger.hpp>
-
 #include <autodiff/finitediff.hpp>
 #include <opt/barrier_constraint.hpp>
 #include <opt/displacement_opt.hpp>
 #include <opt/ncp_solver.hpp>
 #include <opt/volume_constraint.hpp>
+
+#include <logger.hpp>
+#include <profiler.hpp>
 
 namespace ccd {
 State::State()
@@ -204,6 +205,22 @@ opt::CollisionConstraint& State::getCollisionConstraint()
     }
 }
 
+opt::OptimizationSolver& State::getOptimizationSolver()
+{
+    switch (solver_settings.method) {
+    case ccd::opt::NCP:
+        return ncp_solver;
+    case ccd::opt::IPOPT:
+        return ipopt_solver;
+    case ccd::opt::NLOPT:
+        return nlopt_solver;
+    case ccd::opt::LINEARIZED_CONSTRAINTS:
+        return linearized_constraint_solver;
+    case ccd::opt::BARRIER_NEWTON:
+        return barrier_newton_solver;
+    }
+}
+
 void State::reset_optimization_problem()
 {
 
@@ -270,30 +287,26 @@ void State::optimize_displacements(const std::string filename)
               it_gamma.push_back(gamma);
           };
 
-    if(opt_problem.validate_problem()){
+    if (opt_problem.validate_problem()) {
         Eigen::MatrixXd x0 = U0;
         x0.resize(U0.size(), 1);
         opt_problem.x0 = x0;
 
-        // 5. run optimization
-        if (solver_settings.method == ccd::opt::NCP) {
-            opt_results = ncp_solver.solve(opt_problem);
-            opt_results.x.resize(U0.rows(), 2);
+        auto& solver = getOptimizationSolver();
+#ifdef PROFILE_FUNCTIONS
+        reset_profiler();
+        igl::Timer timer;
+        timer.start();
+#endif
+        opt_results = solver.solve(opt_problem);
+        opt_results.x.resize(U0.rows(), 2);
 
-        } else if (solver_settings.method == ccd::opt::IPOPT) {
-            opt_results = ipopt_solver.solve(opt_problem);
-            opt_results.x.resize(U0.rows(), 2);
-        } else if (solver_settings.method == ccd::opt::NLOPT) {
-            opt_results = nlopt_solver.solve(opt_problem);
-            opt_results.x.resize(U0.rows(), 2);
-        } else if (solver_settings.method == ccd::opt::LINEARIZED_CONSTRAINTS) {
-            opt_results = linearized_constraint_solver.solve(opt_problem);
-            opt_results.x.resize(U0.rows(), 2);
-        } else {
-            opt_results = barrier_newton_solver.solve(opt_problem);
-            opt_results.x.resize(U0.rows(), 2);
-        }
+#ifdef PROFILE_FUNCTIONS
+        timer.stop();
+        print_profile(timer.getElapsedTime());
+#endif
     }
+
     if (solver_settings.verbosity > 0) {
         log_optimization_steps(filename, it_x, it_lambda, it_gamma);
     }

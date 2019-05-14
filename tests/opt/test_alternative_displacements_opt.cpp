@@ -31,7 +31,7 @@ TEST_CASE("test the setup", "[opt][displacements][barrier]")
 
     state.recompute_collision_set = GENERATE(false, true);
     state.detection_method = DetectionMethod::BRUTE_FORCE;
-    state.solver_settings.barrier_epsilon = 1.0;
+    state.barrier_newton_solver.barrier_epsilon = 1.0;
     state.solver_settings.method = OptimizationMethod::BARRIER_NEWTON;
 
     state.reset_optimization_problem();
@@ -124,9 +124,9 @@ TEST_CASE("two rotating edges", "[opt][displacements][barrier]")
             + center;
     }
 
-    state.solver_settings.min_barrier_epsilon = 1e-3;
-    state.solver_settings.line_search_tolerance = 1e-4;
-    state.solver_settings.absolute_tolerance = 1e-3;
+    state.barrier_newton_solver.min_barrier_epsilon = 1e-3;
+    state.barrier_newton_solver.line_search_tolerance = 1e-4;
+    state.barrier_newton_solver.absolute_tolerance = 1e-3;
 
     state.optimize_displacements("");
     CHECK(state.opt_results.success);
@@ -147,9 +147,9 @@ TEST_CASE("corner case", "[opt][displacements][barrier]")
     state.detection_method = DetectionMethod::BRUTE_FORCE;
     state.solver_settings.method = OptimizationMethod::BARRIER_NEWTON;
 
-    state.solver_settings.min_barrier_epsilon = 1e-3;
-    state.solver_settings.line_search_tolerance = 1e-4;
-    state.solver_settings.absolute_tolerance = 1e-3;
+    state.barrier_newton_solver.min_barrier_epsilon = 1e-3;
+    state.barrier_newton_solver.line_search_tolerance = 1e-4;
+    state.barrier_newton_solver.absolute_tolerance = 1e-3;
 
     state.optimize_displacements("");
     CHECK(state.opt_results.success);

@@ -132,8 +132,14 @@ namespace opt {
         return hessian;
     }
 
-
-    BarrierNewtonSolver::BarrierNewtonSolver() {}
+    BarrierNewtonSolver::BarrierNewtonSolver()
+        : barrier_epsilon(0.0)
+        , min_barrier_epsilon(1e-8)
+        , absolute_tolerance(1e-8)
+        , line_search_tolerance(1e-8)
+        , max_iterations(3000)
+    {
+    }
     BarrierNewtonSolver::~BarrierNewtonSolver() {}
     OptimizationResults BarrierNewtonSolver::solve(
         OptimizationProblem& general_problem)
@@ -142,7 +148,8 @@ namespace opt {
 
         OptimizationResults results;
         do {
-            results = newtons_method(barrier_problem, absolute_tolerance, line_search_tolerance, max_iterations);
+            results = newtons_method(barrier_problem, absolute_tolerance,
+                line_search_tolerance, max_iterations);
             // Save the original problems objective
             results.minf = general_problem.eval_f(results.x);
             // Steepen the barrier
@@ -169,8 +176,6 @@ namespace opt {
         solver->line_search_tolerance = settings.line_search_tolerance;
         return solver->solve(general_problem);
     }
-
-
 
 } // namespace opt
 } // namespace ccd

@@ -15,18 +15,6 @@
 namespace ccd {
 namespace opt {
 
-    /**
-     * @brief Solve an optimization problem
-     * We handle optimization problems of the form
-     * \begin{align}
-     *      &\min f(x) & x \in \mathbb{R}^n \\\\
-     *      &\text{subject to} & g_L \leq g(x) \leq g_U \\\\
-     *      &                   & x_L \leq x \leq x_U \\\\
-     * \end{align}
-     */
-    OptimizationResults solve_problem(
-        OptimizationProblem& problem, SolverSettings& settings);
-
     class OptimizationSolver {
     public:
         OptimizationSolver();

@@ -12,21 +12,6 @@
 namespace ccd {
 namespace opt {
 
-    OptimizationResults solve_problem(
-        OptimizationProblem& problem, SolverSettings& settings)
-    {
-        if (!problem.validate_problem()) {
-            return OptimizationResults();
-        }
-
-        switch (settings.method) {
-        case OptimizationMethod::BARRIER_NEWTON:
-            return solve_problem_with_barrier_newton(problem, settings);
-        default:
-            throw NotImplementedError("Not implemented");
-        }
-    }
-
     OptimizationSolver::OptimizationSolver() {}
     OptimizationSolver::~OptimizationSolver() {}
 
