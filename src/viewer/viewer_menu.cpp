@@ -3,9 +3,6 @@
 #include <logger.hpp>
 #include <viewer/constraint_view.hpp>
 #include <viewer/imgui_ext.hpp>
-#include <viewer/ipopt_solver_view.hpp>
-#include <viewer/ncp_solver_view.hpp>
-#include <viewer/nlopt_solver_view.hpp>
 #include <viewer/solver_view.hpp>
 
 namespace ccd {
@@ -328,17 +325,23 @@ void ViewerMenu::draw_optimization()
     int idx_ctr_type = static_cast<int>(state.constraint_function);
 
     if (ImGui::CollapsingHeader(
-            "Displacement Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
+            "Collision Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
 
         if (ImGui::Combo("Constraint##opt", &idx_ctr_type, ccd::ConstraintNames,
                 CCD_IM_ARRAYSIZE(ccd::ConstraintNames))) {
             state.constraint_function
                 = static_cast<ccd::ConstraintType>(idx_ctr_type);
         }
-        if (state.constraint_function == ccd::ConstraintType::VOLUME) {
-            volume_constraint_menu(state.volume_constraint);
-        } else {
-            barrier_constraint_menu(state.barrier_constraint);
+        {
+            ImGui::Indent();
+            ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
+            if (state.constraint_function == ccd::ConstraintType::VOLUME) {
+                volume_constraint_menu(state.volume_constraint);
+            } else {
+                barrier_constraint_menu(state.barrier_constraint);
+            }
+            ImGui::PopItemWidth();
+            ImGui::Unindent();
         }
 
         if (ImGui::Combo("method##opt", &idx_optimization_method,
@@ -353,20 +356,19 @@ void ViewerMenu::draw_optimization()
             ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
             switch (state.opt_method) {
             case ccd::OptimizationMethod::LINEARIZED_CONSTRAINTS:
-                linearized_constraint_solver_view(
-                    state.linearized_constraint_solver);
+                solver_menu(state.linearized_constraint_solver);
                 break;
             case ccd::OptimizationMethod::NCP:
-                ncp_solver_menu(state.ncp_solver);
+                solver_menu(state.ncp_solver);
                 break;
             case ccd::OptimizationMethod::IPOPT:
-                ipopt_solver_menu(state.ipopt_solver);
+                solver_menu(state.ipopt_solver);
                 break;
             case ccd::OptimizationMethod::NLOPT:
-                nlopt_solver_menu(state.nlopt_solver);
+                solver_menu(state.nlopt_solver);
                 break;
             case ccd::OptimizationMethod::BARRIER_NEWTON:
-                barrier_newton_solver_view(state.barrier_newton_solver);
+                solver_menu(state.barrier_newton_solver);
                 break;
             }
             ImGui::PopItemWidth();
@@ -375,9 +377,6 @@ void ViewerMenu::draw_optimization()
 
         ImGui::Checkbox(
             "continue optimization##opt", &(state.reuse_opt_displacements));
-
-        ImGui::Checkbox(
-            "recompute col. set##opt", &(state.recompute_collision_set));
 
         if (ImGui::Button("Optimize##opt", ImVec2(-1, 0))) {
             optimize_displacements();

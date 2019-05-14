@@ -1,9 +1,16 @@
 #pragma once
 
-#include <opt/linearized_constraint_solver.hpp>
 #include <opt/barrier_newton_solver.hpp>
+#include <opt/ipopt_solver.hpp>
+#include <opt/linearized_constraint_solver.hpp>
+#include <opt/ncp_solver.hpp>
+#include <opt/nlopt_solver.hpp>
 
 namespace ccd {
-void linearized_constraint_solver_view(ccd::opt::LinearizedCstrSolver& solver);
-void barrier_newton_solver_view(ccd::opt::BarrierNewtonSolver& solver);
-}
+void solver_menu(ccd::opt::NLOptSolver& solver);
+void solver_menu(ccd::opt::LinearizedCstrSolver& solver);
+void solver_menu(ccd::opt::BarrierNewtonSolver& solver);
+void solver_menu(ccd::opt::NCPSolver& ncp_solver);
+void solver_menu(ccd::opt::IpoptSolver& solver);
+
+} // namespace ccd

@@ -24,6 +24,7 @@ namespace ccd {
 State::State()
     : detection_method(DetectionMethod::BRUTE_FORCE)
     , output_dir(DATA_OUTPUT_DIR)
+    , opt_method(OptimizationMethod::BARRIER_NEWTON)
     , constraint_function(ConstraintType::BARRIER)
     , recompute_collision_set(false)
     , canvas_width(10)
