@@ -41,7 +41,7 @@ namespace opt {
      * @param s Denominator inside x which steepens the function.
      * @return The value of the barrier function at x.
      */
-    double spline_barrier(double x, double s);
+    template <typename T> T spline_barrier(T x, double s);
 
     /**
      * @brief Derivative of the spline_barrier function with respect to x.
@@ -182,5 +182,5 @@ namespace opt {
      */
     double hookean_barrier_hessian(double x, double s);
 
-}
-}
+} // namespace opt
+} // namespace ccd

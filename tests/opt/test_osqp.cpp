@@ -4,8 +4,6 @@
 #include <catch.hpp>
 #include <osqp.h>
 
-#define INF_D (std::numeric_limits<double>::infinity())
-
 TEST_CASE("Simple tests of OSQP", "[opt][nlopt]")
 {
     // Load problem data
@@ -31,7 +29,7 @@ TEST_CASE("Simple tests of OSQP", "[opt][nlopt]")
     expected_solution.setOnes();
     SECTION("No Lower Bounds")
     {
-        l *= -INF_D;
+        l *= -2e19;
         expected_solution *= 0;
     }
     SECTION("Lower Bounds = 1") {}
@@ -41,9 +39,8 @@ TEST_CASE("Simple tests of OSQP", "[opt][nlopt]")
         expected_solution *= 10;
     }
     // Linear constraint upper bounds
-    Eigen::Matrix<c_float, M, 1> u;
-    u.setOnes();
-    u *= INF_D;
+    Eigen::Matrix<c_float, M, 1> u
+        = Eigen::Matrix<c_float, M, 1>::Constant(2e19);
 
     // Populate data
     OSQPData data; // OSQPData
@@ -71,7 +68,7 @@ TEST_CASE("Simple tests of OSQP", "[opt][nlopt]")
     Eigen::Map<Eigen::Matrix<c_float, N, 1>> x(work->solution->x, N);
 
     REQUIRE(x.size() == expected_solution.size());
-    CHECK((x - expected_solution).squaredNorm() == Approx(0.0).margin(1e-12));
+    CHECK((x - expected_solution).squaredNorm() == Approx(0.0).margin(1e-8));
 
     // Cleanup
     osqp_cleanup(work);

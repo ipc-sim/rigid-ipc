@@ -2,6 +2,7 @@
 #define CCD_STATE_HPP
 
 #include <Eigen/Core>
+#include <set>
 
 #include <ccd/collision_detection.hpp>
 #include <ccd/impact.hpp>
@@ -118,7 +119,7 @@ public:
         const Eigen::MatrixXd& Uk, const bool recompute_collision_set);
     Eigen::MatrixXd compute_collision_jac_volume(
         const Eigen::MatrixXd& Uk, const bool recompute_collision_set);
-    std::vector<Eigen::MatrixXd> compute_collision_hessian_volume(
+    std::vector<Eigen::SparseMatrix<double>> compute_collision_hessian_volume(
         const Eigen::MatrixXd& Uk, const bool recompute_collision_set);
 
     ////////////////////////////////////////////////////////////////////////////

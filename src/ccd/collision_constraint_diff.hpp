@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <Eigen/SparseCore>
 
 #include <autodiff/autodiff_types.hpp>
 #include <ccd/collision_detection.hpp>
@@ -122,17 +123,17 @@ namespace autodiff {
      * @brief Compute the value of the collision constraint for all edge-edge
      * impacts
      *
-     * @param[in] V                   All vertices positions.
-     * @param[in] U                   All vertices displacements.
+     * @param[in] V                   All vertices positions
+     * @param[in] U                   All vertices displacements
      * @param[in] E                   Edges as pair of vertex indices
-     * @param[in] ee_impacts          List of impact between two edges.
+     * @param[in] ee_impacts          List of impact between two edges
      * @param[in] edge_impact_map     Impact assigned to each edge
      * @param[in] epsilon             A number used during computation
      *                                (e.g. volume epsilon or barrier epsilon)
      * @param[in] compute_constraint  A function to compute the constraint
      *                                locally
      *
-     * @param[out] constraints A vector for the computed constraint values
+     * @param[out] constraints A vector for the computed constraint values.
      */
     void compute_constraints_refresh_toi(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
@@ -143,19 +144,19 @@ namespace autodiff {
 
     /**
      * @brief Compute the first derivative of the collision constraint for all
-     * edge-edge impacts
+     * edge-edge impacts.
      *
-     * @param[in] V                   All vertices positions.
-     * @param[in] U                   All vertices displacements.
+     * @param[in] V                   All vertices positions
+     * @param[in] U                   All vertices displacements
      * @param[in] E                   Edges as pair of vertex indices
-     * @param[in] ee_impacts          List of impact between two edges.
+     * @param[in] ee_impacts          List of impact between two edges
      * @param[in] edge_impact_map     Impact assigned to each edge
      * @param[in] epsilon             A number used during computation
      *                                (e.g. volume epsilon or barrier epsilon)
      * @param[in] compute_constraint  A function to compute the constraint
      *                                locally
      *
-     * @param[out] constraint_grad  Matrix of first derivative of the constraint
+     * @param[out] constraint_grad  First derivative of the constraint.
      */
     void compute_constraints_gradient(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
@@ -165,13 +166,13 @@ namespace autodiff {
         Eigen::MatrixXd& constraint_grad);
 
     /**
-     * Compute the second derivative of the collision constraint for all
-     * edge-edge impacts
+     * @breif Compute the second derivative of the collision constraint for all
+     * edge-edge impacts.
      *
-     * @param[in] V                   All vertices positions.
-     * @param[in] U                   All vertices displacements.
+     * @param[in] V                   All vertices positions
+     * @param[in] U                   All vertices displacements
      * @param[in] E                   Edges as pair of vertex indices
-     * @param[in] ee_impacts          List of impact between two edges.
+     * @param[in] ee_impacts          List of impact between two edges
      * @param[in] edge_impact_map     Impact assigned to each edge
      * @param[in] epsilon             A number used during computation
      *                                (e.g. volume epsilon or barrier epsilon)
@@ -186,16 +187,16 @@ namespace autodiff {
         const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         const constraint_func<DScalar>& compute_constraint,
-        std::vector<Eigen::MatrixXd>& constraint_hessian);
+        std::vector<Eigen::SparseMatrix<double>>& constraint_hessian);
 
     ///////////////////////////////////////////////////////////////////////////
     // SINGLE IMPACT GLOBAL Constraints Derivatives
 
     /**
      * @brief Compute the value of the collision constraint for a single
-     * edge-edge impact
+     * edge-edge impact.
      *
-     * @param[in] vertice             All vertices positions.
+     * @param[in] vertices            All vertices positions.
      * @param[in] displacments        All vertices displacements.
      * @param[in] edges               Edges as pair of vertex indices
      * @param[in] impact              Edge-edge impact
@@ -213,8 +214,52 @@ namespace autodiff {
         const constraint_func<double>& compute_constraint);
 
     /**
+     * @brief Compute the first derivative of the collision constraint for an
+     * edge-edge impact.
+     *
+     * @param[in] vertices            All vertices positions.
+     * @param[in] displacements       All vertices displacements.
+     * @param[in] edges               Edges as pair of vertex indices
+     * @param[in] impact              An impact between two edges.
+     * @param[in] edge_id             The edge for which constraint is computed
+     * @param[in] epsilon             A number used during computation
+     *                                (e.g. volume epsilon or barrier epsilon)
+     * @param[in] compute_constraint  A function to compute the constraint
+     *                                locally
+     *
+     * @param[out] gradient  First derivative of the constraint.
+     */
+    void collision_constraint_grad(const Eigen::MatrixX2d& vertices,
+        const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
+        const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
+        const constraint_func<DScalar>& compute_constraint,
+        Eigen::SparseMatrix<double>& gradient);
+
+    /**
+     * @brief Compute the second derivative of the collision constraint for an
+     * edge-edge impact.
+     *
+     * @param[in] vertices            All vertices positions.
+     * @param[in] displacements       All vertices displacements.
+     * @param[in] edges               Edges as pair of vertex indices
+     * @param[in] impact              An impact between two edges.
+     * @param[in] edge_id             The edge for which constraint is computed
+     * @param[in] epsilon             A number used during computation
+     *                                (e.g. volume epsilon or barrier epsilon)
+     * @param[in] compute_constraint  A function to compute the constraint
+     *                                locally
+     *
+     * @param[out] hessian  Second derivative of the constraint.
+     */
+    void collision_constraint_hessian(const Eigen::MatrixX2d& vertices,
+        const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
+        const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
+        const constraint_func<DScalar>& compute_constraint,
+        Eigen::SparseMatrix<double>& hessian);
+
+    /**
      * @brief Compute the first or second derivative of the collision constraint
-     * for an edge-edge impact
+     * for an edge-edge impact.
      *
      * @param[in] vertices            All vertices positions.
      * @param[in] displacements       All vertices displacements.
@@ -228,63 +273,18 @@ namespace autodiff {
      *
      * @param[out] derivative  First or second derivative of the constraint.
      */
-    template <int I>
     void collision_constraint_derivative(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
         const int order, const constraint_func<DScalar>& compute_constraint,
-        Eigen::Matrix<double, Eigen::Dynamic, I>& derivative);
-
-    /**
-     * @brief Compute the first derivative of the collision constraint for an
-     * edge-edge impact
-     *
-     * @param[in] vertices            All vertices positions.
-     * @param[in] displacements       All vertices displacements.
-     * @param[in] edges               Edges as pair of vertex indices
-     * @param[in] impact              An impact between two edges.
-     * @param[in] edge_id             The edge for which constraint is computed
-     * @param[in] epsilon             A number used during computation
-     *                                (e.g. volume epsilon or barrier epsilon)
-     * @param[in] compute_constraint  A function to compute the constraint
-     *                                locally
-     *
-     * @param[out] gradient First derivative of the constraint.
-     */
-    void collision_constraint_grad(const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
-        const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
-        const constraint_func<DScalar>& compute_constraint,
-        Eigen::VectorXd& gradient);
-
-    /**
-     * @brief Compute the second derivative of the collision constraint for an
-     * edge-edge impact
-     *
-     * @param[in] vertices            All vertices positions.
-     * @param[in] displacements       All vertices displacements.
-     * @param[in] edges               Edges as pair of vertex indices
-     * @param[in] impact              An impact between two edges.
-     * @param[in] edge_id             The edge for which constraint is computed
-     * @param[in] epsilon             A number used during computation
-     *                                (e.g. volume epsilon or barrier epsilon)
-     * @param[in] compute_constraint  A function to compute the constraint
-     *                                locally
-     *
-     * @param[out] hessian Second derivative of the constraint.
-     */
-    void collision_constraint_hessian(const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
-        const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
-        const constraint_func<DScalar>& compute_constraint,
-        Eigen::MatrixXd& hessian);
+        Eigen::SparseMatrix<double>& derivative);
 
     ////////////////////////////////////////////////////////////////////////////
     // Single impact local Constraints Derivatives
 
     /**
      * @brief Compute the derivative of the collision constraint for an
-     * edge-edge impact
+     * edge-edge impact.
      *
      * @param[in] Vi                  First vertex of the impacted edge
      * @param[in] Vj                  Second vertex of the impacted edge
@@ -312,7 +312,7 @@ namespace autodiff {
 
     /**
      * @brief Compute the derivative of the collision constraint for an
-     * edge-edge impact using finite differences
+     * edge-edge impact using finite differences.
      *
      * @param[in] Vi                  First vertex of the impacted edge
      * @param[in] Vj                  Second vertex of the impacted edge

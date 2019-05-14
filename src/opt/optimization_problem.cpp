@@ -32,8 +32,8 @@ namespace opt {
             throw NotImplementedError(
                 "Jacobian of the constraint function not implemented!");
         };
-        this->hessian_g
-            = [](const Eigen::VectorXd&) -> std::vector<Eigen::MatrixXd> {
+        this->hessian_g = [](const Eigen::VectorXd&)
+            -> std::vector<Eigen::SparseMatrix<double>> {
             throw NotImplementedError("Second derivative of the constraint "
                                       "function not implemented!");
         };

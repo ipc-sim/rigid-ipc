@@ -1,5 +1,7 @@
 #include <profiler.hpp>
 
+#ifdef PROFILE_FUNCTIONS
+
 void reset_profiler()
 {
     // Computing the constraints
@@ -58,3 +60,5 @@ void print_profile(double total_time)
 
               << std::endl;
 }
+
+#endif

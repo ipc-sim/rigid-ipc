@@ -27,14 +27,16 @@ namespace opt {
             }
         }
 
-        int i = 0;
+        // Initalize the working variables
         Eigen::VectorXd g = problem.grad_f(x),
                         delta_x = Eigen::VectorXd::Zero(problem.num_vars),
                         g_free; // subset of g for free degrees of freedom
         igl::slice(g, free_dof, 1, g_free); // Initialize g_free
         Eigen::MatrixXd H, H_free;
         double gamma;
-        while (i++ <= settings.max_iter
+
+        int iter = 0;
+        while (iter <= settings.max_iter
             && g_free.squaredNorm() > settings.absolute_tolerance) {
             // Compute the full hessian
             H = problem.hessian_f(x);
@@ -60,12 +62,17 @@ namespace opt {
 
             // Save intermedtiate results
             settings.intermediate_cb(
-                x, problem.f(x), Eigen::VectorXd::Zero(x.size()), 0, i);
+                x, problem.f(x), Eigen::VectorXd::Zero(x.size()), 0, iter);
+
+            iter++; // Increase iteration counter
         }
 
-        return OptimizationResults(x, problem.f(x),
-            i >= settings.max_iter
-                || g.squaredNorm() <= settings.absolute_tolerance);
+        if (settings.verbosity > 0) {
+            std::cout << "took " << iter << " iterations." << std::endl;
+        }
+
+        return OptimizationResults(
+            x, problem.f(x), g.squaredNorm() <= settings.absolute_tolerance);
     }
 
     // Search along a search direction to find a scalar gamma in [0, 1] such

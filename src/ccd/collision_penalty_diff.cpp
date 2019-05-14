@@ -2,6 +2,7 @@
 
 #include <autodiff/finitediff.hpp>
 #include <ccd/time_of_impact.hpp>
+#include <opt/barrier.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -9,6 +10,7 @@
 namespace ccd {
 namespace autodiff {
 
+    // Compute the penalty of an impact between edge_ij and edge_kl.
     template <typename T>
     T collision_penalty(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
         const Eigen::Vector2d& Vk, const Eigen::Vector2d& Vl,
@@ -27,45 +29,58 @@ namespace autodiff {
                           scaled_Uk = time_scale * Uk,
                           scaled_Ul = time_scale * Ul;
 
+        double edge_length;
+        T displacment_length;
+
         switch (impact_node) {
         case vK:
             success = compute_edge_vertex_time_of_impact(
                 Vi, Vj, Vk, scaled_Ui, scaled_Uj, scaled_Uk, toi);
             success &= temporal_parameterization_to_spatial(
                 Vi, Vj, Vk, scaled_Ui, scaled_Uj, scaled_Uk, toi, alpha);
+            edge_length = (Vj - Vi).norm();
+            displacment_length = Uk.norm();
             break;
         case vL:
             success = compute_edge_vertex_time_of_impact(
                 Vi, Vj, Vl, scaled_Ui, scaled_Uj, scaled_Ul, toi);
             success &= temporal_parameterization_to_spatial(
                 Vi, Vj, Vl, scaled_Ui, scaled_Uj, scaled_Ul, toi, alpha);
+            edge_length = (Vj - Vi).norm();
+            displacment_length = Ul.norm();
             break;
         case vI:
             success = compute_edge_vertex_time_of_impact(
                 Vk, Vl, Vi, scaled_Uk, scaled_Ul, scaled_Ui, toi);
             alpha = T(0);
+            edge_length = (Vl - Vk).norm();
+            displacment_length = Ui.norm();
             break;
         case vJ:
             success = compute_edge_vertex_time_of_impact(
                 Vk, Vl, Vj, scaled_Uk, scaled_Ul, scaled_Uj, toi);
             alpha = T(1);
+            edge_length = (Vl - Vk).norm();
+            displacment_length = Uj.norm();
             break;
         }
 
         if (!success) {
-            return T(10 * barrier_epsilon);
+            return T(0);
         }
 
-        return (time_scale * toi - t);
+        return edge_length
+            * opt::spline_barrier<T>(time_scale * toi - t, barrier_epsilon);
         // return (time_scale * toi - t)
         //     * (scaled_Ui.squaredNorm() + scaled_Uj.squaredNorm()
         //         + scaled_Uk.squaredNorm() + scaled_Ul.squaredNorm());
     }
 
-    // -----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // ALL IMPACTS GLOBAL Penalty Derivatives
-    // -----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
+    // Compute the value of the collision constraint for all edge-edge impacts.
     void compute_penalties_refresh_toi(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
@@ -82,6 +97,8 @@ namespace autodiff {
         //     10 * barrier_epsilon, penalties);
     }
 
+    // Compute the first derivative of the collision constraint for all
+    // edge-edge impacts.
     void compute_penalties_gradient(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
@@ -95,11 +112,13 @@ namespace autodiff {
         //     penalties_grad);
     }
 
+    // Compute the second derivative of the collision constraint for all
+    // edge-edge impacts.
     void compute_penalties_hessian(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double barrier_epsilon,
-        std::vector<Eigen::MatrixXd>& penalties_hessian)
+        std::vector<Eigen::SparseMatrix<double>>& penalties_hessian)
     {
         compute_constraints_hessian(V, U, E, ee_impacts, edge_impact_map,
             barrier_epsilon, collision_penalty<DScalar>, penalties_hessian);
@@ -108,9 +127,12 @@ namespace autodiff {
         //     penalties_hessian);
     }
 
-    // -----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // SINGLE IMPACT GLOBAL Penalties & Derivatives
-    // -----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+
+    // Compute the value of the collision constraint for a single edge-edge
+    // impact.
     double collision_penalty_refresh_toi(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id,
@@ -120,39 +142,56 @@ namespace autodiff {
             impact, edge_id, barrier_epsilon, collision_penalty<double>);
     }
 
+    // Compute the first derivative of the collision constraint for an edge-edge
+    // impact.
     void collision_penalty_grad(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id,
         const double barrier_epsilon, Eigen::VectorXd& gradient)
     {
+        Eigen::SparseMatrix<double> sparse_gradient = gradient.sparseView();
         collision_constraint_grad(vertices, displacements, edges, impact,
-            edge_id, barrier_epsilon, collision_penalty<DScalar>, gradient);
+            edge_id, barrier_epsilon, collision_penalty<DScalar>,
+            sparse_gradient);
+        gradient = Eigen::VectorXd(sparse_gradient);
     }
 
+    // Compute the second derivative of the collision constraint for an
+    // edge-edge impact.
     void collision_penalty_hessian(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id,
         const double barrier_epsilon, Eigen::MatrixXd& hessian)
     {
+        Eigen::SparseMatrix<double> sparse_hessian = hessian.sparseView();
         collision_constraint_hessian(vertices, displacements, edges, impact,
-            edge_id, barrier_epsilon, collision_penalty<DScalar>, hessian);
+            edge_id, barrier_epsilon, collision_penalty<DScalar>,
+            sparse_hessian);
+        hessian = Eigen::MatrixXd(sparse_hessian);
     }
 
-    template <int T>
+    // Compute the first or second derivative of the collision constraint for an
+    // edge-edge impact.
+    template <int I>
     void collision_penalty_derivative(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id,
         const double barrier_epsilon, const int order,
-        Eigen::Matrix<double, Eigen::Dynamic, T>& derivative)
+        Eigen::Matrix<double, Eigen::Dynamic, I>& derivative)
     {
+        Eigen::SparseMatrix<double> sparse_derivative = derivative.sparseView();
         collision_constraint_derivative(vertices, displacements, edges, impact,
             edge_id, barrier_epsilon, order, collision_penalty<DScalar>,
-            derivative);
+            sparse_derivative);
+        derivative
+            = Eigen::Matrix<double, Eigen::Dynamic, I>(sparse_derivative);
     }
 
-    // -----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // SINGLE IMPACT LOCAL Penalty Derivatives
-    // -----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+    // Compute the derivative of the collision constraint for an edge-edge
+    // impact.
     DScalar collision_penalty_differentiable(const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
         const Eigen::Vector2d& Vl, const Eigen::Vector2d& Ui,
@@ -164,6 +203,8 @@ namespace autodiff {
             Ul, impact_node, barrier_epsilon, collision_penalty<DScalar>);
     }
 
+    // Compute the derivative of the collision constraint for an edge-edge
+    // impact using finite differences.
     void collision_penalty_grad_fd(const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
         const Eigen::Vector2d& Vl, const Eigen::Vector2d& Ui,

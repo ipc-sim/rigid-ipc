@@ -36,9 +36,15 @@ namespace autodiff {
         const Vector2T<T>& Ul, const ImpactNode impact_node,
         const double epsilon);
 
-    // ------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
     // ALL IMPACTS GLOBAL Volumes Derivatives
-    // ------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    void compute_volumes_refresh_toi(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+        const EdgeEdgeImpacts& ee_impacts,
+        const Eigen::VectorXi& edge_impact_map, const double epsilon,
+        Eigen::VectorXd& volumes);
+
     /**
      * Compute the first derivative of the collision volume for all edge-edge
      * impact
@@ -64,17 +70,11 @@ namespace autodiff {
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
-        std::vector<Eigen::MatrixXd>& volume_hessian);
+        std::vector<Eigen::SparseMatrix<double>>& volume_hessian);
 
-    void compute_volumes_refresh_toi(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& edge_impact_map, const double epsilon,
-        Eigen::VectorXd& volumes);
-
-    // ------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
     // SINGLE IMPACT GLOBAL Volumes Derivatives
-    // ------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
     double collision_volume_refresh_toi(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id, const double epsilon);
@@ -108,9 +108,9 @@ namespace autodiff {
         const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
         Eigen::MatrixXd& hessian);
 
-    // ------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
     // SINGLE IMPACT LOCAL Volumes Derivatives
-    // ------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
     DScalar collision_volume_differentiable(const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,

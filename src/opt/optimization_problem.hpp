@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <Eigen/SparseCore>
 #include <vector>
 
 namespace ccd {
@@ -26,7 +27,8 @@ namespace opt {
         callback_jac_g;
     ///@brief function type for direvative of the jacobian of constraints
     /// \f$\nabla^2 g(x)\f$
-    typedef std::function<std::vector<Eigen::MatrixXd>(const Eigen::VectorXd&)>
+    typedef std::function<std::vector<Eigen::SparseMatrix<double>>(
+        const Eigen::VectorXd&)>
         callback_hessian_g;
 
     /**

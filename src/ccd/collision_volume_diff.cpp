@@ -80,7 +80,7 @@ namespace autodiff {
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
-        std::vector<Eigen::MatrixXd>& volume_hessian)
+        std::vector<Eigen::SparseMatrix<double>>& volume_hessian)
     {
         compute_constraints_hessian(V, U, E, ee_impacts, edge_impact_map,
             epsilon, collision_volume<DScalar>, volume_hessian);
@@ -102,8 +102,10 @@ namespace autodiff {
         const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
         Eigen::VectorXd& gradient)
     {
+        Eigen::SparseMatrix<double> sparse_gradient = gradient.sparseView();
         collision_constraint_grad(vertices, displacements, edges, impact,
-            edge_id, epsilon, collision_volume<DScalar>, gradient);
+            edge_id, epsilon, collision_volume<DScalar>, sparse_gradient);
+        gradient = Eigen::VectorXd(sparse_gradient);
     }
 
     void collision_volume_hessian(const Eigen::MatrixX2d& vertices,
@@ -111,8 +113,10 @@ namespace autodiff {
         const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
         Eigen::MatrixXd& hessian)
     {
+        Eigen::SparseMatrix<double> sparse_hessian = hessian.sparseView();
         collision_constraint_hessian(vertices, displacements, edges, impact,
-            edge_id, epsilon, collision_volume<DScalar>, hessian);
+            edge_id, epsilon, collision_volume<DScalar>, sparse_hessian);
+        hessian = Eigen::MatrixXd(sparse_hessian);
     }
 
     template <int I>
@@ -121,13 +125,17 @@ namespace autodiff {
         const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
         const int order, Eigen::Matrix<double, Eigen::Dynamic, I>& derivative)
     {
+        Eigen::SparseMatrix<double> sparse_derivative = derivative.sparseView();
         collision_constraint_derivative(vertices, displacements, edges, impact,
-            edge_id, epsilon, order, collision_volume<DScalar>, derivative);
+            edge_id, epsilon, order, collision_volume<DScalar>,
+            sparse_derivative);
+        derivative
+            = Eigen::Matrix<double, Eigen::Dynamic, I>(sparse_derivative);
     }
 
-    // -----------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
     // SINGLE IMPACT LOCAL Volumes Derivatives
-    // -----------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
     DScalar collision_volume_differentiable(const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
         const Eigen::Vector2d& Vl, const Eigen::Vector2d& Ui,

@@ -1,12 +1,11 @@
 // Barrier functions that grow to infinity as x -> 0+. Includes gradient and
 // hessian functions, too. These barrier functions can be used to impose
 // inequlity constraints on a function.
-#include <cmath>
-#include <iostream>
-
-#include <Eigen/LU>
-
 #include <opt/barrier.hpp>
+
+#include <cmath>
+
+#include <autodiff/autodiff_types.hpp>
 
 #define INF_D (std::numeric_limits<double>::infinity())
 
@@ -15,17 +14,20 @@ namespace ccd {
 namespace opt {
 
     // Function that grows to infinity as x approaches 0 from the right.
-    double spline_barrier(double x, double s)
+    template <typename T> T spline_barrier(T x, double s)
     {
         if (x <= 0)
-            return INF_D;
+            return T(INF_D);
         if (x >= s)
-            return 0;
-        double x_s = x / s;
+            return T(0);
+        T x_s = x / s;
         // g(x) = (x / s)^3 - 3 * (x / s)^2 + 3 * (x / s)
-        double g = x_s * (3 + x_s * (-3 + x_s)); // Horner's method
+        T g = x_s * (3 + x_s * (-3 + x_s)); // Horner's method
         return 1 / g - 1;
     }
+
+    template double spline_barrier(double x, double s);
+    template DScalar spline_barrier(DScalar x, double s);
 
     // Derivative of the spline_barrier function with respect to x.
     double spline_barrier_gradient(double x, double s)
@@ -116,5 +118,5 @@ namespace opt {
         return 2 * (1 - log(x / s)) / (x * x);
     };
 
-}
-}
+} // namespace opt
+} // namespace ccd

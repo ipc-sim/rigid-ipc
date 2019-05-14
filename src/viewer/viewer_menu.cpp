@@ -257,6 +257,19 @@ void ViewerMenu::draw_io()
 // //////////////////////////////////////////////////////////////////////////
 // EDIT MODE
 // //////////////////////////////////////////////////////////////////////////
+void select_connected(const int selected_point,
+    const std::vector<std::list<int>>& adjacencies,
+    std::set<int>& already_selected)
+{
+    if (already_selected.find(selected_point) != already_selected.end()) {
+        return;
+    }
+    already_selected.insert(selected_point);
+    for (int connected_point : adjacencies[selected_point]) {
+        select_connected(connected_point, adjacencies, already_selected);
+    }
+}
+
 void ViewerMenu::draw_edit_modes()
 {
     if (ImGui::CollapsingHeader("Edit Mode", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -287,6 +300,30 @@ void ViewerMenu::draw_edit_modes()
 
         if (ImGui::Button("Connect##Edit", ImVec2(-1, 0))) {
             connect_selected_vertices();
+        }
+
+        if ((state.selected_points.size() > 0
+                || state.selected_displacements.size() > 0)
+            && ImGui::Button("Select Connected##Edit", ImVec2(-1, 0))) {
+            // Build adjacency list
+            std::vector<std::list<int>> adjacencies(
+                state.vertices.rows(), std::list<int>());
+            for (int i = 0; i < state.edges.rows(); i++) {
+                adjacencies[state.edges(i, 0)].push_back(state.edges(i, 1));
+                adjacencies[state.edges(i, 1)].push_back(state.edges(i, 0));
+            }
+
+            std::set<int> new_selection;
+            for (int selected_point : state.selected_points.size() > 0
+                    ? state.selected_points
+                    : state.selected_displacements) {
+                select_connected(selected_point, adjacencies, new_selection);
+            }
+            (state.selected_points.size() > 0 ? state.selected_points
+                                              : state.selected_displacements)
+                .assign(new_selection.begin(), new_selection.end());
+            recolor_edges();
+            recolor_displacements();
         }
     }
 

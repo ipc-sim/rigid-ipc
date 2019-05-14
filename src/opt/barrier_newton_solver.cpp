@@ -19,8 +19,19 @@ namespace opt {
         setup_barrier_problem(
             general_problem, settings.barrier_epsilon, barrier_problem);
 
+        if (settings.verbosity > 0) {
+            std::cout << std::endl;
+        }
+
         OptimizationResults results;
         do {
+            // Log the epsilon and the newton method will log the number of
+            // iterations.
+            if (settings.verbosity > 0) {
+                std::cout << "ϵ = " << settings.barrier_epsilon << ": ";
+            }
+
+            // Optimize for a fixed epsilon
             results = newtons_method(barrier_problem, settings);
             // Save the original problems objective
             results.minf = general_problem.f(results.x);
@@ -69,10 +80,14 @@ namespace opt {
                 && gx.cols() == general_problem.g_lower.cols()
                 && gx.rows() == general_problem.g_upper.rows()
                 && gx.cols() == general_problem.g_upper.cols()) {
-                val += (gx - general_problem.g_lower).unaryExpr(barrier).sum()
-                    + (-gx + general_problem.g_upper).unaryExpr(barrier).sum();
+                // val += (gx -
+                // general_problem.g_lower).unaryExpr(barrier).sum()
+                //     + (-gx +
+                //     general_problem.g_upper).unaryExpr(barrier).sum();
+                val += gx.sum();
             } else {
-                val += gx.unaryExpr(barrier).sum();
+                // val += gx.unaryExpr(barrier).sum();
+                val += gx.sum();
             }
 
             return val;
@@ -81,27 +96,29 @@ namespace opt {
         // Redefine the objective gradient with the constraints as penalties
         barrier_problem.grad_f = [&general_problem, barrier_gradient](
                                      const Eigen::VectorXd& x) {
-            Eigen::VectorXd gx = general_problem.g(x);
+            // Eigen::VectorXd gx = general_problem.g(x);
             Eigen::MatrixXd dgx = general_problem.jac_g(x);
 
             Eigen::VectorXd grad = general_problem.grad_f(x);
 
             // Add constraint functions barrier(g(x))
             // Check to make sure the gx is not dynamic
-            Eigen::VectorXd coeffs;
-            if (gx.size() != 0 && dgx.size() != 0
-                && gx.rows() == general_problem.g_lower.rows()
-                && gx.cols() == general_problem.g_lower.cols()
-                && gx.rows() == general_problem.g_upper.rows()
-                && gx.cols() == general_problem.g_upper.cols()) {
-                coeffs
-                    = (gx - general_problem.g_lower).unaryExpr(barrier_gradient)
-                    - (-gx + general_problem.g_upper)
-                          .unaryExpr(barrier_gradient);
-            } else {
-                coeffs = gx.unaryExpr(barrier_gradient);
-            }
-            grad += (coeffs.asDiagonal() * dgx).colwise().sum().transpose();
+            // Eigen::VectorXd coeffs;
+            // if (gx.size() != 0 && dgx.size() != 0
+            //     && gx.rows() == general_problem.g_lower.rows()
+            //     && gx.cols() == general_problem.g_lower.cols()
+            //     && gx.rows() == general_problem.g_upper.rows()
+            //     && gx.cols() == general_problem.g_upper.cols()) {
+            //     coeffs
+            //         = (gx -
+            //         general_problem.g_lower).unaryExpr(barrier_gradient)
+            //         - (-gx + general_problem.g_upper)
+            //               .unaryExpr(barrier_gradient);
+            // } else {
+            //     coeffs = gx.unaryExpr(barrier_gradient);
+            // }
+            // grad += (coeffs.asDiagonal() * dgx).colwise().sum().transpose();
+            grad += dgx.colwise().sum().transpose();
 
             // Add value constraints barrier(x)
             // ∇ ∑ ϕ(x_i) = ∑ (∇ ϕ(x_i)) = ∑ [0 ... ϕ'(x_i) ... 0]^T
@@ -116,36 +133,41 @@ namespace opt {
         barrier_problem.hessian_f = [&general_problem, barrier_gradient,
                                         barrier_hessian](
                                         const Eigen::VectorXd& x) {
-            Eigen::VectorXd gx = general_problem.g(x);
-            Eigen::MatrixXd dgx = general_problem.jac_g(x);
-            std::vector<Eigen::MatrixXd> ddgx = general_problem.hessian_g(x);
+            // Eigen::VectorXd gx = general_problem.g(x);
+            // Eigen::MatrixXd dgx = general_problem.jac_g(x);
+            std::vector<Eigen::SparseMatrix<double>> ddgx
+                = general_problem.hessian_g(x);
 
             Eigen::MatrixXd hessian = general_problem.hessian_f(x);
 
             // Check to make sure the gx is not dynamic
-            Eigen::VectorXd grad_coeffs, hessian_coeffs;
-            if (gx.size() != 0 && dgx.size() != 0 && ddgx.size() != 0
-                && gx.rows() == general_problem.g_lower.rows()
-                && gx.cols() == general_problem.g_lower.cols()
-                && gx.rows() == general_problem.g_upper.rows()
-                && gx.cols() == general_problem.g_upper.cols()) {
-                grad_coeffs
-                    = (gx - general_problem.g_lower).unaryExpr(barrier_gradient)
-                    - (-gx + general_problem.g_upper)
-                          .unaryExpr(barrier_gradient);
-                hessian_coeffs
-                    = (gx - general_problem.g_lower).unaryExpr(barrier_hessian)
-                    + (-gx + general_problem.g_upper)
-                          .unaryExpr(barrier_hessian);
-            } else {
-                grad_coeffs = gx.unaryExpr(barrier_gradient);
-                hessian_coeffs = gx.unaryExpr(barrier_hessian);
-            }
+            // Eigen::VectorXd grad_coeffs, hessian_coeffs;
+            // if (gx.size() != 0 && dgx.size() != 0 && ddgx.size() != 0
+            //     && gx.rows() == general_problem.g_lower.rows()
+            //     && gx.cols() == general_problem.g_lower.cols()
+            //     && gx.rows() == general_problem.g_upper.rows()
+            //     && gx.cols() == general_problem.g_upper.cols()) {
+            //     grad_coeffs
+            //         = (gx -
+            //         general_problem.g_lower).unaryExpr(barrier_gradient)
+            //         - (-gx + general_problem.g_upper)
+            //               .unaryExpr(barrier_gradient);
+            //     hessian_coeffs
+            //         = (gx -
+            //         general_problem.g_lower).unaryExpr(barrier_hessian)
+            //         + (-gx + general_problem.g_upper)
+            //               .unaryExpr(barrier_hessian);
+            // } else {
+            //     grad_coeffs = gx.unaryExpr(barrier_gradient);
+            //     hessian_coeffs = gx.unaryExpr(barrier_hessian);
+            // }
 
-            for (long i = 0; i < gx.rows(); i++) {
-                hessian
-                    += hessian_coeffs(i) * dgx.row(i).transpose() * dgx.row(i)
-                    + grad_coeffs(i) * ddgx[unsigned(i)];
+            for (long i = 0; i < ddgx.size(); i++) {
+                // hessian
+                //     += hessian_coeffs(i) * dgx.row(i).transpose() *
+                //     dgx.row(i)
+                //     + grad_coeffs(i) * ddgx[unsigned(i)];
+                hessian += ddgx[unsigned(i)];
             }
 
             // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T

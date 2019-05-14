@@ -43,17 +43,6 @@ namespace autodiff {
         }
     }
 
-    // ToDo Finish this function.
-    int index_of_constraint(const Eigen::MatrixX2i& edges,
-        const EdgeEdgeImpact& impact, const int offset)
-    {
-        int e = impact.impacting_edge_index;
-        int f = impact.impacted_edge_index;
-        Eigen::Vector2i _;
-        ImpactNode impact_node = determine_impact_node(edges, impact, e, _);
-        return offset + 2 * (int(impact_node) + 4 * (f + edges.rows() * e));
-    }
-
     // ------------------------------------------------------------------------
     // ALL IMPACTS GLOBAL Constraints Derivatives
     // ------------------------------------------------------------------------
@@ -84,7 +73,7 @@ namespace autodiff {
     {
         constraints_grad.resize(V.size(), E.rows()); // n x m
 
-        Eigen::VectorXd grad(V.size());
+        Eigen::SparseMatrix<double> grad;
         EdgeEdgeImpact ee_impact;
         for (long i = 0; i < edge_impact_map.rows(); ++i) {
             grad.setZero();
@@ -107,7 +96,7 @@ namespace autodiff {
         constraints_hessian.clear();
         constraints_hessian.reserve(size_t(E.rows()));
 
-        Eigen::MatrixXd hessian(V.size(), V.size());
+        Eigen::SparseMatrix<double> hessian;
         EdgeEdgeImpact ee_impact;
         for (long i = 0; i < edge_impact_map.rows(); ++i) {
             hessian.setZero();
@@ -170,7 +159,7 @@ namespace autodiff {
 
         for (size_t i = 0; i < ee_impacts.size(); ++i) {
             auto& ee_impact = ee_impacts[i];
-            Eigen::VectorXd grad;
+            Eigen::SparseMatrix<double> grad;
 
             collision_constraint_grad(V, U, E, ee_impact,
                 ee_impact.impacted_edge_index, epsilon, compute_constraint,
@@ -194,7 +183,7 @@ namespace autodiff {
         const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         const constraint_func<DScalar>& compute_constraint,
-        std::vector<Eigen::MatrixXd>& constraint_hessian)
+        std::vector<Eigen::SparseMatrix<double>>& constraint_hessian)
     {
 #ifdef PROFILE_FUNCTIONS
         number_of_hessian_calls++;
@@ -205,9 +194,9 @@ namespace autodiff {
         constraint_hessian.clear();
         constraint_hessian.reserve(2 * ee_impacts.size());
 
+        Eigen::SparseMatrix<double> hessian;
         for (size_t i = 0; i < ee_impacts.size(); ++i) {
-            auto& ee_impact = ee_impacts[i];
-            Eigen::MatrixXd hessian;
+            const EdgeEdgeImpact& ee_impact = ee_impacts[i];
 
             collision_constraint_hessian(V, U, E, ee_impact,
                 ee_impact.impacted_edge_index, epsilon, compute_constraint,
@@ -259,7 +248,7 @@ namespace autodiff {
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
         const constraint_func<DScalar>& compute_constraint,
-        Eigen::VectorXd& gradient)
+        Eigen::SparseMatrix<double>& gradient)
     {
         return collision_constraint_derivative(vertices, displacements, edges,
             impact, edge_id, epsilon, /*order=*/1, compute_constraint,
@@ -270,23 +259,20 @@ namespace autodiff {
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
         const constraint_func<DScalar>& compute_constraint,
-        Eigen::MatrixXd& hessian)
+        Eigen::SparseMatrix<double>& hessian)
     {
         return collision_constraint_derivative(vertices, displacements, edges,
             impact, edge_id, epsilon, /*order=*/2, compute_constraint, hessian);
     }
 
-    template <int I>
     void collision_constraint_derivative(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
         const int order, const constraint_func<DScalar>& compute_constraint,
-        Eigen::Matrix<double, Eigen::Dynamic, I>& derivative)
+        Eigen::SparseMatrix<double>& derivative)
     {
         ccd::autodiff::ImpactNode impact_node;
         assert(order == 1 || order == 2);
-        assert(I == 1 || I == Eigen::Dynamic);
-        assert(order != 2 || I == Eigen::Dynamic);
 
         // We need to figure out which one is the impact node
         Eigen::Vector2i e_ij = edges.row(edge_id);
@@ -335,8 +321,9 @@ namespace autodiff {
             Vector8d el_grad = v.getGradient();
 
             for (int i = 0; i < 4; i++) {
-                derivative(nodes[i], 0) = el_grad(2 * i);
-                derivative(nodes[i] + num_vertices, 0) = el_grad(2 * i + 1);
+                derivative.insert(nodes[i], 0) = el_grad(2 * i);
+                derivative.insert(nodes[i] + num_vertices, 0)
+                    = el_grad(2 * i + 1);
             }
 
         } else {
@@ -345,12 +332,14 @@ namespace autodiff {
             Matrix8d el_hessian = v.getHessian();
             for (int i = 0; i < 4; i++)
                 for (int j = 0; j < 4; j++) {
-                    derivative(nodes[i], nodes[j]) = el_hessian(2 * i, 2 * j);
-                    derivative(nodes[i] + num_vertices, nodes[j])
+                    derivative.insert(nodes[i], nodes[j])
+                        = el_hessian(2 * i, 2 * j);
+                    derivative.insert(nodes[i] + num_vertices, nodes[j])
                         = el_hessian(2 * i + 1, 2 * j);
-                    derivative(nodes[i] + num_vertices, nodes[j] + num_vertices)
+                    derivative.insert(
+                        nodes[i] + num_vertices, nodes[j] + num_vertices)
                         = el_hessian(2 * i + 1, 2 * j + 1);
-                    derivative(nodes[i], nodes[j] + num_vertices)
+                    derivative.insert(nodes[i], nodes[j] + num_vertices)
                         = el_hessian(2 * i, 2 * j + 1);
                 }
         }
@@ -367,7 +356,6 @@ namespace autodiff {
         const double epsilon,
         const constraint_func<DScalar>& compute_constraint)
     {
-
         // All definitions using DScalar must be done after setVariableCount
         DiffScalarBase::setVariableCount(8);
 
@@ -407,16 +395,6 @@ namespace autodiff {
         ccd::finite_gradient(x, f, finite_diff);
         grad << finite_diff;
     }
-
-    template void collision_constraint_derivative<1>(const Eigen::MatrixX2d&,
-        const Eigen::MatrixX2d&, const Eigen::MatrixX2i&, const EdgeEdgeImpact&,
-        const int, const double, const int, const constraint_func<DScalar>&,
-        Eigen::VectorXd&);
-
-    template void collision_constraint_derivative<Eigen::Dynamic>(
-        const Eigen::MatrixX2d&, const Eigen::MatrixX2d&,
-        const Eigen::MatrixX2i&, const EdgeEdgeImpact&, const int, const double,
-        const int, const constraint_func<DScalar>&, Eigen::MatrixXd&);
 
 } // namespace autodiff
 } // namespace ccd

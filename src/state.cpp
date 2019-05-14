@@ -114,6 +114,16 @@ void State::add_vertex(const Eigen::RowVector2d& position)
     opt_results.x.setZero();
 
     reset_impacts();
+
+    // Resize the fixed_dof
+    Eigen::Array<bool, Eigen::Dynamic, 1> new_fixed_dof(displacements.size());
+    new_fixed_dof.block(0, 0, lastid, 1)
+        = opt_problem.fixed_dof.block(0, 0, lastid, 1);
+    new_fixed_dof(lastid) = false;
+    new_fixed_dof.block(lastid + 1, 0, lastid, 1)
+        = opt_problem.fixed_dof.block(lastid, 0, lastid, 1);
+    new_fixed_dof(new_fixed_dof.size() - 1) = false;
+    opt_problem.fixed_dof = new_fixed_dof;
 }
 
 void State::add_edges(const Eigen::MatrixX2i& new_edges)
@@ -235,10 +245,11 @@ Eigen::MatrixXd State::compute_collision_jac_volume(
     return volume_gradient.transpose();
 }
 
-std::vector<Eigen::MatrixXd> State::compute_collision_hessian_volume(
+std::vector<Eigen::SparseMatrix<double>>
+State::compute_collision_hessian_volume(
     const Eigen::MatrixXd& Uk, const bool recompute_set)
 {
-    std::vector<Eigen::MatrixXd> volume_hessian;
+    std::vector<Eigen::SparseMatrix<double>> volume_hessian;
     if (recompute_set) {
         detect_collisions(Uk * (1 + 2 * solver_settings.barrier_epsilon));
     }
@@ -331,8 +342,8 @@ void State::reset_optimization_problem()
     };
 
     // Hessian of the constraint (used in Barrier Newton's Method)
-    opt_problem.hessian_g
-        = [this](const Eigen::VectorXd& x) -> std::vector<Eigen::MatrixXd> {
+    opt_problem.hessian_g = [this](const Eigen::VectorXd& x)
+        -> std::vector<Eigen::SparseMatrix<double>> {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
@@ -344,36 +355,28 @@ void State::reset_optimization_problem()
 
 void State::reset_barrier_epsilon()
 {
-    // ToDo: Find a better way to provide a starting epsilon
-    bool was_barrier_epsilon_reset = false;
-    for (long i = 0; i < this->edge_impact_map.size(); i++) {
-        if (this->edge_impact_map(i) >= 0) {
-            EdgeEdgeImpact impact = this->ee_impacts[this->edge_impact_map(i)];
-            double val = impact.time;
-
+    // Assumes the collisions have already been detected
+    // TODO: Find a better way to provide a starting epsilon
+    if (this->ee_impacts.size() > 0) {
+        solver_settings.barrier_epsilon = this->ee_impacts[0].time;
+        for (EdgeEdgeImpact ee_impact : this->ee_impacts) {
             // Penalize the spatial distance too
             // double sum = 0;
             // for (int end = 0; end < 2; end++) {
             //     sum += displacements
-            //                .row(edges(impact.impacted_edge_index, end))
+            //                .row(edges(ee_impact.impacted_edge_index, end))
             //                .squaredNorm();
             //     sum += displacements
-            //                .row(edges(impact.impacting_edge_index, end))
+            //                .row(edges(ee_impact.impacting_edge_index, end))
             //                .squaredNorm();
             // }
             // val *= sum;
 
-            if (!was_barrier_epsilon_reset
-                || val < solver_settings.barrier_epsilon) {
-                solver_settings.barrier_epsilon = val;
-                was_barrier_epsilon_reset = true;
-            }
+            solver_settings.barrier_epsilon
+                = std::max(solver_settings.barrier_epsilon, ee_impact.time);
         }
-    }
-    if (!was_barrier_epsilon_reset) {
-        solver_settings.barrier_epsilon = 0;
     } else {
-        solver_settings.barrier_epsilon += 1e-4;
+        solver_settings.barrier_epsilon = 0;
     }
 }
 
@@ -435,7 +438,8 @@ void State::optimize_displacements(const std::string filename)
     // 5. run optimization
     opt_results
         = ccd::opt::displacement_optimization(opt_problem, U0, solver_settings);
-    if (solver_settings.verbosity > 0) {
+    if (solver_settings.verbosity > 0
+        && solver_settings.method != opt::OptimizationMethod::BARRIER_NEWTON) {
         log_optimization_steps(filename, it_x, it_lambda, it_gamma);
     }
 

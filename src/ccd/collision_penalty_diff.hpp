@@ -7,8 +7,8 @@
 #include <ccd/collision_detection.hpp>
 
 /**
- * @namespace ccd:
- * @brief
+ * @namespace ccd
+ * @brief Continuous collision detection
  */
 namespace ccd {
 
@@ -19,8 +19,7 @@ namespace ccd {
 namespace autodiff {
 
     /**
-     * Compute the penalty of intersection between for edge_ij for an impact
-     * with edge_kl
+     * @brief Compute the penalty of an impact between edge_ij and edge_kl.
      *
      *  @param V_{ijkl}     : Vertices positions.
      *  @param U_{ijkl}     : Vertices displacements.
@@ -38,20 +37,40 @@ namespace autodiff {
     // ------------------------------------------------------------------------
     // ALL IMPACTS GLOBAL Penalties Derivatives
     // ------------------------------------------------------------------------
+
     /**
-     * Compute the first derivative of the collision penalty for all edge-edge
-     * impact
+     * @brief Compute the value of the collision constraint for all edge-edge
+     * impacts.
      *
-     *  @param[in] vertices         : All vertices positions.
-     *  @param[in] displacements    : All vertices displacements.
-     *  @param[in] edges            : Edges as pair of vertex indices
-     *  @param[in] impact           : An impact between two edges.
-     *  @param[in] ee_impacts       : List of impact between two edges.
-     *  @param[in] edge_impact_map  : Impact assigned to each edge
+     * @param[in] V                   All vertices positions
+     * @param[in] U                   All vertices displacements
+     * @param[in] E                   Edges as pair of vertex indices
+     * @param[in] ee_impacts          List of impact between two edges
+     * @param[in] edge_impact_map     Impact assigned to each edge
+     * @param[in] barrier_epsilon     Temporal distance for the start of the
+     *                                barrier
      *
-     *  @param[out] derivative      : Matrix of first derivative of the penalty
-     *                                size (2*V, E)
+     * @param[out] penalties A vector for the computed constraint values.
+     */
+    void compute_penalties_refresh_toi(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+        const EdgeEdgeImpacts& ee_impacts,
+        const Eigen::VectorXi& edge_impact_map, const double barrier_epsilon,
+        Eigen::VectorXd& penalties);
+
+    /**
+     * @brief Compute the first derivative of the collision constraint for all
+     * edge-edge impacts.
      *
+     * @param[in] V                   All vertices positions
+     * @param[in] U                   All vertices displacements
+     * @param[in] E                   Edges as pair of vertex indices
+     * @param[in] ee_impacts          List of impact between two edges
+     * @param[in] edge_impact_map     Impact assigned to each edge
+     * @param[in] barrier_epsilon     Temporal distance for the start of the
+     *                                barrier
+     *
+     * @param[out] constraint_grad  First derivative of the constraint.
      */
     void compute_penalties_gradient(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
@@ -59,59 +78,130 @@ namespace autodiff {
         const Eigen::VectorXi& edge_impact_map, const double barrier_epsilon,
         Eigen::MatrixXd& penalty_grad);
 
+    /**
+     * @brief Compute the second derivative of the collision constraint for all
+     * edge-edge impacts.
+     *
+     * @param[in] V                   All vertices positions
+     * @param[in] U                   All vertices displacements
+     * @param[in] E                   Edges as pair of vertex indices
+     * @param[in] ee_impacts          List of impact between two edges
+     * @param[in] edge_impact_map     Impact assigned to each edge
+     * @param[in] barrier_epsilon     Temporal distance for the start of the
+     *                                barrier
+     *
+     * @param[out] constraint_grad  Second derivative of the constraint.
+     */
     void compute_penalties_hessian(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double barrier_epsilon,
-        std::vector<Eigen::MatrixXd>& penalty_hessian);
-
-    void compute_penalties_refresh_toi(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& edge_impact_map, const double barrier_epsilon,
-        Eigen::VectorXd& penalties);
+        std::vector<Eigen::SparseMatrix<double>>& penalty_hessian);
 
     // ------------------------------------------------------------------------
     // SINGLE IMPACT GLOBAL Penalties Derivatives
     // ------------------------------------------------------------------------
+
+    /**
+     * @brief Compute the value of the collision constraint for a single
+     * edge-edge impact.
+     *
+     * @param[in] vertices            All vertices positions.
+     * @param[in] displacments        All vertices displacements.
+     * @param[in] edges               Edges as pair of vertex indices
+     * @param[in] impact              Edge-edge impact
+     * @param[in] edge_id             Impact assigned to each edge
+     * @param[in] barrier_epsilon     Temporal distance for the start of the
+     *                                barrier
+     *
+     * @return The constraint value for the impact
+     */
     double collision_penalty_refresh_toi(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id,
         const double barrier_epsilon);
-    /**
-     * Compute the first or second derivative of the collision penalty for an
-     * edge-edge impact
-     *
-     *  @param[in] vertices         : All vertices positions.
-     *  @param[in] displacements    : All vertices displacements.
-     *  @param[in] edges            : Edges as pair of vertex indices
-     *  @param[in] impact           : An impact between two edges.
-     *  @param[in] edge_id          : The edge for which penalty is computed
-     *
-     *  @param[out] derivative      : first or second derivative of the
-     * penalty.
-     */
-    template <int T>
-    void collision_penalty_derivative(const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
-        const EdgeEdgeImpact& impact, const int edge_id,
-        const double barrier_epsilon, const int order,
-        Eigen::Matrix<double, Eigen::Dynamic, T>& derivative);
 
+    /**
+     * @brief Compute the first derivative of the collision constraint for an
+     * edge-edge impact.
+     *
+     * @param[in] vertices            All vertices positions.
+     * @param[in] displacements       All vertices displacements.
+     * @param[in] edges               Edges as pair of vertex indices
+     * @param[in] impact              An impact between two edges.
+     * @param[in] edge_id             The edge for which constraint is computed
+     * @param[in] barrier_epsilon     Temporal distance for the start of the
+     *                                barrier
+     *
+     * @param[out] gradient  First derivative of the constraint.
+     */
     void collision_penalty_grad(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id,
         const double barrier_epsilon, Eigen::VectorXd& gradient);
 
+    /**
+     * @brief Compute the second derivative of the collision constraint for an
+     * edge-edge impact.
+     *
+     * @param[in] vertices            All vertices positions.
+     * @param[in] displacements       All vertices displacements.
+     * @param[in] edges               Edges as pair of vertex indices
+     * @param[in] impact              An impact between two edges.
+     * @param[in] edge_id             The edge for which constraint is computed
+     * @param[in] barrier_epsilon     Temporal distance for the start of the
+     *                                barrier
+     *
+     * @param[out] hessian  Second derivative of the constraint.
+     */
     void collision_penalty_hessian(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
         const EdgeEdgeImpact& impact, const int edge_id,
         const double barrier_epsilon, Eigen::MatrixXd& hessian);
 
-    // ------------------------------------------------------------------------
-    // SINGLE IMPACT LOCAL Penalties Derivatives
-    // ------------------------------------------------------------------------
+    /**
+     * @brief Compute the first or second derivative of the collision constraint
+     * for an edge-edge impact.
+     *
+     * @param[in] vertices            All vertices positions.
+     * @param[in] displacements       All vertices displacements.
+     * @param[in] edges               Edges as pair of vertex indices
+     * @param[in] impact              An impact between two edges.
+     * @param[in] edge_id             The edge for which constraint is computed
+     * @param[in] barrier_epsilon     Temporal distance for the start of the
+     *                                barrier
+     *
+     * @param[out] derivative  First or second derivative of the constraint.
+     */
+    template <int I>
+    void collision_penalty_derivative(const Eigen::MatrixX2d& vertices,
+        const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
+        const EdgeEdgeImpact& impact, const int edge_id,
+        const double barrier_epsilon, const int order,
+        Eigen::Matrix<double, Eigen::Dynamic, I>& derivative);
 
+    //------------------------------------------------------------------------
+    // SINGLE IMPACT LOCAL Penalties Derivatives
+    //------------------------------------------------------------------------
+
+    /**
+     * @brief Compute the derivative of the collision constraint for an
+     * edge-edge impact.
+     *
+     * @param[in] Vi                  First vertex of the impacted edge
+     * @param[in] Vj                  Second vertex of the impacted edge
+     * @param[in] Vk                  First vertex of the impacting edge
+     * @param[in] Vl                  Second vertex of the impacting edge
+     * @param[in] Ui                  First displacment of the impacted edge
+     * @param[in] Uj                  Second displacment of the impacted edge
+     * @param[in] Uk                  First displacment of the impacting edge
+     * @param[in] Ul                  Second displacment of the impacting edge
+     * @param[in] impact_node         Which node is impacting the other edge
+     * @param[in] barrier_epsilon     Temporal distance for the start of the
+     *                                barrier
+     *
+     * @return The differentiable scalar for the constraint
+     */
     DScalar collision_penalty_differentiable(const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
         const Eigen::Vector2d& Vl, const Eigen::Vector2d& Ui,
@@ -119,7 +209,24 @@ namespace autodiff {
         const Eigen::Vector2d& Ul, const ImpactNode impact_node,
         const double barrier_epsilon);
 
-    ///@brief helper function for testing
+    /**
+     * @brief Compute the derivative of the collision constraint for an
+     * edge-edge impact using finite differences.
+     *
+     * @param[in] Vi                  First vertex of the impacted edge
+     * @param[in] Vj                  Second vertex of the impacted edge
+     * @param[in] Vk                  First vertex of the impacting edge
+     * @param[in] Vl                  Second vertex of the impacting edge
+     * @param[in] Ui                  First displacment of the impacted edge
+     * @param[in] Uj                  Second displacment of the impacted edge
+     * @param[in] Uk                  First displacment of the impacting edge
+     * @param[in] Ul                  Second displacment of the impacting edge
+     * @param[in] impact_node         Which node is impacting the other edge
+     * @param[in] barrier_epsilon     Temporal distance for the start of the
+     *                                barrier
+     *
+     * @param[out] grad  Gradient of the constraint.
+     */
     void collision_penalty_grad_fd(const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
         const Eigen::Vector2d& Vl, const Eigen::Vector2d& Ui,

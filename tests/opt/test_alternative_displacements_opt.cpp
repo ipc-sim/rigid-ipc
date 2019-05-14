@@ -81,7 +81,7 @@ TEST_CASE("test the setup", "[opt][displacements][barrier]")
         auto jac = state.opt_problem.jac_g(x);
         return jac.row(i);
     };
-    std::vector<Eigen::MatrixXd> analytic_hessian_g
+    std::vector<Eigen::SparseMatrix<double>> analytic_hessian_g
         = state.opt_problem.hessian_g(state.opt_problem.x0);
     for (i = 0; i < long(analytic_hessian_g.size()); i++) {
         finite_jacobian(state.opt_problem.x0, diff_i, finite_hessian_gi);
