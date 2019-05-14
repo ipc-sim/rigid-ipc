@@ -7,11 +7,11 @@
 #include <ccd/impact.hpp>
 #include <ccd/prune_impacts.hpp>
 
+#include <opt/barrier_newton_solver.hpp>
 #include <opt/ipopt_solver.hpp>
 #include <opt/linearized_constraint_solver.hpp>
 #include <opt/ncp_solver.hpp>
 #include <opt/nlopt_solver.hpp>
-#include <opt/barrier_newton_solver.hpp>
 #include <opt/solver.hpp>
 
 #include <opt/barrier_constraint.hpp>
@@ -24,6 +24,17 @@ namespace ccd {
 enum class ConstraintType { VOLUME, BARRIER };
 static const char* ConstraintNames[2] = { "VOLUME", "BARRIER" };
 
+enum class OptimizationMethod {
+    NLOPT,
+    IPOPT,                  ///< @brief Interior-Point Method (Ipopt)
+    LINEARIZED_CONSTRAINTS, ///< @brief Linearize the constraints and solve
+                            ///< the QP (OSQP/MOSEK)
+    NCP,                    ///< @brief Nonlinear Complementarity Problem
+    BARRIER_NEWTON          ///< @brief Barrier Newton's Method
+};
+
+static const char* OptimizationMethodNames[]
+    = { "NLOPT", "IPOPT", "Linearized Const.", "NCP", "Barrier Newton" };
 /**
  * @brief The State class keeps the full state of the UI and the collisions.
  */
@@ -62,22 +73,14 @@ public:
     /// @brief method to use for contact detection
     DetectionMethod detection_method;
 
-    /// @brief epsilon use on volume computation
-    double volume_epsilon;
-
     std::string output_dir;
 
     ////////////////////////////////////////////////////////////////////////////
     // Optimization Fields
 
-    /// @brief Optimization problem to solve
-    //    opt::OptimizationProblem opt_problem;
-
-    /// @brief #V,2 optimized vertices displacements
     opt::OptimizationResults opt_results;
 
-    /// @brief Settings for the problem solver
-    opt::SolverSettings solver_settings;
+    OptimizationMethod opt_method;
 
     opt::NCPSolver ncp_solver;
     opt::IpoptSolver ipopt_solver;

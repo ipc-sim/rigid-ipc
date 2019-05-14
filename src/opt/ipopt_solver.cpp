@@ -10,14 +10,6 @@
 namespace ccd {
 namespace opt {
 
-    OptimizationResults minimize_ipopt(
-        OptimizationProblem& problem, const SolverSettings& settings)
-    {
-        auto solver = std::make_unique<IpoptSolver>(
-            settings.relative_tolerance, settings.verbosity, settings.max_iter);
-        return solver->solve(problem);
-    }
-
     IpoptSolver::IpoptSolver()
         : tolerance(1e-8)
         , print_level(0)

@@ -83,10 +83,10 @@ TEST_CASE("IPOPT_hello_world", "[opt][Ipopt][Ipopt-Interface]")
     problem.g_lower = g_lower;
     problem.g_upper = g_upper;
 
-    SolverSettings settings;
-    settings.verbosity = 0;
+    IpoptSolver solver;
+    solver.print_level = 0;
 
-    auto result = ccd::opt::minimize_ipopt(problem, settings);
+    auto result = solver.solve(problem);
     CHECK((result.x - expected).norm() == Approx(0.0).margin(1e-8));
 }
 
@@ -163,11 +163,10 @@ TEST_CASE("IPOPT_quadratic_linear_cnstr", "[opt][Ipopt][Ipopt-Interface]")
     problem.g_lower = g_lower;
     problem.g_upper = g_upper;
 
-    SolverSettings settings;
-    settings.verbosity = 0;
+    IpoptSolver solver;
+    solver.print_level = 0;
 
-    auto result = ccd::opt::minimize_ipopt(problem, settings);
-
+    auto result = solver.solve(problem);
     CHECK((result.x - expected).norm() < 1e-6);
 }
 TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
@@ -208,15 +207,6 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
         return jac_g;
     };
 
-    callback_intermediate callback
-        = [](const Eigen::VectorXd& x, const double obj_value,
-              const Eigen::VectorXd& dual, const double gamma,
-              const int iteration) -> void {
-        std::cout << "it=" << iteration << " x=" << x.transpose()
-                  << " obj=" << obj_value << " y=" << dual.transpose()
-                  << std::endl;
-    };
-
     Eigen::VectorXd expected(2);
     expected[0] = 0.0;
     expected[1] = 0.0;
@@ -234,11 +224,10 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
     problem.g_lower = g_lower;
     problem.g_upper = g_upper;
 
-    SolverSettings settings;
-    settings.verbosity = 0;
-    settings.max_iter = 3000;
-
-    auto result = ccd::opt::minimize_ipopt(problem, settings);
+    IpoptSolver solver;
+    solver.print_level = 0;
+    solver.max_iterations = 3000;
+    auto result = solver.solve(problem);
     CHECK((result.x - expected).norm() < 1e-6);
 }
 #endif

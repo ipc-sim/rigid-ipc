@@ -9,17 +9,17 @@
 
 const int NUM_EDGES = 2;
 const int NUM_VERTICES = 4;
-const int ANGLE_STEPS = 1;
 
 TEST_CASE("NCP Displacements", "[opt][NCP][NCP-Displacements]")
 {
     ccd::State state;
 
-    state.solver_settings.method = ccd::opt::NCP;
-    state.constraint_function = ccd::ConstraintType::VOLUME;
+    state.opt_method = ccd::OptimizationMethod::NCP;
     state.ncp_solver.max_iterations= 200;
     state.ncp_solver.convergence_tolerance  = 1E-8;
-    state.volume_epsilon = 1E-8;
+
+    state.constraint_function = ccd::ConstraintType::VOLUME;
+    state.volume_constraint.volume_epsilon = 1E-8;
 
     Eigen::MatrixX2d vertices(NUM_VERTICES, 2);
     Eigen::MatrixX2i edges(NUM_EDGES, 2);

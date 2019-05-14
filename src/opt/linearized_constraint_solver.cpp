@@ -171,17 +171,7 @@ namespace opt {
 #endif
     }
 
-    // Optimize the displacments using linearized constraints
-    OptimizationResults solve_problem_with_linearized_constraints(
-        OptimizationProblem& problem, const SolverSettings& settings)
-    {
-        auto solver = std::make_unique<LinearizedCstrSolver>();
-        solver->max_iterations = settings.max_iter;
-        solver->absolute_tolerance = settings.absolute_tolerance;
-        solver->relative_tolerance = settings.relative_tolerance;
 
-        return solver->solve(problem);
-    }
 
 } // namespace opt
 } // namespace ccd

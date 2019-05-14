@@ -66,18 +66,6 @@ namespace opt {
         return results;
     }
 
-    // Optimize the displacments using NLopt.
-    OptimizationResults solve_problem_with_nlopt(
-        OptimizationProblem& problem, const SolverSettings& settings)
-    {
-        auto solver = std::make_unique<NLOptSolver>();
-        solver->relative_tolerance = settings.relative_tolerance;
-        solver->absolute_tolerance = settings.absolute_tolerance;
-        solver->max_iterations = settings.max_iter;
-        solver->max_time = settings.max_time;
-        solver->verbosity = settings.verbosity;
-        return solver->solve(problem);
-    }
 
     double nlopt_objective(
         const std::vector<double>& x, std::vector<double>& grad, void* data)

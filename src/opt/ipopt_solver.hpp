@@ -61,8 +61,6 @@ namespace opt {
         int max_iterations;
     };
 
-    OptimizationResults minimize_ipopt(
-        OptimizationProblem& problem, const SolverSettings& settings);
 
     /**
      * @brief Class for interfacing IPOPT TNLP problem

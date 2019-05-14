@@ -9,7 +9,6 @@
 
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
-#include <opt/solver_settings.hpp>
 
 namespace ccd {
 
@@ -24,16 +23,12 @@ namespace opt {
      * the problem unconstrained.
      *
      * @param[in] problem  The optimization problem to minimize unconstrained.
-     * @param[in] settings The settings of the optimization (tolerances and
-     *                     maximum number of iterations).
      * @param[in] mu       A small value to add to the hessian diagonal to
      *                     prevent it from being singular.
      *
      * @return The results of the optimization including the minimizer, minimum,
      *         and if the optimization was successful.
      */
-    OptimizationResults newtons_method(OptimizationProblem& problem,
-        const SolverSettings& settings, const double mu = 1e-5);
 
     OptimizationResults newtons_method(OptimizationProblem& problem,
         const double absolute_tolerance, const double line_search_tolerance,

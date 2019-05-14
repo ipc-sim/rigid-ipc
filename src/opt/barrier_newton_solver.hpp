@@ -8,21 +8,10 @@
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
 #include <opt/solver.hpp>
-#include <opt/solver_settings.hpp>
 
 namespace ccd {
 namespace opt {
 
-    /**
-     * @brief Perform Newton's Method with a barrier  to minimize a function
-     * f(x) + barrier(g(x)).
-     *
-     * @param[in] problem The optimization problem to solve.
-     * @param[in] settings The solver settings to use.
-     * @return The results of the optimization including x* and minf.
-     */
-    OptimizationResults solve_problem_with_barrier_newton(
-        OptimizationProblem& problem, SolverSettings& settings);
 
     /**
      * @brief Apply the constraints of the general problem as a barrier added to

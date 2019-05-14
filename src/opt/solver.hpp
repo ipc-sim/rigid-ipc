@@ -10,7 +10,6 @@
 
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
-#include <opt/solver_settings.hpp>
 
 namespace ccd {
 namespace opt {

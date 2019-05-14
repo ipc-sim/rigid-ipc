@@ -23,7 +23,6 @@
 namespace ccd {
 State::State()
     : detection_method(DetectionMethod::BRUTE_FORCE)
-    , volume_epsilon(1E-3)
     , output_dir(DATA_OUTPUT_DIR)
     , constraint_function(ConstraintType::BARRIER)
     , recompute_collision_set(false)
@@ -207,16 +206,16 @@ opt::CollisionConstraint& State::getCollisionConstraint()
 
 opt::OptimizationSolver& State::getOptimizationSolver()
 {
-    switch (solver_settings.method) {
-    case ccd::opt::NCP:
+    switch (opt_method) {
+    case OptimizationMethod::NCP:
         return ncp_solver;
-    case ccd::opt::IPOPT:
+    case OptimizationMethod::IPOPT:
         return ipopt_solver;
-    case ccd::opt::NLOPT:
+    case OptimizationMethod::NLOPT:
         return nlopt_solver;
-    case ccd::opt::LINEARIZED_CONSTRAINTS:
+    case OptimizationMethod::LINEARIZED_CONSTRAINTS:
         return linearized_constraint_solver;
-    case ccd::opt::BARRIER_NEWTON:
+    case OptimizationMethod::BARRIER_NEWTON:
         return barrier_newton_solver;
     }
 }
@@ -224,7 +223,6 @@ opt::OptimizationSolver& State::getOptimizationSolver()
 void State::reset_optimization_problem()
 {
 
-    volume_constraint.volume_epsilon = volume_epsilon;
     opt_problem.initialize(
         vertices, edges, displacements, getCollisionConstraint());
 }
@@ -253,7 +251,7 @@ void State::optimize_displacements(const std::string filename)
 
     // 3. set initial value
     Eigen::MatrixXd U0(displacements.rows(), 2);
-    if (solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
+    if (opt_method == OptimizationMethod::LINEARIZED_CONSTRAINTS) {
         U0 = displacements;
     } else if (reuse_opt_displacements) {
         U0 = opt_results.x;
@@ -267,25 +265,6 @@ void State::optimize_displacements(const std::string filename)
     std::vector<Eigen::VectorXd> it_x;
     std::vector<Eigen::VectorXd> it_lambda;
     std::vector<double> it_gamma;
-
-    solver_settings.intermediate_cb
-        = [&](const Eigen::VectorXd& x, const double obj_value,
-              const Eigen::VectorXd& dual, const double gamma,
-              const int /*iteration*/) {
-              Eigen::MatrixXd u = x;
-              u.resize(x.rows() / 2, 2);
-              u_history.push_back(u);
-              f_history.push_back(obj_value);
-
-              Eigen::VectorXd gx = opt_problem.eval_g(x);
-              g_history.push_back(gx);
-              gsum_history.push_back(gx.sum());
-              jac_g_history.push_back(opt_problem.eval_jac_g(x));
-
-              it_x.push_back(x);
-              it_lambda.push_back(dual);
-              it_gamma.push_back(gamma);
-          };
 
     if (opt_problem.validate_problem()) {
         Eigen::MatrixXd x0 = U0;
@@ -307,11 +286,9 @@ void State::optimize_displacements(const std::string filename)
 #endif
     }
 
-    if (solver_settings.verbosity > 0) {
-        log_optimization_steps(filename, it_x, it_lambda, it_gamma);
-    }
-
-    opt_results.method = solver_settings.method;
+//    if (verbosity > 0) {
+//        log_optimization_steps(filename, it_x, it_lambda, it_gamma);
+//    }
     opt_results.finished = true;
 
     // update ui elements
@@ -355,7 +332,7 @@ void State::log_optimization_steps(const std::string filename,
         Eigen::StreamPrecision, Eigen::DontAlignCols, sep, sep, "", "", "", "");
 
     // print table header
-    o << ccd::opt::OptimizationMethodNames[solver_settings.method] << sep;
+    o << ccd::OptimizationMethodNames[static_cast<int>(opt_method)] << sep;
     o << "it";
     for (int i = 0; i < opt_problem.num_vars; i++) {
         o << sep << "x_" << i;

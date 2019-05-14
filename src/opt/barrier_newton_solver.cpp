@@ -140,7 +140,9 @@ namespace opt {
         , max_iterations(3000)
     {
     }
+
     BarrierNewtonSolver::~BarrierNewtonSolver() {}
+
     OptimizationResults BarrierNewtonSolver::solve(
         OptimizationProblem& general_problem)
     {
@@ -164,18 +166,6 @@ namespace opt {
         return results;
     }
 
-    // Performa Newton's Method to minimize a function f(x) + barrier(g(x)).
-    OptimizationResults solve_problem_with_barrier_newton(
-        OptimizationProblem& general_problem, SolverSettings& settings)
-    {
-        auto solver = std::make_unique<BarrierNewtonSolver>();
-        solver->max_iterations = settings.max_iter;
-        solver->barrier_epsilon = settings.barrier_epsilon;
-        solver->min_barrier_epsilon = settings.min_barrier_epsilon;
-        solver->absolute_tolerance = settings.absolute_tolerance;
-        solver->line_search_tolerance = settings.line_search_tolerance;
-        return solver->solve(general_problem);
-    }
 
 } // namespace opt
 } // namespace ccd

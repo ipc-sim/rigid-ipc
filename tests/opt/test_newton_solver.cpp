@@ -81,12 +81,11 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons method]")
 
     REQUIRE(problem.validate_problem());
 
-    SolverSettings settings;
-    OptimizationResults results = newtons_method(problem, settings);
+    OptimizationResults results = newtons_method(problem, 1e-6, 1e-6, 100);
     REQUIRE(results.success);
     CHECK(results.x.squaredNorm()
-        == Approx(0).margin(settings.absolute_tolerance));
-    CHECK(results.minf == Approx(0).margin(settings.absolute_tolerance));
+        == Approx(0).margin(1e-6));
+    CHECK(results.minf == Approx(0).margin(1e-6));
 }
 
 TEST_CASE("Check barrier problem derivatives")
@@ -207,9 +206,9 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
 
     REQUIRE(unconstrained_problem.validate_problem());
 
-    SolverSettings settings;
+
     OptimizationResults results
-        = newtons_method(unconstrained_problem, settings);
+        = newtons_method(unconstrained_problem, 1e-6, 1e-6, 100);
     // REQUIRE(results.success);
-    CHECK(results.x(0) == Approx(1.0).margin(settings.absolute_tolerance));
+    CHECK(results.x(0) == Approx(1.0).margin(1e-6));
 }

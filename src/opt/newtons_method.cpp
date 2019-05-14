@@ -13,13 +13,6 @@
 namespace ccd {
 namespace opt {
 
-    // Performa Newton's Method to minimize the objective unconstrained.
-    OptimizationResults newtons_method(OptimizationProblem& problem,
-        const SolverSettings& settings, const double mu)
-    {
-        return newtons_method(problem, settings.absolute_tolerance,
-            settings.line_search_tolerance, settings.max_iter, mu);
-    }
 
     OptimizationResults newtons_method(OptimizationProblem& problem,
         const double absolute_tolerance, const double line_search_tolerance,

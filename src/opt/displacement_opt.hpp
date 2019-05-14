@@ -16,23 +16,7 @@
 
 namespace ccd {
 
-/**
- * @namespace ccd::opt
- * @brief Functions for optimizing functions.
- */
 namespace opt {
-
-    /**
-     * @brief Runs the optimization problem for the given method and initial
-     * value
-     * @param[in,out] problem : Optimization problem (possibly modified for
-     *                          validation)
-     * @param[in] U0          : Initial displacements
-     * @param[in] settings    : Solver settings including tolerances and method
-     * @return Optimization Result of the optimization
-     * */
-    OptimizationResults displacement_optimization(OptimizationProblem& problem,
-        const Eigen::MatrixX2d& U0, SolverSettings& settings);
 
     class ParticlesDisplProblem : public OptimizationProblem {
     public:

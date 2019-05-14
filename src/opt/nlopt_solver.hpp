@@ -8,20 +8,9 @@
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
 #include <opt/solver.hpp>
-#include <opt/solver_settings.hpp>
 
 namespace ccd {
 namespace opt {
-
-    /**
-     * @brief Optimize the displacments using NLopt
-     *
-     * @param[in] algorithm NLopt algorithm to use for optimization
-     * @param[in,out] problem Optimization problem to solve
-     * @return The results of the optimization
-     */
-    OptimizationResults solve_problem_with_nlopt(
-        OptimizationProblem& problem, const SolverSettings& settings);
 
     /**
      * @brief Computes NLopt's objective for an OptimizationProblem

@@ -306,8 +306,6 @@ void ViewerMenu::draw_ccd_steps()
                 = static_cast<ccd::DetectionMethod>(idx_detection_method);
         }
 
-        ImGui::InputDouble("vol. epsilon", &state.volume_epsilon);
-
         if (ImGui::Button("Run CCD", ImVec2(-1, 0))) {
             compute_collisions();
         }
@@ -326,7 +324,7 @@ void ViewerMenu::draw_ccd_steps()
 void ViewerMenu::draw_optimization()
 {
     using namespace opt;
-    int idx_optimization_method = state.solver_settings.method;
+    int idx_optimization_method = static_cast<int>(state.opt_method);
     int idx_ctr_type = static_cast<int>(state.constraint_function);
 
     if (ImGui::CollapsingHeader(
@@ -344,56 +342,36 @@ void ViewerMenu::draw_optimization()
         }
 
         if (ImGui::Combo("method##opt", &idx_optimization_method,
-                ccd::opt::OptimizationMethodNames,
-                CCD_IM_ARRAYSIZE(ccd::opt::OptimizationMethodNames))) {
-            state.solver_settings.method
-                = static_cast<ccd::opt::OptimizationMethod>(
-                    idx_optimization_method);
+                ccd::OptimizationMethodNames,
+                CCD_IM_ARRAYSIZE(ccd::OptimizationMethodNames))) {
+            state.opt_method
+                = static_cast<ccd::OptimizationMethod>(idx_optimization_method);
         }
 
         {
             ImGui::Indent();
             ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
-            switch (state.solver_settings.method) {
-            case opt::OptimizationMethod::LINEARIZED_CONSTRAINTS:
+            switch (state.opt_method) {
+            case ccd::OptimizationMethod::LINEARIZED_CONSTRAINTS:
                 linearized_constraint_solver_view(
                     state.linearized_constraint_solver);
                 break;
-            case opt::OptimizationMethod::NCP:
+            case ccd::OptimizationMethod::NCP:
                 ncp_solver_menu(state.ncp_solver);
                 break;
-            case opt::OptimizationMethod::IPOPT:
+            case ccd::OptimizationMethod::IPOPT:
                 ipopt_solver_menu(state.ipopt_solver);
                 break;
-            case opt::OptimizationMethod::NLOPT:
+            case ccd::OptimizationMethod::NLOPT:
                 nlopt_solver_menu(state.nlopt_solver);
                 break;
-            case opt::OptimizationMethod::BARRIER_NEWTON:
+            case ccd::OptimizationMethod::BARRIER_NEWTON:
                 barrier_newton_solver_view(state.barrier_newton_solver);
                 break;
             }
             ImGui::PopItemWidth();
             ImGui::Unindent();
         }
-        //        if (ImGui::CollapsingHeader("Settings##opt")) {
-        //            if (ImGui::InputInt(
-        //                    "verbosity##opt",
-        //                    &state.solver_settings.verbosity)) {
-        //                if (state.solver_settings.verbosity > 0) {
-        //                    spdlog::set_level(spdlog::level::debug);
-        //                }
-        //            }
-        //            ImGui::InputIntBounded(
-        //                "max iter##opt", &state.solver_settings.max_iter, 0);
-        //            ImGui::InputDoubleBounded("rel. tol.##opt",
-        //                &state.solver_settings.relative_tolerance, 0.0, 2e19,
-        //                0.0, 0.0,
-        //                "%.3g");
-        //            ImGui::InputDoubleBounded("abs. tol.##opt",
-        //                &state.solver_settings.absolute_tolerance, 0.0, 2e19,
-        //                0.0, 0.0,
-        //                "%.3g");
-        //        }
 
         ImGui::Checkbox(
             "continue optimization##opt", &(state.reuse_opt_displacements));
@@ -423,7 +401,7 @@ void ViewerMenu::draw_optimization_results()
         ImGui::BeginChild("Opt Results Detail",
             ImVec2(ImGui::GetWindowContentRegionWidth() * 0.9f, 100), false);
         ImGui::Text("method = %s",
-            ccd::opt::OptimizationMethodNames[state.opt_results.method]);
+            ccd::OptimizationMethodNames[static_cast<int>(state.opt_method)]);
         ImGui::Text("energy = %.3g", state.get_opt_functional());
 
         ImGui::Text("displacements");
