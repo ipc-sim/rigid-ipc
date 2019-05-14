@@ -356,7 +356,7 @@ void ViewerMenu::draw_optimization()
             ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
             switch (state.opt_method) {
             case ccd::OptimizationMethod::LINEARIZED_CONSTRAINTS:
-                solver_menu(state.linearized_constraint_solver);
+                solver_menu(state.qp_solver);
                 break;
             case ccd::OptimizationMethod::NCP:
                 solver_menu(state.ncp_solver);

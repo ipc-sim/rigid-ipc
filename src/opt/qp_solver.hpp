@@ -4,7 +4,7 @@
 
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
-#include <opt/solver.hpp>
+#include <opt/optimization_solver.hpp>
 
 namespace ccd {
 /**
@@ -12,24 +12,24 @@ namespace ccd {
  * @brief Functions for optimizing functions.
  */
 namespace opt {
-    enum class QPSolver {
+    enum class QPSolverType {
         OSQP, ///< @brief Use OSQP to solve the qudratic program
         MOSEK ///< @brief Use MOSEK to solve the qudratic program
     };
 
     static const char* QPSolverNames[] = { "OSQP", "MOSEK" };
 
-    class LinearizedCstrSolver : public OptimizationSolver {
+    class QPSolver : public OptimizationSolver {
     public:
-        LinearizedCstrSolver();
-        ~LinearizedCstrSolver() override;
+        QPSolver();
+        ~QPSolver() override;
 
         OptimizationResults solve(OptimizationProblem& problem) override;
 
         int max_iterations;
         double absolute_tolerance;
         double relative_tolerance;
-        QPSolver qp_solver;
+        QPSolverType qp_solver;
 
         bool solve_with_osqp(Eigen::MatrixXd& x);
 
@@ -46,7 +46,7 @@ namespace opt {
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd lc, uc;
         Eigen::VectorXd lx, ux;
-        void linearized_energy(OptimizationProblem& problem);
+        void quadratic_energy(OptimizationProblem& problem);
         void linearized_constraints(OptimizationProblem& problem);
     };
 

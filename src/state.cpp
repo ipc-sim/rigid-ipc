@@ -215,7 +215,7 @@ opt::OptimizationSolver& State::getOptimizationSolver()
     case OptimizationMethod::NLOPT:
         return nlopt_solver;
     case OptimizationMethod::LINEARIZED_CONSTRAINTS:
-        return linearized_constraint_solver;
+        return qp_solver;
     case OptimizationMethod::BARRIER_NEWTON:
         return barrier_newton_solver;
     }

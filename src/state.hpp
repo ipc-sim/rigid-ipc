@@ -9,10 +9,10 @@
 
 #include <opt/barrier_newton_solver.hpp>
 #include <opt/ipopt_solver.hpp>
-#include <opt/linearized_constraint_solver.hpp>
+#include <opt/qp_solver.hpp>
 #include <opt/ncp_solver.hpp>
 #include <opt/nlopt_solver.hpp>
-#include <opt/solver.hpp>
+#include <opt/optimization_solver.hpp>
 
 #include <opt/barrier_constraint.hpp>
 #include <opt/collision_constraint.hpp>
@@ -85,7 +85,7 @@ public:
     opt::NCPSolver ncp_solver;
     opt::IpoptSolver ipopt_solver;
     opt::NLOptSolver nlopt_solver;
-    opt::LinearizedCstrSolver linearized_constraint_solver;
+    opt::QPSolver qp_solver;
     opt::BarrierNewtonSolver barrier_newton_solver;
 
     opt::VolumeConstraint volume_constraint;

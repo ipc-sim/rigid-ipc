@@ -5,7 +5,7 @@
 
 namespace ccd {
 
-void solver_menu(ccd::opt::LinearizedCstrSolver& solver)
+void solver_menu(ccd::opt::QPSolver& solver)
 {
     int idx_algorithm = static_cast<int>(solver.qp_solver);
 
@@ -14,7 +14,7 @@ void solver_menu(ccd::opt::LinearizedCstrSolver& solver)
     if (ImGui::Combo("algorithm##qp_solver", &idx_algorithm,
             ccd::opt::QPSolverNames,
             CCD_IM_ARRAYSIZE(ccd::opt::QPSolverNames))) {
-        solver.qp_solver = static_cast<ccd::opt::QPSolver>(idx_algorithm);
+        solver.qp_solver = static_cast<ccd::opt::QPSolverType>(idx_algorithm);
     }
 
     ImGui::InputDoubleBounded("rel. tol.##nlopt", &solver.relative_tolerance,

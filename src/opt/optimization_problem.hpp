@@ -32,6 +32,7 @@ namespace opt {
     typedef std::function<std::vector<Eigen::MatrixXd>(const Eigen::VectorXd&)>
         callback_hessian_g;
 
+    typedef Eigen::Array<bool, Eigen::Dynamic, 1> ArrayXb;
     /**
      *  Defines the optimization problems of the form
      *      MIN     f(x)      x ∈ Rⁿ
@@ -68,7 +69,7 @@ namespace opt {
             const Eigen::VectorXd& x, const double tol);
 
         /// \brief fixed_dof[i] == true indicates x[i] is not a variable
-        Eigen::Array<bool, Eigen::Dynamic, 1> fixed_dof;
+        ArrayXb fixed_dof;
 
         int num_vars;            ///< @brief Number of variables
         int num_constraints;     ///< @brief Number of constraints
@@ -77,6 +78,7 @@ namespace opt {
         Eigen::VectorXd x_upper; ///< @brief Upper bound of x
         Eigen::VectorXd g_lower; ///< @brief Lower bound of the constraint
         Eigen::VectorXd g_upper; ///< @brief Upper bound of the constraint
+
     };
 
     class AdHocProblem : public OptimizationProblem {

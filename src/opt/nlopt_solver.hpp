@@ -7,7 +7,7 @@
 
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
-#include <opt/solver.hpp>
+#include <opt/optimization_solver.hpp>
 
 namespace ccd {
 namespace opt {

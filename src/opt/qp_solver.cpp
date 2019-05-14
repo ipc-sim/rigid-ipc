@@ -1,5 +1,6 @@
-#include <opt/linearized_constraint_solver.hpp>
-#include <opt/solver.hpp>
+#include <opt/qp_solver.hpp>
+
+#include <opt/optimization_solver.hpp>
 
 #include <Eigen/SparseCore>
 #ifdef BUILD_WITH_OSQP
@@ -18,77 +19,55 @@
 namespace ccd {
 namespace opt {
 
-    LinearizedCstrSolver::LinearizedCstrSolver()
+    QPSolver::QPSolver()
         : max_iterations(3000)
         , absolute_tolerance(1e-8)
         , relative_tolerance(1e-8)
-        , qp_solver(QPSolver::OSQP)
+        , qp_solver(QPSolverType::OSQP)
     {
     }
-    LinearizedCstrSolver::~LinearizedCstrSolver() {}
+    QPSolver::~QPSolver() {}
 
-    void LinearizedCstrSolver::linearized_energy(OptimizationProblem& problem)
+    void QPSolver::quadratic_energy(OptimizationProblem& problem)
     {
-        // Quadratic Energy
-        // 1/2 * || U - U0 ||^2 = (U - U0)^T * (U - U0) =
-        //      1/2 * U^T * I * U - U0^T * U + 1/2 * U0^T * U0
+        // Approximate to Quadratic Energy of the form
+        //  ½ * x^T * Q * x + c^T * x + cf
 
-        // Quadratic matrix Q = I
-        Q.resize(problem.num_vars, problem.num_vars);
-        Q.setIdentity();
-
-        // Linear term
-        // c = -U0
-        c = -problem.x0;
-
-        // Constant term
-        // cf = 1/2 * U0^T * U0
-        cf = 0.5 * problem.x0.transpose() * problem.x0;
-
-        // Check that the QP is properly expressed
-        assert((((0.5 * problem.x0.transpose() * Q * problem.x0
-                     + c.transpose() * problem.x0)
-                        .array()
-                    + cf)
-                    .abs()
-            < 1e-8)
-                   .all());
+        Eigen::VectorXd x0 = Eigen::VectorXd::Zero(problem.num_vars);
+        Q = problem.eval_hessian_f_sparse(x0);
+        c = problem.eval_grad_f(x0);
+        cf = problem.eval_f(x0);
     }
 
-    void LinearizedCstrSolver::linearized_constraints(
-        OptimizationProblem& problem)
+    void QPSolver::linearized_constraints(OptimizationProblem& problem)
     {
         // Linearized constraints
         // ℓ ≤ g(x0) + ∇g(x0)(x - x0) ≤ u →
         // ℓ - g(x0) + ∇g(x0) * x0 ≤ ∇g(x0) * x ≤ u
         // Linear constraint matrix
         // A = ∇g(x0) ∈ R^(m × n)
-        Eigen::SparseMatrix<double> A
-            = problem.eval_jac_g(problem.x0).sparseView();
+        A = problem.eval_jac_g(problem.x0).sparseView();
         // Linear constraint lower bounds
         // (ℓ - g(x0) + ∇g(x0) * x0) ∈ R^m
-        Eigen::VectorXd lc
-            = problem.g_lower - problem.eval_g(problem.x0) + A * problem.x0;
+        lc = problem.g_lower - problem.eval_g(problem.x0) + A * problem.x0;
         // Linear constraint upper bounds
         // u ∈ R^m
-        Eigen::VectorXd uc = problem.g_upper;
+        uc = problem.g_upper;
     }
 
-    OptimizationResults LinearizedCstrSolver::solve(
-        OptimizationProblem& problem)
+    OptimizationResults QPSolver::solve(OptimizationProblem& problem)
     {
-
-        linearized_energy(problem);
+        quadratic_energy(problem);
         linearized_constraints(problem);
 
         OptimizationResults results;
         results.x.resize(problem.num_vars, 1);
 
         switch (qp_solver) {
-        case QPSolver::OSQP:
+        case QPSolverType::OSQP:
             results.success = solve_with_osqp(results.x);
             break;
-        case QPSolver::MOSEK:
+        case QPSolverType::MOSEK:
             results.success = solve_with_mosek(results.x);
             break;
         }
@@ -105,7 +84,7 @@ namespace opt {
         return results;
     }
 
-    bool LinearizedCstrSolver::solve_with_mosek(Eigen::MatrixXd& x)
+    bool QPSolver::solve_with_mosek(Eigen::MatrixXd& x)
     {
 #ifdef BUILD_WITH_MOSEK
         igl::mosek::MosekData mosek_data;
@@ -120,7 +99,7 @@ namespace opt {
 #endif
     }
 
-    bool LinearizedCstrSolver::solve_with_osqp(Eigen::MatrixXd& x)
+    bool QPSolver::solve_with_osqp(Eigen::MatrixXd& x)
     {
 
 #ifdef BUILD_WITH_OSQP
@@ -170,8 +149,6 @@ namespace opt {
         throw NotImplementedError("OSQP is not enabled");
 #endif
     }
-
-
 
 } // namespace opt
 } // namespace ccd

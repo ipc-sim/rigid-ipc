@@ -11,7 +11,7 @@
 #include <opt/collision_constraint.hpp>
 #include <opt/ncp_solver.hpp>
 #include <opt/optimization_problem.hpp>
-#include <opt/solver.hpp>
+#include <opt/optimization_solver.hpp>
 #include <opt/volume_constraint.hpp>
 
 namespace ccd {
