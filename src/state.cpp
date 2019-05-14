@@ -24,7 +24,7 @@ State::State()
     : detection_method(DetectionMethod::BRUTE_FORCE)
     , volume_epsilon(1E-3)
     , output_dir(DATA_OUTPUT_DIR)
-    , constraint_function(ConstraintType::VOLUME)
+    , constraint_function(ConstraintType::BARRIER)
     , recompute_collision_set(false)
     , canvas_width(10)
     , canvas_height(10)
@@ -271,16 +271,15 @@ void State::optimize_displacements(const std::string filename)
 
     // 5. run optimization
     if (solver_settings.method == ccd::opt::NCP) {
-        opt_results = ncp_displ_solver.solve(opt_problem);
+        opt_results = ncp_solver.solve(opt_problem);
         opt_results.x.resize(U0.rows(), 2);
-    } else if (solver_settings.method == ccd::opt::IPOPT) {
-        ipopt_solver.max_iterations = solver_settings.max_iter;
-        ipopt_solver.tolerance = solver_settings.relative_tolerance;
-        ipopt_solver.print_level = solver_settings.verbosity;
 
+    } else if (solver_settings.method == ccd::opt::IPOPT) {
         opt_results = ipopt_solver.solve(opt_problem);
         opt_results.x.resize(U0.rows(), 2);
-
+    }else if (solver_settings.method == ccd::opt::NLOPT){
+        opt_results = nlopt_solver.solve(opt_problem);
+        opt_results.x.resize(U0.rows(), 2);
     } else {
         opt_results = ccd::opt::displacement_optimization(
             opt_problem, U0, solver_settings);
@@ -335,7 +334,6 @@ void State::log_optimization_steps(const std::string filename,
 
     // print table header
     o << ccd::opt::OptimizationMethodNames[solver_settings.method] << sep;
-    o << ccd::opt::LCPSolverNames[solver_settings.lcp_solver] << std::endl;
     o << "it";
     for (int i = 0; i < opt_problem.num_vars; i++) {
         o << sep << "x_" << i;

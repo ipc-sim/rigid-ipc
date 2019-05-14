@@ -5,6 +5,7 @@
 #include <viewer/imgui_ext.hpp>
 #include <viewer/ipopt_solver_view.hpp>
 #include <viewer/ncp_solver_view.hpp>
+#include <viewer/nlopt_solver_view.hpp>
 
 namespace ccd {
 
@@ -350,55 +351,63 @@ void ViewerMenu::draw_optimization()
                     idx_optimization_method);
         }
 
-        switch (state.solver_settings.method) {
-        case opt::OptimizationMethod::LINEARIZED_CONSTRAINTS:
-            if (ImGui::Combo("QP solver##opt", &idx_qp_solver,
-                    ccd::opt::QPSolverNames,
-                    CCD_IM_ARRAYSIZE(ccd::opt::QPSolverNames))) {
-                state.solver_settings.qp_solver
-                    = static_cast<ccd::opt::QPSolver>(idx_qp_solver);
-            }
-            break;
-
-        case opt::OptimizationMethod::NCP:
-            ncp_solver_menu(state.ncp_displ_solver);
-            break;
-
-        case opt::OptimizationMethod::IPOPT:
-            ipopt_solver_menu(state.ipopt_solver);
-            break;
-
-        case opt::OptimizationMethod::BARRIER_NEWTON:
+        {
+            ImGui::Indent();
             ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
-            ImGui::InputDoubleBounded("barrier tol.##opt",
-                &state.solver_settings.min_barrier_epsilon, 0.0, 2e19, 0.0, 0.0,
-                "%.3g");
-            ImGui::InputDoubleBounded("line search tol.##opt",
-                &state.solver_settings.line_search_tolerance, 0.0, 2e19, 0.0,
-                0.0, "%.3g");
-            ImGui::PopItemWidth();
-            break;
-
-        default:
-            break;
-        }
-
-        if (ImGui::CollapsingHeader("Settings##opt")) {
-            if (ImGui::InputInt(
-                    "verbosity##opt", &state.solver_settings.verbosity)) {
-                if (state.solver_settings.verbosity > 0) {
-                    spdlog::set_level(spdlog::level::debug);
+            switch (state.solver_settings.method) {
+            case opt::OptimizationMethod::LINEARIZED_CONSTRAINTS:
+                if (ImGui::Combo("QP solver##opt", &idx_qp_solver,
+                        ccd::opt::QPSolverNames,
+                        CCD_IM_ARRAYSIZE(ccd::opt::QPSolverNames))) {
+                    state.solver_settings.qp_solver
+                        = static_cast<ccd::opt::QPSolver>(idx_qp_solver);
                 }
+                break;
+
+            case opt::OptimizationMethod::NCP:
+                ncp_solver_menu(state.ncp_solver);
+                break;
+            case opt::OptimizationMethod::IPOPT:
+                ipopt_solver_menu(state.ipopt_solver);
+                break;
+            case opt::OptimizationMethod::NLOPT:
+                nlopt_solver_menu(state.nlopt_solver);
+                break;
+            case opt::OptimizationMethod::BARRIER_NEWTON:
+                ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
+                ImGui::InputDoubleBounded("barrier tol.##opt",
+                    &state.solver_settings.min_barrier_epsilon, 0.0, 2e19, 0.0,
+                    0.0, "%.3g");
+                ImGui::InputDoubleBounded("line search tol.##opt",
+                    &state.solver_settings.line_search_tolerance, 0.0, 2e19,
+                    0.0, 0.0, "%.3g");
+                ImGui::PopItemWidth();
+                break;
+            default:
+                break;
             }
-            ImGui::InputIntBounded(
-                "max iter##opt", &state.solver_settings.max_iter, 0);
-            ImGui::InputDoubleBounded("rel. tol.##opt",
-                &state.solver_settings.relative_tolerance, 0.0, 2e19, 0.0, 0.0,
-                "%.3g");
-            ImGui::InputDoubleBounded("abs. tol.##opt",
-                &state.solver_settings.absolute_tolerance, 0.0, 2e19, 0.0, 0.0,
-                "%.3g");
+            ImGui::PopItemWidth();
+            ImGui::Unindent();
         }
+        //        if (ImGui::CollapsingHeader("Settings##opt")) {
+        //            if (ImGui::InputInt(
+        //                    "verbosity##opt",
+        //                    &state.solver_settings.verbosity)) {
+        //                if (state.solver_settings.verbosity > 0) {
+        //                    spdlog::set_level(spdlog::level::debug);
+        //                }
+        //            }
+        //            ImGui::InputIntBounded(
+        //                "max iter##opt", &state.solver_settings.max_iter, 0);
+        //            ImGui::InputDoubleBounded("rel. tol.##opt",
+        //                &state.solver_settings.relative_tolerance, 0.0, 2e19,
+        //                0.0, 0.0,
+        //                "%.3g");
+        //            ImGui::InputDoubleBounded("abs. tol.##opt",
+        //                &state.solver_settings.absolute_tolerance, 0.0, 2e19,
+        //                0.0, 0.0,
+        //                "%.3g");
+        //        }
 
         ImGui::Checkbox(
             "continue optimization##opt", &(state.reuse_opt_displacements));

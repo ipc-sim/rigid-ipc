@@ -5,6 +5,8 @@
 
 #include <opt/lcp_solver.hpp>
 #include <opt/optimization_problem.hpp>
+#include <opt/optimization_results.hpp>
+#include <opt/solver.hpp>
 
 namespace ccd {
 namespace opt {
@@ -27,17 +29,19 @@ namespace opt {
 
     static const char* NcpUpdateNames[] = { "G_GRADIENT", "LINEARIZED" };
 
-    class NCPSolver {
+    class NCPSolver : public OptimizationSolver{
     public:
-        NCPSolver(const Eigen::SparseMatrix<double>& A,
-            const Eigen::VectorXd& b,
-            OptimizationProblem& problem,
-            const int max_iter, const callback_intermediate_ncp& callback,
-            const NcpUpdate update_type, const LCPSolver lcp_solver,
-            Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i,
-            const bool keep_in_unfeasible,
-            const bool check_convergence,
-            const double convergence_tolerance);
+        NCPSolver();
+        ~NCPSolver() override;
+        NCPSolver(const bool keep_in_unfeasible, const bool check_convergence,
+            const double convergence_tolerance, const NcpUpdate update_type,
+            const LCPSolver lcp_solver, const int max_iterations);
+
+        OptimizationResults solve(OptimizationProblem& problem) override;
+        bool solve_ncp(const Eigen::SparseMatrix<double>& A,
+            const Eigen::VectorXd& b, OptimizationProblem& problem,
+            Eigen::VectorXd& x_opt, Eigen::VectorXd& alpha_opt);
+        void compute_linear_system(OptimizationProblem& problem);
 
         bool compute();
         void initialize();
@@ -55,29 +59,28 @@ namespace opt {
         double convergence_tolerance;
         NcpUpdate update_type;
         LCPSolver lcp_solver;
-        int max_iter;
+        int max_iterations;
 
         // ---------------------
         // Optimization Specifics
         // ---------------------
-        const Eigen::SparseMatrix<double>& A;
-        const Eigen::VectorXd& b;
-        OptimizationProblem& problem;
-        const callback_intermediate_ncp& callback;
+        Eigen::SparseMatrix<double> A;
+        Eigen::VectorXd b;
+        OptimizationProblem* problem;
+        //        callback_intermediate_ncp& callback;
 
         // -----------------------
         // Optimization Status
         // -----------------------
-        Eigen::SparseLU<Eigen::SparseMatrix<double>> Asolver;
+        std::shared_ptr<Eigen::SparseLU<Eigen::SparseMatrix<double>>> Asolver;
         Eigen::VectorXd g_xi;
         Eigen::MatrixXd jac_g_xi;
 
         // ----------------------
         // Optimization results
         // ----------------------
-        Eigen::VectorXd& xi;
-        Eigen::VectorXd& alpha_i;
-
+        Eigen::VectorXd xi;
+        Eigen::VectorXd alpha_i;
     };
 
     /**
@@ -107,12 +110,11 @@ namespace opt {
      * @param convergence_tolerance: used to evaluate (2)
      */
     bool solve_ncp(const Eigen::SparseMatrix<double>& A,
-        const Eigen::VectorXd& b,
-        OptimizationProblem& problem,
+        const Eigen::VectorXd& b, OptimizationProblem& problem,
         const int max_iter, const callback_intermediate_ncp& callback,
         const NcpUpdate update_type, const LCPSolver lcp_solver,
         Eigen::VectorXd& x, Eigen::VectorXd& alpha,
-        const bool check_convergence, const bool check_convergence_unfeasible,
+        const bool keep_in_unfeasible, const bool check_convergence,
         const double convergence_tolerance = 1E-10);
 
 } // namespace opt

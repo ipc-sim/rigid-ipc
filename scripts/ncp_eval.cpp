@@ -4,8 +4,7 @@
 #include <iomanip> // std::setw
 #include <iostream>
 
-#include <fmt/format.h>
-#include <spdlog/spdlog.h>
+#include <logger.hpp>
 
 #include <autodiff/autodiff_types.hpp>
 #include <autodiff/finitediff.hpp>

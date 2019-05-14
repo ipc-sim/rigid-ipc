@@ -20,25 +20,17 @@ namespace opt {
         }
 
         switch (settings.method) {
-        case OptimizationMethod::MMA:
-        case OptimizationMethod::SLSQP:
-            return solve_problem_with_nlopt(problem, settings);
-        case OptimizationMethod::IPOPT:
-#ifdef BUILD_WITH_IPOPT
-            return minimize_ipopt(problem, settings);
-#else
-            throw NotImplementedError("IPOPT is not enabled");
-#endif
         case OptimizationMethod::LINEARIZED_CONSTRAINTS:
             return solve_problem_with_linearized_constraints(problem, settings);
-        case OptimizationMethod::NCP:
-            // ToDo: Call NCP from here instead of displacment_opt
-            throw NotImplementedError(
-                "Nonlinear complementarity problem not implemented");
         case OptimizationMethod::BARRIER_NEWTON:
             return solve_problem_with_barrier_newton(problem, settings);
+        default:
+            throw NotImplementedError("Not implemented");
         }
     }
+
+    OptimizationSolver::OptimizationSolver() {}
+    OptimizationSolver::~OptimizationSolver() {}
 
 } // namespace opt
 } // namespace ccd

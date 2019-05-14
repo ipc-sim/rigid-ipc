@@ -4,10 +4,10 @@
 #include <viewer/imgui_ext.hpp>
 
 namespace ccd {
-void ncp_solver_menu(ccd::opt::NCPDisplacementOptimization& ncp_solver)
+void ncp_solver_menu(ccd::opt::NCPSolver& ncp_solver)
 {
     int idx_lcp_solver = ncp_solver.lcp_solver;
-    int idx_ncp_update = static_cast<int>(ncp_solver.update_method);
+    int idx_ncp_update = static_cast<int>(ncp_solver.update_type);
 
     ImGui::InputIntBounded(
         "max iter##ncp_solver", &ncp_solver.max_iterations, 0);
@@ -15,7 +15,7 @@ void ncp_solver_menu(ccd::opt::NCPDisplacementOptimization& ncp_solver)
     if (ImGui::Combo("x-update##opt", &idx_ncp_update,
             ccd::opt::NcpUpdateNames,
             CCD_IM_ARRAYSIZE(ccd::opt::NcpUpdateNames))) {
-        ncp_solver.update_method
+        ncp_solver.update_type
             = static_cast<ccd::opt::NcpUpdate>(idx_ncp_update);
     }
 
@@ -26,12 +26,12 @@ void ncp_solver_menu(ccd::opt::NCPDisplacementOptimization& ncp_solver)
             = static_cast<ccd::opt::LCPSolver>(idx_lcp_solver);
     }
 
-    ImGui::Checkbox("keep unf.##ncp_solver", &ncp_solver.keep_in_unfeasible);
+    ImGui::Checkbox("keep unfeasible##ncp_solver", &ncp_solver.keep_in_unfeasible);
     ImGui::Checkbox("##ncp_solver", &ncp_solver.check_convergence);
     ImGui::SameLine();
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.4f);
     ImGui::InputDoubleBounded("conv. tol.##ncp_solver",
-        &ncp_solver.convegence_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
+        &ncp_solver.convergence_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
     ImGui::PopItemWidth();
 }
 } // namespace ccd

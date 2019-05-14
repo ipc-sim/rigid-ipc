@@ -1,7 +1,7 @@
 #pragma once
 
-#include <opt/displacement_opt.hpp>
+#include <opt/ncp_solver.hpp>
 
 namespace ccd {
-void ncp_solver_menu(ccd::opt::NCPDisplacementOptimization& ncp_solver);
+void ncp_solver_menu(ccd::opt::NCPSolver& ncp_solver);
 }

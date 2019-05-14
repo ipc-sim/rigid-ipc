@@ -13,7 +13,8 @@ namespace opt {
 
     callback_grad_f OptimizationProblem::func_grad_f()
     {
-        callback_grad_f f = [&](const Eigen::VectorXd& x) { return eval_grad_f(x); };
+        callback_grad_f f
+            = [&](const Eigen::VectorXd& x) { return eval_grad_f(x); };
         return f;
     }
 
@@ -21,6 +22,12 @@ namespace opt {
     {
         callback_grad_f f = [&](const Eigen::VectorXd& x) { return eval_g(x); };
         return f;
+    }
+
+    Eigen::SparseMatrix<double> OptimizationProblem::eval_hessian_f_sparse(
+        const Eigen::VectorXd& x)
+    {
+        return eval_hessian_f(x).sparseView();
     }
 
     bool OptimizationProblem::validate_problem()
@@ -96,16 +103,12 @@ namespace opt {
                                       "function not implemented!");
         };
     }
-    double AdHocProblem::eval_f(const Eigen::VectorXd& x)
-    {
-        return f(x);
-    }
+    double AdHocProblem::eval_f(const Eigen::VectorXd& x) { return f(x); }
     Eigen::VectorXd AdHocProblem::eval_grad_f(const Eigen::VectorXd& x)
     {
         return grad_f(x);
     }
-    Eigen::MatrixXd AdHocProblem::eval_hessian_f(
-        const Eigen::VectorXd& x)
+    Eigen::MatrixXd AdHocProblem::eval_hessian_f(const Eigen::VectorXd& x)
     {
         return hessian_f(x);
     }

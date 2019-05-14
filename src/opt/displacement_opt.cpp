@@ -104,6 +104,13 @@ namespace opt {
     {
         return Eigen::MatrixXd::Identity(x.size(), x.size());
     }
+    Eigen::SparseMatrix<double> ParticlesDisplProblem::eval_hessian_f_sparse(
+        const Eigen::VectorXd& x)
+    {
+        Eigen::SparseMatrix<double> A(int(x.size()), int(x.size()));
+        A.setIdentity();
+        return A;
+    }
 
     Eigen::VectorXd ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x)
     {
@@ -146,46 +153,6 @@ namespace opt {
         return hess_gx;
     };
 
-    NCPDisplacementOptimization::NCPDisplacementOptimization()
-        : max_iterations(100)
-        , update_method(NcpUpdate::LINEARIZED)
-        , lcp_solver(LCPSolver::LCP_GAUSS_SEIDEL)
-        , keep_in_unfeasible(true)
-        , check_convergence(false)
-        , convegence_tolerance(1e-6)
-    {
-    }
-
-    OptimizationResults NCPDisplacementOptimization::solve(OptimizationProblem& problem)
-    {
-        // Solves the KKT conditions of the Optimization Problem
-        //  (U - Uk) = \nabla g(U)
-        //  s.t V(U) >= 0
-        int num_vars = int(problem.x0.rows());
-        Eigen::SparseMatrix<double> A(num_vars, num_vars);
-        A.setIdentity();
-
-        Eigen::VectorXd b, x_opt, lambda_opt;
-        // obtain Uk from grad_f using x=0
-        b = -problem.eval_grad_f(Eigen::VectorXd::Zero(num_vars));
-
-        int num_it = 0;
-        callback_intermediate_ncp callback
-            = [&](const Eigen::VectorXd& x, const Eigen::VectorXd& alpha,
-                  const double gamma) {
-                  // settings->intermediate_cb(x, problem->f(x), alpha, gamma,
-                  // num_it);
-                  num_it += 1;
-              };
-        OptimizationResults result;
-        result.success = solve_ncp(A, b, problem, max_iterations, callback,
-            update_method, lcp_solver, x_opt, lambda_opt, keep_in_unfeasible,
-            check_convergence, convegence_tolerance);
-        result.x = x_opt;
-        result.minf = problem.eval_f(x_opt);
-
-        return result;
-    }
 
 } // namespace opt
 } // namespace ccd

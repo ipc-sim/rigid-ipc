@@ -5,8 +5,7 @@
 #include <iomanip> // std::setw
 #include <iostream>
 
-#include <fmt/format.h>
-#include <spdlog/spdlog.h>
+#include <logger.hpp>
 
 const int NUM_EDGES = 2;
 const int NUM_VERTICES = 4;
@@ -31,8 +30,8 @@ void inner_loop(const std::string scene_name, const std::string out_dir,
 
 //    for (const auto& update_type : update_types) {
         for (const auto& lcp_solver : lcp_solvers) {
-            state.solver_settings.ncp_update_method = update_type;
-            state.solver_settings.lcp_solver = lcp_solver;
+            state.ncp_solver.update_type = update_type;
+            state.ncp_solver.lcp_solver = lcp_solver;
             std::string filename = fmt::format("{}_{}_{}", scene_name,
                 LCPSolverNames[lcp_solver],
                 NcpUpdateNames[static_cast<int>(update_type)]);
@@ -109,8 +108,8 @@ void case_vertical_displacements(const std::string& dirname,
 }
 
 void case_diagonal_displacements(const std::string& dirname,
-    const Eigen::MatrixX2i& edges, Eigen::MatrixX2d vertices,
-    Eigen::MatrixX2d displacements, ccd::State state)
+    const Eigen::MatrixX2i& edges, Eigen::MatrixX2d& vertices,
+    Eigen::MatrixX2d& displacements, ccd::State& state)
 {
     Eigen::MatrixX2d expected(NUM_VERTICES, 2);
     double alpha = 0.5;

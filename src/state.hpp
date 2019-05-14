@@ -8,6 +8,8 @@
 #include <ccd/prune_impacts.hpp>
 
 #include <opt/ipopt_solver.hpp>
+#include <opt/ncp_solver.hpp>
+#include <opt/nlopt_solver.hpp>
 #include <opt/solver.hpp>
 
 #include <opt/barrier_constraint.hpp>
@@ -75,8 +77,9 @@ public:
     /// @brief Settings for the problem solver
     opt::SolverSettings solver_settings;
 
-    opt::NCPDisplacementOptimization ncp_displ_solver;
+    opt::NCPSolver ncp_solver;
     opt::IpoptSolver ipopt_solver;
+    opt::NLOptSolver nlopt_solver;
 
     opt::VolumeConstraint volume_constraint;
     opt::BarrierConstraint barrier_constraint;

@@ -8,6 +8,7 @@
 
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
+#include <opt/solver.hpp>
 
 namespace ccd {
 /**
@@ -44,13 +45,13 @@ namespace opt {
         SolverReturn status;
     };
 
-    class IpoptSolver {
+    class IpoptSolver : public OptimizationSolver {
     public:
         IpoptSolver();
         IpoptSolver(double tolerance, int print_level, int max_iterations);
-        void initialize();
-        OptimizationResults solve(OptimizationProblem& problem);
+        OptimizationResults solve(OptimizationProblem& problem) override;
 
+        void initialize();
         SmartPtr<IpoptApplication> app;
 
         // Exposed Ipopt Settings

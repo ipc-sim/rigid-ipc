@@ -9,10 +9,10 @@
 
 #include <ccd/collision_detection.hpp>
 #include <opt/collision_constraint.hpp>
-#include <opt/volume_constraint.hpp>
 #include <opt/ncp_solver.hpp>
 #include <opt/optimization_problem.hpp>
 #include <opt/solver.hpp>
+#include <opt/volume_constraint.hpp>
 
 namespace ccd {
 
@@ -51,6 +51,8 @@ namespace opt {
         double eval_f(const Eigen::VectorXd& x) override;
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
         Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& x) override;
+        Eigen::SparseMatrix<double> eval_hessian_f_sparse(
+            const Eigen::VectorXd& x) override;
         Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
         std::vector<Eigen::MatrixXd> eval_hessian_g(
@@ -58,26 +60,5 @@ namespace opt {
         void initProblem();
     };
 
-    /**
-     * @brief Solves the KKT conditions of the Optimization Problem
-     *      (U - Uk) = \nabla g(U)
-     *      s.t V(U) >= 0
-     */
-
-    class NCPDisplacementOptimization {
-    public:
-        NCPDisplacementOptimization();
-        OptimizationResults solve(OptimizationProblem& problem);
-
-        // ---------------
-        // Settings
-        // ---------------
-        int max_iterations;
-        NcpUpdate update_method;
-        LCPSolver lcp_solver;
-        bool keep_in_unfeasible;
-        bool check_convergence;
-        double convegence_tolerance;
-    };
 } // namespace opt
 } // namespace ccd

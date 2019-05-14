@@ -1,8 +1,10 @@
 #pragma once
 
-#include <Eigen/Core>
 #include <functional>
 #include <vector>
+
+#include <Eigen/Core>
+#include <Eigen/Sparse>
 
 namespace ccd {
 namespace opt {
@@ -45,6 +47,9 @@ namespace opt {
         virtual double eval_f(const Eigen::VectorXd& x) = 0;
         virtual Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) = 0;
         virtual Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& x) = 0;
+        virtual Eigen::SparseMatrix<double> eval_hessian_f_sparse(
+            const Eigen::VectorXd& x);
+
         virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) = 0;
         virtual Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) = 0;
         virtual std::vector<Eigen::MatrixXd> eval_hessian_g(

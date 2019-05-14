@@ -27,5 +27,12 @@ namespace opt {
     OptimizationResults solve_problem(
         OptimizationProblem& problem, SolverSettings& settings);
 
+    class OptimizationSolver {
+    public:
+        OptimizationSolver();
+        virtual ~OptimizationSolver();
+        virtual OptimizationResults solve(OptimizationProblem& problem) = 0;
+    };
+
 } // namespace opt
 } // namespace ccd

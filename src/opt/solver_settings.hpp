@@ -1,8 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <opt/lcp_solver.hpp>
-#include <opt/ncp_solver.hpp>
 
 namespace ccd {
 namespace opt {
@@ -21,9 +19,7 @@ namespace opt {
 
     /// @brief Methods available for non-linear constrained optimization.
     enum OptimizationMethod {
-        MMA,   ///< @brief Method of Moving Asymptotes (NLopt)
-        SLSQP, ///< @brief Sequential Least-Squares Quadratic Programming
-               ///< (NLopt)
+        NLOPT,
         IPOPT, ///< @brief Interior-Point Method (Ipopt)
         LINEARIZED_CONSTRAINTS, ///< @brief Linearize the constraints and solve
                                 ///< the QP (OSQP/MOSEK)
@@ -31,7 +27,7 @@ namespace opt {
         BARRIER_NEWTON          ///< @brief Barrier Newton's Method
     };
 
-    static const char* OptimizationMethodNames[] = { "MMA", "SLSQP", "IPOPT",
+    static const char* OptimizationMethodNames[] = { "NLOPT", "IPOPT",
         "Linearized Const.", "NCP", "Barrier Newton" };
 
     enum QPSolver {
@@ -59,8 +55,8 @@ namespace opt {
         QPSolver qp_solver; ///< @brief Quadratic programming solver
 
         // NCP specific settings
-        NcpUpdate ncp_update_method; ///< @brief Method to update NCP solution
-        LCPSolver lcp_solver;        ///< @brief LCP solver
+//        NcpUpdate ncp_update_method; ///< @brief Method to update NCP solution
+//        LCPSolver lcp_solver;        ///< @brief LCP solver
 
         // Barrier Newton specific settings
         // ToDo: Find a better place to store this
@@ -73,15 +69,13 @@ namespace opt {
 
         /// @brief Construct the solver settings
         SolverSettings(
-            const OptimizationMethod method = OptimizationMethod::SLSQP,
+            const OptimizationMethod method = OptimizationMethod::BARRIER_NEWTON,
             const int verbosity = 0, const int max_iter = 3000,
             const double relative_tolerance = 1e-8,
             const double absolute_tolerance = 1e-8,
             const double max_time = 2e19,
             const callback_intermediate intermediate_cb = nullptr,
             const QPSolver qp_solver = QPSolver::OSQP,
-            const NcpUpdate ncp_update_method = NcpUpdate::LINEARIZED,
-            const LCPSolver lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL,
             const double barrier_epsilon = 0.0,
             const double min_barrier_epsilon = 1e-8,
             const double line_search_tolerance = 1e-8);
