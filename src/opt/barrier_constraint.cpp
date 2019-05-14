@@ -6,6 +6,10 @@ namespace ccd {
 namespace opt {
 
     BarrierConstraint::BarrierConstraint() {}
+    BarrierConstraint::BarrierConstraint(const double epsilon)
+        : barrier_epsilon(epsilon)
+    {
+    }
 
     void BarrierConstraint::initialize(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk)
@@ -19,12 +23,14 @@ namespace opt {
         resetBarrierEpsilon();
     }
 
-    void BarrierConstraint::resetBarrierEpsilon(){
+    void BarrierConstraint::resetBarrierEpsilon()
+    {
         // ToDo: Find a better way to provide a starting epsilon
         bool was_barrier_epsilon_reset = false;
         for (long i = 0; i < this->edge_impact_map.size(); i++) {
             if (this->edge_impact_map(i) >= 0) {
-                EdgeEdgeImpact impact = this->ee_impacts[this->edge_impact_map(i)];
+                EdgeEdgeImpact impact
+                    = this->ee_impacts[this->edge_impact_map(i)];
                 double val = impact.time;
 
                 // Penalize the spatial distance too
@@ -39,8 +45,7 @@ namespace opt {
                 // }
                 // val *= sum;
 
-                if (!was_barrier_epsilon_reset
-                    || val < barrier_epsilon) {
+                if (!was_barrier_epsilon_reset || val < barrier_epsilon) {
                     barrier_epsilon = val;
                     was_barrier_epsilon_reset = true;
                 }
@@ -118,5 +123,6 @@ namespace opt {
         solver->ee_impacts = ee_impacts;
         return solver->compute_constraints_hessian(V, E, U, contraints_hess);
     }
+
 } // namespace opt
 } // namespace ccd

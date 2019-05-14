@@ -26,7 +26,6 @@ State::State()
     , output_dir(DATA_OUTPUT_DIR)
     , opt_method(OptimizationMethod::BARRIER_NEWTON)
     , constraint_function(ConstraintType::BARRIER)
-    , recompute_collision_set(false)
     , canvas_width(10)
     , canvas_height(10)
     , current_ev_impact(-1)
@@ -224,8 +223,9 @@ opt::OptimizationSolver& State::getOptimizationSolver()
 void State::reset_optimization_problem()
 {
 
-    opt_problem.initialize(
-        vertices, edges, displacements, getCollisionConstraint());
+    auto& constraint = getCollisionConstraint();
+    constraint.initialize(vertices, edges, displacements);
+    opt_problem.initialize(vertices, edges, displacements, constraint);
 }
 
 void State::reset_results()
@@ -287,9 +287,9 @@ void State::optimize_displacements(const std::string filename)
 #endif
     }
 
-//    if (verbosity > 0) {
-//        log_optimization_steps(filename, it_x, it_lambda, it_gamma);
-//    }
+    //    if (verbosity > 0) {
+    //        log_optimization_steps(filename, it_x, it_lambda, it_gamma);
+    //    }
     opt_results.finished = true;
 
     // update ui elements

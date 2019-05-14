@@ -29,7 +29,7 @@ TEST_CASE("test the setup", "[opt][displacements][barrier]")
     state.displacements << 0, -2, 0, -2, 0, 0, 0, 0;
     state.edges << 0, 1, 2, 3;
 
-    state.recompute_collision_set = GENERATE(false, true);
+    state.getCollisionConstraint().recompute_collision_set = GENERATE(false, true);
     state.detection_method = DetectionMethod::BRUTE_FORCE;
     state.barrier_newton_solver.barrier_epsilon = 1.0;
     state.opt_method = ccd::OptimizationMethod::BARRIER_NEWTON;
@@ -102,7 +102,7 @@ TEST_CASE("two rotating edges", "[opt][displacements][barrier]")
 
     state.constraint_function = ccd::ConstraintType::BARRIER;
 
-    state.recompute_collision_set = GENERATE(false, true);
+    state.getCollisionConstraint().recompute_collision_set = GENERATE(false, true);
     state.detection_method = DetectionMethod::BRUTE_FORCE;
     state.opt_method = ccd::OptimizationMethod::BARRIER_NEWTON;
 
@@ -143,7 +143,7 @@ TEST_CASE("corner case", "[opt][displacements][barrier]")
 
     state.constraint_function = ccd::ConstraintType::BARRIER;
 
-    state.recompute_collision_set = GENERATE(false, true);
+    state.getCollisionConstraint().recompute_collision_set = GENERATE(false, true);
     state.detection_method = DetectionMethod::BRUTE_FORCE;
     state.opt_method = ccd::OptimizationMethod::BARRIER_NEWTON;
 

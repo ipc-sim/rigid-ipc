@@ -12,8 +12,10 @@ namespace opt {
     class BarrierConstraint : public CollisionConstraint {
     public:
         BarrierConstraint();
+        BarrierConstraint(const double epsilon);
 
         void resetBarrierEpsilon();
+
         void initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk) override;
 
