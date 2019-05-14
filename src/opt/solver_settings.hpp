@@ -30,13 +30,6 @@ namespace opt {
     static const char* OptimizationMethodNames[] = { "NLOPT", "IPOPT",
         "Linearized Const.", "NCP", "Barrier Newton" };
 
-    enum QPSolver {
-        OSQP, ///< @brief Use OSQP to solve the qudratic program
-        MOSEK ///< @brief Use MOSEK to solve the qudratic program
-    };
-
-    static const char* QPSolverNames[] = { "OSQP", "MOSEK" };
-
     struct SolverSettings {
         OptimizationMethod method; ///< @brief Optimization method to use
 
@@ -50,13 +43,6 @@ namespace opt {
 
         /// @brief Callback function, called every outer iteration
         callback_intermediate intermediate_cb;
-
-        // Linearized constraint specific settings
-        QPSolver qp_solver; ///< @brief Quadratic programming solver
-
-        // NCP specific settings
-//        NcpUpdate ncp_update_method; ///< @brief Method to update NCP solution
-//        LCPSolver lcp_solver;        ///< @brief LCP solver
 
         // Barrier Newton specific settings
         // ToDo: Find a better place to store this
@@ -75,7 +61,6 @@ namespace opt {
             const double absolute_tolerance = 1e-8,
             const double max_time = 2e19,
             const callback_intermediate intermediate_cb = nullptr,
-            const QPSolver qp_solver = QPSolver::OSQP,
             const double barrier_epsilon = 0.0,
             const double min_barrier_epsilon = 1e-8,
             const double line_search_tolerance = 1e-8);

@@ -8,14 +8,15 @@
 #include <ccd/prune_impacts.hpp>
 
 #include <opt/ipopt_solver.hpp>
+#include <opt/linearized_constraint_solver.hpp>
 #include <opt/ncp_solver.hpp>
 #include <opt/nlopt_solver.hpp>
 #include <opt/solver.hpp>
 
 #include <opt/barrier_constraint.hpp>
+#include <opt/collision_constraint.hpp>
 #include <opt/displacement_opt.hpp>
 #include <opt/volume_constraint.hpp>
-#include <opt/collision_constraint.hpp>
 
 namespace ccd {
 
@@ -69,7 +70,7 @@ public:
     // Optimization Fields
 
     /// @brief Optimization problem to solve
-//    opt::OptimizationProblem opt_problem;
+    //    opt::OptimizationProblem opt_problem;
 
     /// @brief #V,2 optimized vertices displacements
     opt::OptimizationResults opt_results;
@@ -80,6 +81,7 @@ public:
     opt::NCPSolver ncp_solver;
     opt::IpoptSolver ipopt_solver;
     opt::NLOptSolver nlopt_solver;
+    opt::LinearizedCstrSolver linearized_constraint_solver;
 
     opt::VolumeConstraint volume_constraint;
     opt::BarrierConstraint barrier_constraint;

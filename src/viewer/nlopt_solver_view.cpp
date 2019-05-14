@@ -1,7 +1,5 @@
 #include "nlopt_solver_view.hpp"
 
-#include <viewer/ncp_solver_view.hpp>
-
 #include <imgui/imgui.h>
 #include <viewer/imgui_ext.hpp>
 

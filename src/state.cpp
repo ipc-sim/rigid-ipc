@@ -277,8 +277,11 @@ void State::optimize_displacements(const std::string filename)
     } else if (solver_settings.method == ccd::opt::IPOPT) {
         opt_results = ipopt_solver.solve(opt_problem);
         opt_results.x.resize(U0.rows(), 2);
-    }else if (solver_settings.method == ccd::opt::NLOPT){
+    } else if (solver_settings.method == ccd::opt::NLOPT) {
         opt_results = nlopt_solver.solve(opt_problem);
+        opt_results.x.resize(U0.rows(), 2);
+    } else if (solver_settings.method == ccd::opt::LINEARIZED_CONSTRAINTS) {
+        opt_results = linearized_constraint_solver.solve(opt_problem);
         opt_results.x.resize(U0.rows(), 2);
     } else {
         opt_results = ccd::opt::displacement_optimization(

@@ -113,6 +113,7 @@ set(VIEWER_FILES
     src/viewer/ncp_solver_view.cpp
     src/viewer/ipopt_solver_view.cpp
     src/viewer/nlopt_solver_view.cpp
+    src/viewer/linearized_constraint_solver_view.cpp
     src/viewer/constraint_view.cpp
 
     src/main.cpp

@@ -4,6 +4,7 @@
 #include <viewer/constraint_view.hpp>
 #include <viewer/imgui_ext.hpp>
 #include <viewer/ipopt_solver_view.hpp>
+#include <viewer/linearized_constraint_solver_view.hpp>
 #include <viewer/ncp_solver_view.hpp>
 #include <viewer/nlopt_solver_view.hpp>
 
@@ -326,7 +327,6 @@ void ViewerMenu::draw_optimization()
 {
     using namespace opt;
     int idx_optimization_method = state.solver_settings.method;
-    int idx_qp_solver = state.solver_settings.qp_solver;
     int idx_ctr_type = static_cast<int>(state.constraint_function);
 
     if (ImGui::CollapsingHeader(
@@ -356,14 +356,9 @@ void ViewerMenu::draw_optimization()
             ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
             switch (state.solver_settings.method) {
             case opt::OptimizationMethod::LINEARIZED_CONSTRAINTS:
-                if (ImGui::Combo("QP solver##opt", &idx_qp_solver,
-                        ccd::opt::QPSolverNames,
-                        CCD_IM_ARRAYSIZE(ccd::opt::QPSolverNames))) {
-                    state.solver_settings.qp_solver
-                        = static_cast<ccd::opt::QPSolver>(idx_qp_solver);
-                }
+                linearized_constraint_solver_view(
+                    state.linearized_constraint_solver);
                 break;
-
             case opt::OptimizationMethod::NCP:
                 ncp_solver_menu(state.ncp_solver);
                 break;
