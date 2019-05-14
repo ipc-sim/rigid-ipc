@@ -124,9 +124,9 @@ TEST_CASE("Check barrier problem derivatives")
 
     REQUIRE(problem.validate_problem());
 
-    AdHocProblem barrier_problem;
+
     double epsilon = GENERATE(1.0, 0.5, 1e-1, 5e-2);
-    setup_barrier_problem(problem, epsilon, barrier_problem);
+    BarrierProblem barrier_problem(problem, epsilon);
     REQUIRE(barrier_problem.validate_problem());
 
     Eigen::VectorXd x(num_vars);
@@ -135,7 +135,7 @@ TEST_CASE("Check barrier problem derivatives")
     // If the function evaluates to infinity then the finite differences will
     // not work. I assume in the definition of the barrier gradient that
     // d/dx ∞ = 0.
-    if (!isinf(barrier_problem.f(x))) {
+    if (!isinf(barrier_problem.eval_f(x))) {
         // Use a higher order finite difference method because the function near
         // the boundary becomes very non-linear. This problem worsens as the ϵ
         // of the boundary gets smaller.
@@ -143,20 +143,20 @@ TEST_CASE("Check barrier problem derivatives")
         // Test ∇f
         Eigen::VectorXd finite_grad(barrier_problem.num_vars);
         finite_gradient(
-            x, barrier_problem.f, finite_grad, AccuracyOrder::SECOND);
-        Eigen::VectorXd analytic_grad = barrier_problem.grad_f(x);
+            x, barrier_problem.func_f(), finite_grad, AccuracyOrder::SECOND);
+        Eigen::VectorXd analytic_grad = barrier_problem.eval_grad_f(x);
         CHECK(compare_gradient(finite_grad, analytic_grad));
 
         // Test ∇²f
         Eigen::MatrixXd finite_hessian(
             barrier_problem.num_vars, barrier_problem.num_vars);
         finite_jacobian(
-            x, barrier_problem.grad_f, finite_hessian, AccuracyOrder::SECOND);
-        Eigen::MatrixXd analytic_hessian = barrier_problem.hessian_f(x);
+            x, barrier_problem.func_grad_f(), finite_hessian, AccuracyOrder::SECOND);
+        Eigen::MatrixXd analytic_hessian = barrier_problem.eval_hessian_f(x);
         CHECK(compare_jacobian(finite_hessian, analytic_hessian));
 
         CAPTURE(x, problem.x_lower, problem.x_upper, problem.g(x),
-            problem.g_lower, problem.g_upper, epsilon, barrier_problem.f(x),
+            problem.g_lower, problem.g_upper, epsilon, barrier_problem.eval_f(x),
             finite_grad, analytic_grad, finite_hessian, analytic_hessian);
     }
 }
@@ -200,9 +200,8 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
 
     REQUIRE(constrained_problem.validate_problem());
 
-    AdHocProblem unconstrained_problem;
     double s = 1e-6;
-    setup_barrier_problem(constrained_problem, s, unconstrained_problem);
+    BarrierProblem unconstrained_problem(constrained_problem, s);
 
     unconstrained_problem.x0(0) = 5;
 

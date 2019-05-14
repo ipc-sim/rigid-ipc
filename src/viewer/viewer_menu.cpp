@@ -4,9 +4,9 @@
 #include <viewer/constraint_view.hpp>
 #include <viewer/imgui_ext.hpp>
 #include <viewer/ipopt_solver_view.hpp>
-#include <viewer/linearized_constraint_solver_view.hpp>
 #include <viewer/ncp_solver_view.hpp>
 #include <viewer/nlopt_solver_view.hpp>
+#include <viewer/solver_view.hpp>
 
 namespace ccd {
 
@@ -369,16 +369,7 @@ void ViewerMenu::draw_optimization()
                 nlopt_solver_menu(state.nlopt_solver);
                 break;
             case opt::OptimizationMethod::BARRIER_NEWTON:
-                ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
-                ImGui::InputDoubleBounded("barrier tol.##opt",
-                    &state.solver_settings.min_barrier_epsilon, 0.0, 2e19, 0.0,
-                    0.0, "%.3g");
-                ImGui::InputDoubleBounded("line search tol.##opt",
-                    &state.solver_settings.line_search_tolerance, 0.0, 2e19,
-                    0.0, 0.0, "%.3g");
-                ImGui::PopItemWidth();
-                break;
-            default:
+                barrier_newton_solver_view(state.barrier_newton_solver);
                 break;
             }
             ImGui::PopItemWidth();

@@ -11,6 +11,7 @@
 #include <opt/linearized_constraint_solver.hpp>
 #include <opt/ncp_solver.hpp>
 #include <opt/nlopt_solver.hpp>
+#include <opt/barrier_newton_solver.hpp>
 #include <opt/solver.hpp>
 
 #include <opt/barrier_constraint.hpp>
@@ -82,6 +83,7 @@ public:
     opt::IpoptSolver ipopt_solver;
     opt::NLOptSolver nlopt_solver;
     opt::LinearizedCstrSolver linearized_constraint_solver;
+    opt::BarrierNewtonSolver barrier_newton_solver;
 
     opt::VolumeConstraint volume_constraint;
     opt::BarrierConstraint barrier_constraint;

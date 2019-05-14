@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @brief Solve the optimization problem using Newton's Method with barriers for
  * the constraints.
@@ -5,6 +7,7 @@
 
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
+#include <opt/solver.hpp>
 #include <opt/solver_settings.hpp>
 
 namespace ccd {
@@ -32,8 +35,48 @@ namespace opt {
      * @paramp[out] barrier_problem Problem to store the modified objective of
      *                              the general problem.
      */
-    void setup_barrier_problem(OptimizationProblem& general_problem,
-        double& epsilon, AdHocProblem& barrier_problem);
+
+    class BarrierProblem : public OptimizationProblem {
+    public:
+        BarrierProblem(OptimizationProblem& problem, double epsilon);
+        ~BarrierProblem() override;
+
+        Eigen::VectorXd barrier(const Eigen::VectorXd x);
+        Eigen::VectorXd barrier_gradient(const Eigen::VectorXd x);
+        Eigen::VectorXd barrier_hessian(const Eigen::VectorXd x);
+
+        double eval_f(const Eigen::VectorXd& x) override;
+        Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
+        Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& x) override;
+        Eigen::VectorXd eval_g(const Eigen::VectorXd&) override
+        {
+            return Eigen::VectorXd();
+        }
+        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd&) override
+        {
+            return Eigen::MatrixXd();
+        }
+        std::vector<Eigen::MatrixXd> eval_hessian_g(
+            const Eigen::VectorXd&) override
+        {
+            return std::vector<Eigen::MatrixXd>();
+        }
+        OptimizationProblem* general_problem;
+        double epsilon;
+    };
+
+    class BarrierNewtonSolver : OptimizationSolver {
+    public:
+        BarrierNewtonSolver();
+        ~BarrierNewtonSolver() override;
+        OptimizationResults solve(OptimizationProblem& problem) override;
+
+        double barrier_epsilon;
+        double min_barrier_epsilon;
+        double absolute_tolerance;
+        double line_search_tolerance;
+        int max_iterations;
+    };
 
 } // namespace opt
 } // namespace ccd

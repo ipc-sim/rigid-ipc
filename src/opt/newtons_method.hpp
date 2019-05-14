@@ -32,8 +32,12 @@ namespace opt {
      * @return The results of the optimization including the minimizer, minimum,
      *         and if the optimization was successful.
      */
-    OptimizationResults newtons_method(const AdHocProblem& problem,
+    OptimizationResults newtons_method(OptimizationProblem& problem,
         const SolverSettings& settings, const double mu = 1e-5);
+
+    OptimizationResults newtons_method(OptimizationProblem& problem,
+        const double absolute_tolerance, const double line_search_tolerance,
+        const int max_iter, const double mu = 1e-5);
 
     /**
      * @brief Search along a search direction to find a scalar \f$\gamma \in [0,

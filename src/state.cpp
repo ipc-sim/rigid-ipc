@@ -243,6 +243,7 @@ void State::optimize_displacements(const std::string filename)
     } else {
         U0.setZero();
     }
+
     opt_results.x = U0;
 
     // 4. setup callback
@@ -269,25 +270,30 @@ void State::optimize_displacements(const std::string filename)
               it_gamma.push_back(gamma);
           };
 
-    // 5. run optimization
-    if (solver_settings.method == ccd::opt::NCP) {
-        opt_results = ncp_solver.solve(opt_problem);
-        opt_results.x.resize(U0.rows(), 2);
+    if(opt_problem.validate_problem()){
+        Eigen::MatrixXd x0 = U0;
+        x0.resize(U0.size(), 1);
+        opt_problem.x0 = x0;
 
-    } else if (solver_settings.method == ccd::opt::IPOPT) {
-        opt_results = ipopt_solver.solve(opt_problem);
-        opt_results.x.resize(U0.rows(), 2);
-    } else if (solver_settings.method == ccd::opt::NLOPT) {
-        opt_results = nlopt_solver.solve(opt_problem);
-        opt_results.x.resize(U0.rows(), 2);
-    } else if (solver_settings.method == ccd::opt::LINEARIZED_CONSTRAINTS) {
-        opt_results = linearized_constraint_solver.solve(opt_problem);
-        opt_results.x.resize(U0.rows(), 2);
-    } else {
-        opt_results = ccd::opt::displacement_optimization(
-            opt_problem, U0, solver_settings);
+        // 5. run optimization
+        if (solver_settings.method == ccd::opt::NCP) {
+            opt_results = ncp_solver.solve(opt_problem);
+            opt_results.x.resize(U0.rows(), 2);
+
+        } else if (solver_settings.method == ccd::opt::IPOPT) {
+            opt_results = ipopt_solver.solve(opt_problem);
+            opt_results.x.resize(U0.rows(), 2);
+        } else if (solver_settings.method == ccd::opt::NLOPT) {
+            opt_results = nlopt_solver.solve(opt_problem);
+            opt_results.x.resize(U0.rows(), 2);
+        } else if (solver_settings.method == ccd::opt::LINEARIZED_CONSTRAINTS) {
+            opt_results = linearized_constraint_solver.solve(opt_problem);
+            opt_results.x.resize(U0.rows(), 2);
+        } else {
+            opt_results = barrier_newton_solver.solve(opt_problem);
+            opt_results.x.resize(U0.rows(), 2);
+        }
     }
-
     if (solver_settings.verbosity > 0) {
         log_optimization_steps(filename, it_x, it_lambda, it_gamma);
     }

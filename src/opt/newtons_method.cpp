@@ -14,8 +14,16 @@ namespace ccd {
 namespace opt {
 
     // Performa Newton's Method to minimize the objective unconstrained.
-    OptimizationResults newtons_method(const AdHocProblem& problem,
+    OptimizationResults newtons_method(OptimizationProblem& problem,
         const SolverSettings& settings, const double mu)
+    {
+        return newtons_method(problem, settings.absolute_tolerance,
+            settings.line_search_tolerance, settings.max_iter, mu);
+    }
+
+    OptimizationResults newtons_method(OptimizationProblem& problem,
+        const double absolute_tolerance, const double line_search_tolerance,
+        const int max_iter, const double mu)
     {
         Eigen::VectorXd x = problem.x0;
 
@@ -28,16 +36,15 @@ namespace opt {
         }
 
         int i = 0;
-        Eigen::VectorXd g = problem.grad_f(x),
+        Eigen::VectorXd g = problem.eval_grad_f(x),
                         delta_x = Eigen::VectorXd::Zero(problem.num_vars),
                         g_free; // subset of g for free degrees of freedom
         igl::slice(g, free_dof, 1, g_free); // Initialize g_free
         Eigen::MatrixXd H, H_free;
         double gamma;
-        while (i++ <= settings.max_iter
-            && g_free.squaredNorm() > settings.absolute_tolerance) {
+        while (i++ <= max_iter && g_free.squaredNorm() > absolute_tolerance) {
             // Compute the full hessian
-            H = problem.hessian_f(x);
+            H = problem.eval_hessian_f(x);
             H.diagonal().array() += mu;
             // Remove rows and columns of fixed dof
             igl::slice(H, free_dof, free_dof, H_free);
@@ -47,25 +54,25 @@ namespace opt {
                 free_dof, 1, delta_x);
 
             // Perform a line search along delta x to stay in the feasible realm
-            if (!line_search(x, delta_x, problem.f, gamma,
-                    settings.line_search_tolerance)) {
+            if (!line_search(x, delta_x, problem.func_f(), gamma,
+                    line_search_tolerance)) {
                 break; // Newton step unsuccessful
             }
 
             x += gamma * delta_x; // Update x
 
-            g = problem.grad_f(x); // Recompute the gradient
+            g = problem.eval_grad_f(x); // Recompute the gradient
             // Remove rows of fixed dof
             igl::slice(g, free_dof, 1, g_free);
 
             // Save intermedtiate results
-            settings.intermediate_cb(
-                x, problem.f(x), Eigen::VectorXd::Zero(x.size()), 0, i);
+            //            settings.intermediate_cb(
+            //                x, problem.eval_f(x),
+            //                Eigen::VectorXd::Zero(x.size()), 0, i);
         }
 
-        return OptimizationResults(x, problem.f(x),
-            i >= settings.max_iter
-                || g.squaredNorm() <= settings.absolute_tolerance);
+        return OptimizationResults(x, problem.eval_f(x),
+            i >= max_iter || g.squaredNorm() <= absolute_tolerance);
     }
 
     // Search along a search direction to find a scalar gamma in [0, 1] such
@@ -74,9 +81,8 @@ namespace opt {
         const std::function<double(const Eigen::VectorXd&)>& f, double& gamma,
         const double min_gamma)
     {
-        return constrained_line_search(
-            x, dir, f, [](const Eigen::VectorXd&) { return true; }, gamma,
-            min_gamma);
+        return constrained_line_search(x, dir, f,
+            [](const Eigen::VectorXd&) { return true; }, gamma, min_gamma);
     }
 
     // Search along a search direction to find a scalar gamma in [0, 1] such

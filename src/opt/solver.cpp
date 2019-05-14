@@ -20,8 +20,6 @@ namespace opt {
         }
 
         switch (settings.method) {
-        case OptimizationMethod::LINEARIZED_CONSTRAINTS:
-            return solve_problem_with_linearized_constraints(problem, settings);
         case OptimizationMethod::BARRIER_NEWTON:
             return solve_problem_with_barrier_newton(problem, settings);
         default:
