@@ -27,8 +27,6 @@ void solver_menu(ccd::opt::BarrierNewtonSolver& solver)
 {
     ImGui::InputIntBounded(
         "max iter##barrier_solver", &solver.max_iterations, 0);
-    ImGui::InputDoubleBounded("eps##barrier_solver", &solver.barrier_epsilon,
-        0.0, 2e19, 0.0, 0.0, "%.3g");
     ImGui::InputDoubleBounded("min eps##barrier_solver",
         &solver.min_barrier_epsilon, 0.0, 2e19, 0.0, 0.0, "%.3g");
     ImGui::InputDoubleBounded("tol. abs##barrier_solver",

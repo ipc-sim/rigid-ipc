@@ -8,6 +8,7 @@
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
 #include <opt/optimization_solver.hpp>
+#include <opt/barrier_constraint.hpp>
 
 namespace ccd {
 namespace opt {
@@ -60,7 +61,8 @@ namespace opt {
         ~BarrierNewtonSolver() override;
         OptimizationResults solve(OptimizationProblem& problem) override;
 
-        double barrier_epsilon;
+        BarrierConstraint * barrier_constraint;
+
         double min_barrier_epsilon;
         double absolute_tolerance;
         double line_search_tolerance;

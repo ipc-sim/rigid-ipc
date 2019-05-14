@@ -35,6 +35,7 @@ State::State()
     , current_opt_time(0.0)
     , current_opt_iteration(-1)
 {
+    barrier_newton_solver.barrier_constraint = &barrier_constraint;
 }
 
 // -----------------------------------------------------------------------------

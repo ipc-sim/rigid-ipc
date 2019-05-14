@@ -133,7 +133,7 @@ namespace opt {
     }
 
     BarrierNewtonSolver::BarrierNewtonSolver()
-        : barrier_epsilon(0.0)
+        : barrier_constraint(nullptr)
         , min_barrier_epsilon(1e-8)
         , absolute_tolerance(1e-8)
         , line_search_tolerance(1e-8)
@@ -146,7 +146,9 @@ namespace opt {
     OptimizationResults BarrierNewtonSolver::solve(
         OptimizationProblem& general_problem)
     {
-        BarrierProblem barrier_problem(general_problem, barrier_epsilon);
+        assert(barrier_constraint != nullptr);
+
+        BarrierProblem barrier_problem(general_problem, barrier_constraint->barrier_epsilon);
 
         OptimizationResults results;
         do {
@@ -154,8 +156,11 @@ namespace opt {
                 line_search_tolerance, max_iterations);
             // Save the original problems objective
             results.minf = general_problem.eval_f(results.x);
+
             // Steepen the barrier
             barrier_problem.epsilon /= 2;
+            barrier_constraint->barrier_epsilon = barrier_problem.epsilon;
+
             // Start next iteration from the ending optimal position
             barrier_problem.x0 = results.x;
         } while (barrier_problem.epsilon > min_barrier_epsilon);
