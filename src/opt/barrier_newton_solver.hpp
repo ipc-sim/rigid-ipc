@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @brief Solve the optimization problem using Newton's Method with barriers for
  * the constraints.
@@ -5,21 +7,12 @@
 
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
-#include <opt/solver_settings.hpp>
+#include <opt/optimization_solver.hpp>
+#include <opt/barrier_constraint.hpp>
 
 namespace ccd {
 namespace opt {
 
-    /**
-     * @brief Perform Newton's Method with a barrier  to minimize a function
-     * f(x) + barrier(g(x)).
-     *
-     * @param[in] problem The optimization problem to solve.
-     * @param[in] settings The solver settings to use.
-     * @return The results of the optimization including x* and minf.
-     */
-    OptimizationResults solve_problem_with_barrier_newton(
-        const OptimizationProblem& problem, SolverSettings& settings);
 
     /**
      * @brief Apply the constraints of the general problem as a barrier added to
@@ -32,8 +25,49 @@ namespace opt {
      * @paramp[out] barrier_problem Problem to store the modified objective of
      *                              the general problem.
      */
-    void setup_barrier_problem(const OptimizationProblem& general_problem,
-        double& epsilon, OptimizationProblem& barrier_problem);
+
+    class BarrierProblem : public OptimizationProblem {
+    public:
+        BarrierProblem(OptimizationProblem& problem, double epsilon);
+        ~BarrierProblem() override;
+
+        Eigen::VectorXd barrier(const Eigen::VectorXd x);
+        Eigen::VectorXd barrier_gradient(const Eigen::VectorXd x);
+        Eigen::VectorXd barrier_hessian(const Eigen::VectorXd x);
+
+        double eval_f(const Eigen::VectorXd& x) override;
+        Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
+        Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& x) override;
+        Eigen::VectorXd eval_g(const Eigen::VectorXd&) override
+        {
+            return Eigen::VectorXd();
+        }
+        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd&) override
+        {
+            return Eigen::MatrixXd();
+        }
+        std::vector<Eigen::MatrixXd> eval_hessian_g(
+            const Eigen::VectorXd&) override
+        {
+            return std::vector<Eigen::MatrixXd>();
+        }
+        OptimizationProblem* general_problem;
+        double epsilon;
+    };
+
+    class BarrierNewtonSolver : public OptimizationSolver {
+    public:
+        BarrierNewtonSolver();
+        ~BarrierNewtonSolver() override;
+        OptimizationResults solve(OptimizationProblem& problem) override;
+
+        BarrierConstraint * barrier_constraint;
+
+        double min_barrier_epsilon;
+        double absolute_tolerance;
+        double line_search_tolerance;
+        int max_iterations;
+    };
 
 } // namespace opt
 } // namespace ccd

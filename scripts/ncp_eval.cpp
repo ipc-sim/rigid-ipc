@@ -4,8 +4,7 @@
 #include <iomanip> // std::setw
 #include <iostream>
 
-#include <fmt/format.h>
-#include <spdlog/spdlog.h>
+#include <logger.hpp>
 
 #include <autodiff/autodiff_types.hpp>
 #include <autodiff/finitediff.hpp>
@@ -222,15 +221,16 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::NcpUpdate update_type,
         break;
     }
 
-    auto f = [&A, &b](const Eigen::VectorXd& x) -> double {
+    AdHocProblem problem;
+    problem.f = [&A, &b](const Eigen::VectorXd& x) -> double {
         return (A * x - b).squaredNorm() / 2;
     };
 
-    auto grad_f = [&A, &b](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+    problem.grad_f = [&A, &b](const Eigen::VectorXd& x) -> Eigen::VectorXd {
         return (A * x - b);
     };
 
-    auto g = [&g_diff](const Eigen::VectorXd x) -> Eigen::VectorXd {
+    problem.g = [&g_diff](const Eigen::VectorXd x) -> Eigen::VectorXd {
         DVector gx = g_diff(x);
         Eigen::VectorXd g(gx.rows());
         for (int i = 0; i < gx.rows(); ++i) {
@@ -240,15 +240,15 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::NcpUpdate update_type,
         return g;
     };
 
-    auto jac_g
-        = [&g_diff, &g, &gx_case](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
+    problem.jac_g
+        = [&g_diff, &problem, &gx_case](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
         DVector gx = g_diff(x);
         Eigen::MatrixXd jac_gx(gx.rows(), NUM_VARS);
         for (int i = 0; i < gx.rows(); ++i) {
             jac_gx.row(i) = gx(i).getGradient();
         }
         Eigen::MatrixXd fd_jac_gx;
-        ccd::finite_jacobian(x, g, fd_jac_gx);
+        ccd::finite_jacobian(x, problem.g, fd_jac_gx);
         if (!ccd::compare_jacobian(jac_gx, fd_jac_gx)) {
 
             spdlog::warn("CASE {} CHECK_GRADIENT FAILED\n"
@@ -272,7 +272,7 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::NcpUpdate update_type,
 
     // make the call
     Eigen::VectorXd x(NUM_VARS), alpha(NUM_CONSTRAINTS);
-    bool success = solve_ncp(A, b, g, jac_g, /*max_iter=*/300, callback,
+    bool success = solve_ncp(A, b, problem, /*max_iter=*/300, callback,
         update_type, lcp_solver, x, alpha, check_convergence,
         /*check_convergence_unfeasible=*/false);
 
@@ -289,9 +289,9 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::NcpUpdate update_type,
         o << it_x[i].format(CommaFmt) << ",";
         o << it_alpha[i].format(CommaFmt) << ",";
         o << it_gamma[i] << ",";
-        o << f(it_x[i]) << ",";
-        o << g(it_x[i]).format(CommaFmt) << ",";
-        o << jac_g(it_x[i]).format(CommaFmt) << std::endl;
+        o << problem.f(it_x[i]) << ",";
+        o << problem.g(it_x[i]).format(CommaFmt) << ",";
+        o << problem.jac_g(it_x[i]).format(CommaFmt) << std::endl;
     }
     // expected
     o << "expected"
@@ -301,15 +301,15 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::NcpUpdate update_type,
       << ",";
     o << "0.0"
       << ",";
-    o << f(expected) << ",";
-    o << g(expected).format(CommaFmt) << ",";
-    o << jac_g(expected).format(CommaFmt) << std::endl;
+    o << problem.f(expected) << ",";
+    o << problem.g(expected).format(CommaFmt) << ",";
+    o << problem.jac_g(expected).format(CommaFmt) << std::endl;
 
     // --- Log
-    auto fx_is_optimal = std::abs(f(x) - f(expected)) < 1E-16;
+    auto fx_is_optimal = std::abs(problem.f(x) - problem.f(expected)) < 1E-16;
 
-    auto fx = f(x);
-    auto fe = f(expected);
+    auto fx = problem.f(x);
+    auto fe = problem.f(expected);
     std::stringstream ssx;
     ssx << std::setprecision(10) << x.format(CommaFmt);
 
@@ -317,8 +317,8 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::NcpUpdate update_type,
     // (1) grad f = grad g.T \alpha
     // (2) g(x) >= 0
     // (3) \alpha.T g(x) == 0
-    Eigen::VectorXd kkt_grad = grad_f(x) - jac_g(x).transpose() * alpha;
-    double kkt_lcp = alpha.transpose() * g(x);
+    Eigen::VectorXd kkt_grad = problem.grad_f(x) - problem.jac_g(x).transpose() * alpha;
+    double kkt_lcp = alpha.transpose() * problem.g(x);
 
     spdlog::info("CASE={} UPDATE_TYPE={} LCP_SOLVER={} \n"
                  "\tnum_it:{}\n"
@@ -336,7 +336,7 @@ void eval_ncp(const GxCases gx_case, const ccd::opt::NcpUpdate update_type,
         NcpUpdateNames[static_cast<int>(update_type)],
         LCPSolverNames[lcp_solver], it_x.size(), fmt_bool(success),
         fmt_bool(fx_is_optimal), fmt_eigen(x), fmt_eigen(expected), fx, fe,
-        fmt_eigen(g(x)), fmt_eigen(g(expected)), fmt_eigen(kkt_grad), kkt_lcp);
+        fmt_eigen(problem.g(x)), fmt_eigen(problem.g(expected)), fmt_eigen(kkt_grad), kkt_lcp);
 }
 
 int main(int argc, char* argv[])

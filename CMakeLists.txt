@@ -55,15 +55,17 @@ set(SRCFILES
     src/opt/newtons_method.cpp
     src/opt/optimization_problem.cpp
     src/opt/optimization_results.cpp
-    src/opt/solver_settings.cpp
+    src/opt/optimization_solver.cpp
     src/opt/displacement_opt.cpp
-    src/opt/solver.cpp
     src/opt/nlopt_solver.cpp
-    src/opt/linearized_constraint_solver.cpp
+    src/opt/qp_solver.cpp
     src/opt/ipopt_solver.cpp
     src/opt/ncp_solver.cpp
     src/opt/lcp_solver.cpp
     src/opt/barrier_newton_solver.cpp
+    src/opt/collision_constraint.cpp
+    src/opt/volume_constraint.cpp
+    src/opt/barrier_constraint.cpp
 
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp
@@ -106,6 +108,9 @@ set(VIEWER_FILES
     src/viewer/viewer_crud.cpp
     src/viewer/viewer_draw.cpp
     src/viewer/viewer_menu.cpp
+    src/viewer/imgui_ext.cpp
+    src/viewer/solver_view.cpp
+    src/viewer/constraint_view.cpp
 
     src/main.cpp
     )

@@ -3,10 +3,12 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+#include "IpIpoptApplication.hpp"
 #include <IpTNLP.hpp>
 
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
+#include <opt/optimization_solver.hpp>
 
 namespace ccd {
 /**
@@ -43,8 +45,22 @@ namespace opt {
         SolverReturn status;
     };
 
+    class IpoptSolver : public OptimizationSolver {
+    public:
+        IpoptSolver();
+        IpoptSolver(double tolerance, int print_level, int max_iterations);
+        OptimizationResults solve(OptimizationProblem& problem) override;
 
-    OptimizationResults minimize_ipopt(const OptimizationProblem& problem, const SolverSettings& settings);
+        void initialize();
+        SmartPtr<IpoptApplication> app;
+
+        // Exposed Ipopt Settings
+        // -----------------------
+        double tolerance;
+        int print_level;
+        int max_iterations;
+    };
+
 
     /**
      * @brief Class for interfacing IPOPT TNLP problem
@@ -53,11 +69,10 @@ namespace opt {
     class EigenInterfaceTNLP : public TNLP {
 
     public:
-        EigenInterfaceTNLP(const OptimizationProblem& problem, const SolverSettings& settings);
+        EigenInterfaceTNLP(OptimizationProblem& problem);
 
-        SolverSettings settings;
         OptimizationResults result;
-        OptimizationProblem problem;
+        OptimizationProblem * problem;
 
         /**
          * n: (out) the number of variables in the problem (dimension of
