@@ -10,8 +10,7 @@ namespace opt {
 
     NCPSolver::NCPSolver(const Eigen::SparseMatrix<double>& A,
         const Eigen::VectorXd& b,
-        const std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>& g,
-        const std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>& jac_g,
+        OptimizationProblem& problem,
         const int max_iter, const callback_intermediate_ncp& callback,
         const NcpUpdate update_type, const LCPSolver lcp_solver,
         Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i,
@@ -25,8 +24,7 @@ namespace opt {
         , max_iter(max_iter)
         , A(A)
         , b(b)
-        , g(g)
-        , jac_g(jac_g)
+        , problem(problem)
         , callback(callback)
         , xi(xi)
         , alpha_i(alpha_i)
@@ -46,8 +44,8 @@ namespace opt {
 
         // Solve assumming constraints are not violated
         xi = Ainv(b);
-        g_xi = g(xi);
-        jac_g_xi = jac_g(xi);
+        g_xi = problem.eval_g(xi);
+        jac_g_xi = problem.eval_jac_g(xi);
 
         alpha_i.resize(uint(g_xi.rows()));
         alpha_i.setZero();
@@ -115,7 +113,7 @@ namespace opt {
         double gamma_prev = gamma;
         for (int j = 0; j < 32; j++) {
             x_next = xi + delta_x * gamma;
-            g_xi = g(x_next);
+            g_xi = problem.eval_g(x_next);
 //            if (j == 0) {
 //                std::cout << fmt::format(" gxi_0={}\n", g_xi.sum() > 0);
 //            }
@@ -128,7 +126,7 @@ namespace opt {
 
         // check if point satisfy equality constraint, then
         // find the point that should have also satisfied g(x)>0
-        jac_g_xi = jac_g(x_next);
+        jac_g_xi = problem.eval_jac_g(x_next);
         // TODO: we need to be able to test this when recomputing the
         // collision set
         //                eq = A * x_next - (b + jac_g_xi.transpose() *
@@ -145,8 +143,8 @@ namespace opt {
     void NCPSolver::update_candidate(Eigen::VectorXd& delta_x, double& gamma)
     {
         xi = xi + delta_x * gamma;
-        g_xi = g(xi);
-        jac_g_xi = jac_g(xi);
+        g_xi = problem.eval_g(xi);
+        jac_g_xi = problem.eval_jac_g(xi);
 
         callback(xi, alpha_i, gamma);
     }
@@ -166,7 +164,7 @@ namespace opt {
             solve_lcp(delta_x);
 
             // 2.2 Do line-search on delta to ensure volume is increased (-->0)
-            auto eval_g = [&](const Eigen::VectorXd& y) { return -g(y).sum(); };
+            auto eval_g = [&](const Eigen::VectorXd& y) { return -problem.eval_g(y).sum(); };
             double gamma = 1.0;
             if (!line_search(xi, delta_x, eval_g, gamma)) {
                 // ?????
@@ -183,15 +181,14 @@ namespace opt {
 
     bool solve_ncp(const Eigen::SparseMatrix<double>& A,
         const Eigen::VectorXd& b,
-        const std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>& g,
-        const std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>& jac_g,
+        OptimizationProblem& problem,
         const int max_iter, const callback_intermediate_ncp& callback,
         const NcpUpdate update_type, const LCPSolver lcp_solver,
         Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i,
         const bool check_convergence, const bool check_convergence_unfeasible,
         const double convergence_tolerance)
     {
-        auto solver = std::make_unique<NCPSolver>(A, b, g, jac_g, max_iter,
+        auto solver = std::make_unique<NCPSolver>(A, b, problem, max_iter,
             callback, update_type, lcp_solver, xi, alpha_i, check_convergence,
             check_convergence_unfeasible, convergence_tolerance);
         return solver->compute();

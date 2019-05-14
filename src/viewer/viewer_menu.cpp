@@ -1,9 +1,10 @@
 ﻿#include "viewer.hpp"
 
-#include <viewer/imgui_ext.hpp>
 #include <logger.hpp>
-#include <viewer/ncp_solver_view.hpp>
+#include <viewer/constraint_view.hpp>
+#include <viewer/imgui_ext.hpp>
 #include <viewer/ipopt_solver_view.hpp>
+#include <viewer/ncp_solver_view.hpp>
 
 namespace ccd {
 
@@ -256,7 +257,7 @@ void ViewerMenu::draw_edit_modes()
     // Menu for fixing vertex positions
     if (state.selected_points.size() > 0
         && ImGui::CollapsingHeader(
-            "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
+               "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Initial button state is all(fixed_dof(selected_points))
         bool x_fixed_originally = true, y_fixed_originally = true;
         for (int point : state.selected_points) {
@@ -309,14 +310,11 @@ void ViewerMenu::draw_ccd_steps()
             compute_collisions();
         }
 
-        if (state.ee_impacts.size()) {
-            if (ImGui::InputInt("volume##volume", &state.current_volume)) {
-                redraw_grad_volume(/*opt_gradient=*/false);
-            }
-            ImGui::Checkbox("skip empty", &state.skip_no_impact_edge);
-            ImGui::Text(
-                "||jac_j(i)|| = \t%.3g", state.get_volume_grad().norm());
+        if (ImGui::InputInt("volume##volume", &state.current_volume)) {
+            redraw_grad_volume(/*opt_gradient=*/false);
         }
+        ImGui::Checkbox("skip empty", &state.skip_no_impact_edge);
+        ImGui::Text("||jac_j(i)|| = \t%.3g", state.get_volume_grad().norm());
     }
 } // namespace ccd
 
@@ -328,12 +326,21 @@ void ViewerMenu::draw_optimization()
     using namespace opt;
     int idx_optimization_method = state.solver_settings.method;
     int idx_qp_solver = state.solver_settings.qp_solver;
+    int idx_ctr_type = static_cast<int>(state.constraint_function);
 
     if (ImGui::CollapsingHeader(
             "Displacement Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-        ImGui::Checkbox(
-            "use alt formulation##opt", &(state.use_alternative_formulation));
+        if (ImGui::Combo("Constraint##opt", &idx_ctr_type, ccd::ConstraintNames,
+                CCD_IM_ARRAYSIZE(ccd::ConstraintNames))) {
+            state.constraint_function
+                = static_cast<ccd::ConstraintType>(idx_ctr_type);
+        }
+        if (state.constraint_function == ccd::ConstraintType::VOLUME) {
+            volume_constraint_menu(state.volume_constraint);
+        } else {
+            barrier_constraint_menu(state.barrier_constraint);
+        }
 
         if (ImGui::Combo("method##opt", &idx_optimization_method,
                 ccd::opt::OptimizationMethodNames,
@@ -446,8 +453,8 @@ void ViewerMenu::draw_optimization_results()
         }
         ImGui::PopItemWidth();
         if (state.u_history.size() > 0
-            && ImGui::InputInt(
-                "step##opt-results", &(state.current_opt_iteration), 1, 10)) {
+            && ImGui::InputInt("step##opt-results",
+                   &(state.current_opt_iteration), 1, 10)) {
 
             redraw_opt_displacements();
             redraw_grad_volume(/*opt_gradient=*/true);

@@ -16,6 +16,7 @@ TEST_CASE("NCP Displacements", "[opt][NCP][NCP-Displacements]")
     ccd::State state;
 
     state.solver_settings.method = ccd::opt::NCP;
+    state.constraint_function = ccd::ConstraintType::VOLUME;
     state.ncp_displ_solver.max_iterations= 200;
     state.ncp_displ_solver.convegence_tolerance  = 1E-8;
     state.volume_epsilon = 1E-8;

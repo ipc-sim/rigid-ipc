@@ -67,7 +67,7 @@ namespace opt {
         OptimizationResults results;
         results.x = Eigen::Map<Eigen::VectorXd>(x0.data(), problem.num_vars);
         results.minf = minf;
-        Eigen::ArrayXd gx = problem.g(results.x).array();
+        Eigen::ArrayXd gx = problem.eval_g(results.x).array();
         results.success = r > 0 && minf >= 0
             && problem.are_constraints_satisfied(
                 results.x, settings.absolute_tolerance);
@@ -79,7 +79,7 @@ namespace opt {
         const std::vector<double>& x, std::vector<double>& grad, void* data)
     {
         assert(data); // Need the problem to compute anything.
-        OptimizationProblem* problem = static_cast<OptimizationProblem*>(data);
+        AdHocProblem* problem = static_cast<AdHocProblem*>(data);
 
         // Map the input to an Eigen Vector
         const Eigen::VectorXd X
@@ -108,7 +108,7 @@ namespace opt {
         const double* x, double* grad, void* data)
     {
         assert(data); // Need data to compute volumes
-        OptimizationProblem* problem = static_cast<OptimizationProblem*>(data);
+        AdHocProblem* problem = static_cast<AdHocProblem*>(data);
 
         // Map the input to an Eigen Vector
         const Eigen::MatrixXd X = Eigen::Map<const Eigen::VectorXd>(x, n);

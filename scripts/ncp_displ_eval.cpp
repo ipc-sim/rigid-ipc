@@ -40,13 +40,13 @@ void inner_loop(const std::string scene_name, const std::string out_dir,
             //                    spdlog::info("case {}", filename);
             state.optimize_displacements(out_dir + filename + ".csv");
 
-            double fe = state.opt_problem.f(e);
-            double ge_sum = state.opt_problem.g(e).sum();
+            double fe = state.opt_problem.eval_f(e);
+            double ge_sum = state.opt_problem.eval_g(e).sum();
             Eigen::MatrixXd u_ = state.opt_results.x;
             u_.resize(u_.size(), 1);
 
-            double fx = state.opt_problem.f(u_);
-            double gx_sum = state.opt_problem.g(u_).sum();
+            double fx = state.opt_problem.eval_f(u_);
+            double gx_sum = state.opt_problem.eval_g(u_).sum();
 
             o << row_prefix << ",";
             o << fx << ",";

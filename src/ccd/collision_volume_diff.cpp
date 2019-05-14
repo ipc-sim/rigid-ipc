@@ -82,6 +82,7 @@ namespace autodiff {
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         std::vector<Eigen::MatrixXd>& volume_hessian)
     {
+        // TODO: this should be dense too
         compute_constraints_hessian(V, U, E, ee_impacts, edge_impact_map,
             epsilon, collision_volume<DScalar>, volume_hessian);
     }

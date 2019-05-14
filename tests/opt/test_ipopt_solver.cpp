@@ -70,7 +70,7 @@ TEST_CASE("IPOPT_hello_world", "[opt][Ipopt][Ipopt-Interface]")
     expected[2] = 3.821149978948624959;
     expected[3] = 1.379408293215359738;
 
-    OptimizationProblem problem;
+    AdHocProblem problem;
     problem.num_vars = int(x0.rows());
     problem.x0 = x0;
     problem.f = f;
@@ -150,7 +150,7 @@ TEST_CASE("IPOPT_quadratic_linear_cnstr", "[opt][Ipopt][Ipopt-Interface]")
     expected[0] = 1.4;
     expected[1] = 1.7;
 
-    OptimizationProblem problem;
+    AdHocProblem problem;
     problem.num_vars = int(x0.rows());
     problem.x0 = x0;
     problem.f = f;
@@ -221,7 +221,7 @@ TEST_CASE("IPOPT_quadratic_no_cnstr", "[opt][Ipopt][Ipopt-Interface]")
     expected[0] = 0.0;
     expected[1] = 0.0;
 
-    OptimizationProblem problem;
+    AdHocProblem problem;
     problem.num_vars = int(x0.rows());
     problem.x0 = x0;
     problem.f = f;

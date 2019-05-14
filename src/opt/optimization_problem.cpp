@@ -4,9 +4,26 @@
 namespace ccd {
 namespace opt {
 
-    OptProblem::~OptProblem() {}
+    OptimizationProblem::~OptimizationProblem() {}
+    callback_f OptimizationProblem::func_f()
+    {
+        callback_f f = [&](const Eigen::VectorXd& x) { return eval_f(x); };
+        return f;
+    }
 
-    bool OptProblem::validate_problem()
+    callback_grad_f OptimizationProblem::func_grad_f()
+    {
+        callback_grad_f f = [&](const Eigen::VectorXd& x) { return eval_grad_f(x); };
+        return f;
+    }
+
+    callback_grad_f OptimizationProblem::func_g()
+    {
+        callback_grad_f f = [&](const Eigen::VectorXd& x) { return eval_g(x); };
+        return f;
+    }
+
+    bool OptimizationProblem::validate_problem()
     {
         bool valid = true;
         valid &= num_vars == x0.rows();
@@ -39,7 +56,7 @@ namespace opt {
     }
 
     // Check if all constraints are satisfied at a location.
-    bool OptProblem::are_constraints_satisfied(
+    bool OptimizationProblem::are_constraints_satisfied(
         const Eigen::VectorXd& x, const double tol)
     {
         Eigen::ArrayXd gx = eval_g(x).array();
@@ -52,8 +69,7 @@ namespace opt {
             && (x.array() <= this->x_upper.array() + 10 * tol).all();
     }
 
-
-    OptimizationProblem::OptimizationProblem()
+    AdHocProblem::AdHocProblem()
     {
 
         this->f = [](const Eigen::VectorXd&) -> double {
@@ -80,38 +96,38 @@ namespace opt {
                                       "function not implemented!");
         };
     }
-    double OptimizationProblem::eval_f(const Eigen::VectorXd& x)
+    double AdHocProblem::eval_f(const Eigen::VectorXd& x)
     {
         return f(x);
     }
-    Eigen::VectorXd OptimizationProblem::eval_grad_f(const Eigen::VectorXd& x)
+    Eigen::VectorXd AdHocProblem::eval_grad_f(const Eigen::VectorXd& x)
     {
         return grad_f(x);
     }
-    Eigen::MatrixXd OptimizationProblem::eval_hessian_f(
+    Eigen::MatrixXd AdHocProblem::eval_hessian_f(
         const Eigen::VectorXd& x)
     {
         return hessian_f(x);
     }
 
-    Eigen::VectorXd OptimizationProblem::eval_g(const Eigen::VectorXd& x)
+    Eigen::VectorXd AdHocProblem::eval_g(const Eigen::VectorXd& x)
     {
         return g(x);
     };
 
-    Eigen::MatrixXd OptimizationProblem::eval_jac_g(const Eigen::VectorXd& x)
+    Eigen::MatrixXd AdHocProblem::eval_jac_g(const Eigen::VectorXd& x)
     {
         return jac_g(x);
     };
 
-    std::vector<Eigen::MatrixXd> OptimizationProblem::eval_hessian_g(
+    std::vector<Eigen::MatrixXd> AdHocProblem::eval_hessian_g(
         const Eigen::VectorXd& x)
     {
         return hessian_g(x);
     };
 
-    OptimizationProblem::OptimizationProblem(int num_vars, int num_constraints)
-        : OptimizationProblem()
+    AdHocProblem::AdHocProblem(int num_vars, int num_constraints)
+        : AdHocProblem()
     {
         this->num_vars = num_vars;
         this->num_constraints = num_constraints;
@@ -134,7 +150,6 @@ namespace opt {
         this->fixed_dof.resize(this->num_vars);
         this->fixed_dof.setConstant(false); // no-upper-bound
     }
-
 
 } // namespace opt
 } // namespace ccd

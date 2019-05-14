@@ -7,11 +7,18 @@
 #include <ccd/impact.hpp>
 #include <ccd/prune_impacts.hpp>
 
-#include <opt/solver.hpp>
-#include <opt/displacement_opt.hpp>
 #include <opt/ipopt_solver.hpp>
+#include <opt/solver.hpp>
+
+#include <opt/barrier_constraint.hpp>
+#include <opt/displacement_opt.hpp>
+#include <opt/volume_constraint.hpp>
+#include <opt/collision_constraint.hpp>
 
 namespace ccd {
+
+enum class ConstraintType { VOLUME, BARRIER };
+static const char* ConstraintNames[2] = { "VOLUME", "BARRIER" };
 
 /**
  * @brief The State class keeps the full state of the UI and the collisions.
@@ -60,7 +67,7 @@ public:
     // Optimization Fields
 
     /// @brief Optimization problem to solve
-    opt::OptimizationProblem opt_problem;
+//    opt::OptimizationProblem opt_problem;
 
     /// @brief #V,2 optimized vertices displacements
     opt::OptimizationResults opt_results;
@@ -71,6 +78,12 @@ public:
     opt::NCPDisplacementOptimization ncp_displ_solver;
     opt::IpoptSolver ipopt_solver;
 
+    opt::VolumeConstraint volume_constraint;
+    opt::BarrierConstraint barrier_constraint;
+    ConstraintType constraint_function;
+
+    opt::ParticlesDisplProblem opt_problem;
+
     /// @brief if True, reuse the current opt_displacements for initial
     /// optimization
     bool reuse_opt_displacements = false;
@@ -78,9 +91,6 @@ public:
     /// @brief if True, recompute collision set on each evaluation of the
     /// collision volume and gradient
     bool recompute_collision_set = false;
-
-    /// @breif Use the alternate penalty definition of volume with a barrier
-    bool use_alternative_formulation = false;
 
     ///@brief Optimization step history for displacements
     std::vector<Eigen::MatrixX2d> u_history;
@@ -118,19 +128,12 @@ public:
     // ----------------------------------------------------------------------
     void reset_impacts();
     void run_ccd_pipeline();
-    void detect_collisions(const Eigen::MatrixXd& U);
-    Eigen::VectorXd compute_collision_volume(
-        const Eigen::MatrixXd& Uk, const bool recompute_collision_set);
-    Eigen::MatrixXd compute_collision_jac_volume(
-        const Eigen::MatrixXd& Uk, const bool recompute_collision_set);
-    std::vector<Eigen::MatrixXd> compute_collision_hessian_volume(
-        const Eigen::MatrixXd& Uk, const bool recompute_collision_set);
 
     ////////////////////////////////////////////////////////////////////////////
     // SCENE OPT
     // ----------------------------------------------------------------------
+    opt::CollisionConstraint& getCollisionConstraint();
     void reset_optimization_problem();
-    void reset_barrier_epsilon();
     void optimize_displacements(const std::string filename = "");
 
     void load_optimization(const std::string filename);
@@ -189,6 +192,7 @@ public:
 
     ///@brief we show the values of this iteration
     int current_opt_iteration;
+    void reset_results();
 };
 
 } // namespace ccd

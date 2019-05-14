@@ -49,6 +49,103 @@ namespace opt {
         return result;
     } // namespace opt
 
+    ParticlesDisplProblem::ParticlesDisplProblem()
+        : constraint(nullptr)
+    {
+    }
+
+    ParticlesDisplProblem::~ParticlesDisplProblem() {}
+
+    void ParticlesDisplProblem::initialize(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2i& E, const Eigen::MatrixX2d& U,
+        CollisionConstraint& cstr)
+    {
+        vertices = V;
+        edges = E;
+        displacements = U;
+
+        constraint = &cstr;
+        constraint->initialize(V, E, U);
+        initProblem();
+    }
+
+    void ParticlesDisplProblem::initProblem()
+    {
+        u_ = displacements;
+        u_.resize(displacements.size(), 1);
+
+        num_vars = int(u_.size());
+        x0.resize(num_vars);
+        x_lower.resize(num_vars);
+        x_upper.resize(num_vars);
+        x_lower.setConstant(NO_LOWER_BOUND);
+        x_upper.setConstant(NO_UPPER_BOUND);
+
+        // TODO: this is wrong, it will depend on constraint type
+        num_constraints = int(edges.rows());
+        g_lower.resize(num_constraints);
+        g_upper.resize(num_constraints);
+        g_lower.setConstant(0.0);
+        g_upper.setConstant(NO_UPPER_BOUND);
+    }
+
+    double ParticlesDisplProblem::eval_f(const Eigen::VectorXd& x)
+    {
+        return (x - u_).squaredNorm() / 2.0;
+    }
+
+    Eigen::VectorXd ParticlesDisplProblem::eval_grad_f(const Eigen::VectorXd& x)
+    {
+        return (x - u_);
+    }
+
+    Eigen::MatrixXd ParticlesDisplProblem::eval_hessian_f(
+        const Eigen::VectorXd& x)
+    {
+        return Eigen::MatrixXd::Identity(x.size(), x.size());
+    }
+
+    Eigen::VectorXd ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        Eigen::VectorXd gx;
+        if (constraint->recompute_collision_set) {
+            constraint->detecteCollisions(vertices, edges, Uk);
+        }
+        constraint->compute_constraints(vertices, edges, Uk, gx);
+        return gx;
+    };
+
+    Eigen::MatrixXd ParticlesDisplProblem::eval_jac_g(const Eigen::VectorXd& x)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        Eigen::MatrixXd jac_gx;
+        if (constraint->recompute_collision_set) {
+            constraint->detecteCollisions(vertices, edges, Uk);
+        }
+        constraint->compute_constraints_jacobian(vertices, edges, Uk, jac_gx);
+
+        return jac_gx;
+    };
+
+    std::vector<Eigen::MatrixXd> ParticlesDisplProblem::eval_hessian_g(
+        const Eigen::VectorXd& x)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        std::vector<Eigen::MatrixXd> hess_gx;
+        if (constraint->recompute_collision_set) {
+            constraint->detecteCollisions(vertices, edges, Uk);
+        }
+        constraint->compute_constraints_hessian(vertices, edges, Uk, hess_gx);
+        return hess_gx;
+    };
+
     NCPDisplacementOptimization::NCPDisplacementOptimization()
         : max_iterations(100)
         , update_method(NcpUpdate::LINEARIZED)
@@ -59,8 +156,7 @@ namespace opt {
     {
     }
 
-    OptimizationResults NCPDisplacementOptimization::solve(
-        OptimizationProblem& problem)
+    OptimizationResults NCPDisplacementOptimization::solve(OptimizationProblem& problem)
     {
         // Solves the KKT conditions of the Optimization Problem
         //  (U - Uk) = \nabla g(U)
@@ -71,7 +167,7 @@ namespace opt {
 
         Eigen::VectorXd b, x_opt, lambda_opt;
         // obtain Uk from grad_f using x=0
-        b = -problem.grad_f(Eigen::VectorXd::Zero(num_vars));
+        b = -problem.eval_grad_f(Eigen::VectorXd::Zero(num_vars));
 
         int num_it = 0;
         callback_intermediate_ncp callback
@@ -82,12 +178,11 @@ namespace opt {
                   num_it += 1;
               };
         OptimizationResults result;
-        result.success
-            = solve_ncp(A, b, problem.g, problem.jac_g, max_iterations,
-                callback, update_method, lcp_solver, x_opt, lambda_opt,
-                keep_in_unfeasible, check_convergence, convegence_tolerance);
+        result.success = solve_ncp(A, b, problem, max_iterations, callback,
+            update_method, lcp_solver, x_opt, lambda_opt, keep_in_unfeasible,
+            check_convergence, convegence_tolerance);
         result.x = x_opt;
-        result.minf = problem.f(x_opt);
+        result.minf = problem.eval_f(x_opt);
 
         return result;
     }

@@ -3,26 +3,29 @@
 #include <Eigen/Core>
 
 #include <ccd/collision_detection.hpp>
+#include <opt/collision_constraint.hpp>
 
 namespace ccd {
 
 namespace opt {
 
-    class VolumeConstraint {
+    class VolumeConstraint : public CollisionConstraint {
     public:
         VolumeConstraint();
-        void compute_constraints(const Eigen::MatrixX2d vertices,
-            const Eigen::MatrixX2i edges, const Eigen::MatrixXd& Uk,
-            const EdgeEdgeImpacts& ee_impacts, Eigen::VectorXd& volumes);
+        void initialize(const Eigen::MatrixX2d& vertices,
+            const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk) override;
 
-        void compute_constraints_jacobian(const Eigen::MatrixX2d vertices,
-            const Eigen::MatrixX2i edges, const Eigen::MatrixXd& Uk,
-            const EdgeEdgeImpacts& ee_impacts, Eigen::MatrixXd& volumes_jac);
+        void compute_constraints(const Eigen::MatrixX2d& vertices,
+            const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk,
+            Eigen::VectorXd& volumes) override;
 
-        void compute_constraints_hessian(const Eigen::MatrixX2d vertices,
-            const Eigen::MatrixX2i edges, const Eigen::MatrixXd& Uk,
-            const EdgeEdgeImpacts& ee_impacts,
-            std::vector<Eigen::MatrixXd>& volumes_hessian);
+        void compute_constraints_jacobian(const Eigen::MatrixX2d& vertices,
+            const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk,
+            Eigen::MatrixXd& volumes_jac) override;
+
+        void compute_constraints_hessian(const Eigen::MatrixX2d& vertices,
+            const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk,
+            std::vector<Eigen::MatrixXd>& volumes_hessian) override;
 
         // Settings
         // ----------

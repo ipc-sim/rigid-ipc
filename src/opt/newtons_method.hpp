@@ -32,7 +32,7 @@ namespace opt {
      * @return The results of the optimization including the minimizer, minimum,
      *         and if the optimization was successful.
      */
-    OptimizationResults newtons_method(const OptimizationProblem& problem,
+    OptimizationResults newtons_method(const AdHocProblem& problem,
         const SolverSettings& settings, const double mu = 1e-5);
 
     /**

@@ -74,7 +74,7 @@ namespace opt {
 
     // Optimize the displacments using linearized constraints
     OptimizationResults solve_problem_with_linearized_constraints(
-        const OptimizationProblem& problem, const SolverSettings& settings)
+        OptimizationProblem& problem, const SolverSettings& settings)
     {
         // Quadratic Energy
         // 1/2 * || U - U0 ||^2 = (U - U0)^T * (U - U0) =
@@ -106,11 +106,11 @@ namespace opt {
         // ℓ - g(x0) + ∇g(x0) * x0 ≤ ∇g(x0) * x ≤ u
         // Linear constraint matrix
         // A = ∇g(x0) ∈ R^(m × n)
-        Eigen::SparseMatrix<double> A = problem.jac_g(problem.x0).sparseView();
+        Eigen::SparseMatrix<double> A = problem.eval_jac_g(problem.x0).sparseView();
         // Linear constraint lower bounds
         // (ℓ - g(x0) + ∇g(x0) * x0) ∈ R^m
         Eigen::VectorXd l
-            = problem.g_lower - problem.g(problem.x0) + A * problem.x0;
+            = problem.g_lower - problem.eval_g(problem.x0) + A * problem.x0;
         // Linear constraint upper bounds
         // u ∈ R^m
         Eigen::VectorXd u = problem.g_upper;
@@ -141,7 +141,7 @@ namespace opt {
         }
 
         // Compute objective at x
-        results.minf = problem.f(results.x);
+        results.minf = problem.eval_f(results.x);
 
         // Check the solve was successful
         auto lhs = (A * results.x).array();

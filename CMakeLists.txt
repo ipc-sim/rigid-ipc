@@ -64,6 +64,7 @@ set(SRCFILES
     src/opt/ncp_solver.cpp
     src/opt/lcp_solver.cpp
     src/opt/barrier_newton_solver.cpp
+    src/opt/collision_constraint.cpp
     src/opt/volume_constraint.cpp
     src/opt/barrier_constraint.cpp
 
@@ -111,6 +112,7 @@ set(VIEWER_FILES
     src/viewer/imgui_ext.cpp
     src/viewer/ncp_solver_view.cpp
     src/viewer/ipopt_solver_view.cpp
+    src/viewer/constraint_view.cpp
 
     src/main.cpp
     )

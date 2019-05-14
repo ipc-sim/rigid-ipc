@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <functional>
 #include <vector>
 
 namespace ccd {
@@ -37,9 +38,9 @@ namespace opt {
      *              x_L ≤  x   ≤ x_U
      */
 
-    class OptProblem {
+    class OptimizationProblem {
     public:
-        virtual ~OptProblem();
+        virtual ~OptimizationProblem();
 
         virtual double eval_f(const Eigen::VectorXd& x) = 0;
         virtual Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) = 0;
@@ -49,6 +50,10 @@ namespace opt {
         virtual std::vector<Eigen::MatrixXd> eval_hessian_g(
             const Eigen::VectorXd& x)
             = 0;
+
+        callback_f func_f();
+        callback_grad_f func_grad_f();
+        callback_g func_g();
 
         /// @brief Check that the problem is valid and initalized
         bool validate_problem();
@@ -69,8 +74,7 @@ namespace opt {
         Eigen::VectorXd g_upper; ///< @brief Upper bound of the constraint
     };
 
-
-    class OptimizationProblem : public OptProblem {
+    class AdHocProblem : public OptimizationProblem {
     public:
         callback_f f;           ///< @brief Objective function
         callback_grad_f grad_f; ///< @brief Gradient of the objective function
@@ -82,7 +86,7 @@ namespace opt {
             hessian_g; ///< @brief Hessian of the constraint function
 
         /// @brief Default constructor
-        OptimizationProblem();
+        AdHocProblem();
 
         double eval_f(const Eigen::VectorXd& x) override;
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
@@ -93,13 +97,7 @@ namespace opt {
             const Eigen::VectorXd& x) override;
 
         /// @brief Resize fields accordingly
-        OptimizationProblem(int num_vars, int num_constraints);
-
-//        /// @brief Check that the problem is valid and initalized
-//        bool validate_problem();
-//        /// @brief Check if all constraints are satisfied at a location.
-//        bool are_constraints_satisfied(
-//            const Eigen::VectorXd& x, const double tol) const;
+        AdHocProblem(int num_vars, int num_constraints);
     };
 
 } // namespace opt

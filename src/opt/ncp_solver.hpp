@@ -4,6 +4,7 @@
 #include <Eigen/Sparse>
 
 #include <opt/lcp_solver.hpp>
+#include <opt/optimization_problem.hpp>
 
 namespace ccd {
 namespace opt {
@@ -30,9 +31,7 @@ namespace opt {
     public:
         NCPSolver(const Eigen::SparseMatrix<double>& A,
             const Eigen::VectorXd& b,
-            const std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>& g,
-            const std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>&
-                jac_g,
+            OptimizationProblem& problem,
             const int max_iter, const callback_intermediate_ncp& callback,
             const NcpUpdate update_type, const LCPSolver lcp_solver,
             Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i,
@@ -63,8 +62,7 @@ namespace opt {
         // ---------------------
         const Eigen::SparseMatrix<double>& A;
         const Eigen::VectorXd& b;
-        const std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>& g;
-        const std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>& jac_g;
+        OptimizationProblem& problem;
         const callback_intermediate_ncp& callback;
 
         // -----------------------
@@ -110,8 +108,7 @@ namespace opt {
      */
     bool solve_ncp(const Eigen::SparseMatrix<double>& A,
         const Eigen::VectorXd& b,
-        const std::function<Eigen::VectorXd(const Eigen::VectorXd& x)>& g,
-        const std::function<Eigen::MatrixXd(const Eigen::VectorXd& x)>& jac_g,
+        OptimizationProblem& problem,
         const int max_iter, const callback_intermediate_ncp& callback,
         const NcpUpdate update_type, const LCPSolver lcp_solver,
         Eigen::VectorXd& x, Eigen::VectorXd& alpha,

@@ -14,16 +14,17 @@
 #include <logger.hpp>
 
 #include <autodiff/finitediff.hpp>
+#include <opt/barrier_constraint.hpp>
 #include <opt/displacement_opt.hpp>
 #include <opt/ncp_solver.hpp>
 #include <opt/volume_constraint.hpp>
-#include <opt/barrier_constraint.hpp>
 
 namespace ccd {
 State::State()
     : detection_method(DetectionMethod::BRUTE_FORCE)
     , volume_epsilon(1E-3)
     , output_dir(DATA_OUTPUT_DIR)
+    , constraint_function(ConstraintType::VOLUME)
     , recompute_collision_set(false)
     , canvas_width(10)
     , canvas_height(10)
@@ -175,10 +176,13 @@ void State::reset_impacts()
 
 void State::run_ccd_pipeline()
 {
-    detect_collisions(displacements);
-    volumes = compute_collision_volume(displacements, /*recompute_set=*/true);
-    volume_grad
-        = compute_collision_jac_volume(displacements, /*recompute_set=*/true);
+    auto& collision_constraint = getCollisionConstraint();
+    collision_constraint.initialize(vertices, edges, displacements);
+    collision_constraint.compute_constraints(
+        vertices, edges, displacements, volumes);
+    collision_constraint.compute_constraints_jacobian(
+        vertices, edges, displacements, volume_grad);
+
     current_volume = 0;
     current_ev_impact = ev_impacts.size() > 0 ? 0 : -1;
 
@@ -188,209 +192,33 @@ void State::run_ccd_pipeline()
     spdlog::debug("grad_vol\n{}", ccd::log::fmt_eigen(volume_grad, 4));
 }
 
-void State::detect_collisions(const Eigen::MatrixXd& displ)
-{
-    using namespace ccd;
-    detect_edge_vertex_collisions(
-        vertices, displ, edges, ev_impacts, detection_method, false);
-    convert_edge_vertex_to_edge_edge_impacts(edges, ev_impacts, ee_impacts);
-    num_pruned_impacts = prune_impacts(ee_impacts, edge_impact_map);
-}
-
-Eigen::VectorXd State::compute_collision_volume(
-    const Eigen::MatrixXd& Uk, const bool recompute_set)
-{
-    Eigen::VectorXd volume;
-    if (recompute_set) {
-        detect_collisions(Uk * (1 + 2 * solver_settings.barrier_epsilon));
-    }
-    if (use_alternative_formulation) {
-        ccd::opt::compute_penalties_refresh_toi(vertices, Uk, edges,
-            ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
-            volume);
-    } else {
-        ccd::opt::compute_volumes_refresh_toi(vertices, Uk, edges,
-            ee_impacts, edge_impact_map, volume_epsilon, volume);
-    }
-    return volume;
-}
-
-Eigen::MatrixXd State::compute_collision_jac_volume(
-    const Eigen::MatrixXd& Uk, const bool recompute_set)
-{
-    Eigen::MatrixXd volume_gradient;
-    if (recompute_set) {
-        detect_collisions(Uk * (1 + 2 * solver_settings.barrier_epsilon));
-    }
-
-    if (use_alternative_formulation) {
-        ccd::opt::compute_penalties_gradient(vertices, Uk, edges,
-            ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
-            volume_gradient);
-    } else {
-        ccd::opt::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
-            edge_impact_map, volume_epsilon, volume_gradient);
-        //        assert(volume_gradient.cols() == int(2 * ee_impacts.size()));
-    }
-    assert(volume_gradient.rows() == Uk.size());
-
-    // Note: standard is to be num_constraints x num_vars
-    return volume_gradient.transpose();
-}
-
-std::vector<Eigen::MatrixXd> State::compute_collision_hessian_volume(
-    const Eigen::MatrixXd& Uk, const bool recompute_set)
-{
-    std::vector<Eigen::MatrixXd> volume_hessian;
-    if (recompute_set) {
-        detect_collisions(Uk * (1 + 2 * solver_settings.barrier_epsilon));
-    }
-
-    if (use_alternative_formulation) {
-        ccd::opt::compute_penalties_hessian(vertices, Uk, edges,
-            ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
-            volume_hessian);
-    } else {
-        ccd::opt::compute_volumes_hessian(vertices, Uk, edges, ee_impacts,
-            edge_impact_map, volume_epsilon, volume_hessian);
-    }
-
-    return volume_hessian;
-}
-
 // -----------------------------------------------------------------------------
 // OPT
 // -----------------------------------------------------------------------------
+opt::CollisionConstraint& State::getCollisionConstraint()
+{
+    if (constraint_function == ConstraintType::VOLUME) {
+        return volume_constraint;
+    } else {
+        return barrier_constraint;
+    }
+}
 
 void State::reset_optimization_problem()
 {
-    using namespace ccd::opt;
 
-    reset_impacts();
-    detect_collisions(displacements);
-
-    /// Min 1/2||U - Uk||^2
-    /// s.t V(U) >= 0
-    Eigen::MatrixXd u_ = displacements; // U_flat
-    u_.resize(displacements.size(), 1);
-
-    int num_vars, num_constraints;
-    opt_problem.num_vars = num_vars = int(u_.size());
-    opt_problem.num_constraints = num_constraints = int(edges.rows());
-
-    opt_problem.x0.resize(num_vars);
-    opt_problem.x_lower.resize(num_vars);
-    opt_problem.x_upper.resize(num_vars);
-    opt_problem.g_lower.resize(num_constraints);
-    opt_problem.g_upper.resize(num_constraints);
-
-    opt_problem.x_lower.setConstant(NO_LOWER_BOUND);
-    opt_problem.x_upper.setConstant(NO_UPPER_BOUND);
-    opt_problem.g_lower.setConstant(0.0);
-    opt_problem.g_upper.setConstant(NO_UPPER_BOUND);
-
-    opt_problem.f = [u_](const Eigen::VectorXd& x) -> double {
-        return (x - u_).squaredNorm() / 2.0;
-    };
-
-    opt_problem.grad_f = [u_](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-        return (x - u_);
-    };
-
-    // Hessian of the objective (used in Newton's Method)
-    opt_problem.hessian_f = [](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
-        return Eigen::MatrixXd::Identity(x.size(), x.size());
-    };
-
-    opt_problem.g = [this](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-        Eigen::MatrixXd Uk = x;
-        Uk.resize(x.rows() / 2, 2);
-
-        // This "this" refers to the State not the opt_problem
-        return this->compute_collision_volume(Uk, recompute_collision_set);
-    };
-
-    opt_problem.jac_g = [this](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
-        Eigen::MatrixXd Uk = x;
-        Uk.resize(x.rows() / 2, 2);
-
-        Eigen::MatrixXd jac_gx;
-        // This "this" refers to the State not the opt_problem
-        jac_gx
-            = this->compute_collision_jac_volume(Uk, recompute_collision_set);
-
-#ifdef WITH_DERIVATIVE_CHECK
-        Eigen::MatrixXd fd_jac_gx;
-        ccd::finite_jacobian(x, opt_problem.g, fd_jac_gx);
-        if (!ccd::compare_jacobian(jac_gx, fd_jac_gx)) {
-
-            spdlog::warn("Displ Optimization CHECK_GRADIENT FAILED\n"
-                         "\tgrad={}\n"
-                         "\tfd  ={}",
-                ccd::log::fmt_eigen(jac_gx), ccd::log::fmt_eigen(fd_jac_gx));
-        }
-#endif
-        return jac_gx;
-    };
-
-    // Hessian of the constraint (used in Barrier Newton's Method)
-    opt_problem.hessian_g
-        = [this](const Eigen::VectorXd& x) -> std::vector<Eigen::MatrixXd> {
-        Eigen::MatrixXd Uk = x;
-        Uk.resize(x.rows() / 2, 2);
-
-        // This "this" refers to the State not the opt_problem
-        return this->compute_collision_hessian_volume(
-            Uk, recompute_collision_set);
-    };
+    volume_constraint.volume_epsilon = volume_epsilon;
+    opt_problem.initialize(
+        vertices, edges, displacements, getCollisionConstraint());
 }
 
-void State::reset_barrier_epsilon()
+void State::reset_results()
 {
-    // ToDo: Find a better way to provide a starting epsilon
-    bool was_barrier_epsilon_reset = false;
-    for (long i = 0; i < this->edge_impact_map.size(); i++) {
-        if (this->edge_impact_map(i) >= 0) {
-            EdgeEdgeImpact impact = this->ee_impacts[this->edge_impact_map(i)];
-            double val = impact.time;
-
-            // Penalize the spatial distance too
-            // double sum = 0;
-            // for (int end = 0; end < 2; end++) {
-            //     sum += displacements
-            //                .row(edges(impact.impacted_edge_index, end))
-            //                .squaredNorm();
-            //     sum += displacements
-            //                .row(edges(impact.impacting_edge_index, end))
-            //                .squaredNorm();
-            // }
-            // val *= sum;
-
-            if (!was_barrier_epsilon_reset
-                || val < solver_settings.barrier_epsilon) {
-                solver_settings.barrier_epsilon = val;
-                was_barrier_epsilon_reset = true;
-            }
-        }
-    }
-    if (!was_barrier_epsilon_reset) {
-        solver_settings.barrier_epsilon = 0;
-    } else {
-        solver_settings.barrier_epsilon += 1e-4;
-    }
-}
-
-void State::optimize_displacements(const std::string filename)
-{
-    // 1. reset the problem
-    reset_optimization_problem();
-    reset_barrier_epsilon();
-
-    // 2. reset results
     opt_results.success = false;
     opt_results.finished = false;
     bool dirty = opt_results.x.size() == 0
         || opt_results.x.rows() != displacements.rows();
+
     if (dirty || !reuse_opt_displacements) {
         u_history.clear();
         f_history.clear();
@@ -399,6 +227,12 @@ void State::optimize_displacements(const std::string filename)
         opt_results.minf = 1E10;
         opt_results.x.resizeLike(displacements);
     }
+}
+
+void State::optimize_displacements(const std::string filename)
+{
+    reset_optimization_problem();
+    reset_results();
 
     // 3. set initial value
     Eigen::MatrixXd U0(displacements.rows(), 2);
@@ -425,10 +259,10 @@ void State::optimize_displacements(const std::string filename)
               u_history.push_back(u);
               f_history.push_back(obj_value);
 
-              Eigen::VectorXd gx = opt_problem.g(x);
+              Eigen::VectorXd gx = opt_problem.eval_g(x);
               g_history.push_back(gx);
               gsum_history.push_back(gx.sum());
-              jac_g_history.push_back(opt_problem.jac_g(x));
+              jac_g_history.push_back(opt_problem.eval_jac_g(x));
 
               it_x.push_back(x);
               it_lambda.push_back(dual);
@@ -523,10 +357,10 @@ void State::log_optimization_steps(const std::string filename,
     o << Eigen::VectorXd::Zero(opt_problem.num_constraints).format(CommaFmt)
       << sep;
     o << 0.0 << sep;
-    o << opt_problem.f(d) << sep;
-    o << opt_problem.g(d).format(CommaFmt) << sep;
+    o << opt_problem.eval_f(d) << sep;
+    o << opt_problem.eval_g(d).format(CommaFmt) << sep;
 
-    Eigen::MatrixXd jac_gx = opt_problem.jac_g(d);
+    Eigen::MatrixXd jac_gx = opt_problem.eval_jac_g(d);
     o << jac_gx.squaredNorm() << std::endl << std::endl;
 
     // print steps
@@ -535,9 +369,9 @@ void State::log_optimization_steps(const std::string filename,
         o << it_x[i].format(CommaFmt) << sep;
         o << it_lambda[i].format(CommaFmt) << sep;
         o << it_gamma[i] << sep;
-        o << opt_problem.f(it_x[i]) << sep;
-        o << opt_problem.g(it_x[i]).format(CommaFmt) << sep;
-        jac_gx = opt_problem.jac_g(it_x[i]);
+        o << opt_problem.eval_f(it_x[i]) << sep;
+        o << opt_problem.eval_g(it_x[i]).format(CommaFmt) << sep;
+        jac_gx = opt_problem.eval_jac_g(it_x[i]);
         o << jac_gx.squaredNorm() << std::endl;
     }
     spdlog::debug("Optimization Log saved to file://{}", filename);

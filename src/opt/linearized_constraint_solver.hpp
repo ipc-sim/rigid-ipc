@@ -20,7 +20,7 @@ namespace opt {
      * @return The results of the optimization
      */
     OptimizationResults solve_problem_with_linearized_constraints(
-        const OptimizationProblem& problem, const SolverSettings& settings);
+        OptimizationProblem& problem, const SolverSettings& settings);
 
 } // namespace opt
 

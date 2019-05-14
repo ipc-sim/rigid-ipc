@@ -11,7 +11,7 @@ namespace ccd {
 namespace opt {
 
     OptimizationResults minimize_ipopt(
-        const OptimizationProblem& problem, const SolverSettings& settings)
+        OptimizationProblem& problem, const SolverSettings& settings)
     {
         auto solver = std::make_unique<IpoptSolver>(
             settings.relative_tolerance, settings.verbosity, settings.max_iter);
@@ -44,7 +44,7 @@ namespace opt {
         app->Options()->SetStringValue("derivative_test", "first-order");
     }
 
-    OptimizationResults IpoptSolver::solve(const OptimizationProblem& problem)
+    OptimizationResults IpoptSolver::solve(OptimizationProblem& problem)
     {
 
         // update settings
@@ -63,7 +63,7 @@ namespace opt {
         return result;
     }
 
-    EigenInterfaceTNLP::EigenInterfaceTNLP(const OptimizationProblem& problem)
+    EigenInterfaceTNLP::EigenInterfaceTNLP(OptimizationProblem& problem)
         : problem(&problem)
     {
 
@@ -128,7 +128,7 @@ namespace opt {
     {
         assert(n == problem->num_vars);
         auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
-        obj_value = problem->f(xk);
+        obj_value = problem->eval_f(xk);
 
         return true;
     }
@@ -139,7 +139,7 @@ namespace opt {
         assert(n == problem->num_vars);
 
         auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
-        Eigen::VectorXd grad = problem->grad_f(xk);
+        Eigen::VectorXd grad = problem->eval_grad_f(xk);
         Eigen::Map<Eigen::MatrixXd>(grad_f_val, n, 1) = grad;
 
         return true;
@@ -151,13 +151,12 @@ namespace opt {
         assert(n == problem->num_vars);
         assert(m == problem->num_constraints);
 
-        if (problem->g) {
-            auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
-            Eigen::VectorXd gk = problem->g(xk);
-            assert(gk.rows() == m);
+        auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
+        Eigen::VectorXd gk = problem->eval_g(xk);
+        assert(gk.rows() == m);
 
-            Eigen::Map<Eigen::MatrixXd>(gval, m, 1) = gk;
-        }
+        Eigen::Map<Eigen::MatrixXd>(gval, m, 1) = gk;
+
 
         return true;
     }
@@ -178,13 +177,13 @@ namespace opt {
                     jCol[i * n + j] = j;
                 }
             }
-        } else if (problem->jac_g) {
+        } else {
             auto xk = Eigen::Map<const Eigen::VectorXd>(&x[0], n);
             Eigen::MatrixXd jac_g_val;
 
             // the derivative of constraint g^{(i)} with respect to variable
             // x^{(j)} is placed in row i and column j.
-            jac_g_val = problem->jac_g(xk);
+            jac_g_val = problem->eval_jac_g(xk);
 
             for (int i = 0; i < m; ++i) {
                 for (int j = 0; j < n; ++j) {

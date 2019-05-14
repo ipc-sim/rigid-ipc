@@ -70,7 +70,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons method]")
     // Setup problem
     // -----------------------------------------------------------------
     int num_vars = GENERATE(1, 10, 100), num_constraints = 0;
-    OptimizationProblem problem(num_vars, num_constraints);
+    AdHocProblem problem(num_vars, num_constraints);
     problem.x0.setRandom();
 
     problem.f = [](const Eigen::VectorXd& x) { return x.squaredNorm() / 2.0; };
@@ -93,7 +93,7 @@ TEST_CASE("Check barrier problem derivatives")
 {
     // TODO: Generate a random problem and test the derivatives
     int num_vars = GENERATE(1, 2, 5, 10), num_constraints = 1;
-    OptimizationProblem problem(num_vars, num_constraints);
+    AdHocProblem problem(num_vars, num_constraints);
 
     problem.f = [](const Eigen::VectorXd& x) { return x.squaredNorm() / 2; };
     problem.grad_f = [](const Eigen::VectorXd& x) { return x; };
@@ -124,7 +124,7 @@ TEST_CASE("Check barrier problem derivatives")
 
     REQUIRE(problem.validate_problem());
 
-    OptimizationProblem barrier_problem;
+    AdHocProblem barrier_problem;
     double epsilon = GENERATE(1.0, 0.5, 1e-1, 5e-2);
     setup_barrier_problem(problem, epsilon, barrier_problem);
     REQUIRE(barrier_problem.validate_problem());
@@ -167,7 +167,7 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
     // Setup problem
     // -----------------------------------------------------------------
     int num_vars = 1, num_constraints = num_vars;
-    OptimizationProblem constrained_problem(num_vars, num_constraints);
+    AdHocProblem constrained_problem(num_vars, num_constraints);
 
 
     SECTION("Constraint is in g(x)") { constrained_problem.g_lower(0) = 1; }
@@ -200,7 +200,7 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
 
     REQUIRE(constrained_problem.validate_problem());
 
-    OptimizationProblem unconstrained_problem;
+    AdHocProblem unconstrained_problem;
     double s = 1e-6;
     setup_barrier_problem(constrained_problem, s, unconstrained_problem);
 

@@ -49,7 +49,7 @@ namespace opt {
         IpoptSolver();
         IpoptSolver(double tolerance, int print_level, int max_iterations);
         void initialize();
-        OptimizationResults solve(const OptimizationProblem& problem);
+        OptimizationResults solve(OptimizationProblem& problem);
 
         SmartPtr<IpoptApplication> app;
 
@@ -61,7 +61,7 @@ namespace opt {
     };
 
     OptimizationResults minimize_ipopt(
-        const OptimizationProblem& problem, const SolverSettings& settings);
+        OptimizationProblem& problem, const SolverSettings& settings);
 
     /**
      * @brief Class for interfacing IPOPT TNLP problem
@@ -70,10 +70,10 @@ namespace opt {
     class EigenInterfaceTNLP : public TNLP {
 
     public:
-        EigenInterfaceTNLP(const OptimizationProblem& problem);
+        EigenInterfaceTNLP(OptimizationProblem& problem);
 
         OptimizationResults result;
-        OptimizationProblem const* problem;
+        OptimizationProblem * problem;
 
         /**
          * n: (out) the number of variables in the problem (dimension of

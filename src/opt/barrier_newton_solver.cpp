@@ -15,7 +15,7 @@ namespace opt {
     OptimizationResults solve_problem_with_barrier_newton(
         OptimizationProblem& general_problem, SolverSettings& settings)
     {
-        OptimizationProblem barrier_problem;
+        AdHocProblem barrier_problem;
         setup_barrier_problem(
             general_problem, settings.barrier_epsilon, barrier_problem);
 
@@ -23,7 +23,7 @@ namespace opt {
         do {
             results = newtons_method(barrier_problem, settings);
             // Save the original problems objective
-            results.minf = general_problem.f(results.x);
+            results.minf = general_problem.eval_f(results.x);
             // Steepen the barrier
             settings.barrier_epsilon /= 2;
             // Start next iteration from the ending optimal position
@@ -38,7 +38,7 @@ namespace opt {
 
     // Create a OptimizationProblem for the barrier Newton's method.
     void setup_barrier_problem(OptimizationProblem& general_problem,
-        double& epsilon, OptimizationProblem& barrier_problem)
+        double& epsilon, AdHocProblem& barrier_problem)
     {
         barrier_problem.num_vars = general_problem.num_vars;
         barrier_problem.num_constraints = general_problem.num_constraints;
@@ -58,8 +58,8 @@ namespace opt {
         // Redefine the objective with the constraints as penalties
         barrier_problem.f = [&general_problem, barrier](
                                 const Eigen::VectorXd& x) {
-            Eigen::VectorXd gx = general_problem.g(x);
-            double val = general_problem.f(x)
+            Eigen::VectorXd gx = general_problem.eval_g(x);
+            double val = general_problem.eval_f(x)
                 + (x - general_problem.x_lower).unaryExpr(barrier).sum()
                 + (-x + general_problem.x_upper).unaryExpr(barrier).sum();
 
@@ -81,10 +81,10 @@ namespace opt {
         // Redefine the objective gradient with the constraints as penalties
         barrier_problem.grad_f = [&general_problem, barrier_gradient](
                                      const Eigen::VectorXd& x) {
-            Eigen::VectorXd gx = general_problem.g(x);
-            Eigen::MatrixXd dgx = general_problem.jac_g(x);
+            Eigen::VectorXd gx = general_problem.eval_g(x);
+            Eigen::MatrixXd dgx = general_problem.eval_jac_g(x);
 
-            Eigen::VectorXd grad = general_problem.grad_f(x);
+            Eigen::VectorXd grad = general_problem.eval_grad_f(x);
 
             // Add constraint functions barrier(g(x))
             // Check to make sure the gx is not dynamic
@@ -116,11 +116,11 @@ namespace opt {
         barrier_problem.hessian_f = [&general_problem, barrier_gradient,
                                         barrier_hessian](
                                         const Eigen::VectorXd& x) {
-            Eigen::VectorXd gx = general_problem.g(x);
-            Eigen::MatrixXd dgx = general_problem.jac_g(x);
-            std::vector<Eigen::MatrixXd> ddgx = general_problem.hessian_g(x);
+            Eigen::VectorXd gx = general_problem.eval_g(x);
+            Eigen::MatrixXd dgx = general_problem.eval_jac_g(x);
+            std::vector<Eigen::MatrixXd> ddgx = general_problem.eval_hessian_g(x);
 
-            Eigen::MatrixXd hessian = general_problem.hessian_f(x);
+            Eigen::MatrixXd hessian = general_problem.eval_hessian_f(x);
 
             // Check to make sure the gx is not dynamic
             Eigen::VectorXd grad_coeffs, hessian_coeffs;

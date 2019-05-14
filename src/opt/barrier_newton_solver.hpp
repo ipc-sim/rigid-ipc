@@ -33,7 +33,7 @@ namespace opt {
      *                              the general problem.
      */
     void setup_barrier_problem(OptimizationProblem& general_problem,
-        double& epsilon, OptimizationProblem& barrier_problem);
+        double& epsilon, AdHocProblem& barrier_problem);
 
 } // namespace opt
 } // namespace ccd

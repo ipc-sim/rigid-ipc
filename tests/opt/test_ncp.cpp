@@ -94,8 +94,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         };
         expected << 0.0, 1.5;
     }
-
-    auto g = [&g_diff](const Eigen::VectorXd x) -> Eigen::VectorXd {
+    AdHocProblem problem;
+    problem.g = [&g_diff](const Eigen::VectorXd x) -> Eigen::VectorXd {
         DVector gx = g_diff(x);
         Eigen::VectorXd g(gx.rows());
         for (int i = 0; i < gx.rows(); ++i) {
@@ -105,7 +105,7 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         return g;
     };
 
-    auto jac_g = [&g_diff](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
+    problem.jac_g = [&g_diff](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
         DVector gx = g_diff(x);
         Eigen::MatrixXd jac_gx(gx.rows(), NUM_VARS);
         for (int i = 0; i < gx.rows(); ++i) {
@@ -120,7 +120,7 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
     };
 
     Eigen::VectorXd x(NUM_VARS), alpha(NUM_CONSTRAINTS);
-    bool success = solve_ncp(A, b, g, jac_g, /*max_iter=*/300, callback,
+    bool success = solve_ncp(A, b, problem, /*max_iter=*/300, callback,
         NcpUpdate::LINEARIZED, LCPSolver::LCP_GAUSS_SEIDEL, x, alpha,
         /*check_convergence=*/false,
         /*check_convergence_unfeasible=*/false);
