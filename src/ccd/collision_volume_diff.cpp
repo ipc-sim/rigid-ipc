@@ -62,7 +62,7 @@ namespace autodiff {
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         Eigen::VectorXd& volumes)
     {
-        compute_constraints_refresh_toi(V, U, E, ee_impacts, edge_impact_map,
+        compute_constraints_dense_refresh_toi(V, U, E, ee_impacts, edge_impact_map,
             epsilon, collision_volume<double>, volumes);
     }
 
@@ -72,7 +72,7 @@ namespace autodiff {
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         Eigen::MatrixXd& volume_grad)
     {
-        compute_constraints_gradient(V, U, E, ee_impacts, edge_impact_map,
+        compute_constraints_dense_gradient(V, U, E, ee_impacts, edge_impact_map,
             epsilon, collision_volume<DScalar>, volume_grad);
     }
 
@@ -82,6 +82,7 @@ namespace autodiff {
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         std::vector<Eigen::SparseMatrix<double>>& volume_hessian)
     {
+        // TODO: this should be dense too
         compute_constraints_hessian(V, U, E, ee_impacts, edge_impact_map,
             epsilon, collision_volume<DScalar>, volume_hessian);
     }

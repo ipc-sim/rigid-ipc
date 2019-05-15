@@ -13,79 +13,116 @@
 #include <ccd/not_implemented_error.hpp>
 
 #include <autodiff/finitediff.hpp>
-#include <opt/ncp_solver.hpp>
 
 #include <logger.hpp>
-
-#include <profiler.hpp>
 
 namespace ccd {
 namespace opt {
 
-    // Optimize the displacment opt problem with the given method and starting
-    // value.
-    OptimizationResults displacement_optimization(OptimizationProblem& problem,
-        const Eigen::MatrixX2d& U0, SolverSettings& settings)
+    ParticlesDisplProblem::ParticlesDisplProblem()
+        : constraint(nullptr)
     {
-#ifdef PROFILE_FUNCTIONS
-        reset_profiler();
-        igl::Timer timer;
-        timer.start();
-#endif
-
-        // initial value
-        Eigen::MatrixXd x0 = U0;
-        x0.resize(U0.size(), 1); // Flatten displacements
-        problem.x0 = x0;
-
-        OptimizationResults result;
-        if (settings.method == NCP) {
-            result = solve_ncp_displacement_optimization(problem, settings);
-        } else {
-            result = solve_problem(problem, settings);
-        }
-        result.x.resize(U0.rows(), 2); // Unflatten displacments
-
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        print_profile(timer.getElapsedTime());
-#endif
-
-        return result;
-    } // namespace opt
-
-    OptimizationResults solve_ncp_displacement_optimization(
-        OptimizationProblem& problem, SolverSettings& settings)
-    {
-
-        // Solves the KKT conditions of the Optimization Problem
-        //  (U - Uk) = \nabla g(U)
-        //  s.t V(U) >= 0
-        int num_vars = int(problem.x0.rows());
-        Eigen::SparseMatrix<double> A(num_vars, num_vars);
-        A.setIdentity();
-
-        Eigen::VectorXd b, x_opt, lambda_opt;
-        // obtain Uk from grad_f using x=0
-        b = -problem.grad_f(Eigen::VectorXd::Zero(num_vars));
-
-        int num_it = 0;
-        callback_intermediate_ncp callback =
-            [&problem, &settings, &num_it](const Eigen::VectorXd& x,
-                const Eigen::VectorXd& alpha, const double gamma) {
-                settings.intermediate_cb(x, problem.f(x), alpha, gamma, num_it);
-                num_it += 1;
-            };
-        OptimizationResults result;
-        result.success = solve_ncp(A, b, problem.g, problem.jac_g,
-            settings.max_iter, callback, settings.ncp_update_method,
-            settings.lcp_solver, x_opt, lambda_opt, /*check_convergence=*/false,
-            /*check_convergence_unfeasible=*/true, settings.absolute_tolerance);
-        result.x = x_opt;
-        result.minf = problem.f(x_opt);
-
-        return result;
     }
+
+    ParticlesDisplProblem::~ParticlesDisplProblem() {}
+
+    void ParticlesDisplProblem::initialize(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2i& E, const Eigen::MatrixX2d& U,
+        CollisionConstraint& cstr)
+    {
+        vertices = V;
+        edges = E;
+        displacements = U;
+
+        constraint = &cstr;
+        constraint->initialize(V, E, U);
+        initProblem();
+    }
+
+    void ParticlesDisplProblem::initProblem()
+    {
+        u_ = displacements;
+        u_.resize(displacements.size(), 1);
+
+        num_vars = int(u_.size());
+        x0.resize(num_vars);
+        x_lower.resize(num_vars);
+        x_upper.resize(num_vars);
+        x_lower.setConstant(NO_LOWER_BOUND);
+        x_upper.setConstant(NO_UPPER_BOUND);
+
+        // TODO: this is wrong, it will depend on constraint type
+        num_constraints = int(edges.rows());
+        g_lower.resize(num_constraints);
+        g_upper.resize(num_constraints);
+        g_lower.setConstant(0.0);
+        g_upper.setConstant(NO_UPPER_BOUND);
+    }
+
+    double ParticlesDisplProblem::eval_f(const Eigen::VectorXd& x)
+    {
+        return (x - u_).squaredNorm() / 2.0;
+    }
+
+    Eigen::VectorXd ParticlesDisplProblem::eval_grad_f(const Eigen::VectorXd& x)
+    {
+        return (x - u_);
+    }
+
+    Eigen::MatrixXd ParticlesDisplProblem::eval_hessian_f(
+        const Eigen::VectorXd& x)
+    {
+        return Eigen::MatrixXd::Identity(x.size(), x.size());
+    }
+
+    Eigen::SparseMatrix<double> ParticlesDisplProblem::eval_hessian_f_sparse(
+        const Eigen::VectorXd& x)
+    {
+        Eigen::SparseMatrix<double> A(int(x.size()), int(x.size()));
+        A.setIdentity();
+        return A;
+    }
+
+    Eigen::VectorXd ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        Eigen::VectorXd gx;
+        if (constraint->recompute_collision_set) {
+            constraint->detecteCollisions(vertices, edges, Uk);
+        }
+        constraint->compute_constraints(vertices, edges, Uk, gx);
+        return gx;
+    };
+
+    Eigen::MatrixXd ParticlesDisplProblem::eval_jac_g(const Eigen::VectorXd& x)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        Eigen::MatrixXd jac_gx;
+        if (constraint->recompute_collision_set) {
+            constraint->detecteCollisions(vertices, edges, Uk);
+        }
+        constraint->compute_constraints_jacobian(vertices, edges, Uk, jac_gx);
+
+        return jac_gx;
+    };
+
+    std::vector<Eigen::SparseMatrix<double>>
+    ParticlesDisplProblem::eval_hessian_g(const Eigen::VectorXd& x)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        std::vector<Eigen::SparseMatrix<double>> hess_gx;
+        if (constraint->recompute_collision_set) {
+            constraint->detecteCollisions(vertices, edges, Uk);
+        }
+        constraint->compute_constraints_hessian(vertices, edges, Uk, hess_gx);
+        return hess_gx;
+    };
 
 } // namespace opt
 } // namespace ccd

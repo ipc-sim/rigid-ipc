@@ -5,8 +5,7 @@
 #include <iomanip> // std::setw
 #include <iostream>
 
-#include <fmt/format.h>
-#include <spdlog/spdlog.h>
+#include <logger.hpp>
 
 const int NUM_EDGES = 2;
 const int NUM_VERTICES = 4;
@@ -31,8 +30,8 @@ void inner_loop(const std::string scene_name, const std::string out_dir,
 
 //    for (const auto& update_type : update_types) {
         for (const auto& lcp_solver : lcp_solvers) {
-            state.solver_settings.ncp_update_method = update_type;
-            state.solver_settings.lcp_solver = lcp_solver;
+            state.ncp_solver.update_type = update_type;
+            state.ncp_solver.lcp_solver = lcp_solver;
             std::string filename = fmt::format("{}_{}_{}", scene_name,
                 LCPSolverNames[lcp_solver],
                 NcpUpdateNames[static_cast<int>(update_type)]);
@@ -40,13 +39,13 @@ void inner_loop(const std::string scene_name, const std::string out_dir,
             //                    spdlog::info("case {}", filename);
             state.optimize_displacements(out_dir + filename + ".csv");
 
-            double fe = state.opt_problem.f(e);
-            double ge_sum = state.opt_problem.g(e).sum();
+            double fe = state.opt_problem.eval_f(e);
+            double ge_sum = state.opt_problem.eval_g(e).sum();
             Eigen::MatrixXd u_ = state.opt_results.x;
             u_.resize(u_.size(), 1);
 
-            double fx = state.opt_problem.f(u_);
-            double gx_sum = state.opt_problem.g(u_).sum();
+            double fx = state.opt_problem.eval_f(u_);
+            double gx_sum = state.opt_problem.eval_g(u_).sum();
 
             o << row_prefix << ",";
             o << fx << ",";
@@ -109,8 +108,8 @@ void case_vertical_displacements(const std::string& dirname,
 }
 
 void case_diagonal_displacements(const std::string& dirname,
-    const Eigen::MatrixX2i& edges, Eigen::MatrixX2d vertices,
-    Eigen::MatrixX2d displacements, ccd::State state)
+    const Eigen::MatrixX2i& edges, Eigen::MatrixX2d& vertices,
+    Eigen::MatrixX2d& displacements, ccd::State& state)
 {
     Eigen::MatrixX2d expected(NUM_VERTICES, 2);
     double alpha = 0.5;
@@ -166,11 +165,12 @@ int main(int argc, char* argv[])
     spdlog::set_level(spdlog::level::info);
 
     ccd::State state;
-    state.solver_settings.max_iter = 200;
-    state.solver_settings.method = ccd::opt::NCP;
-    state.solver_settings.absolute_tolerance = 1E-8;
-    state.volume_epsilon = 1E-8;
+    state.ncp_solver.max_iterations = 200;
+    state.ncp_solver.convergence_tolerance = 1E-8;
 
+    state.opt_method = ccd::OptimizationMethod::NCP;
+    state.constraint_function= ccd::ConstraintType::VOLUME;
+    state.volume_constraint.volume_epsilon = 1E-8;
 
     Eigen::MatrixX2d vertices(NUM_VERTICES, 2);
     Eigen::MatrixX2i edges(NUM_EDGES, 2);

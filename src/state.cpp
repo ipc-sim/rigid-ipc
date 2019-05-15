@@ -11,17 +11,21 @@
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
 
-#include <logger.hpp>
-
 #include <autodiff/finitediff.hpp>
+#include <opt/barrier_constraint.hpp>
 #include <opt/displacement_opt.hpp>
+#include <opt/ncp_solver.hpp>
+#include <opt/volume_constraint.hpp>
+
+#include <logger.hpp>
+#include <profiler.hpp>
 
 namespace ccd {
 State::State()
     : detection_method(DetectionMethod::BRUTE_FORCE)
-    , volume_epsilon(1E-3)
     , output_dir(DATA_OUTPUT_DIR)
-    , recompute_collision_set(false)
+    , opt_method(OptimizationMethod::BARRIER_NEWTON)
+    , constraint_function(ConstraintType::BARRIER)
     , canvas_width(10)
     , canvas_height(10)
     , current_ev_impact(-1)
@@ -31,6 +35,7 @@ State::State()
     , current_opt_time(0.0)
     , current_opt_iteration(-1)
 {
+    barrier_newton_solver.barrier_constraint = &barrier_constraint;
 }
 
 // -----------------------------------------------------------------------------
@@ -182,10 +187,13 @@ void State::reset_impacts()
 
 void State::run_ccd_pipeline()
 {
-    detect_collisions(displacements);
-    volumes = compute_collision_volume(displacements, /*recompute_set=*/true);
-    volume_grad
-        = compute_collision_jac_volume(displacements, /*recompute_set=*/true);
+    auto& collision_constraint = getCollisionConstraint();
+    collision_constraint.initialize(vertices, edges, displacements);
+    collision_constraint.compute_constraints(
+        vertices, edges, displacements, volumes);
+    collision_constraint.compute_constraints_jacobian(
+        vertices, edges, displacements, volume_grad);
+
     current_volume = 0;
     current_ev_impact = ev_impacts.size() > 0 ? 0 : -1;
 
@@ -195,202 +203,49 @@ void State::run_ccd_pipeline()
     spdlog::debug("grad_vol\n{}", ccd::log::fmt_eigen(volume_grad, 4));
 }
 
-void State::detect_collisions(const Eigen::MatrixXd& displ)
-{
-    using namespace ccd;
-    detect_edge_vertex_collisions(
-        vertices, displ, edges, ev_impacts, detection_method, false);
-    convert_edge_vertex_to_edge_edge_impacts(edges, ev_impacts, ee_impacts);
-    num_pruned_impacts = prune_impacts(ee_impacts, edge_impact_map);
-}
-
-Eigen::VectorXd State::compute_collision_volume(
-    const Eigen::MatrixXd& Uk, const bool recompute_set)
-{
-    Eigen::VectorXd volume;
-    if (recompute_set) {
-        detect_collisions(Uk * (1 + 2 * solver_settings.barrier_epsilon));
-    }
-    if (use_alternative_formulation) {
-        ccd::autodiff::compute_penalties_refresh_toi(vertices, Uk, edges,
-            ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
-            volume);
-    } else {
-        ccd::autodiff::compute_volumes_refresh_toi(vertices, Uk, edges,
-            ee_impacts, edge_impact_map, volume_epsilon, volume);
-    }
-    return volume;
-}
-
-Eigen::MatrixXd State::compute_collision_jac_volume(
-    const Eigen::MatrixXd& Uk, const bool recompute_set)
-{
-    Eigen::MatrixXd volume_gradient;
-    if (recompute_set) {
-        detect_collisions(Uk * (1 + 2 * solver_settings.barrier_epsilon));
-    }
-
-    if (use_alternative_formulation) {
-        ccd::autodiff::compute_penalties_gradient(vertices, Uk, edges,
-            ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
-            volume_gradient);
-    } else {
-        ccd::autodiff::compute_volumes_gradient(vertices, Uk, edges, ee_impacts,
-            edge_impact_map, volume_epsilon, volume_gradient);
-        assert(volume_gradient.cols() == int(2 * ee_impacts.size()));
-    }
-    assert(volume_gradient.rows() == Uk.size());
-
-    // Note: standard is to be num_constraints x num_vars
-    return volume_gradient.transpose();
-}
-
-std::vector<Eigen::SparseMatrix<double>>
-State::compute_collision_hessian_volume(
-    const Eigen::MatrixXd& Uk, const bool recompute_set)
-{
-    std::vector<Eigen::SparseMatrix<double>> volume_hessian;
-    if (recompute_set) {
-        detect_collisions(Uk * (1 + 2 * solver_settings.barrier_epsilon));
-    }
-
-    if (use_alternative_formulation) {
-        ccd::autodiff::compute_penalties_hessian(vertices, Uk, edges,
-            ee_impacts, edge_impact_map, solver_settings.barrier_epsilon,
-            volume_hessian);
-    } else {
-        ccd::autodiff::compute_volumes_hessian(vertices, Uk, edges, ee_impacts,
-            edge_impact_map, volume_epsilon, volume_hessian);
-    }
-
-    return volume_hessian;
-}
-
 // -----------------------------------------------------------------------------
 // OPT
 // -----------------------------------------------------------------------------
-
-void State::reset_optimization_problem()
+opt::CollisionConstraint& State::getCollisionConstraint()
 {
-    using namespace ccd::opt;
-
-    reset_impacts();
-    detect_collisions(displacements);
-
-    /// Min 1/2||U - Uk||^2
-    /// s.t V(U) >= 0
-    Eigen::MatrixXd u_ = displacements; // U_flat
-    u_.resize(displacements.size(), 1);
-
-    int num_vars, num_constraints;
-    opt_problem.num_vars = num_vars = int(u_.size());
-    opt_problem.num_constraints = num_constraints = int(edges.rows());
-
-    opt_problem.x0.resize(num_vars);
-    opt_problem.x_lower.resize(num_vars);
-    opt_problem.x_upper.resize(num_vars);
-    opt_problem.g_lower.resize(num_constraints);
-    opt_problem.g_upper.resize(num_constraints);
-
-    opt_problem.x_lower.setConstant(NO_LOWER_BOUND);
-    opt_problem.x_upper.setConstant(NO_UPPER_BOUND);
-    opt_problem.g_lower.setConstant(0.0);
-    opt_problem.g_upper.setConstant(NO_UPPER_BOUND);
-
-    opt_problem.f = [u_](const Eigen::VectorXd& x) -> double {
-        return (x - u_).squaredNorm() / 2.0;
-    };
-
-    opt_problem.grad_f = [u_](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-        return (x - u_);
-    };
-
-    // Hessian of the objective (used in Newton's Method)
-    opt_problem.hessian_f = [](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
-        return Eigen::MatrixXd::Identity(x.size(), x.size());
-    };
-
-    opt_problem.g = [this](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-        Eigen::MatrixXd Uk = x;
-        Uk.resize(x.rows() / 2, 2);
-
-        // This "this" refers to the State not the opt_problem
-        return this->compute_collision_volume(Uk, recompute_collision_set);
-    };
-
-    opt_problem.jac_g = [this](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
-        Eigen::MatrixXd Uk = x;
-        Uk.resize(x.rows() / 2, 2);
-
-        Eigen::MatrixXd jac_gx;
-        // This "this" refers to the State not the opt_problem
-        jac_gx
-            = this->compute_collision_jac_volume(Uk, recompute_collision_set);
-
-#ifdef WITH_DERIVATIVE_CHECK
-        Eigen::MatrixXd fd_jac_gx;
-        ccd::finite_jacobian(x, opt_problem.g, fd_jac_gx);
-        if (!ccd::compare_jacobian(jac_gx, fd_jac_gx)) {
-
-            spdlog::warn("Displ Optimization CHECK_GRADIENT FAILED\n"
-                         "\tgrad={}\n"
-                         "\tfd  ={}",
-                ccd::log::fmt_eigen(jac_gx), ccd::log::fmt_eigen(fd_jac_gx));
-        }
-#endif
-        return jac_gx;
-    };
-
-    // Hessian of the constraint (used in Barrier Newton's Method)
-    opt_problem.hessian_g = [this](const Eigen::VectorXd& x)
-        -> std::vector<Eigen::SparseMatrix<double>> {
-        Eigen::MatrixXd Uk = x;
-        Uk.resize(x.rows() / 2, 2);
-
-        // This "this" refers to the State not the opt_problem
-        return this->compute_collision_hessian_volume(
-            Uk, recompute_collision_set);
-    };
-}
-
-void State::reset_barrier_epsilon()
-{
-    // Assumes the collisions have already been detected
-    // TODO: Find a better way to provide a starting epsilon
-    if (this->ee_impacts.size() > 0) {
-        solver_settings.barrier_epsilon = this->ee_impacts[0].time;
-        for (EdgeEdgeImpact ee_impact : this->ee_impacts) {
-            // Penalize the spatial distance too
-            // double sum = 0;
-            // for (int end = 0; end < 2; end++) {
-            //     sum += displacements
-            //                .row(edges(ee_impact.impacted_edge_index, end))
-            //                .squaredNorm();
-            //     sum += displacements
-            //                .row(edges(ee_impact.impacting_edge_index, end))
-            //                .squaredNorm();
-            // }
-            // val *= sum;
-
-            solver_settings.barrier_epsilon
-                = std::max(solver_settings.barrier_epsilon, ee_impact.time);
-        }
+    if (constraint_function == ConstraintType::VOLUME) {
+        return volume_constraint;
     } else {
-        solver_settings.barrier_epsilon = 0;
+        return barrier_constraint;
     }
 }
 
-void State::optimize_displacements(const std::string filename)
+opt::OptimizationSolver& State::getOptimizationSolver()
 {
-    // 1. reset the problem
-    reset_optimization_problem();
-    reset_barrier_epsilon();
+    switch (opt_method) {
+    case OptimizationMethod::NCP:
+        return ncp_solver;
+    case OptimizationMethod::IPOPT:
+        return ipopt_solver;
+    case OptimizationMethod::NLOPT:
+        return nlopt_solver;
+    case OptimizationMethod::LINEARIZED_CONSTRAINTS:
+        return qp_solver;
+    case OptimizationMethod::BARRIER_NEWTON:
+        return barrier_newton_solver;
+    }
+}
 
-    // 2. reset results
+void State::reset_optimization_problem()
+{
+
+    auto& constraint = getCollisionConstraint();
+    constraint.initialize(vertices, edges, displacements);
+    opt_problem.initialize(vertices, edges, displacements, constraint);
+}
+
+void State::reset_results()
+{
     opt_results.success = false;
     opt_results.finished = false;
     bool dirty = opt_results.x.size() == 0
         || opt_results.x.rows() != displacements.rows();
+
     if (dirty || !reuse_opt_displacements) {
         u_history.clear();
         f_history.clear();
@@ -399,16 +254,23 @@ void State::optimize_displacements(const std::string filename)
         opt_results.minf = 1E10;
         opt_results.x.resizeLike(displacements);
     }
+}
+
+void State::optimize_displacements(const std::string filename)
+{
+    reset_optimization_problem();
+    reset_results();
 
     // 3. set initial value
     Eigen::MatrixXd U0(displacements.rows(), 2);
-    if (solver_settings.method == opt::LINEARIZED_CONSTRAINTS) {
+    if (opt_method == OptimizationMethod::LINEARIZED_CONSTRAINTS) {
         U0 = displacements;
     } else if (reuse_opt_displacements) {
         U0 = opt_results.x;
     } else {
         U0.setZero();
     }
+
     opt_results.x = U0;
 
     // 4. setup callback
@@ -416,34 +278,29 @@ void State::optimize_displacements(const std::string filename)
     std::vector<Eigen::VectorXd> it_lambda;
     std::vector<double> it_gamma;
 
-    solver_settings.intermediate_cb
-        = [&](const Eigen::VectorXd& x, const double obj_value,
-              const Eigen::VectorXd& dual, const double gamma,
-              const int /*iteration*/) {
-              Eigen::MatrixXd u = x;
-              u.resize(x.rows() / 2, 2);
-              u_history.push_back(u);
-              f_history.push_back(obj_value);
+    if (opt_problem.validate_problem()) {
+        Eigen::MatrixXd x0 = U0;
+        x0.resize(U0.size(), 1);
+        opt_problem.x0 = x0;
 
-              Eigen::VectorXd gx = opt_problem.g(x);
-              g_history.push_back(gx);
-              gsum_history.push_back(gx.sum());
-              jac_g_history.push_back(opt_problem.jac_g(x));
+        auto& solver = getOptimizationSolver();
+#ifdef PROFILE_FUNCTIONS
+        reset_profiler();
+        igl::Timer timer;
+        timer.start();
+#endif
+        opt_results = solver.solve(opt_problem);
+        opt_results.x.resize(U0.rows(), 2);
 
-              it_x.push_back(x);
-              it_lambda.push_back(dual);
-              it_gamma.push_back(gamma);
-          };
-
-    // 5. run optimization
-    opt_results
-        = ccd::opt::displacement_optimization(opt_problem, U0, solver_settings);
-    if (solver_settings.verbosity > 0
-        && solver_settings.method != opt::OptimizationMethod::BARRIER_NEWTON) {
-        log_optimization_steps(filename, it_x, it_lambda, it_gamma);
+#ifdef PROFILE_FUNCTIONS
+        timer.stop();
+        print_profile(timer.getElapsedTime());
+#endif
     }
 
-    opt_results.method = solver_settings.method;
+    //    if (verbosity > 0) {
+    //        log_optimization_steps(filename, it_x, it_lambda, it_gamma);
+    //    }
     opt_results.finished = true;
 
     // update ui elements
@@ -487,8 +344,7 @@ void State::log_optimization_steps(const std::string filename,
         Eigen::StreamPrecision, Eigen::DontAlignCols, sep, sep, "", "", "", "");
 
     // print table header
-    o << ccd::opt::OptimizationMethodNames[solver_settings.method] << sep;
-    o << ccd::opt::LCPSolverNames[solver_settings.lcp_solver] << std::endl;
+    o << ccd::OptimizationMethodNames[static_cast<int>(opt_method)] << sep;
     o << "it";
     for (int i = 0; i < opt_problem.num_vars; i++) {
         o << sep << "x_" << i;
@@ -510,10 +366,10 @@ void State::log_optimization_steps(const std::string filename,
     o << Eigen::VectorXd::Zero(opt_problem.num_constraints).format(CommaFmt)
       << sep;
     o << 0.0 << sep;
-    o << opt_problem.f(d) << sep;
-    o << opt_problem.g(d).format(CommaFmt) << sep;
+    o << opt_problem.eval_f(d) << sep;
+    o << opt_problem.eval_g(d).format(CommaFmt) << sep;
 
-    Eigen::MatrixXd jac_gx = opt_problem.jac_g(d);
+    Eigen::MatrixXd jac_gx = opt_problem.eval_jac_g(d);
     o << jac_gx.squaredNorm() << std::endl << std::endl;
 
     // print steps
@@ -522,9 +378,9 @@ void State::log_optimization_steps(const std::string filename,
         o << it_x[i].format(CommaFmt) << sep;
         o << it_lambda[i].format(CommaFmt) << sep;
         o << it_gamma[i] << sep;
-        o << opt_problem.f(it_x[i]) << sep;
-        o << opt_problem.g(it_x[i]).format(CommaFmt) << sep;
-        jac_gx = opt_problem.jac_g(it_x[i]);
+        o << opt_problem.eval_f(it_x[i]) << sep;
+        o << opt_problem.eval_g(it_x[i]).format(CommaFmt) << sep;
+        jac_gx = opt_problem.eval_jac_g(it_x[i]);
         o << jac_gx.squaredNorm() << std::endl;
     }
     spdlog::debug("Optimization Log saved to file://{}", filename);

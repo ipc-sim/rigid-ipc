@@ -7,6 +7,7 @@
 #include <igl/Timer.h>
 #include <iostream>
 
+
 // Computing the constraints
 extern long number_of_constraint_calls;
 extern double time_spent_computing_constraint;

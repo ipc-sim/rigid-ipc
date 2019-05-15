@@ -8,10 +8,34 @@
 #include <ccd/impact.hpp>
 #include <ccd/prune_impacts.hpp>
 
-#include <opt/solver.hpp>
+#include <opt/barrier_newton_solver.hpp>
+#include <opt/ipopt_solver.hpp>
+#include <opt/ncp_solver.hpp>
+#include <opt/nlopt_solver.hpp>
+#include <opt/optimization_solver.hpp>
+#include <opt/qp_solver.hpp>
+
+#include <opt/barrier_constraint.hpp>
+#include <opt/collision_constraint.hpp>
+#include <opt/displacement_opt.hpp>
+#include <opt/volume_constraint.hpp>
 
 namespace ccd {
 
+enum class ConstraintType { VOLUME, BARRIER };
+static const char* ConstraintNames[2] = { "VOLUME", "BARRIER" };
+
+enum class OptimizationMethod {
+    NLOPT,
+    IPOPT,                  ///< @brief Interior-Point Method (Ipopt)
+    LINEARIZED_CONSTRAINTS, ///< @brief Linearize the constraints and solve
+                            ///< the QP (OSQP/MOSEK)
+    NCP,                    ///< @brief Nonlinear Complementarity Problem
+    BARRIER_NEWTON          ///< @brief Barrier Newton's Method
+};
+
+static const char* OptimizationMethodNames[]
+    = { "NLOPT", "IPOPT", "Linearized Const.", "NCP", "Barrier Newton" };
 /**
  * @brief The State class keeps the full state of the UI and the collisions.
  */
@@ -50,33 +74,30 @@ public:
     /// @brief method to use for contact detection
     DetectionMethod detection_method;
 
-    /// @brief epsilon use on volume computation
-    double volume_epsilon;
-
     std::string output_dir;
 
     ////////////////////////////////////////////////////////////////////////////
     // Optimization Fields
 
-    /// @brief Optimization problem to solve
-    opt::OptimizationProblem opt_problem;
-
-    /// @brief #V,2 optimized vertices displacements
     opt::OptimizationResults opt_results;
 
-    /// @brief Settings for the problem solver
-    opt::SolverSettings solver_settings;
+    OptimizationMethod opt_method;
+
+    opt::NCPSolver ncp_solver;
+    opt::IpoptSolver ipopt_solver;
+    opt::NLOptSolver nlopt_solver;
+    opt::QPSolver qp_solver;
+    opt::BarrierNewtonSolver barrier_newton_solver;
+
+    opt::VolumeConstraint volume_constraint;
+    opt::BarrierConstraint barrier_constraint;
+    ConstraintType constraint_function;
+
+    opt::ParticlesDisplProblem opt_problem;
 
     /// @brief if True, reuse the current opt_displacements for initial
     /// optimization
     bool reuse_opt_displacements = false;
-
-    /// @brief if True, recompute collision set on each evaluation of the
-    /// collision volume and gradient
-    bool recompute_collision_set = false;
-
-    /// @breif Use the alternate penalty definition of volume with a barrier
-    bool use_alternative_formulation = false;
 
     ///@brief Optimization step history for displacements
     std::vector<Eigen::MatrixX2d> u_history;
@@ -114,19 +135,14 @@ public:
     // ----------------------------------------------------------------------
     void reset_impacts();
     void run_ccd_pipeline();
-    void detect_collisions(const Eigen::MatrixXd& U);
-    Eigen::VectorXd compute_collision_volume(
-        const Eigen::MatrixXd& Uk, const bool recompute_collision_set);
-    Eigen::MatrixXd compute_collision_jac_volume(
-        const Eigen::MatrixXd& Uk, const bool recompute_collision_set);
-    std::vector<Eigen::SparseMatrix<double>> compute_collision_hessian_volume(
-        const Eigen::MatrixXd& Uk, const bool recompute_collision_set);
 
     ////////////////////////////////////////////////////////////////////////////
     // SCENE OPT
     // ----------------------------------------------------------------------
+    opt::CollisionConstraint& getCollisionConstraint();
+    opt::OptimizationSolver& getOptimizationSolver();
+
     void reset_optimization_problem();
-    void reset_barrier_epsilon();
     void optimize_displacements(const std::string filename = "");
 
     void load_optimization(const std::string filename);
@@ -185,6 +201,7 @@ public:
 
     ///@brief we show the values of this iteration
     int current_opt_iteration;
+    void reset_results();
 };
 
 } // namespace ccd

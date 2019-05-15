@@ -1,46 +1,9 @@
 ﻿#include "viewer.hpp"
 
 #include <logger.hpp>
-
-#define CCD_IM_ARRAYSIZE(_ARR) (int(sizeof(_ARR) / sizeof(*_ARR)))
-
-namespace ImGui {
-
-bool InputIntBounded(const char* label, int* val, int lower_bound = INT_MIN,
-    int upper_bound = INT_MAX, int step = 1, int step_fast = 100,
-    ImGuiInputTextFlags flags = 0)
-{
-    int unbounded_val = *val;
-    bool success
-        = ImGui::InputInt(label, &unbounded_val, step, step_fast, flags);
-    if (success) {
-        if (unbounded_val >= lower_bound && unbounded_val <= upper_bound) {
-            *val = unbounded_val;
-            return true;
-        }
-    }
-    return false;
-};
-
-bool InputDoubleBounded(const char* label, double* val,
-    double lower_bound = -std::numeric_limits<double>::infinity(),
-    double upper_bound = std::numeric_limits<double>::infinity(),
-    double step = 1, double step_fast = 100, const char* format = "%.6f",
-    ImGuiInputTextFlags flags = 0)
-{
-    double unbounded_val = *val;
-    bool success = ImGui::InputDouble(
-        label, &unbounded_val, step, step_fast, format, flags);
-    if (success) {
-        if (unbounded_val >= lower_bound && unbounded_val <= upper_bound) {
-            *val = unbounded_val;
-            return true;
-        }
-    }
-    return false;
-};
-
-} // namespace ImGui
+#include <viewer/constraint_view.hpp>
+#include <viewer/imgui_ext.hpp>
+#include <viewer/solver_view.hpp>
 
 namespace ccd {
 
@@ -330,7 +293,7 @@ void ViewerMenu::draw_edit_modes()
     // Menu for fixing vertex positions
     if (state.selected_points.size() > 0
         && ImGui::CollapsingHeader(
-            "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
+               "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Initial button state is all(fixed_dof(selected_points))
         bool x_fixed_originally = true, y_fixed_originally = true;
         for (int point : state.selected_points) {
@@ -377,20 +340,15 @@ void ViewerMenu::draw_ccd_steps()
                 = static_cast<ccd::DetectionMethod>(idx_detection_method);
         }
 
-        ImGui::InputDouble("vol. epsilon", &state.volume_epsilon);
-
         if (ImGui::Button("Run CCD", ImVec2(-1, 0))) {
             compute_collisions();
         }
 
-        if (state.ee_impacts.size()) {
-            if (ImGui::InputInt("volume##volume", &state.current_volume)) {
-                redraw_grad_volume(/*opt_gradient=*/false);
-            }
-            ImGui::Checkbox("skip empty", &state.skip_no_impact_edge);
-            ImGui::Text(
-                "||jac_j(i)|| = \t%.3g", state.get_volume_grad().norm());
+        if (ImGui::InputInt("volume##volume", &state.current_volume)) {
+            redraw_grad_volume(/*opt_gradient=*/false);
         }
+        ImGui::Checkbox("skip empty", &state.skip_no_impact_edge);
+        ImGui::Text("||jac_j(i)|| = \t%.3g", state.get_volume_grad().norm());
     }
 } // namespace ccd
 
@@ -400,90 +358,62 @@ void ViewerMenu::draw_ccd_steps()
 void ViewerMenu::draw_optimization()
 {
     using namespace opt;
-    int idx_optimization_method = state.solver_settings.method;
-    int idx_qp_solver = state.solver_settings.qp_solver;
-    int idx_lcp_solver = state.solver_settings.lcp_solver;
-    int idx_ncp_update
-        = static_cast<int>(state.solver_settings.ncp_update_method);
+    int idx_optimization_method = static_cast<int>(state.opt_method);
+    int idx_ctr_type = static_cast<int>(state.constraint_function);
 
     if (ImGui::CollapsingHeader(
-            "Displacement Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
+            "Collision Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-        ImGui::Checkbox(
-            "use alt formulation##opt", &(state.use_alternative_formulation));
+        if (ImGui::Combo("Constraint##opt", &idx_ctr_type, ccd::ConstraintNames,
+                CCD_IM_ARRAYSIZE(ccd::ConstraintNames))) {
+            state.constraint_function
+                = static_cast<ccd::ConstraintType>(idx_ctr_type);
+        }
+        {
+            ImGui::Indent();
+            ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
+            if (state.constraint_function == ccd::ConstraintType::VOLUME) {
+                volume_constraint_menu(state.volume_constraint);
+            } else {
+                barrier_constraint_menu(state.barrier_constraint);
+            }
+            ImGui::PopItemWidth();
+            ImGui::Unindent();
+        }
 
         if (ImGui::Combo("method##opt", &idx_optimization_method,
-                ccd::opt::OptimizationMethodNames,
-                CCD_IM_ARRAYSIZE(ccd::opt::OptimizationMethodNames))) {
-            state.solver_settings.method
-                = static_cast<ccd::opt::OptimizationMethod>(
-                    idx_optimization_method);
+                ccd::OptimizationMethodNames,
+                CCD_IM_ARRAYSIZE(ccd::OptimizationMethodNames))) {
+            state.opt_method
+                = static_cast<ccd::OptimizationMethod>(idx_optimization_method);
         }
 
-        switch (state.solver_settings.method) {
-        case opt::OptimizationMethod::LINEARIZED_CONSTRAINTS:
-            if (ImGui::Combo("QP solver##opt", &idx_qp_solver,
-                    ccd::opt::QPSolverNames,
-                    CCD_IM_ARRAYSIZE(ccd::opt::QPSolverNames))) {
-                state.solver_settings.qp_solver
-                    = static_cast<ccd::opt::QPSolver>(idx_qp_solver);
-            }
-            break;
-
-        case opt::OptimizationMethod::NCP:
-            if (ImGui::Combo("LCP solver##opt", &idx_lcp_solver,
-                    ccd::opt::LCPSolverNames,
-                    CCD_IM_ARRAYSIZE(ccd::opt::LCPSolverNames))) {
-                state.solver_settings.lcp_solver
-                    = static_cast<ccd::opt::LCPSolver>(idx_lcp_solver);
-            }
-            if (ImGui::Combo("NCP Update##opt", &idx_ncp_update,
-                    ccd::opt::NcpUpdateNames,
-                    CCD_IM_ARRAYSIZE(ccd::opt::NcpUpdateNames))) {
-                state.solver_settings.ncp_update_method
-                    = static_cast<ccd::opt::NcpUpdate>(idx_ncp_update);
-            }
-            ImGui::InputDouble("tol. ",
-                &state.solver_settings.absolute_tolerance, 0.0, 0.0, "%.3g");
-            break;
-
-        case opt::OptimizationMethod::BARRIER_NEWTON:
+        {
+            ImGui::Indent();
             ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
-            ImGui::InputDoubleBounded("barrier tol.##opt",
-                &state.solver_settings.min_barrier_epsilon, 0.0, 2e19, 0.0, 0.0,
-                "%.3g");
-            ImGui::InputDoubleBounded("line search tol.##opt",
-                &state.solver_settings.line_search_tolerance, 0.0, 2e19, 0.0,
-                0.0, "%.3g");
-            ImGui::PopItemWidth();
-            break;
-
-        default:
-            break;
-        }
-
-        if (ImGui::CollapsingHeader("Settings##opt")) {
-            if (ImGui::InputInt(
-                    "verbosity##opt", &state.solver_settings.verbosity)) {
-                if (state.solver_settings.verbosity > 0) {
-                    spdlog::set_level(spdlog::level::debug);
-                }
+            switch (state.opt_method) {
+            case ccd::OptimizationMethod::LINEARIZED_CONSTRAINTS:
+                solver_menu(state.qp_solver);
+                break;
+            case ccd::OptimizationMethod::NCP:
+                solver_menu(state.ncp_solver);
+                break;
+            case ccd::OptimizationMethod::IPOPT:
+                solver_menu(state.ipopt_solver);
+                break;
+            case ccd::OptimizationMethod::NLOPT:
+                solver_menu(state.nlopt_solver);
+                break;
+            case ccd::OptimizationMethod::BARRIER_NEWTON:
+                solver_menu(state.barrier_newton_solver);
+                break;
             }
-            ImGui::InputIntBounded(
-                "max iter##opt", &state.solver_settings.max_iter, 0);
-            ImGui::InputDoubleBounded("rel. tol.##opt",
-                &state.solver_settings.relative_tolerance, 0.0, 2e19, 0.0, 0.0,
-                "%.3g");
-            ImGui::InputDoubleBounded("abs. tol.##opt",
-                &state.solver_settings.absolute_tolerance, 0.0, 2e19, 0.0, 0.0,
-                "%.3g");
+            ImGui::PopItemWidth();
+            ImGui::Unindent();
         }
 
         ImGui::Checkbox(
             "continue optimization##opt", &(state.reuse_opt_displacements));
-
-        ImGui::Checkbox(
-            "recompute col. set##opt", &(state.recompute_collision_set));
 
         if (ImGui::Button("Optimize##opt", ImVec2(-1, 0))) {
             optimize_displacements();
@@ -507,7 +437,7 @@ void ViewerMenu::draw_optimization_results()
         ImGui::BeginChild("Opt Results Detail",
             ImVec2(ImGui::GetWindowContentRegionWidth() * 0.9f, 100), false);
         ImGui::Text("method = %s",
-            ccd::opt::OptimizationMethodNames[state.opt_results.method]);
+            ccd::OptimizationMethodNames[static_cast<int>(state.opt_method)]);
         ImGui::Text("energy = %.3g", state.get_opt_functional());
 
         ImGui::Text("displacements");
@@ -532,8 +462,8 @@ void ViewerMenu::draw_optimization_results()
         }
         ImGui::PopItemWidth();
         if (state.u_history.size() > 0
-            && ImGui::InputInt(
-                "step##opt-results", &(state.current_opt_iteration), 1, 10)) {
+            && ImGui::InputInt("step##opt-results",
+                   &(state.current_opt_iteration), 1, 10)) {
 
             redraw_opt_displacements();
             redraw_grad_volume(/*opt_gradient=*/true);

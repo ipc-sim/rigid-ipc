@@ -1,6 +1,6 @@
 #include <igl/serialize.h>
 #include <opt/optimization_results.hpp>
-#include <opt/solver_settings.hpp>
+
 
 namespace ccd {
 namespace io {
@@ -28,8 +28,7 @@ namespace serialization {
         ::igl::serialize(obj.x, std::string("x"), buffer);
         ::igl::serialize(obj.minf, std::string("fun"), buffer);
         ::igl::serialize(obj.success, std::string("success"), buffer);
-        ::igl::serialize(obj.finished, std::string("finished"), buffer);
-        ::igl::serialize(obj.method, std::string("method"), buffer);
+        ::igl::serialize(obj.finished, std::string("finished"), buffer);  
     }
     template <>
     inline void deserialize(
@@ -39,7 +38,6 @@ namespace serialization {
         ::igl::deserialize(obj.minf, std::string("fun"), buffer);
         ::igl::deserialize(obj.success, std::string("success"), buffer);
         ::igl::deserialize(obj.finished, std::string("finished"), buffer);
-        ::igl::deserialize(obj.method, std::string("method"), buffer);
     }
 } // namespace serialization
 } // namespace igl

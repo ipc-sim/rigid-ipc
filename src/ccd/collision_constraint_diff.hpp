@@ -142,6 +142,13 @@ namespace autodiff {
         const constraint_func<double>& compute_constraint,
         Eigen::VectorXd& constraints);
 
+    void compute_constraints_dense_refresh_toi(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+        const EdgeEdgeImpacts& ee_impacts,
+        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
+        const constraint_func<double>& compute_constraint,
+        Eigen::VectorXd& constraints);
+
     /**
      * @brief Compute the first derivative of the collision constraint for all
      * edge-edge impacts.
@@ -159,6 +166,13 @@ namespace autodiff {
      * @param[out] constraint_grad  First derivative of the constraint.
      */
     void compute_constraints_gradient(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+        const EdgeEdgeImpacts& ee_impacts,
+        const Eigen::VectorXi& edge_impact_map, const double epsilon,
+        const constraint_func<DScalar>& compute_constraint,
+        Eigen::MatrixXd& constraint_grad);
+
+    void compute_constraints_dense_gradient(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
         const Eigen::VectorXi& edge_impact_map, const double epsilon,

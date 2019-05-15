@@ -1,6 +1,8 @@
 // General code to compute the collision constraint and its derivative(s).
 #include <ccd/collision_constraint_diff.hpp>
 
+#include <Eigen/Sparse>
+
 #include <autodiff/finitediff.hpp>
 // #include <autogen/collision_volume.hpp>
 #include <ccd/time_of_impact.hpp>
@@ -23,24 +25,49 @@ double time_spent_computing_hessian = 0;
 namespace ccd {
 namespace autodiff {
 
-    // We need to figure out which one is the impact node
-    ImpactNode determine_impact_node(const Eigen::MatrixX2i& edges,
-        const EdgeEdgeImpact& impact, const int edge_id, Eigen::Vector2i& e_kl)
+    ///
+    /// \brief Determines which is the impacting node on an edge-edge impact
+    /// \param[in] impact       : the edge-edge impact
+    /// \param[in] edge_ij      : the edge we are evaluating
+    /// \param[out] edge_kl     : the other edge involved in the impact
+    /// \return                 : the impact node
+    ///
+    ImpactNode determine_impact_node(
+        const EdgeEdgeImpact& impact, const int edge_ij, int& edge_kl)
     {
-        if (edge_id == impact.impacted_edge_index) {
+        if (edge_ij == impact.impacted_edge_index) {
             // IJ is the impactED edge. The impacting node is K or L.
-            e_kl = edges.row(impact.impacting_edge_index);
+            edge_kl = impact.impacting_edge_index;
             return impact.impacting_alpha < 0.5 ? ccd::autodiff::vK
                                                 : ccd::autodiff::vL;
 
-        } else if (edge_id == impact.impacting_edge_index) {
+        } else if (edge_ij == impact.impacting_edge_index) {
             // IJ is the impactING edge
-            e_kl = edges.row(impact.impacted_edge_index);
+            edge_kl = impact.impacted_edge_index;
             return impact.impacting_alpha < 0.5 ? ccd::autodiff::vI
                                                 : ccd::autodiff::vJ;
         } else {
             throw "Edge ID give is not part of the impact!";
         }
+    }
+
+    int get_constraint_index(
+        const EdgeEdgeImpact& impact, const bool impacted, const int num_edges)
+    {
+        int e1 = impact.impacted_edge_index;
+        int e2 = impact.impacting_edge_index;
+        int p = impact.impacting_alpha > 0.5 ? 1 : 0;
+        int q = impacted ? 0 : 1;
+
+        // unravel index Q * P * E2 * e1 + Q * P * e2 + Q * p + q
+        const int Q = 2, P = 2, E2 = num_edges;
+        return Q * P * E2 * e1 + Q * P * e2 + Q * p + q;
+    }
+
+    int get_constraints_size(const int num_edges)
+    {
+        const int Q = 2, P = 2, E2 = num_edges, E1 = num_edges;
+        return Q * P * E2 * E1;
     }
 
     // ------------------------------------------------------------------------
@@ -142,10 +169,38 @@ namespace autodiff {
 #endif
     }
 
+    void compute_constraints_dense_refresh_toi(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+        const EdgeEdgeImpacts& ee_impacts,
+        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
+        const constraint_func<double>& compute_constraint,
+        Eigen::VectorXd& constraints)
+    {
+        const int num_edges = int(E.rows());
+        const int num_constr = get_constraints_size(num_edges);
+        constraints.resize(num_constr);
+        constraints.setZero();
+
+        for (size_t i = 0; i < ee_impacts.size(); ++i) {
+            auto& ee_impact = ee_impacts[i];
+
+            constraints[get_constraint_index(
+                ee_impact, /*impacted=*/true, num_edges)]
+                = collision_constraint_refresh_toi(V, U, E, ee_impact,
+                    ee_impact.impacted_edge_index, epsilon, compute_constraint);
+
+            constraints[get_constraint_index(
+                ee_impact, /*impacted=*/false, num_edges)]
+                = collision_constraint_refresh_toi(V, U, E, ee_impact,
+                    ee_impact.impacting_edge_index, epsilon,
+                    compute_constraint);
+        }
+    }
+
     void compute_constraints_gradient(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& edge_impact_map, const double epsilon,
+        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
         const constraint_func<DScalar>& compute_constraint,
         Eigen::MatrixXd& constraint_grad)
     {
@@ -178,10 +233,43 @@ namespace autodiff {
 #endif
     }
 
+    void compute_constraints_dense_gradient(const Eigen::MatrixX2d& V,
+        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
+        const EdgeEdgeImpacts& ee_impacts,
+        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
+        const constraint_func<DScalar>& compute_constraint,
+        Eigen::MatrixXd& constraint_grad)
+    {
+        const int num_edges = int(E.rows());
+        const int num_constr = get_constraints_size(num_edges);
+
+        constraint_grad.resize(int(V.size()), num_constr);
+        constraint_grad.setZero();
+
+        Eigen::SparseMatrix<double> grad;
+        for (size_t i = 0; i < ee_impacts.size(); ++i) {
+            auto& ee_impact = ee_impacts[i];
+
+            collision_constraint_grad(V, U, E, ee_impact,
+                ee_impact.impacted_edge_index, epsilon, compute_constraint,
+                grad);
+            constraint_grad.col(
+                get_constraint_index(ee_impact, /*impacted=*/true, num_edges))
+                = grad;
+
+            collision_constraint_grad(V, U, E, ee_impact,
+                ee_impact.impacting_edge_index, epsilon, compute_constraint,
+                grad);
+            constraint_grad.col(
+                get_constraint_index(ee_impact, /*impacted=*/false, num_edges))
+                = grad;
+        }
+    }
+
     void compute_constraints_hessian(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
         const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& edge_impact_map, const double epsilon,
+        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
         const constraint_func<DScalar>& compute_constraint,
         std::vector<Eigen::SparseMatrix<double>>& constraint_hessian)
     {
@@ -220,14 +308,15 @@ namespace autodiff {
     // -----------------------------------------------------------------------------
     double collision_constraint_refresh_toi(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges,
-        const EdgeEdgeImpact& impact, const int edge_id, const double epsilon,
+        const EdgeEdgeImpact& impact, const int edge_ij, const double epsilon,
         const constraint_func<double>& compute_constraint)
     {
         // We need to figure out which one is the impact node
-        Eigen::Vector2i e_ij = edges.row(edge_id);
-        Eigen::Vector2i e_kl;
-        ImpactNode impact_node
-            = determine_impact_node(edges, impact, edge_id, e_kl);
+        int edge_kl;
+        ImpactNode impact_node;
+        impact_node = determine_impact_node(impact, edge_ij, edge_kl);
+        Eigen::Vector2i e_ij = edges.row(edge_ij);
+        Eigen::Vector2i e_kl = edges.row(edge_kl);
 
         // Then we get the position and velocity of the edge vertices
         Eigen::Vector2d Vi = vertices.row(e_ij(0));

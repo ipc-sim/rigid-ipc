@@ -11,47 +11,40 @@
 namespace ccd {
 namespace opt {
 
-    // Optimize the displacments using NLopt.
-    OptimizationResults solve_problem_with_nlopt(
-        OptimizationProblem& problem, const SolverSettings& settings)
+    NLOptSolver::NLOptSolver()
+        : algorithm(nlopt::LD_SLSQP)
+        , absolute_tolerance(1e-8)
+        , relative_tolerance(1e-8)
+        , max_iterations(3000)
+        , max_time(2e19)
+        , verbosity(false)
     {
-        nlopt::algorithm algorithm;
-        switch (settings.method) {
-        case MMA:
-            algorithm = nlopt::LD_MMA;
-            break;
-        case SLSQP:
-            algorithm = nlopt::LD_SLSQP;
-            break;
-        default:
-            throw NotImplementedError(
-                "Optimization method not implemented in NLopt.");
-        }
-        // Create a NLopt optimization object
+    }
+    NLOptSolver::~NLOptSolver() {}
+
+    OptimizationResults NLOptSolver::solve(OptimizationProblem& problem)
+    {
         nlopt::opt opt(algorithm, unsigned(problem.num_vars));
 
-        // Set the objective function
         opt.set_min_objective(nlopt_objective, &problem);
 
-        // Set bound constraints
         opt.set_lower_bounds(std::vector<double>(problem.x_lower.data(),
             problem.x_lower.data() + problem.x_lower.size()));
         opt.set_upper_bounds(std::vector<double>(problem.x_upper.data(),
             problem.x_upper.data() + problem.x_upper.size()));
 
         // Set inequality constraints if desired
-        std::vector<double> tol(2 * problem.num_constraints,
-            settings.absolute_tolerance); // Tolerances
-        // Set the m-constraints function
+        std::vector<double> tol(
+            uint(2 * problem.num_constraints), absolute_tolerance);
         opt.add_inequality_mconstraint(
             nlopt_inequality_constraints, &problem, tol);
 
         // Stopping criteria
-        opt.set_xtol_rel(settings.relative_tolerance);
+        opt.set_xtol_rel(relative_tolerance);
         // This may not play well with MMA for some reason
-        opt.set_xtol_abs(settings.absolute_tolerance);
-        opt.set_maxeval(settings.max_iter);
-        opt.set_maxtime(settings.max_time);
+        opt.set_xtol_abs(absolute_tolerance);
+        opt.set_maxeval(max_iterations);
+        opt.set_maxtime(max_time);
 
         // Initial guess is the value of Uopt
         std::vector<double> x0(
@@ -60,91 +53,70 @@ namespace opt {
 
         // Optimize the displacments
         nlopt::result r = opt.optimize(x0, minf);
-        if (settings.verbosity) {
+        if (verbosity) {
             print_nlopt_termination_reason(opt, r);
         }
 
         OptimizationResults results;
         results.x = Eigen::Map<Eigen::VectorXd>(x0.data(), problem.num_vars);
         results.minf = minf;
-        Eigen::ArrayXd gx = problem.g(results.x).array();
+        Eigen::ArrayXd gx = problem.eval_g(results.x).array();
         results.success = r > 0 && minf >= 0
-            && problem.are_constraints_satisfied(
-                results.x, settings.absolute_tolerance);
+            && problem.are_constraints_satisfied(results.x, absolute_tolerance);
         return results;
     }
 
-    // Computes NLopt's objective for an OptimizationProblem.
+
     double nlopt_objective(
         const std::vector<double>& x, std::vector<double>& grad, void* data)
     {
-        assert(data); // Need the problem to compute anything.
+        assert(data != nullptr);
         OptimizationProblem* problem = static_cast<OptimizationProblem*>(data);
 
-        // Map the input to an Eigen Vector
         const Eigen::VectorXd X
             = Eigen::Map<const Eigen::VectorXd>(x.data(), problem->num_vars);
 
-        // Only compute the gradient as needed.
         if (!grad.empty()) {
             // This should always be true according to NLopt.
             assert(size_t(grad.size()) == size_t(problem->num_vars));
 
             // Store the gradient of f(X) in grad
-            Eigen::VectorXd::Map(grad.data(), grad.size()) = problem->grad_f(X);
-
-            // This should really be done in the outer loop of NLopt (as Daniele
-            // pointed out), but that would require modifying NLopt's source
-            // code.
-            // problem->intermediate_cb();
+            Eigen::VectorXd::Map(grad.data(), int(grad.size()))
+                = problem->eval_grad_f(X);
         }
 
-        // Compute the objective at x
-        return problem->f(X);
+        return problem->eval_f(X);
     }
 
-    // Computes NLopt's constraints for an OptimizationProblem
     void nlopt_inequality_constraints(unsigned m, double* results, unsigned n,
         const double* x, double* grad, void* data)
     {
         assert(data); // Need data to compute volumes
         OptimizationProblem* problem = static_cast<OptimizationProblem*>(data);
 
-        // Map the input to an Eigen Vector
         const Eigen::MatrixXd X = Eigen::Map<const Eigen::VectorXd>(x, n);
-
-        // Compute the constraints at x
-        Eigen::VectorXd gx = problem->g(X);
+        Eigen::VectorXd gx = problem->eval_g(X);
 
         // We want g_lower ≤ g(x) ≤ g_upper, but NLopt expects all
         // constraints(x) ≤ 0, so stack the constraints and negate as needed.
-        assert(2 * problem->num_constraints == m);
+        assert(uint(2 * problem->num_constraints) == m);
         Eigen::VectorXd::Map(results, problem->num_constraints)
             = -gx + problem->g_lower;
         Eigen::VectorXd::Map(
             results + problem->num_constraints, problem->num_constraints)
             = gx - problem->g_upper;
 
-        // Only compute the gradient as needed.
         if (grad) {
-            // Gradient of the volumes (n x m)
-            Eigen::MatrixXd dgx = problem->jac_g(X).transpose();
-            // Check that the sizes match up
+            Eigen::MatrixXd dgx = problem->eval_jac_g(X).transpose();
             assert(size_t(m * n) == size_t(2 * dgx.size()));
             // Flatten the Jacobian
             dgx.resize(dgx.size(), 1);
             // Store the flattened Jacobian in grad (once for each bound)
             Eigen::VectorXd::Map(grad, dgx.size()) = -dgx;
             Eigen::VectorXd::Map(grad + dgx.size(), dgx.size()) = dgx;
-
-            // This should really be done in the outer loop of NLopt (as Daniele
-            // pointed out), but that would require modifying NLopt's source
-            // code.
-            // problem->intermediate_cb();
         }
-    } // namespace opt
+    }
 
-    // Output the reason for NLopt's termination.
     void print_nlopt_termination_reason(
         const nlopt::opt& opt, const nlopt::result result)
     {

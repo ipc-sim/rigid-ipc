@@ -13,9 +13,9 @@
 namespace ccd {
 namespace opt {
 
-    // Performa Newton's Method to minimize the objective unconstrained.
-    OptimizationResults newtons_method(const OptimizationProblem& problem,
-        const SolverSettings& settings, const double mu)
+    OptimizationResults newtons_method(OptimizationProblem& problem,
+        const double absolute_tolerance, const double line_search_tolerance,
+        const int max_iter, const double mu)
     {
         Eigen::VectorXd x = problem.x0;
 
@@ -28,7 +28,7 @@ namespace opt {
         }
 
         // Initalize the working variables
-        Eigen::VectorXd g = problem.grad_f(x),
+        Eigen::VectorXd g = problem.eval_grad_f(x),
                         delta_x = Eigen::VectorXd::Zero(problem.num_vars),
                         g_free; // subset of g for free degrees of freedom
         igl::slice(g, free_dof, 1, g_free); // Initialize g_free
@@ -36,10 +36,9 @@ namespace opt {
         double gamma;
 
         int iter = 0;
-        while (iter <= settings.max_iter
-            && g_free.squaredNorm() > settings.absolute_tolerance) {
+        while (iter <= max_iter && g_free.squaredNorm() > absolute_tolerance) {
             // Compute the full hessian
-            H = problem.hessian_f(x);
+            H = problem.eval_hessian_f(x);
             H.diagonal().array() += mu;
             // Remove rows and columns of fixed dof
             igl::slice(H, free_dof, free_dof, H_free);
@@ -49,30 +48,30 @@ namespace opt {
                 free_dof, 1, delta_x);
 
             // Perform a line search along delta x to stay in the feasible realm
-            if (!line_search(x, delta_x, problem.f, gamma,
-                    settings.line_search_tolerance)) {
+            if (!line_search(x, delta_x, problem.func_f(), gamma,
+                    line_search_tolerance)) {
                 break; // Newton step unsuccessful
             }
 
             x += gamma * delta_x; // Update x
 
-            g = problem.grad_f(x); // Recompute the gradient
+            g = problem.eval_grad_f(x); // Recompute the gradient
             // Remove rows of fixed dof
             igl::slice(g, free_dof, 1, g_free);
 
             // Save intermedtiate results
-            settings.intermediate_cb(
-                x, problem.f(x), Eigen::VectorXd::Zero(x.size()), 0, iter);
+            // settings.intermediate_cb(
+            //     x, problem.f(x), Eigen::VectorXd::Zero(x.size()), 0, iter);
 
             iter++; // Increase iteration counter
         }
 
-        if (settings.verbosity > 0) {
-            std::cout << "took " << iter << " iterations." << std::endl;
-        }
+        // if (settings.verbosity > 0) {
+        std::cout << "took " << iter << " iterations." << std::endl;
+        // }
 
         return OptimizationResults(
-            x, problem.f(x), g.squaredNorm() <= settings.absolute_tolerance);
+            x, problem.eval_f(x), g.squaredNorm() <= absolute_tolerance);
     }
 
     // Search along a search direction to find a scalar gamma in [0, 1] such
