@@ -66,6 +66,9 @@ namespace opt {
         double absolute_tolerance;
         double line_search_tolerance;
         int max_iterations;
+
+        std::function<void(const Eigen::VectorXd&, const double, const int)>*
+            callback;
     };
 
 } // namespace opt

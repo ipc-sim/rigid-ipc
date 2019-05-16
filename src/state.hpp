@@ -95,7 +95,7 @@ public:
 
     opt::ParticlesDisplProblem opt_problem;
 
-    /// @brief if True, reuse the current opt_displacements for initial
+    /// @brief reuse the current opt_displacements to initialize the
     /// optimization
     bool reuse_opt_displacements = false;
 
@@ -144,6 +144,9 @@ public:
 
     void reset_optimization_problem();
     void optimize_displacements(const std::string filename = "");
+
+    void optimization_callback(const Eigen::VectorXd& x, const double obj_value,
+        const int iteration_number);
 
     void load_optimization(const std::string filename);
     void save_optimization(const std::string filename);

@@ -21,6 +21,20 @@
 #include <profiler.hpp>
 
 namespace ccd {
+void State::optimization_callback(const Eigen::VectorXd& x,
+    const double obj_value, const int iteration_number)
+{
+    Eigen::MatrixXd u = x;
+    u.resize(x.rows() / 2, 2);
+    u_history.push_back(u);
+    f_history.push_back(obj_value);
+
+    // Eigen::VectorXd gx = opt_problem.g(x);
+    // g_history.push_back(gx);
+    // gsum_history.push_back(gx.sum());
+    // jac_g_history.push_back(opt_problem.jac_g());
+}
+
 State::State()
     : detection_method(DetectionMethod::BRUTE_FORCE)
     , output_dir(DATA_OUTPUT_DIR)
@@ -36,6 +50,7 @@ State::State()
     , current_opt_iteration(-1)
 {
     barrier_newton_solver.barrier_constraint = &barrier_constraint;
+    // barrier_newton_solver.callback = &(this->optimization_callback);
 }
 
 // -----------------------------------------------------------------------------

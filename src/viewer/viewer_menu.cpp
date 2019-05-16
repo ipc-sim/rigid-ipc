@@ -288,12 +288,91 @@ void ViewerMenu::draw_edit_modes()
             recolor_edges();
             recolor_displacements();
         }
+
+        if (state.selected_points.size() > 0
+            && ImGui::Button("Duplicate Selected##Edit", ImVec2(-1, 0))) {
+            // Duplicate selected vertices and edges that have both end-points
+            // selected
+
+            // selected_vertices = set(seletected_vertices)
+            std::set<int> selected_edges;
+            for (int i = 0; i < state.edges.rows(); i++) {
+                if (std::find(state.selected_points.begin(),
+                        state.selected_points.end(), state.edges(i, 0))
+                        != state.selected_points.end()
+                    && std::find(state.selected_points.begin(),
+                           state.selected_points.end(), state.edges(i, 1))
+                        != state.selected_points.end()) {
+                    selected_edges.insert(i);
+                }
+            }
+            std::vector<int> selected_edges_vector(selected_edges.size());
+            std::copy(selected_edges.begin(), selected_edges.end(),
+                selected_edges_vector.begin());
+
+            // selected_vertices = list(selected_vertices)
+            int original_edges_count = state.edges.rows();
+            int original_vertices_count = state.vertices.rows();
+
+            state.edges.conservativeResize(
+                original_edges_count + selected_edges_vector.size(), 2);
+            for (int i = 0; i < selected_edges_vector.size(); i++) {
+                for (int j = 0; j < 2; j++) {
+                    int vertex_idx = state.edges(selected_edges_vector[i], j);
+                    state.edges(original_edges_count + i, j)
+                        = std::distance(state.selected_points.begin(),
+                              std::find(state.selected_points.begin(),
+                                  state.selected_points.end(), vertex_idx))
+                        + original_vertices_count;
+                }
+            }
+
+            state.vertices.conservativeResize(
+                original_vertices_count + state.selected_points.size(), 2);
+            state.displacements.conservativeResize(
+                original_vertices_count + state.selected_points.size(), 2);
+            for (int i = 0; i < state.selected_points.size(); i++) {
+                state.vertices.row(original_vertices_count + i)
+                    = state.vertices.row(state.selected_points[i]);
+                // state.vertices(original_vertices_count + i, 0) += 1;
+                state.vertices(original_vertices_count + i, 1) -= 1;
+                state.displacements.row(original_vertices_count + i)
+                    = state.displacements.row(state.selected_points[i]);
+            }
+
+            state.opt_results.x.conservativeResize(
+                original_vertices_count + state.selected_points.size(), 2);
+            state.opt_results.x.setZero();
+
+            state.reset_impacts();
+
+            // Resize the fixed_dof
+            // Eigen::Array<bool, Eigen::Dynamic, 1> new_fixed_dof(
+            //     state.displacements.size(), false);
+            // new_fixed_dof.block(0, 0, original_vertices_count, 1)
+            //     = state.opt_problem.fixed_dof.block(
+            //         0, 0, original_vertices_count, 1);
+            // new_fixed_dof.block(
+            //     original_vertices_count + 1, 0, original_vertices_count, 1)
+            //     = state.opt_problem.fixed_dof.block(
+            //         original_vertices_count, 0, original_vertices_count, 1);
+            // new_fixed_dof(new_fixed_dof.size() - 1) = false;
+            // state.opt_problem.fixed_dof = new_fixed_dof;
+            state.opt_problem.fixed_dof
+                = Eigen::Array<bool, Eigen::Dynamic, 1>::Zero(
+                    state.displacements.size());
+
+            state_history.push_back(state);
+            load_state();
+
+            state.selected_points.clear();
+        }
     }
 
     // Menu for fixing vertex positions
     if (state.selected_points.size() > 0
         && ImGui::CollapsingHeader(
-               "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
+            "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Initial button state is all(fixed_dof(selected_points))
         bool x_fixed_originally = true, y_fixed_originally = true;
         for (int point : state.selected_points) {
@@ -462,8 +541,8 @@ void ViewerMenu::draw_optimization_results()
         }
         ImGui::PopItemWidth();
         if (state.u_history.size() > 0
-            && ImGui::InputInt("step##opt-results",
-                   &(state.current_opt_iteration), 1, 10)) {
+            && ImGui::InputInt(
+                "step##opt-results", &(state.current_opt_iteration), 1, 10)) {
 
             redraw_opt_displacements();
             redraw_grad_volume(/*opt_gradient=*/true);
