@@ -10,22 +10,21 @@
 
 #include <opt/newtons_method.hpp>
 
+#include <profiler.hpp>
+#ifdef PROFILE_FUNCTIONS
+long number_of_update_solves = 0;
+double time_spent_solving_for_update = 0;
+#endif
+
 namespace ccd {
 namespace opt {
 
     OptimizationResults newtons_method(OptimizationProblem& problem,
-        const double absolute_tolerance, const double line_search_tolerance,
-        const int max_iter, const double mu)
+        const Eigen::VectorXi& free_dof, const double absolute_tolerance,
+        const double line_search_tolerance, const int max_iter, bool verbose,
+        const double mu)
     {
         Eigen::VectorXd x = problem.x0;
-
-        // Convert from the boolean vector to a vector of free dof indices
-        Eigen::VectorXi free_dof(problem.num_vars - problem.fixed_dof.count());
-        for (int i = 0, j = 0; i < problem.fixed_dof.size(); i++) {
-            if (!problem.fixed_dof(i)) {
-                free_dof(j++) = i;
-            }
-        }
 
         // Initalize the working variables
         Eigen::VectorXd g = problem.eval_grad_f(x),
@@ -43,9 +42,31 @@ namespace opt {
             // Remove rows and columns of fixed dof
             igl::slice(H, free_dof, free_dof, H_free);
 
-            // Store the free dof back into delta_x
-            igl::slice_into(Eigen::VectorXd(H_free.lu().solve(-g_free)),
-                free_dof, 1, delta_x);
+// Store the free dof back into delta_x
+#ifdef PROFILE_FUNCTIONS
+            number_of_update_solves++;
+            igl::Timer timer;
+            timer.start();
+#endif
+            // Try to solve the hessian as a positive or negative semidefinite
+            // matrix. I do not know if this is true. I do know that for
+            // f(x) = 0.5 * ||U-U0||^2, hessian(f) = I.
+            auto H_free_decomp = H_free.ldlt();
+            if (H_free_decomp.info() == Eigen::NumericalIssue) {
+                std::cerr
+                    << "Hessian is not positive or negative semi-definite!"
+                    << std::endl;
+                igl::slice_into(Eigen::VectorXd(H_free.lu().solve(-g_free)),
+                    free_dof, 1, delta_x);
+            } else {
+                igl::slice_into(Eigen::VectorXd(H_free_decomp.solve(-g_free)),
+                    free_dof, 1, delta_x);
+            }
+
+#ifdef PROFILE_FUNCTIONS
+            timer.stop();
+            time_spent_solving_for_update += timer.getElapsedTime();
+#endif
 
             // Perform a line search along delta x to stay in the feasible realm
             if (!line_search(x, delta_x, problem.func_f(), gamma,
@@ -66,9 +87,9 @@ namespace opt {
             iter++; // Increase iteration counter
         }
 
-        // if (settings.verbosity > 0) {
-        std::cout << "took " << iter << " iterations." << std::endl;
-        // }
+        if (verbose > 0) {
+            std::cout << "took " << iter << " iterations." << std::endl;
+        }
 
         return OptimizationResults(
             x, problem.eval_f(x), g.squaredNorm() <= absolute_tolerance);

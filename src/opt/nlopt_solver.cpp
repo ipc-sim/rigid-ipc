@@ -17,7 +17,7 @@ namespace opt {
         , relative_tolerance(1e-8)
         , max_iterations(3000)
         , max_time(2e19)
-        , verbosity(false)
+        , verbose(false)
     {
     }
     NLOptSolver::~NLOptSolver() {}
@@ -53,7 +53,7 @@ namespace opt {
 
         // Optimize the displacments
         nlopt::result r = opt.optimize(x0, minf);
-        if (verbosity) {
+        if (verbose) {
             print_nlopt_termination_reason(opt, r);
         }
 
@@ -65,7 +65,6 @@ namespace opt {
             && problem.are_constraints_satisfied(results.x, absolute_tolerance);
         return results;
     }
-
 
     double nlopt_objective(
         const std::vector<double>& x, std::vector<double>& grad, void* data)

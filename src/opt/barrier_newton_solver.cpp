@@ -8,6 +8,12 @@
 #include <opt/barrier.hpp>
 #include <opt/newtons_method.hpp>
 
+#include <profiler.hpp>
+#ifdef PROFILE_FUNCTIONS
+long number_of_hessian_summations = 0;
+double time_spent_summing_hessians = 0;
+#endif
+
 namespace ccd {
 namespace opt {
 
@@ -124,13 +130,25 @@ namespace opt {
         //     hessian_coeffs = barrier_hessian(gx);
         // }
 
-        for (long i = 0; i < ddgx.size(); i++) {
-            // hessian += hessian_coeffs(i) * dgx.row(i).transpose() *
-            // dgx.row(i)
-            //     + grad_coeffs(i) * ddgx[unsigned(i)];
-            hessian += ddgx[unsigned(i)];
+#ifdef PROFILE_FUNCTIONS
+        number_of_hessian_summations++;
+        igl::Timer timer;
+        timer.start();
+#endif
+        if (ddgx.size() > 0) {
+            Eigen::SparseMatrix<double> sum_ddgx = ddgx[0];
+            for (long i = 1; i < ddgx.size(); i++) {
+                // hessian += hessian_coeffs(i) * dgx.row(i).transpose() *
+                // dgx.row(i)
+                //     + grad_coeffs(i) * ddgx[unsigned(i)];
+                sum_ddgx += ddgx[unsigned(i)];
+            }
+            hessian += sum_ddgx;
         }
-
+#ifdef PROFILE_FUNCTIONS
+        timer.stop();
+        time_spent_summing_hessians += timer.getElapsedTime();
+#endif
         // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
         // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
         hessian.diagonal() += barrier_hessian(x - general_problem->x_lower)
@@ -144,6 +162,7 @@ namespace opt {
         , absolute_tolerance(1e-8)
         , line_search_tolerance(1e-8)
         , max_iterations(3000)
+        , verbose(false)
     {
     }
 
@@ -157,21 +176,32 @@ namespace opt {
         BarrierProblem barrier_problem(
             general_problem, barrier_constraint->barrier_epsilon);
 
-        // if (settings.verbosity > 0) {
-        std::cout << std::endl;
-        // }
+        if (verbose) {
+            std::cout << std::endl;
+        }
+
+        // Convert from the boolean vector to a vector of free dof indices
+        Eigen::VectorXi free_dof(
+            barrier_problem.num_vars - barrier_problem.fixed_dof.count());
+        for (int i = 0, j = 0; i < barrier_problem.fixed_dof.size(); i++) {
+            if (!barrier_problem.fixed_dof(i)) {
+                free_dof(j++) = i;
+            }
+        }
 
         OptimizationResults results;
         do {
             // Log the epsilon and the newton method will log the number of
             // iterations.
-            // if (settings.verbosity > 0) {
-            std::cout << "ϵ = " << barrier_constraint->barrier_epsilon << ": ";
-            // }
+            if (verbose) {
+                std::cout << "ϵ = " << barrier_constraint->barrier_epsilon
+                          << ": ";
+            }
 
             // Optimize for a fixed epsilon
-            results = newtons_method(barrier_problem, absolute_tolerance,
-                line_search_tolerance, max_iterations);
+            results
+                = newtons_method(barrier_problem, free_dof, absolute_tolerance,
+                    line_search_tolerance, max_iterations, verbose);
             // Save the original problems objective
             results.minf = general_problem.eval_f(results.x);
 

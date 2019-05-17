@@ -71,9 +71,6 @@ public:
     /// @brief #E,2*V contact gradient for each edge
     Eigen::MatrixXd volume_grad;
 
-    /// @brief method to use for contact detection
-    DetectionMethod detection_method;
-
     std::string output_dir;
 
     ////////////////////////////////////////////////////////////////////////////

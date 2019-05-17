@@ -66,6 +66,7 @@ namespace opt {
         double absolute_tolerance;
         double line_search_tolerance;
         int max_iterations;
+        bool verbose;
     };
 
 } // namespace opt

@@ -10,7 +10,7 @@ set(test_sources
     test_time_of_impact.cpp
 
     # opt/test_displacements_opt.cpp
-    opt/test_newton_solver.cpp
+    # opt/test_newton_solver.cpp
     opt/test_nlopt.cpp
     opt/test_ipopt_solver.cpp
     opt/test_osqp.cpp
