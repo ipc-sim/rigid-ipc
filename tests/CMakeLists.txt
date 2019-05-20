@@ -10,6 +10,7 @@ set(test_sources
     test_impact_pruning.cpp
     test_collision_volume.cpp
     test_time_of_impact.cpp
+    test_hash_grid.cpp
 
     # Test libarary integration
     integration/test_nlopt.cpp

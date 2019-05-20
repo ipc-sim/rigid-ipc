@@ -156,6 +156,34 @@ namespace opt {
         return hessian;
     }
 
+    Eigen::SparseMatrix<double> BarrierProblem::eval_hessian_f_sparse(
+        const Eigen::VectorXd& x)
+    {
+        Eigen::SparseMatrix<double> hessian
+            = general_problem->eval_hessian_f_sparse(x);
+
+        std::vector<Eigen::SparseMatrix<double>> ddgx
+            = general_problem->eval_hessian_g(x);
+
+#ifdef PROFILE_FUNCTIONS
+        number_of_hessian_summations++;
+        igl::Timer timer;
+        timer.start();
+#endif
+        for (const auto& ddgx_i : ddgx) {
+            hessian += ddgx_i;
+        }
+#ifdef PROFILE_FUNCTIONS
+        timer.stop();
+        time_spent_summing_hessians += timer.getElapsedTime();
+#endif
+        // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
+        // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
+        // hessian.diagonal() += barrier_hessian(x - general_problem->x_lower)
+        //     + barrier_hessian(-x + general_problem->x_upper);
+        return hessian;
+    }
+
     BarrierNewtonSolver::BarrierNewtonSolver()
         : barrier_constraint(nullptr)
         , min_barrier_epsilon(1e-8)
@@ -189,8 +217,12 @@ namespace opt {
             }
         }
 
+        // Calculate the maximum number of iteration allowable
+        int max_inner_iterations = int(max_iterations
+            / ceil(-log2(min_barrier_epsilon) + log2(barrier_problem.epsilon)));
+
         OptimizationResults results;
-        do {
+        while (barrier_problem.epsilon > min_barrier_epsilon) {
             // Log the epsilon and the newton method will log the number of
             // iterations.
             if (verbose) {
@@ -199,9 +231,9 @@ namespace opt {
             }
 
             // Optimize for a fixed epsilon
-            results
-                = newtons_method(barrier_problem, free_dof, absolute_tolerance,
-                    line_search_tolerance, max_iterations, verbose);
+            results = sparse_newtons_method(barrier_problem, free_dof,
+                absolute_tolerance, line_search_tolerance, max_inner_iterations,
+                verbose);
             // Save the original problems objective
             results.minf = general_problem.eval_f(results.x);
 
@@ -211,7 +243,7 @@ namespace opt {
 
             // Start next iteration from the ending optimal position
             barrier_problem.x0 = results.x;
-        } while (barrier_problem.epsilon > min_barrier_epsilon);
+        }
 
         results.success = results.minf >= 0
             && general_problem.are_constraints_satisfied(results.x, 0.0);

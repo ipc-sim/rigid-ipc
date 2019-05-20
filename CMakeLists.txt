@@ -39,7 +39,7 @@ set(SRCFILES
     src/ccd/not_implemented_error.cpp
     src/ccd/degenerate_edge_error.cpp
     src/ccd/impact.cpp
-    src/ccd/hash.cpp
+    src/ccd/hash_grid.cpp
     src/ccd/collision_detection_narrow_phase.cpp
     src/ccd/collision_detection_broad_phase.cpp
     src/ccd/prune_impacts.cpp

@@ -3,7 +3,7 @@
 // Supported geometry: point vs edge
 
 #include <ccd/collision_detection.hpp>
-#include <ccd/hash.hpp>
+#include <ccd/hash_grid.hpp>
 
 #include <iostream>
 
@@ -12,8 +12,6 @@
 long number_of_collision_detection_calls = 0;
 double time_spent_detecting_collisions = 0;
 #endif
-
-#define EPSILON (1e-8)
 
 namespace ccd {
 
@@ -90,16 +88,13 @@ void detect_edge_vertex_collisions_hash_map(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
     const Eigen::MatrixXb& skip_pair, EdgeVertexImpacts& ev_impacts)
 {
-    Hash hashgrid;
+    HashGrid hashgrid;
     hashgrid.resize(vertices, displacements, edges);
     hashgrid.addVertices(vertices, displacements);
     hashgrid.addEdges(vertices, displacements, edges);
 
     Candidates candidates; // Set of vertex edge pairs
     hashgrid.getVertexEdgePairs(edges, candidates);
-
-    std::cout << edges.rows() * vertices.rows() << " possible impacts\n"
-              << candidates.size() << " candidate impacts" << std::endl;
 
     for (const Candidate& candidate : candidates) {
         const long vertex_id = candidate.first;
@@ -118,7 +113,9 @@ void detect_edge_vertex_collisions_hash_map(const Eigen::MatrixXd& vertices,
         }
     }
 
-    std::cout << ev_impacts.size() << " actual impacts" << std::endl;
+    // std::cout << edges.rows() * vertices.rows() << " possible impacts\n"
+    //           << candidates.size() << " candidate impacts\n"
+    //           << ev_impacts.size() << " actual impacts" << std::endl;
 }
 
 } // namespace ccd

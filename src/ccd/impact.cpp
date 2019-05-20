@@ -3,6 +3,13 @@
 
 namespace ccd {
 
+bool EdgeVertexImpact::operator==(const EdgeVertexImpact& other) const
+{
+    return this->time == other.time && this->edge_index == other.edge_index
+        && this->alpha == other.alpha
+        && this->vertex_index == other.vertex_index;
+}
+
 // Compare two edge-vertex impacts to determine if impact0 comes before impact1.
 template <typename Impact>
 bool compare_impacts_by_time(Impact impact0, Impact impact1)

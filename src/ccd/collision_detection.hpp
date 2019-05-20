@@ -149,7 +149,8 @@ void detect_edge_vertex_collisions_narrow_phase(const Eigen::Vector2d& Vi,
 bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
     const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk, double& toi, double& alpha);
+    const Eigen::Vector2d& Uk, double& toi, double& alpha,
+    const double tolerance = 1e-8);
 
 /**
  * @brief Convert a temporal parameterization to a spatial parameterization.
@@ -177,7 +178,8 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
 bool temporal_parameterization_to_spatial(const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
     const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk, const double t, double& alpha);
+    const Eigen::Vector2d& Uk, const double t, double& alpha,
+    const double tolerance = 1e-8);
 
 } // namespace ccd
 #endif

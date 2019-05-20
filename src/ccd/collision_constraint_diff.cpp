@@ -399,36 +399,36 @@ namespace autodiff {
             Uk, Ul, impact_node, epsilon, compute_constraint);
 
         // Assemble into GLOBAL gradient and hessian
-        auto num_vertices = vertices.rows();
+        int num_vertices = int(vertices.rows());
         int nodes[4] = { e_ij(0), e_ij(1), e_kl(0), e_kl(1) };
 
         // Note: global gradient is sorted as x,x,x,...y,y,y
         // while local gradient is sorted as x,y,x,y,...,x,y
         if (order == 1) {
-            derivative.resize(vertices.size(), 1);
+            derivative.resize(int(vertices.size()), 1);
             derivative.setZero();
             Vector8d el_grad = v.getGradient();
 
             for (int i = 0; i < 4; i++) {
-                derivative.insert(nodes[i], 0) = el_grad(2 * i);
-                derivative.insert(nodes[i] + num_vertices, 0)
+                derivative.coeffRef(nodes[i], 0) = el_grad(2 * i);
+                derivative.coeffRef(nodes[i] + num_vertices, 0)
                     = el_grad(2 * i + 1);
             }
 
         } else {
-            derivative.resize(vertices.size(), vertices.size());
+            derivative.resize(int(vertices.size()), int(vertices.size()));
             derivative.setZero();
             Matrix8d el_hessian = v.getHessian();
             for (int i = 0; i < 4; i++)
                 for (int j = 0; j < 4; j++) {
-                    derivative.insert(nodes[i], nodes[j])
+                    derivative.coeffRef(nodes[i], nodes[j])
                         = el_hessian(2 * i, 2 * j);
-                    derivative.insert(nodes[i] + num_vertices, nodes[j])
+                    derivative.coeffRef(nodes[i] + num_vertices, nodes[j])
                         = el_hessian(2 * i + 1, 2 * j);
-                    derivative.insert(
+                    derivative.coeffRef(
                         nodes[i] + num_vertices, nodes[j] + num_vertices)
                         = el_hessian(2 * i + 1, 2 * j + 1);
-                    derivative.insert(nodes[i], nodes[j] + num_vertices)
+                    derivative.coeffRef(nodes[i], nodes[j] + num_vertices)
                         = el_hessian(2 * i, 2 * j + 1);
                 }
         }

@@ -14,6 +14,8 @@ struct EdgeVertexImpact {
     int edge_index;   ///< Impacted edge
     double alpha;     ///< Parameter along the edge where the impact occured
     int vertex_index; ///< Impacting vertex
+
+    bool operator==(const EdgeVertexImpact& other) const;
 };
 
 /// A vector of edge-vertex impact pointers.

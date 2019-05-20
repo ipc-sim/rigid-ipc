@@ -21,8 +21,6 @@ namespace ccd {
 
 typedef std::pair<size_t, size_t> Candidate;
 typedef std::unordered_set<Candidate> Candidates;
-// typedef std::unordered_set<Candidate, boost::hash<Candidate>>::iterator
-// CandidatesIterator;
 
 /// @brief An entry into the hash grid as a (key, value) pair.
 class HashItem {
@@ -31,47 +29,40 @@ public:
     int id;  /// @brief The value of the item.
 
     /// @breif Construct a hash item as a (key, value) pair.
-    HashItem(int k, int i)
+    HashItem(int key, int id)
+        : key(key)
+        , id(id)
     {
-        key = k;
-        id = i;
     }
 
     /// @brief Compare HashItems by their keys for sorting.
-    bool operator<(const HashItem& hi) const { return key < hi.key; }
+    bool operator<(const HashItem& other) const { return key < other.key; }
 };
 
 /// @brief Axis aligned bounding-box of some type
 template <class T> class AABBT {
 public:
-    AABBT(const T& min, const T& max)
-    {
-        m_min = min;
-        m_max = max;
-    }
+    T min;
+    T max;
 
     AABBT()
+        : AABBT(T(0, 0), T(0, 0))
     {
-        m_min = T(0, 0);
-        m_max = T(0, 0);
     }
 
-    ~AABBT() {}
+    AABBT(const T& min, const T& max)
+        : min(min)
+        , max(max)
+    {
+    }
 
-    T& getMin() { return m_min; }
-
-    T& getMax() { return m_max; }
-
-    T m_min;
-    T m_max;
+    virtual ~AABBT() {}
 };
 
-typedef Eigen::Matrix<int, 2, 1> Point2i;
-typedef Eigen::Matrix<double, 2, 1> Point2d;
-typedef AABBT<Point2i> AABBi;
-typedef AABBT<Point2d> AABBd;
+typedef AABBT<Eigen::Vector2i> AABBi;
+typedef AABBT<Eigen::Vector2d> AABBd;
 
-class Hash {
+class HashGrid {
 public:
     void resize(Eigen::Vector2d mn, Eigen::Vector2d mx, double cellSize);
     void resize(const Eigen::MatrixX2d& vertices,
@@ -99,9 +90,9 @@ protected:
     void sort();
 
     void add(AABBi aabbi, int id);
-    void add(Point2i p, int id);
+    void add(Eigen::Vector2i p, int id);
 
-    int hash(Point2i p);
+    int hash(Eigen::Vector2i p);
     void clear();
 
     HashItem& get(unsigned int i);

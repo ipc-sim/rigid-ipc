@@ -34,6 +34,10 @@ namespace opt {
         const Eigen::VectorXi& free_dof, const double absolute_tolerance,
         const double line_search_tolerance, const int max_iter,
         bool verbose = false, const double mu = 1e-5);
+    OptimizationResults sparse_newtons_method(OptimizationProblem& problem,
+        const Eigen::VectorXi& free_dof, const double absolute_tolerance,
+        const double line_search_tolerance, const int max_iter,
+        bool verbose = false, const double mu = 1e-5);
 
     /**
      * @brief Search along a search direction to find a scalar \f$\gamma \in [0,

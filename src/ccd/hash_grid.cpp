@@ -1,8 +1,8 @@
-#include <ccd/hash.hpp>
+#include <ccd/hash_grid.hpp>
 
 namespace ccd {
 
-void Hash::resize(Eigen::Vector2d mn, Eigen::Vector2d mx, double cellSize)
+void HashGrid::resize(Eigen::Vector2d mn, Eigen::Vector2d mx, double cellSize)
 {
     clear();
     m_cellSize = cellSize * 2.0;
@@ -49,7 +49,7 @@ double average_displacement_length(const Eigen::MatrixX2d& displacements)
     return sum / displacements.rows();
 }
 
-void Hash::resize(const Eigen::MatrixX2d& vertices,
+void HashGrid::resize(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i edges)
 {
     static Eigen::Vector2d mesh_min, mesh_max;
@@ -73,7 +73,7 @@ void calculate_vertex_extents(const Eigen::Vector2d& v,
     AABB_max.y() = points.col(1).maxCoeff();
 }
 
-void Hash::addVertex(
+void HashGrid::addVertex(
     const Eigen::Vector2d& v, const Eigen::Vector2d& u, const int index)
 {
     static Eigen::Vector2d vertex_min, vertex_max;
@@ -82,7 +82,7 @@ void Hash::addVertex(
         vertex_min, vertex_max, -(index + 1)); // Vertices have a negative id
 }
 
-void Hash::addVertices(
+void HashGrid::addVertices(
     const Eigen::MatrixX2d& vertices, const Eigen::MatrixX2d& displacements)
 {
     for (int i = 0; i < vertices.rows(); i++) {
@@ -107,7 +107,7 @@ void calculate_edge_extents(const Eigen::Vector2d& vi,
     AABB_max.y() = points.col(1).maxCoeff();
 }
 
-void Hash::addEdge(const Eigen::Vector2d& vi, const Eigen::Vector2d& vj,
+void HashGrid::addEdge(const Eigen::Vector2d& vi, const Eigen::Vector2d& vj,
     const Eigen::Vector2d& ui, const Eigen::Vector2d& uj, const int index)
 {
     static Eigen::Vector2d edge_min, edge_max;
@@ -115,7 +115,7 @@ void Hash::addEdge(const Eigen::Vector2d& vi, const Eigen::Vector2d& vj,
     this->addElement(edge_min, edge_max, index + 1); // Edges have a positive id
 }
 
-void Hash::addEdges(const Eigen::MatrixX2d& vertices,
+void HashGrid::addEdges(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i edges)
 {
     for (int i = 0; i < edges.rows(); i++) {
@@ -124,20 +124,21 @@ void Hash::addEdges(const Eigen::MatrixX2d& vertices,
     }
 }
 
-void Hash::addElement(Eigen::Vector2d xmin, Eigen::Vector2d xmax, int id)
+void HashGrid::addElement(Eigen::Vector2d xmin, Eigen::Vector2d xmax, int id)
 {
     AABBi aabbi = makeAABBi(xmin, xmax);
     this->add(aabbi, id);
 }
 
-void Hash::getVertexEdgePairs(const Eigen::MatrixX2i& edges, Candidates& hits)
+void HashGrid::getVertexEdgePairs(
+    const Eigen::MatrixX2i& edges, Candidates& hits)
 {
     hits.clear();
 
     std::vector<int> edge_ids;
-    edge_ids.reserve(edges.rows() / 10);
+    // edge_ids.reserve(edges.rows() / 10);
     std::vector<int> vertex_ids;
-    vertex_ids.reserve(edges.rows() / 5);
+    // vertex_ids.reserve(edges.rows() / 5);
 
     // Sorted all they (key,value) pairs, where key is the hash key, and value
     // is the element index
@@ -180,32 +181,36 @@ void Hash::getVertexEdgePairs(const Eigen::MatrixX2i& edges, Candidates& hits)
     }
 }
 
-AABBi Hash::makeAABBi(Eigen::Vector2d mn, Eigen::Vector2d mx)
+AABBi HashGrid::makeAABBi(Eigen::Vector2d mn, Eigen::Vector2d mx)
 {
     AABBi aabbi;
-    aabbi.m_min = Point2i(int(mn.x() / m_cellSize), int(mn.y() / m_cellSize));
-    aabbi.m_max = Point2i(int(std::ceil(mx.x() / m_cellSize)),
+    aabbi.min
+        = Eigen::Vector2i(int(mn.x() / m_cellSize), int(mn.y() / m_cellSize));
+    aabbi.max = Eigen::Vector2i(int(std::ceil(mx.x() / m_cellSize)),
         int(std::ceil(mx.y() / m_cellSize)));
     return aabbi;
 }
 
-void Hash::sort() { std::sort(m_hash.begin(), m_hash.end()); }
+void HashGrid::sort() { std::sort(m_hash.begin(), m_hash.end()); }
 
-void Hash::add(AABBi aabbi, int id)
+void HashGrid::add(AABBi aabbi, int id)
 {
-    for (int x = aabbi.getMin().x(); x <= aabbi.getMax().x(); ++x) {
-        for (int y = aabbi.getMin().y(); y <= aabbi.getMax().y(); ++y) {
-            add(Point2i(x, y), id);
+    for (int x = aabbi.min.x(); x <= aabbi.max.x(); ++x) {
+        for (int y = aabbi.min.y(); y <= aabbi.max.y(); ++y) {
+            add(Eigen::Vector2i(x, y), id);
         }
     }
 }
 
-void Hash::add(Point2i p, int id) { m_hash.push_back(HashItem(hash(p), id)); }
+void HashGrid::add(Eigen::Vector2i p, int id)
+{
+    m_hash.push_back(HashItem(hash(p), id));
+}
 
-int Hash::hash(Point2i p) { return p.y() * m_gridSize + p.x(); }
+int HashGrid::hash(Eigen::Vector2i p) { return p.y() * m_gridSize + p.x(); }
 
-void Hash::clear() { m_hash.clear(); }
+void HashGrid::clear() { m_hash.clear(); }
 
-HashItem& Hash::get(unsigned int i) { return m_hash[i]; }
+HashItem& HashGrid::get(unsigned int i) { return m_hash[i]; }
 
 } // namespace ccd
