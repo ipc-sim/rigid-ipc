@@ -133,7 +133,7 @@ void HashGrid::addElement(Eigen::Vector2d xmin, Eigen::Vector2d xmax, int id)
 void HashGrid::getVertexEdgePairs(
     const Eigen::MatrixX2i& edges, EdgeVertexCandidates& ev_candidates)
 {
-    ev_candidates.clear();
+    EdgeVertexCandidateSet unique_ev_candidates;
 
     std::vector<int> edge_ids;
     // edge_ids.reserve(edges.rows() / 10);
@@ -170,7 +170,7 @@ void HashGrid::getVertexEdgePairs(
                 for (const int& vertex_id : vertex_ids) {
                     if (edges(edge_id, 0) != vertex_id
                         && edges(edge_id, 1) != vertex_id) {
-                        ev_candidates.insert(
+                        unique_ev_candidates.insert(
                             EdgeVertexCandidate(edge_id, vertex_id));
                     }
                 }
@@ -180,6 +180,10 @@ void HashGrid::getVertexEdgePairs(
             vertex_ids.clear();
         }
     }
+
+    // Copy the unique candidates over to the output vector of candidates
+    std::copy(unique_ev_candidates.begin(), unique_ev_candidates.end(),
+        std::back_inserter(ev_candidates));
 }
 
 AABBi HashGrid::makeAABBi(Eigen::Vector2d mn, Eigen::Vector2d mx)

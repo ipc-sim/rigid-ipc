@@ -84,7 +84,7 @@ void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
             // Check that the vertex is not an endpoint of the edge
             if (vertex_index != edges(edge_index, 0)
                 && vertex_index != edges(edge_index, 1)) {
-                ev_candidates.insert(
+                ev_candidates.push_back(
                     EdgeVertexCandidate(edge_index, vertex_index));
             }
         }

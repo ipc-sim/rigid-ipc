@@ -25,7 +25,8 @@ struct EdgeVertexCandidate {
     }
 };
 
-typedef std::unordered_set<EdgeVertexCandidate> EdgeVertexCandidates;
+typedef std::vector<EdgeVertexCandidate> EdgeVertexCandidates;
+typedef std::unordered_set<EdgeVertexCandidate> EdgeVertexCandidateSet;
 
 } // namespace ccd
 
