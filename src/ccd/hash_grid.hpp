@@ -6,21 +6,41 @@
 #include <vector>
 
 #include <Eigen/Core>
+namespace ccd {
+
+struct EdgeVertexCandidate {
+    long edge_index;
+    long vertex_index;
+
+    EdgeVertexCandidate(long edge_index, long vertex_index)
+        : edge_index(edge_index)
+        , vertex_index(vertex_index)
+    {
+    }
+
+    bool operator==(const EdgeVertexCandidate& other) const
+    {
+        return this->edge_index == other.edge_index
+            && this->vertex_index == other.vertex_index;
+    }
+};
+
+typedef std::unordered_set<EdgeVertexCandidate> EdgeVertexCandidates;
+
+} // namespace ccd
+
 namespace std {
-template <> struct hash<std::pair<size_t, size_t>> {
-    inline size_t operator()(const std::pair<int, int>& v) const
+template <> struct hash<ccd::EdgeVertexCandidate> {
+    inline size_t operator()(const ccd::EdgeVertexCandidate& ev_candidate) const
     {
         // std::hash<size_t> int_hasher;
         // return int_hasher(v.first) ^ int_hasher(v.second);
-        return v.first * 31 + v.second;
+        return ev_candidate.edge_index * 31 + ev_candidate.vertex_index;
     }
 };
 } // namespace std
 
 namespace ccd {
-
-typedef std::pair<size_t, size_t> Candidate;
-typedef std::unordered_set<Candidate> Candidates;
 
 /// @brief An entry into the hash grid as a (key, value) pair.
 class HashItem {
@@ -80,7 +100,8 @@ public:
     void addEdges(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i edges);
 
-    void getVertexEdgePairs(const Eigen::MatrixX2i& edges, Candidates& hits);
+    void getVertexEdgePairs(
+        const Eigen::MatrixX2i& edges, EdgeVertexCandidates& ev_candidates);
 
 protected:
     void addElement(Eigen::Vector2d xmin, Eigen::Vector2d xmax, int id);

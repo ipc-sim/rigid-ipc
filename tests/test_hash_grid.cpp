@@ -5,7 +5,7 @@
 using namespace ccd;
 using namespace opt;
 
-TEST_CASE("hash grid on links", "[ccd][hash]")
+TEST_CASE("hash grid on links", "[ccd][hashgrid]")
 {
     State state;
     state.load_scene(std::string(FIXTURES_DIR)

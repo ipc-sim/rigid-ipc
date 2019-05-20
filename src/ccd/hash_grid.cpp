@@ -131,9 +131,9 @@ void HashGrid::addElement(Eigen::Vector2d xmin, Eigen::Vector2d xmax, int id)
 }
 
 void HashGrid::getVertexEdgePairs(
-    const Eigen::MatrixX2i& edges, Candidates& hits)
+    const Eigen::MatrixX2i& edges, EdgeVertexCandidates& ev_candidates)
 {
-    hits.clear();
+    ev_candidates.clear();
 
     std::vector<int> edge_ids;
     // edge_ids.reserve(edges.rows() / 10);
@@ -166,11 +166,12 @@ void HashGrid::getVertexEdgePairs(
         if ((i == m_hash.size() - 1) || currH != get(i + 1).key) {
             // We are closing the bucket (key entry), so tally up all
             // vertex-edge pairs encountered in the bucket that just ended
-            for (const int& vertex_id : vertex_ids) {
-                for (const int& edge_id : edge_ids) {
+            for (const int& edge_id : edge_ids) {
+                for (const int& vertex_id : vertex_ids) {
                     if (edges(edge_id, 0) != vertex_id
                         && edges(edge_id, 1) != vertex_id) {
-                        hits.insert(std::make_pair(vertex_id, edge_id));
+                        ev_candidates.insert(
+                            EdgeVertexCandidate(edge_id, vertex_id));
                     }
                 }
             }

@@ -12,19 +12,15 @@ namespace ccd {
 void detect_edge_vertex_collisions_narrow_phase(const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
     const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk, const int edge_id, const int vertex_id,
+    const Eigen::Vector2d& Uk, const EdgeVertexCandidate& ev_candidate,
     EdgeVertexImpacts& ev_impacts)
 {
     double toi, alpha;
     bool are_colliding = compute_edge_vertex_time_of_impact(
         Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha);
     if (are_colliding) {
-        EdgeVertexImpact ev_impact;
-        ev_impact.time = toi;
-        ev_impact.edge_index = edge_id;
-        ev_impact.alpha = alpha;
-        ev_impact.vertex_index = vertex_id;
-        ev_impacts.push_back(ev_impact);
+        ev_impacts.push_back(EdgeVertexImpact(
+            toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index));
     }
 }
 

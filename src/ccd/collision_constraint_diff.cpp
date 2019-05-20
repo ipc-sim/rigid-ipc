@@ -11,7 +11,6 @@
 
 #include <profiler.hpp>
 #ifdef PROFILE_FUNCTIONS
-#include <igl/Timer.h>
 long number_of_constraint_calls = 0;
 double time_spent_computing_constraint = 0;
 

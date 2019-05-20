@@ -3,6 +3,29 @@
 
 namespace ccd {
 
+EdgeVertexImpact::EdgeVertexImpact() {}
+
+EdgeVertexImpact::EdgeVertexImpact(
+    double time, long edge_index, double alpha, long vertex_index)
+    : time(time)
+    , edge_index(edge_index)
+    , alpha(alpha)
+    , vertex_index(vertex_index)
+{
+}
+
+EdgeEdgeImpact::EdgeEdgeImpact() {}
+
+EdgeEdgeImpact::EdgeEdgeImpact(double time, long impacted_edge_index,
+    double impacted_alpha, long impacting_edge_index, double impacting_alpha)
+    : time(time)
+    , impacted_edge_index(impacted_edge_index)
+    , impacted_alpha(impacted_alpha)
+    , impacting_edge_index(impacting_edge_index)
+    , impacting_alpha(impacting_alpha)
+{
+}
+
 bool EdgeVertexImpact::operator==(const EdgeVertexImpact& other) const
 {
     return this->time == other.time && this->edge_index == other.edge_index
@@ -30,21 +53,14 @@ void convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
     const EdgeVertexImpacts& ev_impacts, EdgeEdgeImpacts& ee_impacts)
 {
     ee_impacts.clear();
-    EdgeEdgeImpact ee_impact;
     for (EdgeVertexImpact ev_impact : ev_impacts) {
         for (int edge_index = 0; edge_index < edges.rows(); edge_index++) {
-            auto edge = edges.row(edge_index);
-            if (edge(0) == ev_impact.vertex_index
-                || edge(1) == ev_impact.vertex_index) {
-
-                ee_impact.time = ev_impact.time;
-                ee_impact.impacted_edge_index = ev_impact.edge_index;
-                ee_impact.impacted_alpha = ev_impact.alpha;
-                ee_impact.impacting_edge_index = edge_index;
-                ee_impact.impacting_alpha
-                    = edge(0) == ev_impact.vertex_index ? 0.0 : 1.0;
-
-                ee_impacts.push_back(ee_impact);
+            if (edges(edge_index, 0) == ev_impact.vertex_index
+                || edges(edge_index, 1) == ev_impact.vertex_index) {
+                ee_impacts.push_back(EdgeEdgeImpact(ev_impact.time,
+                    ev_impact.edge_index, ev_impact.alpha, edge_index,
+                    edges(edge_index, 0) == ev_impact.vertex_index ? 0.0
+                                                                   : 1.0));
             }
         }
     }
@@ -57,15 +73,11 @@ void convert_edge_edge_to_edge_vertex_impacts(const Eigen::MatrixX2i& edges,
     const EdgeEdgeImpacts& ee_impacts, EdgeVertexImpacts& ev_impacts)
 {
     ev_impacts.clear();
-    EdgeVertexImpact ev_impact;
     for (EdgeEdgeImpact ee_impact : ee_impacts) {
-        ev_impact.time = ee_impact.time;
-        ev_impact.edge_index = ee_impact.impacted_edge_index;
-        ev_impact.alpha = ee_impact.impacted_alpha;
-        ev_impact.vertex_index = edges.row(ee_impact.impacting_edge_index)(
-            int(ee_impact.impacting_alpha + 0.5));
-
-        ev_impacts.push_back(ev_impact);
+        ev_impacts.push_back(EdgeVertexImpact(ee_impact.time,
+            ee_impact.impacted_edge_index, ee_impact.impacted_alpha,
+            edges(ee_impact.impacting_edge_index,
+                int(ee_impact.impacting_alpha + 0.5))));
     }
 }
 } // namespace ccd

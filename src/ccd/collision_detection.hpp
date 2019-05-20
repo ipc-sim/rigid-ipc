@@ -10,6 +10,7 @@
 #include <Eigen/Core>
 #include <array>
 
+#include <ccd/hash_grid.hpp>
 #include <ccd/impact.hpp>
 
 namespace Eigen {
@@ -73,7 +74,7 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
  */
 void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
-    const Eigen::MatrixXb& skip_pair, EdgeVertexImpacts& ev_impacts);
+    EdgeVertexCandidates& ev_candidates);
 
 /**
  * @brief Find all edge-vertex collisions in one time step using spatial-hashing
@@ -97,7 +98,7 @@ void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
  */
 void detect_edge_vertex_collisions_hash_map(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
-    const Eigen::MatrixXb& skip_pair, EdgeVertexImpacts& ev_impacts);
+    EdgeVertexCandidates& ev_candidates);
 
 /**
  * @brief Determine if a single edge-vertext pair intersects.
@@ -120,7 +121,7 @@ void detect_edge_vertex_collisions_hash_map(const Eigen::MatrixXd& vertices,
 void detect_edge_vertex_collisions_narrow_phase(const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
     const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk, const int edge_id, const int vertex_id,
+    const Eigen::Vector2d& Uk, const EdgeVertexCandidate& ev_candidate,
     EdgeVertexImpacts& ev_impacts);
 
 /**

@@ -329,7 +329,7 @@ void ViewerMenu::draw_edit_modes()
 // //////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_ccd_steps()
 {
-    static int idx_detection_method = 0;
+    static int idx_detection_method = 1;
     if (ImGui::CollapsingHeader("CCD", ImGuiTreeNodeFlags_DefaultOpen)) {
 
         if (ImGui::SliderFloat("time", &(state.current_time), 0.0, 1.0)) {
