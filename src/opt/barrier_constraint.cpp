@@ -30,7 +30,7 @@ namespace opt {
             this->barrier_epsilon = this->ee_impacts[0].time;
             for (EdgeEdgeImpact ee_impact : this->ee_impacts) {
                 this->barrier_epsilon
-                    = std::max(this->barrier_epsilon, ee_impact.time);
+                    = std::min(this->barrier_epsilon, ee_impact.time);
             }
         } else {
             this->barrier_epsilon = 0;

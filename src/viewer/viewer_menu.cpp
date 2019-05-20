@@ -1,4 +1,8 @@
-﻿#include "viewer.hpp"
+// Draw the viewer menu buttons and fields.
+
+#include "viewer.hpp"
+
+#include <unordered_set>
 
 #include <logger.hpp>
 #include <viewer/constraint_view.hpp>
@@ -222,7 +226,7 @@ void ViewerMenu::draw_io()
 // //////////////////////////////////////////////////////////////////////////
 void select_connected(const int selected_point,
     const std::vector<std::list<int>>& adjacencies,
-    std::set<int>& already_selected)
+    std::unordered_set<int>& already_selected)
 {
     if (already_selected.find(selected_point) != already_selected.end()) {
         return;
@@ -276,7 +280,7 @@ void ViewerMenu::draw_edit_modes()
                 adjacencies[state.edges(i, 1)].push_back(state.edges(i, 0));
             }
 
-            std::set<int> new_selection;
+            std::unordered_set<int> new_selection;
             for (int selected_point : state.selected_points.size() > 0
                     ? state.selected_points
                     : state.selected_displacements) {
@@ -404,8 +408,7 @@ void ViewerMenu::draw_edit_modes()
 // //////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_ccd_steps()
 {
-
-    static int idx_detection_method = 0;
+    static int idx_detection_method = 1;
     if (ImGui::CollapsingHeader("CCD", ImGuiTreeNodeFlags_DefaultOpen)) {
 
         if (ImGui::SliderFloat("time", &(state.current_time), 0.0, 1.0)) {
@@ -415,7 +418,9 @@ void ViewerMenu::draw_ccd_steps()
         if (ImGui::Combo("method##ccd", &idx_detection_method,
                 ccd::DetectionMethodNames,
                 CCD_IM_ARRAYSIZE(ccd::DetectionMethodNames))) {
-            state.detection_method
+            state.barrier_constraint.detection_method
+                = static_cast<ccd::DetectionMethod>(idx_detection_method);
+            state.volume_constraint.detection_method
                 = static_cast<ccd::DetectionMethod>(idx_detection_method);
         }
 

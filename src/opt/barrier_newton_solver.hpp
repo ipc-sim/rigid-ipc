@@ -37,6 +37,8 @@ namespace opt {
         double eval_f(const Eigen::VectorXd& x) override;
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
         Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& x) override;
+        Eigen::SparseMatrix<double> eval_hessian_f_sparse(
+            const Eigen::VectorXd& x) override;
         Eigen::VectorXd eval_g(const Eigen::VectorXd&) override
         {
             return Eigen::VectorXd();
@@ -69,6 +71,7 @@ namespace opt {
 
         std::function<void(const Eigen::VectorXd&, const double, const int)>*
             callback;
+        bool verbose;
     };
 
 } // namespace opt

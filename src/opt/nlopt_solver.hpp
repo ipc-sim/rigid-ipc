@@ -71,7 +71,7 @@ namespace opt {
         double relative_tolerance;
         int max_iterations;
         double max_time;
-        bool verbosity;
+        bool verbose;
     };
 
 } // namespace opt

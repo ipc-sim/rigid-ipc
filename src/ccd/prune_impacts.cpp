@@ -12,10 +12,9 @@ int prune_impacts(
 
     // Loop over all impacts and add them to the prunced impacts if they are the
     // earliest.
-    EdgeEdgeImpact ee_impact;
     int num_pruned_impacts = 0;
     for (size_t i = 0; i < all_impacts.size(); i++) {
-        ee_impact = all_impacts[i];
+        EdgeEdgeImpact ee_impact = all_impacts[i];
         for (int index :
             { ee_impact.impacted_edge_index, ee_impact.impacting_edge_index }) {
             // If the edge is not in the map or the current impact happens

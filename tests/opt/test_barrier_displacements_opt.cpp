@@ -18,21 +18,19 @@ using namespace opt;
 TEST_CASE("test the setup", "[opt][displacements][barrier]")
 {
     State state;
-    state.constraint_function
-        = GENERATE(ccd::ConstraintType::BARRIER, ccd::ConstraintType::VOLUME);
 
-    state.vertices.resize(4, 2);
-    state.displacements.resize(4, 2);
-    state.edges.resize(2, 2);
+    // Load the test scene
+    state.load_scene(
+        std::string(FIXTURES_DIR) + "/test_setup_falling_horizontal_edge.json");
+    REQUIRE(state.vertices.rows() == 4);
+    REQUIRE(state.displacements.rows() == 4);
+    REQUIRE(state.edges.rows() == 2);
 
-    state.vertices << -1, 1, 1, 1, -2, 0, 2, 0;
-    state.displacements << 0, -2, 0, -2, 0, 0, 0, 0;
-    state.edges << 0, 1, 2, 3;
-
+    state.constraint_function = GENERATE(ccd::ConstraintType::BARRIER);
     state.getCollisionConstraint().recompute_collision_set
         = GENERATE(false, true);
-    state.detection_method = DetectionMethod::BRUTE_FORCE;
-    //    state.barrier_newton_solver.barrier_epsilon = 1.0;
+
+    // state.barrier_newton_solver.barrier_epsilon = 1.0;
     state.opt_method = ccd::OptimizationMethod::BARRIER_NEWTON;
 
     state.reset_optimization_problem();
@@ -107,7 +105,6 @@ TEST_CASE("two rotating edges", "[opt][displacements][barrier]")
 
     state.getCollisionConstraint().recompute_collision_set
         = GENERATE(false, true);
-    state.detection_method = DetectionMethod::BRUTE_FORCE;
     state.opt_method = ccd::OptimizationMethod::BARRIER_NEWTON;
 
     double theta1 = 2 * M_PI / NUM_ANGLES * GENERATE(range(0, NUM_ANGLES));
@@ -149,7 +146,6 @@ TEST_CASE("corner case", "[opt][displacements][barrier]")
 
     state.getCollisionConstraint().recompute_collision_set
         = GENERATE(false, true);
-    state.detection_method = DetectionMethod::BRUTE_FORCE;
     state.opt_method = ccd::OptimizationMethod::BARRIER_NEWTON;
 
     state.barrier_newton_solver.min_barrier_epsilon = 1e-3;
