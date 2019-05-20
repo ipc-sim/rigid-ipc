@@ -20,7 +20,7 @@ TEST_CASE("hash grid on links", "[ccd][hash]")
             state.edges, brute_force_ev_impacts, DetectionMethod::BRUTE_FORCE);
         EdgeVertexImpacts hash_ev_impacts;
         detect_edge_vertex_collisions(state.vertices, state.displacements,
-            state.edges, hash_ev_impacts, DetectionMethod::HASH_MAP);
+            state.edges, hash_ev_impacts, DetectionMethod::HASH_GRID);
 
         REQUIRE(brute_force_ev_impacts.size() == hash_ev_impacts.size());
         for (const auto& impact : brute_force_ev_impacts) {

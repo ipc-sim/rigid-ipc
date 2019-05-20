@@ -38,13 +38,13 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
 
     assert(vertices.size() == displacements.size());
     assert(method == DetectionMethod::BRUTE_FORCE
-        || method == DetectionMethod::HASH_MAP);
+        || method == DetectionMethod::HASH_GRID);
     switch (method) {
     case BRUTE_FORCE:
         detect_edge_vertex_collisions_brute_force(
             vertices, displacements, edges, skip_pair, ev_impacts);
         break;
-    case HASH_MAP:
+    case HASH_GRID:
         detect_edge_vertex_collisions_hash_map(
             vertices, displacements, edges, skip_pair, ev_impacts);
         break;

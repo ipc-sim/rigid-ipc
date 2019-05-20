@@ -21,10 +21,10 @@ namespace ccd {
 /// @brief Possible methods for detecting all edge vertex collisions.
 enum DetectionMethod {
     BRUTE_FORCE, ///< @brief Use brute-force to detect all collisions.
-    HASH_MAP ///< @brief Use a spatial data structure to detect all collisions.
+    HASH_GRID ///< @brief Use a spatial data structure to detect all collisions.
 };
 
-static const char* DetectionMethodNames[] = { "BRUTE_FORCE", "HASH_MAP" };
+static const char* DetectionMethodNames[] = { "BRUTE_FORCE", "HASH_GRID" };
 
 /**
  * @brief Find all edge-vertex collisions in one time step.
