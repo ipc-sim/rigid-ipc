@@ -43,15 +43,19 @@ namespace opt {
         {
             return Eigen::VectorXd();
         }
+
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd&) override
         {
             return Eigen::MatrixXd();
         }
+
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd&) override
         {
             return std::vector<Eigen::SparseMatrix<double>>();
         }
+
+        bool eval_intermediate_callback(const Eigen::VectorXd& x) override;
         OptimizationProblem* general_problem;
         double epsilon;
     };

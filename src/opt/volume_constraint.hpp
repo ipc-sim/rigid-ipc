@@ -23,6 +23,9 @@ namespace opt {
             Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
 
+        void compute_constraints(const Eigen::MatrixXd& Uk,
+            Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian);
+
         int number_of_constraints() override;
 
         template <typename T>

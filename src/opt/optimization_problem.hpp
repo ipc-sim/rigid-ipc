@@ -58,9 +58,11 @@ namespace opt {
         virtual std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x)
             = 0;
-        virtual void eval_g_and_gdiff(const Eigen::VectorXd& x, Eigen::VectorXd& g_uk,
-            Eigen::MatrixXd& g_uk_jacobian,
+        virtual void eval_g_and_gdiff(const Eigen::VectorXd& x,
+            Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian);
+
+        virtual bool eval_intermediate_callback(const Eigen::VectorXd& x);
 
         callback_f func_f();
         callback_grad_f func_grad_f();

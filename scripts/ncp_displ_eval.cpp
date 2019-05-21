@@ -162,7 +162,6 @@ int main(int argc, char* argv[])
     if (argc >= 2) {
         out_dir = argv[1];
     }
-    spdlog::set_level(spdlog::level::info);
 
     ccd::State state;
     state.ncp_solver.max_iterations = 200;

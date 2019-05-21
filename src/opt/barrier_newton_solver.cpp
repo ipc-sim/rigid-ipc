@@ -184,6 +184,12 @@ namespace opt {
         return hessian;
     }
 
+    bool BarrierProblem::eval_intermediate_callback(const Eigen::VectorXd& x)
+    {
+        return general_problem->eval_intermediate_callback(x);
+        return true;
+    }
+
     BarrierNewtonSolver::BarrierNewtonSolver()
         : barrier_constraint(nullptr)
         , min_barrier_epsilon(1e-8)

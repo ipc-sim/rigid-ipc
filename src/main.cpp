@@ -1,9 +1,12 @@
 #include <igl/opengl/glfw/Viewer.h>
 
 #include <viewer/viewer.hpp>
+#include <logger.hpp>
 
 int main(int argc, char* argv[])
 {
+    spdlog::set_level(spdlog::level::info);
+
     igl::opengl::glfw::Viewer viewer;
     ccd::ViewerMenu menu;
 

@@ -21,6 +21,7 @@ namespace opt {
 
     ParticlesDisplProblem::ParticlesDisplProblem()
         : constraint(nullptr)
+        , intermediate_callback(nullptr)
     {
     }
 
@@ -58,6 +59,7 @@ namespace opt {
         g_lower.setConstant(0.0);
         g_upper.setConstant(NO_UPPER_BOUND);
     }
+
 
     double ParticlesDisplProblem::eval_f(const Eigen::VectorXd& x)
     {
@@ -137,6 +139,18 @@ namespace opt {
         }
         constraint->eval_constraints_and_derivatives(
             Uk, g_uk, g_uk_jacobian, g_uk_hessian);
+    }
+
+    bool ParticlesDisplProblem::eval_intermediate_callback(
+        const Eigen::VectorXd& x)
+    {
+        if (intermediate_callback != nullptr) {
+            Eigen::MatrixXd Uk = x;
+            Uk.resize(x.rows() / 2, 2);
+            return intermediate_callback(x, Uk);
+        }
+
+        return true;
     }
 
     template <> bool differentiable<DScalar>() { return true; }
