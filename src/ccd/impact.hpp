@@ -10,10 +10,16 @@ namespace ccd {
 
 /// Data structure representing an impact of an edge and vertex.
 struct EdgeVertexImpact {
-    double time;      ///< Time of impact
-    int edge_index;   ///< Impacted edge
-    double alpha;     ///< Parameter along the edge where the impact occured
-    int vertex_index; ///< Impacting vertex
+    double time;       ///< Time of impact
+    long edge_index;   ///< Impacted edge
+    double alpha;      ///< Parameter along the edge where the impact occured
+    long vertex_index; ///< Impacting vertex
+
+    EdgeVertexImpact();
+    EdgeVertexImpact(
+        double time, long edge_index, double alpha, long vertex_index);
+
+    bool operator==(const EdgeVertexImpact& other) const;
 };
 
 /// A vector of edge-vertex impact pointers.
@@ -21,16 +27,17 @@ typedef std::vector<EdgeVertexImpact> EdgeVertexImpacts;
 
 /// Data structure representing an impact of an edge and edge.
 struct EdgeEdgeImpact {
-    /// Time of impact
-    double time;
-    /// Impacted edge
-    int impacted_edge_index;
-    /// Parameter along the impacted edge where the impact occured
-    double impacted_alpha;
-    /// Impacting edge
-    int impacting_edge_index;
-    /// Parameter along the impacting edge where the impact occured.
-    double impacting_alpha;
+    double time;              ///< @brief Time of impact
+    long impacted_edge_index; ///< @brief Impacted edge
+    double impacted_alpha; ///< @brief Parameter along the impacted edge where
+                           ///< the impact occured
+    long impacting_edge_index; ///< @brief Impacting edge
+    double impacting_alpha; ///< @brief Parameter along the impacting edge where
+                            ///< the impact occured.
+
+    EdgeEdgeImpact();
+    EdgeEdgeImpact(double time, long impacted_edge_index, double impacted_alpha,
+        long impacting_edge_index, double impacting_alpha);
 };
 
 /// A vector of edge-edge impact pointers.

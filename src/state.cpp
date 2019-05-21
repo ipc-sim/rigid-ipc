@@ -22,8 +22,7 @@
 
 namespace ccd {
 State::State()
-    : detection_method(DetectionMethod::BRUTE_FORCE)
-    , output_dir(DATA_OUTPUT_DIR)
+    : output_dir(DATA_OUTPUT_DIR)
     , opt_method(OptimizationMethod::BARRIER_NEWTON)
     , constraint_function(ConstraintType::BARRIER)
     , canvas_width(10)
@@ -298,9 +297,7 @@ void State::optimize_displacements(const std::string filename)
 #endif
     }
 
-    //    if (verbosity > 0) {
-    //        log_optimization_steps(filename, it_x, it_lambda, it_gamma);
-    //    }
+    // log_optimization_steps(filename, it_x, it_lambda, it_gamma);
     opt_results.finished = true;
 
     // update ui elements

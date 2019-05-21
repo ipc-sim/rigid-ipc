@@ -257,7 +257,7 @@ void check_toi(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
     // check original code
     double toi_actual, alpha;
     bool has_collision = ccd::compute_edge_vertex_time_of_impact(
-        Vk, Uk, Vi, Ui, Vj, Uj, toi_actual, alpha);
+        Vi, Vj, Vk, Ui, Uj, Uk, toi_actual, alpha);
     CHECK(has_collision);
     CHECK(toi_expected == Approx(toi_actual));
 
@@ -299,7 +299,7 @@ void check_gradient(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
     REQUIRE(!std::isnan(grad_fd.squaredNorm()));
 
     bool compare_grad = compare_gradient(grad, grad_fd);
-    if (!compare_grad){
+    if (!compare_grad) {
         std::cout << " grad    " << grad.transpose() << std::endl;
         std::cout << " grad_fd " << grad_fd.transpose() << std::endl;
     }

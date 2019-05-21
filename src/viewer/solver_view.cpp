@@ -33,12 +33,13 @@ void solver_menu(ccd::opt::BarrierNewtonSolver& solver)
         &solver.absolute_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
     ImGui::InputDoubleBounded("tol. line_search##barrier_solver",
         &solver.line_search_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
+    ImGui::Checkbox("verbose##opt", &solver.verbose);
 }
 
 void solver_menu(ccd::opt::IpoptSolver& solver)
 {
     ImGui::InputIntBounded("max iter##ipopt_solver", &solver.max_iterations, 0);
-    ImGui::InputIntBounded("verbose##ipopt_solver", &solver.print_level, 0);
+    ImGui::InputIntBounded("verbosity##ipopt_solver", &solver.print_level, 0);
     ImGui::InputDoubleBounded("tolerance##ipopt_solver", &solver.tolerance, 0.0,
         2e19, 0.0, 0.0, "%.3g");
 }
@@ -98,6 +99,6 @@ void solver_menu(ccd::opt::NLOptSolver& solver)
         0.0, 2e19, 0.0, 0.0, "%.3g");
     ImGui::InputDoubleBounded(
         "max_time##nlopt", &solver.max_time, 0.0, 2e19, 0.0, 0.0, "%.3g");
-    ImGui::Checkbox("verbosity##opt", &solver.verbosity);
+    ImGui::Checkbox("verbose##opt", &solver.verbose);
 }
 } // namespace ccd

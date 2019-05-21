@@ -37,6 +37,8 @@ namespace opt {
         double eval_f(const Eigen::VectorXd& x) override;
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
         Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& x) override;
+        Eigen::SparseMatrix<double> eval_hessian_f_sparse(
+            const Eigen::VectorXd& x) override;
         Eigen::VectorXd eval_g(const Eigen::VectorXd&) override
         {
             return Eigen::VectorXd();
@@ -66,6 +68,7 @@ namespace opt {
         double absolute_tolerance;
         double line_search_tolerance;
         int max_iterations;
+        bool verbose;
     };
 
 } // namespace opt

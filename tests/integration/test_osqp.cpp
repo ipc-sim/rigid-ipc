@@ -6,41 +6,45 @@
 
 TEST_CASE("Simple tests of OSQP", "[opt][nlopt]")
 {
+    typedef Eigen::Matrix<c_float, Eigen::Dynamic, 1> VectorX_OSQP;
+    typedef Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int>
+        SparseMatrix_OSQP;
+
     // Load problem data
     const c_int N = 4;
     const c_int M = N;
 
     // Quadratic matrix
-    Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int> P(N, N);
+    SparseMatrix_OSQP P(N, N);
     P.setIdentity();
 
     // Quadratic linear term
-    Eigen::Matrix<c_float, N, 1> q;
-    q.setZero();
+    VectorX_OSQP q = VectorX_OSQP::Zero(N);
 
     // Linear constraint matrix
-    Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int> A(M, N);
+    SparseMatrix_OSQP A(M, N);
     A.setIdentity();
 
     // Linear constraint lower bounds
-    Eigen::Matrix<c_float, M, 1> l;
-    l.setOnes();
-    Eigen::Matrix<c_float, M, 1> expected_solution;
-    expected_solution.setOnes();
+    VectorX_OSQP l(M);
+    VectorX_OSQP expected_solution(M);
     SECTION("No Lower Bounds")
     {
-        l *= -2e19;
-        expected_solution *= 0;
+        l.setConstant(-2e19);
+        expected_solution.setZero();
     }
-    SECTION("Lower Bounds = 1") {}
+    SECTION("Lower Bounds = 1")
+    {
+        l.setOnes();
+        expected_solution.setOnes();
+    }
     SECTION("Lower Bounds = 10")
     {
-        l *= 10;
-        expected_solution *= 10;
+        l.setConstant(10);
+        expected_solution.setConstant(10);
     }
     // Linear constraint upper bounds
-    Eigen::Matrix<c_float, M, 1> u
-        = Eigen::Matrix<c_float, M, 1>::Constant(2e19);
+    VectorX_OSQP u = VectorX_OSQP::Constant(M, 2e19);
 
     // Populate data
     OSQPData data; // OSQPData
@@ -65,7 +69,7 @@ TEST_CASE("Simple tests of OSQP", "[opt][nlopt]")
     // Solve Problem
     osqp_solve(work);
 
-    Eigen::Map<Eigen::Matrix<c_float, N, 1>> x(work->solution->x, N);
+    Eigen::Map<VectorX_OSQP> x(work->solution->x, N);
 
     REQUIRE(x.size() == expected_solution.size());
     CHECK((x - expected_solution).squaredNorm() == Approx(0.0).margin(1e-8));

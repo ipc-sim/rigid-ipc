@@ -15,6 +15,12 @@ void reset_profiler()
     // CCD
     number_of_collision_detection_calls = 0;
     time_spent_detecting_collisions = 0;
+
+    // Optimization
+    number_of_update_solves = 0;
+    time_spent_solving_for_update = 0;
+    number_of_hessian_summations = 0;
+    time_spent_summing_hessians = 0;
 }
 
 void print_profile(double total_time)
@@ -56,9 +62,24 @@ void print_profile(double total_time)
               << time_spent_computing_hessian / total_time * 100 << "%)\n"
               << "\t\tAverage: "
               << time_spent_computing_hessian / number_of_hessian_calls
-              << " seconds per call"
+              << " seconds per call\n"
 
-              << std::endl;
+              << "Solving for an update:\n"
+              << "\tNumber of solves: " << number_of_update_solves
+              << "\n\tTime: " << time_spent_solving_for_update << " seconds ("
+              << time_spent_solving_for_update / total_time * 100 << "%)\n"
+              << "\tAverage: "
+              << time_spent_solving_for_update / number_of_update_solves
+              << " seconds per call\n"
+
+              << "Summing hessians:\n"
+              << "\tNumber of summations: " << number_of_hessian_summations
+              << "\n\tTime: " << time_spent_summing_hessians << " seconds ("
+              << time_spent_summing_hessians / total_time * 100 << "%)\n"
+              << "\tAverage: "
+              << time_spent_summing_hessians / number_of_hessian_summations
+              << " seconds per call\n"
+              << std::flush;
 }
 
 #endif
