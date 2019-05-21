@@ -38,6 +38,8 @@ struct EdgeEdgeImpact {
     EdgeEdgeImpact();
     EdgeEdgeImpact(double time, long impacted_edge_index, double impacted_alpha,
         long impacting_edge_index, double impacting_alpha);
+
+    size_t impacting_node() const { return (impacting_alpha < 0.5 ? 0 : 1); }
 };
 
 /// A vector of edge-edge impact pointers.

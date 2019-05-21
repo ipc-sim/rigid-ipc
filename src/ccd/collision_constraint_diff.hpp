@@ -40,6 +40,10 @@ namespace autodiff {
         const Vector2T<T>& Uk, const Vector2T<T>& Ul,
         const ImpactNode impact_node, const double epsilon)>;
 
+    long get_constraint_index(
+        const EdgeEdgeImpact& impact, const bool impacted, const int num_edges);
+    long get_constraints_size(const int num_edges);
+
     ///////////////////////////////////////////////////////////////////////////
     // Global constraints over the entire simulation
 

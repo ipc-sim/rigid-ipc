@@ -24,8 +24,12 @@ set(test_sources
     opt/test_barriers.cpp
     opt/test_barrier_newton_solver.cpp
 
+    opt/test_volume_constraint.cpp
+    opt/test_barrier_constraint.cpp
+
     # opt/test_displacements_opt.cpp  # This file does not work yet
     opt/test_barrier_displacements_opt.cpp
+
 )
 
 add_executable(unit_tests ${test_sources})

@@ -12,43 +12,36 @@ namespace opt {
     class VolumeConstraint : public CollisionConstraint {
     public:
         VolumeConstraint();
-        void initialize(const Eigen::MatrixX2d& vertices,
-            const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk) override;
 
-        void compute_constraints(const Eigen::MatrixX2d& vertices,
-            const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk,
-            Eigen::VectorXd& volumes) override;
+        void compute_constraints(
+            const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk) override;
+        void compute_constraints_jacobian(
+            const Eigen::MatrixXd& Uk, Eigen::MatrixXd& g_uk_jacobian) override;
+        void compute_constraints_hessian(const Eigen::MatrixXd& Uk,
+            std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
+        void compute_constraints_and_derivatives(const Eigen::MatrixXd& Uk,
+            Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
+            std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
 
-        void compute_constraints_jacobian(const Eigen::MatrixX2d& vertices,
-            const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk,
-            Eigen::MatrixXd& volumes_jac) override;
+        int number_of_constraints() override;
 
-        void compute_constraints_hessian(const Eigen::MatrixX2d& vertices,
-            const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk,
-            std::vector<Eigen::SparseMatrix<double>>& volumes_hessian) override;
+        template <typename T>
+        void compute_constraints_per_impact(
+            const Eigen::MatrixXd& displacements, std::vector<T>& constraints);
 
         // Settings
         // ----------
         double volume_epsilon;
+
+        void assemble_dense_constraints(
+            const std::vector<double>& impact_volumes,
+            Eigen::VectorXd& dense_volumes);
+        void assemble_dense_constraints(
+            const std::vector<DScalar>& impact_volumes,
+            Eigen::VectorXd& dense_volumes);
+        void assemble_dense_jacobian(const std::vector<DScalar>& impact_volumes,
+            Eigen::MatrixXd& volumes_jac);
     };
-
-    void compute_volumes_refresh_toi(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& edge_impact_map, const double epsilon,
-        Eigen::VectorXd& volumes);
-
-    void compute_volumes_gradient(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
-        Eigen::MatrixXd& volumes);
-
-    void compute_volumes_hessian(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
-        std::vector<Eigen::SparseMatrix<double>>& volumes_hess);
 
 } // namespace opt
 } // namespace ccd

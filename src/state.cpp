@@ -188,10 +188,9 @@ void State::run_ccd_pipeline()
 {
     auto& collision_constraint = getCollisionConstraint();
     collision_constraint.initialize(vertices, edges, displacements);
-    collision_constraint.compute_constraints(
-        vertices, edges, displacements, volumes);
+    collision_constraint.compute_constraints(displacements, volumes);
     collision_constraint.compute_constraints_jacobian(
-        vertices, edges, displacements, volume_grad);
+        displacements, volume_grad);
 
     current_volume = 0;
     current_ev_impact = ev_impacts.size() > 0 ? 0 : -1;
