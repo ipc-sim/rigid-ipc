@@ -4,7 +4,7 @@
 #include <catch.hpp>
 #include <nlopt.hpp>
 
-#include <opt/displacements_opt.hpp>
+#include <opt/displacement_opt.hpp>
 
 using namespace ccd;
 using namespace opt;

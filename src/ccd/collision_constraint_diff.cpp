@@ -9,17 +9,17 @@
 
 #include <iostream>
 
-#include <profiler.hpp>
-#ifdef PROFILE_FUNCTIONS
-long number_of_constraint_calls = 0;
-double time_spent_computing_constraint = 0;
+//#include <profiler.hpp>
+//#ifdef PROFILE_FUNCTIONS
+//long number_of_constraint_calls = 0;
+//double time_spent_computing_constraint = 0;
 
-long number_of_gradient_calls = 0;
-double time_spent_computing_gradient = 0;
+//long number_of_gradient_calls = 0;
+//double time_spent_computing_gradient = 0;
 
-long number_of_hessian_calls = 0;
-double time_spent_computing_hessian = 0;
-#endif
+//long number_of_hessian_calls = 0;
+//double time_spent_computing_hessian = 0;
+//#endif
 
 namespace ccd {
 namespace autodiff {
@@ -50,11 +50,11 @@ namespace autodiff {
         }
     }
 
-    int get_constraint_index(
+    long get_constraint_index(
         const EdgeEdgeImpact& impact, const bool impacted, const int num_edges)
     {
-        int e1 = impact.impacted_edge_index;
-        int e2 = impact.impacting_edge_index;
+        long e1 = impact.impacted_edge_index;
+        long e2 = impact.impacting_edge_index;
         int p = impact.impacting_alpha > 0.5 ? 1 : 0;
         int q = impacted ? 0 : 1;
 
@@ -63,7 +63,7 @@ namespace autodiff {
         return Q * P * E2 * e1 + Q * P * e2 + Q * p + q;
     }
 
-    int get_constraints_size(const int num_edges)
+    long get_constraints_size(const int num_edges)
     {
         const int Q = 2, P = 2, E2 = num_edges, E1 = num_edges;
         return Q * P * E2 * E1;

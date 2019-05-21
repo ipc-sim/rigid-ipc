@@ -52,7 +52,7 @@ namespace opt {
         x_upper.setConstant(NO_UPPER_BOUND);
 
         // TODO: this is wrong, it will depend on constraint type
-        num_constraints = int(edges.rows());
+        num_constraints = constraint->number_of_constraints();
         g_lower.resize(num_constraints);
         g_upper.resize(num_constraints);
         g_lower.setConstant(0.0);
@@ -90,9 +90,9 @@ namespace opt {
 
         Eigen::VectorXd gx;
         if (constraint->recompute_collision_set) {
-            constraint->detecteCollisions(vertices, edges, Uk);
+            constraint->detecteCollisions(Uk);
         }
-        constraint->compute_constraints(vertices, edges, Uk, gx);
+        constraint->eval_constraints(Uk, gx);
         return gx;
     };
 
@@ -103,9 +103,9 @@ namespace opt {
 
         Eigen::MatrixXd jac_gx;
         if (constraint->recompute_collision_set) {
-            constraint->detecteCollisions(vertices, edges, Uk);
+            constraint->detecteCollisions(Uk);
         }
-        constraint->compute_constraints_jacobian(vertices, edges, Uk, jac_gx);
+        constraint->eval_constraints_jacobian(Uk, jac_gx);
 
         return jac_gx;
     };
@@ -118,11 +118,29 @@ namespace opt {
 
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
         if (constraint->recompute_collision_set) {
-            constraint->detecteCollisions(vertices, edges, Uk);
+            constraint->detecteCollisions(Uk);
         }
-        constraint->compute_constraints_hessian(vertices, edges, Uk, hess_gx);
+        constraint->eval_constraints_hessian(Uk, hess_gx);
         return hess_gx;
     };
+
+    void ParticlesDisplProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
+        Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
+        std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        std::vector<Eigen::SparseMatrix<double>> hess_gx;
+        if (constraint->recompute_collision_set) {
+            constraint->detecteCollisions(Uk);
+        }
+        constraint->eval_constraints_and_derivatives(
+            Uk, g_uk, g_uk_jacobian, g_uk_hessian);
+    }
+
+    template <> bool differentiable<DScalar>() { return true; }
+    template <> bool differentiable<double>() { return false; }
 
 } // namespace opt
 } // namespace ccd

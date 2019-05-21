@@ -1,6 +1,6 @@
 #include "barrier_constraint.hpp"
 
-#include <ccd/collision_penalty_diff.hpp>
+#include <opt/barrier.hpp>
 
 namespace ccd {
 namespace opt {
@@ -15,12 +15,13 @@ namespace opt {
         const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk)
 
     {
-        ev_impacts.clear();
-        ee_impacts.clear();
-        edge_impact_map.resize(edges.rows());
-        edge_impact_map.setZero();
-        detecteCollisions(vertices, edges, Uk);
+        CollisionConstraint::initialize(vertices, edges, Uk);
         resetBarrierEpsilon();
+    }
+
+    int BarrierConstraint::number_of_constraints()
+    {
+        return int(ee_impacts.size() * 2);
     }
 
     void BarrierConstraint::resetBarrierEpsilon()
@@ -38,70 +39,94 @@ namespace opt {
     }
 
     void BarrierConstraint::compute_constraints(
-        const Eigen::MatrixX2d& vertices, const Eigen::MatrixX2i& edges,
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers)
     {
-        ccd::autodiff::compute_constraints_refresh_toi(vertices, Uk, edges,
-            ee_impacts, Eigen::VectorXi(), barrier_epsilon,
-            ccd::autodiff::collision_penalty<double>, barriers);
+        std::vector<double> v_barriers;
+        compute_constraints_per_impact(Uk, v_barriers);
+        barriers = Eigen::Map<Eigen::VectorXd>(
+            v_barriers.data(), int(v_barriers.size()));
     }
 
     void BarrierConstraint::compute_constraints_jacobian(
-        const Eigen::MatrixX2d& vertices, const Eigen::MatrixX2i& edges,
+
         const Eigen::MatrixXd& Uk, Eigen::MatrixXd& barriers_jacobian)
     {
-        ccd::autodiff::compute_constraints_gradient(vertices, Uk, edges,
-            ee_impacts, Eigen::VectorXi(), barrier_epsilon,
-            ccd::autodiff::collision_penalty<DScalar>, barriers_jacobian);
-        barriers_jacobian.transposeInPlace();
+        std::vector<DScalar> barriers;
+        compute_constraints_per_impact(Uk, barriers);
+        assemble_jacobian(barriers, barriers_jacobian);
     }
 
     void BarrierConstraint::compute_constraints_hessian(
-        const Eigen::MatrixX2d& vertices, const Eigen::MatrixX2i& edges,
         const Eigen::MatrixXd& Uk,
         std::vector<Eigen::SparseMatrix<double>>& barriers_hessian)
     {
-        ccd::autodiff::compute_constraints_hessian(vertices, Uk, edges,
-            ee_impacts, Eigen::VectorXi(), barrier_epsilon,
-            ccd::autodiff::collision_penalty<DScalar>, barriers_hessian);
+        std::vector<DScalar> barriers;
+        compute_constraints_per_impact(Uk, barriers);
+        assemble_hessian(barriers, barriers_hessian);
     }
+    void BarrierConstraint::compute_constraints_and_derivatives(
+        const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers,
+        Eigen::MatrixXd& barriers_jacobian,
+        std::vector<Eigen::SparseMatrix<double>>& barriers_hessian)
 
-    void compute_penalties_refresh_toi(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& edge_impact_map, const double epsilon,
-        Eigen::VectorXd& barriers)
     {
-        auto solver = std::make_unique<BarrierConstraint>();
-        solver->barrier_epsilon = epsilon;
-        solver->ee_impacts = ee_impacts;
-        return solver->compute_constraints(V, E, U, barriers);
+        std::vector<DScalar> v_barriers;
+        compute_constraints_per_impact(Uk, v_barriers);
+        assemble_constraints(v_barriers, barriers);
+        assemble_jacobian(v_barriers, barriers_jacobian);
+        assemble_hessian(v_barriers, barriers_hessian);
     }
 
-    void compute_penalties_gradient(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
-        Eigen::MatrixXd& contraints_jac)
+    template <typename T>
+    void BarrierConstraint::compute_constraints_per_impact(
+        const Eigen::MatrixXd& displacements, std::vector<T>& constraints)
     {
+        constraints.clear();
+        constraints.reserve(2 * ee_impacts.size());
 
-        auto solver = std::make_unique<BarrierConstraint>();
-        solver->barrier_epsilon = epsilon;
-        solver->ee_impacts = ee_impacts;
-        return solver->compute_constraints_jacobian(V, E, U, contraints_jac);
+        if (differentiable<T>()) {
+            // !!! All definitions using DScalar must be done after this !!!
+            DiffScalarBase::setVariableCount(8);
+        }
+
+        // -----------------------------------------------------------
+        // TODO: fix 2x trick
+        T t = T(1);                             // Final time for the time step
+        T time_scale = t + 2 * barrier_epsilon; // 2x for safety
+        // -----------------------------------------------------------
+
+        for (size_t i = 0; i < ee_impacts.size(); ++i) {
+
+            ImpactTData<T> data
+                = get_impact_data<T>(displacements, ee_impacts[i]);
+
+            // -----------------------------------------------------------
+            // TODO: fix this trick
+            for (uint ii = 0; ii < 4; ii++) {
+                data.u[ii] *= time_scale;
+            }
+            // -----------------------------------------------------------
+
+            T toi, alpha_ij, alpha_kl;
+            T vol_ij(0), vol_kl(0);
+
+            if (compute_toi_alpha(data, toi, alpha_ij, alpha_kl)) {
+                T barrier = opt::spline_barrier<T>(
+                    time_scale * toi - t, barrier_epsilon);
+
+                vol_ij = (data.v[0] - data.v[1]).norm() * barrier;
+                vol_kl = (data.v[2] - data.v[3]).norm() * barrier;
+            }
+            constraints.push_back(vol_ij);
+            constraints.push_back(vol_kl);
+        }
     }
 
-    void compute_penalties_hessian(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2d& U, const Eigen::MatrixX2i& E,
-        const EdgeEdgeImpacts& ee_impacts,
-        const Eigen::VectorXi& /*edge_impact_map*/, const double epsilon,
-        std::vector<Eigen::SparseMatrix<double>>& contraints_hess)
-    {
-        auto solver = std::make_unique<BarrierConstraint>();
-        solver->barrier_epsilon = epsilon;
-        solver->ee_impacts = ee_impacts;
-        return solver->compute_constraints_hessian(V, E, U, contraints_hess);
-    }
+    template void BarrierConstraint::compute_constraints_per_impact<double>(
+        const Eigen::MatrixXd& displacements, std::vector<double>& constraints);
 
+    template void BarrierConstraint::compute_constraints_per_impact<DScalar>(
+        const Eigen::MatrixXd& displacements,
+        std::vector<DScalar>& constraints);
 } // namespace opt
 } // namespace ccd

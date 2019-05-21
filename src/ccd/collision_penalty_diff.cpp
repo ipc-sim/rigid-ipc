@@ -29,8 +29,7 @@ namespace autodiff {
                           scaled_Uk = time_scale * Uk,
                           scaled_Ul = time_scale * Ul;
 
-        double edge_length;
-        T displacment_length;
+        double edge_length = (Vj - Vi).norm();
 
         switch (impact_node) {
         case vK:
@@ -38,30 +37,22 @@ namespace autodiff {
                 Vi, Vj, Vk, scaled_Ui, scaled_Uj, scaled_Uk, toi);
             success &= temporal_parameterization_to_spatial(
                 Vi, Vj, Vk, scaled_Ui, scaled_Uj, scaled_Uk, toi, alpha);
-            edge_length = (Vj - Vi).norm();
-            displacment_length = Uk.norm();
             break;
         case vL:
             success = compute_edge_vertex_time_of_impact(
                 Vi, Vj, Vl, scaled_Ui, scaled_Uj, scaled_Ul, toi);
             success &= temporal_parameterization_to_spatial(
                 Vi, Vj, Vl, scaled_Ui, scaled_Uj, scaled_Ul, toi, alpha);
-            edge_length = (Vj - Vi).norm();
-            displacment_length = Ul.norm();
             break;
         case vI:
             success = compute_edge_vertex_time_of_impact(
                 Vk, Vl, Vi, scaled_Uk, scaled_Ul, scaled_Ui, toi);
             alpha = T(0);
-            edge_length = (Vl - Vk).norm();
-            displacment_length = Ui.norm();
             break;
         case vJ:
             success = compute_edge_vertex_time_of_impact(
                 Vk, Vl, Vj, scaled_Uk, scaled_Ul, scaled_Uj, toi);
             alpha = T(1);
-            edge_length = (Vl - Vk).norm();
-            displacment_length = Uj.norm();
             break;
         }
 

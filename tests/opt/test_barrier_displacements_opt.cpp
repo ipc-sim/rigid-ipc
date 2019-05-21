@@ -36,7 +36,6 @@ TEST_CASE("test the setup", "[opt][displacements][barrier]")
     state.reset_optimization_problem();
 
     CHECK(state.opt_problem.num_vars == state.displacements.size());
-    CHECK(state.opt_problem.num_constraints == state.edges.rows());
 
     CHECK(state.opt_problem.x0.size() == state.opt_problem.num_vars);
     CHECK(state.opt_problem.x_lower.size() == state.opt_problem.num_vars);
@@ -151,6 +150,7 @@ TEST_CASE("corner case", "[opt][displacements][barrier]")
     state.barrier_newton_solver.min_barrier_epsilon = 1e-3;
     state.barrier_newton_solver.line_search_tolerance = 1e-4;
     state.barrier_newton_solver.absolute_tolerance = 1e-3;
+
 
     state.optimize_displacements("");
     CHECK(state.opt_results.success);
