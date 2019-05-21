@@ -30,6 +30,15 @@ namespace opt {
         return eval_hessian_f(x).sparseView();
     }
 
+    void OptimizationProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
+        Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
+        std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
+    {
+        g_uk = eval_g(x);
+        g_uk_jacobian = eval_jac_g(x);
+        g_uk_hessian = eval_hessian_g(x);
+    }
+
     bool OptimizationProblem::validate_problem()
     {
         bool valid = true;

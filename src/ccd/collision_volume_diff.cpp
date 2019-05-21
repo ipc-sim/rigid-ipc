@@ -52,6 +52,8 @@ namespace autodiff {
             Vi, Vj, Ui, Uj, toi, alpha, epsilon);
     }
 
+
+
     // -----------------------------------------------------------------------------
     // ALL IMPACTS GLOBAL Volumes Derivatives
     // -----------------------------------------------------------------------------
@@ -62,8 +64,8 @@ namespace autodiff {
         const Eigen::VectorXi& edge_impact_map, const double epsilon,
         Eigen::VectorXd& volumes)
     {
-        compute_constraints_dense_refresh_toi(V, U, E, ee_impacts, edge_impact_map,
-            epsilon, collision_volume<double>, volumes);
+        compute_constraints_dense_refresh_toi(V, U, E, ee_impacts,
+            edge_impact_map, epsilon, collision_volume<double>, volumes);
     }
 
     void compute_volumes_gradient(const Eigen::MatrixX2d& V,
