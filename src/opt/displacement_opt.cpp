@@ -124,14 +124,23 @@ namespace opt {
         return hess_gx;
     };
 
-    template <>
-    bool differentiable<DScalar>(){
-        return true;
+    void ParticlesDisplProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
+        Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
+        std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        std::vector<Eigen::SparseMatrix<double>> hess_gx;
+        if (constraint->recompute_collision_set) {
+            constraint->detecteCollisions(Uk);
+        }
+        constraint->eval_constraints_and_derivatives(
+            Uk, g_uk, g_uk_jacobian, g_uk_hessian);
     }
-    template <>
-    bool differentiable<double>(){
-        return false;
-    }
+
+    template <> bool differentiable<DScalar>() { return true; }
+    template <> bool differentiable<double>() { return false; }
 
 } // namespace opt
 } // namespace ccd

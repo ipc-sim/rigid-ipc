@@ -41,6 +41,10 @@ namespace opt {
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x) override;
+
+        void eval_g_and_gdiff(const Eigen::VectorXd& x, Eigen::VectorXd& g_uk,
+            Eigen::MatrixXd& g_uk_jacobian,
+            std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
         void initProblem();
     };
 
