@@ -92,7 +92,7 @@ namespace opt {
 
         Eigen::VectorXd gx;
         if (constraint->recompute_collision_set) {
-            constraint->detecteCollisions(Uk);
+            constraint->detectCollisions(Uk);
         }
         constraint->eval_constraints(Uk, gx);
         return gx;
@@ -105,7 +105,7 @@ namespace opt {
 
         Eigen::MatrixXd jac_gx;
         if (constraint->recompute_collision_set) {
-            constraint->detecteCollisions(Uk);
+            constraint->detectCollisions(Uk);
         }
         constraint->eval_constraints_jacobian(Uk, jac_gx);
 
@@ -120,7 +120,7 @@ namespace opt {
 
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
         if (constraint->recompute_collision_set) {
-            constraint->detecteCollisions(Uk);
+            constraint->detectCollisions(Uk);
         }
         constraint->eval_constraints_hessian(Uk, hess_gx);
         return hess_gx;
@@ -135,7 +135,7 @@ namespace opt {
 
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
         if (constraint->recompute_collision_set) {
-            constraint->detecteCollisions(Uk);
+            constraint->detectCollisions(Uk);
         }
         constraint->eval_constraints_and_derivatives(
             Uk, g_uk, g_uk_jacobian, g_uk_hessian);

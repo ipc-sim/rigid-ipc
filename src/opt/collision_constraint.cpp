@@ -36,10 +36,10 @@ namespace opt {
         ee_impacts.clear();
         edge_impact_map.resize(E.rows());
         edge_impact_map.setZero();
-        detecteCollisions(Uk);
+        detectCollisions(Uk);
     }
 
-    void CollisionConstraint::detecteCollisions(const Eigen::MatrixXd& Uk)
+    void CollisionConstraint::detectCollisions(const Eigen::MatrixXd& Uk)
     {
         edge_impact_map.resize(edges->rows());
         ccd::detect_edge_vertex_collisions(

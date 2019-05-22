@@ -187,7 +187,6 @@ namespace opt {
     bool BarrierProblem::eval_intermediate_callback(const Eigen::VectorXd& x)
     {
         return general_problem->eval_intermediate_callback(x);
-        return true;
     }
 
     BarrierNewtonSolver::BarrierNewtonSolver()

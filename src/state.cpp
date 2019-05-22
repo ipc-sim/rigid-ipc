@@ -256,7 +256,7 @@ bool State::record_optimization_step(
     f_history.push_back(opt_problem.eval_f(x));
 
     // Allways use Volume constraint
-    volume_constraint.detecteCollisions(Uk);
+    volume_constraint.detectCollisions(Uk);
 
     Eigen::VectorXd gx;
     Eigen::MatrixXd jac_gx;
