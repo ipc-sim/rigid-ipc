@@ -28,7 +28,7 @@ namespace opt {
         virtual void initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk);
 
-        void detecteCollisions(const Eigen::MatrixXd& Uk);
+        void detectCollisions(const Eigen::MatrixXd& Uk);
 
         void assemble_hessian(const std::vector<DScalar>& constraints,
             std::vector<Eigen::SparseMatrix<double>>& hessian);

@@ -207,11 +207,8 @@ namespace opt {
             tnlp_adapter->ResortX(*ip_data->curr()->x(), primals.data());
             tnlp_adapter->ResortG(*ip_data->curr()->y_c(),
                 *ip_data->curr()->y_d(), dualeqs.data());
-            //            if (settings.intermediate_cb) {
-            //                settings.intermediate_cb(
-            //                    primals, obj_value, dualeqs,
-            //                    /*gamma=*/alpha_pr, iter);
-            //            }
+
+            problem->eval_intermediate_callback(primals);
         }
         return true;
     }
