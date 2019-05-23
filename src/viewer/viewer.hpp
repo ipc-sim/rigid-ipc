@@ -90,6 +90,7 @@ public:
     void draw_edit_modes();
     void draw_ccd_steps();
     void draw_legends();
+    void draw_collision_menu();
     void draw_optimization();
     void draw_optimization_results();
 

@@ -18,6 +18,8 @@ namespace ccd {
 
 namespace opt {
 
+    typedef std::function<bool(const Eigen::VectorXd&, const Eigen::MatrixX2d&)> intermediate_callback;
+
     class ParticlesDisplProblem : public OptimizationProblem {
     public:
         ParticlesDisplProblem();
@@ -26,14 +28,10 @@ namespace opt {
         void initialize(const Eigen::MatrixX2d& V, const Eigen::MatrixX2i& E,
             const Eigen::MatrixX2d& U, CollisionConstraint& cstr);
 
-        Eigen::MatrixX2d vertices;
-        Eigen::MatrixX2i edges;
-        Eigen::MatrixX2d displacements;
-        Eigen::MatrixXd u_;
-        CollisionConstraint* constraint;
-
         double eval_f(const Eigen::VectorXd& x) override;
+
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
+
         Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& x) override;
         Eigen::SparseMatrix<double> eval_hessian_f_sparse(
             const Eigen::VectorXd& x) override;
@@ -45,6 +43,17 @@ namespace opt {
         void eval_g_and_gdiff(const Eigen::VectorXd& x, Eigen::VectorXd& g_uk,
             Eigen::MatrixXd& g_uk_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
+
+        bool eval_intermediate_callback(const Eigen::VectorXd& x) override;
+
+        Eigen::MatrixX2d vertices;
+        Eigen::MatrixX2i edges;
+        Eigen::MatrixX2d displacements;
+        Eigen::MatrixXd u_;
+        CollisionConstraint* constraint;
+        intermediate_callback intermediate_callback;
+
+    private:
         void initProblem();
     };
 

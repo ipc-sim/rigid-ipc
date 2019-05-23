@@ -5,6 +5,13 @@ namespace ccd {
 namespace opt {
 
     OptimizationProblem::~OptimizationProblem() {}
+
+    bool OptimizationProblem::eval_intermediate_callback(
+        const Eigen::VectorXd& /*x*/)
+    {
+        return true;
+    }
+
     callback_f OptimizationProblem::func_f()
     {
         callback_f f = [&](const Eigen::VectorXd& x) { return eval_f(x); };

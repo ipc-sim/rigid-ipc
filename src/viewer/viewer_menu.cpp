@@ -38,7 +38,7 @@ void color_button()
 
 void ViewerMenu::draw_menu()
 {
-    float menu_width = 180.f * menu_scaling();
+    float menu_width = 200.f * menu_scaling();
     draw_labels_window();
 
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
@@ -53,6 +53,13 @@ void ViewerMenu::draw_menu()
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
 
     draw_io();
+
+    const char* level_strings[] = SPDLOG_LEVEL_NAMES;
+    if (ImGui::Combo("log-level##logger", &state.log_level, level_strings,
+            CCD_IM_ARRAYSIZE(level_strings))) {
+        spdlog::set_level(
+            static_cast<spdlog::level::level_enum>(state.log_level));
+    }
 
     ImGui::Separator();
     ImGui::Separator();
@@ -322,7 +329,7 @@ void ViewerMenu::draw_edit_modes()
     // Menu for fixing vertex positions
     if (state.selected_points.size() > 0
         && ImGui::CollapsingHeader(
-            "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
+               "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Initial button state is all(fixed_dof(selected_points))
         bool x_fixed_originally = true, y_fixed_originally = true;
         for (int point : state.selected_points) {
@@ -354,33 +361,47 @@ void ViewerMenu::draw_edit_modes()
 // //////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_ccd_steps()
 {
-    static int idx_detection_method = 1;
     if (ImGui::CollapsingHeader("CCD", ImGuiTreeNodeFlags_DefaultOpen)) {
 
         if (ImGui::SliderFloat("time", &(state.current_time), 0.0, 1.0)) {
             redraw_at_time();
         }
 
-        if (ImGui::Combo("method##ccd", &idx_detection_method,
-                ccd::DetectionMethodNames,
-                CCD_IM_ARRAYSIZE(ccd::DetectionMethodNames))) {
-            state.barrier_constraint.detection_method
-                = static_cast<ccd::DetectionMethod>(idx_detection_method);
-            state.volume_constraint.detection_method
-                = static_cast<ccd::DetectionMethod>(idx_detection_method);
-        }
-
         if (ImGui::Button("Run CCD", ImVec2(-1, 0))) {
             compute_collisions();
         }
-
-        if (ImGui::InputInt("volume##volume", &state.current_volume)) {
-            redraw_grad_volume(/*opt_gradient=*/false);
+        if (state.volumes.size() > 0) {
+            if (ImGui::InputInt("volume##volume", &state.current_volume)) {
+                redraw_grad_volume(/*opt_gradient=*/false);
+            }
         }
-        ImGui::Checkbox("skip empty", &state.skip_no_impact_edge);
+        //        ImGui::Checkbox("skip empty", &state.skip_no_impact_edge);
         ImGui::Text("||jac_j(i)|| = \t%.3g", state.get_volume_grad().norm());
     }
-} // namespace ccd
+}
+
+void ViewerMenu::draw_collision_menu()
+{
+
+    int idx_ctr_type = static_cast<int>(state.constraint_function);
+
+    if (ImGui::Combo("Constraint##opt", &idx_ctr_type, ccd::ConstraintNames,
+            CCD_IM_ARRAYSIZE(ccd::ConstraintNames))) {
+        state.constraint_function
+            = static_cast<ccd::ConstraintType>(idx_ctr_type);
+    }
+    {
+        ImGui::Indent();
+        ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
+        if (state.constraint_function == ccd::ConstraintType::VOLUME) {
+            volume_constraint_menu(state.volume_constraint);
+        } else {
+            barrier_constraint_menu(state.barrier_constraint);
+        }
+        ImGui::PopItemWidth();
+        ImGui::Unindent();
+    }
+}
 
 // //////////////////////////////////////////////////////////////////////////
 // OPTIMIZATION
@@ -389,27 +410,11 @@ void ViewerMenu::draw_optimization()
 {
     using namespace opt;
     int idx_optimization_method = static_cast<int>(state.opt_method);
-    int idx_ctr_type = static_cast<int>(state.constraint_function);
 
     if (ImGui::CollapsingHeader(
             "Collision Optimization", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-        if (ImGui::Combo("Constraint##opt", &idx_ctr_type, ccd::ConstraintNames,
-                CCD_IM_ARRAYSIZE(ccd::ConstraintNames))) {
-            state.constraint_function
-                = static_cast<ccd::ConstraintType>(idx_ctr_type);
-        }
-        {
-            ImGui::Indent();
-            ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
-            if (state.constraint_function == ccd::ConstraintType::VOLUME) {
-                volume_constraint_menu(state.volume_constraint);
-            } else {
-                barrier_constraint_menu(state.barrier_constraint);
-            }
-            ImGui::PopItemWidth();
-            ImGui::Unindent();
-        }
+        draw_collision_menu();
 
         if (ImGui::Combo("method##opt", &idx_optimization_method,
                 ccd::OptimizationMethodNames,
@@ -492,8 +497,9 @@ void ViewerMenu::draw_optimization_results()
         }
         ImGui::PopItemWidth();
         if (state.u_history.size() > 0
-            && ImGui::InputInt(
-                "step##opt-results", &(state.current_opt_iteration), 1, 10)) {
+            && ImGui::InputIntBounded("step##opt-results",
+                   &(state.current_opt_iteration), -1,
+                   int(state.u_history.size() -1), 1, 10)) {
 
             redraw_opt_displacements();
             redraw_grad_volume(/*opt_gradient=*/true);
@@ -503,7 +509,8 @@ void ViewerMenu::draw_optimization_results()
         if (ImGui::InputInt("volume##ee_opt", &state.current_volume)) {
             redraw_grad_volume(/*opt_gradient=*/true);
         }
-        ImGui::Checkbox("skip empty##edge_opt", &state.skip_no_impact_edge);
+        //        ImGui::Checkbox("skip empty##edge_opt",
+        //        &state.skip_no_impact_edge);
     }
 
     // -------------------------------------------------------------------

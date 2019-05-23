@@ -105,7 +105,6 @@ public:
     ///@brief Optimization step history for constraints
     std::vector<double> gsum_history;
     std::vector<Eigen::VectorXd> g_history;
-
     std::vector<Eigen::MatrixXd> jac_g_history;
 
     ////////////////////////////////////////////////////////////////////////////
@@ -147,13 +146,7 @@ public:
 
     void load_optimization(const std::string filename);
     void save_optimization(const std::string filename);
-
-    ////////////////////////////////////////////////////////////////////////////
-    // SCENE OUTPUT
-    // ----------------------------------------------------------------------
-    void log_optimization_steps(const std::string filename,
-        std::vector<Eigen::VectorXd>& it_x,
-        std::vector<Eigen::VectorXd>& it_lambda, std::vector<double>& it_gamma);
+    bool record_optimization_step(const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk);
 
     ////////////////////////////////////////////////////////////////////////////
     // UI
@@ -167,6 +160,9 @@ public:
     Eigen::MatrixX2d get_opt_volume_grad();
     Eigen::VectorXd get_opt_volume();
 
+    /// @brief setup log
+    int log_level;
+
     /// @brief Background rectangle to detect clicks
     double canvas_width, canvas_height;
 
@@ -175,10 +171,6 @@ public:
     float current_time;
     /// @brief Current user-selection of vertex and displacement points
     std::vector<int> selected_points, selected_displacements;
-
-    /// @brief Use for any functionallity that requires showing only one ev
-    /// impact
-    int current_ev_impact;
 
     /// @brief Use for any functionallity that requires showing info of only
     /// one volume

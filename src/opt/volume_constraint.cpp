@@ -15,7 +15,6 @@ namespace opt {
     {
     }
 
-
     int VolumeConstraint::number_of_constraints()
     {
         return int(ccd::autodiff::get_constraints_size(int(edges->rows())));
@@ -47,8 +46,9 @@ namespace opt {
         assemble_hessian(impact_volumes, volumes_hessian);
     }
 
-    void VolumeConstraint::compute_constraints_and_derivatives(const Eigen::MatrixXd& Uk,
-        Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
+    void VolumeConstraint::compute_constraints_and_derivatives(
+        const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk,
+        Eigen::MatrixXd& g_uk_jacobian,
         std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
     {
         std::vector<DScalar> impact_volumes;
@@ -56,7 +56,15 @@ namespace opt {
         assemble_dense_constraints(impact_volumes, g_uk);
         assemble_dense_jacobian(impact_volumes, g_uk_jacobian);
         assemble_hessian(impact_volumes, g_uk_hessian);
+    }
 
+    void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
+        Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian)
+    {
+        std::vector<DScalar> impact_volumes;
+        compute_constraints_per_impact(Uk, impact_volumes);
+        assemble_dense_constraints(impact_volumes, g_uk);
+        assemble_dense_jacobian(impact_volumes, g_uk_jacobian);
     }
 
     template <typename T>
@@ -119,7 +127,8 @@ namespace opt {
 
     void VolumeConstraint::assemble_dense_constraints(
         const std::vector<DScalar>& impact_volumes,
-            Eigen::VectorXd& dense_volumes){
+        Eigen::VectorXd& dense_volumes)
+    {
         const int num_edges = int(edges->rows());
         const long num_constr = ccd::autodiff::get_constraints_size(num_edges);
         dense_volumes.resize(num_constr);

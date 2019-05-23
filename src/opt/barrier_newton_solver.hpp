@@ -63,6 +63,7 @@ namespace opt {
             return std::vector<Eigen::SparseMatrix<double>>();
         }
 
+        bool eval_intermediate_callback(const Eigen::VectorXd& x) override;
         OptimizationProblem* general_problem;
 
         double epsilon;

@@ -70,6 +70,8 @@ namespace opt {
             Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian);
 
+        virtual bool eval_intermediate_callback(const Eigen::VectorXd& x);
+
         callback_f func_f();
         callback_grad_f func_grad_f();
         callback_g func_g();

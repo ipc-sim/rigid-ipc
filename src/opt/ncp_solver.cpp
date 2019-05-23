@@ -72,6 +72,7 @@ namespace opt {
     bool NCPSolver::compute()
     {
         initialize();
+        problem->eval_intermediate_callback(xi);
 
         // 2. solve constraints with successive linearizations
         for (int i = 0; i < max_iterations; ++i) {
@@ -97,6 +98,7 @@ namespace opt {
             }
 
             update_candidate(delta_x, gamma);
+            problem->eval_intermediate_callback(xi);
         }
         return (g_xi.array() >= 0).all();
     }

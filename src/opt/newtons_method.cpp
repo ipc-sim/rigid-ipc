@@ -81,9 +81,8 @@ namespace opt {
             igl::slice(problem.eval_grad_f(x), free_dof, 1,
                 g_free); // Remove rows of fixed dof
 
-            // Save intermedtiate results
-            // settings.intermediate_cb(
-            //     x, problem.f(x), Eigen::VectorXd::Zero(x.size()), 0, iter);
+
+            problem.eval_intermediate_callback(x);
 
             iter++; // Increase iteration counter
         }
