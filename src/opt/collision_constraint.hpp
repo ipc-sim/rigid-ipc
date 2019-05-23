@@ -3,6 +3,7 @@
 #include <Eigen/SparseCore>
 
 #include <ccd/collision_detection.hpp>
+#include <ccd/not_implemented_error.hpp>
 
 #include <autodiff/autodiff_types.hpp>
 
@@ -20,6 +21,15 @@ namespace opt {
         size_t impacting_index() const { return 2 + impacting_side; }
     };
 
+    class DoubleTriplet : public Eigen::Triplet<double> {
+    public:
+        DoubleTriplet(const int& i, const int& j, const double& v)
+            : Eigen::Triplet<double>(i, j, v)
+        {
+        }
+        void set_row(const int& i) { m_row = i; }
+    };
+
     class CollisionConstraint {
     public:
         CollisionConstraint();
@@ -30,26 +40,22 @@ namespace opt {
 
         void detectCollisions(const Eigen::MatrixXd& Uk);
 
+        // Assembly of global Matrices
+        // -------------------------------------------------------------------
         void assemble_hessian(const std::vector<DScalar>& constraints,
             std::vector<Eigen::SparseMatrix<double>>& hessian);
 
         void assemble_jacobian(
             const std::vector<DScalar>& constraints, Eigen::MatrixXd& jacobian);
 
+        void assemble_jacobian(const std::vector<DScalar>& constraints,
+            Eigen::SparseMatrix<double>& jacobian);
+
+        void assemble_jacobian_triplets(const std::vector<DScalar>& constraints,
+            std::vector<DoubleTriplet>& jacobian);
+
         void assemble_constraints(
             const std::vector<DScalar>& constraints, Eigen::VectorXd& g_uk);
-
-        void eval_constraints(const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk);
-
-        void eval_constraints_jacobian(
-            const Eigen::MatrixXd& Uk, Eigen::MatrixXd& g_uk_jacobian);
-
-        void eval_constraints_hessian(const Eigen::MatrixXd& Uk,
-            std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian);
-
-        void eval_constraints_and_derivatives(const Eigen::MatrixXd& Uk,
-            Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
-            std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian);
 
         // Helper Functions
         // -------------------------------------------------------------
@@ -74,16 +80,31 @@ namespace opt {
             const Eigen::MatrixXd& Uk, Eigen::MatrixXd& g_uk_jacobian)
             = 0;
 
+        virtual void compute_constraints_jacobian(const Eigen::MatrixXd& /*Uk*/,
+            Eigen::SparseMatrix<double>& /*g_uk_jacobian*/)
+        {
+            throw NotImplementedError("compute_constraints_jacobian not implemented");
+        }
+
         virtual void compute_constraints_hessian(const Eigen::MatrixXd& Uk,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
             = 0;
 
         virtual void compute_constraints_and_derivatives(
-            const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk,
-            Eigen::MatrixXd& g_uk_jacobian,
-            std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
-            = 0;
+            const Eigen::MatrixXd& /*Uk*/, Eigen::VectorXd& /*g_uk*/,
+            Eigen::MatrixXd& /*g_uk_jacobian*/,
+            std::vector<Eigen::SparseMatrix<double>>& /*g_uk_hessian*/)
+        {
+            throw NotImplementedError("compute_constraints_and_derivatives not implemented");
+        }
 
+        virtual void compute_constraints(const Eigen::MatrixXd& /*Uk*/,
+            Eigen::VectorXd& /*g_uk*/,
+            Eigen::SparseMatrix<double>& /*g_uk_jacobian*/,
+            Eigen::VectorXi& /*g_uk_active*/)
+        {
+            throw NotImplementedError("compute_constraints not implemented");
+        }
         // Settings
         // ----------
         DetectionMethod detection_method;

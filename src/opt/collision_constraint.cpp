@@ -39,36 +39,9 @@ namespace opt {
         num_pruned_impacts = prune_impacts(ee_impacts, edge_impact_map);
     }
 
-    void CollisionConstraint::eval_constraints(
-        const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk)
-    {
-        PROFILE(compute_constraints(Uk, g_uk),
-            ProfiledPoint::COMPUTING_CONSTRAINTS);
-    }
-
-    void CollisionConstraint::eval_constraints_jacobian(
-        const Eigen::MatrixXd& Uk, Eigen::MatrixXd& g_uk_jacobian)
-    {
-        PROFILE(compute_constraints_jacobian(Uk, g_uk_jacobian),
-            ProfiledPoint::COMPUTING_GRADIENT);
-    }
-
-    void CollisionConstraint::eval_constraints_hessian(
-        const Eigen::MatrixXd& Uk,
-        std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
-    {
-        PROFILE(compute_constraints_hessian(Uk, g_uk_hessian),
-            ProfiledPoint::COMPUTING_HESSIAN)
-    }
-
-    void CollisionConstraint::eval_constraints_and_derivatives(
-        const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk,
-        Eigen::MatrixXd& g_uk_jacobian,
-        std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
-    {
-        compute_constraints_and_derivatives(
-            Uk, g_uk, g_uk_jacobian, g_uk_hessian);
-    }
+    // -------------------------------------------------------------------
+    // Assembly of global Matrices
+    // -------------------------------------------------------------------
 
     void CollisionConstraint::assemble_hessian(
         const std::vector<DScalar>& constraints,
@@ -115,8 +88,33 @@ namespace opt {
     void CollisionConstraint::assemble_jacobian(
         const std::vector<DScalar>& constraints, Eigen::MatrixXd& jacobian)
     {
+        std::vector<DoubleTriplet> tripletList;
+        assemble_jacobian_triplets(constraints, tripletList);
+
         jacobian.resize(int(constraints.size()), vertices->size());
         jacobian.setZero();
+
+        for (auto& triplet : tripletList) {
+            jacobian(triplet.row(), triplet.col()) = triplet.value();
+        }
+    }
+
+    void CollisionConstraint::assemble_jacobian(
+        const std::vector<DScalar>& constraints,
+        Eigen::SparseMatrix<double>& jacobian)
+    {
+        std::vector<DoubleTriplet> tripletList;
+        assemble_jacobian_triplets(constraints, tripletList);
+        jacobian.resize(int(constraints.size()), int(vertices->size()));
+        jacobian.setFromTriplets(tripletList.begin(), tripletList.end());
+    }
+
+    void CollisionConstraint::assemble_jacobian_triplets(
+        const std::vector<DScalar>& constraints,
+        std::vector<DoubleTriplet>& tripletList)
+    {
+        tripletList.clear();
+        tripletList.reserve(2 * ee_impacts.size());
 
         const int num_vertices = int(vertices->rows());
 
@@ -128,9 +126,10 @@ namespace opt {
                 Vector8d local_jac = constraints[2 * ee + k].getGradient();
 
                 for (int i = 0; i < 4; i++) {
-                    jacobian(int(2 * ee + k), nodes[i]) = local_jac(2 * i);
-                    jacobian(int(2 * ee + k), nodes[i] + num_vertices)
-                        = local_jac(2 * i + 1);
+                    tripletList.push_back(DoubleTriplet(
+                        int(2 * ee + k), nodes[i], local_jac(2 * i + 0)));
+                    tripletList.push_back(DoubleTriplet(int(2 * ee + k),
+                        nodes[i] + num_vertices, local_jac(2 * i + 1)));
                 }
             }
         }

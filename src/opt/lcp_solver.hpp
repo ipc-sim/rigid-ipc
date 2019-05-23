@@ -22,9 +22,10 @@ namespace opt {
     };
     static const char* LCPSolverNames[] = { "LCP_GAUSS_SEIDEL", "LCP_MOSEK" };
 
-    bool lcp_solve(const Eigen::VectorXd& q, const Eigen::MatrixXd& N,
-        const Eigen::MatrixXd& M, const Eigen::VectorXd& p,
-        const LCPSolver solver, Eigen::VectorXd& x);
+    bool lcp_solve(const Eigen::VectorXd& gxi,
+        const Eigen::SparseMatrix<double>& jac_gxi,
+        const Eigen::MatrixXd& tilde_jac_gxi, const Eigen::VectorXd& ci,
+        const LCPSolver solver, Eigen::VectorXd& alpha);
 
     /**
      * solves the lcp problem using gauss-seidel
@@ -33,8 +34,10 @@ namespace opt {
      * the problem as
      *      s = q + N*(M * x + p)
      * */
-    bool lcp_gauss_seidel(const Eigen::VectorXd& q, const Eigen::MatrixXd& N,
-        const Eigen::MatrixXd& M, const Eigen::VectorXd& p, Eigen::VectorXd& x);
+    bool lcp_gauss_seidel(const Eigen::VectorXd& gxi,
+        const Eigen::SparseMatrix<double>& jac_gxi,
+        const Eigen::MatrixXd& tilde_jac_gxi, const Eigen::VectorXd& ci,
+        Eigen::VectorXd& alpha);
 
     bool lcp_mosek(
         const Eigen::MatrixXd& A, const Eigen::VectorXd& b, Eigen::VectorXd& x);
