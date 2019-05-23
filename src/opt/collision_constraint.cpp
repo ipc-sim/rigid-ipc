@@ -4,16 +4,6 @@
 #include <ccd/time_of_impact.hpp>
 
 #include <profiler.hpp>
-#ifdef PROFILE_FUNCTIONS
-long number_of_constraint_calls = 0;
-double time_spent_computing_constraint = 0;
-
-long number_of_gradient_calls = 0;
-double time_spent_computing_gradient = 0;
-
-long number_of_hessian_calls = 0;
-double time_spent_computing_hessian = 0;
-#endif
 
 namespace ccd {
 namespace opt {
@@ -52,49 +42,23 @@ namespace opt {
     void CollisionConstraint::eval_constraints(
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk)
     {
-#ifdef PROFILE_FUNCTIONS
-        number_of_constraint_calls++;
-        igl::Timer timer;
-        timer.start();
-#endif
-        compute_constraints(Uk, g_uk);
-
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        time_spent_computing_constraint += timer.getElapsedTime();
-#endif
+        PROFILE(compute_constraints(Uk, g_uk),
+            ProfiledPoint::COMPUTING_CONSTRAINTS);
     }
 
     void CollisionConstraint::eval_constraints_jacobian(
         const Eigen::MatrixXd& Uk, Eigen::MatrixXd& g_uk_jacobian)
     {
-#ifdef PROFILE_FUNCTIONS
-        number_of_gradient_calls++;
-        igl::Timer timer;
-        timer.start();
-#endif
-        compute_constraints_jacobian(Uk, g_uk_jacobian);
-
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        time_spent_computing_gradient += timer.getElapsedTime();
-#endif
+        PROFILE(compute_constraints_jacobian(Uk, g_uk_jacobian),
+            ProfiledPoint::COMPUTING_GRADIENT);
     }
 
     void CollisionConstraint::eval_constraints_hessian(
         const Eigen::MatrixXd& Uk,
         std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
     {
-#ifdef PROFILE_FUNCTIONS
-        number_of_hessian_calls++;
-        igl::Timer timer;
-        timer.start();
-#endif
-        compute_constraints_hessian(Uk, g_uk_hessian);
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        time_spent_computing_hessian += timer.getElapsedTime();
-#endif
+        PROFILE(compute_constraints_hessian(Uk, g_uk_hessian),
+            ProfiledPoint::COMPUTING_HESSIAN)
     }
 
     void CollisionConstraint::eval_constraints_and_derivatives(

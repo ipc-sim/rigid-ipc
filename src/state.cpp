@@ -371,19 +371,18 @@ void State::reset_results()
 bool State::record_optimization_step(
     const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk)
 {
-
     u_history.push_back(Uk);
-    f_history.push_back(opt_problem.eval_f(x));
-
-    // Allways use Volume constraint
-    volume_constraint.detectCollisions(Uk);
-
-    Eigen::VectorXd gx;
-    Eigen::MatrixXd jac_gx;
-    volume_constraint.compute_constraints(Uk, gx, jac_gx);
-    g_history.push_back(gx);
-    gsum_history.push_back(gx.sum());
-    jac_g_history.push_back(jac_gx);
+    // f_history.push_back(opt_problem.eval_f(x));
+    //
+    // // Allways use Volume constraint
+    // volume_constraint.detectCollisions(Uk);
+    //
+    // Eigen::VectorXd gx;
+    // Eigen::MatrixXd jac_gx;
+    // volume_constraint.compute_constraints(Uk, gx, jac_gx);
+    // g_history.push_back(gx);
+    // gsum_history.push_back(gx.sum());
+    // jac_g_history.push_back(jac_gx);
 
     // check if there is any reason to stop optimization
     return true;

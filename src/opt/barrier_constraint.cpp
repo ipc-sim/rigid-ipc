@@ -2,6 +2,8 @@
 
 #include <opt/barrier.hpp>
 
+#include <profiler.hpp>
+
 namespace ccd {
 namespace opt {
 
@@ -64,6 +66,7 @@ namespace opt {
         compute_constraints_per_impact(Uk, barriers);
         assemble_hessian(barriers, barriers_hessian);
     }
+
     void BarrierConstraint::compute_constraints_and_derivatives(
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers,
         Eigen::MatrixXd& barriers_jacobian,
@@ -72,9 +75,12 @@ namespace opt {
     {
         std::vector<DScalar> v_barriers;
         compute_constraints_per_impact(Uk, v_barriers);
-        assemble_constraints(v_barriers, barriers);
-        assemble_jacobian(v_barriers, barriers_jacobian);
-        assemble_hessian(v_barriers, barriers_hessian);
+        PROFILE(assemble_constraints(v_barriers, barriers),
+            ProfiledPoint::COMPUTING_CONSTRAINTS)
+        PROFILE(assemble_jacobian(v_barriers, barriers_jacobian),
+            ProfiledPoint::COMPUTING_GRADIENT)
+        PROFILE(assemble_hessian(v_barriers, barriers_hessian),
+            ProfiledPoint::COMPUTING_HESSIAN)
     }
 
     template <typename T>

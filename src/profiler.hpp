@@ -6,26 +6,44 @@
 
 #include <igl/Timer.h>
 #include <iostream>
+#include <vector>
 
-// Computing the constraints
-extern long number_of_constraint_calls;
-extern double time_spent_computing_constraint;
-extern long number_of_gradient_calls;
-extern double time_spent_computing_gradient;
-extern long number_of_hessian_calls;
-extern double time_spent_computing_hessian;
+enum ProfiledPoint {
+    DETECTING_COLLISIONS,
+    COMPUTING_CONSTRAINTS,
+    COMPUTING_GRADIENT,
+    COMPUTING_HESSIAN,
+    UPDATE_SOLVE,
+    SUMMING_HESSIAN,
+    _COUNT
+};
 
-// CCD
-extern long number_of_collision_detection_calls;
-extern double time_spent_detecting_collisions;
+static const char* ProfiledPointNames[]
+    = { "Detecting collisions", "Computing constraint values",
+          "Computing constraint gradients", "Computing constraint hessians",
+          "Solving for an update", "Summing hessians" };
 
-// Optimization
-extern long number_of_update_solves;
-extern double time_spent_solving_for_update;
-extern long number_of_hessian_summations;
-extern double time_spent_summing_hessians;
+extern double time_spent_at_profiled_points[];
+extern long number_of_evals_profiled_points[];
 
 void reset_profiler();
 void print_profile(double total_time);
+
+#define PROFILE(op, point)                                                     \
+    {                                                                          \
+        number_of_evals_profiled_points[int(point)]++;                         \
+        igl::Timer timer;                                                      \
+        timer.start();                                                         \
+        op;                                                                    \
+        timer.stop();                                                          \
+        time_spent_at_profiled_points[int(point)] += timer.getElapsedTime();   \
+    }
+
+#else
+
+#define PROFILE(op, point)                                                     \
+    {                                                                          \
+        op;                                                                    \
+    }
 
 #endif

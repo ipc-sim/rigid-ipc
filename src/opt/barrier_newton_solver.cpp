@@ -9,10 +9,6 @@
 #include <opt/newtons_method.hpp>
 
 #include <profiler.hpp>
-#ifdef PROFILE_FUNCTIONS
-long number_of_hessian_summations = 0;
-double time_spent_summing_hessians = 0;
-#endif
 
 namespace ccd {
 namespace opt {
@@ -62,21 +58,16 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> ddgx;
         general_problem->eval_g_and_gdiff(x, gx, dgx, ddgx);
 
-        f_uk += gx.sum();
-        f_uk_gradient += dgx.colwise().sum().transpose();
+        f_uk += gx.sum() + this->barrier(x - general_problem->x_lower).sum()
+            + this->barrier(-x + general_problem->x_upper).sum();
+        f_uk_gradient += dgx.colwise().sum().transpose()
+            + barrier_gradient(x - general_problem->x_lower)
+            - barrier_gradient(-x + general_problem->x_upper);
 
-#ifdef PROFILE_FUNCTIONS
-        number_of_hessian_summations++;
-        igl::Timer timer;
-        timer.start();
-#endif
-        for (const auto& ddgx_i : ddgx) {
-            f_uk_hessian += ddgx_i;
-        }
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        time_spent_summing_hessians += timer.getElapsedTime();
-#endif
+        PROFILE(
+            for (const auto& ddgx_i
+                 : ddgx) { f_uk_hessian += ddgx_i; },
+            ProfiledPoint::SUMMING_HESSIAN)
     }
 
     double BarrierProblem::eval_f(const Eigen::VectorXd& x)
@@ -158,25 +149,19 @@ namespace opt {
         //     hessian_coeffs = barrier_hessian(gx);
         // }
 
-#ifdef PROFILE_FUNCTIONS
-        number_of_hessian_summations++;
-        igl::Timer timer;
-        timer.start();
-#endif
-        if (ddgx.size() > 0) {
-            Eigen::SparseMatrix<double> sum_ddgx = ddgx[0];
-            for (long i = 1; i < ddgx.size(); i++) {
-                // hessian += hessian_coeffs(i) * dgx.row(i).transpose() *
-                // dgx.row(i)
-                //     + grad_coeffs(i) * ddgx[unsigned(i)];
-                sum_ddgx += ddgx[unsigned(i)];
-            }
-            hessian += sum_ddgx;
-        }
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        time_spent_summing_hessians += timer.getElapsedTime();
-#endif
+        PROFILE(
+            if (ddgx.size() > 0) {
+                Eigen::SparseMatrix<double> sum_ddgx = ddgx[0];
+                for (long i = 1; i < ddgx.size(); i++) {
+                    // hessian += hessian_coeffs(i) * dgx.row(i).transpose() *
+                    // dgx.row(i)
+                    //     + grad_coeffs(i) * ddgx[unsigned(i)];
+                    sum_ddgx += ddgx[unsigned(i)];
+                }
+                hessian += sum_ddgx;
+            },
+            ProfiledPoint::SUMMING_HESSIAN)
+
         // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
         // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
         hessian.diagonal() += barrier_hessian(x - general_problem->x_lower)
@@ -193,18 +178,11 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> ddgx
             = general_problem->eval_hessian_g(x);
 
-#ifdef PROFILE_FUNCTIONS
-        number_of_hessian_summations++;
-        igl::Timer timer;
-        timer.start();
-#endif
-        for (const auto& ddgx_i : ddgx) {
-            hessian += ddgx_i;
-        }
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        time_spent_summing_hessians += timer.getElapsedTime();
-#endif
+        PROFILE(
+            for (const auto& ddgx_i
+                 : ddgx) { hessian += ddgx_i; },
+            ProfiledPoint::SUMMING_HESSIAN)
+
         // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
         // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
         // hessian.diagonal() += barrier_hessian(x - general_problem->x_lower)
@@ -264,9 +242,9 @@ namespace opt {
             }
 
             // Optimize for a fixed epsilon
-            results = sparse_newtons_method(barrier_problem, free_dof,
-                absolute_tolerance, line_search_tolerance, max_inner_iterations,
-                verbose);
+            results
+                = newtons_method(barrier_problem, free_dof, absolute_tolerance,
+                    line_search_tolerance, max_inner_iterations, verbose);
             // Save the original problems objective
             results.minf = general_problem.eval_f(results.x);
 

@@ -9,17 +9,7 @@
 
 #include <iostream>
 
-//#include <profiler.hpp>
-//#ifdef PROFILE_FUNCTIONS
-//long number_of_constraint_calls = 0;
-//double time_spent_computing_constraint = 0;
-
-//long number_of_gradient_calls = 0;
-//double time_spent_computing_gradient = 0;
-
-//long number_of_hessian_calls = 0;
-//double time_spent_computing_hessian = 0;
-//#endif
+#include <profiler.hpp>
 
 namespace ccd {
 namespace autodiff {
@@ -142,30 +132,21 @@ namespace autodiff {
         const constraint_func<double>& compute_constraint,
         Eigen::VectorXd& constraints)
     {
-#ifdef PROFILE_FUNCTIONS
-        number_of_constraint_calls++;
-        igl::Timer timer;
-        timer.start();
-#endif
+        PROFILE(
+            constraints.resize(int(2 * ee_impacts.size()));
 
-        constraints.resize(int(2 * ee_impacts.size()));
+            for (size_t i = 0; i < ee_impacts.size(); ++i) {
+                auto& ee_impact = ee_impacts[i];
 
-        for (size_t i = 0; i < ee_impacts.size(); ++i) {
-            auto& ee_impact = ee_impacts[i];
+                constraints(2 * int(i)) = collision_constraint_refresh_toi(V, U,
+                    E, ee_impact, ee_impact.impacted_edge_index, epsilon,
+                    compute_constraint);
 
-            constraints(2 * int(i))
-                = collision_constraint_refresh_toi(V, U, E, ee_impact,
-                    ee_impact.impacted_edge_index, epsilon, compute_constraint);
-
-            constraints(2 * int(i) + 1) = collision_constraint_refresh_toi(V, U,
-                E, ee_impact, ee_impact.impacting_edge_index, epsilon,
-                compute_constraint);
-        }
-
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        time_spent_computing_constraint += timer.getElapsedTime();
-#endif
+                constraints(2 * int(i) + 1) = collision_constraint_refresh_toi(
+                    V, U, E, ee_impact, ee_impact.impacting_edge_index, epsilon,
+                    compute_constraint);
+            },
+            ProfiledPoint::COMPUTING_CONSTRAINTS)
     }
 
     void compute_constraints_dense_refresh_toi(const Eigen::MatrixX2d& V,
@@ -203,33 +184,24 @@ namespace autodiff {
         const constraint_func<DScalar>& compute_constraint,
         Eigen::MatrixXd& constraint_grad)
     {
-#ifdef PROFILE_FUNCTIONS
-        number_of_gradient_calls++;
-        igl::Timer timer;
-        timer.start();
-#endif
+        PROFILE(
+            constraint_grad.resize(V.size(), int(2 * ee_impacts.size()));
 
-        constraint_grad.resize(V.size(), int(2 * ee_impacts.size()));
+            for (size_t i = 0; i < ee_impacts.size(); ++i) {
+                auto& ee_impact = ee_impacts[i];
+                Eigen::SparseMatrix<double> grad;
 
-        for (size_t i = 0; i < ee_impacts.size(); ++i) {
-            auto& ee_impact = ee_impacts[i];
-            Eigen::SparseMatrix<double> grad;
+                collision_constraint_grad(V, U, E, ee_impact,
+                    ee_impact.impacted_edge_index, epsilon, compute_constraint,
+                    grad);
+                constraint_grad.col(2 * int(i)) = grad;
 
-            collision_constraint_grad(V, U, E, ee_impact,
-                ee_impact.impacted_edge_index, epsilon, compute_constraint,
-                grad);
-            constraint_grad.col(2 * int(i)) = grad;
-
-            collision_constraint_grad(V, U, E, ee_impact,
-                ee_impact.impacting_edge_index, epsilon, compute_constraint,
-                grad);
-            constraint_grad.col(2 * int(i) + 1) = grad;
-        }
-
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        time_spent_computing_gradient += timer.getElapsedTime();
-#endif
+                collision_constraint_grad(V, U, E, ee_impact,
+                    ee_impact.impacting_edge_index, epsilon, compute_constraint,
+                    grad);
+                constraint_grad.col(2 * int(i) + 1) = grad;
+            },
+            ProfiledPoint::COMPUTING_GRADIENT)
     }
 
     void compute_constraints_dense_gradient(const Eigen::MatrixX2d& V,
@@ -272,34 +244,25 @@ namespace autodiff {
         const constraint_func<DScalar>& compute_constraint,
         std::vector<Eigen::SparseMatrix<double>>& constraint_hessian)
     {
-#ifdef PROFILE_FUNCTIONS
-        number_of_hessian_calls++;
-        igl::Timer timer;
-        timer.start();
-#endif
+        PROFILE(
+            constraint_hessian.clear();
+            constraint_hessian.reserve(2 * ee_impacts.size());
 
-        constraint_hessian.clear();
-        constraint_hessian.reserve(2 * ee_impacts.size());
+            Eigen::SparseMatrix<double> hessian;
+            for (size_t i = 0; i < ee_impacts.size(); ++i) {
+                const EdgeEdgeImpact& ee_impact = ee_impacts[i];
 
-        Eigen::SparseMatrix<double> hessian;
-        for (size_t i = 0; i < ee_impacts.size(); ++i) {
-            const EdgeEdgeImpact& ee_impact = ee_impacts[i];
+                collision_constraint_hessian(V, U, E, ee_impact,
+                    ee_impact.impacted_edge_index, epsilon, compute_constraint,
+                    hessian);
+                constraint_hessian.push_back(hessian);
 
-            collision_constraint_hessian(V, U, E, ee_impact,
-                ee_impact.impacted_edge_index, epsilon, compute_constraint,
-                hessian);
-            constraint_hessian.push_back(hessian);
-
-            collision_constraint_hessian(V, U, E, ee_impact,
-                ee_impact.impacting_edge_index, epsilon, compute_constraint,
-                hessian);
-            constraint_hessian.push_back(hessian);
-        }
-
-#ifdef PROFILE_FUNCTIONS
-        timer.stop();
-        time_spent_computing_hessian += timer.getElapsedTime();
-#endif
+                collision_constraint_hessian(V, U, E, ee_impact,
+                    ee_impact.impacting_edge_index, epsilon, compute_constraint,
+                    hessian);
+                constraint_hessian.push_back(hessian);
+            },
+            ProfiledPoint::COMPUTING_HESSIAN)
     }
 
     // -----------------------------------------------------------------------------

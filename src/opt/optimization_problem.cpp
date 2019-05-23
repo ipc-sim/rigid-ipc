@@ -37,6 +37,24 @@ namespace opt {
         return eval_hessian_f(x).sparseView();
     }
 
+    // Evaluate the objective and its derivatives.
+    void OptimizationProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
+        double& value, Eigen::VectorXd& grad, Eigen::MatrixXd& hessian)
+    {
+        value = eval_f(x);
+        grad = eval_grad_f(x);
+        hessian = eval_hessian_f(x);
+    }
+
+    void OptimizationProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
+        double& value, Eigen::VectorXd& grad,
+        Eigen::SparseMatrix<double>& hessian)
+    {
+        value = eval_f(x);
+        grad = eval_grad_f(x);
+        hessian = eval_hessian_f_sparse(x);
+    }
+
     void OptimizationProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
         Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
         std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
@@ -83,6 +101,7 @@ namespace opt {
         const Eigen::VectorXd& x, const double tol)
     {
         Eigen::ArrayXd gx = eval_g(x).array();
+        // TODO: Fix the lower and upper bounds of g for this to work again
         // return (this->g_lower.array() - 10 * tol <= gx).all()
         //     && (gx <= this->g_upper.array() + 10 * tol).all()
         //     && (this->x_lower.array() - 10 * tol <= x.array()).all()
@@ -94,7 +113,6 @@ namespace opt {
 
     AdHocProblem::AdHocProblem()
     {
-
         this->f = [](const Eigen::VectorXd&) -> double {
             throw NotImplementedError("Objective function not implemented!");
         };

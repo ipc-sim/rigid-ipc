@@ -60,7 +60,6 @@ namespace opt {
         g_upper.setConstant(NO_UPPER_BOUND);
     }
 
-
     double ParticlesDisplProblem::eval_f(const Eigen::VectorXd& x)
     {
         return (x - u_).squaredNorm() / 2.0;
@@ -80,9 +79,9 @@ namespace opt {
     Eigen::SparseMatrix<double> ParticlesDisplProblem::eval_hessian_f_sparse(
         const Eigen::VectorXd& x)
     {
-        Eigen::SparseMatrix<double> A(int(x.size()), int(x.size()));
-        A.setIdentity();
-        return A;
+        Eigen::SparseMatrix<double> H(int(x.size()), int(x.size()));
+        H.setIdentity();
+        return H;
     }
 
     Eigen::VectorXd ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x)
@@ -90,11 +89,13 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        Eigen::VectorXd gx;
         if (constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
+
+        Eigen::VectorXd gx;
         constraint->eval_constraints(Uk, gx);
+
         return gx;
     };
 
@@ -103,10 +104,11 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        Eigen::MatrixXd jac_gx;
         if (constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
+
+        Eigen::MatrixXd jac_gx;
         constraint->eval_constraints_jacobian(Uk, jac_gx);
 
         return jac_gx;
@@ -118,11 +120,13 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        std::vector<Eigen::SparseMatrix<double>> hess_gx;
         if (constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
+
+        std::vector<Eigen::SparseMatrix<double>> hess_gx;
         constraint->eval_constraints_hessian(Uk, hess_gx);
+
         return hess_gx;
     };
 
@@ -133,7 +137,6 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        std::vector<Eigen::SparseMatrix<double>> hess_gx;
         if (constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
