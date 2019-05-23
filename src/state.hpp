@@ -120,6 +120,9 @@ public:
 
     void add_vertex(const Eigen::RowVector2d& vertex);
     void add_edges(const Eigen::MatrixX2i& edges);
+    void duplicate_selected_vertices(Eigen::Vector2d delta_center_of_mass);
+    void expand_fixed_dof();
+    void remove_free_vertices();
 
     void set_vertex_position(
         const int vertex_idx, const Eigen::RowVector2d& position);
@@ -141,9 +144,6 @@ public:
 
     void reset_optimization_problem();
     void optimize_displacements(const std::string filename = "");
-
-    void optimization_callback(const Eigen::VectorXd& x, const double obj_value,
-        const int iteration_number);
 
     void load_optimization(const std::string filename);
     void save_optimization(const std::string filename);

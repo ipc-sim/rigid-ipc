@@ -269,12 +269,17 @@ void ViewerMenu::draw_edit_modes()
             connect_selected_vertices();
         }
 
+        if (ImGui::Button("Remove Free Vertices##Edit", ImVec2(-1, 0))) {
+            state.remove_free_vertices();
+            state_history.push_back(state);
+            load_state();
+        }
+
         if ((state.selected_points.size() > 0
                 || state.selected_displacements.size() > 0)
             && ImGui::Button("Select Connected##Edit", ImVec2(-1, 0))) {
             // Build adjacency list
-            std::vector<std::list<int>> adjacencies(
-                state.vertices.rows(), std::list<int>());
+            std::vector<std::list<int>> adjacencies(state.vertices.rows());
             for (int i = 0; i < state.edges.rows(); i++) {
                 adjacencies[state.edges(i, 0)].push_back(state.edges(i, 1));
                 adjacencies[state.edges(i, 1)].push_back(state.edges(i, 0));
@@ -297,79 +302,20 @@ void ViewerMenu::draw_edit_modes()
             && ImGui::Button("Duplicate Selected##Edit", ImVec2(-1, 0))) {
             // Duplicate selected vertices and edges that have both end-points
             // selected
-
-            // selected_vertices = set(seletected_vertices)
-            std::set<int> selected_edges;
-            for (int i = 0; i < state.edges.rows(); i++) {
-                if (std::find(state.selected_points.begin(),
-                        state.selected_points.end(), state.edges(i, 0))
-                        != state.selected_points.end()
-                    && std::find(state.selected_points.begin(),
-                           state.selected_points.end(), state.edges(i, 1))
-                        != state.selected_points.end()) {
-                    selected_edges.insert(i);
-                }
-            }
-            std::vector<int> selected_edges_vector(selected_edges.size());
-            std::copy(selected_edges.begin(), selected_edges.end(),
-                selected_edges_vector.begin());
-
-            // selected_vertices = list(selected_vertices)
-            int original_edges_count = state.edges.rows();
-            int original_vertices_count = state.vertices.rows();
-
-            state.edges.conservativeResize(
-                original_edges_count + selected_edges_vector.size(), 2);
-            for (int i = 0; i < selected_edges_vector.size(); i++) {
-                for (int j = 0; j < 2; j++) {
-                    int vertex_idx = state.edges(selected_edges_vector[i], j);
-                    state.edges(original_edges_count + i, j)
-                        = std::distance(state.selected_points.begin(),
-                              std::find(state.selected_points.begin(),
-                                  state.selected_points.end(), vertex_idx))
-                        + original_vertices_count;
-                }
-            }
-
-            state.vertices.conservativeResize(
-                original_vertices_count + state.selected_points.size(), 2);
-            state.displacements.conservativeResize(
-                original_vertices_count + state.selected_points.size(), 2);
-            for (int i = 0; i < state.selected_points.size(); i++) {
-                state.vertices.row(original_vertices_count + i)
-                    = state.vertices.row(state.selected_points[i]);
-                // state.vertices(original_vertices_count + i, 0) += 1;
-                state.vertices(original_vertices_count + i, 1) -= 1;
-                state.displacements.row(original_vertices_count + i)
-                    = state.displacements.row(state.selected_points[i]);
-            }
-
-            state.opt_results.x.conservativeResize(
-                original_vertices_count + state.selected_points.size(), 2);
-            state.opt_results.x.setZero();
-
-            state.reset_impacts();
-
-            // Resize the fixed_dof
-            // Eigen::Array<bool, Eigen::Dynamic, 1> new_fixed_dof(
-            //     state.displacements.size(), false);
-            // new_fixed_dof.block(0, 0, original_vertices_count, 1)
-            //     = state.opt_problem.fixed_dof.block(
-            //         0, 0, original_vertices_count, 1);
-            // new_fixed_dof.block(
-            //     original_vertices_count + 1, 0, original_vertices_count, 1)
-            //     = state.opt_problem.fixed_dof.block(
-            //         original_vertices_count, 0, original_vertices_count, 1);
-            // new_fixed_dof(new_fixed_dof.size() - 1) = false;
-            // state.opt_problem.fixed_dof = new_fixed_dof;
-            state.opt_problem.fixed_dof
-                = Eigen::Array<bool, Eigen::Dynamic, 1>::Zero(
-                    state.displacements.size());
+            long num_old_vertices = state.vertices.rows();
+            Eigen::Vector2d delta_com;
+            delta_com << 0, -1;
+            state.duplicate_selected_vertices(delta_com);
+            state.selected_points.clear();
 
             state_history.push_back(state);
             load_state();
 
-            state.selected_points.clear();
+            // Select the newly created points
+            for (long i = num_old_vertices; i < state.vertices.rows(); i++) {
+                state.selected_points.push_back(i);
+            }
+            recolor_edges();
         }
     }
 

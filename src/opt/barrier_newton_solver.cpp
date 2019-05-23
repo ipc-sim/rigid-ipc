@@ -51,6 +51,34 @@ namespace opt {
             [eps](double xi) { return spline_barrier_hessian(xi, eps); });
     }
 
+    void BarrierProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
+        double& f_uk, Eigen::VectorXd& f_uk_gradient,
+        Eigen::SparseMatrix<double>& f_uk_hessian)
+    {
+        general_problem->eval_f_and_fdiff(x, f_uk, f_uk_gradient, f_uk_hessian);
+
+        Eigen::VectorXd gx;
+        Eigen::MatrixXd dgx;
+        std::vector<Eigen::SparseMatrix<double>> ddgx;
+        general_problem->eval_g_and_gdiff(x, gx, dgx, ddgx);
+
+        f_uk += gx.sum();
+        f_uk_gradient += dgx.colwise().sum().transpose();
+
+#ifdef PROFILE_FUNCTIONS
+        number_of_hessian_summations++;
+        igl::Timer timer;
+        timer.start();
+#endif
+        for (const auto& ddgx_i : ddgx) {
+            f_uk_hessian += ddgx_i;
+        }
+#ifdef PROFILE_FUNCTIONS
+        timer.stop();
+        time_spent_summing_hessians += timer.getElapsedTime();
+#endif
+    }
+
     double BarrierProblem::eval_f(const Eigen::VectorXd& x)
     {
         double val = general_problem->eval_f(x)

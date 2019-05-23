@@ -112,11 +112,14 @@ namespace opt {
                                       "function not implemented!");
         };
     }
+
     double AdHocProblem::eval_f(const Eigen::VectorXd& x) { return f(x); }
+
     Eigen::VectorXd AdHocProblem::eval_grad_f(const Eigen::VectorXd& x)
     {
         return grad_f(x);
     }
+
     Eigen::MatrixXd AdHocProblem::eval_hessian_f(const Eigen::VectorXd& x)
     {
         return hessian_f(x);
@@ -159,7 +162,7 @@ namespace opt {
         this->g_upper.resize(this->num_constraints);
         this->g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
 
-        this->fixed_dof.resize(this->num_vars);
+        this->fixed_dof.resize(this->num_vars, 1);
         this->fixed_dof.setConstant(false); // no-upper-bound
     }
 

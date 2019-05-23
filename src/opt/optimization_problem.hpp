@@ -7,6 +7,12 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+namespace Eigen {
+typedef Array<bool, Eigen::Dynamic, 1> ArrayXb;
+typedef Matrix<bool, Eigen::Dynamic, 1> VectorXb;
+typedef Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> MatrixXb;
+} // namespace Eigen
+
 namespace ccd {
 namespace opt {
 
@@ -34,7 +40,6 @@ namespace opt {
         const Eigen::VectorXd&)>
         callback_hessian_g;
 
-    typedef Eigen::Array<bool, Eigen::Dynamic, 1> ArrayXb;
     /**
      *  Defines the optimization problems of the form
      *      MIN     f(x)      x ∈ Rⁿ
@@ -52,14 +57,17 @@ namespace opt {
         virtual Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& x) = 0;
         virtual Eigen::SparseMatrix<double> eval_hessian_f_sparse(
             const Eigen::VectorXd& x);
+        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x, double& f_uk,
+            Eigen::VectorXd& f_uk_jacobian,
+            Eigen::SparseMatrix<double>& f_uk_hessian);
 
         virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) = 0;
         virtual Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) = 0;
         virtual std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x)
             = 0;
-        virtual void eval_g_and_gdiff(const Eigen::VectorXd& x, Eigen::VectorXd& g_uk,
-            Eigen::MatrixXd& g_uk_jacobian,
+        virtual void eval_g_and_gdiff(const Eigen::VectorXd& x,
+            Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian);
 
         callback_f func_f();
@@ -73,8 +81,8 @@ namespace opt {
         bool are_constraints_satisfied(
             const Eigen::VectorXd& x, const double tol);
 
-        /// @brief fixed_dof[i] == true indicates x[i] is not a variable
-        ArrayXb fixed_dof;
+        /// @brief fixed_dof(i) == true indicates x(i) is not a variable
+        Eigen::MatrixXb fixed_dof;
 
         int num_vars;            ///< @brief Number of variables
         int num_constraints;     ///< @brief Number of constraints

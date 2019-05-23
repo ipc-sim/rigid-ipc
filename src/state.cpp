@@ -1,6 +1,8 @@
 #include <algorithm> // std::sort
 #include <iostream>
 
+#include <igl/slice.h>
+
 #include "state.hpp"
 
 #include <ccd/collision_penalty_diff.hpp>
@@ -17,23 +19,12 @@
 #include <opt/ncp_solver.hpp>
 #include <opt/volume_constraint.hpp>
 
+#include <rigid_bodies/rigid_bodies.hpp>
+
 #include <logger.hpp>
 #include <profiler.hpp>
 
 namespace ccd {
-void State::optimization_callback(const Eigen::VectorXd& x,
-    const double obj_value, const int iteration_number)
-{
-    Eigen::MatrixXd u = x;
-    u.resize(x.rows() / 2, 2);
-    u_history.push_back(u);
-    f_history.push_back(obj_value);
-
-    // Eigen::VectorXd gx = opt_problem.g(x);
-    // g_history.push_back(gx);
-    // gsum_history.push_back(gx.sum());
-    // jac_g_history.push_back(opt_problem.jac_g());
-}
 
 State::State()
     : output_dir(DATA_OUTPUT_DIR)
@@ -49,7 +40,6 @@ State::State()
     , current_opt_iteration(-1)
 {
     barrier_newton_solver.barrier_constraint = &barrier_constraint;
-    // barrier_newton_solver.callback = &(this->optimization_callback);
 }
 
 // -----------------------------------------------------------------------------
@@ -111,7 +101,7 @@ void State::reset_scene()
     opt_results.success = false;
     opt_results.finished = false;
 
-    opt_problem.fixed_dof.resize(displacements.size());
+    opt_problem.fixed_dof.resize(displacements.size(), 1);
     opt_problem.fixed_dof.setConstant(false);
 }
 
@@ -135,14 +125,7 @@ void State::add_vertex(const Eigen::RowVector2d& position)
     reset_impacts();
 
     // Resize the fixed_dof
-    Eigen::Array<bool, Eigen::Dynamic, 1> new_fixed_dof(displacements.size());
-    new_fixed_dof.block(0, 0, lastid, 1)
-        = opt_problem.fixed_dof.block(0, 0, lastid, 1);
-    new_fixed_dof(lastid) = false;
-    new_fixed_dof.block(lastid + 1, 0, lastid, 1)
-        = opt_problem.fixed_dof.block(lastid, 0, lastid, 1);
-    new_fixed_dof(new_fixed_dof.size() - 1) = false;
-    opt_problem.fixed_dof = new_fixed_dof;
+    expand_fixed_dof();
 }
 
 void State::add_edges(const Eigen::MatrixX2i& new_edges)
@@ -159,6 +142,128 @@ void State::add_edges(const Eigen::MatrixX2i& new_edges)
     volumes.conservativeResize(lastid + new_edges.rows());
 
     reset_impacts();
+}
+
+void State::expand_fixed_dof()
+{
+    long num_old_vertices = opt_problem.fixed_dof.size() / 2;
+    long num_new_vertices = displacements.rows() - num_old_vertices;
+
+    opt_problem.fixed_dof.resize(num_old_vertices, 2);
+    opt_problem.fixed_dof.conservativeResize(displacements.rows(), 2);
+    opt_problem.fixed_dof.block(num_old_vertices, 0, num_new_vertices, 2)
+        .setZero();
+    opt_problem.fixed_dof.resize(opt_problem.fixed_dof.size(), 1);
+
+    assert(opt_problem.fixed_dof.size() == displacements.size());
+}
+
+// Remove vertices that are not an end-point to any edge.
+void State::remove_free_vertices()
+{
+    // Create a set of non-free vertices to keep
+    std::set<int> nonfree_ids_set;
+    for (int i = 0; i < edges.rows(); i++) {
+        nonfree_ids_set.insert(edges(i, 0));
+        nonfree_ids_set.insert(edges(i, 1));
+    }
+    std::vector<int> nonfree_ids
+        = std::vector<int>(nonfree_ids_set.begin(), nonfree_ids_set.end());
+    // Convert the set of non-free vertices to an Eigen vector
+    Eigen::VectorXi R
+        = Eigen::VectorXi::Map(nonfree_ids.data(), long(nonfree_ids.size()));
+
+    // Create a range for the columns to keep
+    Eigen::Vector2i C;
+    C << 0, 1;
+
+    // Create a temporary matrix of the vertices and displacements to keep
+    Eigen::MatrixX2d new_vertices, new_displacements;
+    Eigen::MatrixXb new_fixed_dof;
+    igl::slice(vertices, R, C, new_vertices); // Copy over the vertices to keep
+    igl::slice(displacements, R, C, new_displacements); // Copy displacements
+    opt_problem.fixed_dof.resize(opt_problem.fixed_dof.size() / 2, 2);
+    igl::slice(opt_problem.fixed_dof, R, C, new_fixed_dof);
+    vertices = new_vertices;
+    displacements = new_displacements;
+
+    // Update the edges to have the new vertex indices
+    // Map from old to new indices
+    std::unordered_map<int, int> old_ids_to_new_ids;
+    int new_id = 0;
+    for (const auto& old_id : nonfree_ids) {
+        // The new indices are the order of indices in nonfree_vertex_ids
+        old_ids_to_new_ids.insert(std::make_pair(old_id, new_id++));
+    }
+    for (int i = 0; i < edges.rows(); i++) {
+        edges(i, 0) = old_ids_to_new_ids.at(edges(i, 0));
+        edges(i, 1) = old_ids_to_new_ids.at(edges(i, 1));
+    }
+
+    reset_scene();
+    new_fixed_dof.resize(new_fixed_dof.size(), 1);
+    opt_problem.fixed_dof = new_fixed_dof;
+}
+
+// Duplicate selected vertices and edges that have both end-points selected.
+void State::duplicate_selected_vertices(Eigen::Vector2d delta_center_of_mass)
+{
+    std::vector<long> selected_edges;
+    for (int i = 0; i < edges.rows(); i++) {
+        if (std::find(
+                selected_points.begin(), selected_points.end(), edges(i, 0))
+                != selected_points.end()
+            && std::find(
+                   selected_points.begin(), selected_points.end(), edges(i, 1))
+                != selected_points.end()) {
+            selected_edges.push_back(i);
+        }
+    }
+
+    long num_old_vertices = vertices.rows();
+    long num_new_vertices = long(selected_points.size());
+
+    long num_old_edges = edges.rows();
+    long num_new_edges = long(selected_edges.size());
+
+    edges.conservativeResize(num_old_edges + num_new_edges, 2);
+    // Map from old to new indices
+    std::unordered_map<int, int> old_ids_to_new_ids;
+    long new_id = num_old_vertices;
+    for (const int& selected_point : selected_points) {
+        old_ids_to_new_ids.insert(std::make_pair(selected_point, new_id++));
+    }
+    long new_edge_id = num_old_edges;
+    for (const long& selected_edge : selected_edges) {
+        edges(new_edge_id, 0) = old_ids_to_new_ids.at(edges(selected_edge, 0));
+        edges(new_edge_id, 1) = old_ids_to_new_ids.at(edges(selected_edge, 1));
+        new_edge_id++;
+    }
+
+    vertices.conservativeResize(num_old_vertices + num_new_vertices, 2);
+    displacements.conservativeResize(num_old_vertices + num_new_vertices, 2);
+    Eigen::VectorXi R = Eigen::VectorXi::Map(
+        selected_points.data(), long(selected_points.size()));
+    Eigen::Vector2i C;
+    C << 0, 1;
+
+    Eigen::MatrixX2d duplicate_vertices, duplicate_displacements;
+    igl::slice(vertices, R, C, duplicate_vertices);
+    duplicate_vertices.col(0).array() += delta_center_of_mass.x();
+    duplicate_vertices.col(1).array() += delta_center_of_mass.y();
+    vertices.block(num_old_vertices, 0, num_new_vertices, 2)
+        = duplicate_vertices;
+    igl::slice(displacements, R, C, duplicate_displacements);
+    displacements.block(num_old_vertices, 0, num_new_vertices, 2)
+        = duplicate_displacements;
+
+    opt_results.x.resize(num_old_vertices + num_new_vertices, 2);
+    opt_results.x.setZero();
+
+    reset_impacts();
+
+    // Resize the fixed_dof
+    expand_fixed_dof();
 }
 
 void State::set_vertex_position(
