@@ -242,8 +242,8 @@ void ViewerMenu::draw_io()
         if (ImGui::Button("Save##Scene", ImVec2((w - p) / 2.f, 0))) {
             save_scene();
         }
-        static bool convert_to_rigid_bodies;
-        ImGui::Checkbox("convert to rigid bodies", &convert_to_rigid_bodies);
+        ImGui::Checkbox(
+            "convert to rigid bodies", &state.convert_to_rigid_bodies);
     }
 }
 
@@ -280,6 +280,25 @@ void ViewerMenu::draw_edit_modes()
 
         if (ImGui::Button("Connect##Edit", ImVec2(-1, 0))) {
             connect_selected_vertices();
+        }
+
+        if (ImGui::Button("Select All Vertices##Edit", ImVec2(-1, 0))) {
+            state.selected_displacements.clear();
+            Eigen::VectorXi all_idxs = Eigen::VectorXi::LinSpaced(
+                state.vertices.rows(), 0, state.vertices.rows() - 1);
+            state.selected_points = std::vector<int>(
+                all_idxs.data(), all_idxs.data() + all_idxs.size());
+            recolor_edges();
+            recolor_displacements();
+        }
+        if (ImGui::Button("Select All Displacements##Edit", ImVec2(-1, 0))) {
+            state.selected_points.clear();
+            Eigen::VectorXi all_idxs = Eigen::VectorXi::LinSpaced(
+                state.displacements.rows(), 0, state.displacements.rows() - 1);
+            state.selected_displacements = std::vector<int>(
+                all_idxs.data(), all_idxs.data() + all_idxs.size());
+            recolor_edges();
+            recolor_displacements();
         }
 
         if (ImGui::Button("Subdivide Edges##Edit", ImVec2(-1, 0))) {
@@ -443,12 +462,6 @@ void ViewerMenu::draw_edit_modes()
             load_state();
             recolor_edges();
         }
-    }
-
-    if (ImGui::Button("Make Rigid Bodies##Edit", ImVec2(-1, 0))) {
-        state.convert_connected_components_to_rigid_bodies();
-        state_history.push_back(state);
-        load_state();
     }
 }
 

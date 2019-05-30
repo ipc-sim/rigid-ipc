@@ -57,6 +57,7 @@ public:
 
     /// @brief Rigid bodies to get displacements
     std::vector<RigidBody> rigid_bodies;
+    bool convert_to_rigid_bodies;
 
     /// @brief The current number of pruned impacts
     int num_pruned_impacts;

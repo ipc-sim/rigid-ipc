@@ -1,7 +1,7 @@
 #include <igl/opengl/glfw/Viewer.h>
 
-#include <viewer/viewer.hpp>
 #include <logger.hpp>
+#include <viewer/viewer.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -13,6 +13,8 @@ int main(int argc, char* argv[])
     std::string scene_file;
     if (argc > 1) {
         menu.scene_file = argv[1];
+    } else {
+        menu.scene_file = std::string(FIXTURES_DIR) + "/starting-scene.json";
     }
 
     viewer.plugins.push_back(&menu);

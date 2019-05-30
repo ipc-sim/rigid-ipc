@@ -25,7 +25,6 @@ namespace opt {
         Eigen::VectorXd x = problem.x0;
 
         // subset of g for free degrees of freedom
-        double value;
         Eigen::VectorXd gradient, gradient_free;
         Eigen::SparseMatrix<double> hessian, hessian_free;
 
@@ -40,11 +39,10 @@ namespace opt {
         };
 
         int iter = 0;
-        problem.eval_intermediate_callback(x);
-
         do {
             // Compute the gradient and hessian
-            problem.eval_f_and_fdiff(x, value, gradient, hessian);
+            double _;
+            problem.eval_f_and_fdiff(x, _, gradient, hessian);
             // Remove rows of fixed dof
             igl::slice(gradient, free_dof, 1, gradient_free);
 

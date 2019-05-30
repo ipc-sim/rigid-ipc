@@ -24,6 +24,7 @@ namespace opt {
     ParticlesDisplProblem::ParticlesDisplProblem()
         : constraint(nullptr)
         , intermediate_callback(nullptr)
+        , use_mass_matrix(true)
     {
     }
 
@@ -68,6 +69,11 @@ namespace opt {
     // Initalize the mass matrix based on the edge length of incident edges.
     void ParticlesDisplProblem::init_mass_matrix()
     {
+        if (!use_mass_matrix) {
+            mass_matrix
+                = Eigen::MatrixXd::Identity(vertices.size(), vertices.size());
+            return;
+        }
         Eigen::VectorXd vertex_masses = Eigen::VectorXd::Zero(vertices.size());
         for (long i = 0; i < edges.rows(); i++) {
             double edge_length

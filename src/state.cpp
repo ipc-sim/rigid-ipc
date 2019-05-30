@@ -25,7 +25,8 @@
 namespace ccd {
 
 State::State()
-    : output_dir(DATA_OUTPUT_DIR)
+    : convert_to_rigid_bodies(false)
+    , output_dir(DATA_OUTPUT_DIR)
     , opt_method(OptimizationMethod::BARRIER_NEWTON)
     , constraint_function(ConstraintType::BARRIER)
     , log_level(spdlog::level::info)
@@ -53,6 +54,9 @@ State::State()
 void State::load_scene(std::string filename)
 {
     io::read_scene(filename, vertices, edges, displacements);
+    if (convert_to_rigid_bodies) {
+        convert_connected_components_to_rigid_bodies();
+    }
     fit_scene_to_canvas();
     reset_scene();
 }

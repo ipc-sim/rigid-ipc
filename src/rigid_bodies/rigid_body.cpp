@@ -11,16 +11,17 @@ RigidBody::RigidBody(const Eigen::MatrixX2d& vertices,
 
 void RigidBody::update_center_of_mass()
 {
-    // TODO: What should the mass of a single point be?
     Eigen::VectorXd vertex_masses = Eigen::VectorXd::Zero(vertices.rows());
+    double total_edge_length = 0;
     for (long i = 0; i < edges.rows(); i++) {
         double edge_length
             = (vertices.row(edges(i, 1)) - vertices.row(edges(i, 0))).norm();
         vertex_masses(edges(i, 0)) += edge_length / 2;
         vertex_masses(edges(i, 1)) += edge_length / 2;
+        total_edge_length += edge_length;
     }
     center_of_mass = (vertex_masses.asDiagonal() * vertices).colwise().sum()
-        / edges.rows();
+        / total_edge_length;
 }
 
 void RigidBody::compute_particle_displacments(

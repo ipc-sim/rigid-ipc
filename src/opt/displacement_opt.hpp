@@ -75,6 +75,7 @@ namespace opt {
         Eigen::MatrixXd u_;
         CollisionConstraint* constraint;
         intermediate_callback intermediate_callback;
+        bool use_mass_matrix;
 
     private:
         bool is_in_line_search;
