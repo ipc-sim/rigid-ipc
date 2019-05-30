@@ -53,6 +53,7 @@ namespace opt {
         assemble_sparse_jacobian_all(impact_volumes, g_uk_jacobian);
     }
 
+
     void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
         Eigen::VectorXd& g_uk, Eigen::SparseMatrix<double>& g_uk_jacobian,
         Eigen::VectorXi& g_uk_active)
@@ -62,6 +63,15 @@ namespace opt {
         assemble_constraints_all(impact_volumes, g_uk);
         assemble_sparse_jacobian_all(impact_volumes, g_uk_jacobian);
         dense_indices(g_uk_active);
+    }
+
+    void VolumeConstraint::compute_active_constraints(const Eigen::MatrixXd& Uk,
+        Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian)
+    {
+        std::vector<DScalar> impact_volumes;
+        compute_constraints_per_impact(Uk, impact_volumes);
+        assemble_constraints(impact_volumes, g_uk);
+        assemble_jacobian(impact_volumes, g_uk_jacobian);
     }
 
     template <typename T>

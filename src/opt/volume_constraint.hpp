@@ -29,6 +29,10 @@ namespace opt {
             Eigen::VectorXd& g_uk, Eigen::SparseMatrix<double>& g_uk_jacobian,
             Eigen::VectorXi& g_uk_active) override;
 
+        /// \brief compute_constraints sparsly including only active
+        void compute_active_constraints(const Eigen::MatrixXd& Uk,
+            Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian);
+
         int number_of_constraints() override;
 
         template <typename T>

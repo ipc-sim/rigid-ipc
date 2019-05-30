@@ -93,7 +93,7 @@ namespace opt {
         Uk.resize(x.rows() / 2, 2);
 
         Eigen::VectorXd g_uk;
-        if (constraint->recompute_collision_set) {
+        if (constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
         PROFILE(constraint->compute_constraints(Uk, g_uk),
@@ -107,7 +107,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (constraint->recompute_collision_set) {
+        if (constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
         Eigen::MatrixXd jac_gx;
@@ -123,7 +123,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (constraint->recompute_collision_set) {
+        if (constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
@@ -138,7 +138,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (constraint->recompute_collision_set) {
+        if (constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
         constraint->compute_constraints_jacobian(Uk, jac_gx);
@@ -151,7 +151,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (constraint->recompute_collision_set) {
+        if (constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
@@ -166,7 +166,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (constraint->recompute_collision_set) {
+        if (constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
         constraint->compute_constraints(Uk, g_uk, g_uk_jacobian, g_uk_active);

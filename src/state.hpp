@@ -53,15 +53,6 @@ public:
     /// @brief #V,2 vertices displacements
     Eigen::MatrixX2d displacements;
 
-    /// @brief All edge-vertex contact
-    EdgeVertexImpacts ev_impacts;
-
-    /// @brief All edge-edge contact
-    EdgeEdgeImpacts ee_impacts;
-
-    /// @brief #E,1 indices of the edges' first impact
-    Eigen::VectorXi edge_impact_map;
-
     /// @brief The current number of pruned impacts
     int num_pruned_impacts;
 
@@ -106,6 +97,7 @@ public:
     std::vector<double> gsum_history;
     std::vector<Eigen::VectorXd> g_history;
     std::vector<Eigen::MatrixXd> jac_g_history;
+    std::vector<std::vector<long>> collision_history;
 
     ////////////////////////////////////////////////////////////////////////////
     // SCENE CRUD
@@ -132,7 +124,7 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // SCENE CCD
     // ----------------------------------------------------------------------
-    void reset_impacts();
+    void reset_scene_data();
     void run_ccd_pipeline();
 
     ////////////////////////////////////////////////////////////////////////////
@@ -147,6 +139,7 @@ public:
     void load_optimization(const std::string filename);
     void save_optimization(const std::string filename);
     bool record_optimization_step(const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk);
+    void post_process_optimization();
 
     ////////////////////////////////////////////////////////////////////////////
     // UI
@@ -159,6 +152,7 @@ public:
     Eigen::MatrixX2d get_opt_vertex_at_time();
     Eigen::MatrixX2d get_opt_volume_grad();
     Eigen::VectorXd get_opt_volume();
+    std::vector<long> get_opt_collision_edges();
 
     /// @brief setup log
     int log_level;

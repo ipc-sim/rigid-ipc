@@ -92,7 +92,7 @@ void State::fit_scene_to_canvas()
 
 void State::reset_scene()
 {
-    reset_impacts();
+    reset_scene_data();
 
     current_volume = -1;
     current_time = 0.0;
@@ -127,7 +127,7 @@ void State::add_vertex(const Eigen::RowVector2d& position)
     opt_results.x.conservativeResize(lastid + 1, kDIM);
     opt_results.x.setZero();
 
-    reset_impacts();
+    reset_scene_data();
 
     // Resize the fixed_dof
     expand_fixed_dof();
@@ -142,7 +142,7 @@ void State::add_edges(const Eigen::MatrixX2i& new_edges)
     for (unsigned i = 0; i < new_edges.rows(); ++i)
         edges.row(lastid + i) << new_edges.row(i);
 
-    reset_impacts();
+    reset_scene_data();
 }
 
 void State::expand_fixed_dof()
@@ -261,7 +261,7 @@ void State::duplicate_selected_vertices(Eigen::Vector2d delta_center_of_mass)
     opt_results.x.resize(num_old_vertices + num_new_vertices, 2);
     opt_results.x.setZero();
 
-    reset_impacts();
+    reset_scene_data();
 
     // Resize the fixed_dof
     expand_fixed_dof();
@@ -271,32 +271,42 @@ void State::set_vertex_position(
     const int vertex_idx, const Eigen::RowVector2d& position)
 {
     vertices.row(vertex_idx) = position;
-    reset_impacts();
+    reset_scene_data();
 }
 
 void State::move_vertex(const int vertex_idx, const Eigen::RowVector2d& delta)
 {
     vertices.row(vertex_idx) += delta;
-    reset_impacts();
+    reset_scene_data();
 }
 
 void State::move_displacement(
     const int vertex_idx, const Eigen::RowVector2d& delta)
 {
     displacements.row(vertex_idx) += delta;
-    reset_impacts();
+    reset_scene_data();
 }
 
 // -----------------------------------------------------------------------------
 // CCD
 // -----------------------------------------------------------------------------
-void State::reset_impacts()
+void State::reset_scene_data()
 {
     volumes.resize(0);
     volumes.setZero();
 
     volume_grad.resize(0, 0);
     volume_grad.setZero();
+
+    volume_constraint.initialize(vertices, edges, displacements);
+    barrier_constraint.initialize(vertices, edges, displacements);
+
+    u_history.clear();
+    f_history.clear();
+    gsum_history.clear();
+    jac_g_history.clear();
+    collision_history.clear();
+
 }
 
 void State::run_ccd_pipeline()
@@ -376,7 +386,44 @@ bool State::record_optimization_step(
     return true;
 }
 
-void State::optimize_displacements(const std::string filename)
+void State::post_process_optimization()
+{
+    f_history.clear();
+    f_history.reserve(u_history.size());
+    g_history.clear();
+    g_history.reserve(u_history.size());
+    gsum_history.clear();
+    gsum_history.reserve(u_history.size());
+    jac_g_history.clear();
+    jac_g_history.reserve(u_history.size());
+    collision_history.clear();
+
+    size_t i = 0, steps = u_history.size();
+    for (auto& uk : u_history) {
+        Eigen::MatrixXd x = uk;
+        x.resize(x.size(), 1);
+        f_history.push_back(opt_problem.eval_f(x));
+
+        Eigen::VectorXd gx;
+        Eigen::MatrixXd jac_gx;
+        volume_constraint.detectCollisions(uk);
+        volume_constraint.compute_active_constraints(uk, gx, jac_gx);
+        g_history.push_back(gx);
+        gsum_history.push_back(gx.sum());
+        jac_g_history.push_back(jac_gx);
+
+        std::vector<long> active_edges;
+        active_edges.reserve(volume_constraint.ee_impacts.size());
+        for (auto& ee : volume_constraint.ee_impacts) {
+            active_edges.push_back(ee.impacted_edge_index);
+        }
+        collision_history.push_back(active_edges);
+
+        spdlog::debug("post-process {}/{} gx_sum={}", ++i, steps, gx.sum());
+
+    }
+}
+void State::optimize_displacements(const std::string /*filename*/)
 {
     reset_optimization_problem();
     reset_results();
@@ -481,6 +528,8 @@ Eigen::MatrixX2d State::get_opt_displacements()
 
 Eigen::MatrixX2d State::get_opt_volume_grad()
 {
+    current_volume = std::max(-1, current_volume);
+
     Eigen::MatrixX2d empty_grad = Eigen::MatrixX2d::Zero(vertices.rows(), kDIM);
     if (current_opt_iteration < 0 || jac_g_history.size() == 0
         || current_volume < 0) {
@@ -492,7 +541,6 @@ Eigen::MatrixX2d State::get_opt_volume_grad()
         return empty_grad;
     }
 
-    current_volume = std::max(-1, current_volume);
     current_volume = std::min(int(grad_volume.rows()) - 1, current_volume);
 
     Eigen::MatrixXd grad = grad_volume.row(current_volume).transpose();
@@ -512,11 +560,29 @@ Eigen::VectorXd State::get_opt_volume()
 
 double State::get_opt_functional()
 {
-    auto fun = opt_results.minf;
-    if (current_opt_iteration >= 0 && f_history.size() > 0) {
-        current_opt_iteration %= f_history.size();
-        fun = f_history[size_t(current_opt_iteration)];
+    if (current_opt_iteration == -1) {
+        return opt_results.minf;
     }
-    return fun;
+    current_opt_iteration = std::max(-1, current_opt_iteration);
+    if (f_history.size() > 0) {
+        current_opt_iteration
+            = std::min(current_opt_iteration, int(f_history.size()));
+        return f_history[size_t(current_opt_iteration)];
+    }
+    return -1;
 }
+std::vector<long> State::get_opt_collision_edges()
+{
+    if (current_opt_iteration == -1) {
+        return std::vector<long>();
+    }
+    current_opt_iteration = std::max(-1, current_opt_iteration);
+    if (collision_history.size() > 0) {
+        current_opt_iteration
+            = std::min(current_opt_iteration, int(collision_history.size()));
+        return collision_history[size_t(current_opt_iteration)];
+    }
+    return std::vector<long>();
+}
+
 } // namespace ccd

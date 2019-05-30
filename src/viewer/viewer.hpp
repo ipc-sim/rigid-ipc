@@ -54,6 +54,7 @@ public:
 
     void create_opt_displacements();
     void redraw_opt_displacements();
+    void recolor_opt_collisions();
     void recolor_opt_displacements();
 
     void create_grad_volume();
@@ -84,6 +85,7 @@ public:
     void optimize_displacements();
     void load_optimization();
     void save_optimization();
+    void post_process_optimization();
 
     // menu windows
     void draw_io();
@@ -105,6 +107,7 @@ public:
     Eigen::RowVector3d color_displ;
     Eigen::RowVector3d color_grad;
     Eigen::RowVector3d color_opt_displ;
+    Eigen::RowVector3d color_collision;
 
     // active colors
     Eigen::RowVector3d color_sl;

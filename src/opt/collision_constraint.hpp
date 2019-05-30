@@ -108,7 +108,8 @@ namespace opt {
         // Settings
         // ----------
         DetectionMethod detection_method;
-        bool recompute_collision_set;
+        bool update_collision_set;
+        bool extend_collision_set;
         bool recompute_toi;
 
         // Structures used for detection

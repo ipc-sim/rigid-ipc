@@ -31,6 +31,8 @@ void viewer_highlight_points(igl::opengl::ViewerData& data,
     const std::vector<int>& nodes, const Eigen::RowVector3d& color_hl);
 void viewer_highlight_edge(igl::opengl::ViewerData& data, const int edge,
     const Eigen::RowVector3d& color_hl);
+void viewer_highlight_edges(igl::opengl::ViewerData& data,
+    const std::vector<long>& edges, const Eigen::RowVector3d& color_hl);
 
 // ---------------------------------------------------------------------
 // VIEWER DRAW FUNCTIONS
@@ -53,7 +55,8 @@ void ViewerMenu::create_edges()
     data.point_size = 10 * pixel_ratio();
 }
 
-void ViewerMenu::redraw_at_time() {
+void ViewerMenu::redraw_at_time()
+{
     redraw_edges(state.get_vertex_at_time());
     redraw_grad_volume(/*use_opt_volume=*/false);
 }
@@ -81,6 +84,14 @@ void ViewerMenu::recolor_edges()
     viewer_highlight_points(data, state.selected_points, color_sl);
 }
 
+void ViewerMenu::recolor_opt_collisions()
+{
+    auto& data = viewer->data_list[edges_data_id];
+    viewer_color_edges(data, color_edge);
+    viewer_highlight_edges(
+        data, state.get_opt_collision_edges(), color_collision);
+}
+
 void ViewerMenu::create_displacements()
 {
     auto& data = viewer->data_list[displ_data_id];
@@ -93,9 +104,9 @@ void ViewerMenu::create_displacements()
 void ViewerMenu::redraw_displacements()
 {
     const Eigen::MatrixXd& P2 = state.vertices + state.displacements;
-    viewer_update_edges2(
-        viewer->data_list[displ_data_id], state.vertices, P2);
-    viewer_update_points(viewer->data_list[displ_data_id], state.vertices + state.displacements);
+    viewer_update_edges2(viewer->data_list[displ_data_id], state.vertices, P2);
+    viewer_update_points(
+        viewer->data_list[displ_data_id], state.vertices + state.displacements);
 }
 
 void ViewerMenu::recolor_displacements()
@@ -153,6 +164,7 @@ void ViewerMenu::recolor_grad_volume()
 {
     viewer_color_edges(viewer->data_list[gradient_data_id], color_grad);
 }
+
 // ---------------------------------------------------------------------
 // HELPER FUNCTIONS IMPLEMENTATION
 // ---------------------------------------------------------------------
@@ -305,6 +317,17 @@ void viewer_highlight_edge(igl::opengl::ViewerData& data, const int edge,
 {
     Eigen::MatrixXd& lines = data.lines;
     lines.row(edge).segment(6, 3) = color_hl;
+
+    data.dirty |= igl::opengl::MeshGL::DIRTY_OVERLAY_LINES;
+}
+
+void viewer_highlight_edges(igl::opengl::ViewerData& data, const std::vector<long>& edges,
+    const Eigen::RowVector3d& color_hl)
+{
+    Eigen::MatrixXd& lines = data.lines;
+    for (auto edge: edges) {
+        lines.row(edge).segment(6, 3) = color_hl;
+    }
 
     data.dirty |= igl::opengl::MeshGL::DIRTY_OVERLAY_LINES;
 }
