@@ -16,6 +16,9 @@
 
 #include <logger.hpp>
 
+#include <profiler.hpp>
+
+
 namespace ccd {
 namespace opt {
 
@@ -89,14 +92,14 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
+        Eigen::VectorXd g_uk;
         if (constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
+        PROFILE(constraint->compute_constraints(Uk, g_uk),
+            ProfiledPoint::COMPUTING_CONSTRAINTS);
+        return g_uk;
 
-        Eigen::VectorXd gx;
-        constraint->eval_constraints(Uk, gx);
-
-        return gx;
     };
 
     Eigen::MatrixXd ParticlesDisplProblem::eval_jac_g(const Eigen::VectorXd& x)
@@ -107,9 +110,9 @@ namespace opt {
         if (constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
-
         Eigen::MatrixXd jac_gx;
-        constraint->eval_constraints_jacobian(Uk, jac_gx);
+        PROFILE(constraint->compute_constraints_jacobian(Uk, jac_gx),
+            ProfiledPoint::COMPUTING_GRADIENT);
 
         return jac_gx;
     };
@@ -123,11 +126,22 @@ namespace opt {
         if (constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
-
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
-        constraint->eval_constraints_hessian(Uk, hess_gx);
-
+        PROFILE(constraint->compute_constraints_hessian(Uk, hess_gx);
+                , ProfiledPoint::COMPUTING_HESSIAN);
         return hess_gx;
+    }
+
+    void ParticlesDisplProblem::eval_jac_g(
+        const Eigen::VectorXd& x, Eigen::SparseMatrix<double>& jac_gx)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        if (constraint->recompute_collision_set) {
+            constraint->detectCollisions(Uk);
+        }
+        constraint->compute_constraints_jacobian(Uk, jac_gx);
     };
 
     void ParticlesDisplProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
@@ -140,8 +154,22 @@ namespace opt {
         if (constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
-        constraint->eval_constraints_and_derivatives(
+        std::vector<Eigen::SparseMatrix<double>> hess_gx;
+        constraint->compute_constraints_and_derivatives(
             Uk, g_uk, g_uk_jacobian, g_uk_hessian);
+    }
+
+    void ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x,
+        Eigen::VectorXd& g_uk, Eigen::SparseMatrix<double>& g_uk_jacobian,
+        Eigen::VectorXi& g_uk_active)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        if (constraint->recompute_collision_set) {
+            constraint->detectCollisions(Uk);
+        }
+        constraint->compute_constraints(Uk, g_uk, g_uk_jacobian, g_uk_active);
     }
 
     bool ParticlesDisplProblem::eval_intermediate_callback(

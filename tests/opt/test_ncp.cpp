@@ -115,15 +115,17 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         return jac_gx;
     };
 
-    auto callback = [](const Eigen::VectorXd& /*x*/, const Eigen::VectorXd& /*alpha*/,
-                        const double /*gamma*/) {
-    };
-
     Eigen::VectorXd x(NUM_VARS), alpha(NUM_CONSTRAINTS);
-    bool success = solve_ncp(A, b, problem, /*max_iter=*/300, callback,
-        NcpUpdate::LINEARIZED, LCPSolver::LCP_GAUSS_SEIDEL, x, alpha,
-        /*check_convergence=*/false,
-        /*check_convergence_unfeasible=*/false);
+    NCPSolver solver;
+    solver.max_iterations= 300;
+    solver.convergence_tolerance  = 1E-8;
+    solver.keep_in_unfeasible = false;
+    solver.check_convergence = false;
+    solver.solve_for_active_cstr = false;
+    solver.update_type = NcpUpdate::LINEARIZED;
+    solver.lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL;
+
+    bool success = solver.solve_ncp(A, b, problem, x, alpha);
 
     CHECK(success);
     CHECK((expected - x).squaredNorm() < 1E-6);
