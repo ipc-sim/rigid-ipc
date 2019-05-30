@@ -6,9 +6,7 @@ bool InputIntBounded(const char* label, int* val, int lower_bound,
     int upper_bound, int step, int step_fast, ImGuiInputTextFlags flags)
 {
     int unbounded_val = *val;
-    bool success
-        = ImGui::InputInt(label, &unbounded_val, step, step_fast, flags);
-    if (success) {
+    if (ImGui::InputInt(label, &unbounded_val, step, step_fast, flags)) {
         if (unbounded_val >= lower_bound && unbounded_val <= upper_bound) {
             *val = unbounded_val;
             return true;
@@ -22,9 +20,8 @@ bool InputDoubleBounded(const char* label, double* val, double lower_bound,
     ImGuiInputTextFlags flags)
 {
     double unbounded_val = *val;
-    bool success = ImGui::InputDouble(
-        label, &unbounded_val, step, step_fast, format, flags);
-    if (success) {
+    if (ImGui::InputDouble(
+            label, &unbounded_val, step, step_fast, format, flags)) {
         if (unbounded_val >= lower_bound && unbounded_val <= upper_bound) {
             *val = unbounded_val;
             return true;
@@ -32,6 +29,5 @@ bool InputDoubleBounded(const char* label, double* val, double lower_bound,
     }
     return false;
 };
-
 
 } // namespace ImGui

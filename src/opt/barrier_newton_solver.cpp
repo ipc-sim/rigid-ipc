@@ -190,6 +190,16 @@ namespace opt {
         return hessian;
     }
 
+    void BarrierProblem::enable_line_search_mode(const Eigen::VectorXd& max_x)
+    {
+        general_problem->enable_line_search_mode(max_x);
+    }
+
+    void BarrierProblem::disable_line_search_mode()
+    {
+        general_problem->disable_line_search_mode();
+    }
+
     bool BarrierProblem::eval_intermediate_callback(const Eigen::VectorXd& x)
     {
         return general_problem->eval_intermediate_callback(x);
@@ -197,7 +207,7 @@ namespace opt {
 
     BarrierNewtonSolver::BarrierNewtonSolver()
         : barrier_constraint(nullptr)
-        , min_barrier_epsilon(1e-8)
+        , min_barrier_epsilon(1e-5)
         , absolute_tolerance(1e-8)
         , line_search_tolerance(1e-8)
         , max_iterations(3000)
@@ -232,13 +242,15 @@ namespace opt {
         int max_inner_iterations = int(max_iterations
             / ceil(-log2(min_barrier_epsilon) + log2(barrier_problem.epsilon)));
 
+        barrier_problem.eval_intermediate_callback(barrier_problem.x0);
+
         OptimizationResults results;
-        while (barrier_problem.epsilon > min_barrier_epsilon) {
+        do {
             // Log the epsilon and the newton method will log the number of
             // iterations.
             if (verbose) {
                 std::cout << "ϵ = " << barrier_constraint->barrier_epsilon
-                          << ": ";
+                          << ": " << std::flush;
             }
 
             // Optimize for a fixed epsilon
@@ -254,10 +266,12 @@ namespace opt {
 
             // Start next iteration from the ending optimal position
             barrier_problem.x0 = results.x;
-        }
+        } while (barrier_problem.epsilon > min_barrier_epsilon);
 
+        // TODO: This should check if the barrier constraints are satisfied.
         results.success = results.minf >= 0
-            && general_problem.are_constraints_satisfied(results.x, 0.0);
+            && barrier_problem.eval_f(results.x)
+                < std::numeric_limits<double>::infinity();
 
         return results;
     }

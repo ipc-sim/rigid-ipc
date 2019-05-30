@@ -76,7 +76,7 @@ set(SRCFILES
     src/logger.cpp
     src/profiler.cpp
 
-    src/rigid_bodies/rigid_bodies.cpp
+    src/rigid_bodies/rigid_body.cpp
 )
 
 set(TMPFILES

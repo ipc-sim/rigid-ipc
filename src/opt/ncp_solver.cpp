@@ -89,7 +89,10 @@ namespace opt {
                 return -problem->eval_g(y).sum();
             };
             double gamma = 1.0;
-            if (!line_search(xi, delta_x, eval_g, gamma)) {
+            // TODO: This is sending a zero for the gradient which is not
+            // correct
+            if (!line_search(xi, delta_x, eval_g,
+                    Eigen::VectorXd::Zero(delta_x.rows()), gamma)) {
                 // ?????
             }
 

@@ -19,6 +19,8 @@ namespace opt {
         void initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk) override;
 
+        void detectCollisions(const Eigen::MatrixXd& Uk) override;
+
         int number_of_constraints() override;
 
         void compute_constraints(

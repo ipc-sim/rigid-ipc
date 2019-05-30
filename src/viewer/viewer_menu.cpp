@@ -107,6 +107,23 @@ void ViewerMenu::draw_menu()
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
     draw_legends();
     ImGui::End();
+
+    // ------------------------------------------------------------------------
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            ImGui::GetIO().DisplaySize.x - legends_width - menu_width - 10, 0),
+        ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(
+        ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
+    bool _line_stack_menu_visible = true;
+
+    ImGui::Begin("Line Stack", &_line_stack_menu_visible,
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
+    draw_line_stack();
+    ImGui::PopItemWidth();
+    ImGui::End();
 }
 
 // //////////////////////////////////////////////////////////////////////////
@@ -225,25 +242,14 @@ void ViewerMenu::draw_io()
         if (ImGui::Button("Save##Scene", ImVec2((w - p) / 2.f, 0))) {
             save_scene();
         }
+        static bool convert_to_rigid_bodies;
+        ImGui::Checkbox("convert to rigid bodies", &convert_to_rigid_bodies);
     }
 }
 
 // //////////////////////////////////////////////////////////////////////////
 // EDIT MODE
 // //////////////////////////////////////////////////////////////////////////
-void select_connected(const int selected_point,
-    const std::vector<std::list<int>>& adjacencies,
-    std::unordered_set<int>& already_selected)
-{
-    if (already_selected.find(selected_point) != already_selected.end()) {
-        return;
-    }
-    already_selected.insert(selected_point);
-    for (int connected_point : adjacencies[selected_point]) {
-        select_connected(connected_point, adjacencies, already_selected);
-    }
-}
-
 void ViewerMenu::draw_edit_modes()
 {
     if (ImGui::CollapsingHeader("Edit Mode", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -276,31 +282,103 @@ void ViewerMenu::draw_edit_modes()
             connect_selected_vertices();
         }
 
-        if (ImGui::Button("Remove Free Vertices##Edit", ImVec2(-1, 0))) {
-            state.remove_free_vertices();
+        if (ImGui::Button("Subdivide Edges##Edit", ImVec2(-1, 0))) {
+            // Loop over edges creating a new vertex in the center
+            const long num_old_vertices = state.vertices.rows();
+            const long num_new_vertices = state.edges.rows();
+            state.vertices.conservativeResize(
+                num_old_vertices + num_new_vertices, state.vertices.cols());
+            state.displacements.conservativeResize(
+                num_old_vertices + num_new_vertices,
+                state.displacements.cols());
+            state.edges.conservativeResize(2 * state.edges.rows(), 2);
+
+            auto fixed_dof = state.opt_problem.fixed_dof;
+            fixed_dof.resize(num_old_vertices, 2);
+            fixed_dof.conservativeResize(state.displacements.rows(), 2);
+
+            for (long i = 0; i < num_new_vertices; i++) {
+                state.vertices.row(num_old_vertices + i) = 0.5
+                    * (state.vertices.row(state.edges(i, 1))
+                        + state.vertices.row(state.edges(i, 0)));
+
+                state.displacements.row(num_old_vertices + i) = 0.5
+                    * (state.displacements.row(state.edges(i, 1))
+                        + state.displacements.row(state.edges(i, 0)));
+
+                for (int j = 0; j < 2; j++) {
+                    fixed_dof(num_old_vertices + i, j)
+                        = fixed_dof(state.edges(i, 0), j)
+                        && fixed_dof(state.edges(i, 1), j);
+                }
+
+                state.edges.row(num_new_vertices + i) = state.edges.row(i);
+                state.edges(i, 1) = num_old_vertices + i;
+                state.edges(num_new_vertices + i, 0) = num_old_vertices + i;
+            }
+
+            fixed_dof.resize(fixed_dof.size(), 1);
+
+            state.reset_scene();
+            state.opt_problem.fixed_dof = fixed_dof;
+
             state_history.push_back(state);
             load_state();
+        }
+
+        if (ImGui::Button("Smooth Vertices##Edit", ImVec2(-1, 0))) {
+            // Loop over edges creating a new vertex in the center
+            double w0 = 0.75; // TODO: Expose this parameter
+            Eigen::MatrixX2d smoothed_vertices = w0 * state.vertices;
+            Eigen::MatrixX2d smoothed_displacements = w0 * state.displacements;
+
+            auto adjacency_list = state.create_adjacency_list();
+
+            for (long i = 0; i < state.vertices.rows(); i++) {
+                const unsigned long num_neighbors = adjacency_list[i].size();
+                for (const auto& vertex_idx : adjacency_list[i]) {
+                    smoothed_vertices.row(i) += ((1 - w0) / num_neighbors)
+                        * state.vertices.row(vertex_idx);
+                    smoothed_displacements.row(i) += ((1 - w0) / num_neighbors)
+                        * state.displacements.row(vertex_idx);
+                }
+            }
+
+            state.vertices = smoothed_vertices;
+            state.displacements = smoothed_displacements;
+
+            auto fixed_dof = state.opt_problem.fixed_dof;
+            state.reset_scene();
+            state.opt_problem.fixed_dof = fixed_dof;
+
+            state_history.push_back(state);
+            load_state();
+        }
+
+        if (ImGui::Button("Remove Free Vertices##Edit", ImVec2(-1, 0))) {
+            if (state.remove_free_vertices()) {
+                state_history.push_back(state);
+                load_state();
+            }
         }
 
         if ((state.selected_points.size() > 0
                 || state.selected_displacements.size() > 0)
             && ImGui::Button("Select Connected##Edit", ImVec2(-1, 0))) {
+            std::vector<int>& selection = state.selected_points.size() > 0
+                ? state.selected_points
+                : state.selected_displacements;
             // Build adjacency list
-            std::vector<std::list<int>> adjacencies(state.vertices.rows());
-            for (int i = 0; i < state.edges.rows(); i++) {
-                adjacencies[state.edges(i, 0)].push_back(state.edges(i, 1));
-                adjacencies[state.edges(i, 1)].push_back(state.edges(i, 0));
-            }
+            std::vector<std::vector<int>> adjacency_list
+                = state.create_adjacency_list();
 
             std::unordered_set<int> new_selection;
-            for (int selected_point : state.selected_points.size() > 0
-                    ? state.selected_points
-                    : state.selected_displacements) {
-                select_connected(selected_point, adjacencies, new_selection);
+            for (const auto& selected_id : selection) {
+                state.find_connected_vertices(
+                    selected_id, adjacency_list, new_selection);
             }
-            (state.selected_points.size() > 0 ? state.selected_points
-                                              : state.selected_displacements)
-                .assign(new_selection.begin(), new_selection.end());
+            selection.assign(new_selection.begin(), new_selection.end());
+
             recolor_edges();
             recolor_displacements();
         }
@@ -329,7 +407,7 @@ void ViewerMenu::draw_edit_modes()
     // Menu for fixing vertex positions
     if (state.selected_points.size() > 0
         && ImGui::CollapsingHeader(
-               "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
+            "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Initial button state is all(fixed_dof(selected_points))
         bool x_fixed_originally = true, y_fixed_originally = true;
         for (int point : state.selected_points) {
@@ -343,7 +421,13 @@ void ViewerMenu::draw_edit_modes()
         if (x_fixed != x_fixed_originally) {
             for (int point : state.selected_points) {
                 state.opt_problem.fixed_dof(point) = x_fixed;
+                if (x_fixed) {
+                    state.displacements(point, 0) = 0.0;
+                }
             }
+            state_history.push_back(state);
+            load_state();
+            recolor_edges();
         }
 
         ImGui::Checkbox("fixed y position##static", &y_fixed);
@@ -351,8 +435,56 @@ void ViewerMenu::draw_edit_modes()
             for (int point : state.selected_points) {
                 state.opt_problem.fixed_dof(point + state.displacements.rows())
                     = y_fixed;
+                if (y_fixed) {
+                    state.displacements(point, 1) = 0.0;
+                }
             }
+            state_history.push_back(state);
+            load_state();
+            recolor_edges();
         }
+    }
+
+    if (ImGui::Button("Make Rigid Bodies##Edit", ImVec2(-1, 0))) {
+        state.convert_connected_components_to_rigid_bodies();
+        state_history.push_back(state);
+        load_state();
+    }
+}
+
+void ViewerMenu::draw_line_stack()
+{
+    static int num_lines = 3;
+    static double scale_displacment = 10;
+    ImGui::InputIntBounded("line count##line-stack", &num_lines, 0,
+        std::numeric_limits<int>::max(), 1, 10);
+    ImGui::InputDouble("scale disp.##line-stack", &scale_displacment);
+    if (ImGui::Button("Make Line Stack##Edit", ImVec2(-1, 0))) {
+        Eigen::MatrixX2d vertices(2 * num_lines + 2, 2);
+        Eigen::MatrixX2d displacements
+            = Eigen::MatrixX2d::Zero(2 * num_lines + 2, 2);
+        Eigen::MatrixX2i edges(num_lines + 1, 2);
+
+        vertices.row(0) << -0.05, 0.1;
+        vertices.row(1) << 0.05, 0.2;
+        displacements(0, 1) = -1;
+        displacements(1, 1) = -1;
+        displacements *= scale_displacment;
+        edges.row(0) << 0, 1;
+
+        Eigen::VectorXd ys = Eigen::VectorXd::LinSpaced(num_lines, 0, -1);
+        for (int i = 1; i < edges.rows(); i++) {
+            vertices.row(2 * i) << -1, ys(i - 1);
+            vertices.row(2 * i + 1) << 1, ys(i - 1);
+            edges.row(i) << 2 * i, 2 * i + 1;
+        }
+
+        state.vertices = vertices;
+        state.displacements = displacements;
+        state.edges = edges;
+        state.reset_scene();
+        state_history.push_back(state);
+        load_state();
     }
 }
 
@@ -498,8 +630,8 @@ void ViewerMenu::draw_optimization_results()
         ImGui::PopItemWidth();
         if (state.u_history.size() > 0
             && ImGui::InputIntBounded("step##opt-results",
-                   &(state.current_opt_iteration), -1,
-                   int(state.u_history.size() -1), 1, 10)) {
+                &(state.current_opt_iteration), -1,
+                int(state.u_history.size() - 1), 1, 10)) {
 
             redraw_opt_displacements();
             redraw_grad_volume(/*opt_gradient=*/true);

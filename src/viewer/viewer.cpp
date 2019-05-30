@@ -19,6 +19,7 @@ ViewerMenu::ViewerMenu(std::string scene_file)
     , color_grad(1.0, 0.5, 0.0)            // #ff8000
     , color_opt_displ(0.1875, 0.5, 0.1875) // #308030
     , color_sl(1.0, 1.0, 0.0)              // #ffff00
+    , color_com(1.0, 0.0, 1.0)             // #ff00ff
     , scene_file(scene_file)
     , last_action_message("")
     , last_action_success(true)
@@ -138,7 +139,6 @@ void ViewerMenu::compute_collisions()
         last_action_success = false;
     }
 }
-
 
 // ----------------------------------------------------------------------------------------------------------------------------
 // OPT USER ACTIONS

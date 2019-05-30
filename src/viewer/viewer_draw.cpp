@@ -53,7 +53,8 @@ void ViewerMenu::create_edges()
     data.point_size = 10 * pixel_ratio();
 }
 
-void ViewerMenu::redraw_at_time() {
+void ViewerMenu::redraw_at_time()
+{
     redraw_edges(state.get_vertex_at_time());
     redraw_grad_volume(/*use_opt_volume=*/false);
 }
@@ -93,9 +94,9 @@ void ViewerMenu::create_displacements()
 void ViewerMenu::redraw_displacements()
 {
     const Eigen::MatrixXd& P2 = state.vertices + state.displacements;
-    viewer_update_edges2(
-        viewer->data_list[displ_data_id], state.vertices, P2);
-    viewer_update_points(viewer->data_list[displ_data_id], state.vertices + state.displacements);
+    viewer_update_edges2(viewer->data_list[displ_data_id], state.vertices, P2);
+    viewer_update_points(
+        viewer->data_list[displ_data_id], state.vertices + state.displacements);
 }
 
 void ViewerMenu::recolor_displacements()

@@ -20,6 +20,8 @@
 #include <opt/displacement_opt.hpp>
 #include <opt/volume_constraint.hpp>
 
+#include <rigid_bodies/rigid_body.hpp>
+
 namespace ccd {
 
 enum class ConstraintType { VOLUME, BARRIER };
@@ -52,6 +54,8 @@ public:
     Eigen::MatrixX2i edges;
     /// @brief #V,2 vertices displacements
     Eigen::MatrixX2d displacements;
+
+    std::vector<RigidBody> rigid_bodies;
 
     /// @brief All edge-vertex contact
     EdgeVertexImpacts ev_impacts;
@@ -121,7 +125,7 @@ public:
     void add_edges(const Eigen::MatrixX2i& edges);
     void duplicate_selected_vertices(Eigen::Vector2d delta_center_of_mass);
     void expand_fixed_dof();
-    void remove_free_vertices();
+    bool remove_free_vertices();
 
     void set_vertex_position(
         const int vertex_idx, const Eigen::RowVector2d& position);
@@ -146,7 +150,8 @@ public:
 
     void load_optimization(const std::string filename);
     void save_optimization(const std::string filename);
-    bool record_optimization_step(const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk);
+    bool record_optimization_step(
+        const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk);
 
     ////////////////////////////////////////////////////////////////////////////
     // UI
@@ -194,6 +199,12 @@ public:
     ///@brief we show the values of this iteration
     int current_opt_iteration;
     void reset_results();
+
+    std::vector<std::vector<int>> create_adjacency_list();
+    void find_connected_vertices(const long& vertex_id,
+        const std::vector<std::vector<int>>& adjacency_list,
+        std::unordered_set<int>& connected_vertices);
+    void convert_connected_components_to_rigid_bodies();
 };
 
 } // namespace ccd

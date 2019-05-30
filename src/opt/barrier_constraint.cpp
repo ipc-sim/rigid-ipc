@@ -15,10 +15,22 @@ namespace opt {
 
     void BarrierConstraint::initialize(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk)
-
     {
+        this->barrier_epsilon = 0.0; // Temporary until collisions are computed.
         CollisionConstraint::initialize(vertices, edges, Uk);
         resetBarrierEpsilon();
+    }
+
+    void BarrierConstraint::detectCollisions(const Eigen::MatrixXd& Uk)
+    {
+        const double time_scale = 1 + 2 * this->barrier_epsilon;
+        ccd::detect_edge_vertex_collisions(*vertices, time_scale * Uk, *edges,
+            ev_impacts, detection_method, true);
+        for (EdgeVertexImpact& ev_impact : ev_impacts) {
+            ev_impact.time *= time_scale;
+        }
+        ccd::convert_edge_vertex_to_edge_edge_impacts(
+            *edges, ev_impacts, ee_impacts);
     }
 
     int BarrierConstraint::number_of_constraints()

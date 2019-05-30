@@ -38,6 +38,7 @@ namespace opt {
         constraint = &cstr;
         constraint->initialize(V, E, U);
         initProblem();
+        init_mass_matrix();
     }
 
     void ParticlesDisplProblem::initProblem()
@@ -58,30 +59,49 @@ namespace opt {
         g_upper.resize(num_constraints);
         g_lower.setConstant(0.0);
         g_upper.setConstant(NO_UPPER_BOUND);
+
+        is_in_line_search = false;
+    }
+
+    // Initalize the mass matrix based on the edge length of incident edges.
+    void ParticlesDisplProblem::init_mass_matrix()
+    {
+        Eigen::VectorXd vertex_masses = Eigen::VectorXd::Zero(vertices.size());
+        for (long i = 0; i < edges.rows(); i++) {
+            double edge_length
+                = (vertices.row(edges(i, 1)) - vertices.row(edges(i, 0)))
+                      .norm();
+            // Add vornoi areas to the vertex weight
+            vertex_masses(edges(i, 0)) += edge_length / 2;
+            vertex_masses(edges(i, 0) + vertices.rows()) += edge_length / 2;
+            vertex_masses(edges(i, 1)) += edge_length / 2;
+            vertex_masses(edges(i, 1) + vertices.rows()) += edge_length / 2;
+        }
+        // TODO: Store this as a sparse matrix
+        mass_matrix = vertex_masses.asDiagonal();
     }
 
     double ParticlesDisplProblem::eval_f(const Eigen::VectorXd& x)
     {
-        return (x - u_).squaredNorm() / 2.0;
+        Eigen::VectorXd diff = x - u_;
+        return 0.5 * diff.transpose() * mass_matrix * diff;
     }
 
     Eigen::VectorXd ParticlesDisplProblem::eval_grad_f(const Eigen::VectorXd& x)
     {
-        return (x - u_);
+        return mass_matrix * (x - u_);
     }
 
     Eigen::MatrixXd ParticlesDisplProblem::eval_hessian_f(
         const Eigen::VectorXd& x)
     {
-        return Eigen::MatrixXd::Identity(x.size(), x.size());
+        return mass_matrix;
     }
 
     Eigen::SparseMatrix<double> ParticlesDisplProblem::eval_hessian_f_sparse(
         const Eigen::VectorXd& x)
     {
-        Eigen::SparseMatrix<double> H(int(x.size()), int(x.size()));
-        H.setIdentity();
-        return H;
+        return mass_matrix.sparseView();
     }
 
     Eigen::VectorXd ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x)
@@ -89,7 +109,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (constraint->recompute_collision_set) {
+        if (!is_in_line_search && constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
 
@@ -104,7 +124,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (constraint->recompute_collision_set) {
+        if (!is_in_line_search && constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
 
@@ -120,7 +140,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (constraint->recompute_collision_set) {
+        if (!is_in_line_search && constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
 
@@ -137,11 +157,29 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (constraint->recompute_collision_set) {
+        if (!is_in_line_search && constraint->recompute_collision_set) {
             constraint->detectCollisions(Uk);
         }
         constraint->eval_constraints_and_derivatives(
             Uk, g_uk, g_uk_jacobian, g_uk_hessian);
+    }
+
+    void ParticlesDisplProblem::enable_line_search_mode(
+        const Eigen::VectorXd& max_x)
+    {
+        Eigen::MatrixXd Uk = max_x;
+        Uk.resize(max_x.rows() / 2, 2);
+
+        if (!is_in_line_search && constraint->recompute_collision_set) {
+            constraint->detectCollisions(Uk);
+        }
+
+        this->is_in_line_search = true;
+    }
+
+    void ParticlesDisplProblem::disable_line_search_mode()
+    {
+        this->is_in_line_search = false;
     }
 
     bool ParticlesDisplProblem::eval_intermediate_callback(

@@ -88,6 +88,7 @@ public:
     // menu windows
     void draw_io();
     void draw_edit_modes();
+    void draw_line_stack();
     void draw_ccd_steps();
     void draw_legends();
     void draw_collision_menu();
@@ -105,6 +106,7 @@ public:
     Eigen::RowVector3d color_displ;
     Eigen::RowVector3d color_grad;
     Eigen::RowVector3d color_opt_displ;
+    Eigen::RowVector3d color_com;
 
     // active colors
     Eigen::RowVector3d color_sl;

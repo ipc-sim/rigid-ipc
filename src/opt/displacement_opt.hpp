@@ -18,7 +18,8 @@ namespace ccd {
 
 namespace opt {
 
-    typedef std::function<bool(const Eigen::VectorXd&, const Eigen::MatrixX2d&)> intermediate_callback;
+    typedef std::function<bool(const Eigen::VectorXd&, const Eigen::MatrixX2d&)>
+        intermediate_callback;
 
     class ParticlesDisplProblem : public OptimizationProblem {
     public:
@@ -44,6 +45,9 @@ namespace opt {
             Eigen::MatrixXd& g_uk_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
 
+        void enable_line_search_mode(const Eigen::VectorXd& max_x) override;
+        void disable_line_search_mode() override;
+
         bool eval_intermediate_callback(const Eigen::VectorXd& x) override;
 
         Eigen::MatrixX2d vertices;
@@ -54,7 +58,12 @@ namespace opt {
         intermediate_callback intermediate_callback;
 
     private:
+        bool is_in_line_search;
+
         void initProblem();
+
+        Eigen::MatrixXd mass_matrix;
+        void init_mass_matrix();
     };
 
 } // namespace opt
