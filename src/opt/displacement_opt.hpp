@@ -1,6 +1,6 @@
 /**
- * Methods for optimizing the displacments with a non-linear interference volume
- * constraint.
+ * Methods for optimizing the displacements with a non-linear interference
+ * volume constraint.
  */
 
 #pragma once
@@ -78,11 +78,11 @@ namespace opt {
         bool use_mass_matrix;
 
     private:
-        bool is_in_line_search;
+        bool is_collision_set_frozen;
 
         void initProblem();
 
-        Eigen::MatrixXd mass_matrix;
+        Eigen::SparseMatrix<double> mass_matrix;
         void init_mass_matrix();
     };
 

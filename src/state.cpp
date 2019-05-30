@@ -664,7 +664,7 @@ void State::convert_connected_components_to_rigid_bodies()
         edges.conservativeResize(edges.rows() + rigid_body.edges.rows(), 2);
         vertices.bottomRows(rigid_body.vertices.rows()) = rigid_body.vertices;
         Eigen::MatrixX2d body_displacements;
-        rigid_body.compute_particle_displacments(body_displacements);
+        rigid_body.compute_particle_displacements(body_displacements);
         displacements.bottomRows(rigid_body.vertices.rows())
             = body_displacements;
         edges.bottomRows(rigid_body.edges.rows()) = rigid_body.edges;

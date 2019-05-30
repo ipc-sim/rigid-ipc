@@ -15,5 +15,5 @@ public:
 
     void update_center_of_mass();
 
-    void compute_particle_displacments(Eigen::MatrixX2d& displacements) const;
+    void compute_particle_displacements(Eigen::MatrixX2d& displacements) const;
 };

@@ -85,8 +85,7 @@ namespace opt {
             // TODO: This is sending a zero for the gradient which is not
             // correct
             if (check_volume_increase
-                && !line_search(xi, delta_x, eval_g,
-                    Eigen::VectorXd::Zero(delta_x.rows()), gamma)) {
+                && !line_search(xi, delta_x, eval_g, gamma)) {
             }
 
             if (keep_in_unfeasible) {

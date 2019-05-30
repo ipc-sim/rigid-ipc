@@ -247,9 +247,9 @@ void ViewerMenu::draw_io()
     }
 }
 
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 // EDIT MODE
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_edit_modes()
 {
     if (ImGui::CollapsingHeader("Edit Mode", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -283,95 +283,22 @@ void ViewerMenu::draw_edit_modes()
         }
 
         if (ImGui::Button("Select All Vertices##Edit", ImVec2(-1, 0))) {
-            state.selected_displacements.clear();
-            Eigen::VectorXi all_idxs = Eigen::VectorXi::LinSpaced(
-                state.vertices.rows(), 0, state.vertices.rows() - 1);
-            state.selected_points = std::vector<int>(
-                all_idxs.data(), all_idxs.data() + all_idxs.size());
+            select_all_vertices();
             recolor_edges();
             recolor_displacements();
         }
         if (ImGui::Button("Select All Displacements##Edit", ImVec2(-1, 0))) {
-            state.selected_points.clear();
-            Eigen::VectorXi all_idxs = Eigen::VectorXi::LinSpaced(
-                state.displacements.rows(), 0, state.displacements.rows() - 1);
-            state.selected_displacements = std::vector<int>(
-                all_idxs.data(), all_idxs.data() + all_idxs.size());
+            select_all_displacements();
             recolor_edges();
             recolor_displacements();
         }
 
         if (ImGui::Button("Subdivide Edges##Edit", ImVec2(-1, 0))) {
-            // Loop over edges creating a new vertex in the center
-            const long num_old_vertices = state.vertices.rows();
-            const long num_new_vertices = state.edges.rows();
-            state.vertices.conservativeResize(
-                num_old_vertices + num_new_vertices, state.vertices.cols());
-            state.displacements.conservativeResize(
-                num_old_vertices + num_new_vertices,
-                state.displacements.cols());
-            state.edges.conservativeResize(2 * state.edges.rows(), 2);
-
-            auto fixed_dof = state.opt_problem.fixed_dof;
-            fixed_dof.resize(num_old_vertices, 2);
-            fixed_dof.conservativeResize(state.displacements.rows(), 2);
-
-            for (long i = 0; i < num_new_vertices; i++) {
-                state.vertices.row(num_old_vertices + i) = 0.5
-                    * (state.vertices.row(state.edges(i, 1))
-                        + state.vertices.row(state.edges(i, 0)));
-
-                state.displacements.row(num_old_vertices + i) = 0.5
-                    * (state.displacements.row(state.edges(i, 1))
-                        + state.displacements.row(state.edges(i, 0)));
-
-                for (int j = 0; j < 2; j++) {
-                    fixed_dof(num_old_vertices + i, j)
-                        = fixed_dof(state.edges(i, 0), j)
-                        && fixed_dof(state.edges(i, 1), j);
-                }
-
-                state.edges.row(num_new_vertices + i) = state.edges.row(i);
-                state.edges(i, 1) = num_old_vertices + i;
-                state.edges(num_new_vertices + i, 0) = num_old_vertices + i;
-            }
-
-            fixed_dof.resize(fixed_dof.size(), 1);
-
-            state.reset_scene();
-            state.opt_problem.fixed_dof = fixed_dof;
-
-            state_history.push_back(state);
-            load_state();
+            subdivide_edges();
         }
 
         if (ImGui::Button("Smooth Vertices##Edit", ImVec2(-1, 0))) {
-            // Loop over edges creating a new vertex in the center
-            double w0 = 0.75; // TODO: Expose this parameter
-            Eigen::MatrixX2d smoothed_vertices = w0 * state.vertices;
-            Eigen::MatrixX2d smoothed_displacements = w0 * state.displacements;
-
-            auto adjacency_list = state.create_adjacency_list();
-
-            for (long i = 0; i < state.vertices.rows(); i++) {
-                const unsigned long num_neighbors = adjacency_list[i].size();
-                for (const auto& vertex_idx : adjacency_list[i]) {
-                    smoothed_vertices.row(i) += ((1 - w0) / num_neighbors)
-                        * state.vertices.row(vertex_idx);
-                    smoothed_displacements.row(i) += ((1 - w0) / num_neighbors)
-                        * state.displacements.row(vertex_idx);
-                }
-            }
-
-            state.vertices = smoothed_vertices;
-            state.displacements = smoothed_displacements;
-
-            auto fixed_dof = state.opt_problem.fixed_dof;
-            state.reset_scene();
-            state.opt_problem.fixed_dof = fixed_dof;
-
-            state_history.push_back(state);
-            load_state();
+            smooth_vertices();
         }
 
         if (ImGui::Button("Remove Free Vertices##Edit", ImVec2(-1, 0))) {
@@ -384,42 +311,12 @@ void ViewerMenu::draw_edit_modes()
         if ((state.selected_points.size() > 0
                 || state.selected_displacements.size() > 0)
             && ImGui::Button("Select Connected##Edit", ImVec2(-1, 0))) {
-            std::vector<int>& selection = state.selected_points.size() > 0
-                ? state.selected_points
-                : state.selected_displacements;
-            // Build adjacency list
-            std::vector<std::vector<int>> adjacency_list
-                = state.create_adjacency_list();
-
-            std::unordered_set<int> new_selection;
-            for (const auto& selected_id : selection) {
-                state.find_connected_vertices(
-                    selected_id, adjacency_list, new_selection);
-            }
-            selection.assign(new_selection.begin(), new_selection.end());
-
-            recolor_edges();
-            recolor_displacements();
+            select_connected();
         }
 
         if (state.selected_points.size() > 0
             && ImGui::Button("Duplicate Selected##Edit", ImVec2(-1, 0))) {
-            // Duplicate selected vertices and edges that have both end-points
-            // selected
-            long num_old_vertices = state.vertices.rows();
-            Eigen::Vector2d delta_com;
-            delta_com << 0, -1;
-            state.duplicate_selected_vertices(delta_com);
-            state.selected_points.clear();
-
-            state_history.push_back(state);
-            load_state();
-
-            // Select the newly created points
-            for (long i = num_old_vertices; i < state.vertices.rows(); i++) {
-                state.selected_points.push_back(i);
-            }
-            recolor_edges();
+            duplicate_selected();
         }
     }
 
@@ -468,10 +365,10 @@ void ViewerMenu::draw_edit_modes()
 void ViewerMenu::draw_line_stack()
 {
     static int num_lines = 3;
-    static double scale_displacment = 10;
+    static double scale_displacement = 10;
     ImGui::InputIntBounded("line count##line-stack", &num_lines, 0,
         std::numeric_limits<int>::max(), 1, 10);
-    ImGui::InputDouble("scale disp.##line-stack", &scale_displacment);
+    ImGui::InputDouble("scale disp.##line-stack", &scale_displacement);
     if (ImGui::Button("Make Line Stack##Edit", ImVec2(-1, 0))) {
         Eigen::MatrixX2d vertices(2 * num_lines + 2, 2);
         Eigen::MatrixX2d displacements
@@ -482,7 +379,7 @@ void ViewerMenu::draw_line_stack()
         vertices.row(1) << 0.05, 0.2;
         displacements(0, 1) = -1;
         displacements(1, 1) = -1;
-        displacements *= scale_displacment;
+        displacements *= scale_displacement;
         edges.row(0) << 0, 1;
 
         Eigen::VectorXd ys = Eigen::VectorXd::LinSpaced(num_lines, 0, -1);

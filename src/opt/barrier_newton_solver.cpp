@@ -3,11 +3,10 @@
 
 #include <opt/barrier_newton_solver.hpp>
 
-#include <iostream>
-
 #include <opt/barrier.hpp>
 #include <opt/newtons_method.hpp>
 
+#include <logger.hpp>
 #include <profiler.hpp>
 
 namespace ccd {
@@ -211,7 +210,6 @@ namespace opt {
         , absolute_tolerance(1e-8)
         , line_search_tolerance(1e-8)
         , max_iterations(3000)
-        , verbose(false)
     {
     }
 
@@ -224,10 +222,6 @@ namespace opt {
 
         BarrierProblem barrier_problem(
             general_problem, barrier_constraint->barrier_epsilon);
-
-        if (verbose) {
-            std::cout << std::endl;
-        }
 
         // Convert from the boolean vector to a vector of free dof indices
         Eigen::VectorXi free_dof(
@@ -248,15 +242,13 @@ namespace opt {
         do {
             // Log the epsilon and the newton method will log the number of
             // iterations.
-            if (verbose) {
-                std::cout << "ϵ = " << barrier_constraint->barrier_epsilon
-                          << ": " << std::flush;
-            }
+            spdlog::trace("solver=barrier_newton ϵ={:g}",
+                barrier_constraint->barrier_epsilon);
 
             // Optimize for a fixed epsilon
             results
                 = newtons_method(barrier_problem, free_dof, absolute_tolerance,
-                    line_search_tolerance, max_inner_iterations, verbose);
+                    line_search_tolerance, max_inner_iterations);
             // Save the original problems objective
             results.minf = general_problem.eval_f(results.x);
 

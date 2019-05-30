@@ -33,7 +33,7 @@ static const char* DetectionMethodNames[] = { "BRUTE_FORCE", "HASH_GRID" };
  * @param[in] vertices       The vertices of the bodies.
  * @param[in] displacements  The displacements of the vertices in one time-step.
  *                           There must be an equal number of vertices and
- *                           displacments. The trajectories are linear over one
+ *                           displacements. The trajectories are linear over one
  *                           time-step and the velocity is constant.
  * @param[in] edges          The edges of the bodies defined as pairs of indices
  *                           into the rows of the vertices matrix. Each row is
@@ -59,7 +59,7 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
  * @param[in] vertices       The vertices of the bodies.
  * @param[in] displacements  The displacements of the vertices in one time-step.
  *                           There must be an equal number of vertices and
- *                           displacments. The trajectories are linear over one
+ *                           displacements. The trajectories are linear over one
  *                           time-step and the velocity is constant.
  * @param[in] edges          The edges of the bodies defined as pairs of indices
  *                           into the rows of the vertices matrix. Each row is
@@ -83,7 +83,7 @@ void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
  * @param[in] vertices       The vertices of the bodies.
  * @param[in] displacements  The displacements of the vertices in one time-step.
  *                           There must be an equal number of vertices and
- *                           displacments. The trajectories are linear over one
+ *                           displacements. The trajectories are linear over one
  *                           time-step and the velocity is constant.
  * @param[in] edges          The edges of the bodies defined as pairs of indices
  *                           into the rows of the vertices matrix. Each row is

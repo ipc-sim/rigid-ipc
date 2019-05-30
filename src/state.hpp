@@ -189,7 +189,7 @@ public:
 
     // UI OPT
     // ----------------------------------------------------------------------
-    ///@brief Time along the optimal displacments
+    ///@brief Time along the optimal displacements
     float current_opt_time;
 
     ///@brief we show the values of this iteration

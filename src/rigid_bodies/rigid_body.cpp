@@ -24,7 +24,7 @@ void RigidBody::update_center_of_mass()
         / total_edge_length;
 }
 
-void RigidBody::compute_particle_displacments(
+void RigidBody::compute_particle_displacements(
     Eigen::MatrixX2d& displacements) const
 {
     Eigen::Matrix3d T = Eigen::Transform<double, 2, Eigen::Affine>(

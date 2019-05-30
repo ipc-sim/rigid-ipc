@@ -1,16 +1,15 @@
 // Functions for optimizing functions.
 // Includes Newton's method with and without constraints.
+#include <opt/newtons_method.hpp>
+
 #include <cmath>
 #include <iostream>
 
-#include <Eigen/LU>
 #include <Eigen/Sparse>
-#include <Eigen/SparseLU>
 #include <igl/slice.h>
 #include <igl/slice_into.h>
 
-#include <opt/newtons_method.hpp>
-
+#include <logger.hpp>
 #include <profiler.hpp>
 
 namespace ccd {
@@ -18,8 +17,7 @@ namespace opt {
 
     OptimizationResults newtons_method(OptimizationProblem& problem,
         const Eigen::VectorXi& free_dof, const double absolute_tolerance,
-        const double line_search_tolerance, const int max_iter, bool verbose,
-        const double mu)
+        const double line_search_tolerance, const int max_iter, const double mu)
     {
         // Initalize the working variables
         Eigen::VectorXd x = problem.x0;
@@ -93,21 +91,30 @@ namespace opt {
             problem.eval_intermediate_callback(x);
         } while (++iter <= max_iter);
 
-        if (verbose > 0) {
-            std::cout << "took " << iter << " iterations; ";
-            if (gradient_free.squaredNorm() <= absolute_tolerance) {
-                std::cout << "found a local optimum";
-            } else if (iter > max_iter) {
-                std::cout << "exceeded the maximum allowable iterations ("
+        std::ostringstream string_stream;
+        if (gradient_free.squaredNorm() <= absolute_tolerance) {
+            string_stream << "found a local optimum";
+        } else if (iter > max_iter) {
+            string_stream << "exceeded the maximum allowable iterations ("
                           << max_iter << ")";
-            } else {
-                std::cout << "line-search failed";
-            }
-            std::cout << std::endl;
+        } else {
+            string_stream << "line-search failed";
         }
+        spdlog::trace("solver=newtons_method iter={:d} exit_code=\"{:s}\"",
+            iter, string_stream.str());
 
         return OptimizationResults(x, problem.eval_f(x),
             gradient_free.squaredNorm() <= absolute_tolerance);
+    }
+
+    // Search along a search direction to find a scalar step_length in [0, 1]
+    // such that f(x + step_length * dir) ≤ f(x).
+    bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
+        const std::function<double(const Eigen::VectorXd&)>& f,
+        double& step_length, const double min_step_length)
+    {
+        return line_search(x, dir, f, Eigen::VectorXd::Zero(dir.size()),
+            step_length, min_step_length);
     }
 
     // Search along a search direction to find a scalar step_length in [0, 1]

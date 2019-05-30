@@ -1,5 +1,5 @@
-// Methods for optimizing the displacments with a non-linear interference volume
-// constraint.
+// Methods for optimizing the displacements with a non-linear interference
+// volume constraint.
 #include <opt/displacement_opt.hpp>
 
 #include <fstream>
@@ -63,7 +63,7 @@ namespace opt {
         g_lower.setConstant(0.0);
         g_upper.setConstant(NO_UPPER_BOUND);
 
-        is_in_line_search = false;
+        is_collision_set_frozen = false;
     }
 
     // Initalize the mass matrix based on the edge length of incident edges.
@@ -71,7 +71,8 @@ namespace opt {
     {
         if (!use_mass_matrix) {
             mass_matrix
-                = Eigen::MatrixXd::Identity(vertices.size(), vertices.size());
+                = Eigen::SparseMatrix<double>(vertices.size(), vertices.size());
+            mass_matrix.setIdentity();
             return;
         }
         Eigen::VectorXd vertex_masses = Eigen::VectorXd::Zero(vertices.size());
@@ -85,8 +86,7 @@ namespace opt {
             vertex_masses(edges(i, 1)) += edge_length / 2;
             vertex_masses(edges(i, 1) + vertices.rows()) += edge_length / 2;
         }
-        // TODO: Store this as a sparse matrix
-        mass_matrix = vertex_masses.asDiagonal();
+        mass_matrix = Eigen::MatrixXd(vertex_masses.asDiagonal()).sparseView();
     }
 
     double ParticlesDisplProblem::eval_f(const Eigen::VectorXd& x)
@@ -103,13 +103,13 @@ namespace opt {
     Eigen::MatrixXd ParticlesDisplProblem::eval_hessian_f(
         const Eigen::VectorXd& x)
     {
-        return mass_matrix;
+        return Eigen::MatrixXd(mass_matrix);
     }
 
     Eigen::SparseMatrix<double> ParticlesDisplProblem::eval_hessian_f_sparse(
         const Eigen::VectorXd& x)
     {
-        return mass_matrix.sparseView();
+        return mass_matrix;
     }
 
     Eigen::VectorXd ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x)
@@ -118,7 +118,7 @@ namespace opt {
         Uk.resize(x.rows() / 2, 2);
 
         Eigen::VectorXd g_uk;
-        if (!is_in_line_search && constraint->update_collision_set) {
+        if (!is_collision_set_frozen && constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
         PROFILE(constraint->compute_constraints(Uk, g_uk),
@@ -131,7 +131,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (!is_in_line_search && constraint->update_collision_set) {
+        if (!is_collision_set_frozen && constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
         Eigen::MatrixXd jac_gx;
@@ -147,7 +147,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (!is_in_line_search && constraint->update_collision_set) {
+        if (!is_collision_set_frozen && constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
@@ -175,7 +175,7 @@ namespace opt {
         Eigen::MatrixXd Uk = x;
         Uk.resize(x.rows() / 2, 2);
 
-        if (!is_in_line_search && constraint->update_collision_set) {
+        if (!is_collision_set_frozen && constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
@@ -189,16 +189,16 @@ namespace opt {
         Eigen::MatrixXd Uk = max_x;
         Uk.resize(max_x.rows() / 2, 2);
 
-        if (!is_in_line_search && constraint->update_collision_set) {
+        if (!is_collision_set_frozen && constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
 
-        this->is_in_line_search = true;
+        this->is_collision_set_frozen = true;
     }
 
     void ParticlesDisplProblem::disable_line_search_mode()
     {
-        this->is_in_line_search = false;
+        this->is_collision_set_frozen = false;
     }
 
     void ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x,
