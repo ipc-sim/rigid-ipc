@@ -100,8 +100,9 @@ namespace opt {
         } else {
             string_stream << "line-search failed";
         }
-        spdlog::trace("solver=newtons_method iter={:d} exit_code=\"{:s}\"",
-            iter, string_stream.str());
+        spdlog::debug(
+            "method=newtons_method total_iter={:d} exit_code=\"{:s}\"", iter,
+            string_stream.str());
 
         return OptimizationResults(x, problem.eval_f(x),
             gradient_free.squaredNorm() <= absolute_tolerance);

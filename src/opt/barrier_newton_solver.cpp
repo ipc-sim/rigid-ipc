@@ -242,7 +242,7 @@ namespace opt {
         do {
             // Log the epsilon and the newton method will log the number of
             // iterations.
-            spdlog::trace("solver=barrier_newton ϵ={:g}",
+            spdlog::debug("solver=barrier_newton ϵ={:g}",
                 barrier_constraint->barrier_epsilon);
 
             // Optimize for a fixed epsilon
