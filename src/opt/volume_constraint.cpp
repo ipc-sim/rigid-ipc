@@ -25,16 +25,15 @@ namespace opt {
     {
         std::vector<double> impact_volumes;
         compute_constraints_per_impact(displacements, impact_volumes);
-        assemble_dense_constraints(impact_volumes, volumes);
+        assemble_constraints_all(impact_volumes, volumes);
     }
 
     void VolumeConstraint::compute_constraints_jacobian(
-
-        const Eigen::MatrixXd& Uk, Eigen::MatrixXd& volumes_jac)
+        const Eigen::MatrixXd& Uk, Eigen::MatrixXd& g_uk_jacobian)
     {
         std::vector<DScalar> impact_volumes;
         compute_constraints_per_impact(Uk, impact_volumes);
-        assemble_dense_jacobian(impact_volumes, volumes_jac);
+        assemble_jacobian_all(impact_volumes, g_uk_jacobian);
     }
 
     void VolumeConstraint::compute_constraints_hessian(
@@ -46,25 +45,33 @@ namespace opt {
         assemble_hessian(impact_volumes, volumes_hessian);
     }
 
-    void VolumeConstraint::compute_constraints_and_derivatives(
-        const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk,
-        Eigen::MatrixXd& g_uk_jacobian,
-        std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
+    void VolumeConstraint::compute_constraints_jacobian(
+        const Eigen::MatrixXd& Uk, Eigen::SparseMatrix<double>& g_uk_jacobian)
     {
         std::vector<DScalar> impact_volumes;
         compute_constraints_per_impact(Uk, impact_volumes);
-        assemble_dense_constraints(impact_volumes, g_uk);
-        assemble_dense_jacobian(impact_volumes, g_uk_jacobian);
-        assemble_hessian(impact_volumes, g_uk_hessian);
+        assemble_sparse_jacobian_all(impact_volumes, g_uk_jacobian);
     }
 
+
     void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
+        Eigen::VectorXd& g_uk, Eigen::SparseMatrix<double>& g_uk_jacobian,
+        Eigen::VectorXi& g_uk_active)
+    {
+        std::vector<DScalar> impact_volumes;
+        compute_constraints_per_impact(Uk, impact_volumes);
+        assemble_constraints_all(impact_volumes, g_uk);
+        assemble_sparse_jacobian_all(impact_volumes, g_uk_jacobian);
+        dense_indices(g_uk_active);
+    }
+
+    void VolumeConstraint::compute_active_constraints(const Eigen::MatrixXd& Uk,
         Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian)
     {
         std::vector<DScalar> impact_volumes;
         compute_constraints_per_impact(Uk, impact_volumes);
-        assemble_dense_constraints(impact_volumes, g_uk);
-        assemble_dense_jacobian(impact_volumes, g_uk_jacobian);
+        assemble_constraints(impact_volumes, g_uk);
+        assemble_jacobian(impact_volumes, g_uk_jacobian);
     }
 
     template <typename T>
@@ -102,7 +109,7 @@ namespace opt {
         }
     }
 
-    void VolumeConstraint::assemble_dense_constraints(
+    void VolumeConstraint::assemble_constraints_all(
         const std::vector<double>& impact_volumes,
         Eigen::VectorXd& dense_volumes)
     {
@@ -125,10 +132,13 @@ namespace opt {
         }
     }
 
-    void VolumeConstraint::assemble_dense_constraints(
+    void VolumeConstraint::assemble_constraints_all(
         const std::vector<DScalar>& impact_volumes,
         Eigen::VectorXd& dense_volumes)
     {
+        Eigen::VectorXd volumes;
+        assemble_constraints(impact_volumes, volumes);
+
         const int num_edges = int(edges->rows());
         const long num_constr = ccd::autodiff::get_constraints_size(num_edges);
         dense_volumes.resize(num_constr);
@@ -142,12 +152,13 @@ namespace opt {
             long c_kl = ccd::autodiff::get_constraint_index(
                 ee_impact, /*impacted=*/false, num_edges);
 
-            dense_volumes[c_ij] = impact_volumes[2 * i + 0].getValue();
-            dense_volumes[c_kl] = impact_volumes[2 * i + 1].getValue();
+            dense_volumes[c_ij] = volumes(2 * int(i) + 0);
+            dense_volumes[c_kl] = volumes(2 * int(i) + 1);
         }
     }
 
-    void VolumeConstraint::assemble_dense_jacobian(
+    [[deprecated("Replaced by sparse jabobian")]] void
+    VolumeConstraint::assemble_jacobian_all(
         const std::vector<DScalar>& impact_volumes,
         Eigen::MatrixXd& volumes_jac)
     {
@@ -173,6 +184,57 @@ namespace opt {
 
             volumes_jac.row(c_ij) = impact_volumes_jac.row(2 * int(i) + 0);
             volumes_jac.row(c_kl) = impact_volumes_jac.row(2 * int(i) + 1);
+        }
+    }
+
+    void VolumeConstraint::assemble_sparse_jacobian_all(
+        const std::vector<DScalar>& constraints,
+        Eigen::SparseMatrix<double>& jacobian)
+    {
+
+        std::vector<DoubleTriplet> tripletList;
+        assemble_jacobian_triplets(constraints, tripletList);
+
+        const int num_edges = int(edges->rows());
+        const long num_constr = ccd::autodiff::get_constraints_size(num_edges);
+
+        size_t counter = 0;
+        for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
+            auto& ee_impact = ee_impacts[ee];
+
+            long c_ij = ccd::autodiff::get_constraint_index(
+                ee_impact, /*impacted=*/true, num_edges);
+            long c_kl = ccd::autodiff::get_constraint_index(
+                ee_impact, /*impacted=*/false, num_edges);
+            int rows[2] = { int(c_ij), int(c_kl) };
+
+            for (size_t k = 0; k < 2; k++) {
+                for (int i = 0; i < 8; i++) {
+                    tripletList[counter++].set_row(rows[k]);
+                }
+            }
+        }
+
+        jacobian.resize(int(num_constr), int(vertices->size()));
+        jacobian.setFromTriplets(tripletList.begin(), tripletList.end());
+    }
+
+    void VolumeConstraint::dense_indices(Eigen::VectorXi& dense_indices)
+    {
+        dense_indices.resize(int(ee_impacts.size()) * 2);
+
+        const int num_edges = int(edges->rows());
+
+        for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
+            auto& ee_impact = ee_impacts[ee];
+
+            long c_ij = ccd::autodiff::get_constraint_index(
+                ee_impact, /*impacted=*/true, num_edges);
+            long c_kl = ccd::autodiff::get_constraint_index(
+                ee_impact, /*impacted=*/false, num_edges);
+
+            dense_indices(int(2 * ee) + 0) = int(c_ij);
+            dense_indices(int(2 * ee) + 1) = int(c_kl);
         }
     }
 

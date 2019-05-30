@@ -585,6 +585,10 @@ void ViewerMenu::draw_optimization()
         if (ImGui::Button("Optimize##opt", ImVec2(-1, 0))) {
             optimize_displacements();
         }
+
+        if (ImGui::Button("Process##opt", ImVec2(-1, 0))) {
+            post_process_optimization();
+        }
     }
 } // namespace ccd
 
@@ -601,11 +605,19 @@ void ViewerMenu::draw_optimization_results()
         // -------------------------------------------------------------------
         // DETAILS
         // -------------------------------------------------------------------
+
         ImGui::BeginChild("Opt Results Detail",
             ImVec2(ImGui::GetWindowContentRegionWidth() * 0.9f, 100), false);
+
         ImGui::Text("method = %s",
             ccd::OptimizationMethodNames[static_cast<int>(state.opt_method)]);
-        ImGui::Text("energy = %.3g", state.get_opt_functional());
+
+        double energy = state.get_opt_functional();
+        if (energy > -1) {
+            ImGui::Text("energy = %.3g", energy);
+        } else {
+            ImGui::Text("energy = NO_INFO");
+        }
 
         ImGui::Text("displacements");
         Eigen::MatrixX2d disp = state.get_opt_displacements();
@@ -628,21 +640,21 @@ void ViewerMenu::draw_optimization_results()
             redraw_at_opt_time();
         }
         ImGui::PopItemWidth();
-        if (state.u_history.size() > 0
-            && ImGui::InputIntBounded("step##opt-results",
-                &(state.current_opt_iteration), -1,
-                int(state.u_history.size() - 1), 1, 10)) {
+        if (state.u_history.size() > 0) {
+            if (ImGui::InputIntBounded("step##opt-results",
+                    &(state.current_opt_iteration), -1,
+                    int(state.u_history.size() - 1), 1, 10)) {
 
-            redraw_opt_displacements();
-            redraw_grad_volume(/*opt_gradient=*/true);
-            redraw_at_opt_time();
+                redraw_opt_displacements();
+                recolor_opt_collisions();
+                redraw_grad_volume(/*opt_gradient=*/true);
+                redraw_at_opt_time();
+            }
         }
-
-        if (ImGui::InputInt("volume##ee_opt", &state.current_volume)) {
-            redraw_grad_volume(/*opt_gradient=*/true);
-        }
-        //        ImGui::Checkbox("skip empty##edge_opt",
-        //        &state.skip_no_impact_edge);
+        if (state.g_history.size() > 0)
+            if (ImGui::InputInt("volume##ee_opt", &state.current_volume)) {
+                redraw_grad_volume(/*opt_gradient=*/true);
+            }
     }
 
     // -------------------------------------------------------------------

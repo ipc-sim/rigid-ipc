@@ -1,6 +1,6 @@
 #pragma once
 
-#define PROFILE_FUNCTIONS
+// #define PROFILE_FUNCTIONS
 
 #ifdef PROFILE_FUNCTIONS
 

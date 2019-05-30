@@ -73,14 +73,31 @@ namespace opt {
             Eigen::VectorXd& f_uk_jacobian,
             Eigen::SparseMatrix<double>& f_uk_hessian);
 
+
+        /// \brief eval_g evaluates constraints at point x
         virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) = 0;
+
+        /// \brief eval_jac_g evaluates constraints jacobian at point x
         virtual Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) = 0;
+        virtual void eval_jac_g(
+            const Eigen::VectorXd& x, Eigen::SparseMatrix<double>& jac_gx);
+
+        // \brief eval_hessian_g evaluates constraints hessian at point x
         virtual std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x)
             = 0;
+
+        /// \brief eval_g_and_gdiff evaluates constraints, jacobian and hessian
+        /// at point x
         virtual void eval_g_and_gdiff(const Eigen::VectorXd& x,
-            Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
-            std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian);
+            Eigen::VectorXd& gx, Eigen::MatrixXd& gx_jacobian,
+            std::vector<Eigen::SparseMatrix<double>>& gx_hessian);
+
+        /// \brief eval_g evaluates constraints and jacobian at point x. Also
+        /// returns list of active constraints (indices)
+        virtual void eval_g(const Eigen::VectorXd& x, Eigen::VectorXd& gx,
+            Eigen::SparseMatrix<double>& gx_jacobian,
+            Eigen::VectorXi& gx_active);
 
         virtual void enable_line_search_mode(const Eigen::VectorXd& max_x) = 0;
         virtual void disable_line_search_mode() = 0;

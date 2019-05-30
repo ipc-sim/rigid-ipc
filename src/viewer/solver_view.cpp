@@ -66,7 +66,11 @@ void solver_menu(ccd::opt::NCPSolver& ncp_solver)
     }
 
     ImGui::Checkbox(
+        "active only##ncp_solver", &ncp_solver.solve_for_active_cstr);
+    ImGui::Checkbox(
         "keep unfeasible##ncp_solver", &ncp_solver.keep_in_unfeasible);
+    ImGui::Checkbox(
+        "vol. line search##ncp_solver", &ncp_solver.check_volume_increase);
     ImGui::Checkbox("##ncp_solver", &ncp_solver.check_convergence);
     ImGui::SameLine();
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.4f);

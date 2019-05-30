@@ -40,6 +40,8 @@ namespace opt {
         };
 
         int iter = 0;
+        problem.eval_intermediate_callback(x);
+
         do {
             // Compute the gradient and hessian
             problem.eval_f_and_fdiff(x, value, gradient, hessian);

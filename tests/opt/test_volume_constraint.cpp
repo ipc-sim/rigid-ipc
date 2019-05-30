@@ -73,12 +73,11 @@ TEST_CASE("Volume Constraint", "[opt][ccd][Volume]")
     volume.compute_constraints(displacements, v_actual);
     CHECK((v_actual - v_expected).squaredNorm() < 1e-10);
 
-    Eigen::MatrixXd jac_actual;
-    std::vector<Eigen::SparseMatrix<double>> hess_actual;
-    volume.compute_constraints_and_derivatives(
-        displacements, v_actual, jac_actual, hess_actual);
-    CHECK((v_actual - v_expected).squaredNorm() < 1e-6);
-
+    Eigen::SparseMatrix<double> jac_actual_sparse;
+    Eigen::VectorXi active;
+    volume.compute_constraints(
+        displacements, v_actual, jac_actual_sparse, active);
+     CHECK((v_actual - v_expected).squaredNorm() < 1e-6);
 
 }
 
@@ -175,11 +174,77 @@ TEST_CASE("Volume Constraint Gradient", "[opt][ccd][Volume][Gradient]")
     volume.compute_constraints_jacobian(displacements, jac_actual);
     CHECK((jac_actual - jac_expected).squaredNorm() < 1e-10);
 
+}
+
+TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
+{
+    ccd::opt::VolumeConstraint volume;
+    volume.volume_epsilon = 1e-3;
+    volume.detection_method = ccd::BRUTE_FORCE;
+
+    Eigen::MatrixX2d vertices(4, 2);
+    Eigen::MatrixX2i edges(2, 2);
+    Eigen::MatrixX2d displacements(4, 2);
+
+    edges.row(0) << 0, 1;
+    edges.row(1) << 2, 3;
+
+    vertices.row(0) << -0.5, 0.0;
+    vertices.row(1) << 0.5, 0.0;
+
+    displacements.row(0) << 0.0, 0.0;
+    displacements.row(1) << 0.0, 0.0;
+
+    Eigen::MatrixXd jac_actual;
+    Eigen::SparseMatrix<double> jac_actual_sparse;
+
+    SECTION("Vertical Displ Small")
+    {
+        vertices.row(2) << 0.0, 0.5;
+        vertices.row(3) << 0.0, 1.0;
+        displacements.row(2) << 0.0, -0.6;
+        displacements.row(3) << 0.0, -0.6;
+
+    }
+
+    SECTION("Vertical Displ Long")
+    {
+        vertices.row(2) << 0.0, 0.5;
+        vertices.row(3) << 0.0, 1.0;
+        displacements.row(2) << 0.0, -1.0;
+        displacements.row(3) << 0.0, -1.0;
+
+    }
+
+    SECTION("Horizontal Displ Small")
+    {
+        vertices.row(2) << -0.3, 0.5;
+        vertices.row(3) << 0.3, 0.5;
+        displacements.row(2) << 0.0, -0.6;
+        displacements.row(3) << 0.0, -0.6;
+
+    }
+
+    SECTION("Horizontal Displ Long")
+    {
+        vertices.row(2) << -0.3, 0.5;
+        vertices.row(3) << 0.3, 0.5;
+        displacements.row(2) << 0.0, -1.0;
+        displacements.row(3) << 0.0, -1.0;
+
+    }
+
+    volume.initialize(vertices, edges, displacements);
+    volume.compute_constraints_jacobian(displacements, jac_actual);
+    volume.compute_constraints_jacobian(displacements, jac_actual_sparse);
+    CHECK((jac_actual - jac_actual_sparse.toDense()).squaredNorm() < 1e-10);
+
     Eigen::VectorXd v_actual;
-    std::vector<Eigen::SparseMatrix<double>> hess_actual;
-    volume.compute_constraints_and_derivatives(
-        displacements, v_actual, jac_actual, hess_actual);
-    CHECK((jac_actual - jac_expected).squaredNorm() < 1e-6);
+    Eigen::VectorXi active;
+    volume.compute_constraints(
+        displacements, v_actual, jac_actual_sparse, active);
+    CHECK((jac_actual - jac_actual_sparse.toDense()).squaredNorm() < 1e-6);
+
 
 }
 
@@ -376,12 +441,4 @@ TEST_CASE("Volume Constraint Hessian", "[opt][ccd][Volume][Hessian]")
             < 1e-6);
     }
 
-    Eigen::VectorXd v_actual;
-    Eigen::MatrixXd jac_actual;
-
-    volume.compute_constraints_and_derivatives(
-        displacements, v_actual, jac_actual, hess_actual);
-    for (size_t i = 0; i < hess_actual.size(); i++) {
-        CHECK((hess_actual[i] - hess_expected[i]).toDense().squaredNorm() < 1e-6);
-    }
 }

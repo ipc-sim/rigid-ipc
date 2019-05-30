@@ -6,7 +6,8 @@
 namespace ccd {
 void collision_constraint_menu(ccd::opt::CollisionConstraint& cstr)
 {
-    ImGui::Checkbox("recompute col. set##opt", &(cstr.recompute_collision_set));
+    ImGui::Checkbox("update col. set##opt", &(cstr.update_collision_set));
+    ImGui::Checkbox("extend col. set##opt", &(cstr.extend_collision_set));
 
     int idx_detection_method = cstr.detection_method;
     if (ImGui::Combo("method##ccd", &idx_detection_method,

@@ -1,36 +1,28 @@
 #include "ncp_solver.hpp"
 
 #include <iostream>
+
+#include <igl/slice.h>
+#include <igl/slice_into.h>
+
 #include <opt/lcp_solver.hpp>
 #include <opt/newtons_method.hpp> //> line search
 
 #include <logger.hpp>
+
 namespace ccd {
 namespace opt {
 
     NCPSolver::~NCPSolver() {}
     NCPSolver::NCPSolver()
         : keep_in_unfeasible(true)
-        , check_convergence(false)
+        , check_convergence(true)
+        , check_volume_increase(true)
+        , solve_for_active_cstr(true)
         , convergence_tolerance(1e-6)
         , update_type(NcpUpdate::LINEARIZED)
         , lcp_solver(LCPSolver::LCP_GAUSS_SEIDEL)
         , max_iterations(100)
-    {
-        Asolver
-            = std::make_shared<Eigen::SparseLU<Eigen::SparseMatrix<double>>>();
-    }
-
-    NCPSolver::NCPSolver(const bool keep_in_unfeasible,
-        const bool check_convergence, const double convergence_tolerance,
-        const NcpUpdate update_type, const LCPSolver lcp_solver,
-        const int max_iter)
-        : keep_in_unfeasible(keep_in_unfeasible)
-        , check_convergence(check_convergence)
-        , convergence_tolerance(convergence_tolerance)
-        , update_type(update_type)
-        , lcp_solver(lcp_solver)
-        , max_iterations(max_iter)
     {
         Asolver
             = std::make_shared<Eigen::SparseLU<Eigen::SparseMatrix<double>>>();
@@ -85,15 +77,16 @@ namespace opt {
             solve_lcp(delta_x);
 
             // 2.2 Do line-search on delta to ensure volume is increased (-->0)
+            double gamma = 1.0;
             auto eval_g = [&](const Eigen::VectorXd& y) {
                 return -problem->eval_g(y).sum();
             };
-            double gamma = 1.0;
+
             // TODO: This is sending a zero for the gradient which is not
             // correct
-            if (!line_search(xi, delta_x, eval_g,
+            if (check_volume_increase
+                && !line_search(xi, delta_x, eval_g,
                     Eigen::VectorXd::Zero(delta_x.rows()), gamma)) {
-                // ?????
             }
 
             if (keep_in_unfeasible) {
@@ -101,7 +94,6 @@ namespace opt {
             }
 
             update_candidate(delta_x, gamma);
-            problem->eval_intermediate_callback(xi);
         }
         return (g_xi.array() >= 0).all();
     }
@@ -120,19 +112,25 @@ namespace opt {
 
         // Solve assumming constraints are not violated
         xi = Ainv(b);
-        g_xi = problem->eval_g(xi);
-        jac_g_xi = problem->eval_jac_g(xi);
+        problem->eval_g(xi, g_xi, jac_g_xi, g_active);
+        problem->eval_intermediate_callback(xi);
 
-        alpha_i.resize(uint(g_xi.rows()));
+        alpha_i.resize(problem->num_constraints);
         alpha_i.setZero();
+    }
 
-        //        callback(xi, alpha_i, 1.0);
+    void NCPSolver::update_candidate(Eigen::VectorXd& delta_x, double& gamma)
+    {
+        xi = xi + delta_x * gamma;
+        problem->eval_g(xi, g_xi, jac_g_xi, g_active);
+        problem->eval_intermediate_callback(xi);
     }
 
     Eigen::VectorXd NCPSolver::Ainv(const Eigen::VectorXd& x)
     {
         auto y = Asolver->solve(x);
         if (Asolver->info() != Eigen::Success) {
+            spdlog::error("Linear solve failed - ncp_solver.cpp");
             std::cerr << "Linear solve failed - ncp_solver.cpp" << std::endl;
             assert(0);
         }
@@ -159,7 +157,6 @@ namespace opt {
         //      s = g(x_i) + jac_g(x_i) [ A^{-1} jac_x(x_i)^T \alpha_i + A^{-1}b - x_i]
         // clang-format on
         uint dof = uint(xi.rows());
-        uint num_constraints = uint(g_xi.rows());
 
         Eigen::VectorXd p(dof);
         if (update_type == NcpUpdate::G_GRADIENT) {
@@ -168,18 +165,47 @@ namespace opt {
             p = Ainv(b) - xi;
         }
 
-        Eigen::MatrixXd M(dof, num_constraints);
-        assert(num_constraints == jac_g_xi.rows());
-        assert(dof == jac_g_xi.cols());
+        uint num_constraints = uint(g_xi.rows());
+        if (solve_for_active_cstr) {
+            uint num_active_constraints = uint(g_active.rows());
+            spdlog::trace("solver=ncp_solver active_cstr={}/{}",
+                num_active_constraints, num_constraints);
 
-        // computes A^{-1} jac_x(x_i)^T for each row of jac_x
-        for (uint ci = 0; ci < num_constraints; ++ci) {
-            M.col(ci) = Ainv(jac_g_xi.row(ci));
+            // create lcp problem for ACTIVE constraints only
+            // ----------------------------------------------
+            Eigen::VectorXd g_xi_active;
+            igl::slice(g_xi, g_active, g_xi_active);
+            assert(g_xi_active.rows() == num_active_constraints);
+
+            Eigen::SparseMatrix<double> jac_g_xi_active;
+            igl::slice(jac_g_xi, g_active,
+                Eigen::VectorXi::LinSpaced(dof, 0, int(dof)), jac_g_xi_active);
+            assert(jac_g_xi_active.rows() == int(num_active_constraints));
+            assert(jac_g_xi_active.cols() == int(dof));
+
+            Eigen::MatrixXd M_active(dof, num_active_constraints);
+            for (uint ci = 0; ci < num_active_constraints; ++ci) {
+                M_active.col(ci) = Ainv(jac_g_xi_active.row(int(ci)));
+            }
+            Eigen::VectorXd alpha_i_active(num_active_constraints);
+            lcp_solve(g_xi_active, jac_g_xi_active, M_active, p, lcp_solver,
+                alpha_i_active);
+
+            delta_x = M_active * alpha_i_active + p;
+
+            alpha_i.setZero();
+            igl::slice_into(alpha_i_active, g_active, alpha_i);
+
+        } else {
+            Eigen::MatrixXd M(dof, num_constraints);
+            for (uint ci = 0; ci < num_constraints; ++ci) {
+                assert(M.cols() > ci);
+                assert(uint(jac_g_xi.rows()) > ci);
+                M.col(ci) = Ainv(jac_g_xi.row(int(ci)));
+            }
+            lcp_solve(g_xi, jac_g_xi, M, p, lcp_solver, alpha_i);
+            delta_x = M * alpha_i + p;
         }
-
-        lcp_solve(/*q=*/g_xi, /*N=*/jac_g_xi, M, p, lcp_solver, alpha_i);
-
-        delta_x = M * alpha_i + p;
     }
 
     void NCPSolver::move_to_unfeasible_domain(
@@ -190,10 +216,8 @@ namespace opt {
         for (int j = 0; j < 32; j++) {
             x_next = xi + delta_x * gamma;
             g_xi = problem->eval_g(x_next);
-            //            if (j == 0) {
-            //                std::cout << fmt::format(" gxi_0={}\n", g_xi.sum()
-            //                > 0);
-            //            }
+
+            // if any is negative
             if (!(g_xi.array() >= 0).all()) {
                 break;
             }
@@ -203,44 +227,18 @@ namespace opt {
 
         // check if point satisfy equality constraint, then
         // find the point that should have also satisfied g(x)>0
-        jac_g_xi = problem->eval_jac_g(x_next);
-        // TODO: we need to be able to test this when recomputing the
-        // collision set
-        //                eq = A * x_next - (b + jac_g_xi.transpose() *
-        //                alpha_i); std::cout << fmt::format("
-        //                gamma_n={:.3e} eq={:.3e} gxi_n={}\n",
-        //                    gamma, eq.squaredNorm(), g_xi.sum() > 0);
-
-        //                if (eq.squaredNorm() < convergence_tolerance)
-        //                {
-        //                    gamma = gamma_prev;
-        //                }
-    }
-
-    void NCPSolver::update_candidate(Eigen::VectorXd& delta_x, double& gamma)
-    {
-        xi = xi + delta_x * gamma;
-        g_xi = problem->eval_g(xi);
-        jac_g_xi = problem->eval_jac_g(xi);
-
-        //        callback(xi, alpha_i, gamma);
-    }
-
-    bool solve_ncp(const Eigen::SparseMatrix<double>& A,
-        const Eigen::VectorXd& b, OptimizationProblem& problem,
-        const int max_iter, const callback_intermediate_ncp& callback,
-        const NcpUpdate update_type, const LCPSolver lcp_solver,
-        Eigen::VectorXd& xi, Eigen::VectorXd& alpha_i,
-        const bool keep_in_unfeasible, const bool check_convergence,
-        const double convergence_tolerance)
-    {
-
-        auto solver
-            = std::make_unique<NCPSolver>(keep_in_unfeasible, check_convergence,
-                convergence_tolerance, update_type, lcp_solver, max_iter);
-        bool sucess = solver->solve_ncp(A, b, problem, xi, alpha_i);
-
-        return sucess;
+        if (check_convergence) {
+            problem->eval_jac_g(x_next, jac_g_xi);
+            Eigen::VectorXd eq
+                = A * x_next - (b + jac_g_xi.transpose() * alpha_i);
+            double eq_norm = eq.squaredNorm();
+            if (eq_norm < convergence_tolerance) {
+                gamma = gamma_prev;
+            }
+            spdlog::trace("solver=ncp_solver step=check_convergence "
+                          "||eq||^2={} passed={}",
+                eq_norm, eq_norm < convergence_tolerance);
+        }
     }
 
 } // namespace opt

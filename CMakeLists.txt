@@ -209,5 +209,5 @@ endif()
 # Scripts
 ################################################################################
 if(BUILD_SCRIPTS)
-    add_subdirectory(scripts)
+#    add_subdirectory(scripts)
 endif()

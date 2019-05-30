@@ -55,13 +55,29 @@ namespace opt {
         hessian = eval_hessian_f_sparse(x);
     }
 
-    void OptimizationProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
-        Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
-        std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
+    void OptimizationProblem::eval_jac_g(
+        const Eigen::VectorXd& x, Eigen::SparseMatrix<double>& jac_gx)
     {
-        g_uk = eval_g(x);
-        g_uk_jacobian = eval_jac_g(x);
-        g_uk_hessian = eval_hessian_g(x);
+
+        jac_gx = eval_jac_g(x).sparseView();
+    }
+
+    void OptimizationProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
+        Eigen::VectorXd& gx, Eigen::MatrixXd& gx_jacobian,
+        std::vector<Eigen::SparseMatrix<double>>& gx_hessian)
+    {
+        gx = eval_g(x);
+        gx_jacobian = eval_jac_g(x);
+        gx_hessian = eval_hessian_g(x);
+    }
+
+    void OptimizationProblem::eval_g(const Eigen::VectorXd& x,
+        Eigen::VectorXd& gx, Eigen::SparseMatrix<double>& gx_jacobian,
+        Eigen::VectorXi& gx_active)
+    {
+        gx = eval_g(x);
+        gx_jacobian = eval_jac_g(x).sparseView();
+        gx_active = Eigen::VectorXi::LinSpaced(gx.rows(), 0, int(gx.rows()));
     }
 
     bool OptimizationProblem::validate_problem()
