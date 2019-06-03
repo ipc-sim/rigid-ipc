@@ -12,21 +12,19 @@ A project for robustly resolving collisions with a guarantee of no interpenetrat
     * [ ] Replace &gamma;, a scalar multiplier, with &Gamma;, a diagonal matrix multiplier.
 * [ ] Update CCD to find all impacts where the time of impact is greater than or equal to t<sub>0</sub> not bounded by ≤ t<sub>1</sub>
     * The time of impact is recomputed every time we compute the constraints anyways
-* [ ] Refactor OptimizationProblem
-    * [ ] Compute **objective** value, gradient, and hessian in one function
-    * [ ] Compute **constraint** value, gradient, and hessian in one function
+* [x] Refactor OptimizationProblem
+    * [x] Compute **objective** value, gradient, and hessian in one function
+    * [x] Compute **constraint** value, gradient, and hessian in one function
+* [x] Add static objects (displacement is fixed to zero)
+    * [x] Remove the variables from the optimization
+* [ ] Add rigid bodies by limiting the degrees of freedom to one rotation and position per body. Solve the optimization on these variables.
+    * [x] Implement transformation from rigid motion to point-wise linear trajectories per time-step
 * [ ] Add physics
     * [ ] Replace our objective with a more physically based one
     * [ ] Simple model (gravity, no friction, etc.)
     * [ ] Friction model
-* [ ] Add static objects (displacement is fixed to zero)
-    * [ ] Remove the variables from the optimization
-    * OR
-    * [ ] Set the displacements to zero every iteration (this might lead to intersections)
-* [ ] Add rigid bodies by limiting the degrees of freedom to one rotation and position per body. Solve the optimization on these variables.
-    * [ ] Implement translation from rigid motion to point-wise linear trajectories per time-step
 * [ ] Add minimum separation distance
-    * [ ] Trivially, change the lower bound of the barrier constraints
+   * Is it possible to solve a degree-six polynomial with autodiff?
 
 ## Compilation
 
