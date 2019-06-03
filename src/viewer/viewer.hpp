@@ -108,6 +108,7 @@ public:
     void draw_io();
     void draw_edit_modes();
     void draw_line_stack();
+    void draw_chain_menu();
     void draw_ccd_steps();
     void draw_legends();
     void draw_collision_menu();

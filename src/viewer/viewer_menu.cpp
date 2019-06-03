@@ -124,6 +124,23 @@ void ViewerMenu::draw_menu()
     draw_line_stack();
     ImGui::PopItemWidth();
     ImGui::End();
+
+    // ------------------------------------------------------------------------
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - legends_width
+                                    - 2 * menu_width - 20,
+                                0),
+        ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(
+        ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
+    bool _chain_menu_visible = true;
+
+    ImGui::Begin("Chain", &_chain_menu_visible,
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
+    draw_chain_menu();
+    ImGui::PopItemWidth();
+    ImGui::End();
 }
 
 // //////////////////////////////////////////////////////////////////////////
@@ -393,6 +410,49 @@ void ViewerMenu::draw_line_stack()
         state.displacements = displacements;
         state.edges = edges;
         state.reset_scene();
+        state_history.push_back(state);
+        load_state();
+    }
+}
+
+void ViewerMenu::draw_chain_menu()
+{
+    static int num_links = 2;
+    static double scale_displacment = 10;
+    ImGui::InputIntBounded("link count##chain", &num_links, 1,
+        std::numeric_limits<int>::max(), 1, 10);
+    // ImGui::InputDouble("scale disp.##chain", &scale_displacment);
+    if (ImGui::Button("Make Chain##chain", ImVec2(-1, 0))) {
+        state.load_scene(std::string(FIXTURES_DIR) + "/chain/one-links.json");
+
+        Eigen::MatrixX2d chain_vertices
+            = state.vertices.replicate(num_links, 1);
+        Eigen::MatrixX2d chain_displacements
+            = state.displacements.replicate(num_links, 1);
+        Eigen::MatrixX2i chain_edges = state.edges.replicate(num_links, 1);
+
+        long num_vertices = state.vertices.rows(),
+             num_edges = state.edges.rows();
+        for (int i = 0; i < num_links; i++) {
+            chain_vertices.block(i * num_vertices, 0, num_vertices, 2)
+                .col(1)
+                .array()
+                -= 2 * i;
+            chain_displacements.block(i * num_vertices, 0, num_vertices, 2)
+                .col(1)
+                .array()
+                -= 0.25 * i;
+            chain_edges.block(i * num_edges, 0, num_edges, 2).array()
+                += i * num_vertices;
+        }
+
+        state.vertices = chain_vertices;
+        state.displacements = chain_displacements;
+        state.edges = chain_edges;
+
+        state.fit_scene_to_canvas();
+        state.reset_scene();
+
         state_history.push_back(state);
         load_state();
     }
