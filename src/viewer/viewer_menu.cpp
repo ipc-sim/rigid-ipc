@@ -116,29 +116,12 @@ void ViewerMenu::draw_menu()
     ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(
         ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
-    bool _line_stack_menu_visible = true;
+    bool _procedural_scene_menu_visible = true;
 
-    ImGui::Begin("Line Stack", &_line_stack_menu_visible,
+    ImGui::Begin("Procedural Scene", &_procedural_scene_menu_visible,
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
-    draw_line_stack();
-    ImGui::PopItemWidth();
-    ImGui::End();
-
-    // ------------------------------------------------------------------------
-    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - legends_width
-                                    - 2 * menu_width - 20,
-                                0),
-        ImGuiSetCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
-    ImGui::SetNextWindowSizeConstraints(
-        ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
-    bool _chain_menu_visible = true;
-
-    ImGui::Begin("Chain", &_chain_menu_visible,
-        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
-    draw_chain_menu();
+    draw_procedural_scene_menu();
     ImGui::PopItemWidth();
     ImGui::End();
 }
@@ -376,85 +359,6 @@ void ViewerMenu::draw_edit_modes()
             load_state();
             recolor_edges();
         }
-    }
-}
-
-void ViewerMenu::draw_line_stack()
-{
-    static int num_lines = 3;
-    static double scale_displacement = 10;
-    ImGui::InputIntBounded("line count##line-stack", &num_lines, 0,
-        std::numeric_limits<int>::max(), 1, 10);
-    ImGui::InputDouble("scale disp.##line-stack", &scale_displacement);
-    if (ImGui::Button("Make Line Stack##Edit", ImVec2(-1, 0))) {
-        Eigen::MatrixX2d vertices(2 * num_lines + 2, 2);
-        Eigen::MatrixX2d displacements
-            = Eigen::MatrixX2d::Zero(2 * num_lines + 2, 2);
-        Eigen::MatrixX2i edges(num_lines + 1, 2);
-
-        vertices.row(0) << -0.05, 0.1;
-        vertices.row(1) << 0.05, 0.2;
-        displacements(0, 1) = -1;
-        displacements(1, 1) = -1;
-        displacements *= scale_displacement;
-        edges.row(0) << 0, 1;
-
-        Eigen::VectorXd ys = Eigen::VectorXd::LinSpaced(num_lines, 0, -1);
-        for (int i = 1; i < edges.rows(); i++) {
-            vertices.row(2 * i) << -1, ys(i - 1);
-            vertices.row(2 * i + 1) << 1, ys(i - 1);
-            edges.row(i) << 2 * i, 2 * i + 1;
-        }
-
-        state.vertices = vertices;
-        state.displacements = displacements;
-        state.edges = edges;
-        state.reset_scene();
-        state_history.push_back(state);
-        load_state();
-    }
-}
-
-void ViewerMenu::draw_chain_menu()
-{
-    static int num_links = 2;
-    static double scale_displacment = 10;
-    ImGui::InputIntBounded("link count##chain", &num_links, 1,
-        std::numeric_limits<int>::max(), 1, 10);
-    // ImGui::InputDouble("scale disp.##chain", &scale_displacment);
-    if (ImGui::Button("Make Chain##chain", ImVec2(-1, 0))) {
-        state.load_scene(std::string(FIXTURES_DIR) + "/chain/one-links.json");
-
-        Eigen::MatrixX2d chain_vertices
-            = state.vertices.replicate(num_links, 1);
-        Eigen::MatrixX2d chain_displacements
-            = state.displacements.replicate(num_links, 1);
-        Eigen::MatrixX2i chain_edges = state.edges.replicate(num_links, 1);
-
-        long num_vertices = state.vertices.rows(),
-             num_edges = state.edges.rows();
-        for (int i = 0; i < num_links; i++) {
-            chain_vertices.block(i * num_vertices, 0, num_vertices, 2)
-                .col(1)
-                .array()
-                -= 2 * i;
-            chain_displacements.block(i * num_vertices, 0, num_vertices, 2)
-                .col(1)
-                .array()
-                -= 0.25 * i;
-            chain_edges.block(i * num_edges, 0, num_edges, 2).array()
-                += i * num_vertices;
-        }
-
-        state.vertices = chain_vertices;
-        state.displacements = chain_displacements;
-        state.edges = chain_edges;
-
-        state.fit_scene_to_canvas();
-        state.reset_scene();
-
-        state_history.push_back(state);
-        load_state();
     }
 }
 
