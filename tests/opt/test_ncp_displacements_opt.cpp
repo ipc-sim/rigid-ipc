@@ -15,10 +15,11 @@ TEST_CASE("NCP Displacements", "[opt][NCP][NCP-Displacements]")
     ccd::State state;
 
     state.opt_method = ccd::OptimizationMethod::NCP;
-    state.ncp_solver.max_iterations= 200;
-    state.ncp_solver.convergence_tolerance  = 1E-8;
+    state.ncp_solver.max_iterations = 200;
+    state.ncp_solver.convergence_tolerance = 1E-8;
     state.ncp_solver.check_convergence = false;
     state.ncp_solver.solve_for_active_cstr = false;
+    state.opt_problem.use_mass_matrix = false;
 
     state.constraint_function = ccd::ConstraintType::VOLUME;
     state.volume_constraint.volume_epsilon = 1E-8;
@@ -68,8 +69,8 @@ TEST_CASE("NCP Displacements", "[opt][NCP][NCP-Displacements]")
     Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols,
         ", ", ", ", "", "", " << ", ";");
 
-//    std::cout << "here" << std::endl;
-//    std::cout << u_.format(CommaInitFmt) << std::endl;
-//    std::cout << expected.format(CommaInitFmt) << std::endl;
+    //    std::cout << "here" << std::endl;
+    //    std::cout << u_.format(CommaInitFmt) << std::endl;
+    //    std::cout << expected.format(CommaInitFmt) << std::endl;
     CHECK((u_ - expected).squaredNorm() < 1E-4);
 }

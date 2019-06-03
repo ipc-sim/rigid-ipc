@@ -38,7 +38,7 @@ namespace opt {
         virtual void initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk);
 
-        void detectCollisions(const Eigen::MatrixXd& Uk);
+        virtual void detectCollisions(const Eigen::MatrixXd& Uk);
 
         // Assembly of global Matrices
         // -------------------------------------------------------------------

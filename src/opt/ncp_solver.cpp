@@ -28,7 +28,6 @@ namespace opt {
             = std::make_shared<Eigen::SparseLU<Eigen::SparseMatrix<double>>>();
     }
 
-
     bool NCPSolver::solve_ncp(const Eigen::SparseMatrix<double>& f_A,
         const Eigen::VectorXd& f_b, OptimizationProblem& opt_problem,
         Eigen::VectorXd& x_opt, Eigen::VectorXd& alpha_opt)
@@ -82,9 +81,11 @@ namespace opt {
             auto eval_g = [&](const Eigen::VectorXd& y) {
                 return -problem->eval_g(y).sum();
             };
+
+            // TODO: This is sending a zero for the gradient which is not
+            // correct
             if (check_volume_increase
                 && !line_search(xi, delta_x, eval_g, gamma)) {
-                // return false; ???
             }
 
             if (keep_in_unfeasible) {
@@ -233,12 +234,11 @@ namespace opt {
             if (eq_norm < convergence_tolerance) {
                 gamma = gamma_prev;
             }
-            spdlog::trace(
-                "solver=ncp_solver step=check_convergence ||eq||^2={} passed={}",
+            spdlog::trace("solver=ncp_solver step=check_convergence "
+                          "||eq||^2={} passed={}",
                 eq_norm, eq_norm < convergence_tolerance);
         }
     }
-
 
 } // namespace opt
 } // namespace ccd

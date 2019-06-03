@@ -215,7 +215,7 @@ namespace autodiff {
      * edge-edge impact.
      *
      * @param[in] vertices            All vertices positions.
-     * @param[in] displacments        All vertices displacements.
+     * @param[in] displacements        All vertices displacements.
      * @param[in] edges               Edges as pair of vertex indices
      * @param[in] impact              Edge-edge impact
      * @param[in] edge_id             Impact assigned to each edge
@@ -308,10 +308,10 @@ namespace autodiff {
      * @param[in] Vj                  Second vertex of the impacted edge
      * @param[in] Vk                  First vertex of the impacting edge
      * @param[in] Vl                  Second vertex of the impacting edge
-     * @param[in] Ui                  First displacment of the impacted edge
-     * @param[in] Uj                  Second displacment of the impacted edge
-     * @param[in] Uk                  First displacment of the impacting edge
-     * @param[in] Ul                  Second displacment of the impacting edge
+     * @param[in] Ui                  First displacement of the impacted edge
+     * @param[in] Uj                  Second displacement of the impacted edge
+     * @param[in] Uk                  First displacement of the impacting edge
+     * @param[in] Ul                  Second displacement of the impacting edge
      * @param[in] impact_node         Which node is impacting the other edge
      * @param[in] epsilon             A number used during computation
      *                                (e.g. volume epsilon or barrier epsilon)
@@ -336,10 +336,10 @@ namespace autodiff {
      * @param[in] Vj                  Second vertex of the impacted edge
      * @param[in] Vk                  First vertex of the impacting edge
      * @param[in] Vl                  Second vertex of the impacting edge
-     * @param[in] Ui                  First displacment of the impacted edge
-     * @param[in] Uj                  Second displacment of the impacted edge
-     * @param[in] Uk                  First displacment of the impacting edge
-     * @param[in] Ul                  Second displacment of the impacting edge
+     * @param[in] Ui                  First displacement of the impacted edge
+     * @param[in] Uj                  Second displacement of the impacted edge
+     * @param[in] Uk                  First displacement of the impacting edge
+     * @param[in] Ul                  Second displacement of the impacting edge
      * @param[in] impact_node         Which node is impacting the other edge
      * @param[in] epsilon             A number used during computation
      *                                (e.g. volume epsilon or barrier epsilon)

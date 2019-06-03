@@ -53,6 +53,9 @@ namespace opt {
         hessian.clear();
         hessian.reserve(ee_impacts.size() * 2);
 
+        std::vector<Eigen::Triplet<double>> coefficients;
+        coefficients.reserve(64);
+
         for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
             int nodes[4];
             get_impact_nodes(ee_impacts[ee], nodes);
@@ -63,25 +66,28 @@ namespace opt {
             for (size_t k = 0; k < 2; k++) {
                 Matrix8d local_hessian = constraints[2 * ee + k].getHessian();
 
-                Eigen::SparseMatrix<double> global_hessian(
-                    int(vertices->size()), int(vertices->size()));
-
                 for (int i = 0; i < 4; i++) {
                     for (int j = 0; j < 4; j++) {
-                        global_hessian.coeffRef(nodes[i], nodes[j])
-                            = local_hessian(2 * i, 2 * j);
-                        global_hessian.coeffRef(
-                            nodes[i] + num_vertices, nodes[j])
-                            = local_hessian(2 * i + 1, 2 * j);
-                        global_hessian.coeffRef(
-                            nodes[i] + num_vertices, nodes[j] + num_vertices)
-                            = local_hessian(2 * i + 1, 2 * j + 1);
-                        global_hessian.coeffRef(
-                            nodes[i], nodes[j] + num_vertices)
-                            = local_hessian(2 * i, 2 * j + 1);
+                        coefficients.push_back(Eigen::Triplet<double>(
+                            nodes[i], nodes[j], local_hessian(2 * i, 2 * j)));
+                        coefficients.push_back(
+                            Eigen::Triplet<double>(nodes[i] + num_vertices,
+                                nodes[j], local_hessian(2 * i + 1, 2 * j)));
+                        coefficients.push_back(Eigen::Triplet<double>(
+                            nodes[i] + num_vertices, nodes[j] + num_vertices,
+                            local_hessian(2 * i + 1, 2 * j + 1)));
+                        coefficients.push_back(Eigen::Triplet<double>(nodes[i],
+                            nodes[j] + num_vertices,
+                            local_hessian(2 * i, 2 * j + 1)));
                     }
                 }
+
+                Eigen::SparseMatrix<double> global_hessian(
+                    int(vertices->size()), int(vertices->size()));
+                global_hessian.setFromTriplets(
+                    coefficients.begin(), coefficients.end());
                 hessian.push_back(global_hessian);
+                coefficients.clear();
             }
         }
     }

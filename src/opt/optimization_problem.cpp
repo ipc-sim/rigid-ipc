@@ -116,12 +116,15 @@ namespace opt {
     bool OptimizationProblem::are_constraints_satisfied(
         const Eigen::VectorXd& x, const double tol)
     {
+        // TODO: Move this function to the constraint
+        // return this->constraints.is_satisfied();
         Eigen::ArrayXd gx = eval_g(x).array();
         // TODO: Fix the lower and upper bounds of g for this to work again
         // return (this->g_lower.array() - 10 * tol <= gx).all()
         //     && (gx <= this->g_upper.array() + 10 * tol).all()
         //     && (this->x_lower.array() - 10 * tol <= x.array()).all()
         //     && (x.array() <= this->x_upper.array() + 10 * tol).all();
+        // TODO: This does not work for the barrier constraint
         return (-10 * tol <= gx).all()
             && (this->x_lower.array() - 10 * tol <= x.array()).all()
             && (x.array() <= this->x_upper.array() + 10 * tol).all();
@@ -206,6 +209,9 @@ namespace opt {
         this->fixed_dof.resize(this->num_vars, 1);
         this->fixed_dof.setConstant(false); // no-upper-bound
     }
+
+    void AdHocProblem::enable_line_search_mode(const Eigen::VectorXd&) {};
+    void AdHocProblem::disable_line_search_mode() {};
 
 } // namespace opt
 } // namespace ccd

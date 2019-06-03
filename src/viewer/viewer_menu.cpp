@@ -107,6 +107,23 @@ void ViewerMenu::draw_menu()
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
     draw_legends();
     ImGui::End();
+
+    // ------------------------------------------------------------------------
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            ImGui::GetIO().DisplaySize.x - legends_width - menu_width - 10, 0),
+        ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(
+        ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
+    bool _line_stack_menu_visible = true;
+
+    ImGui::Begin("Line Stack", &_line_stack_menu_visible,
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
+    draw_line_stack();
+    ImGui::PopItemWidth();
+    ImGui::End();
 }
 
 // //////////////////////////////////////////////////////////////////////////
@@ -225,25 +242,14 @@ void ViewerMenu::draw_io()
         if (ImGui::Button("Save##Scene", ImVec2((w - p) / 2.f, 0))) {
             save_scene();
         }
+        ImGui::Checkbox(
+            "convert to rigid bodies", &state.convert_to_rigid_bodies);
     }
 }
 
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 // EDIT MODE
-// //////////////////////////////////////////////////////////////////////////
-void select_connected(const int selected_point,
-    const std::vector<std::list<int>>& adjacencies,
-    std::unordered_set<int>& already_selected)
-{
-    if (already_selected.find(selected_point) != already_selected.end()) {
-        return;
-    }
-    already_selected.insert(selected_point);
-    for (int connected_point : adjacencies[selected_point]) {
-        select_connected(connected_point, adjacencies, already_selected);
-    }
-}
-
+////////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_edit_modes()
 {
     if (ImGui::CollapsingHeader("Edit Mode", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -276,60 +282,48 @@ void ViewerMenu::draw_edit_modes()
             connect_selected_vertices();
         }
 
+        if (ImGui::Button("Select All Vertices##Edit", ImVec2(-1, 0))) {
+            select_all_vertices();
+            recolor_edges();
+            recolor_displacements();
+        }
+        if (ImGui::Button("Select All Displacements##Edit", ImVec2(-1, 0))) {
+            select_all_displacements();
+            recolor_edges();
+            recolor_displacements();
+        }
+
+        if (ImGui::Button("Subdivide Edges##Edit", ImVec2(-1, 0))) {
+            subdivide_edges();
+        }
+
+        if (ImGui::Button("Smooth Vertices##Edit", ImVec2(-1, 0))) {
+            smooth_vertices();
+        }
+
         if (ImGui::Button("Remove Free Vertices##Edit", ImVec2(-1, 0))) {
-            state.remove_free_vertices();
-            state_history.push_back(state);
-            load_state();
+            if (state.remove_free_vertices()) {
+                state_history.push_back(state);
+                load_state();
+            }
         }
 
         if ((state.selected_points.size() > 0
                 || state.selected_displacements.size() > 0)
             && ImGui::Button("Select Connected##Edit", ImVec2(-1, 0))) {
-            // Build adjacency list
-            std::vector<std::list<int>> adjacencies(state.vertices.rows());
-            for (int i = 0; i < state.edges.rows(); i++) {
-                adjacencies[state.edges(i, 0)].push_back(state.edges(i, 1));
-                adjacencies[state.edges(i, 1)].push_back(state.edges(i, 0));
-            }
-
-            std::unordered_set<int> new_selection;
-            for (int selected_point : state.selected_points.size() > 0
-                    ? state.selected_points
-                    : state.selected_displacements) {
-                select_connected(selected_point, adjacencies, new_selection);
-            }
-            (state.selected_points.size() > 0 ? state.selected_points
-                                              : state.selected_displacements)
-                .assign(new_selection.begin(), new_selection.end());
-            recolor_edges();
-            recolor_displacements();
+            select_connected();
         }
 
         if (state.selected_points.size() > 0
             && ImGui::Button("Duplicate Selected##Edit", ImVec2(-1, 0))) {
-            // Duplicate selected vertices and edges that have both end-points
-            // selected
-            long num_old_vertices = state.vertices.rows();
-            Eigen::Vector2d delta_com;
-            delta_com << 0, -1;
-            state.duplicate_selected_vertices(delta_com);
-            state.selected_points.clear();
-
-            state_history.push_back(state);
-            load_state();
-
-            // Select the newly created points
-            for (long i = num_old_vertices; i < state.vertices.rows(); i++) {
-                state.selected_points.push_back(i);
-            }
-            recolor_edges();
+            duplicate_selected();
         }
     }
 
     // Menu for fixing vertex positions
     if (state.selected_points.size() > 0
         && ImGui::CollapsingHeader(
-               "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
+            "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Initial button state is all(fixed_dof(selected_points))
         bool x_fixed_originally = true, y_fixed_originally = true;
         for (int point : state.selected_points) {
@@ -343,7 +337,13 @@ void ViewerMenu::draw_edit_modes()
         if (x_fixed != x_fixed_originally) {
             for (int point : state.selected_points) {
                 state.opt_problem.fixed_dof(point) = x_fixed;
+                if (x_fixed) {
+                    state.displacements(point, 0) = 0.0;
+                }
             }
+            state_history.push_back(state);
+            load_state();
+            recolor_edges();
         }
 
         ImGui::Checkbox("fixed y position##static", &y_fixed);
@@ -351,8 +351,50 @@ void ViewerMenu::draw_edit_modes()
             for (int point : state.selected_points) {
                 state.opt_problem.fixed_dof(point + state.displacements.rows())
                     = y_fixed;
+                if (y_fixed) {
+                    state.displacements(point, 1) = 0.0;
+                }
             }
+            state_history.push_back(state);
+            load_state();
+            recolor_edges();
         }
+    }
+}
+
+void ViewerMenu::draw_line_stack()
+{
+    static int num_lines = 3;
+    static double scale_displacement = 10;
+    ImGui::InputIntBounded("line count##line-stack", &num_lines, 0,
+        std::numeric_limits<int>::max(), 1, 10);
+    ImGui::InputDouble("scale disp.##line-stack", &scale_displacement);
+    if (ImGui::Button("Make Line Stack##Edit", ImVec2(-1, 0))) {
+        Eigen::MatrixX2d vertices(2 * num_lines + 2, 2);
+        Eigen::MatrixX2d displacements
+            = Eigen::MatrixX2d::Zero(2 * num_lines + 2, 2);
+        Eigen::MatrixX2i edges(num_lines + 1, 2);
+
+        vertices.row(0) << -0.05, 0.1;
+        vertices.row(1) << 0.05, 0.2;
+        displacements(0, 1) = -1;
+        displacements(1, 1) = -1;
+        displacements *= scale_displacement;
+        edges.row(0) << 0, 1;
+
+        Eigen::VectorXd ys = Eigen::VectorXd::LinSpaced(num_lines, 0, -1);
+        for (int i = 1; i < edges.rows(); i++) {
+            vertices.row(2 * i) << -1, ys(i - 1);
+            vertices.row(2 * i + 1) << 1, ys(i - 1);
+            edges.row(i) << 2 * i, 2 * i + 1;
+        }
+
+        state.vertices = vertices;
+        state.displacements = displacements;
+        state.edges = edges;
+        state.reset_scene();
+        state_history.push_back(state);
+        load_state();
     }
 }
 
@@ -508,7 +550,7 @@ void ViewerMenu::draw_optimization_results()
             redraw_at_opt_time();
         }
         ImGui::PopItemWidth();
-        if (state.u_history.size() > 0)
+        if (state.u_history.size() > 0) {
             if (ImGui::InputIntBounded("step##opt-results",
                     &(state.current_opt_iteration), -1,
                     int(state.u_history.size() - 1), 1, 10)) {
@@ -518,12 +560,11 @@ void ViewerMenu::draw_optimization_results()
                 redraw_grad_volume(/*opt_gradient=*/true);
                 redraw_at_opt_time();
             }
-
+        }
         if (state.g_history.size() > 0)
             if (ImGui::InputInt("volume##ee_opt", &state.current_volume)) {
                 redraw_grad_volume(/*opt_gradient=*/true);
             }
-
     }
 
     // -------------------------------------------------------------------

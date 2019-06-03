@@ -18,8 +18,9 @@ ViewerMenu::ViewerMenu(std::string scene_file)
     , color_displ(0.0, 1.0, 0.0)           // #00ff00
     , color_grad(1.0, 0.5, 0.0)            // #ff8000
     , color_opt_displ(0.1875, 0.5, 0.1875) // #308030
-    , color_collision(0.0, 1.0, 1.0)        // #00ffff
+    , color_collision(0.0, 1.0, 1.0)       // #00ffff
     , color_sl(1.0, 1.0, 0.0)              // #ffff00
+    , color_com(1.0, 0.0, 1.0)             // #ff00ff
     , scene_file(scene_file)
     , last_action_message("")
     , last_action_success(true)
@@ -115,7 +116,6 @@ void ViewerMenu::load_state()
     recolor_opt_collisions();
     create_grad_volume();
     redraw_at_time();
-
 }
 
 void ViewerMenu::resize_canvas()
@@ -141,7 +141,6 @@ void ViewerMenu::compute_collisions()
         last_action_success = false;
     }
 }
-
 
 // ----------------------------------------------------------------------------------------------------------------------------
 // OPT USER ACTIONS
@@ -187,7 +186,8 @@ void ViewerMenu::save_optimization()
     return state.save_optimization(fname);
 }
 
-void ViewerMenu::post_process_optimization(){
+void ViewerMenu::post_process_optimization()
+{
     state.post_process_optimization();
 }
 

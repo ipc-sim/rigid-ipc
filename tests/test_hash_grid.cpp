@@ -8,8 +8,7 @@ using namespace opt;
 TEST_CASE("hash grid on links", "[ccd][hashgrid]")
 {
     State state;
-    state.load_scene(std::string(FIXTURES_DIR)
-        + "/sim2d_chain_link_large_displacements.json");
+    state.load_scene(std::string(FIXTURES_DIR) + "/chain/two-links.json");
 
     for (int i = 0; i < 10; i++) {
         state.displacements.setRandom();

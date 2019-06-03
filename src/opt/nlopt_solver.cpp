@@ -51,7 +51,7 @@ namespace opt {
             problem.x0.data(), problem.x0.data() + problem.x0.size());
         double minf; // The minimum objective value, upon return
 
-        // Optimize the displacments
+        // Optimize the displacements
         nlopt::result r = opt.optimize(x0, minf);
         if (verbose) {
             print_nlopt_termination_reason(opt, r);

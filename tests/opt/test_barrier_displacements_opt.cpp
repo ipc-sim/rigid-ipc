@@ -20,15 +20,14 @@ TEST_CASE("test the setup", "[opt][displacements][barrier]")
     State state;
 
     // Load the test scene
-    state.load_scene(
-        std::string(FIXTURES_DIR) + "/test_setup_falling_horizontal_edge.json");
+    state.load_scene(std::string(FIXTURES_DIR)
+        + "/tests/setup-falling-horizontal-edge.json");
     REQUIRE(state.vertices.rows() == 4);
     REQUIRE(state.displacements.rows() == 4);
     REQUIRE(state.edges.rows() == 2);
 
     state.constraint_function = GENERATE(ccd::ConstraintType::BARRIER);
-    state.getCollisionConstraint().update_collision_set
-        = GENERATE(false, true);
+    state.getCollisionConstraint().update_collision_set = GENERATE(false, true);
 
     // state.barrier_newton_solver.barrier_epsilon = 1.0;
     state.opt_method = ccd::OptimizationMethod::BARRIER_NEWTON;
@@ -94,7 +93,8 @@ TEST_CASE("test the setup", "[opt][displacements][barrier]")
 TEST_CASE("two rotating edges", "[opt][displacements][barrier]")
 {
     State state;
-    state.load_scene(std::string(FIXTURES_DIR) + "/single-falling-edge.json");
+    state.load_scene(std::string(FIXTURES_DIR)
+        + "/two-edges/falling-edge-00°-same-length.json");
 
     REQUIRE(state.vertices.rows() == 4);
     REQUIRE(state.displacements.rows() == 4);
@@ -102,8 +102,7 @@ TEST_CASE("two rotating edges", "[opt][displacements][barrier]")
 
     state.constraint_function = ccd::ConstraintType::BARRIER;
 
-    state.getCollisionConstraint().update_collision_set
-        = GENERATE(false, true);
+    state.getCollisionConstraint().update_collision_set = GENERATE(false, true);
     state.opt_method = ccd::OptimizationMethod::BARRIER_NEWTON;
 
     double theta1 = 2 * M_PI / NUM_ANGLES * GENERATE(range(0, NUM_ANGLES));
@@ -143,14 +142,12 @@ TEST_CASE("corner case", "[opt][displacements][barrier]")
 
     state.constraint_function = ccd::ConstraintType::BARRIER;
 
-    state.getCollisionConstraint().update_collision_set
-        = GENERATE(false, true);
+    state.getCollisionConstraint().update_collision_set = GENERATE(false, true);
     state.opt_method = ccd::OptimizationMethod::BARRIER_NEWTON;
 
     state.barrier_newton_solver.min_barrier_epsilon = 1e-3;
     state.barrier_newton_solver.line_search_tolerance = 1e-4;
     state.barrier_newton_solver.absolute_tolerance = 1e-3;
-
 
     state.optimize_displacements("");
     CHECK(state.opt_results.success);

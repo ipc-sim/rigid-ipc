@@ -6,6 +6,8 @@
 
 #include <autogen/time_of_impact_coeff.hpp>
 
+#include <profiler.hpp>
+
 namespace ccd {
 
 // Determine if a single edge-vertext pair intersects.
@@ -16,12 +18,14 @@ void detect_edge_vertex_collisions_narrow_phase(const Eigen::Vector2d& Vi,
     EdgeVertexImpacts& ev_impacts)
 {
     double toi, alpha;
-    bool are_colliding = compute_edge_vertex_time_of_impact(
-        Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha);
-    if (are_colliding) {
-        ev_impacts.push_back(EdgeVertexImpact(
-            toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index));
-    }
+    PROFILE(
+        bool are_colliding = compute_edge_vertex_time_of_impact(
+            Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha);
+        if (are_colliding) {
+            ev_impacts.push_back(EdgeVertexImpact(toi, ev_candidate.edge_index,
+                alpha, ev_candidate.vertex_index));
+        },
+        ProfiledPoint::DETECTING_COLLISIONS_NARROW_PHASE);
 }
 
 // Compute the time of impact of a point and edge moVing in 2D.

@@ -1,6 +1,6 @@
 /**
- * Methods for optimizing the displacments with a non-linear interference volume
- * constraint.
+ * Methods for optimizing the displacements with a non-linear interference
+ * volume constraint.
  */
 
 #pragma once
@@ -45,9 +45,9 @@ namespace opt {
 
         /// \brief eval_g evaluates constraints and jacobian at point x. Also
         /// returns list of active constraints (indices)
-        void eval_g(const Eigen::VectorXd& x,
-                    Eigen::VectorXd& gx, Eigen::SparseMatrix<double>& gx_jacobian,
-                    Eigen::VectorXi& gx_active) override;
+        void eval_g(const Eigen::VectorXd& x, Eigen::VectorXd& gx,
+            Eigen::SparseMatrix<double>& gx_jacobian,
+            Eigen::VectorXi& gx_active) override;
 
         /// \brief eval_g_and_gdiff evaluates constraints, jacobian and hessian
         /// at point x
@@ -55,9 +55,13 @@ namespace opt {
             Eigen::MatrixXd& g_uk_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
 
+        void enable_line_search_mode(const Eigen::VectorXd& max_x) override;
+        void disable_line_search_mode() override;
+
         /// \brief eval_jac_g evaluates constraints jacobian at point x
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
-        void  eval_jac_g(const Eigen::VectorXd& x, Eigen::SparseMatrix<double>& jac_gx) override;
+        void eval_jac_g(const Eigen::VectorXd& x,
+            Eigen::SparseMatrix<double>& jac_gx) override;
 
         // \brief eval_hessian_g evaluates constraints hessian at point x
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
@@ -71,9 +75,15 @@ namespace opt {
         Eigen::MatrixXd u_;
         CollisionConstraint* constraint;
         intermediate_callback intermediate_callback;
+        bool use_mass_matrix;
 
     private:
+        bool is_collision_set_frozen;
+
         void initProblem();
+
+        Eigen::SparseMatrix<double> mass_matrix;
+        void init_mass_matrix();
     };
 
 } // namespace opt

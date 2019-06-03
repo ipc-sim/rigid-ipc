@@ -76,7 +76,7 @@ set(SRCFILES
     src/logger.cpp
     src/profiler.cpp
 
-    src/rigid_bodies/rigid_bodies.cpp
+    src/rigid_bodies/rigid_body.cpp
 )
 
 set(TMPFILES
@@ -112,6 +112,7 @@ set(VIEWER_FILES
     src/viewer/viewer_crud.cpp
     src/viewer/viewer_draw.cpp
     src/viewer/viewer_menu.cpp
+    src/viewer/viewer_editor.cpp
     src/viewer/imgui_ext.cpp
     src/viewer/solver_view.cpp
     src/viewer/constraint_view.cpp

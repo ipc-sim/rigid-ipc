@@ -33,7 +33,6 @@ void solver_menu(ccd::opt::BarrierNewtonSolver& solver)
         &solver.absolute_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
     ImGui::InputDoubleBounded("tol. line_search##barrier_solver",
         &solver.line_search_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
-    ImGui::Checkbox("verbose##opt", &solver.verbose);
 }
 
 void solver_menu(ccd::opt::IpoptSolver& solver)

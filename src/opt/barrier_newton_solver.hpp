@@ -63,6 +63,9 @@ namespace opt {
             return std::vector<Eigen::SparseMatrix<double>>();
         }
 
+        void enable_line_search_mode(const Eigen::VectorXd& max_x) override;
+        void disable_line_search_mode() override;
+
         bool eval_intermediate_callback(const Eigen::VectorXd& x) override;
         OptimizationProblem* general_problem;
 
@@ -81,8 +84,6 @@ namespace opt {
         double absolute_tolerance;
         double line_search_tolerance;
         int max_iterations;
-
-        bool verbose;
     };
 
 } // namespace opt

@@ -99,6 +99,9 @@ namespace opt {
             Eigen::SparseMatrix<double>& gx_jacobian,
             Eigen::VectorXi& gx_active);
 
+        virtual void enable_line_search_mode(const Eigen::VectorXd& max_x) = 0;
+        virtual void disable_line_search_mode() = 0;
+
         virtual bool eval_intermediate_callback(const Eigen::VectorXd& x);
 
         callback_f func_f();
@@ -145,6 +148,9 @@ namespace opt {
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x) override;
+
+        void enable_line_search_mode(const Eigen::VectorXd& max_x) override;
+        void disable_line_search_mode() override;
 
         /// @brief Resize fields accordingly
         AdHocProblem(int num_vars, int num_constraints);

@@ -32,46 +32,66 @@ namespace opt {
     OptimizationResults newtons_method(OptimizationProblem& problem,
         const Eigen::VectorXi& free_dof, const double absolute_tolerance,
         const double line_search_tolerance, const int max_iter,
-        bool verbose = false, const double mu = 1e-5);
+        const double mu = 1e-5);
 
     /**
-     * @brief Search along a search direction to find a scalar \f$\gamma \in [0,
-     * 1]\f$ such that \f$f(x + \gamma \vec{dir}) \leq f(x)\f$.
+     * @brief Search along a search direction to find a scalar \f$\step_length
+     * \in [0, 1]\f$ such that \f$f(x + \step_length \vec{dir}) \leq f(x)\f$.
      *
-     * @param[in] x          Starting point for the line search.
-     * @param[in] dir        Direction to search along.
-     * @param[in] f          Function of x to minimize.
-     * @param[in] fx         The precomputed value of f(x).
-     * @param[out] gamma     Scalar coefficent of the direction to step.
-     * @param[in] min_gamma  Minimum value of gamma before the line search
-     *                       fails.
+     * @param[in] x                Starting point for the line search.
+     * @param[in] dir              Direction to search along.
+     * @param[in] f                Function of x to minimize.
+     * @param[out] step_length     Scalar coefficent of the direction to step.
+     * @param[in] min_step_length  Minimum value of step_length before the line
+     *                             search fails.
      *
      * @return True if the line search was successful, false otherwise.
      */
     bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
-        const std::function<double(const Eigen::VectorXd&)>& f, double& gamma,
-        const double min_gamma = 1e-10);
+        const std::function<double(const Eigen::VectorXd&)>& f,
+        double& step_length, const double min_step_length = 1e-10);
 
     /**
-     * @brief Search along a search direction to find a scalar \f$\gamma \in [0,
-     * 1]\f$ such that \f$f(x + \gamma \vec{dir}) \leq f(x)\f$.
+     * @brief Search along a search direction to find a scalar \f$\step_length
+     * \in [0, 1]\f$ such that \f$f(x + \step_length \vec{dir}) \leq f(x)\f$.
      *
-     * @param[in] x           Starting point for the line search.
-     * @param[in] dir         Direction to search along.
-     * @param[in] f           Function of x to minimize.
-     * @param[in] constraint  Constraint on x such that constraint(x) must be
-     *                        true.
-     * @param[out] gamma      Scalar coefficent of the direction to step.
-     * @param[in] min_gamma   Minimum value of gamma before the line search
-     *                        fails.
+     * @param[in] x                Starting point for the line search.
+     * @param[in] dir              Direction to search along.
+     * @param[in] f                Function of x to minimize.
+     * @param[in] grad_fx          The precomputed value of ∇f(x).
+     * @param[out] step_length     Scalar coefficent of the direction to step.
+     * @param[in] min_step_length  Minimum value of step_length before the line
+     *                             search fails.
+     *
+     * @return True if the line search was successful, false otherwise.
+     */
+    bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
+        const std::function<double(const Eigen::VectorXd&)>& f,
+        const Eigen::VectorXd& grad_fx, double& step_length,
+        const double min_step_length = 1e-10);
+
+    /**
+     * @brief Search along a search direction to find a scalar \f$\step_length
+     * \in [0, 1]\f$ such that \f$f(x + \step_length \vec{dir}) \leq f(x)\f$.
+     *
+     * @param[in] x                 Starting point for the line search.
+     * @param[in] dir               Direction to search along.
+     * @param[in] f                 Function of x to minimize.
+     * @param[in] grad_fx          The precomputed value of ∇f(x).
+     * @param[in] constraint        Constraint on x such that constraint(x) must
+     *                              be true.
+     * @param[out] step_length      Scalar coefficent of the direction to step.
+     * @param[in] min_step_length   Minimum value of step_length before the line
+     * search fails.
      *
      * @return True if the line search was successful, false otherwise.
      */
     bool constrained_line_search(const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const std::function<double(const Eigen::VectorXd&)>& f,
+        const Eigen::VectorXd& grad_fx,
         const std::function<bool(const Eigen::VectorXd&)>& constraint,
-        double& gamma, const double min_gamma = 1e-10);
+        double& step_length, const double min_step_length = 1e-10);
 
 } // namespace opt
 } // namespace ccd

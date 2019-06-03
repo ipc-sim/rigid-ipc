@@ -10,14 +10,12 @@ void collision_constraint_menu(ccd::opt::CollisionConstraint& cstr)
     ImGui::Checkbox("extend col. set##opt", &(cstr.extend_collision_set));
 
     int idx_detection_method = cstr.detection_method;
-
     if (ImGui::Combo("method##ccd", &idx_detection_method,
             ccd::DetectionMethodNames,
             CCD_IM_ARRAYSIZE(ccd::DetectionMethodNames))) {
         cstr.detection_method
             = static_cast<ccd::DetectionMethod>(idx_detection_method);
     }
-
 }
 
 void volume_constraint_menu(ccd::opt::VolumeConstraint& cstr)
