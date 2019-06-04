@@ -116,12 +116,12 @@ void ViewerMenu::draw_menu()
     ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(
         ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
-    bool _line_stack_menu_visible = true;
+    bool _procedural_scene_menu_visible = true;
 
-    ImGui::Begin("Line Stack", &_line_stack_menu_visible,
+    ImGui::Begin("Procedural Scene", &_procedural_scene_menu_visible,
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
-    draw_line_stack();
+    draw_procedural_scene_menu();
     ImGui::PopItemWidth();
     ImGui::End();
 }
@@ -359,42 +359,6 @@ void ViewerMenu::draw_edit_modes()
             load_state();
             recolor_edges();
         }
-    }
-}
-
-void ViewerMenu::draw_line_stack()
-{
-    static int num_lines = 3;
-    static double scale_displacement = 10;
-    ImGui::InputIntBounded("line count##line-stack", &num_lines, 0,
-        std::numeric_limits<int>::max(), 1, 10);
-    ImGui::InputDouble("scale disp.##line-stack", &scale_displacement);
-    if (ImGui::Button("Make Line Stack##Edit", ImVec2(-1, 0))) {
-        Eigen::MatrixX2d vertices(2 * num_lines + 2, 2);
-        Eigen::MatrixX2d displacements
-            = Eigen::MatrixX2d::Zero(2 * num_lines + 2, 2);
-        Eigen::MatrixX2i edges(num_lines + 1, 2);
-
-        vertices.row(0) << -0.05, 0.1;
-        vertices.row(1) << 0.05, 0.2;
-        displacements(0, 1) = -1;
-        displacements(1, 1) = -1;
-        displacements *= scale_displacement;
-        edges.row(0) << 0, 1;
-
-        Eigen::VectorXd ys = Eigen::VectorXd::LinSpaced(num_lines, 0, -1);
-        for (int i = 1; i < edges.rows(); i++) {
-            vertices.row(2 * i) << -1, ys(i - 1);
-            vertices.row(2 * i + 1) << 1, ys(i - 1);
-            edges.row(i) << 2 * i, 2 * i + 1;
-        }
-
-        state.vertices = vertices;
-        state.displacements = displacements;
-        state.edges = edges;
-        state.reset_scene();
-        state_history.push_back(state);
-        load_state();
     }
 }
 

@@ -116,6 +116,7 @@ set(VIEWER_FILES
     src/viewer/imgui_ext.cpp
     src/viewer/solver_view.cpp
     src/viewer/constraint_view.cpp
+    src/viewer/procedural_scenes.cpp
 
     src/main.cpp
     )

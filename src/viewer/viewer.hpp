@@ -24,6 +24,9 @@ static const std::array<ViewerEditMode, 3> ViewerEditModeAll
 static const std::array<std::string, 3> ViewerEditModeNames
     = { { "Select", "Translate", "Add Node" } };
 
+enum ProceduralScene { LINE_STACK, CHAIN };
+static const char* ProceduralSceneNames[] = { "Line Stack", "Chain" };
+
 class ViewerMenu : public igl::opengl::glfw::imgui::ImGuiMenu {
 private:
     typedef igl::opengl::glfw::imgui::ImGuiMenu Super;
@@ -107,12 +110,18 @@ public:
     // menu windows
     void draw_io();
     void draw_edit_modes();
-    void draw_line_stack();
     void draw_ccd_steps();
     void draw_legends();
     void draw_collision_menu();
     void draw_optimization();
     void draw_optimization_results();
+
+    // Procedural scenes
+    void draw_procedural_scene_menu();
+    void create_line_stack_scene(int num_lines, double displacment_scale);
+    void draw_line_stack();
+    void create_chain_scene(int num_links);
+    void draw_chain_menu();
 
     State state;
     std::vector<State> state_history;
