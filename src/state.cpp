@@ -25,7 +25,7 @@
 namespace ccd {
 
 State::State()
-    : convert_to_rigid_bodies(false)
+    : is_rigid_bodies_mode(false)
     , output_dir(DATA_OUTPUT_DIR)
     , opt_method(OptimizationMethod::BARRIER_NEWTON)
     , constraint_function(ConstraintType::BARRIER)
@@ -54,7 +54,7 @@ State::State()
 void State::load_scene(std::string filename)
 {
     io::read_scene(filename, vertices, edges, displacements);
-    if (convert_to_rigid_bodies) {
+    if (is_rigid_bodies_mode) {
         convert_connected_components_to_rigid_bodies();
     }
     fit_scene_to_canvas();
@@ -599,6 +599,52 @@ void State::find_connected_vertices(const long& vertex_id,
     }
 }
 
+void State::update_displacements_from_rigid_bodies()
+{
+    displacements = Eigen::MatrixX2d();
+    for (const auto& rigid_body : rigid_bodies) {
+        displacements.conservativeResize(
+            displacements.rows() + rigid_body.vertices.rows(), 2);
+        displacements.bottomRows(rigid_body.vertices.rows())
+            = rigid_body.compute_particle_displacements();
+    }
+}
+
+void State::update_fields_from_rigid_bodies()
+{
+    vertices = Eigen::MatrixX2d();
+    edges = Eigen::MatrixX2i();
+
+    vertex_to_body = Eigen::VectorXi();
+    body_to_vertex_start = Eigen::VectorXi(long(rigid_bodies.size()));
+    body_to_edge_start = Eigen::VectorXi(long(rigid_bodies.size()));
+
+    int body_id = 0;
+    for (const auto& rigid_body : rigid_bodies) {
+        long prev_vertex_count = vertices.rows();
+        long prev_edge_count = edges.rows();
+        vertices.conservativeResize(
+            prev_vertex_count + rigid_body.vertices.rows(), 2);
+        edges.conservativeResize(prev_edge_count + rigid_body.edges.rows(), 2);
+        vertex_to_body.conservativeResize(
+            prev_vertex_count + rigid_body.vertices.rows());
+
+        vertices.bottomRows(rigid_body.vertices.rows()) = rigid_body.vertices;
+        edges.bottomRows(rigid_body.edges.rows()) = rigid_body.edges;
+        edges.bottomRows(rigid_body.edges.rows()).array() += int(prev_vertex_count);
+
+        vertex_to_body.bottomRows(rigid_body.vertices.rows())
+            .setConstant(body_id);
+        body_to_vertex_start(body_id) = int(prev_vertex_count);
+        body_to_edge_start(body_id) = int(prev_edge_count);
+        body_id++;
+    }
+
+    update_displacements_from_rigid_bodies();
+
+    reset_scene();
+}
+
 void State::convert_connected_components_to_rigid_bodies()
 {
     auto adjacency_list = create_adjacency_list();
@@ -642,8 +688,8 @@ void State::convert_connected_components_to_rigid_bodies()
             igl::slice(vertices, R, Eigen::VectorXi::LinSpaced(2, 0, 1),
                 body_vertices);
 
-            rigid_bodies.push_back(RigidBody(
-                body_vertices, body_edges, Eigen::Vector3d(0, 0, 3.14 / 4)));
+            rigid_bodies.push_back(
+                RigidBody(body_vertices, body_edges, Eigen::Vector3d(0, 0, 0)));
 
             for (const auto& vertex_id : ordered_connected_vertices) {
                 is_part_of_body(vertex_id) = true;
@@ -652,26 +698,7 @@ void State::convert_connected_components_to_rigid_bodies()
         }
     }
 
-    vertices = Eigen::MatrixX2d();
-    displacements = Eigen::MatrixX2d();
-    edges = Eigen::MatrixX2i();
-    for (const auto& rigid_body : rigid_bodies) {
-        long prev_vertex_count = vertices.rows();
-        vertices.conservativeResize(
-            vertices.rows() + rigid_body.vertices.rows(), 2);
-        displacements.conservativeResize(
-            displacements.rows() + rigid_body.vertices.rows(), 2);
-        edges.conservativeResize(edges.rows() + rigid_body.edges.rows(), 2);
-        vertices.bottomRows(rigid_body.vertices.rows()) = rigid_body.vertices;
-        Eigen::MatrixX2d body_displacements;
-        rigid_body.compute_particle_displacements(body_displacements);
-        displacements.bottomRows(rigid_body.vertices.rows())
-            = body_displacements;
-        edges.bottomRows(rigid_body.edges.rows()) = rigid_body.edges;
-        edges.bottomRows(rigid_body.edges.rows()).array() += prev_vertex_count;
-    }
-
-    reset_scene();
+    update_fields_from_rigid_bodies();
 }
 
 std::vector<long> State::get_opt_collision_edges()

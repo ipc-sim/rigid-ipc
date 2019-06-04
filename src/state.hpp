@@ -57,7 +57,13 @@ public:
 
     /// @brief Rigid bodies to get displacements
     std::vector<RigidBody> rigid_bodies;
-    bool convert_to_rigid_bodies;
+    bool is_rigid_bodies_mode;
+    /// @brief Each element is the body index to which the vertex belongs
+    Eigen::VectorXi vertex_to_body;
+    /// @brief Each element is the starting index in the vertices of the body
+    Eigen::VectorXi body_to_vertex_start;
+    /// @brief Each element is the starting index in the edges of the body
+    Eigen::VectorXi body_to_edge_start;
 
     /// @brief The current number of pruned impacts
     int num_pruned_impacts;
@@ -200,7 +206,10 @@ public:
     void find_connected_vertices(const long& vertex_id,
         const std::vector<std::vector<int>>& adjacency_list,
         std::unordered_set<int>& connected_vertices);
+
     void convert_connected_components_to_rigid_bodies();
+    void update_fields_from_rigid_bodies();
+    void update_displacements_from_rigid_bodies();
 };
 
 } // namespace ccd
