@@ -110,6 +110,7 @@ public:
     // menu windows
     void draw_io();
     void draw_edit_modes();
+    void draw_rigid_body_options();
     void draw_ccd_steps();
     void draw_legends();
     void draw_collision_menu();
