@@ -33,6 +33,7 @@ Eigen::MatrixX2d RigidBody::compute_particle_displacements() const
         * Eigen::Rotation2Dd(velocity(2))
         * Eigen::Translation2d(-center_of_mass.x(), -center_of_mass.y()))
                             .matrix();
+
     // V' = V + U = V * T^T
     Eigen::MatrixX2d transformed_vertices
         = (vertices.rowwise().homogeneous() * T.transpose())
@@ -181,4 +182,5 @@ RigidBody::compute_particle_displacements_hessian() const
     hessian[2].push_back(transform_vertices(gradθ_gradθ_T));
 
     return hessian;
+
 }

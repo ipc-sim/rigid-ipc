@@ -29,6 +29,8 @@ add_executable(unit_tests
 
     # opt/test_displacements_opt.cpp  # This file does not work yet
     opt/test_barrier_displacements_opt.cpp
+    rigid_body/test_rigid_body.cpp
+
 )
 
 target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)
