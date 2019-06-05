@@ -5,27 +5,6 @@ A project for robustly resolving collisions with a guarantee of no interpenetrat
 * [Google Doc](https://docs.google.com/document/d/13MetSJoTTZ0ptT0SERbst1SgG-KbgK48hozhko6mJxc/edit?usp=sharing)
 * [LaTeX Write-up](https://www.overleaf.com/6555952782nttqwfwgksjb)
 
-## TODO
-
-* [x] Have one constraint per collision instead of per edge
-* [ ] Line-search over each degree of freedom independently
-    * [ ] Replace &gamma;, a scalar multiplier, with &Gamma;, a diagonal matrix multiplier.
-* [ ] Update CCD to find all impacts where the time of impact is greater than or equal to t<sub>0</sub> not bounded by ≤ t<sub>1</sub>
-    * The time of impact is recomputed every time we compute the constraints anyways
-* [x] Refactor OptimizationProblem
-    * [x] Compute **objective** value, gradient, and hessian in one function
-    * [x] Compute **constraint** value, gradient, and hessian in one function
-* [x] Add static objects (displacement is fixed to zero)
-    * [x] Remove the variables from the optimization
-* [ ] Add rigid bodies by limiting the degrees of freedom to one rotation and position per body. Solve the optimization on these variables.
-    * [x] Implement transformation from rigid motion to point-wise linear trajectories per time-step
-* [ ] Add physics
-    * [ ] Replace our objective with a more physically based one
-    * [ ] Simple model (gravity, no friction, etc.)
-    * [ ] Friction model
-* [ ] Add minimum separation distance
-   * Is it possible to solve a degree-six polynomial with autodiff?
-
 ## Compilation
 
 To build the project, use the following commands from the root directory of the project.
