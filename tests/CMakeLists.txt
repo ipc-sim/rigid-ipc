@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 ################################################################################
 
-set(test_sources
+add_executable(unit_tests
     main.cpp
 
     # Test CCD
@@ -29,17 +29,13 @@ set(test_sources
 
     # opt/test_displacements_opt.cpp  # This file does not work yet
     opt/test_barrier_displacements_opt.cpp
-
 )
 
-add_executable(unit_tests ${test_sources})
-target_include_directories(unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)
 
 foreach(source IN ITEMS ${test_sources})
    source_group("tests" FILES "${source}")
 endforeach()
-
-target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} catch warnings::all)
 
 # Register tests
 set(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS ON)

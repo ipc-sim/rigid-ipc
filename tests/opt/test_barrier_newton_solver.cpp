@@ -1,8 +1,10 @@
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <autodiff/finitediff.hpp>
 #include <opt/barrier_newton_solver.hpp>
 #include <opt/newtons_method.hpp>
+
+#include <cmath>
 
 using namespace ccd;
 using namespace opt;
@@ -53,7 +55,7 @@ TEST_CASE("Check barrier problem derivatives")
     // If the function evaluates to infinity then the finite differences will
     // not work. I assume in the definition of the barrier gradient that
     // d/dx ∞ = 0.
-    if (!isinf(barrier_problem.eval_f(x))) {
+    if (!std::isinf(barrier_problem.eval_f(x))) {
         // Use a higher order finite difference method because the function near
         // the boundary becomes very non-linear. This problem worsens as the ϵ
         // of the boundary gets smaller.

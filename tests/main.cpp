@@ -5,7 +5,7 @@
 // Catch2 Documentation: https://github.com/catchorg/Catch2/tree/master/docs
 
 #define CATCH_CONFIG_RUNNER
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 
 #include <spdlog/spdlog.h>
 

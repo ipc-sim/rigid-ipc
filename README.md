@@ -113,6 +113,6 @@ Catch2 is used for unit tests. Catch2 is not required to make the project, but i
 
 #### libigl
 
-Libigl must be **installed manually** (more information on downloading and compiling libigl can be found here https://libigl.github.io/).
+Libigl is **automatically downloaded** through CMake.
 
 Libigl is used for the viewer and for calling MOSEK's QP. Libigl is **required** to make the project.
