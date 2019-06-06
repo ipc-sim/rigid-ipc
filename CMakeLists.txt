@@ -9,12 +9,13 @@ option(LIBIGL_WITH_OPENGL_GLFW          "Use GLFW"           ON)
 option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"          ON)
 
 # project-options
-option(BUILD_UNIT_TESTS                 "Build unit-tests"      ON)
-option(BUILD_SCRIPTS                    "Build scripts"         ON)
-option(ENABLE_DERIVATIVE_CHECK          "Check Derivatives"     ON)
-option(ENABLE_IPOPT                     "Enable Ipopt Library"  ON)
-option(ENABLE_OSQP                      "Enable OSQP Library"   ON)
-option(ENABLE_MOSEK                     "Enable Mosek Library"  OFF)
+option(BUILD_UNIT_TESTS         "Build unit-tests"     ON)
+option(BUILD_SCRIPTS            "Build scripts"        ON)
+option(ENABLE_DERIVATIVE_CHECK  "Check Derivatives"    ON)
+option(ENABLE_IPOPT             "Enable Ipopt Library" ON)
+option(ENABLE_OSQP              "Enable OSQP Library"  ON)
+option(ENABLE_MOSEK             "Enable Mosek Library" OFF)
+option(CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
 
 ################################################################################
 
@@ -182,7 +183,7 @@ endif()
 ################################################################################
 
 if(CODE_COVERAGE)
-    message("Building with code coverage")
+    message(STATUS "Building with code coverage")
     include(CodeCoverage)
     add_code_coverage_all_targets()
 
@@ -201,10 +202,6 @@ if(BUILD_UNIT_TESTS)
     include(CTest)
     enable_testing()
     add_subdirectory(tests)
-
-    if(CODE_COVERAGE)
-        target_code_coverage(unit_tests AUTO ALL)
-    endif()
 endif()
 
 ################################################################################

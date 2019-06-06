@@ -37,7 +37,7 @@ if(ENABLE_OSQP)
         # Make sure the right types are used
         set(DFLOAT OFF CACHE BOOL "Use float numbers instead of doubles"   FORCE)
         set(DLONG  OFF CACHE BOOL "Use long integers (64bit) for indexing" FORCE)
-        add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/osqp)
+        add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/osqp EXCLUDE_FROM_ALL)
         add_library(osqp::osqp ALIAS osqpstatic)
     endif()
 endif()
