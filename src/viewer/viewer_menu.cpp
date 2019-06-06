@@ -9,6 +9,9 @@
 #include <viewer/imgui_ext.hpp>
 #include <viewer/solver_view.hpp>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 namespace ccd {
 
 /**
@@ -73,6 +76,10 @@ void ViewerMenu::draw_menu()
     ImGui::Separator();
     ImGui::Separator();
     draw_edit_modes();
+
+    ImGui::Separator();
+    ImGui::Separator();
+    draw_rigid_body_options();
     ImGui::PopItemWidth();
     ImGui::End();
 
@@ -242,8 +249,16 @@ void ViewerMenu::draw_io()
         if (ImGui::Button("Save##Scene", ImVec2((w - p) / 2.f, 0))) {
             save_scene();
         }
-        ImGui::Checkbox(
-            "convert to rigid bodies", &state.convert_to_rigid_bodies);
+        if (ImGui::Checkbox(
+                "convert to rigid bodies", &state.is_rigid_bodies_mode)) {
+            if (state.is_rigid_bodies_mode) {
+                state.convert_connected_components_to_rigid_bodies();
+            } else {
+                state.rigid_bodies.clear();
+            }
+            state_history.push_back(state);
+            load_state();
+        }
     }
 }
 
@@ -255,6 +270,7 @@ void ViewerMenu::draw_edit_modes()
     if (ImGui::CollapsingHeader("Edit Mode", ImGuiTreeNodeFlags_DefaultOpen)) {
         float w = ImGui::GetContentRegionAvailWidth();
         float p = ImGui::GetStyle().FramePadding.x;
+        float half = (w - p) / 2.f;
 
         for (uint i = 0; i < ViewerEditModeAll.size(); ++i) {
             bool needs_pop = false;
@@ -264,7 +280,7 @@ void ViewerMenu::draw_edit_modes()
             }
             char buf[100];
             sprintf(buf, "%s##Edit", ViewerEditModeNames[i].c_str());
-            if (ImGui::Button(buf, ImVec2((w - p) / 2.f, 0))) {
+            if (ImGui::Button(buf, ImVec2(half, 0))) {
                 if (edit_mode == ViewerEditModeAll[i]) {
                     edit_mode = none;
                 } else {
@@ -282,22 +298,23 @@ void ViewerMenu::draw_edit_modes()
             connect_selected_vertices();
         }
 
-        if (ImGui::Button("Select All Vertices##Edit", ImVec2(-1, 0))) {
+        if (ImGui::Button("Select All Vert.##Edit", ImVec2(half, 0))) {
             select_all_vertices();
             recolor_edges();
             recolor_displacements();
         }
-        if (ImGui::Button("Select All Displacements##Edit", ImVec2(-1, 0))) {
+        ImGui::SameLine(0, p);
+        if (ImGui::Button("Select All Disp.##Edit", ImVec2(half, 0))) {
             select_all_displacements();
             recolor_edges();
             recolor_displacements();
         }
 
-        if (ImGui::Button("Subdivide Edges##Edit", ImVec2(-1, 0))) {
+        if (ImGui::Button("Subdivide Edges##Edit", ImVec2(half, 0))) {
             subdivide_edges();
         }
-
-        if (ImGui::Button("Smooth Vertices##Edit", ImVec2(-1, 0))) {
+        ImGui::SameLine(0, p);
+        if (ImGui::Button("Smooth Vertices##Edit", ImVec2(half, 0))) {
             smooth_vertices();
         }
 
@@ -310,7 +327,8 @@ void ViewerMenu::draw_edit_modes()
 
         if ((state.selected_points.size() > 0
                 || state.selected_displacements.size() > 0)
-            && ImGui::Button("Select Connected##Edit", ImVec2(-1, 0))) {
+            && (state.is_rigid_bodies_mode
+                || ImGui::Button("Select Connected##Edit", ImVec2(-1, 0)))) {
             select_connected();
         }
 
@@ -358,6 +376,42 @@ void ViewerMenu::draw_edit_modes()
             state_history.push_back(state);
             load_state();
             recolor_edges();
+        }
+    }
+}
+
+void ViewerMenu::draw_rigid_body_options()
+{
+    if (state.is_rigid_bodies_mode
+        && ImGui::CollapsingHeader(
+            "Rigid Bodies##rigid-bodies", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (state.selected_points.size() > 0) {
+            std::set<int> selected_body_ids;
+            for (const auto& selected_point : state.selected_points) {
+                selected_body_ids.insert(state.vertex_to_body(selected_point));
+            }
+            Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
+            for (const auto& body_id : selected_body_ids) {
+                velocity += state.rigid_bodies[body_id].velocity;
+            }
+            velocity /= selected_body_ids.size();
+            velocity(2) /= M_PI / 180.0;
+
+            bool velocity_x_changed
+                = ImGui::InputDouble("x vel.##rigid-bodies", &velocity(0));
+            bool velocity_y_changed
+                = ImGui::InputDouble("y vel.##rigid-bodies", &velocity(1));
+            bool rotation_changed
+                = ImGui::InputDouble("rotation##rigid-bodies", &velocity(2));
+            if (velocity_x_changed || velocity_y_changed || rotation_changed) {
+                velocity(2) *= M_PI / 180.0;
+                for (const auto& body_id : selected_body_ids) {
+                    state.rigid_bodies[body_id].velocity = velocity;
+                }
+                state.update_displacements_from_rigid_bodies();
+                state_history.push_back(state);
+                load_state();
+            }
         }
     }
 }
