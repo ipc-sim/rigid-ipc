@@ -6,30 +6,28 @@ add_executable(unit_tests
 
     # Test CCD
     collision_generator.cpp
-    test_ccd.cpp
-    test_impact_pruning.cpp
-    test_collision_volume.cpp
-    test_time_of_impact.cpp
-    test_hash_grid.cpp
+    ccd/test_ccd.cpp
+    ccd/test_impact_pruning.cpp
+    ccd/test_time_of_impact.cpp
+    ccd/test_hash_grid.cpp
 
     # Test libarary integration
     integration/test_nlopt.cpp
     integration/test_osqp.cpp
     integration/test_mosek.cpp
 
-    opt/test_ipopt_solver.cpp
-    opt/test_ncp.cpp
-    opt/test_ncp_displacements_opt.cpp
-    opt/test_newton_solver.cpp
-    opt/test_barriers.cpp
-    opt/test_barrier_newton_solver.cpp
+    solvers/test_ipopt_solver.cpp
+    solvers/test_ncp.cpp
+    solvers/test_ncp_displacements_opt.cpp
+    solvers/test_newton_solver.cpp
+    solvers/test_barrier_newton_solver.cpp
+    solvers/test_barrier_displacements_opt.cpp
 
+    opt/test_barriers.cpp
     opt/test_volume_constraint.cpp
     opt/test_barrier_constraint.cpp
 
-    # opt/test_displacements_opt.cpp  # This file does not work yet
-    opt/test_barrier_displacements_opt.cpp
-    rigid_body/test_rigid_body.cpp
+    physics/test_rigid_body.cpp
 
 )
 

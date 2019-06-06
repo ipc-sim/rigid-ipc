@@ -8,19 +8,19 @@
 #include <ccd/impact.hpp>
 #include <ccd/prune_impacts.hpp>
 
-#include <opt/barrier_newton_solver.hpp>
-#include <opt/ipopt_solver.hpp>
-#include <opt/ncp_solver.hpp>
-#include <opt/nlopt_solver.hpp>
-#include <opt/optimization_solver.hpp>
-#include <opt/qp_solver.hpp>
+#include <solvers/barrier_newton_solver.hpp>
+#include <solvers/ipopt_solver.hpp>
+#include <solvers/ncp_solver.hpp>
+#include <solvers/nlopt_solver.hpp>
+#include <solvers/optimization_solver.hpp>
+#include <solvers/qp_solver.hpp>
 
 #include <opt/barrier_constraint.hpp>
 #include <opt/collision_constraint.hpp>
 #include <opt/particles_problem.hpp>
 #include <opt/volume_constraint.hpp>
 
-#include <rigid_bodies/rigid_body.hpp>
+#include <physics/rigid_body_system.hpp>
 
 namespace ccd {
 
@@ -55,9 +55,7 @@ public:
     /// @brief #V,2 vertices displacements
     Eigen::MatrixX2d displacements;
 
-    /// @brief Rigid bodies to get displacements
-
-    std::vector<ccd::opt::RigidBody> rigid_bodies;
+    ccd::physics::RigidBodySystem rigid_body_system;
     bool is_rigid_bodies_mode;
 
     /// @brief The current number of pruned impacts
@@ -204,7 +202,7 @@ public:
 
     void convert_connected_components_to_rigid_bodies();
     void update_fields_from_rigid_bodies();
-    void update_displacements_from_rigid_bodies();
+
 };
 
 } // namespace ccd

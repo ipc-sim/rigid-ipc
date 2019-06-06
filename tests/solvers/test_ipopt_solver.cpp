@@ -5,7 +5,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <opt/ipopt_solver.hpp>
+#include <solvers/ipopt_solver.hpp>
 
 // ---------------------------------------------------
 // Tests

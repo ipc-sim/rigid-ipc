@@ -3,10 +3,11 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
-#include <opt/lcp_solver.hpp>
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
-#include <opt/optimization_solver.hpp>
+
+#include <solvers/lcp_solver.hpp>
+#include <solvers/optimization_solver.hpp>
 
 #include <memory>
 
@@ -84,7 +85,6 @@ namespace opt {
         Eigen::VectorXd xi;
         Eigen::VectorXd alpha_i;
     };
-
 
 } // namespace opt
 } // namespace ccd

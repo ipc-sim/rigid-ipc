@@ -5,8 +5,8 @@
 #include <igl/slice.h>
 #include <igl/slice_into.h>
 
-#include <opt/lcp_solver.hpp>
-#include <opt/newtons_method.hpp> //> line search
+#include <solvers/lcp_solver.hpp>
+#include <solvers/newtons_method.hpp> //> line search
 
 #include <logger.hpp>
 

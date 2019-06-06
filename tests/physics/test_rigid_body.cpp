@@ -5,7 +5,7 @@
 
 #include <igl/PI.h>
 
-#include <rigid_bodies/rigid_body.hpp>
+#include <physics/rigid_body_system.hpp>
 
 // ---------------------------------------------------
 // Tests
@@ -41,11 +41,10 @@ TEST_CASE("Rigid Body Transform", "[RB][RB-transform]")
         expected << 1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, -1.0;
         expected += velocity.segment(0, 2).transpose().replicate(4, 1);
     }
-    using namespace ccd::opt;
+    using namespace ccd::physics;
 
-    auto rb = RigidBody(vertices, edges, velocity);
-    Eigen::MatrixXd actual;
-    rb.compute_particle_displacements(actual);
+    auto rb = RigidBody::Centered(vertices, edges, velocity);
+    Eigen::MatrixXd actual = rb.world_displacements();
     CHECK((expected - actual).squaredNorm() < 1E-6);
 
 

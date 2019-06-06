@@ -8,11 +8,12 @@
 #include <Eigen/Core>
 
 #include <ccd/collision_detection.hpp>
+
 #include <opt/collision_constraint.hpp>
-#include <opt/ncp_solver.hpp>
 #include <opt/optimization_problem.hpp>
-#include <opt/optimization_solver.hpp>
 #include <opt/volume_constraint.hpp>
+
+#include <solvers/optimization_solver.hpp>
 
 namespace ccd {
 

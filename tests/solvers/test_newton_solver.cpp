@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <opt/newtons_method.hpp>
+#include <solvers/newtons_method.hpp>
 
 using namespace ccd;
 using namespace opt;

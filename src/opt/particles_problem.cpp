@@ -6,14 +6,11 @@
 
 #include <nlohmann/json.hpp>
 
-#include <ccd/collision_volume.hpp>
-#include <ccd/collision_volume_diff.hpp>
 #include <ccd/not_implemented_error.hpp>
 
 #include <autodiff/finitediff.hpp>
 
 #include <logger.hpp>
-
 #include <profiler.hpp>
 
 namespace ccd {

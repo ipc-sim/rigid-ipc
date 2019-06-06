@@ -6,7 +6,7 @@
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/opengl/glfw/imgui/ImGuiMenu.h>
 
-#include <opt/qp_solver.hpp>
+#include <solvers/qp_solver.hpp>
 
 #include "state.hpp"
 

@@ -1,10 +1,10 @@
 // Solve the optimization general_problem using Newton's Method with barriers
 // for the constraints.
 
-#include <opt/barrier_newton_solver.hpp>
+#include <solvers/barrier_newton_solver.hpp>
 
+#include <solvers/newtons_method.hpp>
 #include <opt/barrier.hpp>
-#include <opt/newtons_method.hpp>
 
 #include <logger.hpp>
 #include <profiler.hpp>
@@ -63,9 +63,8 @@ namespace opt {
             + barrier_gradient(x - general_problem->x_lower)
             - barrier_gradient(-x + general_problem->x_upper);
 
-        PROFILE(
-            for (const auto& ddgx_i
-                 : ddgx) { f_uk_hessian += ddgx_i; },
+        PROFILE(for (const auto& ddgx_i
+                     : ddgx) { f_uk_hessian += ddgx_i; },
             ProfiledPoint::SUMMING_HESSIAN)
     }
 
@@ -177,9 +176,8 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> ddgx
             = general_problem->eval_hessian_g(x);
 
-        PROFILE(
-            for (const auto& ddgx_i
-                 : ddgx) { hessian += ddgx_i; },
+        PROFILE(for (const auto& ddgx_i
+                     : ddgx) { hessian += ddgx_i; },
             ProfiledPoint::SUMMING_HESSIAN)
 
         // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
