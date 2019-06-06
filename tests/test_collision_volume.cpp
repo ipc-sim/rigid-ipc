@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <autodiff/finitediff.hpp>
 #include <autogen/collision_volume.hpp>

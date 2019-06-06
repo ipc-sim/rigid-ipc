@@ -19,7 +19,7 @@ namespace ccd {
 namespace opt {
 
     typedef std::function<bool(const Eigen::VectorXd&, const Eigen::MatrixX2d&)>
-        intermediate_callback;
+        intermediate_callback_func;
 
     class ParticlesDisplProblem : public OptimizationProblem {
     public:
@@ -74,7 +74,7 @@ namespace opt {
         Eigen::MatrixX2d displacements;
         Eigen::MatrixXd u_;
         CollisionConstraint* constraint;
-        intermediate_callback intermediate_callback;
+        intermediate_callback_func intermediate_callback;
         bool use_mass_matrix;
 
     private:

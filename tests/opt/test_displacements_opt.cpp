@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include <Eigen/Core>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <nlopt.hpp>
 
 #include <opt/displacement_opt.hpp>

@@ -4,7 +4,8 @@
 #include <memory>
 
 #include <Eigen/Core>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
+
 namespace ccd {
 namespace unittests {
 

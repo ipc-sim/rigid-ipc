@@ -3,7 +3,7 @@
 #include <random>
 
 #include <Eigen/Core>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <nlopt.hpp>
 
 /**

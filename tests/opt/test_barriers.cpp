@@ -1,5 +1,5 @@
 #include <Eigen/Core>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <autodiff/finitediff.hpp>
 #include <opt/barrier.hpp>

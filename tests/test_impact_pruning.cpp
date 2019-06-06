@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stdlib.h> /* srand, rand */
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <ccd/impact.hpp>
 #include <ccd/prune_impacts.hpp>

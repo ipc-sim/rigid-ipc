@@ -8,6 +8,8 @@
 #include <opt/optimization_results.hpp>
 #include <opt/optimization_solver.hpp>
 
+#include <memory>
+
 namespace ccd {
 namespace opt {
 

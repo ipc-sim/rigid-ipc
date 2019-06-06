@@ -22,12 +22,14 @@ namespace opt {
             success
                 = lcp_gauss_seidel(gxi, jac_gxi, tilde_jac_gxi, tilde_b, alpha);
             break;
+#if BUILD_WITH_MOSEK
         case LCP_MOSEK:
             //  s = jac_gxi * (tilde_jac_gxi * alpha + tilde_b) + gx
             //  s = jac_gxi * tilde_jac_gxi * alpha + (jac_gxi* tilde_b + gxi)
             success = lcp_mosek(
                 jac_gxi * tilde_jac_gxi, jac_gxi * tilde_b + gxi, alpha);
             break;
+#endif
         }
 
         Eigen::VectorXd s = jac_gxi * (tilde_jac_gxi * alpha + tilde_b) + gxi;
@@ -117,6 +119,7 @@ namespace opt {
         return true;
     }
 
+#if BUILD_WITH_MOSEK
     bool lcp_mosek(
         const Eigen::MatrixXd& M, const Eigen::VectorXd& q, Eigen::VectorXd& x)
     {
@@ -153,6 +156,7 @@ namespace opt {
 
         return success;
     }
+#endif
 
 } // namespace opt
 } // namespace ccd

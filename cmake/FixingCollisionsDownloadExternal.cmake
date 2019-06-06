@@ -21,12 +21,11 @@ endfunction()
 
 ################################################################################
 
-
 ## Catch2
 function(download_catch2)
     custom_download_project(Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v2.4.2
+        GIT_TAG        v2.5.0
     )
 endfunction()
 
@@ -34,7 +33,7 @@ endfunction()
 function(download_nlopt)
     custom_download_project(nlopt
         GIT_REPOSITORY https://github.com/stevengj/nlopt.git
-        GIT_TAG        master
+        GIT_TAG        463abb855d166503a4f2890379647a54a26ca678
     )
 endfunction()
 
@@ -42,7 +41,7 @@ endfunction()
 function(download_osqp)
     custom_download_project(osqp
         GIT_REPOSITORY https://github.com/oxfordcontrol/osqp.git
-        GIT_TAG        master
+        GIT_TAG        8949e678122d6949139644d2a95985765527535f
     )
 endfunction()
 
@@ -60,6 +59,16 @@ function(download_spdlog)
     )
 endfunction()
 
-## libigl
-## GIT_TAG dev
-## GIT_HASH aea868bd1fc64f71afecd2c51e51507a99d8e3e5
+function(download_libigl)
+    custom_download_project(libigl
+       GIT_REPOSITORY https://github.com/libigl/libigl.git
+       GIT_TAG        aea868bd1fc64f71afecd2c51e51507a99d8e3e5
+    )
+endfunction()
+
+function(download_json)
+    custom_download_project(json
+        GIT_REPOSITORY https://github.com/nlohmann/json
+        GIT_TAG v3.5.0
+    )
+endfunction()

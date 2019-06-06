@@ -354,6 +354,7 @@ opt::OptimizationSolver& State::getOptimizationSolver()
     case OptimizationMethod::BARRIER_NEWTON:
         return barrier_newton_solver;
     }
+    throw std::runtime_error("Invalid method");
 }
 
 void State::reset_optimization_problem()
