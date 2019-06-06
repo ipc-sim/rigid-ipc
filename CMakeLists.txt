@@ -55,7 +55,7 @@ add_library(${PROJECT_NAME}
     src/opt/optimization_problem.cpp
     src/opt/optimization_results.cpp
     src/opt/optimization_solver.cpp
-    src/opt/displacement_opt.cpp
+    src/opt/particles_problem.cpp
     src/opt/nlopt_solver.cpp
     src/opt/qp_solver.cpp
     src/opt/ipopt_solver.cpp

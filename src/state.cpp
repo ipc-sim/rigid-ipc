@@ -15,8 +15,8 @@
 
 #include <autodiff/finitediff.hpp>
 #include <opt/barrier_constraint.hpp>
-#include <opt/displacement_opt.hpp>
 #include <opt/ncp_solver.hpp>
+#include <opt/particles_problem.hpp>
 #include <opt/volume_constraint.hpp>
 
 #include <logger.hpp>
@@ -693,6 +693,10 @@ void State::convert_connected_components_to_rigid_bodies()
             rigid_bodies.push_back(
                 RigidBody(body_vertices, body_edges, Eigen::Vector3d(0, 0, 0)));
 
+            rigid_bodies.push_back(ccd::opt::RigidBody(
+                body_vertices, body_edges, Eigen::Vector3d(0, 0, 3.14 / 4)));
+
+
             for (const auto& vertex_id : ordered_connected_vertices) {
                 is_part_of_body(vertex_id) = true;
             }
@@ -700,7 +704,9 @@ void State::convert_connected_components_to_rigid_bodies()
         }
     }
 
+
     update_fields_from_rigid_bodies();
+
 }
 
 std::vector<long> State::get_opt_collision_edges()

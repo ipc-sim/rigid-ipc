@@ -11,7 +11,8 @@
 // Tests
 // ---------------------------------------------------
 
-TEST_CASE("Rigid Body Transform", "[RB][RB-transform]"){
+TEST_CASE("Rigid Body Transform", "[RB][RB-transform]")
+{
 
     Eigen::MatrixX2d vertices(4, 2);
     Eigen::MatrixX2i edges(4, 2);
@@ -19,35 +20,38 @@ TEST_CASE("Rigid Body Transform", "[RB][RB-transform]"){
 
     Eigen::MatrixX2d expected(4, 2);
 
-
     vertices << -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5;
     edges << 0, 1, 1, 2, 2, 3, 3, 0;
 
-    SECTION("Translation Case"){
+    SECTION("Translation Case")
+    {
         velocity << 0.5, 0.5, 0.0;
-        expected = velocity.segment(0,2).transpose().replicate(4,1);
+        expected = velocity.segment(0, 2).transpose().replicate(4, 1);
     }
 
-    SECTION("90 Deg Rotation Case"){
+    SECTION("90 Deg Rotation Case")
+    {
         velocity << 0.0, 0.0, 0.5 * M_PI;
         expected << 1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, -1.0;
     }
 
-    SECTION("Translation and Rotation Case"){
+    SECTION("Translation and Rotation Case")
+    {
         velocity << 0.5, 0.5, 0.5 * M_PI;
         expected << 1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, -1.0;
-        expected += velocity.segment(0,2).transpose().replicate(4,1);
+        expected += velocity.segment(0, 2).transpose().replicate(4, 1);
     }
+    using namespace ccd::opt;
 
     auto rb = RigidBody(vertices, edges, velocity);
-    Eigen::MatrixX2d actual;
+    Eigen::MatrixXd actual;
     rb.compute_particle_displacements(actual);
-
     CHECK((expected - actual).squaredNorm() < 1E-6);
 
-//    Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols,
-//        ", ", ", ", "", "", " << ", ";");
-//    std::cout << expected.format(CommaInitFmt) << std::endl;
-//    std::cout << actual.format(CommaInitFmt) << std::endl;
 
+    //    Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision,
+    //    Eigen::DontAlignCols,
+    //        ", ", ", ", "", "", " << ", ";");
+    //    std::cout << expected.format(CommaInitFmt) << std::endl;
+    //    std::cout << actual.format(CommaInitFmt) << std::endl;
 }

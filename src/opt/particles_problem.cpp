@@ -1,6 +1,4 @@
-// Methods for optimizing the displacements with a non-linear interference
-// volume constraint.
-#include <opt/displacement_opt.hpp>
+#include <opt/particles_problem.hpp>
 
 #include <fstream>
 #include <iomanip> // std::setw
@@ -75,6 +73,7 @@ namespace opt {
             mass_matrix.setIdentity();
             return;
         }
+
         Eigen::VectorXd vertex_masses = Eigen::VectorXd::Zero(vertices.size());
         for (long i = 0; i < edges.rows(); i++) {
             double edge_length

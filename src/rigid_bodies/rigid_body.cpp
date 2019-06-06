@@ -1,28 +1,39 @@
 #include <rigid_bodies/rigid_body.hpp>
 
-RigidBody::RigidBody(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2i& edges, const Eigen::Vector3d& velocity)
-    : vertices(vertices)
-    , edges(edges)
-    , velocity(velocity)
-{
-    this->update_center_of_mass();
-}
+namespace ccd {
 
-void RigidBody::update_center_of_mass()
-{
-    Eigen::VectorXd vertex_masses = Eigen::VectorXd::Zero(vertices.rows());
-    double total_edge_length = 0;
-    for (long i = 0; i < edges.rows(); i++) {
-        double edge_length
-            = (vertices.row(edges(i, 1)) - vertices.row(edges(i, 0))).norm();
-        vertex_masses(edges(i, 0)) += edge_length / 2;
-        vertex_masses(edges(i, 1)) += edge_length / 2;
-        total_edge_length += edge_length;
+namespace opt {
+    RigidBody::RigidBody(const Eigen::MatrixX2d& vertices,
+        const Eigen::MatrixX2i& edges, const Eigen::Vector3d& velocity)
+        : velocity(velocity)
+        , _vertices(vertices)
+        , _edges(edges)
+
+    {
+        compute_center_of_mass(center_of_mass);
     }
-    center_of_mass = (vertex_masses.asDiagonal() * vertices).colwise().sum()
-        / total_edge_length;
-}
+
+    void RigidBody::compute_center_of_mass(Eigen::Vector2d& cm) const
+    {
+        Eigen::VectorXd vertex_masses = Eigen::VectorXd::Zero(_vertices.rows());
+        double total_edge_length = 0;
+        for (long i = 0; i < _edges.rows(); i++) {
+            double edge_length
+                = (_vertices.row(_edges(i, 1)) - _vertices.row(_edges(i, 0)))
+                      .norm();
+            vertex_masses(_edges(i, 0)) += edge_length / 2;
+            vertex_masses(_edges(i, 1)) += edge_length / 2;
+            total_edge_length += edge_length;
+        }
+        cm = (vertex_masses.asDiagonal() * _vertices).colwise().sum()
+            / total_edge_length;
+    }
+
+    void RigidBody::compute_particle_displacements(
+        Eigen::MatrixXd& displacements) const
+    {
+        return compute_particle_displacements(velocity, displacements);
+    }
 
 Eigen::MatrixX2d RigidBody::compute_particle_displacements() const
 {
@@ -184,3 +195,31 @@ RigidBody::compute_particle_displacements_hessian() const
     return hessian;
 
 }
+
+
+    void RigidBody::compute_particle_displacements(
+        const Eigen::Vector3d& vel, Eigen::MatrixXd& displacements) const
+    {
+        typedef Eigen::Translation<double, 2> Translation2d;
+        typedef Eigen::Rotation2D<double> Rotation2Dd;
+
+        // create transform matrix matrix
+        Eigen::Matrix<double, 3, 3> Tm
+            = Eigen::Transform<double, 2, Eigen::Affine>(
+                Translation2d(vel.x(), vel.y())
+                * Translation2d(center_of_mass.x(), center_of_mass.y())
+                * Rotation2Dd(vel(2))
+                * Translation2d(center_of_mass.x(), -center_of_mass.y()))
+                  .matrix();
+
+        Eigen::Matrix<double, Eigen::Dynamic, 3> hvertices
+            = _vertices.rowwise().homogeneous();
+        Eigen::Matrix<double, Eigen::Dynamic, 3> tvertices
+            = hvertices * Tm.transpose();
+        displacements = tvertices.rowwise().hnormalized();
+        displacements -= _vertices;
+    }
+
+} // namespace opt
+} // namespace ccd
+
