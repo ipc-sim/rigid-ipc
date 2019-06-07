@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <igl/PI.h>
 

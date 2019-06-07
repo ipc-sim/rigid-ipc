@@ -254,7 +254,7 @@ void ViewerMenu::draw_io()
             if (state.is_rigid_bodies_mode) {
                 state.convert_connected_components_to_rigid_bodies();
             } else {
-                state.rigid_bodies.clear();
+                state.rigid_body_system.clear();
             }
             state_history.push_back(state);
             load_state();
@@ -388,12 +388,13 @@ void ViewerMenu::draw_rigid_body_options()
         if (state.selected_points.size() > 0) {
             std::set<int> selected_body_ids;
             for (const auto& selected_point : state.selected_points) {
-                selected_body_ids.insert(state.vertex_to_body(selected_point));
+                selected_body_ids.insert(state.rigid_body_system.vertex_to_body_map(selected_point));
             }
             Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
             for (const auto& body_id : selected_body_ids) {
-                velocity += state.rigid_bodies[body_id].velocity;
+                velocity += state.rigid_body_system.get_velocity(size_t(body_id));
             }
+
             velocity /= selected_body_ids.size();
             velocity(2) /= M_PI / 180.0;
 
@@ -406,7 +407,7 @@ void ViewerMenu::draw_rigid_body_options()
             if (velocity_x_changed || velocity_y_changed || rotation_changed) {
                 velocity(2) *= M_PI / 180.0;
                 for (const auto& body_id : selected_body_ids) {
-                    state.rigid_bodies[body_id].velocity = velocity;
+                    state.rigid_body_system.set_velocity(size_t(body_id), velocity);
                 }
                 state.update_displacements_from_rigid_bodies();
                 state_history.push_back(state);

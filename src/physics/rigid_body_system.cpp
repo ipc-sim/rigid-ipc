@@ -84,7 +84,7 @@ namespace physics {
         // clang-format on
         Eigen::Matrix3d gradθ_T = T_xy * T_c * gradθ_R * T_negc;
 
-        const auto& this_vertices = vertices;
+        const auto& this_vertices = world_vertices();
         auto transform_vertices
             = [&this_vertices](const Eigen::Matrix3d& T) -> Eigen::MatrixX2d {
             return (this_vertices.rowwise().homogeneous() * T.transpose())
@@ -156,13 +156,13 @@ namespace physics {
         Eigen::Matrix3d gradθ_gradθ_T = T_xy * T_c * -R_θ * T_negc;
 
         Eigen::MatrixX3d homogeneous_vertices(vertices.rows(), 3);
-        homogeneous_vertices.leftCols(2) = vertices;
+        homogeneous_vertices.leftCols(2) = world_vertices();;
         homogeneous_vertices.col(2).setOnes();
 
         std::vector<std::vector<Eigen::MatrixX2d>> hessian(
             3, std::vector<Eigen::MatrixX2d>());
 
-        const auto& this_vertices = vertices;
+        const auto& this_vertices = world_vertices();
         auto transform_vertices
             = [&this_vertices](const Eigen::Matrix3d& T) -> Eigen::MatrixX2d {
             return (this_vertices.rowwise().homogeneous() * T.transpose())
@@ -191,12 +191,19 @@ namespace physics {
         return hessian;
     }
 
+    void RigidBodySystem::clear(){
+        rigid_bodies.clear();
+        acc_vertex_id.clear();
+        acc_edge_id.clear();
+    }
     void RigidBodySystem::assemble()
     {
         size_t num_bodies = rigid_bodies.size();
 
         velocities.resize(int(3 * num_bodies));
 
+        acc_vertex_id.clear();
+        acc_edge_id.clear();
         acc_vertex_id.resize(num_bodies + 1);
         acc_edge_id.resize(num_bodies + 1);
         acc_vertex_id[0] = 0;
@@ -208,15 +215,26 @@ namespace physics {
             acc_edge_id[i + 1] = acc_edge_id[i] + rb.edges.rows();
         }
 
+        vertex_to_body_map.resize(acc_vertex_id.back());
         vertices.resize(acc_vertex_id.back(), 2);
         edges.resize(acc_edge_id.back(), 2);
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
             vertices.block(acc_vertex_id[i], 0, rb.vertices.rows(), 2)
                 = rb.world_vertices();
+            vertex_to_body_map.segment(acc_vertex_id[i], rb.vertices.rows()).setConstant(int(i));
             edges.block(acc_edge_id[i], 0, rb.edges.rows(), 2) = (rb.edges.array() + int(acc_vertex_id[i]));
         }
 
+        assemble_displacements();
+    }
+
+    void RigidBodySystem::set_velocity(const size_t rb_id, const Eigen::Vector3d vel ){
+        rigid_bodies[rb_id].velocity = vel;
+        velocities.segment(int(3 * rb_id), 3) = vel;
+    }
+
+    void RigidBodySystem::assemble_displacements(){
         assemble_displacements(velocities, displacements);
     }
 
@@ -230,6 +248,7 @@ namespace physics {
                 = rb.world_displacements(v.segment(int(3 * i), 3));
         }
     }
+
 
 } // namespace physics
 } // namespace ccd

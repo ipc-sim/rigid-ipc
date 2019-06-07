@@ -5,7 +5,7 @@ add_executable(unit_tests
     main.cpp
 
     # Test CCD
-    collision_generator.cpp
+    ccd/collision_generator.cpp
     ccd/test_ccd.cpp
     ccd/test_impact_pruning.cpp
     ccd/test_time_of_impact.cpp

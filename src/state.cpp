@@ -604,11 +604,15 @@ void State::update_fields_from_rigid_bodies()
 
     reset_scene();
 }
+void State::update_displacements_from_rigid_bodies(){
+    rigid_body_system.assemble_displacements();
+    displacements = rigid_body_system.displacements;
+}
 
 void State::convert_connected_components_to_rigid_bodies()
 {
     auto adjacency_list = create_adjacency_list();
-    rigid_body_system.rigid_bodies.clear();
+    rigid_body_system.clear();
     Eigen::VectorXb is_part_of_body = Eigen::VectorXb::Zero(vertices.rows());
 
     std::unordered_set<int> connected_vertices;

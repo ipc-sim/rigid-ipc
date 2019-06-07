@@ -202,6 +202,7 @@ public:
 
     void convert_connected_components_to_rigid_bodies();
     void update_fields_from_rigid_bodies();
+    void update_displacements_from_rigid_bodies();
 
 };
 

@@ -60,23 +60,33 @@ namespace physics {
     public:
         RigidBodySystem() {}
         ~RigidBodySystem() {}
+
+        void clear();
         void assemble();
+        void assemble_displacements();
         void assemble_displacements(
             const Eigen::VectorXd& v, Eigen::MatrixXd& u);
         void add_rigid_body(RigidBody rb) { rigid_bodies.push_back(rb); }
-
-        std::vector<RigidBody> rigid_bodies;
+        void set_velocity(const size_t rb_id, const Eigen::Vector3d vel);
+        const Eigen::Vector3d& get_velocity(const size_t rb_id)
+        {
+            return rigid_bodies[rb_id].velocity;
+        }
 
         ///> velocities: flatten array with all RB velocities
         Eigen::VectorXd velocities;
         std::vector<long> acc_vertex_id;
         std::vector<long> acc_edge_id;
+        Eigen::VectorXi vertex_to_body_map;
 
         // world-space units of the RB, used for ccd
         Eigen::MatrixXd vertices;
         Eigen::MatrixXd displacements;
         Eigen::MatrixX2i edges;
         Eigen::SparseMatrix<double> mass_matrix;
+
+    private:
+        std::vector<RigidBody> rigid_bodies;
     };
 } // namespace physics
 } // namespace ccd
