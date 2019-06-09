@@ -4,7 +4,7 @@
 #include <catch2/catch.hpp>
 
 #include <autodiff/autodiff_types.hpp>
-#include <opt/ncp_solver.hpp>
+#include <solvers/ncp_solver.hpp>
 
 // ---------------------------------------------------
 // SETUP

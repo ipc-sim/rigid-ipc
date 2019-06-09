@@ -1,9 +1,6 @@
 // Solve a optimization problem with NLopt.
-#include <opt/nlopt_solver.hpp>
-// #include <opt/solver.hpp>
+#include "nlopt_solver.hpp"
 
-#include <ccd/collision_volume.hpp>
-#include <ccd/collision_volume_diff.hpp>
 #include <ccd/not_implemented_error.hpp>
 
 #include <iostream>

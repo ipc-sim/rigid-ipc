@@ -31,8 +31,10 @@ include(${PROJECT_NAME}Dependencies)
 ################################################################################
 # Fixing Collisions Library
 ################################################################################
+add_library(${PROJECT_NAME}    
+    src/autodiff/finitediff.cpp
+    src/autodiff/autodiff.cpp
 
-add_library(${PROJECT_NAME}
     src/ccd/not_implemented_error.cpp
     src/ccd/degenerate_edge_error.cpp
     src/ccd/impact.cpp
@@ -40,44 +42,41 @@ add_library(${PROJECT_NAME}
     src/ccd/collision_detection_narrow_phase.cpp
     src/ccd/collision_detection_broad_phase.cpp
     src/ccd/prune_impacts.cpp
-    src/ccd/collision_volume.cpp
-    src/ccd/collision_constraint_diff.cpp
-    src/ccd/collision_volume_diff.cpp
-    src/ccd/collision_penalty_diff.cpp
     src/ccd/time_of_impact.cpp
 
     src/io/read_scene.cpp
     src/io/write_scene.cpp
     src/io/opt_results.cpp
 
+    src/physics/rigid_body_system.cpp
+    src/physics/mass_matrix.cpp
+    src/physics/center_of_mass.cpp
+
     src/opt/barrier.cpp
-    src/opt/newtons_method.cpp
+    src/opt/barrier_constraint.cpp
+    src/opt/collision_constraint.cpp
     src/opt/optimization_problem.cpp
     src/opt/optimization_results.cpp
-    src/opt/optimization_solver.cpp
-    src/opt/displacement_opt.cpp
-    src/opt/nlopt_solver.cpp
-    src/opt/qp_solver.cpp
-    src/opt/ipopt_solver.cpp
-    src/opt/ncp_solver.cpp
-    src/opt/lcp_solver.cpp
-    src/opt/barrier_newton_solver.cpp
-    src/opt/collision_constraint.cpp
+    src/opt/particles_problem.cpp
     src/opt/volume_constraint.cpp
-    src/opt/barrier_constraint.cpp
 
-    src/autodiff/finitediff.cpp
-    src/autodiff/autodiff.cpp
+    src/solvers/barrier_newton_solver.cpp
+    src/solvers/ipopt_solver.cpp
+    src/solvers/lcp_solver.cpp
+    src/solvers/ncp_solver.cpp
+    src/solvers/newtons_method.cpp
+    src/solvers/nlopt_solver.cpp
+    src/solvers/optimization_solver.cpp
+    src/solvers/qp_solver.cpp
 
     src/state.cpp
     src/logger.cpp
     src/profiler.cpp
 
-    src/rigid_bodies/rigid_body.cpp
-
     # Generated files
-    src/autogen/time_of_impact_coeff.tpp
-    src/autogen/collision_volume.tpp
+   src/autogen/time_of_impact_coeff.tpp
+   src/autogen/collision_volume.tpp
+
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)

@@ -6,9 +6,7 @@
 #include "IpIpoptApplication.hpp"
 #include <IpTNLP.hpp>
 
-#include <opt/optimization_problem.hpp>
-#include <opt/optimization_results.hpp>
-#include <opt/optimization_solver.hpp>
+#include <solvers/optimization_solver.hpp>
 
 namespace ccd {
 /**
@@ -61,7 +59,6 @@ namespace opt {
         int max_iterations;
     };
 
-
     /**
      * @brief Class for interfacing IPOPT TNLP problem
      * with Eigen matrices.
@@ -72,7 +69,7 @@ namespace opt {
         EigenInterfaceTNLP(OptimizationProblem& problem);
 
         OptimizationResults result;
-        OptimizationProblem * problem;
+        OptimizationProblem* problem;
 
         /**
          * n: (out) the number of variables in the problem (dimension of

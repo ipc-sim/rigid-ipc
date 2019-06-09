@@ -1,6 +1,6 @@
-#include <opt/qp_solver.hpp>
+#include <solvers/qp_solver.hpp>
 
-#include <opt/optimization_solver.hpp>
+#include <solvers/optimization_solver.hpp>
 
 #include <Eigen/SparseCore>
 #ifdef BUILD_WITH_OSQP
@@ -10,8 +10,6 @@
 #include <igl/mosek/mosek_quadprog.h>
 #endif
 
-#include <ccd/collision_volume.hpp>
-#include <ccd/collision_volume_diff.hpp>
 #include <ccd/not_implemented_error.hpp>
 
 #include <iostream>

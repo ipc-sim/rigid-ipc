@@ -1,6 +1,6 @@
 // Functions for optimizing functions.
 // Includes Newton's method with and without constraints.
-#include <opt/newtons_method.hpp>
+#include "newtons_method.hpp"
 
 #include <cmath>
 #include <iostream>

@@ -1,6 +1,4 @@
-// Methods for optimizing the displacements with a non-linear interference
-// volume constraint.
-#include <opt/displacement_opt.hpp>
+#include <opt/particles_problem.hpp>
 
 #include <fstream>
 #include <iomanip> // std::setw
@@ -8,14 +6,11 @@
 
 #include <nlohmann/json.hpp>
 
-#include <ccd/collision_volume.hpp>
-#include <ccd/collision_volume_diff.hpp>
 #include <ccd/not_implemented_error.hpp>
 
 #include <autodiff/finitediff.hpp>
 
 #include <logger.hpp>
-
 #include <profiler.hpp>
 
 namespace ccd {
@@ -75,6 +70,7 @@ namespace opt {
             mass_matrix.setIdentity();
             return;
         }
+
         Eigen::VectorXd vertex_masses = Eigen::VectorXd::Zero(vertices.size());
         for (long i = 0; i < edges.rows(); i++) {
             double edge_length

@@ -3,8 +3,6 @@
 #include <iostream>
 
 #include <autogen/collision_volume.hpp>
-#include <ccd/collision_constraint_diff.hpp>
-#include <ccd/collision_volume_diff.hpp>
 
 namespace ccd {
 
@@ -17,7 +15,7 @@ namespace opt {
 
     int VolumeConstraint::number_of_constraints()
     {
-        return int(ccd::autodiff::get_constraints_size(int(edges->rows())));
+        return int(get_constraints_size(int(edges->rows())));
     }
 
     void VolumeConstraint::compute_constraints(
@@ -52,7 +50,6 @@ namespace opt {
         compute_constraints_per_impact(Uk, impact_volumes);
         assemble_sparse_jacobian_all(impact_volumes, g_uk_jacobian);
     }
-
 
     void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
         Eigen::VectorXd& g_uk, Eigen::SparseMatrix<double>& g_uk_jacobian,
@@ -115,16 +112,16 @@ namespace opt {
     {
 
         const int num_edges = int(edges->rows());
-        const long num_constr = ccd::autodiff::get_constraints_size(num_edges);
+        const long num_constr = get_constraints_size(num_edges);
         dense_volumes.resize(num_constr);
         dense_volumes.setZero();
 
         for (size_t i = 0; i < ee_impacts.size(); ++i) {
             auto& ee_impact = ee_impacts[i];
 
-            long c_ij = ccd::autodiff::get_constraint_index(
-                ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = ccd::autodiff::get_constraint_index(
+            long c_ij
+                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
+            long c_kl = get_constraint_index(
                 ee_impact, /*impacted=*/false, num_edges);
 
             dense_volumes[c_ij] = impact_volumes[2 * i + 0];
@@ -140,16 +137,16 @@ namespace opt {
         assemble_constraints(impact_volumes, volumes);
 
         const int num_edges = int(edges->rows());
-        const long num_constr = ccd::autodiff::get_constraints_size(num_edges);
+        const long num_constr = get_constraints_size(num_edges);
         dense_volumes.resize(num_constr);
         dense_volumes.setZero();
 
         for (size_t i = 0; i < ee_impacts.size(); ++i) {
             auto& ee_impact = ee_impacts[i];
 
-            long c_ij = ccd::autodiff::get_constraint_index(
-                ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = ccd::autodiff::get_constraint_index(
+            long c_ij
+                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
+            long c_kl = get_constraint_index(
                 ee_impact, /*impacted=*/false, num_edges);
 
             dense_volumes[c_ij] = volumes(2 * int(i) + 0);
@@ -170,16 +167,16 @@ namespace opt {
         assert(impact_volumes_jac.rows() == int(impact_volumes.size()));
 
         const int num_edges = int(edges->rows());
-        const long num_constr = ccd::autodiff::get_constraints_size(num_edges);
+        const long num_constr = get_constraints_size(num_edges);
         volumes_jac.resize(num_constr, impact_volumes_jac.cols());
         volumes_jac.setZero();
 
         for (size_t i = 0; i < ee_impacts.size(); ++i) {
             auto& ee_impact = ee_impacts[i];
 
-            long c_ij = ccd::autodiff::get_constraint_index(
-                ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = ccd::autodiff::get_constraint_index(
+            long c_ij
+                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
+            long c_kl = get_constraint_index(
                 ee_impact, /*impacted=*/false, num_edges);
 
             volumes_jac.row(c_ij) = impact_volumes_jac.row(2 * int(i) + 0);
@@ -196,15 +193,15 @@ namespace opt {
         assemble_jacobian_triplets(constraints, tripletList);
 
         const int num_edges = int(edges->rows());
-        const long num_constr = ccd::autodiff::get_constraints_size(num_edges);
+        const long num_constr = get_constraints_size(num_edges);
 
         size_t counter = 0;
         for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
             auto& ee_impact = ee_impacts[ee];
 
-            long c_ij = ccd::autodiff::get_constraint_index(
-                ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = ccd::autodiff::get_constraint_index(
+            long c_ij
+                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
+            long c_kl = get_constraint_index(
                 ee_impact, /*impacted=*/false, num_edges);
             int rows[2] = { int(c_ij), int(c_kl) };
 
@@ -228,9 +225,9 @@ namespace opt {
         for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
             auto& ee_impact = ee_impacts[ee];
 
-            long c_ij = ccd::autodiff::get_constraint_index(
-                ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = ccd::autodiff::get_constraint_index(
+            long c_ij
+                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
+            long c_kl = get_constraint_index(
                 ee_impact, /*impacted=*/false, num_edges);
 
             dense_indices(int(2 * ee) + 0) = int(c_ij);
@@ -245,5 +242,23 @@ namespace opt {
         const Eigen::MatrixXd& displacements,
         std::vector<DScalar>& constraints);
 
+    long get_constraint_index(
+        const EdgeEdgeImpact& impact, const bool impacted, const int num_edges)
+    {
+        long e1 = impact.impacted_edge_index;
+        long e2 = impact.impacting_edge_index;
+        int p = impact.impacting_alpha > 0.5 ? 1 : 0;
+        int q = impacted ? 0 : 1;
+
+        // unravel index Q * P * E2 * e1 + Q * P * e2 + Q * p + q
+        const int Q = 2, P = 2, E2 = num_edges;
+        return Q * P * E2 * e1 + Q * P * e2 + Q * p + q;
+    }
+
+    long get_constraints_size(const int num_edges)
+    {
+        const int Q = 2, P = 2, E2 = num_edges, E1 = num_edges;
+        return Q * P * E2 * E1;
+    }
 } // namespace opt
 } // namespace ccd

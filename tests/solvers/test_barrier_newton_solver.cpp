@@ -1,8 +1,9 @@
 #include <catch2/catch.hpp>
 
 #include <autodiff/finitediff.hpp>
-#include <opt/barrier_newton_solver.hpp>
-#include <opt/newtons_method.hpp>
+
+#include <solvers/barrier_newton_solver.hpp>
+#include <solvers/newtons_method.hpp>
 
 #include <cmath>
 
