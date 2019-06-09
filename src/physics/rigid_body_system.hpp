@@ -19,10 +19,7 @@ namespace physics {
         Eigen::MatrixXd world_displacements(
             const Eigen::Vector3d& velocity) const;
 
-        Eigen::MatrixX2d world_vertices() const
-        {
-            return vertices.rowwise() + position.transpose();
-        }
+        Eigen::MatrixX2d world_vertices() const;
 
         std::vector<Eigen::MatrixX2d>
         compute_world_displacements_gradient() const;

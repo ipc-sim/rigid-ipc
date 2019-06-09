@@ -14,7 +14,8 @@ namespace physics {
         , position(position)
         , velocity(velocity)
     {
-        spdlog::trace("rigid_body velocity={},{},{}", velocity[0], velocity[1], velocity[2]);
+        spdlog::trace("rigid_body velocity={},{},{}", velocity[0], velocity[1],
+            velocity[2]);
     }
 
     Eigen::MatrixX2d RigidBody::world_vertices() const
@@ -161,7 +162,8 @@ namespace physics {
         Eigen::Matrix3d gradθ_gradθ_T = T_xy * T_c * -R_θ * T_negc;
 
         Eigen::MatrixX3d homogeneous_vertices(vertices.rows(), 3);
-        homogeneous_vertices.leftCols(2) = world_vertices();;
+        homogeneous_vertices.leftCols(2) = world_vertices();
+        ;
         homogeneous_vertices.col(2).setOnes();
 
         std::vector<std::vector<Eigen::MatrixX2d>> hessian(
@@ -196,7 +198,8 @@ namespace physics {
         return hessian;
     }
 
-    void RigidBodySystem::clear(){
+    void RigidBodySystem::clear()
+    {
         rigid_bodies.clear();
         acc_vertex_id.clear();
         acc_edge_id.clear();
@@ -227,19 +230,24 @@ namespace physics {
             auto& rb = rigid_bodies[i];
             vertices.block(acc_vertex_id[i], 0, rb.vertices.rows(), 2)
                 = rb.world_vertices();
-            vertex_to_body_map.segment(acc_vertex_id[i], rb.vertices.rows()).setConstant(int(i));
-            edges.block(acc_edge_id[i], 0, rb.edges.rows(), 2) = (rb.edges.array() + int(acc_vertex_id[i]));
+            vertex_to_body_map.segment(acc_vertex_id[i], rb.vertices.rows())
+                .setConstant(int(i));
+            edges.block(acc_edge_id[i], 0, rb.edges.rows(), 2)
+                = (rb.edges.array() + int(acc_vertex_id[i]));
         }
 
         assemble_displacements();
     }
 
-    void RigidBodySystem::set_velocity(const size_t rb_id, const Eigen::Vector3d vel ){
+    void RigidBodySystem::set_velocity(
+        const size_t rb_id, const Eigen::Vector3d vel)
+    {
         rigid_bodies[rb_id].velocity = vel;
         velocities.segment(int(3 * rb_id), 3) = vel;
     }
 
-    void RigidBodySystem::assemble_displacements(){
+    void RigidBodySystem::assemble_displacements()
+    {
         assemble_displacements(velocities, displacements);
     }
 
@@ -253,7 +261,6 @@ namespace physics {
                 = rb.world_displacements(v.segment(int(3 * i), 3));
         }
     }
-
 
 } // namespace physics
 } // namespace ccd

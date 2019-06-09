@@ -49,6 +49,7 @@ add_library(${PROJECT_NAME}
     src/io/opt_results.cpp
 
     src/physics/rigid_body_system.cpp
+    src/physics/mass_matrix.cpp
     src/physics/center_of_mass.cpp
 
     src/opt/barrier.cpp
