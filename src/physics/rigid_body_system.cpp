@@ -17,6 +17,11 @@ namespace physics {
         spdlog::trace("rigid_body velocity={},{},{}", velocity[0], velocity[1], velocity[2]);
     }
 
+    Eigen::MatrixX2d RigidBody::world_vertices() const
+    {
+        return vertices.rowwise() + position.transpose();
+    }
+
     Eigen::MatrixXd RigidBody::world_displacements() const
     {
         return world_displacements(velocity);
