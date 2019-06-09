@@ -26,8 +26,10 @@ add_executable(unit_tests
     opt/test_barriers.cpp
     opt/test_volume_constraint.cpp
     opt/test_barrier_constraint.cpp
+    opt/test_rigid_body_problem.cpp
 
     physics/test_rigid_body.cpp
+    physics/test_rigid_body_system.cpp
 
 )
 

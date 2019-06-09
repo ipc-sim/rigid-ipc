@@ -25,7 +25,7 @@ namespace opt {
     class ParticlesDisplProblem : public OptimizationProblem {
     public:
         ParticlesDisplProblem();
-        ~ParticlesDisplProblem() override;
+        virtual ~ParticlesDisplProblem() override;
 
         void initialize(const Eigen::MatrixX2d& V, const Eigen::MatrixX2i& E,
             const Eigen::MatrixX2d& U, CollisionConstraint& cstr);
