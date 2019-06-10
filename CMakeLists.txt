@@ -48,6 +48,7 @@ add_library(${PROJECT_NAME}
     src/io/write_scene.cpp
     src/io/opt_results.cpp
 
+    src/physics/rigid_body.cpp
     src/physics/rigid_body_system.cpp
     src/physics/mass_matrix.cpp
     src/physics/center_of_mass.cpp
@@ -59,6 +60,7 @@ add_library(${PROJECT_NAME}
     src/opt/optimization_results.cpp
     src/opt/particles_problem.cpp
     src/opt/volume_constraint.cpp
+    src/opt/rigid_body_problem.cpp
 
     src/solvers/barrier_newton_solver.cpp
     src/solvers/ipopt_solver.cpp

@@ -2,201 +2,10 @@
 
 #include <Eigen/Geometry>
 #include <logger.hpp>
+
 namespace ccd {
 
 namespace physics {
-
-    RigidBody::RigidBody(const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2i& edges, const Eigen::Vector2d& position,
-        const Eigen::Vector3d& velocity)
-        : vertices(vertices)
-        , edges(edges)
-        , position(position)
-        , velocity(velocity)
-    {
-        spdlog::trace("rigid_body velocity={},{},{}", velocity[0], velocity[1],
-            velocity[2]);
-    }
-
-    Eigen::MatrixX2d RigidBody::world_vertices() const
-    {
-        return vertices.rowwise() + position.transpose();
-    }
-
-    Eigen::MatrixXd RigidBody::world_displacements() const
-    {
-        return world_displacements(velocity);
-    }
-
-    Eigen::MatrixXd RigidBody::world_displacements(
-        const Eigen::Vector3d& vel) const
-    {
-        typedef Eigen::Translation<double, 2> Translation2d;
-        typedef Eigen::Rotation2D<double> Rotation2Dd;
-
-        // create transform matrix matrix
-        Eigen::Matrix<double, 3, 3> Tm
-            = Eigen::Transform<double, 2, Eigen::Affine>(
-                Translation2d(vel.x(), vel.y())
-                * Translation2d(position.x(), position.y())
-                * Rotation2Dd(vel(2))
-                * Translation2d(position.x(), -position.y()))
-                  .matrix();
-
-        Eigen::MatrixXd v = world_vertices();
-        Eigen::Matrix<double, Eigen::Dynamic, 3> hvertices
-            = v.rowwise().homogeneous();
-        Eigen::Matrix<double, Eigen::Dynamic, 3> tvertices
-            = hvertices * Tm.transpose();
-
-        Eigen::MatrixXd displacements;
-        displacements = tvertices.rowwise().hnormalized();
-        displacements -= v;
-
-        return displacements;
-    }
-
-    std::vector<Eigen::MatrixX2d>
-    RigidBody::compute_world_displacements_gradient() const
-    {
-        Eigen::Matrix3d T_c = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(position.x(), position.y()))
-                                  .matrix();
-        Eigen::Matrix3d T_negc = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(-position.x(), -position.y()))
-                                     .matrix();
-        Eigen::Matrix3d T_xy = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(velocity.x(), velocity.y()))
-                                   .matrix();
-        double θ = velocity(2);
-        Eigen::Matrix3d R_θ
-            = Eigen::Transform<double, 2, Eigen::Affine>(Eigen::Rotation2Dd(θ))
-                  .matrix();
-
-        Eigen::Matrix3d gradx_T = Eigen::Transform<double, 2, Eigen::Affine>(
-                                      Eigen::Translation2d(1, 0))
-                                      .matrix()
-            * T_c * R_θ * T_negc;
-        Eigen::Matrix3d grady_T = Eigen::Transform<double, 2, Eigen::Affine>(
-                                      Eigen::Translation2d(0, 1))
-                                      .matrix()
-            * T_c * R_θ * T_negc;
-        Eigen::Matrix3d gradθ_R;
-        // clang-format off
-    gradθ_R <<
-        -sin(θ), -cos(θ), 0,
-         cos(θ), -sin(θ), 0,
-              0,       0, 0;
-        // clang-format on
-        Eigen::Matrix3d gradθ_T = T_xy * T_c * gradθ_R * T_negc;
-
-        const auto& this_vertices = world_vertices();
-        auto transform_vertices
-            = [&this_vertices](const Eigen::Matrix3d& T) -> Eigen::MatrixX2d {
-            return (this_vertices.rowwise().homogeneous() * T.transpose())
-                .rowwise()
-                .hnormalized();
-        };
-
-        std::vector<Eigen::MatrixX2d> gradient;
-        gradient.reserve(3);
-        gradient.push_back(transform_vertices(gradx_T));
-        gradient.push_back(transform_vertices(grady_T));
-        gradient.push_back(transform_vertices(gradθ_T));
-
-        return gradient;
-    }
-
-    std::vector<std::vector<Eigen::MatrixX2d>>
-    RigidBody::compute_world_displacements_hessian() const
-    {
-        Eigen::Matrix3d T_c = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(position.x(), position.y()))
-                                  .matrix();
-        Eigen::Matrix3d T_negc = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(-position.x(), -position.y()))
-                                     .matrix();
-        Eigen::Matrix3d T_xy = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(velocity.x(), velocity.y()))
-                                   .matrix();
-        double θ = velocity(2);
-        Eigen::Matrix3d R_θ
-            = Eigen::Transform<double, 2, Eigen::Affine>(Eigen::Rotation2Dd(θ))
-                  .matrix();
-
-        Eigen::Matrix3d gradx_T_xy = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(1, 0))
-                                         .matrix();
-        Eigen::Matrix3d grady_T_xy = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(0, 1))
-                                         .matrix();
-        Eigen::Matrix3d gradx_T = gradx_T_xy * T_c * R_θ * T_negc;
-        Eigen::Matrix3d grady_T = grady_T_xy * T_c * R_θ * T_negc;
-        Eigen::Matrix3d gradθ_R;
-        // clang-format off
-    // R_θ <<
-    //     cos(θ), -sin(θ), 0,
-    //     sin(θ),  cos(θ), 0,
-    //          0,       0, 0;
-    gradθ_R <<
-        -sin(θ), -cos(θ), 0,
-         cos(θ), -sin(θ), 0,
-              0,       0, 0;
-    // gradθ_gradθ_R <<
-    //     -cos(θ),  sin(θ), 0,
-    //     -sin(θ), -cos(θ), 0,
-    //           0,       0, 0;
-        // clang-format on
-        Eigen::Matrix3d gradθ_T = T_xy * T_c * gradθ_R * T_negc;
-
-        Eigen::Matrix3d gradx_gradx_T = Eigen::Matrix3d::Zero();
-        Eigen::Matrix3d gradx_grady_T = Eigen::Matrix3d::Zero();
-        Eigen::Matrix3d gradx_gradθ_T = gradx_T_xy * T_c * gradθ_R * T_negc;
-
-        Eigen::Matrix3d grady_gradx_T = Eigen::Matrix3d::Zero();
-        Eigen::Matrix3d grady_grady_T = Eigen::Matrix3d::Zero();
-        Eigen::Matrix3d grady_gradθ_T = grady_T_xy * T_c * gradθ_R * T_negc;
-
-        Eigen::Matrix3d gradθ_gradx_T = gradx_gradθ_T;
-        Eigen::Matrix3d gradθ_grady_T = grady_gradθ_T;
-        Eigen::Matrix3d gradθ_gradθ_T = T_xy * T_c * -R_θ * T_negc;
-
-        Eigen::MatrixX3d homogeneous_vertices(vertices.rows(), 3);
-        homogeneous_vertices.leftCols(2) = world_vertices();
-        ;
-        homogeneous_vertices.col(2).setOnes();
-
-        std::vector<std::vector<Eigen::MatrixX2d>> hessian(
-            3, std::vector<Eigen::MatrixX2d>());
-
-        const auto& this_vertices = world_vertices();
-        auto transform_vertices
-            = [&this_vertices](const Eigen::Matrix3d& T) -> Eigen::MatrixX2d {
-            return (this_vertices.rowwise().homogeneous() * T.transpose())
-                .rowwise()
-                .hnormalized();
-        };
-
-        // ∇_x∇U
-        hessian[0].reserve(3);
-        hessian[0].push_back(transform_vertices(gradx_gradx_T));
-        hessian[0].push_back(transform_vertices(gradx_grady_T));
-        hessian[0].push_back(transform_vertices(gradx_gradθ_T));
-
-        // ∇_y∇U
-        hessian[1].reserve(3);
-        hessian[1].push_back(transform_vertices(grady_gradx_T));
-        hessian[1].push_back(transform_vertices(grady_grady_T));
-        hessian[1].push_back(transform_vertices(grady_gradθ_T));
-
-        // ∇_θ∇U
-        hessian[2].reserve(3);
-        hessian[2].push_back(transform_vertices(gradθ_gradx_T));
-        hessian[2].push_back(transform_vertices(gradθ_grady_T));
-        hessian[2].push_back(transform_vertices(gradθ_gradθ_T));
-
-        return hessian;
-    }
 
     void RigidBodySystem::clear()
     {
@@ -204,6 +13,7 @@ namespace physics {
         acc_vertex_id.clear();
         acc_edge_id.clear();
     }
+
     void RigidBodySystem::assemble()
     {
         size_t num_bodies = rigid_bodies.size();
@@ -248,19 +58,86 @@ namespace physics {
 
     void RigidBodySystem::assemble_displacements()
     {
-        assemble_displacements(velocities, displacements);
+        compute_displacements(velocities, displacements);
     }
 
-    void RigidBodySystem::assemble_displacements(
+    void RigidBodySystem::compute_displacements(
         const Eigen::VectorXd& v, Eigen::MatrixXd& u)
     {
         u.resize(acc_vertex_id.back(), 2);
         for (size_t i = 0; i < rigid_bodies.size(); ++i) {
             auto& rb = rigid_bodies[i];
             u.block(acc_vertex_id[i], 0, rb.vertices.rows(), 2)
-                = rb.world_displacements(v.segment(int(3 * i), 3));
+                = rb.world_displacements<double>(v.segment(int(3 * i), 3));
         }
     }
 
+    void RigidBodySystem::compute_displacements_gradient(
+        const Eigen::VectorXd& v, Eigen::SparseMatrix<double>& grad_u)
+    {
+        typedef Eigen::Triplet<double> M;
+        std::vector<M> triplets;
+
+        long num_vertices = acc_vertex_id.back();
+        triplets.reserve(size_t(num_vertices) * 2);
+
+        for (size_t i = 0; i < rigid_bodies.size(); ++i) {
+            auto& rb = rigid_bodies[i];
+            Eigen::MatrixXd el_grad
+                = rb.world_displacements_gradient(v.segment(int(3 * i), 3));
+
+            long d = el_grad.rows() / 2;
+            // x-axis entries
+            for (int j = 0; j < d; ++j) {
+                for (int k = 0; k < el_grad.cols(); ++k) {
+                    triplets.push_back(M(int(acc_edge_id[i]) + j,
+                        int(3 * i) + k, el_grad(j, k)));
+                }
+            }
+            // y-axis entries
+            for (int j = 0; j < d; ++j) {
+                for (int k = 0; k < el_grad.cols(); ++k) {
+                    triplets.push_back(M(int(acc_edge_id[i] + num_vertices) + j,
+                        int(3 * i) + k, el_grad(d + j, k)));
+                }
+            }
+        }
+        grad_u.resize(int(num_vertices * 2), int(rigid_bodies.size()) * 3);
+        grad_u.setFromTriplets(triplets.begin(), triplets.end());
+    }
+
+    void RigidBodySystem::compute_displacements_hessian(
+        const Eigen::VectorXd& v,
+        std::vector<Eigen::SparseMatrix<double>>& hess_u)
+    {
+        // for local entry hessian
+        typedef Eigen::Triplet<double> M;
+        std::array<M, 9> triplets;
+
+        long num_vertices = acc_vertex_id.back();
+        hess_u.resize(size_t(num_vertices) * 2);
+
+        for (size_t i = 0; i < rigid_bodies.size(); ++i) {
+            auto& rb = rigid_bodies[i];
+            std::vector<Eigen::Matrix3d> el_hessians
+                = rb.world_displacements_hessian(v.segment(int(3 * i), 3));
+            for (size_t ii = 0; ii < el_hessians.size(); ++ii) {
+                auto &el_hess = el_hessians[ii];
+                for (int j = 0; j < 3; ++j) {
+                    for (int k = 0; k < 3; ++k) {
+                        triplets[size_t(3 * j + k)]
+                            = M(int(3 * i) + j, int(3 * i) + k, el_hess(j, k));
+                    }
+                }
+                Eigen::SparseMatrix<double> global_el_hessian(
+                    int(rigid_bodies.size()) * 3, int(rigid_bodies.size()) * 3);
+                global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
+
+                int d = int(el_hessians.size() / 2);
+                int padding = int(ii) >= d ? int(ii) - d + int(num_vertices) : int(ii);
+                hess_u[size_t(acc_vertex_id[i] + padding)] = global_el_hessian;
+            }
+        }
+    }
 } // namespace physics
 } // namespace ccd

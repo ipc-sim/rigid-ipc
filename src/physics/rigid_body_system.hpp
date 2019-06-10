@@ -3,55 +3,12 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
-#include <physics/center_of_mass.hpp>
+#include <physics/rigid_body.hpp>
+
+#include <autodiff/autodiff.h>
 
 namespace ccd {
 namespace physics {
-
-    class RigidBody {
-    public:
-        RigidBody(const Eigen::MatrixX2d& vertices,
-            const Eigen::MatrixX2i& edges, const Eigen::Vector2d& position,
-            const Eigen::Vector3d& velocity);
-
-        Eigen::MatrixXd world_displacements() const;
-
-        Eigen::MatrixXd world_displacements(
-            const Eigen::Vector3d& velocity) const;
-
-        Eigen::MatrixX2d world_vertices() const;
-
-        std::vector<Eigen::MatrixX2d>
-        compute_world_displacements_gradient() const;
-        std::vector<std::vector<Eigen::MatrixX2d>>
-        compute_world_displacements_hessian() const;
-
-        /// \brief vertices as distances from the center of mass
-        Eigen::MatrixX2d vertices;
-        Eigen::MatrixX2i edges;
-
-        /// \brief position: position of the object in world space
-        Eigen::Vector2d position;
-
-        /// \brief velocity: linear and angular velicity
-        Eigen::Vector3d velocity;
-
-        ///
-        /// \brief Centered: Factory method to create a RB with
-        /// with position equal to current center of mass.
-        /// \param vertices
-        /// \param edges
-        /// \param velocity
-        /// \return
-        ///
-        static inline RigidBody Centered(const Eigen::MatrixXd& vertices,
-            const Eigen::MatrixX2i& edges, const Eigen::Vector3d& velocity)
-        {
-            Eigen::RowVector2d x = center_of_mass(vertices, edges);
-            Eigen::MatrixX2d centered_vertices = vertices.rowwise() - x;
-            return RigidBody(centered_vertices, edges, x, velocity);
-        }
-    };
 
     class RigidBodySystem {
     public:
@@ -60,9 +17,27 @@ namespace physics {
 
         void clear();
         void assemble();
+
+        ///
+        /// \brief compute_displacements: computes particles displacements for the CURRENT velocities
+        /// updates `displacements` attribute.
+        ///
         void assemble_displacements();
-        void assemble_displacements(
+
+        ///
+        /// \brief compute_displacements: computes particles displacements for the GIVEN velocities
+        /// \param v[in]:   rigid bodies velocities  Bx3 by 1
+        /// \param u[out]:  particles displacements N by 2
+        ///
+        void compute_displacements(
             const Eigen::VectorXd& v, Eigen::MatrixXd& u);
+
+        void compute_displacements_gradient(
+            const Eigen::VectorXd& v, Eigen::SparseMatrix<double>& grad_u);
+
+        void compute_displacements_hessian(
+            const Eigen::VectorXd& v, std::vector<Eigen::SparseMatrix<double>>& hess_u);
+
         void add_rigid_body(RigidBody rb) { rigid_bodies.push_back(rb); }
         void set_velocity(const size_t rb_id, const Eigen::Vector3d vel);
         const Eigen::Vector3d& get_velocity(const size_t rb_id)
