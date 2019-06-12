@@ -31,7 +31,7 @@ include(${PROJECT_NAME}Dependencies)
 ################################################################################
 # Fixing Collisions Library
 ################################################################################
-add_library(${PROJECT_NAME}    
+add_library(${PROJECT_NAME}
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp
 
@@ -66,10 +66,13 @@ add_library(${PROJECT_NAME}
     src/solvers/ipopt_solver.cpp
     src/solvers/lcp_solver.cpp
     src/solvers/ncp_solver.cpp
+    src/solvers/line_search.cpp
     src/solvers/newtons_method.cpp
     src/solvers/nlopt_solver.cpp
     src/solvers/optimization_solver.cpp
     src/solvers/qp_solver.cpp
+
+    src/utils/eigen_ext.cpp
 
     src/state.cpp
     src/logger.cpp

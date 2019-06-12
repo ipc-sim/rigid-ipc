@@ -31,67 +31,23 @@ namespace opt {
      */
     OptimizationResults newtons_method(OptimizationProblem& problem,
         const Eigen::VectorXi& free_dof, const double absolute_tolerance,
-        const double line_search_tolerance, const int max_iter,
-        const double mu = 1e-5);
+        const double line_search_tolerance, const int max_iter);
 
-    /**
-     * @brief Search along a search direction to find a scalar \f$\step_length
-     * \in [0, 1]\f$ such that \f$f(x + \step_length \vec{dir}) \leq f(x)\f$.
-     *
-     * @param[in] x                Starting point for the line search.
-     * @param[in] dir              Direction to search along.
-     * @param[in] f                Function of x to minimize.
-     * @param[out] step_length     Scalar coefficent of the direction to step.
-     * @param[in] min_step_length  Minimum value of step_length before the line
-     *                             search fails.
-     *
-     * @return True if the line search was successful, false otherwise.
-     */
-    bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        double& step_length, const double min_step_length = 1e-10);
+    // Solve for the Newton direction (Δx = -H^{-1}∇f).
+    // Return true if the solve was successful.
+    bool solve_for_newton_direction(const Eigen::VectorXd& gradient,
+        const Eigen::SparseMatrix<double>& hessian, Eigen::VectorXd& delta_x,
+        bool make_psd = false);
 
-    /**
-     * @brief Search along a search direction to find a scalar \f$\step_length
-     * \in [0, 1]\f$ such that \f$f(x + \step_length \vec{dir}) \leq f(x)\f$.
-     *
-     * @param[in] x                Starting point for the line search.
-     * @param[in] dir              Direction to search along.
-     * @param[in] f                Function of x to minimize.
-     * @param[in] grad_fx          The precomputed value of ∇f(x).
-     * @param[out] step_length     Scalar coefficent of the direction to step.
-     * @param[in] min_step_length  Minimum value of step_length before the line
-     *                             search fails.
-     *
-     * @return True if the line search was successful, false otherwise.
-     */
-    bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        const Eigen::VectorXd& grad_fx, double& step_length,
-        const double min_step_length = 1e-10);
+    // Solve for the newton direction for the limited degrees of freedom.
+    // The fixed dof of x will have a delta_x of zero.
+    bool solve_for_free_newton_direction(const Eigen::VectorXd& gradient_free,
+        const Eigen::SparseMatrix<double>& hessian_free,
+        const Eigen::VectorXi& free_dof, Eigen::VectorXd& delta_x,
+        bool make_psd = false);
 
-    /**
-     * @brief Search along a search direction to find a scalar \f$\step_length
-     * \in [0, 1]\f$ such that \f$f(x + \step_length \vec{dir}) \leq f(x)\f$.
-     *
-     * @param[in] x                 Starting point for the line search.
-     * @param[in] dir               Direction to search along.
-     * @param[in] f                 Function of x to minimize.
-     * @param[in] grad_fx          The precomputed value of ∇f(x).
-     * @param[in] constraint        Constraint on x such that constraint(x) must
-     *                              be true.
-     * @param[out] step_length      Scalar coefficent of the direction to step.
-     * @param[in] min_step_length   Minimum value of step_length before the line
-     * search fails.
-     *
-     * @return True if the line search was successful, false otherwise.
-     */
-    bool constrained_line_search(const Eigen::VectorXd& x,
-        const Eigen::VectorXd& dir,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        const Eigen::VectorXd& grad_fx,
-        const std::function<bool(const Eigen::VectorXd&)>& constraint,
-        double& step_length, const double min_step_length = 1e-10);
+    // Make the matrix positive definite (x^T A x > 0).
+    double make_matrix_positive_definite(Eigen::SparseMatrix<double>& A);
 
 } // namespace opt
 } // namespace ccd

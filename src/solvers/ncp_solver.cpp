@@ -6,7 +6,7 @@
 #include <igl/slice_into.h>
 
 #include <solvers/lcp_solver.hpp>
-#include <solvers/newtons_method.hpp> //> line search
+#include <solvers/line_search.hpp>
 
 #include <logger.hpp>
 
