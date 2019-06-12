@@ -7,9 +7,9 @@
 namespace ccd {
 namespace opt {
 
-    BarrierConstraint::BarrierConstraint() {}
-    BarrierConstraint::BarrierConstraint(const double epsilon)
-        : barrier_epsilon(epsilon)
+    BarrierConstraint::BarrierConstraint()
+        : barrier_epsilon(0.0)
+        , initial_epsilon(InitialBarrierEpsilon::MIN_TOI)
     {
     }
 
@@ -42,15 +42,28 @@ namespace opt {
     {
         // Assumes the collisions have already been detected
         if (this->ee_impacts.size() > 0) {
-            this->barrier_epsilon = this->ee_impacts[0].time;
-            for (EdgeEdgeImpact ee_impact : this->ee_impacts) {
-                this->barrier_epsilon
-                    = std::min(this->barrier_epsilon, ee_impact.time);
+            switch (initial_epsilon) {
+            case InitialBarrierEpsilon::MIN_TOI:
+            case InitialBarrierEpsilon::MAX_TOI:
+                this->barrier_epsilon = this->ee_impacts[0].time;
+                for (EdgeEdgeImpact ee_impact : this->ee_impacts) {
+                    if (initial_epsilon == InitialBarrierEpsilon::MIN_TOI) {
+                        this->barrier_epsilon
+                            = std::min(this->barrier_epsilon, ee_impact.time);
+                    } else {
+                        this->barrier_epsilon
+                            = std::max(this->barrier_epsilon, ee_impact.time);
+                    }
+                }
+                break;
+            case InitialBarrierEpsilon::ONE:
+                this->barrier_epsilon = 1;
+                break;
             }
         } else {
             this->barrier_epsilon = 0;
         }
-    }
+    } // namespace opt
 
     void BarrierConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers)

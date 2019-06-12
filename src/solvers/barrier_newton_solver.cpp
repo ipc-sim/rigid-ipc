@@ -1,10 +1,11 @@
 // Solve the optimization general_problem using Newton's Method with barriers
 // for the constraints.
 
-#include <solvers/barrier_newton_solver.hpp>
+#include "barrier_newton_solver.hpp"
 
-#include <solvers/newtons_method.hpp>
 #include <opt/barrier.hpp>
+#include <solvers/newtons_method.hpp>
+#include <utils/eigen_ext.hpp>
 
 #include <logger.hpp>
 #include <profiler.hpp>
@@ -57,35 +58,40 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> ddgx;
         general_problem->eval_g_and_gdiff(x, gx, dgx, ddgx);
 
-        f_uk += gx.sum() + this->barrier(x - general_problem->x_lower).sum()
-            + this->barrier(-x + general_problem->x_upper).sum();
+        // Check the sizes of the x's match
+        assert(x.size() == general_problem->x_lower.size());
+        assert(x.size() == general_problem->x_upper.size());
+
+        // Sum the barrier constraints into the objective
+        f_uk += gx.sum() + barrier(x - general_problem->x_lower).sum()
+            + barrier(-x + general_problem->x_upper).sum();
+
+        // Sum the barrier constraint gradients into the objective gradient
         f_uk_gradient += dgx.colwise().sum().transpose()
             + barrier_gradient(x - general_problem->x_lower)
             - barrier_gradient(-x + general_problem->x_upper);
 
-        PROFILE(for (const auto& ddgx_i
-                     : ddgx) { f_uk_hessian += ddgx_i; },
+        // Sum the barrier constraint hessian into the objective hessian
+        PROFILE(
+            // clang-format off
+            for (const auto& ddgx_i : ddgx) {
+                f_uk_hessian += ddgx_i;
+            },
+            // clang-format on
             ProfiledPoint::SUMMING_HESSIAN)
     }
 
     double BarrierProblem::eval_f(const Eigen::VectorXd& x)
     {
+        // Check the sizes of the x's match
+        assert(x.size() == general_problem->x_lower.size());
+        assert(x.size() == general_problem->x_upper.size());
+
         double val = general_problem->eval_f(x)
-            + this->barrier(x - general_problem->x_lower).sum()
-            + this->barrier(-x + general_problem->x_upper).sum();
+            + barrier(x - general_problem->x_lower).sum()
+            + barrier(-x + general_problem->x_upper).sum();
 
         Eigen::VectorXd gx = general_problem->eval_g(x);
-        // Check to make sure the gx is not dynamic
-        // if (gx.size() != 0
-        //     && gx.size() == gx.rows() == general_problem->g_lower.rows()
-        //     && gx.cols() == general_problem->g_lower.cols()
-        //     && gx.rows() == general_problem->g_upper.rows()
-        //     && gx.cols() == general_problem->g_upper.cols()) {
-        //     val += barrier(gx - general_problem->g_lower).sum()
-        //         + barrier(-gx + general_problem->g_upper).sum();
-        // } else {
-        //     val += barrier(gx).sum();
-        // }
         val += gx.sum();
 
         return val;
@@ -96,29 +102,17 @@ namespace opt {
         Eigen::VectorXd grad = general_problem->eval_grad_f(x);
 
         // Add constraint functions barrier(g(x))
-        // Eigen::VectorXd gx = general_problem->eval_g(x);
         Eigen::MatrixXd dgx = general_problem->eval_jac_g(x);
-        // Check to make sure the gx is not dynamic
-        // Eigen::VectorXd coeffs;
-        // if (gx.size() != 0 && dgx.size() != 0
-        //     && gx.rows() == general_problem->g_lower.rows()
-        //     && gx.cols() == general_problem->g_lower.cols()
-        //     && gx.rows() == general_problem->g_upper.rows()
-        //     && gx.cols() == general_problem->g_upper.cols()) {
-        //     coeffs = barrier_gradient(gx - general_problem->g_lower)
-        //         - barrier_gradient(-gx + general_problem->g_upper);
-        // } else {
-        //     coeffs = barrier_gradient(gx);
-        // }
-        // grad += (coeffs.asDiagonal() * dgx).colwise().sum().transpose();
         grad += dgx.colwise().sum().transpose();
 
-        // Add value constraints barrier(x)
+        // Add value constraint barriers
         // ∇ ∑ ϕ(x_i) = ∑ (∇ ϕ(x_i)) = ∑ [0 ... ϕ'(x_i) ... 0]^T
         //            = [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
+        // Check the sizes of the x's match
+        assert(x.size() == general_problem->x_lower.size());
+        assert(x.size() == general_problem->x_upper.size());
         grad += barrier_gradient(x - general_problem->x_lower)
             - barrier_gradient(-x + general_problem->x_upper);
-
         return grad;
     }
 
@@ -131,37 +125,22 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> ddgx
             = general_problem->eval_hessian_g(x);
 
-        // Check to make sure the gx is not dynamic
-        // Eigen::VectorXd grad_coeffs, hessian_coeffs;
-        // if (gx.size() != 0 && dgx.size() != 0 && ddgx.size() != 0
-        //     && gx.rows() == general_problem->g_lower.rows()
-        //     && gx.cols() == general_problem->g_lower.cols()
-        //     && gx.rows() == general_problem->g_upper.rows()
-        //     && gx.cols() == general_problem->g_upper.cols()) {
-        //     grad_coeffs = barrier_gradient(gx - general_problem->g_lower)
-        //         - barrier_gradient(-gx + general_problem->g_upper);
-        //     hessian_coeffs = barrier_hessian(gx - general_problem->g_lower)
-        //         + barrier_hessian(-gx + general_problem->g_upper);
-        // } else {
-        //     grad_coeffs = barrier_gradient(gx);
-        //     hessian_coeffs = barrier_hessian(gx);
-        // }
-
         PROFILE(
-            if (ddgx.size() > 0) {
-                Eigen::SparseMatrix<double> sum_ddgx = ddgx[0];
-                for (long i = 1; i < ddgx.size(); i++) {
-                    // hessian += hessian_coeffs(i) * dgx.row(i).transpose() *
-                    // dgx.row(i)
-                    //     + grad_coeffs(i) * ddgx[unsigned(i)];
-                    sum_ddgx += ddgx[unsigned(i)];
-                }
-                hessian += sum_ddgx;
-            },
-            ProfiledPoint::SUMMING_HESSIAN)
+            // clang-format off
+            Eigen::SparseMatrix<double> sum_ddgx(
+                hessian.rows(), hessian.cols());
+            for (const auto& ddgx_i : ddgx) {
+                sum_ddgx += ddgx_i;
+            }
+            hessian += sum_ddgx;
+            // clang-format on
+            , ProfiledPoint::SUMMING_HESSIAN)
 
         // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
         // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
+        // Check the sizes of the x's match
+        assert(x.size() == general_problem->x_lower.size());
+        assert(x.size() == general_problem->x_upper.size());
         hessian.diagonal() += barrier_hessian(x - general_problem->x_lower)
             + barrier_hessian(-x + general_problem->x_upper);
         return hessian;
@@ -171,19 +150,26 @@ namespace opt {
         const Eigen::VectorXd& x)
     {
         Eigen::SparseMatrix<double> hessian
-            = general_problem->eval_hessian_f_sparse(x);
+            = general_problem->eval_hessian_f_sparse(x); // mass matrix
 
         std::vector<Eigen::SparseMatrix<double>> ddgx
-            = general_problem->eval_hessian_g(x);
+            = general_problem->eval_hessian_g(x); // hessian of constraints
 
-        PROFILE(for (const auto& ddgx_i
-                     : ddgx) { hessian += ddgx_i; },
+        PROFILE(
+            // clang-format off
+            for (const auto& ddgx_i : ddgx) {
+                hessian += ddgx_i;
+            },
+            // clang-format on
             ProfiledPoint::SUMMING_HESSIAN)
 
         // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
         // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
-        // hessian.diagonal() += barrier_hessian(x - general_problem->x_lower)
-        //     + barrier_hessian(-x + general_problem->x_upper);
+        assert(x.size() == general_problem->x_lower.size());
+        assert(x.size() == general_problem->x_upper.size());
+        hessian += Eigen::SparseDiagonal<double>(
+            barrier_hessian(x - general_problem->x_lower)
+            + barrier_hessian(-x + general_problem->x_upper));
         return hessian;
     }
 
@@ -205,8 +191,8 @@ namespace opt {
     BarrierNewtonSolver::BarrierNewtonSolver()
         : barrier_constraint(nullptr)
         , min_barrier_epsilon(1e-5)
-        , absolute_tolerance(1e-8)
-        , line_search_tolerance(1e-8)
+        , absolute_tolerance(1e-5)
+        , line_search_tolerance(1e-12)
         , max_iterations(3000)
     {
     }
@@ -240,7 +226,7 @@ namespace opt {
         do {
             // Log the epsilon and the newton method will log the number of
             // iterations.
-            spdlog::debug("solver=barrier_newton ϵ={:g}",
+            spdlog::trace("solver=barrier_newton ϵ={:g}",
                 barrier_constraint->barrier_epsilon);
 
             // Optimize for a fixed epsilon

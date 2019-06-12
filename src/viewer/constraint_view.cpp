@@ -28,6 +28,13 @@ void volume_constraint_menu(ccd::opt::VolumeConstraint& cstr)
 void barrier_constraint_menu(ccd::opt::BarrierConstraint& cstr)
 {
     collision_constraint_menu(cstr);
+    int initial_epsilon_idx = static_cast<int>(cstr.initial_epsilon);
+    if (ImGui::Combo("init. eps##opt", &initial_epsilon_idx,
+            ccd::opt::InitialBarrierEpsilonNames,
+            CCD_IM_ARRAYSIZE(ccd::opt::InitialBarrierEpsilonNames))) {
+        cstr.initial_epsilon
+            = static_cast<ccd::opt::InitialBarrierEpsilon>(initial_epsilon_idx);
+    }
 }
 
 } // namespace ccd

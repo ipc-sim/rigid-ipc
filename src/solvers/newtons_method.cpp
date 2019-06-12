@@ -2,12 +2,12 @@
 // Includes Newton's method with and without constraints.
 #include "newtons_method.hpp"
 
-#include <cmath>
-#include <iostream>
-
+#include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <igl/slice.h>
 #include <igl/slice_into.h>
+
+#include <solvers/line_search.hpp>
 
 #include <logger.hpp>
 #include <profiler.hpp>
@@ -17,72 +17,80 @@ namespace opt {
 
     OptimizationResults newtons_method(OptimizationProblem& problem,
         const Eigen::VectorXi& free_dof, const double absolute_tolerance,
-        const double line_search_tolerance, const int max_iter, const double mu)
+        const double line_search_tolerance, const int max_iter)
     {
         // Initalize the working variables
         Eigen::VectorXd x = problem.x0;
-
-        // subset of g for free degrees of freedom
         Eigen::VectorXd gradient, gradient_free;
         Eigen::SparseMatrix<double> hessian, hessian_free;
-
         Eigen::VectorXd delta_x = Eigen::VectorXd::Zero(problem.num_vars);
         double step_length = 1.0;
 
-        // TODO: Can we use a better solver than LU?
-        Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
-
+        // Simple function to make sure the optimization does not violate
+        // constraints.
         auto constraint = [&problem](const Eigen::VectorXd& x) {
-            return problem.eval_f(x) < std::numeric_limits<double>::infinity();
+            return !std::isinf(problem.eval_f(x));
         };
 
         int iter = 0;
+        std::string exit_reason = "exceeded the maximum allowable iterations";
         do {
             // Compute the gradient and hessian
             double _;
             problem.eval_f_and_fdiff(x, _, gradient, hessian);
+
             // Remove rows of fixed dof
-            igl::slice(gradient, free_dof, 1, gradient_free);
+            igl::slice(gradient, free_dof, gradient_free);
 
             if (gradient_free.squaredNorm() <= absolute_tolerance) {
+                exit_reason = "found a local optimum";
                 break;
             }
 
-            // Compute the full hessian and remove rows and columns of fixed dof
+            // Remove rows and columns of fixed dof of the hessian
             igl::slice(hessian, free_dof, free_dof, hessian_free);
-            // Add a small value to the diagonal to prevent singular matrices
-            for (int i = 0; i < hessian_free.rows(); i++) {
-                hessian_free.coeffRef(i, i) += mu;
+
+            if (!solve_for_free_newton_direction(
+                    gradient_free, hessian_free, free_dof, delta_x, true)) {
+                exit_reason = "newton direction solve failed";
+                break;
             }
 
-            PROFILE(
-                solver.compute(hessian_free);
-                if (solver.info() != Eigen::Success) {
-                    std::cerr << "Sparse decomposition of the hessian failed!"
-                              << std::endl;
-                    break;
-                }
-
-                // Store the free dof back into delta_x
-                igl::slice_into(Eigen::VectorXd(solver.solve(-gradient_free)),
-                    free_dof, 1, delta_x);
-                if (solver.info() != Eigen::Success) {
-                    std::cerr << "Sparse solve for the update failed!"
-                              << std::endl;
-                    break;
-                },
-                ProfiledPoint::UPDATE_SOLVE);
-
-            // Perform a line search along delta x to stay in the feasible realm
+            // Perform a line search along Δx to stay in the feasible realm
+            bool found_step_length;
             // step_length = std::min(1.0, 2 * step_length);
             step_length = 1.0;
             // problem.enable_line_search_mode(x + delta_x);
-            bool found_step_length
+            found_step_length
                 = constrained_line_search(x, delta_x, problem.func_f(),
                     gradient, constraint, step_length, line_search_tolerance);
             // problem.disable_line_search_mode();
+
             if (!found_step_length) {
-                break; // Newton step unsuccessful
+                // Revert to gradient descent if the newton direction
+                // fails
+                spdlog::warn("method=newtons_method iter={:d} failure=\"line "
+                             "search using newton direction\" "
+                             "failsafe=\"reverting to gradient descent\"",
+                    iter + 1);
+                igl::slice_into(-gradient_free, free_dof, 1, delta_x);
+
+                // step_length = std::min(1.0, 2 * step_length);
+                step_length = 1.0;
+                // problem.enable_line_search_mode(x + delta_x);
+                found_step_length = constrained_line_search(x, delta_x,
+                    problem.func_f(), gradient, constraint, step_length,
+                    line_search_tolerance);
+                // problem.disable_line_search_mode();
+
+                if (!found_step_length) {
+                    spdlog::warn(
+                        "method=newtons_method iter={:d} failure=\"line search "
+                        "using gradient descent\" failsafe=none",
+                        iter + 1);
+                    exit_reason = "line-search failed";
+                    break;
+                }
             }
 
             x += step_length * delta_x; // Update x
@@ -91,81 +99,113 @@ namespace opt {
             problem.eval_intermediate_callback(x);
         } while (++iter <= max_iter);
 
-        std::ostringstream string_stream;
-        if (gradient_free.squaredNorm() <= absolute_tolerance) {
-            string_stream << "found a local optimum";
-        } else if (iter > max_iter) {
-            string_stream << "exceeded the maximum allowable iterations ("
-                          << max_iter << ")";
-        } else {
-            string_stream << "line-search failed";
-        }
-        spdlog::debug(
-            "method=newtons_method total_iter={:d} exit_code=\"{:s}\"", iter,
-            string_stream.str());
+        spdlog::trace("method=newtons_method total_iter={:d} "
+                      "exit_reason=\"{:s}\" sqr_norm_grad={:g}",
+            iter, exit_reason, gradient_free.squaredNorm());
 
         return OptimizationResults(x, problem.eval_f(x),
             gradient_free.squaredNorm() <= absolute_tolerance);
     }
 
-    // Search along a search direction to find a scalar step_length in [0, 1]
-    // such that f(x + step_length * dir) ≤ f(x).
-    bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        double& step_length, const double min_step_length)
+    // Solve for the newton direction for the limited degrees of freedom.
+    // The fixed dof of x will have a delta_x of zero.
+    bool solve_for_free_newton_direction(const Eigen::VectorXd& gradient_free,
+        const Eigen::SparseMatrix<double>& hessian_free,
+        const Eigen::VectorXi& free_dof, Eigen::VectorXd& delta_x,
+        bool make_psd)
     {
-        return line_search(x, dir, f, Eigen::VectorXd::Zero(dir.size()),
-            step_length, min_step_length);
-    }
-
-    // Search along a search direction to find a scalar step_length in [0, 1]
-    // such that f(x + step_length * dir) ≤ f(x).
-    bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        const Eigen::VectorXd& grad_fx, double& step_length,
-        const double min_step_length)
-    {
-        return constrained_line_search(
-            x, dir, f, grad_fx, [](const Eigen::VectorXd&) { return true; },
-            step_length, min_step_length);
-    }
-
-    // Search along a search direction to find a scalar step_length in [0, 1]
-    // such that f(x + step_length * dir) ≤ f(x).
-    // TODO: Filter the dof that violate the constraints. These are the indices
-    // i where ϕ([g(x)]_i) = ∞.
-    bool constrained_line_search(const Eigen::VectorXd& x,
-        const Eigen::VectorXd& dir,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        const Eigen::VectorXd& grad_fx,
-        const std::function<bool(const Eigen::VectorXd&)>& constraint,
-        double& step_length, const double min_step_length)
-    {
-        const double fx = f(x); // Function value we want to beat
-
-        // Wolfe conditions:
-        // Armijo rule
-        double wolfe_c1 = 1e-4;
-        const double wolfe1 = wolfe_c1 * dir.transpose() * grad_fx;
-        auto armijo_rule = [&]() {
-            return f(x + step_length * dir) <= fx + step_length * wolfe1;
-        };
-        // Curvature condition
-        // double wolfe_c2 = 0.9;
-        // const double wolfe2 = -wolfe_c2 * dir.transpose() * grad_fx;
-        auto curvature_consition = [&]() {
-            // return -dir.transpose * grad_f(x + step_length * dir) <= wolfe2;
-            return true;
-        };
-
-        while (step_length >= min_step_length) {
-            if (armijo_rule() && curvature_consition()
-                && constraint(x + step_length * dir)) {
-                return true;
-            }
-            step_length /= 2.0;
+        Eigen::VectorXd delta_x_free;
+        if (!solve_for_newton_direction(
+                gradient_free, hessian_free, delta_x_free, make_psd)) {
+            return false;
         }
-        return false;
+        // Store the free dof back into delta_x
+        igl::slice_into(delta_x_free, free_dof, delta_x);
+        return true;
+    }
+
+    // Solve for the Newton direction (Δx = -H^{-1}∇f).
+    // Return true if the solve was successful.
+    bool solve_for_newton_direction(const Eigen::VectorXd& gradient,
+        const Eigen::SparseMatrix<double>& hessian, Eigen::VectorXd& delta_x,
+        bool make_psd)
+    {
+        bool solve_success = false;
+
+        // Profile the performance of the solve.
+        // PROFILE(
+        // clang-format off
+            // TODO: Can we use a better solver than LU?
+            Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+
+            solver.compute(hessian);
+            if (solver.info() != Eigen::Success) {
+                spdlog::warn(
+                    "method=newtons_method failure=\"sparse decomposition "
+                    "of the hessian failed\" failsafe=none");
+            } else {
+                delta_x = solver.solve(-gradient);
+                if (solver.info() != Eigen::Success) {
+                    spdlog::warn("method=newtons_method failure=\"sparse solve "
+                                 "for newton direction failed\" failsafe=none");
+                } else {
+                    solve_success = true;
+                }
+            }//,
+        // clang-format on
+        // ProfiledPoint::UPDATE_SOLVE);
+
+        if (solve_success && make_psd && delta_x.transpose() * gradient >= 0) {
+            // If delta_x is not a descent direction then we want to modify the
+            // hessian to be diagonally dominant with positive elements on the
+            // diagonal (positive definite). We do this by adding μI to the
+            // hessian. This can result in doing a step of gradient descent.
+            Eigen::SparseMatrix<double> psd_hessian = hessian;
+            double mu = make_matrix_positive_definite(psd_hessian);
+            spdlog::debug("method=newtons_method failure=\"newton direction "
+                          "not descent direction\" failsafe=\"H += μI\" μ={:g}",
+                mu);
+            solve_success = solve_for_newton_direction(
+                gradient, psd_hessian, delta_x, false);
+            if (delta_x.transpose() * gradient >= 0) {
+                spdlog::warn(
+                    "method=newtons_method failure=\"newton direction not "
+                    "descent direction\" failsafe=none dir_dot_grad={:g}",
+                    delta_x.transpose() * gradient);
+            }
+        }
+
+        return solve_success; // Was the solve successful
+    }
+
+    // Make the matrix positive definite (x^T A x > 0).
+    double make_matrix_positive_definite(Eigen::SparseMatrix<double>& A)
+    {
+        // Conservative way of making A PSD by making it diagonally dominant
+        // with all positive diagonal entries
+        Eigen::SparseMatrix<double> I(A.rows(), A.rows());
+        I.setIdentity();
+        // Entries along the diagonal of A
+        Eigen::VectorXd diag = Eigen::VectorXd::Zero(A.rows());
+        // Sum of columns per row not including the diagonal entry
+        // (∑_{i≠j}|a_{ij}|)
+        Eigen::VectorXd sum_row = Eigen::VectorXd::Zero(A.rows());
+
+        // Loop over elements adding them to the appropriate vector above
+        for (int k = 0; k < A.outerSize(); ++k) {
+            for (Eigen::SparseMatrix<double>::InnerIterator it(A, k); it;
+                 ++it) {
+                if (it.row() == it.col()) { // Diagonal element
+                    diag(it.row()) = it.value();
+                } else { // Non-diagonal element
+                    sum_row(it.row()) += abs(it.value());
+                }
+            }
+        }
+        // Take max to ensure all diagonal elements are dominant
+        double mu = std::max((sum_row - diag).maxCoeff(), 0.0);
+        A += mu * I;
+        return mu;
     }
 
 } // namespace opt
