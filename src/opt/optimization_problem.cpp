@@ -1,4 +1,4 @@
-#include <ccd/not_implemented_error.hpp>
+#include <utils/not_implemented_error.hpp>
 #include <opt/optimization_problem.hpp>
 
 namespace ccd {

@@ -4,7 +4,7 @@
 #include <catch2/catch.hpp>
 #include <osqp.h>
 
-TEST_CASE("Simple tests of OSQP", "[opt][nlopt]")
+TEST_CASE("Simple tests of OSQP", "[opt][osqp]")
 {
     typedef Eigen::Matrix<c_float, Eigen::Dynamic, 1> VectorX_OSQP;
     typedef Eigen::SparseMatrix<c_float, Eigen::ColMajor, c_int>

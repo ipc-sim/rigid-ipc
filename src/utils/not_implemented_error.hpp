@@ -1,5 +1,4 @@
-#ifndef NOT_IMPLEMENTED_ERROR_H
-#define NOT_IMPLEMENTED_ERROR_H
+#pragma once
 
 #include <stdexcept>
 
@@ -14,8 +13,8 @@ public:
      * @param error_message Message describing what has not been implmented.
      */
     NotImplementedError(
-        const char* error_message = "Functionality not yet implemented!");
+        const char* error_message = "Functionality not yet implemented!")
+        : std::logic_error(error_message) {};
 };
 
 } // namespace ccd
-#endif // NOT_IMPLEMENTED_ERROR_H

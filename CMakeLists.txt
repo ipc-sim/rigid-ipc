@@ -35,7 +35,6 @@ add_library(${PROJECT_NAME}
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp
 
-    src/ccd/not_implemented_error.cpp
     src/ccd/degenerate_edge_error.cpp
     src/ccd/impact.cpp
     src/ccd/hash_grid.cpp
