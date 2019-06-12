@@ -157,8 +157,8 @@ namespace opt {
         //     && (x.array() <= this->x_upper.array() + 10 * tol).all();
         // TODO: This does not work for the barrier constraint
         return (-10 * tol <= gx).all()
-               && (this->x_lower.array() - 10 * tol <= x.array()).all()
-               && (x.array() <= this->x_upper.array() + 10 * tol).all();
+            && (this->x_lower.array() - 10 * tol <= x.array()).all()
+            && (x.array() <= this->x_upper.array() + 10 * tol).all();
     }
 
     // Enable the line search mode. This functionality is not up to the child

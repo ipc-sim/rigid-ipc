@@ -3,7 +3,7 @@
 #include <Eigen/SparseCore>
 
 #include <ccd/collision_detection.hpp>
-#include <ccd/not_implemented_error.hpp>
+#include <utils/not_implemented_error.hpp>
 
 #include <autodiff/autodiff_types.hpp>
 
