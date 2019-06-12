@@ -1,7 +1,7 @@
 // Solve a optimization problem with NLopt.
 #include "nlopt_solver.hpp"
 
-#include <ccd/not_implemented_error.hpp>
+#include <utils/not_implemented_error.hpp>
 
 #include <iostream>
 

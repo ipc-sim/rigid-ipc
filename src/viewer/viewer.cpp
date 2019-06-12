@@ -4,7 +4,7 @@
 #include <igl/bounding_box.h>
 #include <igl/opengl/MeshGL.h>
 
-#include <ccd/not_implemented_error.hpp>
+#include <utils/not_implemented_error.hpp>
 
 #include <io/read_scene.hpp>
 #include <viewer/edges_to_rectangles.hpp>

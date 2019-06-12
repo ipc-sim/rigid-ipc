@@ -6,7 +6,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <ccd/not_implemented_error.hpp>
+#include <utils/not_implemented_error.hpp>
 
 #include <autodiff/finitediff.hpp>
 
