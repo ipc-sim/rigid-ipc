@@ -31,7 +31,7 @@ include(${PROJECT_NAME}Dependencies)
 ################################################################################
 # Fixing Collisions Library
 ################################################################################
-add_library(${PROJECT_NAME}    
+add_library(${PROJECT_NAME}
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp
 
@@ -57,6 +57,7 @@ add_library(${PROJECT_NAME}
     src/opt/barrier_constraint.cpp
     src/opt/collision_constraint.cpp
     src/opt/optimization_problem.cpp
+    src/opt/ad_hoc_problem.cpp
     src/opt/optimization_results.cpp
     src/opt/particles_problem.cpp
     src/opt/volume_constraint.cpp
@@ -71,13 +72,15 @@ add_library(${PROJECT_NAME}
     src/solvers/optimization_solver.cpp
     src/solvers/qp_solver.cpp
 
+    src/utils/eigen_ext.cpp
+
     src/state.cpp
     src/logger.cpp
     src/profiler.cpp
 
     # Generated files
-   src/autogen/time_of_impact_coeff.tpp
-   src/autogen/collision_volume.tpp
+    src/autogen/time_of_impact_coeff.tpp
+    src/autogen/collision_volume.tpp
 
 )
 

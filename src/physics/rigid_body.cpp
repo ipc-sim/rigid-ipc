@@ -31,28 +31,18 @@ namespace physics {
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
     RigidBody::world_displacements(const Eigen::Matrix<T, 3, 1>& vel) const
     {
-        typedef Eigen::Translation<T, 2> Translation2d;
-        typedef Eigen::Rotation2D<T> Rotation2Dd;
-        typedef Eigen::Matrix<T, 3, 3> Matrix3d;
-        typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
-        typedef Eigen::Matrix<T, Eigen::Dynamic, 3> MatrixX3d;
+        typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> MatrixXT;
+        typedef Eigen::Matrix<T, 2, 2> Matrix2T;
 
-        // create transform matrix matrix
-        Matrix3d Tm = Eigen::Transform<T, 2, Eigen::Affine>(
-            Translation2d(vel.x(), vel.y())
-            * Translation2d(T(position.x()), T(position.y()))
-            * Rotation2Dd(vel(2))
-            * Translation2d(T(position.x()), -T(position.y())))
-                          .matrix();
+        // Create a 2D 2x2 rotation matrix
+        Matrix2T R = Eigen::Rotation2D<T>(vel(2)).toRotationMatrix();
 
-        MatrixXd v = world_vertices().cast<T>();
+        MatrixXT verticesT = vertices.cast<T>();
 
-        MatrixX3d hvertices = v.rowwise().homogeneous();
-        MatrixX3d tvertices = hvertices * Tm.transpose();
+        MatrixXT transformed_vertices = (verticesT * R.transpose()).rowwise()
+            + vel.topRows(2).transpose();
 
-        MatrixXd displacements;
-        displacements = tvertices.rowwise().hnormalized();
-        displacements -= v;
+        MatrixXT displacements = transformed_vertices - verticesT;
 
         return displacements;
     }
@@ -76,7 +66,6 @@ namespace physics {
     std::vector<Eigen::Matrix3d> RigidBody::world_displacements_hessian(
         const Eigen::Vector3d& vel) const
     {
-
         RBDiff::activate();
         RBDiff::D2Vector3 dvel = RBDiff::d2vars(0, vel);
         RBDiff::D2MatrixXd dx = world_displacements<RBDiff::DScalar2>(dvel);
@@ -102,142 +91,71 @@ namespace physics {
         return grad;
     }
 
-    std::vector<Eigen::MatrixX2d> RigidBody::world_displacements_gradient_exact(
+    // Return the gradient of the world displacments with respect to the
+    // velocities. ∇U(σ) ∈ R^{2n × 3} where n = |V|.
+    Eigen::MatrixXd RigidBody::world_displacements_gradient_exact(
         const Eigen::Vector3d& vel) const
     {
-        typedef Eigen::Transform<double, 2, Eigen::Affine> AffineTransform;
-        Eigen::Matrix3d T_c
-            = AffineTransform(Eigen::Translation2d(position.x(), position.y()))
-                  .matrix();
-        Eigen::Matrix3d T_negc = AffineTransform(
-            Eigen::Translation2d(-position.x(), -position.y()))
-                                     .matrix();
-        Eigen::Matrix3d T_xy
-            = AffineTransform(Eigen::Translation2d(vel.x(), vel.y())).matrix();
+        // With respect to vel.x()
+        Eigen::MatrixXd gradx_U
+            = Eigen::MatrixXd::Zero(vertices.rows(), vertices.cols());
+        gradx_U.col(0).setOnes();
+        flatten<double>(gradx_U);
+
+        // With respect to vel.y()
+        Eigen::MatrixXd grady_U
+            = Eigen::MatrixXd::Zero(vertices.rows(), vertices.cols());
+        grady_U.col(1).setOnes();
+        flatten<double>(grady_U);
+
+        // With respect to θ = vel(2)
         double θ = vel(2);
-        Eigen::Matrix3d R_θ = AffineTransform(Eigen::Rotation2Dd(θ)).matrix();
-
-        Eigen::Matrix3d gradx_T
-            = AffineTransform(Eigen::Translation2d(1, 0)).matrix() * T_c * R_θ
-            * T_negc;
-        Eigen::Matrix3d grady_T = Eigen::Transform<double, 2, Eigen::Affine>(
-                                      Eigen::Translation2d(0, 1))
-                                      .matrix()
-            * T_c * R_θ * T_negc;
-        Eigen::Matrix3d gradθ_R;
+        Eigen::Matrix2d gradθ_R;
         // clang-format off
-    gradθ_R <<
-        -sin(θ), -cos(θ), 0,
-         cos(θ), -sin(θ), 0,
-              0,       0, 1;
+        gradθ_R << -sin(θ), -cos(θ),
+                    cos(θ), -sin(θ);
         // clang-format on
-        Eigen::Matrix3d gradθ_T = T_xy * T_c * gradθ_R * T_negc;
+        Eigen::MatrixXd gradθ_U = vertices * gradθ_R.transpose();
+        flatten<double>(gradθ_U);
 
-        const auto& this_vertices = world_vertices();
-        auto transform_vertices
-            = [&this_vertices](const Eigen::Matrix3d& T) -> Eigen::MatrixX2d {
-            return (this_vertices.rowwise().homogeneous() * T.transpose())
-                .rowwise()
-                .hnormalized();
-        };
-
-        std::vector<Eigen::MatrixX2d> gradient;
-        gradient.reserve(3);
-        gradient.push_back(transform_vertices(gradx_T));
-        gradient.push_back(transform_vertices(grady_T));
-        gradient.push_back(transform_vertices(gradθ_T));
-
+        Eigen::MatrixXd gradient(vertices.size(), 3);
+        gradient << gradx_U, grady_U, gradθ_U;
         return gradient;
     }
 
-    std::vector<std::vector<Eigen::MatrixX2d>>
-    RigidBody::compute_world_displacements_hessian() const
+    std::vector<Eigen::Matrix3d> RigidBody::world_displacements_hessian_exact(
+        const Eigen::Vector3d& vel) const
     {
-        Eigen::Matrix3d T_c = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(position.x(), position.y()))
-                                  .matrix();
-        Eigen::Matrix3d T_negc = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(-position.x(), -position.y()))
-                                     .matrix();
-        Eigen::Matrix3d T_xy = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(velocity.x(), velocity.y()))
-                                   .matrix();
-        double θ = velocity(2);
-        Eigen::Matrix3d R_θ
-            = Eigen::Transform<double, 2, Eigen::Affine>(Eigen::Rotation2Dd(θ))
-                  .matrix();
+        // With respect to vel.x()
+        Eigen::VectorXd gradx_gradx_U, gradx_grady_U, gradx_gradθ_U;
+        gradx_gradx_U = gradx_grady_U = gradx_gradθ_U
+            = Eigen::VectorXd::Zero(vertices.size());
 
-        Eigen::Matrix3d gradx_T_xy = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(1, 0))
-                                         .matrix();
-        Eigen::Matrix3d grady_T_xy = Eigen::Transform<double, 2, Eigen::Affine>(
-            Eigen::Translation2d(0, 1))
-                                         .matrix();
-        Eigen::Matrix3d gradx_T = gradx_T_xy * T_c * R_θ * T_negc;
-        Eigen::Matrix3d grady_T = grady_T_xy * T_c * R_θ * T_negc;
-        Eigen::Matrix3d gradθ_R;
-        // clang-format off
-    // R_θ <<
-    //     cos(θ), -sin(θ), 0,
-    //     sin(θ),  cos(θ), 0,
-    //          0,       0, 0;
-    gradθ_R <<
-        -sin(θ), -cos(θ), 0,
-         cos(θ), -sin(θ), 0,
-              0,       0, 0;
-    // gradθ_gradθ_R <<
-    //     -cos(θ),  sin(θ), 0,
-    //     -sin(θ), -cos(θ), 0,
-    //           0,       0, 0;
-        // clang-format on
-        Eigen::Matrix3d gradθ_T = T_xy * T_c * gradθ_R * T_negc;
+        // With respect to vel.y()
+        Eigen::VectorXd grady_gradx_U, grady_grady_U, grady_gradθ_U;
+        grady_gradx_U = grady_grady_U = grady_gradθ_U
+            = Eigen::VectorXd::Zero(vertices.size());
 
-        Eigen::Matrix3d gradx_gradx_T = Eigen::Matrix3d::Zero();
-        Eigen::Matrix3d gradx_grady_T = Eigen::Matrix3d::Zero();
-        Eigen::Matrix3d gradx_gradθ_T = gradx_T_xy * T_c * gradθ_R * T_negc;
+        // With respect to θ = vel(2)
+        // -cos(θ)  sin(θ)
+        // -sin(θ) -cos(θ)
+        Eigen::Matrix2d hessθ_R
+            = -Eigen::Rotation2D<double>(vel(2)).toRotationMatrix();
+        Eigen::VectorXd gradθ_gradx_U, gradθ_grady_U;
+        gradθ_gradx_U = gradθ_grady_U = Eigen::VectorXd::Zero(vertices.size());
+        Eigen::MatrixXd gradθ_gradθ_U = vertices * hessθ_R.transpose();
+        flatten<double>(gradθ_gradθ_U);
 
-        Eigen::Matrix3d grady_gradx_T = Eigen::Matrix3d::Zero();
-        Eigen::Matrix3d grady_grady_T = Eigen::Matrix3d::Zero();
-        Eigen::Matrix3d grady_gradθ_T = grady_T_xy * T_c * gradθ_R * T_negc;
-
-        Eigen::Matrix3d gradθ_gradx_T = gradx_gradθ_T;
-        Eigen::Matrix3d gradθ_grady_T = grady_gradθ_T;
-        Eigen::Matrix3d gradθ_gradθ_T = T_xy * T_c * -R_θ * T_negc;
-
-        Eigen::MatrixX3d homogeneous_vertices(vertices.rows(), 3);
-        homogeneous_vertices.leftCols(2) = world_vertices();
-        ;
-        homogeneous_vertices.col(2).setOnes();
-
-        std::vector<std::vector<Eigen::MatrixX2d>> hessian(
-            3, std::vector<Eigen::MatrixX2d>());
-
-        const auto& this_vertices = world_vertices();
-        auto transform_vertices
-            = [&this_vertices](const Eigen::Matrix3d& T) -> Eigen::MatrixX2d {
-            return (this_vertices.rowwise().homogeneous() * T.transpose())
-                .rowwise()
-                .hnormalized();
-        };
-
-        // ∇_x∇U
-        hessian[0].reserve(3);
-        hessian[0].push_back(transform_vertices(gradx_gradx_T));
-        hessian[0].push_back(transform_vertices(gradx_grady_T));
-        hessian[0].push_back(transform_vertices(gradx_gradθ_T));
-
-        // ∇_y∇U
-        hessian[1].reserve(3);
-        hessian[1].push_back(transform_vertices(grady_gradx_T));
-        hessian[1].push_back(transform_vertices(grady_grady_T));
-        hessian[1].push_back(transform_vertices(grady_gradθ_T));
-
-        // ∇_θ∇U
-        hessian[2].reserve(3);
-        hessian[2].push_back(transform_vertices(gradθ_gradx_T));
-        hessian[2].push_back(transform_vertices(gradθ_grady_T));
-        hessian[2].push_back(transform_vertices(gradθ_gradθ_T));
-
+        std::vector<Eigen::Matrix3d> hessian(
+            static_cast<unsigned long>(vertices.size()), Eigen::Matrix3d());
+        for (long i = 0; i < vertices.size(); i++) {
+            // clang-format off
+            hessian[static_cast<unsigned long>(i)] <<
+                gradx_gradx_U(i), gradx_grady_U(i), gradx_gradθ_U(i),
+                grady_gradx_U(i), grady_grady_U(i), grady_gradθ_U(i),
+                gradθ_gradx_U(i), gradθ_grady_U(i), gradθ_gradθ_U(i);
+            // clang-format on
+        }
         return hessian;
     }
 

@@ -6,9 +6,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <ccd/not_implemented_error.hpp>
-
-#include <autodiff/finitediff.hpp>
+#include <physics/mass_matrix.hpp>
 
 #include <logger.hpp>
 #include <profiler.hpp>
@@ -36,7 +34,6 @@ namespace opt {
         constraint = &cstr;
         constraint->initialize(V, E, U);
         initProblem();
-        init_mass_matrix();
     }
 
     void ParticlesDisplProblem::initProblem()
@@ -44,21 +41,38 @@ namespace opt {
         u_ = displacements;
         u_.resize(displacements.size(), 1);
 
-        num_vars = int(u_.size());
+        init_num_vars();
         x0.resize(num_vars);
         x_lower.resize(num_vars);
         x_upper.resize(num_vars);
         x_lower.setConstant(NO_LOWER_BOUND);
         x_upper.setConstant(NO_UPPER_BOUND);
 
-        // TODO: this is wrong, it will depend on constraint type
-        num_constraints = constraint->number_of_constraints();
+        assert(fixed_dof.size() == num_vars);
+        // fixed_dof.resize(num_vars);
+        // fixed_dof.setZero();
+
+        init_num_constraints();
         g_lower.resize(num_constraints);
         g_upper.resize(num_constraints);
         g_lower.setConstant(0.0);
         g_upper.setConstant(NO_UPPER_BOUND);
 
         is_collision_set_frozen = false;
+
+        init_mass_matrix();
+    }
+
+    void ParticlesDisplProblem::init_num_vars()
+    {
+        num_vars = int(displacements.size());
+    }
+
+    void ParticlesDisplProblem::init_num_constraints()
+    {
+        // TODO: this is wrong, it will depend on constraint type
+        // num_constraints = Eigen::Dynamic;
+        num_constraints = constraint->number_of_constraints();
     }
 
     // Initalize the mass matrix based on the edge length of incident edges.
@@ -71,19 +85,15 @@ namespace opt {
             return;
         }
 
-        Eigen::VectorXd vertex_masses = Eigen::VectorXd::Zero(vertices.size());
-        for (long i = 0; i < edges.rows(); i++) {
-            double edge_length
-                = (vertices.row(edges(i, 1)) - vertices.row(edges(i, 0)))
-                      .norm();
-            // Add vornoi areas to the vertex weight
-            vertex_masses(edges(i, 0)) += edge_length / 2;
-            vertex_masses(edges(i, 0) + vertices.rows()) += edge_length / 2;
-            vertex_masses(edges(i, 1)) += edge_length / 2;
-            vertex_masses(edges(i, 1) + vertices.rows()) += edge_length / 2;
-        }
-        mass_matrix = Eigen::MatrixXd(vertex_masses.asDiagonal()).sparseView();
+        Eigen::VectorXd vertex_masses;
+        physics::mass_vector(vertices, edges, vertex_masses);
+        // Repeat the mass vector to make a mass matrix per dof
+        mass_matrix
+            = Eigen::SparseDiagonal<double>(vertex_masses.replicate(2, 1));
     }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Objective function and its derivatives.
 
     double ParticlesDisplProblem::eval_f(const Eigen::VectorXd& x)
     {
@@ -108,6 +118,11 @@ namespace opt {
         return mass_matrix;
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Constraint function and its derivatives.
+
     Eigen::VectorXd ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x)
     {
         Eigen::MatrixXd Uk = x;
@@ -122,6 +137,19 @@ namespace opt {
         return g_uk;
     };
 
+    void ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x,
+        Eigen::VectorXd& g_uk, Eigen::SparseMatrix<double>& g_uk_jacobian,
+        Eigen::VectorXi& g_uk_active)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        if (constraint->update_collision_set) {
+            constraint->detectCollisions(Uk);
+        }
+        constraint->compute_constraints(Uk, g_uk, g_uk_jacobian, g_uk_active);
+    }
+
     Eigen::MatrixXd ParticlesDisplProblem::eval_jac_g(const Eigen::VectorXd& x)
     {
         Eigen::MatrixXd Uk = x;
@@ -135,6 +163,18 @@ namespace opt {
             ProfiledPoint::COMPUTING_GRADIENT);
 
         return jac_gx;
+    };
+
+    void ParticlesDisplProblem::eval_jac_g(
+        const Eigen::VectorXd& x, Eigen::SparseMatrix<double>& jac_gx)
+    {
+        Eigen::MatrixXd Uk = x;
+        Uk.resize(x.rows() / 2, 2);
+
+        if (constraint->update_collision_set) {
+            constraint->detectCollisions(Uk);
+        }
+        constraint->compute_constraints_jacobian(Uk, jac_gx);
     };
 
     std::vector<Eigen::SparseMatrix<double>>
@@ -152,18 +192,6 @@ namespace opt {
         return hess_gx;
     }
 
-    void ParticlesDisplProblem::eval_jac_g(
-        const Eigen::VectorXd& x, Eigen::SparseMatrix<double>& jac_gx)
-    {
-        Eigen::MatrixXd Uk = x;
-        Uk.resize(x.rows() / 2, 2);
-
-        if (constraint->update_collision_set) {
-            constraint->detectCollisions(Uk);
-        }
-        constraint->compute_constraints_jacobian(Uk, jac_gx);
-    };
-
     void ParticlesDisplProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
         Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
         std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
@@ -177,6 +205,20 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
         constraint->compute_constraints_and_derivatives(
             Uk, g_uk, g_uk_jacobian, g_uk_hessian);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    bool ParticlesDisplProblem::eval_intermediate_callback(
+        const Eigen::VectorXd& x)
+    {
+        if (intermediate_callback != nullptr) {
+            Eigen::MatrixXd Uk = x;
+            Uk.resize(x.rows() / 2, 2);
+            return intermediate_callback(x, Uk);
+        }
+
+        return true;
     }
 
     void ParticlesDisplProblem::enable_line_search_mode(
@@ -197,31 +239,7 @@ namespace opt {
         this->is_collision_set_frozen = false;
     }
 
-    void ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x,
-        Eigen::VectorXd& g_uk, Eigen::SparseMatrix<double>& g_uk_jacobian,
-        Eigen::VectorXi& g_uk_active)
-    {
-        Eigen::MatrixXd Uk = x;
-        Uk.resize(x.rows() / 2, 2);
-
-        if (constraint->update_collision_set) {
-            constraint->detectCollisions(Uk);
-        }
-        constraint->compute_constraints(Uk, g_uk, g_uk_jacobian, g_uk_active);
-    }
-
-    bool ParticlesDisplProblem::eval_intermediate_callback(
-        const Eigen::VectorXd& x)
-    {
-        if (intermediate_callback != nullptr) {
-            Eigen::MatrixXd Uk = x;
-            Uk.resize(x.rows() / 2, 2);
-            return intermediate_callback(x, Uk);
-        }
-
-        return true;
-    }
-
+    // Check if a type, T, is differentiable (differentiable<T>())
     template <> bool differentiable<DScalar>() { return true; }
     template <> bool differentiable<double>() { return false; }
 

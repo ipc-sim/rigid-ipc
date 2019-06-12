@@ -2,6 +2,7 @@
 
 #include <autodiff/finitediff.hpp>
 
+#include <opt/ad_hoc_problem.hpp>
 #include <solvers/barrier_newton_solver.hpp>
 #include <solvers/newtons_method.hpp>
 
@@ -92,8 +93,16 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
     AdHocProblem constrained_problem(num_vars, num_constraints);
 
     // TODO: Added lower bound on g(x) back in to the optimization
-    // SECTION("Constraint is in g(x)") { constrained_problem.g_lower(0) = 1; }
-    SECTION("Constraint is in x_lower") { constrained_problem.x_lower(0) = 1; }
+    // SECTION("Constraint is in g(x)")
+    // {
+    //     // Set a lower bound on the variable through an identitiy function
+    //     constrained_problem.g_lower(0) = 1;
+    // }
+    SECTION("Constraint is in x_lower")
+    {
+        // Set a lower bound on the variable directly
+        constrained_problem.x_lower(0) = 1;
+    }
 
     constrained_problem.f
         = [](const Eigen::VectorXd& x) { return x.squaredNorm() / 2; };

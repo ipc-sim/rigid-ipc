@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include <opt/ad_hoc_problem.hpp>
 #include <solvers/newtons_method.hpp>
 
 using namespace ccd;
