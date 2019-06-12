@@ -1,6 +1,6 @@
 #include "ad_hoc_problem.hpp"
 
-#include <ccd/not_implemented_error.hpp>
+#include <utils/not_implemented_error.hpp>
 
 namespace ccd {
 namespace opt {
