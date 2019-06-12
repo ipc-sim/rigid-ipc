@@ -10,7 +10,7 @@
 #include <igl/mosek/mosek_quadprog.h>
 #endif
 
-#include <ccd/not_implemented_error.hpp>
+#include <utils/not_implemented_error.hpp>
 
 #include <iostream>
 
