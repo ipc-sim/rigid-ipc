@@ -8,19 +8,19 @@
 #include <ccd/impact.hpp>
 #include <ccd/prune_impacts.hpp>
 
-#include <opt/barrier_newton_solver.hpp>
-#include <opt/ipopt_solver.hpp>
-#include <opt/ncp_solver.hpp>
-#include <opt/nlopt_solver.hpp>
-#include <opt/optimization_solver.hpp>
-#include <opt/qp_solver.hpp>
+#include <solvers/barrier_newton_solver.hpp>
+#include <solvers/ipopt_solver.hpp>
+#include <solvers/ncp_solver.hpp>
+#include <solvers/nlopt_solver.hpp>
+#include <solvers/optimization_solver.hpp>
+#include <solvers/qp_solver.hpp>
 
 #include <opt/barrier_constraint.hpp>
 #include <opt/collision_constraint.hpp>
-#include <opt/displacement_opt.hpp>
+#include <opt/particles_problem.hpp>
 #include <opt/volume_constraint.hpp>
 
-#include <rigid_bodies/rigid_body.hpp>
+#include <physics/rigid_body_system.hpp>
 
 namespace ccd {
 
@@ -55,15 +55,8 @@ public:
     /// @brief #V,2 vertices displacements
     Eigen::MatrixX2d displacements;
 
-    /// @brief Rigid bodies to get displacements
-    std::vector<RigidBody> rigid_bodies;
+    ccd::physics::RigidBodySystem rigid_body_system;
     bool is_rigid_bodies_mode;
-    /// @brief Each element is the body index to which the vertex belongs
-    Eigen::VectorXi vertex_to_body;
-    /// @brief Each element is the starting index in the vertices of the body
-    Eigen::VectorXi body_to_vertex_start;
-    /// @brief Each element is the starting index in the edges of the body
-    Eigen::VectorXi body_to_edge_start;
 
     /// @brief The current number of pruned impacts
     int num_pruned_impacts;

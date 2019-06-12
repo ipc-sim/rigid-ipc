@@ -19,8 +19,8 @@ namespace opt {
         void compute_constraints_jacobian(
             const Eigen::MatrixXd& Uk, Eigen::MatrixXd& g_uk_jacobian) override;
 
-        void compute_constraints_jacobian(
-            const Eigen::MatrixXd& Uk, Eigen::SparseMatrix<double>& g_uk_jacobian) override;
+        void compute_constraints_jacobian(const Eigen::MatrixXd& Uk,
+            Eigen::SparseMatrix<double>& g_uk_jacobian) override;
 
         void compute_constraints_hessian(const Eigen::MatrixXd& Uk,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
@@ -55,6 +55,11 @@ namespace opt {
             const std::vector<DScalar>& impact_volumes,
             Eigen::SparseMatrix<double>& volumes_jac);
     };
+
+    long get_constraint_index(
+        const EdgeEdgeImpact& impact, const bool impacted, const int num_edges);
+
+    long get_constraints_size(const int num_edges);
 
 } // namespace opt
 } // namespace ccd

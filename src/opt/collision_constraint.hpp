@@ -7,6 +7,8 @@
 
 #include <autodiff/autodiff_types.hpp>
 
+#include <memory>
+
 namespace ccd {
 namespace opt {
 

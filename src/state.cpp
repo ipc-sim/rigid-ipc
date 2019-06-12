@@ -5,18 +5,12 @@
 
 #include "state.hpp"
 
-#include <ccd/collision_penalty_diff.hpp>
-#include <ccd/collision_volume.hpp>
-#include <ccd/collision_volume_diff.hpp>
-
 #include <io/opt_results.hpp>
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
 
-#include <autodiff/finitediff.hpp>
 #include <opt/barrier_constraint.hpp>
-#include <opt/displacement_opt.hpp>
-#include <opt/ncp_solver.hpp>
+#include <opt/particles_problem.hpp>
 #include <opt/volume_constraint.hpp>
 
 #include <logger.hpp>
@@ -354,6 +348,7 @@ opt::OptimizationSolver& State::getOptimizationSolver()
     case OptimizationMethod::BARRIER_NEWTON:
         return barrier_newton_solver;
     }
+    throw std::runtime_error("Invalid method");
 }
 
 void State::reset_optimization_problem()
@@ -599,57 +594,25 @@ void State::find_connected_vertices(const long& vertex_id,
     }
 }
 
-void State::update_displacements_from_rigid_bodies()
-{
-    displacements = Eigen::MatrixX2d();
-    for (const auto& rigid_body : rigid_bodies) {
-        displacements.conservativeResize(
-            displacements.rows() + rigid_body.vertices.rows(), 2);
-        displacements.bottomRows(rigid_body.vertices.rows())
-            = rigid_body.compute_particle_displacements();
-    }
-}
-
 void State::update_fields_from_rigid_bodies()
 {
-    vertices = Eigen::MatrixX2d();
-    edges = Eigen::MatrixX2i();
-
-    vertex_to_body = Eigen::VectorXi();
-    body_to_vertex_start = Eigen::VectorXi(long(rigid_bodies.size()));
-    body_to_edge_start = Eigen::VectorXi(long(rigid_bodies.size()));
-
-    int body_id = 0;
-    for (const auto& rigid_body : rigid_bodies) {
-        long prev_vertex_count = vertices.rows();
-        long prev_edge_count = edges.rows();
-        vertices.conservativeResize(
-            prev_vertex_count + rigid_body.vertices.rows(), 2);
-        edges.conservativeResize(prev_edge_count + rigid_body.edges.rows(), 2);
-        vertex_to_body.conservativeResize(
-            prev_vertex_count + rigid_body.vertices.rows());
-
-        vertices.bottomRows(rigid_body.vertices.rows()) = rigid_body.vertices;
-        edges.bottomRows(rigid_body.edges.rows()) = rigid_body.edges;
-        edges.bottomRows(rigid_body.edges.rows()).array()
-            += int(prev_vertex_count);
-
-        vertex_to_body.bottomRows(rigid_body.vertices.rows())
-            .setConstant(body_id);
-        body_to_vertex_start(body_id) = int(prev_vertex_count);
-        body_to_edge_start(body_id) = int(prev_edge_count);
-        body_id++;
-    }
-
-    update_displacements_from_rigid_bodies();
+    rigid_body_system.assemble();
+    vertices = rigid_body_system.vertices;
+    displacements = rigid_body_system.displacements;
+    edges = rigid_body_system.edges;
 
     reset_scene();
+}
+void State::update_displacements_from_rigid_bodies()
+{
+    rigid_body_system.assemble_displacements();
+    displacements = rigid_body_system.displacements;
 }
 
 void State::convert_connected_components_to_rigid_bodies()
 {
     auto adjacency_list = create_adjacency_list();
-    rigid_bodies.clear();
+    rigid_body_system.clear();
     Eigen::VectorXb is_part_of_body = Eigen::VectorXb::Zero(vertices.rows());
 
     std::unordered_set<int> connected_vertices;
@@ -689,8 +652,9 @@ void State::convert_connected_components_to_rigid_bodies()
             igl::slice(vertices, R, Eigen::VectorXi::LinSpaced(2, 0, 1),
                 body_vertices);
 
-            rigid_bodies.push_back(
-                RigidBody(body_vertices, body_edges, Eigen::Vector3d(0, 0, 0)));
+            ccd::physics::RigidBody rb = ccd::physics::RigidBody::Centered(
+                body_vertices, body_edges, Eigen::Vector3d(0, 0, 0.0));
+            rigid_body_system.add_rigid_body(rb);
 
             for (const auto& vertex_id : ordered_connected_vertices) {
                 is_part_of_body(vertex_id) = true;

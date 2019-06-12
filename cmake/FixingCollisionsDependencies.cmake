@@ -4,9 +4,6 @@
 # download it via external project, and add_subdirectory to build it alongside
 # this project.
 
-### Configuration
-set(FIXING_COLLISIONS_ROOT     "${CMAKE_CURRENT_LIST_DIR}/..")
-set(FIXING_COLLISIONS_EXTERNAL "${FIXING_COLLISIONS_ROOT}/3rd_party")
 
 # Download and update 3rd_party libraries
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
@@ -22,7 +19,7 @@ if(NOT TARGET nlopt)
     download_nlopt()
     find_package(NLopt QUIET)
     if(NLOPT_FOUND)
-        message("Including NLOPT")
+        message(STATUS "Including NLOPT")
         add_library(nlopt_nlopt INTERFACE)
         target_link_libraries(nlopt_nlopt INTERFACE ${NLOPT_LIBRARIES})
         target_compile_definitions(nlopt_nlopt INTERFACE -DHAS_NLOPT)
@@ -35,23 +32,13 @@ endif()
 
 # OSQP library
 if(ENABLE_OSQP)
-    if(NOT TARGET osqp)
+    if(NOT TARGET osqp::osqp)
         download_osqp()
-        find_package(osqp QUIET)
-        if(OSQP_FOUND)
-            message("Including OSQP")
-            # Make sure the right types are used
-            set(DFLOAT OFF CACHE BOOL "Use float numbers instead of doubles"   FORCE)
-            set(DLONG  OFF CACHE BOOL "Use long integers (64bit) for indexing" FORCE)
-            # Create a library for OSQP
-            add_library(osqp_osqp INTERFACE)
-            target_link_libraries(osqp_osqp INTERFACE ${OSQP_LIBRARIES})
-            target_compile_definitions(osqp_osqp INTERFACE -DHAS_OSQP)
-            add_library(osqp::osqp ALIAS osqp_osqp)
-        else()
-            message(WARNING "OSQP not found!")
-            add_library(osqp::osqp INTERFACE IMPORTED)
-        endif()
+        # Make sure the right types are used
+        set(DFLOAT OFF CACHE BOOL "Use float numbers instead of doubles"   FORCE)
+        set(DLONG  OFF CACHE BOOL "Use long integers (64bit) for indexing" FORCE)
+        add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/osqp EXCLUDE_FROM_ALL)
+        add_library(osqp::osqp ALIAS osqpstatic)
     endif()
 endif()
 
@@ -61,7 +48,7 @@ if(ENABLE_MOSEK)
         # download_mosek()
         find_package(mosek QUIET)
         if(MOSEK_FOUND)
-            message("Including MOSEK")
+            message(STATUS "Including MOSEK")
             # Make sure libigl uses mosek
             set(LIBIGL_WITH_MOSEK ON CACHE BOOL "Use MOSEK" FORCE)
             # Create a library for mosek
@@ -81,6 +68,7 @@ if(NOT TARGET fmt::fmt)
     download_fmt()
     add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/fmt)
 endif()
+
 if(NOT TARGET spdlog::spdlog)
     download_spdlog()
     add_library(spdlog INTERFACE)
@@ -88,4 +76,21 @@ if(NOT TARGET spdlog::spdlog)
     target_include_directories(spdlog SYSTEM INTERFACE ${FIXING_COLLISIONS_EXTERNAL}/spdlog/include)
     target_compile_definitions(spdlog INTERFACE -DSPDLOG_FMT_EXTERNAL)
     target_link_libraries(spdlog INTERFACE fmt::fmt)
+endif()
+
+# libigl
+if(NOT TARGET igl::core)
+    download_libigl()
+
+    # Import libigl targets
+    list(APPEND CMAKE_MODULE_PATH "${FIXING_COLLISIONS_EXTERNAL}/libigl/cmake")
+    include(libigl)
+endif()
+
+# json
+if(NOT TARGET nlohmann_json::nlohmann_json)
+    download_json()
+    option(JSON_BuildTests "" OFF)
+    option(JSON_MultipleHeaders "" ON)
+    add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/json json)
 endif()

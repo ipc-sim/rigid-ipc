@@ -1,7 +1,7 @@
 #ifdef BUILD_WITH_MOSEK
 
 #include <Eigen/SparseCore>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <igl/mosek/mosek_quadprog.h>
 

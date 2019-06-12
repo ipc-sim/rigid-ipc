@@ -67,6 +67,7 @@ set(MY_FLAGS
 		# This is annoying if there is a default that covers the rest.
 		# -Wswitch-enum
 		-Wswitch-unreachable
+		# -Wcovered-switch-default # Annoying warnings from nlohmann::json 
 
 		-Wcast-align
 		-Wdisabled-optimization
@@ -109,7 +110,6 @@ set(MY_FLAGS
 		#-Wdocumentation
 		#-Wdocumentation-unknown-command
 		#-Wfloat-equal
-		-Wcovered-switch-default
 
 		#-Wglobal-constructors
 		#-Wexit-time-destructors

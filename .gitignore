@@ -104,8 +104,7 @@ data/**/*.json
 data/**/*.pdf
 data/**/*.xlsx
 
-3rd_party/*
-!3rd_party/json
+3rdparty/*
 
 .vscode
 

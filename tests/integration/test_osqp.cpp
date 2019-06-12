@@ -1,7 +1,7 @@
 #ifdef BUILD_WITH_OSQP
 
 #include <Eigen/Sparse>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <osqp.h>
 
 TEST_CASE("Simple tests of OSQP", "[opt][nlopt]")
