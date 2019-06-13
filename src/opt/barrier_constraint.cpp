@@ -63,7 +63,7 @@ namespace opt {
         } else {
             this->barrier_epsilon = 0;
         }
-    } // namespace opt
+    }
 
     void BarrierConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers)

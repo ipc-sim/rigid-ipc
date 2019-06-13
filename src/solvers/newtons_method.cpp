@@ -133,8 +133,8 @@ namespace opt {
         bool solve_success = false;
 
         // Profile the performance of the solve.
-        // PROFILE(
-        // clang-format off
+        PROFILE(
+            // clang-format off
             // TODO: Can we use a better solver than LU?
             Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
 
@@ -151,9 +151,9 @@ namespace opt {
                 } else {
                     solve_success = true;
                 }
-            }//,
-        // clang-format on
-        // ProfiledPoint::UPDATE_SOLVE);
+            },
+            // clang-format on
+            ProfiledPoint::UPDATE_SOLVE);
 
         if (solve_success && make_psd && delta_x.transpose() * gradient >= 0) {
             // If delta_x is not a descent direction then we want to modify the
