@@ -44,17 +44,16 @@ namespace opt {
         if (this->ee_impacts.size() > 0) {
             switch (initial_epsilon) {
             case InitialBarrierEpsilon::MIN_TOI:
+                this->barrier_epsilon = std::min_element(
+                    this->ee_impacts.begin(), this->ee_impacts.end(),
+                    compare_impacts_by_time<EdgeEdgeImpact>)
+                                            ->time;
+                break;
             case InitialBarrierEpsilon::MAX_TOI:
-                this->barrier_epsilon = this->ee_impacts[0].time;
-                for (EdgeEdgeImpact ee_impact : this->ee_impacts) {
-                    if (initial_epsilon == InitialBarrierEpsilon::MIN_TOI) {
-                        this->barrier_epsilon
-                            = std::min(this->barrier_epsilon, ee_impact.time);
-                    } else {
-                        this->barrier_epsilon
-                            = std::max(this->barrier_epsilon, ee_impact.time);
-                    }
-                }
+                this->barrier_epsilon = std::max_element(
+                    this->ee_impacts.begin(), this->ee_impacts.end(),
+                    compare_impacts_by_time<EdgeEdgeImpact>)
+                                            ->time;
                 break;
             case InitialBarrierEpsilon::ONE:
                 this->barrier_epsilon = 1;
@@ -127,7 +126,6 @@ namespace opt {
         // -----------------------------------------------------------
 
         for (size_t i = 0; i < ee_impacts.size(); ++i) {
-
             ImpactTData<T> data
                 = get_impact_data<T>(displacements, ee_impacts[i]);
 
