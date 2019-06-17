@@ -1,6 +1,6 @@
 // Functions for optimizing functions.
 // Includes Newton's method with and without constraints.
-#include "newtons_method.hpp"
+#include "newton_solver.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
@@ -15,9 +15,28 @@
 namespace ccd {
 namespace opt {
 
-    OptimizationResults newtons_method(OptimizationProblem& problem,
-        const Eigen::VectorXi& free_dof, const double absolute_tolerance,
-        const double line_search_tolerance, const int max_iter)
+    NewtonSolver::NewtonSolver()
+        : free_dof()
+        , absolute_tolerance(1e-5)
+        , line_search_tolerance(1e-12)
+        , max_iterations(3000)
+    {
+    }
+
+    NewtonSolver::~NewtonSolver() {}
+
+    // Initialize free_dof with indices of dof that are not fixed.
+    void NewtonSolver::init_free_dof(Eigen::MatrixXb is_dof_fixed)
+    {
+        free_dof = Eigen::VectorXi(is_dof_fixed.size() - is_dof_fixed.count());
+        for (int i = 0, j = 0; i < is_dof_fixed.size(); i++) {
+            if (!is_dof_fixed(i)) {
+                free_dof(j++) = i;
+            }
+        }
+    }
+
+    OptimizationResults NewtonSolver::solve(OptimizationProblem& problem)
     {
         // Initalize the working variables
         Eigen::VectorXd x = problem.x0;
@@ -50,8 +69,8 @@ namespace opt {
             // Remove rows and columns of fixed dof of the hessian
             igl::slice(hessian, free_dof, free_dof, hessian_free);
 
-            if (!solve_for_free_newton_direction(
-                    gradient_free, hessian_free, free_dof, delta_x, true)) {
+            if (!compute_free_direction(
+                    gradient_free, hessian_free, delta_x, true)) {
                 exit_reason = "newton direction solve failed";
                 break;
             }
@@ -97,7 +116,7 @@ namespace opt {
             assert(constraint(x));
 
             problem.eval_intermediate_callback(x);
-        } while (++iter <= max_iter);
+        } while (++iter <= max_iterations);
 
         spdlog::trace("method=newtons_method total_iter={:d} "
                       "exit_reason=\"{:s}\" sqr_norm_grad={:g}",
@@ -109,13 +128,13 @@ namespace opt {
 
     // Solve for the newton direction for the limited degrees of freedom.
     // The fixed dof of x will have a delta_x of zero.
-    bool solve_for_free_newton_direction(const Eigen::VectorXd& gradient_free,
+    bool NewtonSolver::compute_free_direction(
+        const Eigen::VectorXd& gradient_free,
         const Eigen::SparseMatrix<double>& hessian_free,
-        const Eigen::VectorXi& free_dof, Eigen::VectorXd& delta_x,
-        bool make_psd)
+        Eigen::VectorXd& delta_x, bool make_psd)
     {
         Eigen::VectorXd delta_x_free;
-        if (!solve_for_newton_direction(
+        if (!compute_direction(
                 gradient_free, hessian_free, delta_x_free, make_psd)) {
             return false;
         }
@@ -126,7 +145,7 @@ namespace opt {
 
     // Solve for the Newton direction (Δx = -H^{-1}∇f).
     // Return true if the solve was successful.
-    bool solve_for_newton_direction(const Eigen::VectorXd& gradient,
+    bool NewtonSolver::compute_direction(const Eigen::VectorXd& gradient,
         const Eigen::SparseMatrix<double>& hessian, Eigen::VectorXd& delta_x,
         bool make_psd)
     {
@@ -165,8 +184,8 @@ namespace opt {
             spdlog::debug("method=newtons_method failure=\"newton direction "
                           "not descent direction\" failsafe=\"H += μI\" μ={:g}",
                 mu);
-            solve_success = solve_for_newton_direction(
-                gradient, psd_hessian, delta_x, false);
+            solve_success
+                = compute_direction(gradient, psd_hessian, delta_x, false);
             if (delta_x.transpose() * gradient >= 0) {
                 spdlog::warn(
                     "method=newtons_method failure=\"newton direction not "

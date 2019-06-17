@@ -342,11 +342,11 @@ void ViewerMenu::draw_edit_modes()
     if (state.selected_points.size() > 0
         && ImGui::CollapsingHeader(
             "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
-        // Initial button state is all(fixed_dof(selected_points))
+        // Initial button state is all(is_dof_fixed(selected_points))
         bool x_fixed_originally = true, y_fixed_originally = true;
         for (int point : state.selected_points) {
-            x_fixed_originally &= state.opt_problem.fixed_dof(point);
-            y_fixed_originally &= state.opt_problem.fixed_dof(
+            x_fixed_originally &= state.opt_problem.is_dof_fixed(point);
+            y_fixed_originally &= state.opt_problem.is_dof_fixed(
                 point + state.displacements.rows());
         }
         bool x_fixed = x_fixed_originally, y_fixed = y_fixed_originally;
@@ -354,7 +354,7 @@ void ViewerMenu::draw_edit_modes()
         ImGui::Checkbox("fixed x position##static", &x_fixed);
         if (x_fixed != x_fixed_originally) {
             for (int point : state.selected_points) {
-                state.opt_problem.fixed_dof(point) = x_fixed;
+                state.opt_problem.is_dof_fixed(point) = x_fixed;
                 if (x_fixed) {
                     state.displacements(point, 0) = 0.0;
                 }
@@ -367,7 +367,8 @@ void ViewerMenu::draw_edit_modes()
         ImGui::Checkbox("fixed y position##static", &y_fixed);
         if (y_fixed != y_fixed_originally) {
             for (int point : state.selected_points) {
-                state.opt_problem.fixed_dof(point + state.displacements.rows())
+                state.opt_problem.is_dof_fixed(
+                    point + state.displacements.rows())
                     = y_fixed;
                 if (y_fixed) {
                     state.displacements(point, 1) = 0.0;
@@ -388,11 +389,13 @@ void ViewerMenu::draw_rigid_body_options()
         if (state.selected_points.size() > 0) {
             std::set<int> selected_body_ids;
             for (const auto& selected_point : state.selected_points) {
-                selected_body_ids.insert(state.rigid_body_system.vertex_to_body_map(selected_point));
+                selected_body_ids.insert(
+                    state.rigid_body_system.vertex_to_body_map(selected_point));
             }
             Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
             for (const auto& body_id : selected_body_ids) {
-                velocity += state.rigid_body_system.get_velocity(size_t(body_id));
+                velocity
+                    += state.rigid_body_system.get_velocity(size_t(body_id));
             }
 
             velocity /= selected_body_ids.size();
@@ -407,7 +410,8 @@ void ViewerMenu::draw_rigid_body_options()
             if (velocity_x_changed || velocity_y_changed || rotation_changed) {
                 velocity(2) *= M_PI / 180.0;
                 for (const auto& body_id : selected_body_ids) {
-                    state.rigid_body_system.set_velocity(size_t(body_id), velocity);
+                    state.rigid_body_system.set_velocity(
+                        size_t(body_id), velocity);
                 }
                 state.update_displacements_from_rigid_bodies();
                 state_history.push_back(state);
@@ -500,8 +504,8 @@ void ViewerMenu::draw_optimization()
             case ccd::OptimizationMethod::NLOPT:
                 solver_menu(state.nlopt_solver);
                 break;
-            case ccd::OptimizationMethod::BARRIER_NEWTON:
-                solver_menu(state.barrier_newton_solver);
+            case ccd::OptimizationMethod::BARRIER_SOLVER:
+                solver_menu(state.barrier_solver);
                 break;
             }
             ImGui::PopItemWidth();

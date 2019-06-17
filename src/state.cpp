@@ -21,7 +21,7 @@ namespace ccd {
 State::State()
     : is_rigid_bodies_mode(false)
     , output_dir(DATA_OUTPUT_DIR)
-    , opt_method(OptimizationMethod::BARRIER_NEWTON)
+    , opt_method(OptimizationMethod::BARRIER_SOLVER)
     , constraint_function(ConstraintType::BARRIER)
     , log_level(spdlog::level::info)
     , canvas_width(10)
@@ -32,7 +32,7 @@ State::State()
     , current_opt_time(0.0)
     , current_opt_iteration(-1)
 {
-    barrier_newton_solver.barrier_constraint = &barrier_constraint;
+    barrier_solver.barrier_constraint = &barrier_constraint;
     opt_problem.intermediate_callback
         = [&](const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk) {
               return record_optimization_step(x, Uk);
@@ -102,8 +102,8 @@ void State::reset_scene()
     opt_results.success = false;
     opt_results.finished = false;
 
-    opt_problem.fixed_dof.resize(displacements.size(), 1);
-    opt_problem.fixed_dof.setConstant(false);
+    opt_problem.is_dof_fixed.resize(displacements.size(), 1);
+    opt_problem.is_dof_fixed.setConstant(false);
 }
 
 void State::save_scene(std::string filename)
@@ -125,8 +125,8 @@ void State::add_vertex(const Eigen::RowVector2d& position)
 
     reset_scene_data();
 
-    // Resize the fixed_dof
-    expand_fixed_dof();
+    // Resize the is_dof_fixed
+    expand_is_dof_fixed();
 }
 
 void State::add_edges(const Eigen::MatrixX2i& new_edges)
@@ -141,17 +141,17 @@ void State::add_edges(const Eigen::MatrixX2i& new_edges)
     reset_scene_data();
 }
 
-void State::expand_fixed_dof()
+void State::expand_is_dof_fixed()
 {
-    long num_old_vertices = opt_problem.fixed_dof.size() / 2;
+    long num_old_vertices = opt_problem.is_dof_fixed.size() / 2;
     long num_new_vertices = displacements.rows() - num_old_vertices;
 
-    opt_problem.fixed_dof.resize(num_old_vertices, 2);
-    opt_problem.fixed_dof.conservativeResize(displacements.rows(), 2);
-    opt_problem.fixed_dof.bottomRows(num_new_vertices).setZero();
-    opt_problem.fixed_dof.resize(opt_problem.fixed_dof.size(), 1);
+    opt_problem.is_dof_fixed.resize(num_old_vertices, 2);
+    opt_problem.is_dof_fixed.conservativeResize(displacements.rows(), 2);
+    opt_problem.is_dof_fixed.bottomRows(num_new_vertices).setZero();
+    opt_problem.is_dof_fixed.resize(opt_problem.is_dof_fixed.size(), 1);
 
-    assert(opt_problem.fixed_dof.size() == displacements.size());
+    assert(opt_problem.is_dof_fixed.size() == displacements.size());
 }
 
 // Remove vertices that are not an end-point to any edge.
@@ -179,11 +179,11 @@ bool State::remove_free_vertices()
 
     // Create a temporary matrix of the vertices and displacements to keep
     Eigen::MatrixX2d new_vertices, new_displacements;
-    Eigen::MatrixXb new_fixed_dof;
+    Eigen::MatrixXb new_is_dof_fixed;
     igl::slice(vertices, R, C, new_vertices); // Copy over the vertices to keep
     igl::slice(displacements, R, C, new_displacements); // Copy displacements
-    opt_problem.fixed_dof.resize(opt_problem.fixed_dof.size() / 2, 2);
-    igl::slice(opt_problem.fixed_dof, R, C, new_fixed_dof);
+    opt_problem.is_dof_fixed.resize(opt_problem.is_dof_fixed.size() / 2, 2);
+    igl::slice(opt_problem.is_dof_fixed, R, C, new_is_dof_fixed);
     vertices = new_vertices;
     displacements = new_displacements;
 
@@ -201,8 +201,8 @@ bool State::remove_free_vertices()
     }
 
     reset_scene();
-    new_fixed_dof.resize(new_fixed_dof.size(), 1);
-    opt_problem.fixed_dof = new_fixed_dof;
+    new_is_dof_fixed.resize(new_is_dof_fixed.size(), 1);
+    opt_problem.is_dof_fixed = new_is_dof_fixed;
 
     return true;
 }
@@ -262,8 +262,8 @@ void State::duplicate_selected_vertices(Eigen::Vector2d delta_center_of_mass)
 
     reset_scene_data();
 
-    // Resize the fixed_dof
-    expand_fixed_dof();
+    // Resize the is_dof_fixed
+    expand_is_dof_fixed();
 }
 
 void State::set_vertex_position(
@@ -345,8 +345,8 @@ opt::OptimizationSolver& State::getOptimizationSolver()
         return nlopt_solver;
     case OptimizationMethod::LINEARIZED_CONSTRAINTS:
         return qp_solver;
-    case OptimizationMethod::BARRIER_NEWTON:
-        return barrier_newton_solver;
+    case OptimizationMethod::BARRIER_SOLVER:
+        return barrier_solver;
     }
     throw std::runtime_error("Invalid method");
 }
@@ -594,7 +594,6 @@ void State::find_connected_vertices(const long& vertex_id,
     }
 }
 
-
 void State::update_fields_from_rigid_bodies()
 {
     rigid_body_system.assemble();
@@ -604,7 +603,8 @@ void State::update_fields_from_rigid_bodies()
 
     reset_scene();
 }
-void State::update_displacements_from_rigid_bodies(){
+void State::update_displacements_from_rigid_bodies()
+{
     rigid_body_system.assemble_displacements();
     displacements = rigid_body_system.displacements;
 }

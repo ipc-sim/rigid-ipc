@@ -1,10 +1,9 @@
 // Solve the optimization general_problem using Newton's Method with barriers
 // for the constraints.
 
-#include "barrier_newton_solver.hpp"
+#include "barrier_solver.hpp"
 
 #include <opt/barrier.hpp>
-#include <solvers/newtons_method.hpp>
 #include <utils/eigen_ext.hpp>
 
 #include <logger.hpp>
@@ -13,15 +12,70 @@
 namespace ccd {
 namespace opt {
 
+    BarrierSolver::BarrierSolver()
+        : barrier_constraint(nullptr)
+        , min_barrier_epsilon(1e-5)
+        , max_iterations(3000)
+    {
+        inner_solver = NewtonSolver();
+    }
+
+    BarrierSolver::~BarrierSolver() {}
+
+    OptimizationResults BarrierSolver::solve(
+        OptimizationProblem& general_problem)
+    {
+        assert(barrier_constraint != nullptr);
+
+        BarrierProblem barrier_problem(
+            general_problem, barrier_constraint->barrier_epsilon);
+
+        // Convert from the boolean vector to a vector of free dof indices
+        inner_solver.init_free_dof(barrier_problem.is_dof_fixed);
+
+        // Calculate the maximum number of iteration allowable
+        inner_solver.max_iterations = int(max_iterations
+            / ceil(-log2(min_barrier_epsilon) + log2(barrier_problem.epsilon)));
+
+        barrier_problem.eval_intermediate_callback(barrier_problem.x0);
+
+        OptimizationResults results;
+        do {
+            // Log the epsilon and the newton method will log the number of
+            // iterations.
+            spdlog::trace("solver=barrier_newton ϵ={:g}",
+                barrier_constraint->barrier_epsilon);
+
+            // Optimize for a fixed epsilon
+            results = inner_solver.solve(barrier_problem);
+            // Save the original problems objective
+            results.minf = general_problem.eval_f(results.x);
+
+            // Steepen the barrier
+            barrier_problem.epsilon /= 2;
+            barrier_constraint->barrier_epsilon = barrier_problem.epsilon;
+
+            // Start next iteration from the ending optimal position
+            barrier_problem.x0 = results.x;
+        } while (barrier_problem.epsilon > min_barrier_epsilon);
+
+        // TODO: This should check if the barrier constraints are satisfied.
+        results.success = results.minf >= 0
+            && barrier_problem.eval_f(results.x)
+                < std::numeric_limits<double>::infinity();
+
+        return results;
+    }
+
     BarrierProblem::BarrierProblem(
         OptimizationProblem& general_problem, const double epsilon)
         : general_problem(&general_problem)
         , epsilon(epsilon)
     {
         num_vars = general_problem.num_vars;
-        num_constraints = general_problem.num_constraints;
+        num_constraints = 0;
         x0 = general_problem.x0;
-        fixed_dof = general_problem.fixed_dof;
+        is_dof_fixed = general_problem.is_dof_fixed;
     }
 
     BarrierProblem::~BarrierProblem() {}
@@ -186,70 +240,6 @@ namespace opt {
     bool BarrierProblem::eval_intermediate_callback(const Eigen::VectorXd& x)
     {
         return general_problem->eval_intermediate_callback(x);
-    }
-
-    BarrierNewtonSolver::BarrierNewtonSolver()
-        : barrier_constraint(nullptr)
-        , min_barrier_epsilon(1e-5)
-        , absolute_tolerance(1e-5)
-        , line_search_tolerance(1e-12)
-        , max_iterations(3000)
-    {
-    }
-
-    BarrierNewtonSolver::~BarrierNewtonSolver() {}
-
-    OptimizationResults BarrierNewtonSolver::solve(
-        OptimizationProblem& general_problem)
-    {
-        assert(barrier_constraint != nullptr);
-
-        BarrierProblem barrier_problem(
-            general_problem, barrier_constraint->barrier_epsilon);
-
-        // Convert from the boolean vector to a vector of free dof indices
-        Eigen::VectorXi free_dof(
-            barrier_problem.num_vars - barrier_problem.fixed_dof.count());
-        for (int i = 0, j = 0; i < barrier_problem.fixed_dof.size(); i++) {
-            if (!barrier_problem.fixed_dof(i)) {
-                free_dof(j++) = i;
-            }
-        }
-
-        // Calculate the maximum number of iteration allowable
-        int max_inner_iterations = int(max_iterations
-            / ceil(-log2(min_barrier_epsilon) + log2(barrier_problem.epsilon)));
-
-        barrier_problem.eval_intermediate_callback(barrier_problem.x0);
-
-        OptimizationResults results;
-        do {
-            // Log the epsilon and the newton method will log the number of
-            // iterations.
-            spdlog::trace("solver=barrier_newton ϵ={:g}",
-                barrier_constraint->barrier_epsilon);
-
-            // Optimize for a fixed epsilon
-            results
-                = newtons_method(barrier_problem, free_dof, absolute_tolerance,
-                    line_search_tolerance, max_inner_iterations);
-            // Save the original problems objective
-            results.minf = general_problem.eval_f(results.x);
-
-            // Steepen the barrier
-            barrier_problem.epsilon /= 2;
-            barrier_constraint->barrier_epsilon = barrier_problem.epsilon;
-
-            // Start next iteration from the ending optimal position
-            barrier_problem.x0 = results.x;
-        } while (barrier_problem.epsilon > min_barrier_epsilon);
-
-        // TODO: This should check if the barrier constraints are satisfied.
-        results.success = results.minf >= 0
-            && barrier_problem.eval_f(results.x)
-                < std::numeric_limits<double>::infinity();
-
-        return results;
     }
 
 } // namespace opt

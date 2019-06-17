@@ -2,8 +2,8 @@
 
 #include <autodiff/finitediff.hpp>
 
-#include <solvers/barrier_newton_solver.hpp>
-#include <solvers/newtons_method.hpp>
+#include <solvers/barrier_solver.hpp>
+#include <solvers/newton_solver.hpp>
 
 #include <cmath>
 
@@ -86,9 +86,11 @@ TEST_CASE("Check barrier problem derivatives")
 TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
     "[opt][barrier]")
 {
-    // Setup problem
-    // -----------------------------------------------------------------
     int num_vars = 1, num_constraints = num_vars;
+    // Setup solver
+    NewtonSolver solver;
+    solver.free_dof = Eigen::VectorXi::LinSpaced(num_vars, 0, num_vars - 1);
+    // Setup problem
     AdHocProblem constrained_problem(num_vars, num_constraints);
 
     // TODO: Added lower bound on g(x) back in to the optimization
@@ -126,13 +128,7 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
 
     REQUIRE(unconstrained_problem.validate_problem());
 
-    Eigen::VectorXi free_dof(num_vars);
-    for (int i = 0; i < free_dof.size(); i++) {
-        free_dof(i) = i;
-    }
-
-    OptimizationResults results
-        = newtons_method(unconstrained_problem, free_dof, 1e-6, 1e-6, 100);
+    OptimizationResults results = solver.solve(unconstrained_problem);
     // REQUIRE(results.success);
     CHECK(results.x(0) == Approx(1.0).margin(1e-6));
 }

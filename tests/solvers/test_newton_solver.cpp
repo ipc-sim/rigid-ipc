@@ -1,15 +1,18 @@
 #include <catch2/catch.hpp>
 
-#include <solvers/newtons_method.hpp>
+#include <solvers/newton_solver.hpp>
 
 using namespace ccd;
 using namespace opt;
 
 TEST_CASE("Simple tests of Newton's Method", "[opt][newtons method]")
 {
+    int num_vars = GENERATE(1, 10, 100), num_constraints = 0;
+    // Setup solver
+    NewtonSolver solver;
+    solver.free_dof = Eigen::VectorXi::LinSpaced(num_vars, 0, num_vars - 1);
     // Setup problem
     // -----------------------------------------------------------------
-    int num_vars = GENERATE(1, 10, 100), num_constraints = 0;
     AdHocProblem problem(num_vars, num_constraints);
     problem.x0.setRandom();
 
@@ -21,13 +24,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons method]")
 
     REQUIRE(problem.validate_problem());
 
-    Eigen::VectorXi free_dof(num_vars);
-    for (int i = 0; i < free_dof.size(); i++) {
-        free_dof(i) = i;
-    }
-
-    OptimizationResults results
-        = newtons_method(problem, free_dof, 1e-6, 1e-6, 100);
+    OptimizationResults results = solver.solve(problem);
     REQUIRE(results.success);
     CHECK(results.x.squaredNorm() == Approx(0).margin(1e-6));
     CHECK(results.minf == Approx(0).margin(1e-6));

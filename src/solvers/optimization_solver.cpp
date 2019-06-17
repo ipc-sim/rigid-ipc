@@ -1,14 +1,5 @@
 #include "optimization_solver.hpp"
 
-#include <solvers/nlopt_solver.hpp>
-#ifdef BUILD_WITH_IPOPT
-#include <solvers/ipopt_solver.hpp>
-#endif
-#include <solvers/barrier_newton_solver.hpp>
-#include <solvers/qp_solver.hpp>
-
-#include <utils/not_implemented_error.hpp>
-
 namespace ccd {
 namespace opt {
 
