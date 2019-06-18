@@ -189,5 +189,17 @@ namespace opt {
     }
     ////////////////////////////////////////////////////////////////////////////
 
+    // Evaluate the intermediate callback.
+    bool RigidBodyProblem::eval_intermediate_callback(const Eigen::VectorXd& x)
+    {
+        if (intermediate_callback != nullptr) {
+            Eigen::MatrixXd Uk;
+            model->compute_displacements(x, Uk);
+            return intermediate_callback(x, Uk);
+        }
+
+        return true;
+    }
+
 } // namespace opt
 } // namespace ccd

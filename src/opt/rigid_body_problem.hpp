@@ -51,6 +51,10 @@ namespace opt {
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
         ////////////////////////////////////////////////////////////////////////
 
+        /// @brief Evaluate the intermediate callback.
+        virtual bool eval_intermediate_callback(
+            const Eigen::VectorXd& x) override;
+
     protected:
         virtual void init_num_vars() override;
 
