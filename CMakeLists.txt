@@ -62,11 +62,12 @@ add_library(${PROJECT_NAME}
     src/opt/volume_constraint.cpp
     src/opt/rigid_body_problem.cpp
 
-    src/solvers/barrier_newton_solver.cpp
+    src/solvers/barrier_solver.cpp
     src/solvers/ipopt_solver.cpp
     src/solvers/lcp_solver.cpp
     src/solvers/ncp_solver.cpp
-    src/solvers/newtons_method.cpp
+    src/solvers/line_search.cpp
+    src/solvers/newton_solver.cpp
     src/solvers/nlopt_solver.cpp
     src/solvers/optimization_solver.cpp
     src/solvers/qp_solver.cpp

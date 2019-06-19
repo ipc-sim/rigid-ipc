@@ -22,6 +22,7 @@ add_executable(unit_tests
     solvers/test_newton_solver.cpp
     solvers/test_barrier_newton_solver.cpp
     solvers/test_barrier_displacements_opt.cpp
+    solvers/test_line_search.cpp
 
     opt/test_barriers.cpp
     opt/test_volume_constraint.cpp

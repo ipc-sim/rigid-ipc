@@ -1,17 +1,17 @@
 #include <catch2/catch.hpp>
+#include <cmath>
 
 #include <autodiff/finitediff.hpp>
+#include <solvers/barrier_solver.hpp>
+#include <solvers/newton_solver.hpp>
 
-#include <opt/ad_hoc_problem.hpp>
-#include <solvers/barrier_newton_solver.hpp>
-#include <solvers/newtons_method.hpp>
-
-#include <cmath>
+#include <logger.hpp>
 
 using namespace ccd;
 using namespace opt;
 
-TEST_CASE("Check barrier problem derivatives")
+TEST_CASE(
+    "Check barrier problem derivatives", "[opt][barrier][barrier_problem]")
 {
     // TODO: Generate a random problem and test the derivatives
     int num_vars = GENERATE(1, 2, 5, 10), num_constraints = 1;
@@ -85,63 +85,59 @@ TEST_CASE("Check barrier problem derivatives")
 }
 
 TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
-    "[opt][barrier]")
+    "[opt][barrier][barrier_solver]")
 {
+    spdlog::set_level(spdlog::level::off);
+    // Setup solver
+    BarrierSolver solver;
+    solver.barrier_constraint = new BarrierConstraint();
+    solver.barrier_constraint->barrier_epsilon = 1;
+    solver.min_barrier_epsilon = 1e-12;
+    solver.inner_solver.absolute_tolerance = 1e-12;
     // Setup problem
-    // -----------------------------------------------------------------
     int num_vars = 1, num_constraints = num_vars;
-    AdHocProblem constrained_problem(num_vars, num_constraints);
+    AdHocProblem problem(num_vars, num_constraints);
+    problem.is_dof_fixed = Eigen::MatrixXb::Zero(num_vars, 1);
+    problem.x_lower = Eigen::VectorXd::Zero(num_vars);
 
-    // TODO: Added lower bound on g(x) back in to the optimization
-    // SECTION("Constraint is in g(x)")
-    // {
-    //     // Set a lower bound on the variable through an identitiy function
-    //     constrained_problem.g_lower(0) = 1;
-    // }
-    SECTION("Constraint is in x_lower")
-    {
-        // Set a lower bound on the variable directly
-        constrained_problem.x_lower(0) = 1;
-    }
+    double x_shift = GENERATE(-1, 0, 1);
 
-    constrained_problem.f
-        = [](const Eigen::VectorXd& x) { return x.squaredNorm() / 2; };
-    constrained_problem.grad_f = [](const Eigen::VectorXd& x) { return x; };
-    constrained_problem.hessian_f = [](const Eigen::VectorXd& x) {
+    problem.f = [x_shift](const Eigen::VectorXd& x) {
+        return (x.array() + x_shift).matrix().squaredNorm() / 2;
+    };
+    problem.grad_f = [x_shift](const Eigen::VectorXd& x) {
+        return (x.array() + x_shift).matrix();
+    };
+    problem.hessian_f = [](const Eigen::VectorXd& x) {
         return Eigen::MatrixXd::Identity(x.rows(), x.rows());
     };
 
-    constrained_problem.g = [](const Eigen::VectorXd& x) {
-        Eigen::VectorXd gx = Eigen::VectorXd::Zero(x.rows());
-        gx(0) = x(0);
-        return gx;
+    // TODO: Move the barrier function out of the constraint and back into the
+    // barrier problem.
+    problem.g = [](const Eigen::VectorXd& x) {
+        // Eigen::VectorXd gx = Eigen::VectorXd::Zero(x.rows());
+        // gx(0) = x(0);
+        return Eigen::VectorXd::Zero(x.size());
     };
-    constrained_problem.jac_g = [](const Eigen::VectorXd& x) {
+    problem.jac_g = [](const Eigen::VectorXd& x) {
         Eigen::VectorXd dg = Eigen::MatrixXd::Zero(x.rows(), x.rows());
-        dg(0, 0) = 1;
+        // dg(0, 0) = 1;
         return dg;
     };
-    constrained_problem.hessian_g = [](const Eigen::VectorXd& x) {
+    problem.hessian_g = [](const Eigen::VectorXd& x) {
         return std::vector<Eigen::SparseMatrix<double>>(
             x.rows(), Eigen::SparseMatrix<double>(x.rows(), x.rows()));
     };
 
-    REQUIRE(constrained_problem.validate_problem());
+    problem.x0 = Eigen::VectorXd::Zero(num_vars);
+    problem.x0(0) = GENERATE(0, 1, 5, 10);
 
-    double s = 1e-6;
-    BarrierProblem unconstrained_problem(constrained_problem, s);
+    REQUIRE(problem.validate_problem());
 
-    unconstrained_problem.x0(0) = 5;
-
-    REQUIRE(unconstrained_problem.validate_problem());
-
-    Eigen::VectorXi free_dof(num_vars);
-    for (int i = 0; i < free_dof.size(); i++) {
-        free_dof(i) = i;
+    OptimizationResults results = solver.solve(problem);
+    CAPTURE(x_shift, problem.x0(0), problem.f(problem.x0), results.success);
+    if (problem.x0(0) + x_shift >= 0) {
+        CHECK(results.x(0) == Approx(x_shift < 0 ? -x_shift : 0).margin(1e-6));
     }
-
-    OptimizationResults results
-        = newtons_method(unconstrained_problem, free_dof, 1e-6, 1e-6, 100);
-    // REQUIRE(results.success);
-    CHECK(results.x(0) == Approx(1.0).margin(1e-6));
+    spdlog::set_level(spdlog::level::info);
 }

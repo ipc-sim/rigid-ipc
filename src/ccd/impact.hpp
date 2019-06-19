@@ -53,7 +53,7 @@ typedef std::vector<EdgeEdgeImpact> EdgeEdgeImpacts;
  * @return A boolean for if impact0.time <= impact1.time.
  */
 template <typename Impact>
-bool compare_impacts_by_time(Impact impact0, Impact impact1);
+bool compare_impacts_by_time(Impact impact1, Impact impact2);
 
 /**
  * Convert all edge-vertex impacts to correspoding edge-edge impacts. There may

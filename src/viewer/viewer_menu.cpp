@@ -342,11 +342,11 @@ void ViewerMenu::draw_edit_modes()
     if (state.selected_points.size() > 0 && !state.is_rigid_bodies_mode
         && ImGui::CollapsingHeader(
             "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
-        // Initial button state is all(fixed_dof(selected_points))
+        // Initial button state is all(is_dof_fixed(selected_points))
         bool x_fixed_originally = true, y_fixed_originally = true;
         for (int point : state.selected_points) {
-            x_fixed_originally &= state.particles_problem.fixed_dof(point);
-            y_fixed_originally &= state.particles_problem.fixed_dof(
+            x_fixed_originally &= state.particles_problem.is_dof_fixed(point);
+            y_fixed_originally &= state.particles_problem.is_dof_fixed(
                 point + state.displacements.rows());
         }
         bool x_fixed = x_fixed_originally, y_fixed = y_fixed_originally;
@@ -354,7 +354,7 @@ void ViewerMenu::draw_edit_modes()
         ImGui::Checkbox("fixed x position##static", &x_fixed);
         if (x_fixed != x_fixed_originally) {
             for (int point : state.selected_points) {
-                state.particles_problem.fixed_dof(point) = x_fixed;
+                state.particles_problem.is_dof_fixed(point) = x_fixed;
                 if (x_fixed) {
                     state.displacements(point, 0) = 0.0;
                 }
@@ -367,7 +367,7 @@ void ViewerMenu::draw_edit_modes()
         ImGui::Checkbox("fixed y position##static", &y_fixed);
         if (y_fixed != y_fixed_originally) {
             for (int point : state.selected_points) {
-                state.particles_problem.fixed_dof(
+                state.particles_problem.is_dof_fixed(
                     point + state.displacements.rows())
                     = y_fixed;
                 if (y_fixed) {
@@ -504,8 +504,8 @@ void ViewerMenu::draw_optimization()
             case ccd::OptimizationMethod::NLOPT:
                 solver_menu(state.nlopt_solver);
                 break;
-            case ccd::OptimizationMethod::BARRIER_NEWTON:
-                solver_menu(state.barrier_newton_solver);
+            case ccd::OptimizationMethod::BARRIER_SOLVER:
+                solver_menu(state.barrier_solver);
                 break;
             }
             ImGui::PopItemWidth();

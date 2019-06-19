@@ -75,9 +75,15 @@ void ViewerMenu::subdivide_edges()
         num_old_vertices + num_new_vertices, state.displacements.cols());
     state.edges.conservativeResize(2 * state.edges.rows(), 2);
     // Copy the fixed dof because it is reset during reset_scene
+<<<<<<< HEAD
     auto fixed_dof = state.getOptimizationProblem().fixed_dof;
     fixed_dof.resize(num_old_vertices, 2);
     fixed_dof.conservativeResize(state.displacements.rows(), 2);
+=======
+    auto is_dof_fixed = state.opt_problem.is_dof_fixed;
+    is_dof_fixed.resize(num_old_vertices, 2);
+    is_dof_fixed.conservativeResize(state.displacements.rows(), 2);
+>>>>>>> master
 
     for (long i = 0; i < num_new_vertices; i++) {
         // Average adjacent vertices.
@@ -92,8 +98,9 @@ void ViewerMenu::subdivide_edges()
 
         // AND endpoints of edge to determine if the new vertex is fixed.
         for (int j = 0; j < 2; j++) {
-            fixed_dof(num_old_vertices + i, j) = fixed_dof(state.edges(i, 0), j)
-                && fixed_dof(state.edges(i, 1), j);
+            is_dof_fixed(num_old_vertices + i, j)
+                = is_dof_fixed(state.edges(i, 0), j)
+                && is_dof_fixed(state.edges(i, 1), j);
         }
 
         // Split the edge into two edges.
@@ -104,9 +111,9 @@ void ViewerMenu::subdivide_edges()
 
     state.reset_scene();
 
-    // Flatten the fixed_dof
-    fixed_dof.resize(fixed_dof.size(), 1);
-    state.getOptimizationProblem().fixed_dof = fixed_dof;
+    // Flatten the is_dof_fixed
+    is_dof_fixed.resize(is_dof_fixed.size(), 1);
+    state.getOptimizationProblem().is_dof_fixed = is_dof_fixed;
 
     state_history.push_back(state);
     load_state();
@@ -141,9 +148,10 @@ void ViewerMenu::smooth_vertices()
     state.vertices = smoothed_vertices;
     state.displacements = smoothed_displacements;
 
-    auto fixed_dof = state.getOptimizationProblem().fixed_dof; // Save this from being reset
+    auto is_dof_fixed = state.getOptimizationProblem()
+                            .is_dof_fixed; // Save this from being reset
     state.reset_scene();
-    state.getOptimizationProblem().fixed_dof = fixed_dof;
+    state.getOptimizationProblem().is_dof_fixed = is_dof_fixed;
 
     state_history.push_back(state);
     load_state();

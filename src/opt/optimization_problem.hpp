@@ -133,15 +133,15 @@ namespace opt {
 
         ////////////////////////////////////////////////////////////////////////
         // Fields
-        int num_vars;              ///< @brief Number of variables
-        int num_constraints;       ///< @brief Number of constraints
-        Eigen::VectorXd x0;        ///< @brief Initial value of x
-        Eigen::VectorXd x_lower;   ///< @brief Lower bound of x
-        Eigen::VectorXd x_upper;   ///< @brief Upper bound of x
-        Eigen::VectorXd g_lower;   ///< @brief Lower bound of the constraint
-        Eigen::VectorXd g_upper;   ///< @brief Upper bound of the constraint
-        Eigen::MatrixXb fixed_dof; ///< @brief fixed_dof(i) == true indicates
-                                   ///< x(i) is not a variable
+        int num_vars;                 ///< @brief Number of variables
+        int num_constraints;          ///< @brief Number of constraints
+        Eigen::VectorXd x0;           ///< @brief Initial value of x
+        Eigen::VectorXd x_lower;      ///< @brief Lower bound of x
+        Eigen::VectorXd x_upper;      ///< @brief Upper bound of x
+        Eigen::VectorXd g_lower;      ///< @brief Lower bound of the constraint
+        Eigen::VectorXd g_upper;      ///< @brief Upper bound of the constraint
+        Eigen::MatrixXb is_dof_fixed; ///< @brief fixed_dof(i) == true indicates
+                                      ///< x(i) is not a variable
         ////////////////////////////////////////////////////////////////////////
     };
 

@@ -8,7 +8,7 @@
 #include <ccd/impact.hpp>
 #include <ccd/prune_impacts.hpp>
 
-#include <solvers/barrier_newton_solver.hpp>
+#include <solvers/barrier_solver.hpp>
 #include <solvers/ipopt_solver.hpp>
 #include <solvers/ncp_solver.hpp>
 #include <solvers/nlopt_solver.hpp>
@@ -29,16 +29,16 @@ enum class ConstraintType { VOLUME, BARRIER };
 static const char* ConstraintNames[2] = { "VOLUME", "BARRIER" };
 
 enum class OptimizationMethod {
-    NLOPT,
-    IPOPT,                  ///< @brief Interior-Point Method (Ipopt)
-    LINEARIZED_CONSTRAINTS, ///< @brief Linearize the constraints and solve
-                            ///< the QP (OSQP/MOSEK)
-    NCP,                    ///< @brief Nonlinear Complementarity Problem
-    BARRIER_NEWTON          ///< @brief Barrier Newton's Method
+    NLOPT,                  ///< @brief Container for various algorithms.
+    IPOPT,                  ///< @brief Interior-Point Method (Ipopt).
+    LINEARIZED_CONSTRAINTS, ///< @brief Linearize the constraints and solve the
+                            ///< QP (OSQP/MOSEK).
+    NCP,                    ///< @brief Nonlinear Complementarity Problem.
+    BARRIER_SOLVER          ///< @brief Apply constraints as barriers.
 };
 
 static const char* OptimizationMethodNames[]
-    = { "NLOPT", "IPOPT", "Linearized Const.", "NCP", "Barrier Newton" };
+    = { "NLOPT", "IPOPT", "Linearized Const.", "NCP", "Barrier Solver" };
 /**
  * @brief The State class keeps the full state of the UI and the collisions.
  */
@@ -81,7 +81,7 @@ public:
     opt::IpoptSolver ipopt_solver;
     opt::NLOptSolver nlopt_solver;
     opt::QPSolver qp_solver;
-    opt::BarrierNewtonSolver barrier_newton_solver;
+    opt::BarrierSolver barrier_solver;
 
     opt::VolumeConstraint volume_constraint;
     opt::BarrierConstraint barrier_constraint;
@@ -119,7 +119,7 @@ public:
     void add_vertex(const Eigen::RowVector2d& vertex);
     void add_edges(const Eigen::MatrixX2i& edges);
     void duplicate_selected_vertices(Eigen::Vector2d delta_center_of_mass);
-    void expand_fixed_dof();
+    void expand_is_dof_fixed();
     bool remove_free_vertices();
 
     void set_vertex_position(
