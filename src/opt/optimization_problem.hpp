@@ -73,7 +73,6 @@ namespace opt {
             Eigen::VectorXd& f_uk_jacobian,
             Eigen::SparseMatrix<double>& f_uk_hessian);
 
-
         /// \brief eval_g evaluates constraints at point x
         virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) = 0;
 
@@ -115,8 +114,8 @@ namespace opt {
         bool are_constraints_satisfied(
             const Eigen::VectorXd& x, const double tol);
 
-        /// @brief fixed_dof(i) == true indicates x(i) is not a variable
-        Eigen::MatrixXb fixed_dof;
+        /// @brief is_dof_fixed(i) == true indicates x(i) is not a variable
+        Eigen::MatrixXb is_dof_fixed;
 
         int num_vars;            ///< @brief Number of variables
         int num_constraints;     ///< @brief Number of constraints

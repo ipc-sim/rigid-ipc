@@ -6,22 +6,29 @@
  */
 
 #include <opt/barrier_constraint.hpp>
+#include <solvers/newton_solver.hpp>
 #include <solvers/optimization_solver.hpp>
 
 namespace ccd {
 namespace opt {
 
-    /**
-     * @brief Apply the constraints of the general problem as a barrier added to
-     * the objective of the original problem.
-     *
-     * @param[in] general_problem Problem to convert to a problem with barrier
-     *                            on the objective
-     * @param[in] epsilon The barrier epsilon controlling the steepness. This
-     *                    value is stored by reference in the barrier functions.
-     * @paramp[out] barrier_problem Problem to store the modified objective of
-     *                              the general problem.
-     */
+    // enum class BarrierInnerSolver { NEWTON, BFGS };
+    // static const char* BarrierInnerSolverNames[]
+    //     = { "Newton's Method", "BFGS" };
+
+    class BarrierSolver : public OptimizationSolver {
+    public:
+        BarrierSolver();
+        ~BarrierSolver() override;
+        OptimizationResults solve(OptimizationProblem& problem) override;
+
+        BarrierConstraint* barrier_constraint;
+
+        double min_barrier_epsilon;
+        int max_iterations;
+
+        NewtonSolver inner_solver;
+    };
 
     class BarrierProblem : public OptimizationProblem {
     public:
@@ -68,20 +75,6 @@ namespace opt {
         OptimizationProblem* general_problem;
 
         double epsilon;
-    };
-
-    class BarrierNewtonSolver : public OptimizationSolver {
-    public:
-        BarrierNewtonSolver();
-        ~BarrierNewtonSolver() override;
-        OptimizationResults solve(OptimizationProblem& problem) override;
-
-        BarrierConstraint* barrier_constraint;
-
-        double min_barrier_epsilon;
-        double absolute_tolerance;
-        double line_search_tolerance;
-        int max_iterations;
     };
 
 } // namespace opt

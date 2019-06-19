@@ -1,5 +1,6 @@
+#include "optimization_problem.hpp"
+
 #include <utils/not_implemented_error.hpp>
-#include <opt/optimization_problem.hpp>
 
 namespace ccd {
 namespace opt {
@@ -206,8 +207,8 @@ namespace opt {
         this->g_upper.resize(this->num_constraints);
         this->g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
 
-        this->fixed_dof.resize(this->num_vars, 1);
-        this->fixed_dof.setConstant(false); // no-upper-bound
+        this->is_dof_fixed.resize(this->num_vars, 1);
+        this->is_dof_fixed.setConstant(false); // no-upper-bound
     }
 
     void AdHocProblem::enable_line_search_mode(const Eigen::VectorXd&) {};

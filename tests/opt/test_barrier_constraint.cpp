@@ -5,12 +5,11 @@
 
 //-----------------
 // Tests
-// ---------------------------------------------------
+//-----------------
 
 TEST_CASE("Barrier Constraint", "[opt][ccd][Barrier]")
 {
     ccd::opt::BarrierConstraint barrier;
-    barrier.barrier_epsilon = 1e-3;
     barrier.detection_method = ccd::BRUTE_FORCE;
 
     Eigen::MatrixX2d vertices(4, 2);
@@ -67,7 +66,10 @@ TEST_CASE("Barrier Constraint", "[opt][ccd][Barrier]")
         v_expected << 1.04918, 0.629508, 1.04918, 0.629508;
     }
 
+    REQUIRE(
+        barrier.initial_epsilon == ccd::opt::InitialBarrierEpsilon::MIN_TOI);
     barrier.initialize(vertices, edges, displacements * 2.0);
+
     barrier.compute_constraints(displacements, v_actual);
     CHECK((v_actual - v_expected).squaredNorm() < 1e-6);
 
@@ -87,7 +89,6 @@ TEST_CASE("Barrier Constraint", "[opt][ccd][Barrier]")
 TEST_CASE("Barrier Constraint Gradient", "[opt][ccd][Barrier][Gradient]")
 {
     ccd::opt::BarrierConstraint barrier;
-    barrier.barrier_epsilon = 1e-3;
     barrier.detection_method = ccd::BRUTE_FORCE;
 
     Eigen::MatrixX2d vertices(4, 2);
@@ -154,7 +155,10 @@ TEST_CASE("Barrier Constraint Gradient", "[opt][ccd][Barrier][Gradient]")
             -21.4996;
     }
 
+    REQUIRE(
+        barrier.initial_epsilon == ccd::opt::InitialBarrierEpsilon::MIN_TOI);
     barrier.initialize(vertices, edges, displacements * 2.0);
+
     barrier.compute_constraints_jacobian(displacements, jac_actual);
     CHECK((jac_actual - jac_expected).squaredNorm() < 1e-6);
 
@@ -173,7 +177,6 @@ TEST_CASE("Barrier Constraint Gradient", "[opt][ccd][Barrier][Gradient]")
 TEST_CASE("Barrier Constraint Hessian", "[opt][ccd][Barrier][Hessian]")
 {
     ccd::opt::BarrierConstraint barrier;
-    barrier.barrier_epsilon = 1e-3;
     barrier.detection_method = ccd::BRUTE_FORCE;
 
     Eigen::MatrixX2d vertices(4, 2);
@@ -373,12 +376,16 @@ TEST_CASE("Barrier Constraint Hessian", "[opt][ccd][Barrier][Hessian]")
         hess_expected[3] = hessian.sparseView();
     }
 
+    REQUIRE(
+        barrier.initial_epsilon == ccd::opt::InitialBarrierEpsilon::MIN_TOI);
     barrier.initialize(vertices, edges, displacements * 2.0);
+
     barrier.compute_constraints_hessian(displacements, hess_actual);
     CHECK(hess_actual.size() == hess_expected.size());
 
     for (size_t i = 0; i < hess_actual.size(); i++) {
-        CHECK((hess_actual[i] - hess_expected[i]).toDense().squaredNorm() < 1e-6);
+        CHECK(
+            (hess_actual[i] - hess_expected[i]).toDense().squaredNorm() < 1e-6);
     }
 
     Eigen::VectorXd v_actual;
@@ -387,6 +394,7 @@ TEST_CASE("Barrier Constraint Hessian", "[opt][ccd][Barrier][Hessian]")
     barrier.compute_constraints_and_derivatives(
         displacements, v_actual, jac_actual, hess_actual);
     for (size_t i = 0; i < hess_actual.size(); i++) {
-        CHECK((hess_actual[i] - hess_expected[i]).toDense().squaredNorm() < 1e-6);
+        CHECK(
+            (hess_actual[i] - hess_expected[i]).toDense().squaredNorm() < 1e-6);
     }
 }

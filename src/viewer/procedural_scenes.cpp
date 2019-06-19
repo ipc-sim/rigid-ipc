@@ -53,8 +53,8 @@ void ViewerMenu::create_line_stack_scene(
 
 void ViewerMenu::draw_line_stack()
 {
-    static int num_lines = 3;
-    static double displacment_scale = 10;
+    static int num_lines = 20;
+    static double displacment_scale = 100;
     ImGui::InputIntBounded("line count##line-stack", &num_lines, 0,
         std::numeric_limits<int>::max(), 1, 10);
     ImGui::InputDouble("scale disp.##line-stack", &displacment_scale);
