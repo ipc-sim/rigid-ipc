@@ -114,7 +114,7 @@ namespace opt {
         valid &= num_vars == x_upper.rows() || x_upper.size() == 0;
         valid &= num_constraints == g_lower.rows() || g_lower.size() == 0;
         valid &= num_constraints == g_upper.rows() || g_upper.size() == 0;
-        valid &= num_vars == fixed_dof.rows() || fixed_dof.size() == 0;
+        valid &= num_vars == is_dof_fixed.rows() || is_dof_fixed.size() == 0;
 
         if (!valid) {
             return false;
@@ -136,7 +136,7 @@ namespace opt {
             g_upper.resize(num_constraints);
             g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
         }
-        if (fixed_dof.size() == 0) {
+        if (is_dof_fixed.size() == 0) {
             g_upper.resize(num_vars);
             g_upper.setZero(); // no-fixed-dof
         }

@@ -99,13 +99,8 @@ void State::reset_scene()
     opt_results.success = false;
     opt_results.finished = false;
 
-<<<<<<< HEAD
-    particles_problem.fixed_dof
+    particles_problem.is_dof_fixed
         = Eigen::MatrixXb::Zero(displacements.size(), 1);
-=======
-    opt_problem.is_dof_fixed.resize(displacements.size(), 1);
-    opt_problem.is_dof_fixed.setConstant(false);
->>>>>>> master
 }
 
 void State::save_scene(std::string filename)
@@ -145,27 +140,16 @@ void State::add_edges(const Eigen::MatrixX2i& new_edges)
 
 void State::expand_is_dof_fixed()
 {
-<<<<<<< HEAD
-    long num_old_vertices = particles_problem.fixed_dof.size() / 2;
+    long num_old_vertices = particles_problem.is_dof_fixed.size() / 2;
     long num_new_vertices = displacements.rows() - num_old_vertices;
 
-    particles_problem.fixed_dof.resize(num_old_vertices, 2);
-    particles_problem.fixed_dof.conservativeResize(displacements.rows(), 2);
-    particles_problem.fixed_dof.bottomRows(num_new_vertices).setZero();
-    particles_problem.fixed_dof.resize(particles_problem.fixed_dof.size(), 1);
+    particles_problem.is_dof_fixed.resize(num_old_vertices, 2);
+    particles_problem.is_dof_fixed.conservativeResize(displacements.rows(), 2);
+    particles_problem.is_dof_fixed.bottomRows(num_new_vertices).setZero();
+    particles_problem.is_dof_fixed.resize(
+        particles_problem.is_dof_fixed.size(), 1);
 
-    assert(particles_problem.fixed_dof.size() == displacements.size());
-=======
-    long num_old_vertices = opt_problem.is_dof_fixed.size() / 2;
-    long num_new_vertices = displacements.rows() - num_old_vertices;
-
-    opt_problem.is_dof_fixed.resize(num_old_vertices, 2);
-    opt_problem.is_dof_fixed.conservativeResize(displacements.rows(), 2);
-    opt_problem.is_dof_fixed.bottomRows(num_new_vertices).setZero();
-    opt_problem.is_dof_fixed.resize(opt_problem.is_dof_fixed.size(), 1);
-
-    assert(opt_problem.is_dof_fixed.size() == displacements.size());
->>>>>>> master
+    assert(particles_problem.is_dof_fixed.size() == displacements.size());
 }
 
 // Remove vertices that are not an end-point to any edge.
@@ -196,14 +180,9 @@ bool State::remove_free_vertices()
     Eigen::MatrixXb new_is_dof_fixed;
     igl::slice(vertices, R, C, new_vertices); // Copy over the vertices to keep
     igl::slice(displacements, R, C, new_displacements); // Copy displacements
-<<<<<<< HEAD
-    particles_problem.fixed_dof.resize(
-        particles_problem.fixed_dof.size() / 2, 2);
-    igl::slice(particles_problem.fixed_dof, R, C, new_fixed_dof);
-=======
-    opt_problem.is_dof_fixed.resize(opt_problem.is_dof_fixed.size() / 2, 2);
-    igl::slice(opt_problem.is_dof_fixed, R, C, new_is_dof_fixed);
->>>>>>> master
+    particles_problem.is_dof_fixed.resize(
+        particles_problem.is_dof_fixed.size() / 2, 2);
+    igl::slice(particles_problem.is_dof_fixed, R, C, new_is_dof_fixed);
     vertices = new_vertices;
     displacements = new_displacements;
 
@@ -221,13 +200,8 @@ bool State::remove_free_vertices()
     }
 
     reset_scene();
-<<<<<<< HEAD
-    new_fixed_dof.resize(new_fixed_dof.size(), 1);
-    particles_problem.fixed_dof = new_fixed_dof;
-=======
     new_is_dof_fixed.resize(new_is_dof_fixed.size(), 1);
-    opt_problem.is_dof_fixed = new_is_dof_fixed;
->>>>>>> master
+    particles_problem.is_dof_fixed = new_is_dof_fixed;
 
     return true;
 }
@@ -644,10 +618,7 @@ void State::update_fields_from_rigid_bodies()
 
     reset_scene();
 }
-<<<<<<< HEAD
 
-=======
->>>>>>> master
 void State::update_displacements_from_rigid_bodies()
 {
     rigid_body_system.assemble_displacements();

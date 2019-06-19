@@ -75,15 +75,9 @@ void ViewerMenu::subdivide_edges()
         num_old_vertices + num_new_vertices, state.displacements.cols());
     state.edges.conservativeResize(2 * state.edges.rows(), 2);
     // Copy the fixed dof because it is reset during reset_scene
-<<<<<<< HEAD
-    auto fixed_dof = state.getOptimizationProblem().fixed_dof;
-    fixed_dof.resize(num_old_vertices, 2);
-    fixed_dof.conservativeResize(state.displacements.rows(), 2);
-=======
-    auto is_dof_fixed = state.opt_problem.is_dof_fixed;
+    auto is_dof_fixed = state.getOptimizationProblem().is_dof_fixed;
     is_dof_fixed.resize(num_old_vertices, 2);
     is_dof_fixed.conservativeResize(state.displacements.rows(), 2);
->>>>>>> master
 
     for (long i = 0; i < num_new_vertices; i++) {
         // Average adjacent vertices.

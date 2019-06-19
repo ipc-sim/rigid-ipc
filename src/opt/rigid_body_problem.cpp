@@ -20,7 +20,7 @@ namespace opt {
         model->assemble();
 
         init_num_vars();
-        fixed_dof = Eigen::MatrixXb::Zero(num_vars, 1);
+        is_dof_fixed = Eigen::MatrixXb::Zero(num_vars, 1);
 
         ParticlesDisplProblem::initialize(
             model->vertices, model->edges, model->displacements, cstr);

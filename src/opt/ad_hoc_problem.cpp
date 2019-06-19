@@ -53,8 +53,8 @@ namespace opt {
         this->g_upper.resize(this->num_constraints);
         this->g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
 
-        this->fixed_dof.resize(this->num_vars, 1);
-        this->fixed_dof.setConstant(false); // no-upper-bound
+        this->is_dof_fixed.resize(this->num_vars, 1);
+        this->is_dof_fixed.setConstant(false); // no-upper-bound
     }
 
     double AdHocProblem::eval_f(const Eigen::VectorXd& x) { return f(x); }
