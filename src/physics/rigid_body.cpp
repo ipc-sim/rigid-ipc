@@ -114,24 +114,24 @@ namespace physics {
                                      .matrix();
         Eigen::Matrix3d T_xy
             = AffineTransform(Eigen::Translation2d(vel.x(), vel.y())).matrix();
-        double θ = vel(2);
-        Eigen::Matrix3d R_θ = AffineTransform(Eigen::Rotation2Dd(θ)).matrix();
+        double theta = vel(2);
+        Eigen::Matrix3d R_theta = AffineTransform(Eigen::Rotation2Dd(theta)).matrix();
 
         Eigen::Matrix3d gradx_T
-            = AffineTransform(Eigen::Translation2d(1, 0)).matrix() * T_c * R_θ
+            = AffineTransform(Eigen::Translation2d(1, 0)).matrix() * T_c * R_theta
             * T_negc;
         Eigen::Matrix3d grady_T = Eigen::Transform<double, 2, Eigen::Affine>(
                                       Eigen::Translation2d(0, 1))
                                       .matrix()
-            * T_c * R_θ * T_negc;
-        Eigen::Matrix3d gradθ_R;
+            * T_c * R_theta * T_negc;
+        Eigen::Matrix3d gradtheta_R;
         // clang-format off
-    gradθ_R <<
-        -sin(θ), -cos(θ), 0,
-         cos(θ), -sin(θ), 0,
+    gradtheta_R <<
+        -sin(theta), -cos(theta), 0,
+         cos(theta), -sin(theta), 0,
               0,       0, 1;
         // clang-format on
-        Eigen::Matrix3d gradθ_T = T_xy * T_c * gradθ_R * T_negc;
+        Eigen::Matrix3d gradtheta_T = T_xy * T_c * gradtheta_R * T_negc;
 
         const auto& this_vertices = world_vertices();
         auto transform_vertices
@@ -145,7 +145,7 @@ namespace physics {
         gradient.reserve(3);
         gradient.push_back(transform_vertices(gradx_T));
         gradient.push_back(transform_vertices(grady_T));
-        gradient.push_back(transform_vertices(gradθ_T));
+        gradient.push_back(transform_vertices(gradtheta_T));
 
         return gradient;
     }
@@ -162,9 +162,9 @@ namespace physics {
         Eigen::Matrix3d T_xy = Eigen::Transform<double, 2, Eigen::Affine>(
             Eigen::Translation2d(velocity.x(), velocity.y()))
                                    .matrix();
-        double θ = velocity(2);
-        Eigen::Matrix3d R_θ
-            = Eigen::Transform<double, 2, Eigen::Affine>(Eigen::Rotation2Dd(θ))
+        double theta = velocity(2);
+        Eigen::Matrix3d R_theta
+            = Eigen::Transform<double, 2, Eigen::Affine>(Eigen::Rotation2Dd(theta))
                   .matrix();
 
         Eigen::Matrix3d gradx_T_xy = Eigen::Transform<double, 2, Eigen::Affine>(
@@ -173,36 +173,36 @@ namespace physics {
         Eigen::Matrix3d grady_T_xy = Eigen::Transform<double, 2, Eigen::Affine>(
             Eigen::Translation2d(0, 1))
                                          .matrix();
-        Eigen::Matrix3d gradx_T = gradx_T_xy * T_c * R_θ * T_negc;
-        Eigen::Matrix3d grady_T = grady_T_xy * T_c * R_θ * T_negc;
-        Eigen::Matrix3d gradθ_R;
+        Eigen::Matrix3d gradx_T = gradx_T_xy * T_c * R_theta * T_negc;
+        Eigen::Matrix3d grady_T = grady_T_xy * T_c * R_theta * T_negc;
+        Eigen::Matrix3d gradtheta_R;
         // clang-format off
-    // R_θ <<
-    //     cos(θ), -sin(θ), 0,
-    //     sin(θ),  cos(θ), 0,
+    // R_theta <<
+    //     cos(theta), -sin(theta), 0,
+    //     sin(theta),  cos(theta), 0,
     //          0,       0, 0;
-    gradθ_R <<
-        -sin(θ), -cos(θ), 0,
-         cos(θ), -sin(θ), 0,
+    gradtheta_R <<
+        -sin(theta), -cos(theta), 0,
+         cos(theta), -sin(theta), 0,
               0,       0, 0;
-    // gradθ_gradθ_R <<
-    //     -cos(θ),  sin(θ), 0,
-    //     -sin(θ), -cos(θ), 0,
+    // gradtheta_gradtheta_R <<
+    //     -cos(theta),  sin(theta), 0,
+    //     -sin(theta), -cos(theta), 0,
     //           0,       0, 0;
         // clang-format on
-        Eigen::Matrix3d gradθ_T = T_xy * T_c * gradθ_R * T_negc;
+        Eigen::Matrix3d gradtheta_T = T_xy * T_c * gradtheta_R * T_negc;
 
         Eigen::Matrix3d gradx_gradx_T = Eigen::Matrix3d::Zero();
         Eigen::Matrix3d gradx_grady_T = Eigen::Matrix3d::Zero();
-        Eigen::Matrix3d gradx_gradθ_T = gradx_T_xy * T_c * gradθ_R * T_negc;
+        Eigen::Matrix3d gradx_gradtheta_T = gradx_T_xy * T_c * gradtheta_R * T_negc;
 
         Eigen::Matrix3d grady_gradx_T = Eigen::Matrix3d::Zero();
         Eigen::Matrix3d grady_grady_T = Eigen::Matrix3d::Zero();
-        Eigen::Matrix3d grady_gradθ_T = grady_T_xy * T_c * gradθ_R * T_negc;
+        Eigen::Matrix3d grady_gradtheta_T = grady_T_xy * T_c * gradtheta_R * T_negc;
 
-        Eigen::Matrix3d gradθ_gradx_T = gradx_gradθ_T;
-        Eigen::Matrix3d gradθ_grady_T = grady_gradθ_T;
-        Eigen::Matrix3d gradθ_gradθ_T = T_xy * T_c * -R_θ * T_negc;
+        Eigen::Matrix3d gradtheta_gradx_T = gradx_gradtheta_T;
+        Eigen::Matrix3d gradtheta_grady_T = grady_gradtheta_T;
+        Eigen::Matrix3d gradtheta_gradtheta_T = T_xy * T_c * -R_theta * T_negc;
 
         Eigen::MatrixX3d homogeneous_vertices(vertices.rows(), 3);
         homogeneous_vertices.leftCols(2) = world_vertices();
@@ -224,19 +224,19 @@ namespace physics {
         hessian[0].reserve(3);
         hessian[0].push_back(transform_vertices(gradx_gradx_T));
         hessian[0].push_back(transform_vertices(gradx_grady_T));
-        hessian[0].push_back(transform_vertices(gradx_gradθ_T));
+        hessian[0].push_back(transform_vertices(gradx_gradtheta_T));
 
         // ∇_y∇U
         hessian[1].reserve(3);
         hessian[1].push_back(transform_vertices(grady_gradx_T));
         hessian[1].push_back(transform_vertices(grady_grady_T));
-        hessian[1].push_back(transform_vertices(grady_gradθ_T));
+        hessian[1].push_back(transform_vertices(grady_gradtheta_T));
 
-        // ∇_θ∇U
+        // ∇_theta∇U
         hessian[2].reserve(3);
-        hessian[2].push_back(transform_vertices(gradθ_gradx_T));
-        hessian[2].push_back(transform_vertices(gradθ_grady_T));
-        hessian[2].push_back(transform_vertices(gradθ_gradθ_T));
+        hessian[2].push_back(transform_vertices(gradtheta_gradx_T));
+        hessian[2].push_back(transform_vertices(gradtheta_grady_T));
+        hessian[2].push_back(transform_vertices(gradtheta_gradtheta_T));
 
         return hessian;
     }
