@@ -339,8 +339,10 @@ opt::OptimizationSolver& State::getOptimizationSolver()
     switch (opt_method) {
     case OptimizationMethod::NCP:
         return ncp_solver;
+#ifdef BUILD_WITH_IPOPT
     case OptimizationMethod::IPOPT:
         return ipopt_solver;
+#endif
     case OptimizationMethod::NLOPT:
         return nlopt_solver;
     case OptimizationMethod::LINEARIZED_CONSTRAINTS:
