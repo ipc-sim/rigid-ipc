@@ -48,9 +48,9 @@ namespace opt {
         x_lower.setConstant(NO_LOWER_BOUND);
         x_upper.setConstant(NO_UPPER_BOUND);
 
-        assert(fixed_dof.size() == num_vars);
-        // fixed_dof.resize(num_vars);
-        // fixed_dof.setZero();
+        assert(is_dof_fixed.size() == num_vars);
+        // is_dof_fixed.resize(num_vars);
+        // is_dof_fixed.setZero();
 
         init_num_constraints();
         g_lower.resize(num_constraints);
