@@ -207,7 +207,7 @@ namespace opt {
         // Entries along the diagonal of A
         Eigen::VectorXd diag = Eigen::VectorXd::Zero(A.rows());
         // Sum of columns per row not including the diagonal entry
-        // (����_{i≠j}|a_{ij}|)
+        // (∑_{i≠j}|a_{ij}|)
         Eigen::VectorXd sum_row = Eigen::VectorXd::Zero(A.rows());
 
         // Loop over elements adding them to the appropriate vector above
