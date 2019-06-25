@@ -122,7 +122,7 @@ namespace physics {
             std::vector<Eigen::Matrix3d> el_hessians
                 = rb.world_displacements_hessian(v.segment(int(3 * i), 3));
             for (size_t ii = 0; ii < el_hessians.size(); ++ii) {
-                auto &el_hess = el_hessians[ii];
+                auto& el_hess = el_hessians[ii];
                 for (int j = 0; j < 3; ++j) {
                     for (int k = 0; k < 3; ++k) {
                         triplets[size_t(3 * j + k)]
@@ -131,10 +131,12 @@ namespace physics {
                 }
                 Eigen::SparseMatrix<double> global_el_hessian(
                     int(rigid_bodies.size()) * 3, int(rigid_bodies.size()) * 3);
-                global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
+                global_el_hessian.setFromTriplets(
+                    triplets.begin(), triplets.end());
 
                 int d = int(el_hessians.size() / 2);
-                int padding = int(ii) >= d ? int(ii) - d + int(num_vertices) : int(ii);
+                int padding
+                    = int(ii) >= d ? int(ii) - d + int(num_vertices) : int(ii);
                 hess_u[size_t(acc_vertex_id[i] + padding)] = global_el_hessian;
             }
         }

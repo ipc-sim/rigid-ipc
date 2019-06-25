@@ -2,6 +2,7 @@
 #include <cmath>
 
 #include <autodiff/finitediff.hpp>
+#include <opt/ad_hoc_problem.hpp>
 #include <solvers/barrier_solver.hpp>
 #include <solvers/newton_solver.hpp>
 

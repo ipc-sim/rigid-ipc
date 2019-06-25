@@ -33,57 +33,60 @@ TEST_CASE("test the setup", "[opt][displacements][barrier]")
 
     state.reset_optimization_problem();
 
-    CHECK(state.opt_problem.num_vars == state.displacements.size());
+    CHECK(state.particles_problem.num_vars == state.displacements.size());
 
-    CHECK(state.opt_problem.x0.size() == state.opt_problem.num_vars);
-    CHECK(state.opt_problem.x_lower.size() == state.opt_problem.num_vars);
-    CHECK(state.opt_problem.x_upper.size() == state.opt_problem.num_vars);
     CHECK(
-        state.opt_problem.g_lower.size() == state.opt_problem.num_constraints);
-    CHECK(
-        state.opt_problem.g_upper.size() == state.opt_problem.num_constraints);
+        state.particles_problem.x0.size() == state.particles_problem.num_vars);
+    CHECK(state.particles_problem.x_lower.size()
+        == state.particles_problem.num_vars);
+    CHECK(state.particles_problem.x_upper.size()
+        == state.particles_problem.num_vars);
+    CHECK(state.particles_problem.g_lower.size()
+        == state.particles_problem.num_constraints);
+    CHECK(state.particles_problem.g_upper.size()
+        == state.particles_problem.num_constraints);
 
-    state.opt_problem.x0.setRandom();
+    state.particles_problem.x0.setRandom();
 
     // Test ∇f
-    Eigen::VectorXd finite_grad(state.opt_problem.num_vars);
-    finite_gradient(
-        state.opt_problem.x0, state.opt_problem.func_f(), finite_grad);
+    Eigen::VectorXd finite_grad(state.particles_problem.num_vars);
+    finite_gradient(state.particles_problem.x0,
+        state.particles_problem.func_f(), finite_grad);
     Eigen::VectorXd analytic_grad
-        = state.opt_problem.eval_grad_f(state.opt_problem.x0);
+        = state.particles_problem.eval_grad_f(state.particles_problem.x0);
     CHECK(compare_gradient(finite_grad, analytic_grad));
 
     // Test ∇²f
     Eigen::MatrixXd finite_hessian(
-        state.opt_problem.num_vars, state.opt_problem.num_vars);
-    finite_jacobian(
-        state.opt_problem.x0, state.opt_problem.func_grad_f(), finite_hessian);
+        state.particles_problem.num_vars, state.particles_problem.num_vars);
+    finite_jacobian(state.particles_problem.x0,
+        state.particles_problem.func_grad_f(), finite_hessian);
     Eigen::MatrixXd analytic_hessian
-        = state.opt_problem.eval_hessian_f(state.opt_problem.x0);
+        = state.particles_problem.eval_hessian_f(state.particles_problem.x0);
     CHECK(compare_jacobian(finite_hessian, analytic_hessian));
 
     // Test ∇g
-    Eigen::MatrixXd finite_jac(
-        state.opt_problem.num_constraints, state.opt_problem.num_vars);
-    finite_jacobian(
-        state.opt_problem.x0, state.opt_problem.func_g(), finite_jac);
+    Eigen::MatrixXd finite_jac(state.particles_problem.num_constraints,
+        state.particles_problem.num_vars);
+    finite_jacobian(state.particles_problem.x0,
+        state.particles_problem.func_g(), finite_jac);
     Eigen::MatrixXd analytic_jac
-        = state.opt_problem.eval_jac_g(state.opt_problem.x0);
+        = state.particles_problem.eval_jac_g(state.particles_problem.x0);
     CHECK(compare_jacobian(finite_jac, analytic_jac));
 
     // Test ∇²g
     Eigen::MatrixXd finite_hessian_gi(
-        state.opt_problem.num_vars, state.opt_problem.num_vars);
+        state.particles_problem.num_vars, state.particles_problem.num_vars);
     finite_hessian_gi.setOnes();
     long i;
     auto diff_i = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-        auto jac = state.opt_problem.eval_jac_g(x);
+        auto jac = state.particles_problem.eval_jac_g(x);
         return jac.row(i);
     };
     std::vector<Eigen::SparseMatrix<double>> analytic_hessian_g
-        = state.opt_problem.eval_hessian_g(state.opt_problem.x0);
+        = state.particles_problem.eval_hessian_g(state.particles_problem.x0);
     for (i = 0; i < long(analytic_hessian_g.size()); i++) {
-        finite_jacobian(state.opt_problem.x0, diff_i, finite_hessian_gi);
+        finite_jacobian(state.particles_problem.x0, diff_i, finite_hessian_gi);
         CHECK(compare_jacobian(
             finite_hessian_gi, analytic_hessian_g[unsigned(i)]));
     }

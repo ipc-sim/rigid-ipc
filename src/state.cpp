@@ -1,17 +1,13 @@
+#include "state.hpp"
+
 #include <algorithm> // std::sort
 #include <iostream>
 
 #include <igl/slice.h>
 
-#include "state.hpp"
-
 #include <io/opt_results.hpp>
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
-
-#include <opt/barrier_constraint.hpp>
-#include <opt/particles_problem.hpp>
-#include <opt/volume_constraint.hpp>
 
 #include <logger.hpp>
 #include <profiler.hpp>
@@ -33,7 +29,8 @@ State::State()
     , current_opt_iteration(-1)
 {
     barrier_solver.barrier_constraint = &barrier_constraint;
-    opt_problem.intermediate_callback
+    rigid_body_problem.intermediate_callback
+        = particles_problem.intermediate_callback
         = [&](const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk) {
               return record_optimization_step(x, Uk);
           };
@@ -102,8 +99,8 @@ void State::reset_scene()
     opt_results.success = false;
     opt_results.finished = false;
 
-    opt_problem.is_dof_fixed.resize(displacements.size(), 1);
-    opt_problem.is_dof_fixed.setConstant(false);
+    particles_problem.is_dof_fixed
+        = Eigen::MatrixXb::Zero(displacements.size(), 1);
 }
 
 void State::save_scene(std::string filename)
@@ -143,15 +140,16 @@ void State::add_edges(const Eigen::MatrixX2i& new_edges)
 
 void State::expand_is_dof_fixed()
 {
-    long num_old_vertices = opt_problem.is_dof_fixed.size() / 2;
+    long num_old_vertices = particles_problem.is_dof_fixed.size() / 2;
     long num_new_vertices = displacements.rows() - num_old_vertices;
 
-    opt_problem.is_dof_fixed.resize(num_old_vertices, 2);
-    opt_problem.is_dof_fixed.conservativeResize(displacements.rows(), 2);
-    opt_problem.is_dof_fixed.bottomRows(num_new_vertices).setZero();
-    opt_problem.is_dof_fixed.resize(opt_problem.is_dof_fixed.size(), 1);
+    particles_problem.is_dof_fixed.resize(num_old_vertices, 2);
+    particles_problem.is_dof_fixed.conservativeResize(displacements.rows(), 2);
+    particles_problem.is_dof_fixed.bottomRows(num_new_vertices).setZero();
+    particles_problem.is_dof_fixed.resize(
+        particles_problem.is_dof_fixed.size(), 1);
 
-    assert(opt_problem.is_dof_fixed.size() == displacements.size());
+    assert(particles_problem.is_dof_fixed.size() == displacements.size());
 }
 
 // Remove vertices that are not an end-point to any edge.
@@ -182,8 +180,9 @@ bool State::remove_free_vertices()
     Eigen::MatrixXb new_is_dof_fixed;
     igl::slice(vertices, R, C, new_vertices); // Copy over the vertices to keep
     igl::slice(displacements, R, C, new_displacements); // Copy displacements
-    opt_problem.is_dof_fixed.resize(opt_problem.is_dof_fixed.size() / 2, 2);
-    igl::slice(opt_problem.is_dof_fixed, R, C, new_is_dof_fixed);
+    particles_problem.is_dof_fixed.resize(
+        particles_problem.is_dof_fixed.size() / 2, 2);
+    igl::slice(particles_problem.is_dof_fixed, R, C, new_is_dof_fixed);
     vertices = new_vertices;
     displacements = new_displacements;
 
@@ -202,7 +201,7 @@ bool State::remove_free_vertices()
 
     reset_scene();
     new_is_dof_fixed.resize(new_is_dof_fixed.size(), 1);
-    opt_problem.is_dof_fixed = new_is_dof_fixed;
+    particles_problem.is_dof_fixed = new_is_dof_fixed;
 
     return true;
 }
@@ -351,13 +350,25 @@ opt::OptimizationSolver& State::getOptimizationSolver()
     throw std::runtime_error("Invalid method");
 }
 
+opt::OptimizationProblem& State::getOptimizationProblem()
+{
+    if (is_rigid_bodies_mode) {
+        return rigid_body_problem;
+    } else {
+        return particles_problem;
+    }
+}
+
 void State::reset_optimization_problem()
 {
-    volume_constraint.initialize(vertices, edges, displacements);
-
     auto& constraint = getCollisionConstraint();
     constraint.initialize(vertices, edges, displacements);
-    opt_problem.initialize(vertices, edges, displacements, constraint);
+    if (is_rigid_bodies_mode) {
+        rigid_body_problem.initialize(rigid_body_system, constraint);
+    } else {
+        particles_problem.initialize(
+            vertices, edges, displacements, constraint);
+    }
 }
 
 void State::reset_results()
@@ -401,7 +412,7 @@ void State::post_process_optimization()
     for (auto& uk : u_history) {
         Eigen::MatrixXd x = uk;
         x.resize(x.size(), 1);
-        f_history.push_back(opt_problem.eval_f(x));
+        f_history.push_back(getOptimizationProblem().eval_f(x));
 
         Eigen::VectorXd gx;
         Eigen::MatrixXd jac_gx;
@@ -427,35 +438,39 @@ void State::optimize_displacements(const std::string /*filename*/)
     reset_results();
 
     // 3. set initial value
-    Eigen::MatrixXd U0(displacements.rows(), 2);
+    auto& problem = getOptimizationProblem();
     if (opt_method == OptimizationMethod::LINEARIZED_CONSTRAINTS) {
-        U0 = displacements;
+        Eigen::MatrixXd x0 = displacements;
+        x0.resize(x0.size(), 1);
+        problem.x0 = x0;
     } else if (reuse_opt_displacements) {
-        U0 = opt_results.x;
+        problem.x0 = opt_results.x;
     } else {
-        U0.setZero();
+        problem.x0 = Eigen::VectorXd::Zero(problem.num_vars);
     }
 
-    opt_results.x = U0;
+    opt_results.x = problem.x0;
 
     // 4. setup callback
     std::vector<Eigen::VectorXd> it_x;
     std::vector<Eigen::VectorXd> it_lambda;
     std::vector<double> it_gamma;
 
-    if (opt_problem.validate_problem()) {
-        Eigen::MatrixXd x0 = U0;
-        x0.resize(U0.size(), 1);
-        opt_problem.x0 = x0;
-
+    if (problem.validate_problem()) {
         auto& solver = getOptimizationSolver();
 #ifdef PROFILE_FUNCTIONS
         reset_profiler();
         igl::Timer timer;
         timer.start();
 #endif
-        opt_results = solver.solve(opt_problem);
-        opt_results.x.resize(U0.rows(), 2);
+        opt_results = solver.solve(problem);
+        if (is_rigid_bodies_mode) {
+            Eigen::MatrixXd opt_U;
+            rigid_body_system.compute_displacements(opt_results.x, opt_U);
+            opt_results.x = opt_U;
+        } else {
+            opt_results.x.resize(displacements.rows(), 2);
+        }
 
 #ifdef PROFILE_FUNCTIONS
         timer.stop();
@@ -603,6 +618,7 @@ void State::update_fields_from_rigid_bodies()
 
     reset_scene();
 }
+
 void State::update_displacements_from_rigid_bodies()
 {
     rigid_body_system.assemble_displacements();

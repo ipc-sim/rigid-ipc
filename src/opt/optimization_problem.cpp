@@ -1,41 +1,35 @@
 #include "optimization_problem.hpp"
 
-#include <utils/not_implemented_error.hpp>
+#include <autodiff/finitediff.hpp>
 
 namespace ccd {
 namespace opt {
 
     OptimizationProblem::~OptimizationProblem() {}
 
-    bool OptimizationProblem::eval_intermediate_callback(
-        const Eigen::VectorXd& /*x*/)
-    {
-        return true;
-    }
+    ////////////////////////////////////////////////////////////////////////////
+    // Objective function and its derivatives.
 
-    callback_f OptimizationProblem::func_f()
+    Eigen::VectorXd OptimizationProblem::eval_grad_f_approx(
+        const Eigen::VectorXd& x)
     {
-        callback_f f = [&](const Eigen::VectorXd& x) { return eval_f(x); };
-        return f;
-    }
-
-    callback_grad_f OptimizationProblem::func_grad_f()
-    {
-        callback_grad_f f
-            = [&](const Eigen::VectorXd& x) { return eval_grad_f(x); };
-        return f;
-    }
-
-    callback_grad_f OptimizationProblem::func_g()
-    {
-        callback_grad_f f = [&](const Eigen::VectorXd& x) { return eval_g(x); };
-        return f;
+        Eigen::VectorXd grad;
+        ccd::finite_gradient(x, func_f(), grad);
+        return grad;
     }
 
     Eigen::SparseMatrix<double> OptimizationProblem::eval_hessian_f_sparse(
         const Eigen::VectorXd& x)
     {
         return eval_hessian_f(x).sparseView();
+    }
+
+    Eigen::MatrixXd OptimizationProblem::eval_hessian_f_approx(
+        const Eigen::VectorXd& x)
+    {
+        Eigen::MatrixXd hess;
+        ccd::finite_jacobian(x, func_grad_f(), hess);
+        return hess;
     }
 
     // Evaluate the objective and its derivatives.
@@ -64,10 +58,35 @@ namespace opt {
         hessian = eval_hessian_f_sparse(x);
     }
 
+    callback_f OptimizationProblem::func_f()
+    {
+        return [&](const Eigen::VectorXd& x) -> double { return eval_f(x); };
+    }
+
+    callback_grad_f OptimizationProblem::func_grad_f()
+    {
+        return [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+            return eval_grad_f(x);
+        };
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Constraint function and its derivatives.
+
+    void OptimizationProblem::eval_g(const Eigen::VectorXd& x,
+        Eigen::VectorXd& gx, Eigen::SparseMatrix<double>& gx_jacobian,
+        Eigen::VectorXi& gx_active)
+    {
+        gx = eval_g(x);
+        gx_jacobian = eval_jac_g(x).sparseView();
+        gx_active = Eigen::VectorXi::LinSpaced(gx.rows(), 0, int(gx.rows()));
+    }
+
     void OptimizationProblem::eval_jac_g(
         const Eigen::VectorXd& x, Eigen::SparseMatrix<double>& jac_gx)
     {
-
         jac_gx = eval_jac_g(x).sparseView();
     }
 
@@ -80,13 +99,19 @@ namespace opt {
         gx_hessian = eval_hessian_g(x);
     }
 
-    void OptimizationProblem::eval_g(const Eigen::VectorXd& x,
-        Eigen::VectorXd& gx, Eigen::SparseMatrix<double>& gx_jacobian,
-        Eigen::VectorXi& gx_active)
+    callback_g OptimizationProblem::func_g()
     {
-        gx = eval_g(x);
-        gx_jacobian = eval_jac_g(x).sparseView();
-        gx_active = Eigen::VectorXi::LinSpaced(gx.rows(), 0, int(gx.rows()));
+        return [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+            return eval_g(x);
+        };
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    bool OptimizationProblem::eval_intermediate_callback(
+        const Eigen::VectorXd& /*x*/)
+    {
+        return true;
     }
 
     bool OptimizationProblem::validate_problem()
@@ -97,6 +122,7 @@ namespace opt {
         valid &= num_vars == x_upper.rows() || x_upper.size() == 0;
         valid &= num_constraints == g_lower.rows() || g_lower.size() == 0;
         valid &= num_constraints == g_upper.rows() || g_upper.size() == 0;
+        valid &= num_vars == is_dof_fixed.rows() || is_dof_fixed.size() == 0;
 
         if (!valid) {
             return false;
@@ -117,6 +143,10 @@ namespace opt {
         if (g_upper.size() == 0) {
             g_upper.resize(num_constraints);
             g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
+        }
+        if (is_dof_fixed.size() == 0) {
+            g_upper.resize(num_vars);
+            g_upper.setZero(); // no-fixed-dof
         }
         return true;
     }
@@ -139,88 +169,12 @@ namespace opt {
             && (x.array() <= this->x_upper.array() + 10 * tol).all();
     }
 
-    AdHocProblem::AdHocProblem()
-    {
-        this->f = [](const Eigen::VectorXd&) -> double {
-            throw NotImplementedError("Objective function not implemented!");
-        };
-        this->grad_f = [](const Eigen::VectorXd&) -> Eigen::VectorXd {
-            throw NotImplementedError(
-                "Gradient of the objective function not implemented!");
-        };
-        this->hessian_f = [](const Eigen::VectorXd&) -> Eigen::MatrixXd {
-            throw NotImplementedError(
-                "Hessian of the objective function not implemented!");
-        };
-        this->g = [](const Eigen::VectorXd&) -> Eigen::VectorXd {
-            throw NotImplementedError("Constraint function not implemented!");
-        };
-        this->jac_g = [](const Eigen::VectorXd&) -> Eigen::MatrixXd {
-            throw NotImplementedError(
-                "Jacobian of the constraint function not implemented!");
-        };
-        this->hessian_g = [](const Eigen::VectorXd&)
-            -> std::vector<Eigen::SparseMatrix<double>> {
-            throw NotImplementedError("Second derivative of the constraint "
-                                      "function not implemented!");
-        };
-    }
-
-    double AdHocProblem::eval_f(const Eigen::VectorXd& x) { return f(x); }
-
-    Eigen::VectorXd AdHocProblem::eval_grad_f(const Eigen::VectorXd& x)
-    {
-        return grad_f(x);
-    }
-
-    Eigen::MatrixXd AdHocProblem::eval_hessian_f(const Eigen::VectorXd& x)
-    {
-        return hessian_f(x);
-    }
-
-    Eigen::VectorXd AdHocProblem::eval_g(const Eigen::VectorXd& x)
-    {
-        return g(x);
-    };
-
-    Eigen::MatrixXd AdHocProblem::eval_jac_g(const Eigen::VectorXd& x)
-    {
-        return jac_g(x);
-    };
-
-    std::vector<Eigen::SparseMatrix<double>> AdHocProblem::eval_hessian_g(
-        const Eigen::VectorXd& x)
-    {
-        return hessian_g(x);
-    };
-
-    AdHocProblem::AdHocProblem(int num_vars, int num_constraints)
-        : AdHocProblem()
-    {
-        this->num_vars = num_vars;
-        this->num_constraints = num_constraints;
-
-        this->x0.resize(num_vars);
-        this->x0.setConstant(0.0);
-
-        this->x_lower.resize(this->num_vars);
-        this->x_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
-
-        this->x_upper.resize(this->num_vars);
-        this->x_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
-
-        this->g_lower.resize(this->num_constraints);
-        this->g_lower.setConstant(NO_LOWER_BOUND); // no-lower-bound
-
-        this->g_upper.resize(this->num_constraints);
-        this->g_upper.setConstant(NO_UPPER_BOUND); // no-upper-bound
-
-        this->is_dof_fixed.resize(this->num_vars, 1);
-        this->is_dof_fixed.setConstant(false); // no-upper-bound
-    }
-
-    void AdHocProblem::enable_line_search_mode(const Eigen::VectorXd&) {};
-    void AdHocProblem::disable_line_search_mode() {};
+    // Enable the line search mode. This functionality is not up to the child
+    // class.
+    void OptimizationProblem::enable_line_search_mode(
+        const Eigen::VectorXd&) {};
+    // Disable the line search mode.
+    void OptimizationProblem::disable_line_search_mode() {};
 
 } // namespace opt
 } // namespace ccd

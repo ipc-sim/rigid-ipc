@@ -4,6 +4,7 @@
 #include <catch2/catch.hpp>
 
 #include <autodiff/autodiff_types.hpp>
+#include <opt/ad_hoc_problem.hpp>
 #include <solvers/ncp_solver.hpp>
 
 // ---------------------------------------------------
@@ -67,7 +68,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         expected << -0.2, -0.3;
     }
 
-    SECTION("Abs Value Case"){
+    SECTION("Abs Value Case")
+    {
 
         g_diff = [](const Eigen::VectorXd& x) -> DVector {
             DVector gx(NUM_CONSTRAINTS);
@@ -81,7 +83,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         expected << -0.2, -0.3;
     }
 
-    SECTION("Ciecle Case"){
+    SECTION("Ciecle Case")
+    {
 
         g_diff = [](const Eigen::VectorXd& x) -> DVector {
             DVector gx(NUM_CONSTRAINTS);
@@ -117,8 +120,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
 
     Eigen::VectorXd x(NUM_VARS), alpha(NUM_CONSTRAINTS);
     NCPSolver solver;
-    solver.max_iterations= 300;
-    solver.convergence_tolerance  = 1E-8;
+    solver.max_iterations = 300;
+    solver.convergence_tolerance = 1E-8;
     solver.keep_in_unfeasible = false;
     solver.check_convergence = false;
     solver.solve_for_active_cstr = false;
