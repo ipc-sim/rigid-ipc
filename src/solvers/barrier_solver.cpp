@@ -16,19 +16,35 @@ namespace opt {
         : barrier_constraint(nullptr)
         , min_barrier_epsilon(1e-5)
         , max_iterations(3000)
+        , inner_solver_type(BarrierInnerSolver::NEWTON)
     {
-        inner_solver = NewtonSolver();
+        newton_inner_solver = NewtonSolver();
+        bfgs_inner_solver = BFGSSolver();
+        gradient_descent_inner_solver = GradientDescentSolver();
     }
 
     BarrierSolver::~BarrierSolver() {}
+
+    NewtonSolver& BarrierSolver::get_inner_solver()
+    {
+        switch (inner_solver_type) {
+        case BarrierInnerSolver::NEWTON:
+            return newton_inner_solver;
+        case BarrierInnerSolver::BFGS:
+            return bfgs_inner_solver;
+        case BarrierInnerSolver::GRADIENT_DESCENT:
+            return gradient_descent_inner_solver;
+        }
+    }
 
     OptimizationResults BarrierSolver::solve(
         OptimizationProblem& general_problem)
     {
         assert(barrier_constraint != nullptr);
-
         BarrierProblem barrier_problem(
             general_problem, barrier_constraint->barrier_epsilon);
+
+        NewtonSolver& inner_solver = get_inner_solver();
 
         // Convert from the boolean vector to a vector of free dof indices
         inner_solver.init_free_dof(barrier_problem.is_dof_fixed);
@@ -43,8 +59,8 @@ namespace opt {
         do {
             // Log the epsilon and the newton method will log the number of
             // iterations.
-            spdlog::trace("solver=barrier_newton ϵ={:g}",
-                barrier_constraint->barrier_epsilon);
+            spdlog::trace(
+                "solver=barrier ϵ={:g}", barrier_constraint->barrier_epsilon);
 
             // Optimize for a fixed epsilon
             results = inner_solver.solve(barrier_problem);
@@ -217,8 +233,8 @@ namespace opt {
             // clang-format on
             ProfiledPoint::SUMMING_HESSIAN)
 
-        // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
-        // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
+        // �������� [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
+        // = diag([�����������''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
         assert(x.size() == general_problem->x_lower.size());
         assert(x.size() == general_problem->x_upper.size());
         hessian += Eigen::SparseDiagonal<double>(

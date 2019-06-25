@@ -15,6 +15,7 @@ add_executable(unit_tests
     integration/test_nlopt.cpp
     integration/test_osqp.cpp
     integration/test_mosek.cpp
+    integration/test_lbfgspp.cpp
 
     solvers/test_ipopt_solver.cpp
     solvers/test_ncp.cpp

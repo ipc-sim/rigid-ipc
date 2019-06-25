@@ -43,7 +43,8 @@ TEST_CASE("Test Newton direction solve", "[opt][newtons_method][newton_dir]")
     Eigen::SparseMatrix<double> hessian
         = Eigen::SparseDiagonal<double>(2 * Eigen::VectorXd::Ones(num_vars));
     Eigen::VectorXd delta_x;
-    ccd::opt::NewtonSolver::compute_direction(gradient, hessian, delta_x);
+    ccd::opt::NewtonSolver solver;
+    solver.compute_direction(gradient, hessian, delta_x);
     CHECK((x + delta_x).squaredNorm() == Approx(0.0));
 }
 

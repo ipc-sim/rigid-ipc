@@ -39,6 +39,14 @@ namespace opt {
     }
 
     // Evaluate the objective and its derivatives.
+    void OptimizationProblem::eval_f_and_fdiff(
+        const Eigen::VectorXd& x, double& value, Eigen::VectorXd& grad)
+    {
+        value = eval_f(x);
+        grad = eval_grad_f(x);
+    }
+
+    // Evaluate the objective and its derivatives.
     void OptimizationProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
         double& value, Eigen::VectorXd& grad, Eigen::MatrixXd& hessian)
     {

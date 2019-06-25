@@ -29,20 +29,23 @@ void solver_menu(ccd::opt::BarrierSolver& solver)
         "max iter##barrier_solver", &solver.max_iterations, 0);
     ImGui::InputDoubleBounded("min eps##barrier_solver",
         &solver.min_barrier_epsilon, 0.0, 2e19, 0.0, 0.0, "%.3g");
-    // static int idx_inner_solver
-    //     = static_cast<int>(ccd::opt::BarrierInnerSolver::NEWTON);
-    // ImGui::Combo("inner solver##barrier_solver", &idx_inner_solver,
-    //     ccd::opt::BarrierInnerSolverNames,
-    //     CCD_IM_ARRAYSIZE(ccd::opt::BarrierInnerSolverNames));
-    solver_menu(solver.inner_solver);
+    int idx_inner_solver = static_cast<int>(solver.inner_solver_type);
+    if (ImGui::Combo("inner solver##barrier_solver", &idx_inner_solver,
+            ccd::opt::BarrierInnerSolverNames,
+            CCD_IM_ARRAYSIZE(ccd::opt::BarrierInnerSolverNames))) {
+        solver.inner_solver_type
+            = static_cast<ccd::opt::BarrierInnerSolver>(idx_inner_solver);
+    }
+
+    solver_menu(solver.get_inner_solver());
 }
 
 void solver_menu(ccd::opt::NewtonSolver& solver)
 {
     ImGui::InputDoubleBounded("tol. abs##barrier_solver",
         &solver.absolute_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
-    ImGui::InputDoubleBounded("tol. line_search##barrier_solver",
-        &solver.line_search_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
+    ImGui::InputDoubleBounded("min step##barrier_solver",
+        &solver.min_step_length, 0.0, 2e19, 0.0, 0.0, "%.3g");
 }
 
 void solver_menu(ccd::opt::IpoptSolver& solver)
