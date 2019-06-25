@@ -56,6 +56,7 @@ add_library(${PROJECT_NAME}
     src/opt/barrier_constraint.cpp
     src/opt/collision_constraint.cpp
     src/opt/optimization_problem.cpp
+    src/opt/ad_hoc_problem.cpp
     src/opt/optimization_results.cpp
     src/opt/particles_problem.cpp
     src/opt/volume_constraint.cpp
@@ -78,8 +79,8 @@ add_library(${PROJECT_NAME}
     src/profiler.cpp
 
     # Generated files
-   src/autogen/time_of_impact_coeff.tpp
-   src/autogen/collision_volume.tpp
+    src/autogen/time_of_impact_coeff.tpp
+    src/autogen/collision_volume.tpp
 
 )
 

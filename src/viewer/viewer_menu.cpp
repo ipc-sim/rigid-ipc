@@ -50,7 +50,7 @@ void ViewerMenu::draw_menu()
         ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
     bool _viewer_menu_visible = true;
 
-    // ---------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     ImGui::Begin("CCD Viewer", &_viewer_menu_visible,
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
@@ -83,7 +83,7 @@ void ViewerMenu::draw_menu()
     ImGui::PopItemWidth();
     ImGui::End();
 
-    // ---------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     ImGui::SetNextWindowPos(
         ImVec2(menu_width + 10.0f, 0.0f), ImGuiSetCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(800.0f, 50.0f), ImGuiSetCond_FirstUseEver);
@@ -100,7 +100,7 @@ void ViewerMenu::draw_menu()
         last_action_message.c_str());
     ImGui::End();
 
-    // ---------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     float legends_width = 250.f * menu_scaling();
     ImGui::SetNextWindowPos(
         ImVec2(ImGui::GetIO().DisplaySize.x - legends_width, 0.0f),
@@ -133,9 +133,9 @@ void ViewerMenu::draw_menu()
     ImGui::End();
 }
 
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // LEGENDS MENU
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_legends()
 {
     float slider_width = ImGui::GetWindowWidth() * 0.25f;
@@ -233,9 +233,9 @@ void ViewerMenu::draw_legends()
     };
 }
 
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // IO MENU
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_io()
 {
     // Scene
@@ -339,14 +339,14 @@ void ViewerMenu::draw_edit_modes()
     }
 
     // Menu for fixing vertex positions
-    if (state.selected_points.size() > 0
+    if (state.selected_points.size() > 0 && !state.is_rigid_bodies_mode
         && ImGui::CollapsingHeader(
             "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Initial button state is all(is_dof_fixed(selected_points))
         bool x_fixed_originally = true, y_fixed_originally = true;
         for (int point : state.selected_points) {
-            x_fixed_originally &= state.opt_problem.is_dof_fixed(point);
-            y_fixed_originally &= state.opt_problem.is_dof_fixed(
+            x_fixed_originally &= state.particles_problem.is_dof_fixed(point);
+            y_fixed_originally &= state.particles_problem.is_dof_fixed(
                 point + state.displacements.rows());
         }
         bool x_fixed = x_fixed_originally, y_fixed = y_fixed_originally;
@@ -354,7 +354,7 @@ void ViewerMenu::draw_edit_modes()
         ImGui::Checkbox("fixed x position##static", &x_fixed);
         if (x_fixed != x_fixed_originally) {
             for (int point : state.selected_points) {
-                state.opt_problem.is_dof_fixed(point) = x_fixed;
+                state.particles_problem.is_dof_fixed(point) = x_fixed;
                 if (x_fixed) {
                     state.displacements(point, 0) = 0.0;
                 }
@@ -367,7 +367,7 @@ void ViewerMenu::draw_edit_modes()
         ImGui::Checkbox("fixed y position##static", &y_fixed);
         if (y_fixed != y_fixed_originally) {
             for (int point : state.selected_points) {
-                state.opt_problem.is_dof_fixed(
+                state.particles_problem.is_dof_fixed(
                     point + state.displacements.rows())
                     = y_fixed;
                 if (y_fixed) {
@@ -423,7 +423,7 @@ void ViewerMenu::draw_rigid_body_options()
 
 // //////////////////////////////////////////////////////////////////////////
 // CCD STEPS
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_ccd_steps()
 {
     if (ImGui::CollapsingHeader("CCD", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -468,9 +468,9 @@ void ViewerMenu::draw_collision_menu()
     }
 }
 
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // OPTIMIZATION
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_optimization()
 {
     using namespace opt;
@@ -525,9 +525,9 @@ void ViewerMenu::draw_optimization()
     }
 } // namespace ccd
 
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // OPTIMIZATION RESULTS
-// //////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 void ViewerMenu::draw_optimization_results()
 {
     if (!ImGui::CollapsingHeader(

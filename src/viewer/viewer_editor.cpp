@@ -75,7 +75,7 @@ void ViewerMenu::subdivide_edges()
         num_old_vertices + num_new_vertices, state.displacements.cols());
     state.edges.conservativeResize(2 * state.edges.rows(), 2);
     // Copy the fixed dof because it is reset during reset_scene
-    auto is_dof_fixed = state.opt_problem.is_dof_fixed;
+    auto is_dof_fixed = state.getOptimizationProblem().is_dof_fixed;
     is_dof_fixed.resize(num_old_vertices, 2);
     is_dof_fixed.conservativeResize(state.displacements.rows(), 2);
 
@@ -107,7 +107,7 @@ void ViewerMenu::subdivide_edges()
 
     // Flatten the is_dof_fixed
     is_dof_fixed.resize(is_dof_fixed.size(), 1);
-    state.opt_problem.is_dof_fixed = is_dof_fixed;
+    state.getOptimizationProblem().is_dof_fixed = is_dof_fixed;
 
     state_history.push_back(state);
     load_state();
@@ -142,10 +142,10 @@ void ViewerMenu::smooth_vertices()
     state.vertices = smoothed_vertices;
     state.displacements = smoothed_displacements;
 
-    auto is_dof_fixed
-        = state.opt_problem.is_dof_fixed; // Save this from being reset
+    auto is_dof_fixed = state.getOptimizationProblem()
+                            .is_dof_fixed; // Save this from being reset
     state.reset_scene();
-    state.opt_problem.is_dof_fixed = is_dof_fixed;
+    state.getOptimizationProblem().is_dof_fixed = is_dof_fixed;
 
     state_history.push_back(state);
     load_state();
