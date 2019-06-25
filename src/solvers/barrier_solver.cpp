@@ -233,8 +233,8 @@ namespace opt {
             // clang-format on
             ProfiledPoint::SUMMING_HESSIAN)
 
-        // �������� [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
-        // = diag([�����������''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
+        // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
+        // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
         assert(x.size() == general_problem->x_lower.size());
         assert(x.size() == general_problem->x_upper.size());
         hessian += Eigen::SparseDiagonal<double>(
