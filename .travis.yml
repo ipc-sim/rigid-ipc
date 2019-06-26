@@ -39,11 +39,20 @@ matrix:
     env:
     - MATRIX_EVAL="export CONFIG=Release"
 
+before_install:
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes conda
+
 install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
 - eval "${MATRIX_EVAL}"
 - ccache --max-size=5.0G
 - ccache -V && ccache --show-stats && ccache --zero-stats
+- conda env create -f environment.yml
+- conda activate ccd-3.6
 
 script:
 - mkdir build
