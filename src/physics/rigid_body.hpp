@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 
 #include <Eigen/Core>
@@ -58,7 +60,6 @@ namespace physics {
             }
             return hess;
         }
-
     } // namespace RBDiff
 
     class RigidBody {
@@ -93,11 +94,11 @@ namespace physics {
         Eigen::MatrixXd world_displacements_gradient_finite(
             const Eigen::Vector3d& velocity) const;
 
-        std::vector<Eigen::MatrixX2d> world_displacements_gradient_exact(
+        Eigen::MatrixXd world_displacements_gradient_exact(
             const Eigen::Vector3d& velocity) const;
 
-        std::vector<std::vector<Eigen::MatrixX2d>>
-        compute_world_displacements_hessian() const;
+        std::vector<Eigen::Matrix3d> world_displacements_hessian_exact(
+            const Eigen::Vector3d& velocity) const;
 
         /// \brief vertices as distances from the center of mass
         Eigen::MatrixX2d vertices;

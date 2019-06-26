@@ -18,6 +18,7 @@
 #include <opt/barrier_constraint.hpp>
 #include <opt/collision_constraint.hpp>
 #include <opt/particles_problem.hpp>
+#include <opt/rigid_body_problem.hpp>
 #include <opt/volume_constraint.hpp>
 
 #include <physics/rigid_body_system.hpp>
@@ -98,7 +99,8 @@ public:
     opt::BarrierConstraint barrier_constraint;
     ConstraintType constraint_function;
 
-    opt::ParticlesDisplProblem opt_problem;
+    opt::ParticlesDisplProblem particles_problem;
+    opt::RigidBodyProblem rigid_body_problem;
 
     /// @brief reuse the current opt_displacements to initialize the
     /// optimization
@@ -149,6 +151,7 @@ public:
     // ----------------------------------------------------------------------
     opt::CollisionConstraint& getCollisionConstraint();
     opt::OptimizationSolver& getOptimizationSolver();
+    opt::OptimizationProblem& getOptimizationProblem();
 
     void reset_optimization_problem();
     void optimize_displacements(const std::string filename = "");
