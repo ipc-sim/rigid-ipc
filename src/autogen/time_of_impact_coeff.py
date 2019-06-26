@@ -7,9 +7,10 @@ import sympy as sympy
 import numpy as np
 from jinja2 import Environment, FileSystemLoader
 
-from utils import C99_print, assert_, message, short_message
+from utils import C99_print, assert_, message, short_message, which
 
 template_path = os.path.dirname(os.path.realpath(__file__))
+
 
 def vec2_symbols(prefix):
     _range = "i:l[0:2]"
@@ -31,7 +32,7 @@ def toi_formula(v, u):
     v_at_t = v + t * u
 
     # point along the edge at distance alpha
-    ve_at_alpha = (v_at_t[j,:] - v_at_t[i,:]) * alpha + v_at_t[i,:]
+    ve_at_alpha = (v_at_t[j, :] - v_at_t[i, :]) * alpha + v_at_t[i, :]
 
     alpha_nominator = [None] * dimensions
     alpha_denominator = [None] * dimensions
@@ -40,16 +41,18 @@ def toi_formula(v, u):
     #   V_k(t) =  V_i(t) + alpha (V_j(t) - V_i(t))
     # for alpha, to express alpha in terms of t
     for d in range(0, dimensions):
-        eq = sympy.Eq(v_at_t[k,d], ve_at_alpha[d])
+        eq = sympy.Eq(v_at_t[k, d], ve_at_alpha[d])
         alpha_ = sympy.solve(eq, alpha)[0]
         alpha_nominator[d], alpha_denominator[d] = sympy.fraction(alpha_)
 
     # The solution should be the same in all dimensions
     # (V_k(t) -  V_i(t))_x / (V_j(t) - V_i(t))_x = (V_k(t) -  V_i(t))_x / (V_j(t) - V_i(t))_y = alpha
     if dimensions == 2:
-        eq1 = sympy.Eq(alpha_nominator[0] * alpha_denominator[1], alpha_nominator[1] * alpha_denominator[0])
+        eq1 = sympy.Eq(alpha_nominator[0] * alpha_denominator[1],
+                       alpha_nominator[1] * alpha_denominator[0])
     elif dimensions == 3:
-        lhs = alpha_denominator[1] * (alpha_nominator[2] * alpha_denominator[1] - alpha_nominator[0] * alpha_denominator[2])
+        lhs = alpha_denominator[1] * (alpha_nominator[2] *
+                                      alpha_denominator[1] - alpha_nominator[0] * alpha_denominator[2])
         eq1 = sympy.Eq(lhs, alpha_nominator[2])
     else:
         raise Exception("Invalid dimension option")
@@ -60,6 +63,7 @@ def toi_formula(v, u):
     assert(dimensions == 2)
     code = C99_print(coeffs, ['a', 'b', 'c'])
     return code
+
 
 def autogen_function():
     prefix_pos = "V"
@@ -80,7 +84,8 @@ def main(args=None):
     args = parser.parse_args()
 
     print("generating %s" % args.output)
-    env = Environment(loader=FileSystemLoader(str(template_path)), trim_blocks=True, lstrip_blocks=False)
+    env = Environment(loader=FileSystemLoader(
+        str(template_path)), trim_blocks=True, lstrip_blocks=False)
     cpp_temp = env.get_template("time_of_impact_coeff.tpp")
 
     filename = 'auto_time_of_impact_coeff'
@@ -93,7 +98,9 @@ def main(args=None):
     with open(filename_cpp, "w") as file:
         file.write(cpp)
 
-    subprocess.run(["clang-format", "--style=WebKit", "-i", filename_cpp])
+    format_exe = which("clang-format")
+    if format_exe is not None:
+        subprocess.run([format_exe, "--style=WebKit", "-i", filename_cpp])
     print("done!")
 
 
