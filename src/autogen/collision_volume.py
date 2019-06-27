@@ -7,9 +7,10 @@ import sympy as sympy
 import numpy as np
 from jinja2 import Environment, FileSystemLoader
 
-from utils import C99_print, assert_, message, short_message
+from utils import C99_print, assert_, message, short_message, which
 
 template_path = os.path.dirname(os.path.realpath(__file__))
+
 
 def vec2_symbols(prefix):
     _range = "i:l[0:2]"
@@ -34,11 +35,13 @@ def volume_formula(v, u):
 
     U_ij_dot_e_rot90_toi = (U_ij.T * e_rot90_toi)[0]
 
-    volume = - (1.0 - toi) * sympy.sqrt(epsilon ** 2 * e_length_toi ** 2 + U_ij_dot_e_rot90_toi ** 2)
-    
+    volume = - (1.0 - toi) * sympy.sqrt(epsilon ** 2 *
+                                        e_length_toi ** 2 + U_ij_dot_e_rot90_toi ** 2)
+
     expressions = [
         assert_(e_length_toi > 0),
-        assert_(sympy.Or(epsilon > 0, sympy.Or(U_ij_dot_e_rot90_toi > 0, -U_ij_dot_e_rot90_toi > 0))),
+        assert_(sympy.Or(epsilon > 0, sympy.Or(
+            U_ij_dot_e_rot90_toi > 0, -U_ij_dot_e_rot90_toi > 0))),
         volume]
 
     expressions_names = [
@@ -60,7 +63,7 @@ def autogen_function():
     volume_code = [short_message] + volume_formula(V, U)
     volume_code = '\n'.join(volume_code)
 
-    return dict(volume_ccode = volume_code)
+    return dict(volume_ccode=volume_code)
 
 
 def main(args=None):
@@ -69,7 +72,8 @@ def main(args=None):
     args = parser.parse_args()
 
     print("generating %s" % args.output)
-    env = Environment(loader=FileSystemLoader(str(template_path)), trim_blocks=True, lstrip_blocks=False)
+    env = Environment(loader=FileSystemLoader(
+        str(template_path)), trim_blocks=True, lstrip_blocks=False)
     cpp_temp = env.get_template("collision_volume.tpp")
 
     filename = 'auto_collision_volume'
@@ -82,7 +86,9 @@ def main(args=None):
     with open(filename_cpp, "w") as file:
         file.write(cpp)
 
-    subprocess.run(["clang-format", "--style=WebKit", "-i", filename_cpp])
+    format_exe = which("clang-format")
+    if format_exe is not None:
+        subprocess.run([format_exe, "--style=WebKit", "-i", filename_cpp])
     print("done!")
 
 
