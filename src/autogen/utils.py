@@ -1,4 +1,5 @@
 """Utilities for generating C code from symbolic Python."""
+import os
 from sympy import Function, simplify, cse, numbered_symbols
 from sympy.matrices import MatrixSymbol
 from sympy.printing.ccode import C99CodePrinter
@@ -32,6 +33,33 @@ def C99_print(expr, expr_names):
         else:
             lines.append(ccode(result, name))
     return lines
+
+
+def is_exe(fpath):
+    return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+
+def which(program):
+    """
+    Mimics the behavior of Unix's 'which' command.
+
+    Parameters
+    ----------
+    program : string
+        Absolute or relative name of the program to find.
+    """
+    fpath, _fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
 
 
 my_printer = MyPrinter({'user_functions': custom_functions})
