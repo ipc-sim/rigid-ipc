@@ -108,18 +108,18 @@ namespace physics {
         grady_U.col(1).setOnes();
         flatten<double>(grady_U);
 
-        // With respect to θ = vel(2)
-        double θ = vel(2);
-        Eigen::Matrix2d gradθ_R;
+        // With respect to theta = vel(2)
+        double theta = vel(2);
+        Eigen::Matrix2d gradtheta_R;
         // clang-format off
-        gradθ_R << -sin(θ), -cos(θ),
-                    cos(θ), -sin(θ);
+        gradtheta_R << -sin(theta), -cos(theta),
+                    cos(theta), -sin(theta);
         // clang-format on
-        Eigen::MatrixXd gradθ_U = vertices * gradθ_R.transpose();
-        flatten<double>(gradθ_U);
+        Eigen::MatrixXd gradtheta_U = vertices * gradtheta_R.transpose();
+        flatten<double>(gradtheta_U);
 
         Eigen::MatrixXd gradient(vertices.size(), 3);
-        gradient << gradx_U, grady_U, gradθ_U;
+        gradient << gradx_U, grady_U, gradtheta_U;
         return gradient;
     }
 
@@ -127,33 +127,35 @@ namespace physics {
         const Eigen::Vector3d& vel) const
     {
         // With respect to vel.x()
-        Eigen::VectorXd gradx_gradx_U, gradx_grady_U, gradx_gradθ_U;
-        gradx_gradx_U = gradx_grady_U = gradx_gradθ_U
+        Eigen::VectorXd gradx_gradx_U, gradx_grady_U, gradx_gradtheta_U;
+        gradx_gradx_U = gradx_grady_U = gradx_gradtheta_U
             = Eigen::VectorXd::Zero(vertices.size());
 
         // With respect to vel.y()
-        Eigen::VectorXd grady_gradx_U, grady_grady_U, grady_gradθ_U;
-        grady_gradx_U = grady_grady_U = grady_gradθ_U
+        Eigen::VectorXd grady_gradx_U, grady_grady_U, grady_gradtheta_U;
+        grady_gradx_U = grady_grady_U = grady_gradtheta_U
             = Eigen::VectorXd::Zero(vertices.size());
 
-        // With respect to θ = vel(2)
-        // -cos(θ)  sin(θ)
-        // -sin(θ) -cos(θ)
-        Eigen::Matrix2d hessθ_R
+        // With respect to theta = vel(2)
+        // -cos(theta)  sin(theta)
+        // -sin(theta) -cos(theta)
+        Eigen::Matrix2d hesstheta_R
             = -Eigen::Rotation2D<double>(vel(2)).toRotationMatrix();
-        Eigen::VectorXd gradθ_gradx_U, gradθ_grady_U;
-        gradθ_gradx_U = gradθ_grady_U = Eigen::VectorXd::Zero(vertices.size());
-        Eigen::MatrixXd gradθ_gradθ_U = vertices * hessθ_R.transpose();
-        flatten<double>(gradθ_gradθ_U);
+        Eigen::VectorXd gradtheta_gradx_U, gradtheta_grady_U;
+        gradtheta_gradx_U = gradtheta_grady_U
+            = Eigen::VectorXd::Zero(vertices.size());
+        Eigen::MatrixXd gradtheta_gradtheta_U
+            = vertices * hesstheta_R.transpose();
+        flatten<double>(gradtheta_gradtheta_U);
 
         std::vector<Eigen::Matrix3d> hessian(
             static_cast<unsigned long>(vertices.size()), Eigen::Matrix3d());
         for (long i = 0; i < vertices.size(); i++) {
             // clang-format off
             hessian[static_cast<unsigned long>(i)] <<
-                gradx_gradx_U(i), gradx_grady_U(i), gradx_gradθ_U(i),
-                grady_gradx_U(i), grady_grady_U(i), grady_gradθ_U(i),
-                gradθ_gradx_U(i), gradθ_grady_U(i), gradθ_gradθ_U(i);
+                gradx_gradx_U(i), gradx_grady_U(i), gradx_gradtheta_U(i),
+                grady_gradx_U(i), grady_grady_U(i), grady_gradtheta_U(i),
+                gradtheta_gradx_U(i), gradtheta_grady_U(i), gradtheta_gradtheta_U(i);
             // clang-format on
         }
         return hessian;

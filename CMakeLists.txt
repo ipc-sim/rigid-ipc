@@ -12,7 +12,7 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"          ON)
 option(BUILD_UNIT_TESTS         "Build unit-tests"     ON)
 option(BUILD_SCRIPTS            "Build scripts"        ON)
 option(ENABLE_DERIVATIVE_CHECK  "Check Derivatives"    ON)
-option(ENABLE_IPOPT             "Enable Ipopt Library" ON)
+option(ENABLE_IPOPT             "Enable Ipopt Library" OFF)
 option(ENABLE_OSQP              "Enable OSQP Library"  ON)
 option(ENABLE_MOSEK             "Enable Mosek Library" OFF)
 option(CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
@@ -31,6 +31,7 @@ include(${PROJECT_NAME}Dependencies)
 ################################################################################
 # Fixing Collisions Library
 ################################################################################
+
 add_library(${PROJECT_NAME}
     src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp

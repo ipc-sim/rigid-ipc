@@ -1,3 +1,4 @@
+#ifdef BUILD_WITH_IPOPT
 #pragma once
 
 #include <Eigen/Core>
@@ -208,3 +209,4 @@ namespace opt {
 } // namespace opt
 
 } // namespace ccd
+#endif
