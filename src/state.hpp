@@ -30,7 +30,9 @@ static const char* ConstraintNames[2] = { "VOLUME", "BARRIER" };
 
 enum class OptimizationMethod {
     NLOPT,                  ///< @brief Container for various algorithms.
+#ifdef BUILD_WITH_IPOPT
     IPOPT,                  ///< @brief Interior-Point Method (Ipopt).
+#endif
     LINEARIZED_CONSTRAINTS, ///< @brief Linearize the constraints and solve the
                             ///< QP (OSQP/MOSEK).
     NCP,                    ///< @brief Nonlinear Complementarity Problem.
@@ -38,7 +40,15 @@ enum class OptimizationMethod {
 };
 
 static const char* OptimizationMethodNames[]
-    = { "NLOPT", "IPOPT", "Linearized Const.", "NCP", "Barrier Solver" };
+    = { "NLOPT",
+#ifdef BUILD_WITH_IPOPT
+        "IPOPT",
+#endif
+        "Linearized Const.",
+        "NCP",
+        "Barrier Solver"
+    };
+
 /**
  * @brief The State class keeps the full state of the UI and the collisions.
  */
@@ -78,7 +88,9 @@ public:
     OptimizationMethod opt_method;
 
     opt::NCPSolver ncp_solver;
+#ifdef BUILD_WITH_IPOPT
     opt::IpoptSolver ipopt_solver;
+#endif
     opt::NLOptSolver nlopt_solver;
     opt::QPSolver qp_solver;
     opt::BarrierSolver barrier_solver;

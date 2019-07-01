@@ -498,9 +498,11 @@ void ViewerMenu::draw_optimization()
             case ccd::OptimizationMethod::NCP:
                 solver_menu(state.ncp_solver);
                 break;
+#ifdef BUILD_WITH_IPOPT
             case ccd::OptimizationMethod::IPOPT:
                 solver_menu(state.ipopt_solver);
                 break;
+#endif
             case ccd::OptimizationMethod::NLOPT:
                 solver_menu(state.nlopt_solver);
                 break;

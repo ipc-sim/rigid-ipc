@@ -48,6 +48,7 @@ void solver_menu(ccd::opt::NewtonSolver& solver)
         &solver.min_step_length, 0.0, 2e19, 0.0, 0.0, "%.3g");
 }
 
+#ifdef BUILD_WITH_IPOPT
 void solver_menu(ccd::opt::IpoptSolver& solver)
 {
     ImGui::InputIntBounded("max iter##ipopt_solver", &solver.max_iterations, 0);
@@ -55,6 +56,7 @@ void solver_menu(ccd::opt::IpoptSolver& solver)
     ImGui::InputDoubleBounded("tolerance##ipopt_solver", &solver.tolerance, 0.0,
         2e19, 0.0, 0.0, "%.3g");
 }
+#endif
 
 void solver_menu(ccd::opt::NCPSolver& ncp_solver)
 {
