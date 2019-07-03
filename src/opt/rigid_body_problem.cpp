@@ -3,6 +3,10 @@
 #include <utils/flatten.hpp>
 #include <utils/tensor.hpp>
 
+#include <autodiff/finitediff.hpp>
+
+#include <iostream>
+
 namespace ccd {
 
 namespace opt {
@@ -51,8 +55,28 @@ namespace opt {
 
         Eigen::SparseMatrix<double> jac_uk_x;
         model->compute_displacements_gradient(x, jac_uk_x);
+#ifdef WITH_DERIVATIVE_CHECK
+        auto foo = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+            Eigen::MatrixXd Uk;
+            this->model->compute_displacements(x, Uk);
+            flatten(Uk);
+            return Uk;
+        };
+        Eigen::MatrixXd approx_jac_uk_x;
+        ccd::finite_jacobian(x, foo, approx_jac_uk_x);
+        assert(compare_jacobian(Eigen::MatrixXd(jac_uk_x), approx_jac_uk_x));
+#endif
 
         Eigen::VectorXd grad_uk = ParticlesDisplProblem::eval_grad_f(Uk);
+#ifdef WITH_DERIVATIVE_CHECK
+        auto bar = [&](const Eigen::VectorXd& Uk) -> double {
+            return ParticlesDisplProblem::eval_f(Uk);
+        };
+        Eigen::VectorXd approx_grad_uk;
+        ccd::finite_gradient(Uk, bar, approx_grad_uk);
+        assert(compare_gradient(grad_uk, approx_grad_uk));
+#endif
+
         return grad_uk.transpose() * jac_uk_x;
     }
 
