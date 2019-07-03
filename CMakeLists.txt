@@ -12,6 +12,7 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"          ON)
 option(BUILD_UNIT_TESTS         "Build unit-tests"     ON)
 option(BUILD_SCRIPTS            "Build scripts"        ON)
 option(ENABLE_DERIVATIVE_CHECK  "Check Derivatives"    ON)
+option(ENABLE_PROFILING         "Profile Functions"    ON)
 option(ENABLE_IPOPT             "Enable Ipopt Library" OFF)
 option(ENABLE_OSQP              "Enable OSQP Library"  ON)
 option(ENABLE_MOSEK             "Enable Mosek Library" OFF)
@@ -112,6 +113,10 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DDATA_OUTPUT_DIR=\"${DATA_OUT
 
 if(ENABLE_DERIVATIVE_CHECK)
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DWITH_DERIVATIVE_CHECK)
+endif()
+
+if(ENABLE_PROFILING)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DPROFILE_FUNCTIONS)
 endif()
 
 ################################################################################
