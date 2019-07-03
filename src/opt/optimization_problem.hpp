@@ -49,8 +49,8 @@ namespace opt {
         /// @brief Evaulate the gradient of the objective function.
         virtual Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) = 0;
 
-        /// @brief eval_grad_f evaluates gradient of functional at point x using
-        /// finitite differences
+        /// @brief Evaluate the gradient of the objective at point x using
+        /// finitite differences.
         virtual Eigen::VectorXd eval_grad_f_approx(const Eigen::VectorXd& x);
 
         /// @brief Evaulate the hessian of the objective function.
@@ -60,8 +60,8 @@ namespace opt {
         virtual Eigen::SparseMatrix<double> eval_hessian_f_sparse(
             const Eigen::VectorXd& x);
 
-        /// @brief eval_hessian_f evaluates hessian of functional at point x
-        /// using finitite differences
+        /// @brief Evaluate the hessian of the objective at point x using
+        /// finitite differences.
         virtual Eigen::MatrixXd eval_hessian_f_approx(const Eigen::VectorXd& x);
 
         /// @brief Evaluate the objective and its derivatives.
@@ -93,13 +93,22 @@ namespace opt {
         virtual void eval_jac_g(
             const Eigen::VectorXd& x, Eigen::SparseMatrix<double>& jac_gx);
 
+        /// @brief Evaluate the jacobian of the constraint at point x using
+        /// finitite differences.
+        virtual Eigen::MatrixXd eval_jac_g_approx(const Eigen::VectorXd& x);
+
         // @brief eval_hessian_g evaluates constraints hessian at point x
         virtual std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x)
             = 0;
 
-        /// @brief eval_g_and_gdiff evaluates constraints, jacobian and hessian
-        /// at point x
+        /// @brief Evaluate the hessian of the constraint at point x using
+        /// finitite differences.
+        std::vector<Eigen::MatrixXd> eval_hessian_g_approx(
+            const Eigen::VectorXd& x);
+
+        /// @brief eval_g_and_gdiff evaluates constraints, jacobian and
+        /// hessian at point x
         virtual void eval_g_and_gdiff(const Eigen::VectorXd& x,
             Eigen::VectorXd& gx, Eigen::MatrixXd& gx_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& gx_hessian);

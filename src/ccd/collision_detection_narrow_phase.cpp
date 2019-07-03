@@ -93,9 +93,9 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
 
         // Possible cases for trajectories:
         // - No impact to impact ():
-        //  - s0 < 0 && s1 >= 0 -> sI = 0
-        //  - s0 > 1 && s1 <= 1 -> sI = 1
-        // - impact to *: 0 <= s0 <= 1 -> sI = s0
+        //      - s0 < 0 && s1 >= 0 -> sI = 0
+        //      - s0 > 1 && s1 <= 1 -> sI = 1
+        // - Impact to *: 0 <= s0 <= 1 -> sI = s0
         // - No impact to no impact: * -> NO_IMPACT
         if ((s0 < 0 && s1 >= 0) || (s0 > 1 && s1 <= 1)
             || (s0 >= 0 && s0 <= 1)) {
