@@ -72,7 +72,8 @@ namespace opt {
     {
         // TODO: this is wrong, it will depend on constraint type
         // num_constraints = Eigen::Dynamic;
-        num_constraints = constraint->number_of_constraints();
+        num_constraints
+            = constraint != nullptr ? (constraint->number_of_constraints()) : 0;
     }
 
     // Initalize the mass matrix based on the edge length of incident edges.

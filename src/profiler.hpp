@@ -1,7 +1,5 @@
 #pragma once
 
-#define PROFILE_FUNCTIONS
-
 #ifdef PROFILE_FUNCTIONS
 
 #include <igl/Timer.h>

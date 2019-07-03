@@ -38,7 +38,15 @@ namespace opt {
     {
         value = eval_f(x);
         grad = eval_grad_f(x);
+#ifdef WITH_DERIVATIVE_CHECK
+        Eigen::VectorXd approx_grad = eval_grad_f_approx(x);
+        assert(compare_gradient(grad, approx_grad));
+#endif
         hessian = eval_hessian_f(x);
+#ifdef WITH_DERIVATIVE_CHECK
+        Eigen::MatrixXd approx_hessian = eval_hessian_f_approx(x);
+        assert(compare_jacobian(hessian, approx_hessian));
+#endif
     }
 
     void OptimizationProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
@@ -47,7 +55,15 @@ namespace opt {
     {
         value = eval_f(x);
         grad = eval_grad_f(x);
+#ifdef WITH_DERIVATIVE_CHECK
+        Eigen::VectorXd approx_grad = eval_grad_f_approx(x);
+        assert(compare_gradient(grad, approx_grad));
+#endif
         hessian = eval_hessian_f_sparse(x);
+#ifdef WITH_DERIVATIVE_CHECK
+        Eigen::MatrixXd approx_hessian = eval_hessian_f_approx(x);
+        assert(compare_jacobian(Eigen::MatrixXd(hessian), approx_hessian));
+#endif
     }
 
     callback_f OptimizationProblem::func_f()
@@ -72,7 +88,7 @@ namespace opt {
         Eigen::VectorXi& gx_active)
     {
         gx = eval_g(x);
-        gx_jacobian = eval_jac_g(x).sparseView();
+        eval_jac_g(x, gx_jacobian);
         gx_active = Eigen::VectorXi::LinSpaced(gx.rows(), 0, int(gx.rows()));
     }
 
@@ -82,13 +98,46 @@ namespace opt {
         jac_gx = eval_jac_g(x).sparseView();
     }
 
+    Eigen::MatrixXd OptimizationProblem::eval_jac_g_approx(
+        const Eigen::VectorXd& x)
+    {
+        Eigen::MatrixXd jac;
+        ccd::finite_jacobian(x, func_g(), jac);
+        return jac;
+    }
+
+    std::vector<Eigen::MatrixXd> OptimizationProblem::eval_hessian_g_approx(
+        const Eigen::VectorXd& x)
+    {
+        std::vector<Eigen::MatrixXd> hess(num_constraints, Eigen::MatrixXd());
+        for (int i = 0; i < num_constraints; i++) {
+            auto foo = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+                return eval_jac_g(x).col(i);
+            };
+            ccd::finite_jacobian(x, foo, hess[i]);
+        }
+        return hess;
+    }
+
     void OptimizationProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
         Eigen::VectorXd& gx, Eigen::MatrixXd& gx_jacobian,
         std::vector<Eigen::SparseMatrix<double>>& gx_hessian)
     {
         gx = eval_g(x);
         gx_jacobian = eval_jac_g(x);
+#ifdef WITH_DERIVATIVE_CHECK
+        Eigen::MatrixXd approx_jac = eval_jac_g_approx(x);
+        assert(compare_jacobian(gx_jacobian, approx_jac));
+#endif
         gx_hessian = eval_hessian_g(x);
+#ifdef WITH_DERIVATIVE_CHECK
+        std::vector<Eigen::MatrixXd> approx_hessian = eval_hessian_g_approx(x);
+        assert(gx_hessian.size() == approx_hessian.size());
+        for (int i = 0; i < gx_hessian.size(); i++) {
+            assert(compare_jacobian(
+                Eigen::MatrixXd(gx_hessian[i]), approx_hessian[i]));
+        }
+#endif
     }
 
     callback_g OptimizationProblem::func_g()
