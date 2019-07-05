@@ -4,9 +4,10 @@ project(FixingCollisions)
 ################################################################################
 
 # libigl-options
-option(LIBIGL_WITH_OPENGL               "Use OpenGL"         ON)
-option(LIBIGL_WITH_OPENGL_GLFW          "Use GLFW"           ON)
-option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"          ON)
+option(LIBIGL_USE_STATIC_LIBRARY        "Use libigl as static library" OFF)
+option(LIBIGL_WITH_OPENGL               "Use OpenGL"                   ON)
+option(LIBIGL_WITH_OPENGL_GLFW          "Use GLFW"                     ON)
+option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"                    ON)
 
 # project-options
 option(BUILD_UNIT_TESTS         "Build unit-tests"     ON)
