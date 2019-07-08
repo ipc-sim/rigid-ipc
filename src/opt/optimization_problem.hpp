@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <utils/eigen_ext.hpp>
+#include <utils/not_implemented_error.hpp>
 
 namespace ccd {
 namespace opt {
@@ -65,15 +66,19 @@ namespace opt {
         virtual Eigen::MatrixXd eval_hessian_f_approx(const Eigen::VectorXd& x);
 
         /// @brief Evaluate the objective and its derivatives.
-        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x, double& f_uk,
+        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
+            double& f_uk,
             Eigen::VectorXd& f_uk_jacobian);
 
         /// @brief Evaluate the objective and its derivatives.
-        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x, double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian, Eigen::MatrixXd& f_uk_hessian);
+        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
+            double& f_uk,
+            Eigen::VectorXd& f_uk_jacobian,
+            Eigen::MatrixXd& f_uk_hessian);
 
         /// @brief Evaluate the objective and its derivatives.
-        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x, double& f_uk,
+        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
+            double& f_uk,
             Eigen::VectorXd& f_uk_jacobian,
             Eigen::SparseMatrix<double>& f_uk_hessian);
 
@@ -88,7 +93,8 @@ namespace opt {
 
         /// @brief eval_g evaluates constraints and jacobian at point x. Also
         /// returns list of active constraints (indices)
-        virtual void eval_g(const Eigen::VectorXd& x, Eigen::VectorXd& gx,
+        virtual void eval_g(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
             Eigen::SparseMatrix<double>& gx_jacobian,
             Eigen::VectorXi& gx_active);
 
@@ -114,10 +120,21 @@ namespace opt {
         /// @brief eval_g_and_gdiff evaluates constraints, jacobian and
         /// hessian at point x
         virtual void eval_g_and_gdiff(const Eigen::VectorXd& x,
-            Eigen::VectorXd& gx, Eigen::MatrixXd& gx_jacobian,
+            Eigen::VectorXd& gx,
+            Eigen::MatrixXd& gx_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& gx_hessian);
 
         callback_g func_g();
+
+        virtual bool has_barrier_constraint() { return false; }
+        virtual double get_barrier_epsilon()
+        {
+            throw NotImplementedError("get_barrier_epsilon not implemted");
+        }
+        virtual void set_barrier_epsilon(const double)
+        {
+            throw NotImplementedError("set_barrier_epsilon not implemted");
+        }
         ////////////////////////////////////////////////////////////////////////
 
         /// @brief Call the intermediate_callback function.

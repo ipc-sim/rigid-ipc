@@ -4,3 +4,5 @@ ColumnLimit: 80
 AlignTrailingComments: true
 FixNamespaceComments: true
 ReflowComments: true
+BinPackParameters: false
+AllowAllParametersOfDeclarationOnNextLine: true

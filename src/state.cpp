@@ -6,6 +6,7 @@
 #include <igl/slice.h>
 
 #include <io/opt_results.hpp>
+#include <io/read_rb_scene.hpp>
 #include <io/read_scene.hpp>
 #include <io/write_scene.hpp>
 
@@ -27,8 +28,8 @@ State::State()
     , use_opt_gradient(false)
     , current_opt_time(0.0)
     , current_opt_iteration(-1)
+
 {
-    barrier_solver.barrier_constraint = &barrier_constraint;
     rigid_body_problem.intermediate_callback
         = particles_problem.intermediate_callback
         = [&](const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk) {
@@ -44,6 +45,16 @@ State::State()
 
 void State::load_scene(std::string filename)
 {
+    using nlohmann::json;
+
+    std::ifstream input(filename);
+    json scene = json::parse(input);
+    auto scene_type = scene["scene_type"];
+    if (scene_type.is_string()
+        && scene_type.get<std::string>().compare("rigid-body") == 0) {
+        return load_rigidbody_scene(filename);
+    }
+
     io::read_scene(filename, vertices, edges, displacements);
     if (is_rigid_bodies_mode) {
         convert_connected_components_to_rigid_bodies();
@@ -52,13 +63,26 @@ void State::load_scene(std::string filename)
     reset_scene();
 }
 
-void State::load_scene(const Eigen::MatrixX2d& v, const Eigen::MatrixX2i& e,
+void State::load_scene(const Eigen::MatrixX2d& v,
+    const Eigen::MatrixX2i& e,
     const Eigen::MatrixX2d& d)
 {
     this->vertices = v;
     this->edges = e;
     this->displacements = d;
 
+    reset_scene();
+}
+
+void State::load_rigidbody_scene(std::string filename)
+{
+    std::vector<ccd::physics::RigidBody> rbs;
+    ccd::io::read_rb_scene(filename, rbs);
+    rigid_body_system.clear();
+    rigid_body_system.add_rigid_body(rbs);
+    rigid_body_system.assemble();
+    is_rigid_bodies_mode = true;
+    update_fields_from_rigid_bodies();
     reset_scene();
 }
 
@@ -320,6 +344,7 @@ void State::run_ccd_pipeline()
 
     spdlog::debug("grad_vol\n{}", ccd::log::fmt_eigen(volume_grad, 4));
 }
+
 
 // -----------------------------------------------------------------------------
 // OPT
@@ -617,8 +642,6 @@ void State::update_fields_from_rigid_bodies()
     vertices = rigid_body_system.vertices;
     displacements = rigid_body_system.displacements;
     edges = rigid_body_system.edges;
-
-    reset_scene();
 }
 
 void State::update_displacements_from_rigid_bodies()
@@ -682,6 +705,7 @@ void State::convert_connected_components_to_rigid_bodies()
     }
 
     update_fields_from_rigid_bodies();
+    reset_scene();
 }
 
 std::vector<long> State::get_opt_collision_edges()

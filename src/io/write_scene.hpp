@@ -10,10 +10,10 @@ namespace io {
         const Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic>& matrix);
 
     void write_scene(const std::string filename,
-        const Eigen::MatrixXd& vertices, const Eigen::MatrixX2i& edges,
+        const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& edges,
         const Eigen::MatrixXd& displacements);
     nlohmann::json write_scene(const Eigen::MatrixXd& vertices,
-        const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& displacements);
+        const Eigen::MatrixXi& edges, const Eigen::MatrixXd& displacements);
 } // namespace io
 } // namespace ccd
 

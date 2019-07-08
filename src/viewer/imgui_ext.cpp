@@ -2,8 +2,13 @@
 
 namespace ImGui {
 
-bool InputIntBounded(const char* label, int* val, int lower_bound,
-    int upper_bound, int step, int step_fast, ImGuiInputTextFlags flags)
+bool InputIntBounded(const char* label,
+    int* val,
+    int lower_bound,
+    int upper_bound,
+    int step,
+    int step_fast,
+    ImGuiInputTextFlags flags)
 {
     int unbounded_val = *val;
     if (ImGui::InputInt(label, &unbounded_val, step, step_fast, flags)) {
@@ -13,10 +18,15 @@ bool InputIntBounded(const char* label, int* val, int lower_bound,
         }
     }
     return false;
-};
+}
 
-bool InputDoubleBounded(const char* label, double* val, double lower_bound,
-    double upper_bound, double step, double step_fast, const char* format,
+bool InputDoubleBounded(const char* label,
+    double* val,
+    double lower_bound,
+    double upper_bound,
+    double step,
+    double step_fast,
+    const char* format,
     ImGuiInputTextFlags flags)
 {
     double unbounded_val = *val;
@@ -28,6 +38,19 @@ bool InputDoubleBounded(const char* label, double* val, double lower_bound,
         }
     }
     return false;
-};
+}
+
+bool DragDouble(const char* label,
+    double* v,
+    double v_speed,
+    double v_min,
+    double v_max,
+    const char* format,
+    float power)
+{
+
+    return DragScalar(
+        label, ImGuiDataType_Double, v, v_speed, &v_min, &v_max, format, power);
+}
 
 } // namespace ImGui

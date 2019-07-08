@@ -22,10 +22,8 @@ namespace opt {
         BarrierSolver();
         ~BarrierSolver() override;
         OptimizationResults solve(OptimizationProblem& problem) override;
+        OptimizationSolver& get_inner_solver();
 
-        virtual OptimizationSolver& get_inner_solver();
-
-        BarrierConstraint* barrier_constraint;
         double min_barrier_epsilon;
         BarrierInnerSolver inner_solver_type;
 

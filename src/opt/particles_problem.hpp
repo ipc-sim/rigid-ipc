@@ -27,8 +27,10 @@ namespace opt {
         ParticlesDisplProblem();
         virtual ~ParticlesDisplProblem() override;
 
-        void initialize(const Eigen::MatrixX2d& V, const Eigen::MatrixX2i& E,
-            const Eigen::MatrixX2d& U, CollisionConstraint& cstr);
+        void initialize(const Eigen::MatrixX2d& V,
+            const Eigen::MatrixX2i& E,
+            const Eigen::MatrixX2d& U,
+            CollisionConstraint& cstr);
 
         ////////////////////////////////////////////////////////////////////////
         // Objective function and its derivatives.
@@ -54,7 +56,8 @@ namespace opt {
 
         /// @brief eval_g evaluates constraints and jacobian at point x. Also
         /// returns list of active constraints (indices)
-        virtual void eval_g(const Eigen::VectorXd& x, Eigen::VectorXd& gx,
+        virtual void eval_g(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
             Eigen::SparseMatrix<double>& gx_jacobian,
             Eigen::VectorXi& gx_active) override;
 
@@ -72,8 +75,22 @@ namespace opt {
         /// @brief eval_g_and_gdiff evaluates constraints, jacobian and hessian
         /// at point x
         virtual void eval_g_and_gdiff(const Eigen::VectorXd& x,
-            Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
+            Eigen::VectorXd& g_uk,
+            Eigen::MatrixXd& g_uk_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
+
+        virtual bool has_barrier_constraint() override
+        {
+            return constraint->is_barrier();
+        }
+        virtual double get_barrier_epsilon() override
+        {
+            return constraint->get_barrier_epsilon();
+        }
+        virtual void set_barrier_epsilon(const double eps) override
+        {
+            return constraint->set_barrier_epsilon(eps);
+        }
         ////////////////////////////////////////////////////////////////////////
 
         /// @brief Evaluate the intermediate callback.

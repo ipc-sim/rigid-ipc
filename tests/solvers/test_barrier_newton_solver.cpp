@@ -89,10 +89,9 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
     "[opt][barrier][barrier_solver]")
 {
     spdlog::set_level(spdlog::level::off);
+
     // Setup solver
     BarrierSolver solver;
-    solver.barrier_constraint = new BarrierConstraint();
-    solver.barrier_constraint->barrier_epsilon = 1;
     solver.min_barrier_epsilon = 1e-12;
     solver.inner_solver_type = BarrierInnerSolver::NEWTON;
     dynamic_cast<NewtonSolver&>(solver.get_inner_solver()).absolute_tolerance
@@ -131,6 +130,19 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
         return std::vector<Eigen::SparseMatrix<double>>(
             x.rows(), Eigen::SparseMatrix<double>(x.rows(), x.rows()));
     };
+
+    BarrierConstraint cstr;
+    cstr.barrier_epsilon = 1;
+
+    problem.fhas_barrier_constraint
+        = []() { return true; };
+    problem.fget_barrier_epsilon = [&cstr](){
+        return cstr.get_barrier_epsilon();
+    };
+    problem.fset_barrier_epsilon= [&cstr](const double eps){
+        return cstr.set_barrier_epsilon(eps);
+    };
+
 
     problem.x0 = Eigen::VectorXd::Zero(num_vars);
     problem.x0(0) = GENERATE(0, 1, 5, 10);

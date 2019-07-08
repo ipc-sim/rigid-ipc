@@ -2,6 +2,9 @@
 
 #include <Eigen/Geometry>
 
+#include <physics/mass_matrix.hpp>
+#include <physics/moment_of_inertia.hpp>
+
 #include <autodiff/finitediff.hpp>
 #include <logger.hpp>
 #include <utils/flatten.hpp>
@@ -10,16 +13,75 @@ namespace ccd {
 
 namespace physics {
 
-    RigidBody::RigidBody(const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2i& edges, const Eigen::Vector2d& position,
+    RigidBody RigidBody::Centered(const Eigen::MatrixXd& vertices,
+        const Eigen::MatrixX2i& edges,
         const Eigen::Vector3d& velocity)
+    {
+        Eigen::RowVector2d x = center_of_mass(vertices, edges);
+        Eigen::MatrixX2d centered_vertices = vertices.rowwise() - x;
+        Eigen::Vector3d position = Eigen::Vector3d::Zero();
+        position.segment(0, 2) = x;
+        return RigidBody(centered_vertices, edges, velocity, position);
+    }
+
+    RigidBody::RigidBody(const Eigen::MatrixX2d& vertices,
+        const Eigen::MatrixX2i& edges,
+        const Eigen::Vector3d& v,
+        const Eigen::Vector3d& x)
         : vertices(vertices)
         , edges(edges)
-        , position(position)
-        , velocity(velocity)
+        , velocity(v)
+        , position(x)
+
     {
-        spdlog::trace("rigid_body velocity={},{},{}", velocity[0], velocity[1],
-            velocity[2]);
+        spdlog::trace("rigid_body velocity={},{} omega={}", velocity.x(),
+            velocity.y(), velocity.z());
+
+        Eigen::VectorXd masses;
+        mass_vector(vertices, edges, masses);
+        mass = masses.sum();
+        moment_of_inertia = physics::moment_of_inertia(vertices, masses);
+
+        mass_matrix << mass, 0, 0, 0, mass, 0, 0, 0, moment_of_inertia;
+    }
+
+    Eigen::MatrixXd RigidBody::world_vertices(const bool previous) const
+    {
+        return world_vertices(previous ? position_prev : position);
+    }
+
+    template <typename T>
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> RigidBody::world_vertices(
+        const Eigen::Matrix<T, 3, 1>& position) const
+    {
+        typedef Eigen::Matrix<T, 2, 2> Matrix2T;
+
+        // compute X[i] = R(theta) * r_i + X
+        Matrix2T R = Eigen::Rotation2D<T>(position.z()).toRotationMatrix();
+        return (vertices.cast<T>() * R.transpose()).rowwise()
+            + position.head(2).transpose();
+    }
+
+    Eigen::MatrixXd RigidBody::world_vertices_gradient(
+        const Eigen::Vector3d& position) const
+    {
+        RBDiff::activate();
+        RBDiff::D1Vector3 dpos = RBDiff::d1vars(0, position);
+        RBDiff::D1MatrixXd dx = world_vertices<RBDiff::DScalar1>(dpos);
+
+        flatten<RBDiff::DScalar1>(dx);
+        return RBDiff::get_gradient(dx);
+    }
+
+    std::vector<Eigen::Matrix3d> RigidBody::world_vertices_hessian(
+        const Eigen::Vector3d& position) const
+    {
+        RBDiff::activate();
+        RBDiff::D2Vector3 dpos = RBDiff::d2vars(0, position);
+        RBDiff::D2MatrixXd dx = world_vertices<RBDiff::DScalar2>(dpos);
+
+        flatten<RBDiff::DScalar2>(dx);
+        return RBDiff::get_hessian(dx);
     }
 
     Eigen::MatrixXd RigidBody::world_displacements() const
@@ -27,29 +89,31 @@ namespace physics {
         return world_displacements(velocity);
     }
 
+    // ---------------------------------------------------------------------- //
+    // DERIVATIVES
+    // ---------------------------------------------------------------------- //
+
     template <typename T>
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
-    RigidBody::world_displacements(const Eigen::Matrix<T, 3, 1>& vel) const
+    RigidBody::world_displacements(const Eigen::Matrix<T, 3, 1>& velocity) const
     {
         typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> MatrixXT;
+        typedef Eigen::Matrix<T, 3, 1> Vector3T;
         typedef Eigen::Matrix<T, 2, 2> Matrix2T;
 
-        // Create a 2D 2x2 rotation matrix
-        Matrix2T R = Eigen::Rotation2D<T>(vel(2)).toRotationMatrix();
+        Vector3T next_position = position.cast<T>() + velocity;
 
+        // Create a 2D 2x2 rotation matrix
+        Matrix2T R = Eigen::Rotation2D<T>(next_position.z()).toRotationMatrix();
         MatrixXT verticesT = vertices.cast<T>();
 
         MatrixXT transformed_vertices = (verticesT * R.transpose()).rowwise()
-            + vel.topRows(2).transpose();
+            + next_position.head(2).transpose();
 
-        MatrixXT displacements = transformed_vertices - verticesT;
+        MatrixXT displacements
+            = transformed_vertices - world_vertices().cast<T>();
 
         return displacements;
-    }
-
-    Eigen::MatrixX2d RigidBody::world_vertices() const
-    {
-        return vertices.rowwise() + position.transpose();
     }
 
     Eigen::MatrixXd RigidBody::world_displacements_gradient(

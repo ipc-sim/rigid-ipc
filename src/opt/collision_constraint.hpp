@@ -38,9 +38,22 @@ namespace opt {
         virtual ~CollisionConstraint();
 
         virtual void initialize(const Eigen::MatrixX2d& vertices,
-            const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk);
+            const Eigen::MatrixX2i& edges,
+            const Eigen::MatrixXd& Uk);
 
         virtual void detectCollisions(const Eigen::MatrixXd& Uk);
+
+        // For barrier constraints
+        // -------------------------------------------------------------------
+        virtual bool is_barrier() { return false; }
+        virtual double get_barrier_epsilon()
+        {
+            throw NotImplementedError("get_barrier_epsilon not implemented");
+        }
+        virtual void set_barrier_epsilon(const double)
+        {
+            throw NotImplementedError("set_barrier_epsilon not implemented");
+        }
 
         // Assembly of global Matrices
         // -------------------------------------------------------------------
@@ -85,7 +98,8 @@ namespace opt {
         virtual void compute_constraints_jacobian(const Eigen::MatrixXd& /*Uk*/,
             Eigen::SparseMatrix<double>& /*g_uk_jacobian*/)
         {
-            throw NotImplementedError("compute_constraints_jacobian not implemented");
+            throw NotImplementedError(
+                "compute_constraints_jacobian not implemented");
         }
 
         virtual void compute_constraints_hessian(const Eigen::MatrixXd& Uk,
@@ -93,11 +107,13 @@ namespace opt {
             = 0;
 
         virtual void compute_constraints_and_derivatives(
-            const Eigen::MatrixXd& /*Uk*/, Eigen::VectorXd& /*g_uk*/,
+            const Eigen::MatrixXd& /*Uk*/,
+            Eigen::VectorXd& /*g_uk*/,
             Eigen::MatrixXd& /*g_uk_jacobian*/,
             std::vector<Eigen::SparseMatrix<double>>& /*g_uk_hessian*/)
         {
-            throw NotImplementedError("compute_constraints_and_derivatives not implemented");
+            throw NotImplementedError(
+                "compute_constraints_and_derivatives not implemented");
         }
 
         virtual void compute_constraints(const Eigen::MatrixXd& /*Uk*/,
@@ -132,8 +148,10 @@ namespace opt {
         std::shared_ptr<const Eigen::MatrixX2i> edges;
     };
 
-    void slice_vector(const Eigen::MatrixX2d& data, const Eigen::Vector2i e_ij,
-        Eigen::Vector2i e_kl, std::array<Eigen::Vector2d, 4>& d);
+    void slice_vector(const Eigen::MatrixX2d& data,
+        const Eigen::Vector2i e_ij,
+        Eigen::Vector2i e_kl,
+        std::array<Eigen::Vector2d, 4>& d);
 
     template <typename T> bool differentiable();
 

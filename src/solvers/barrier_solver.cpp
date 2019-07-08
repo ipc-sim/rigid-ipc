@@ -13,8 +13,7 @@ namespace ccd {
 namespace opt {
 
     BarrierSolver::BarrierSolver()
-        : barrier_constraint(nullptr)
-        , min_barrier_epsilon(1e-5)
+        : min_barrier_epsilon(1e-5)
         , inner_solver_type(BarrierInnerSolver::NEWTON)
     {
         newton_inner_solver = NewtonSolver();
@@ -39,9 +38,10 @@ namespace opt {
     OptimizationResults BarrierSolver::solve(
         OptimizationProblem& general_problem)
     {
-        assert(barrier_constraint != nullptr);
+        assert(general_problem.has_barrier_constraint());
+
         BarrierProblem barrier_problem(
-            general_problem, barrier_constraint->barrier_epsilon);
+            general_problem, general_problem.get_barrier_epsilon());
 
         OptimizationSolver& inner_solver = get_inner_solver();
 
@@ -59,7 +59,7 @@ namespace opt {
             // Log the epsilon and the newton method will log the number of
             // iterations.
             spdlog::trace(
-                "solver=barrier ϵ={:g}", barrier_constraint->barrier_epsilon);
+                "solver=barrier ϵ={:g}", general_problem.get_barrier_epsilon());
 
             // Optimize for a fixed epsilon
             results = inner_solver.solve(barrier_problem);
@@ -68,7 +68,7 @@ namespace opt {
 
             // Steepen the barrier
             barrier_problem.epsilon /= 2;
-            barrier_constraint->barrier_epsilon = barrier_problem.epsilon;
+            general_problem.set_barrier_epsilon(barrier_problem.epsilon);
 
             // Start next iteration from the ending optimal position
             barrier_problem.x0 = results.x;
@@ -117,7 +117,8 @@ namespace opt {
     }
 
     void BarrierProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
-        double& f_uk, Eigen::VectorXd& f_uk_gradient,
+        double& f_uk,
+        Eigen::VectorXd& f_uk_gradient,
         Eigen::SparseMatrix<double>& f_uk_hessian)
     {
         general_problem->eval_f_and_fdiff(x, f_uk, f_uk_gradient, f_uk_hessian);

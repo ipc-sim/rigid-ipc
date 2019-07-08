@@ -49,11 +49,14 @@ add_library(${PROJECT_NAME}
     src/io/read_scene.cpp
     src/io/write_scene.cpp
     src/io/opt_results.cpp
+    src/io/serialize_json.cpp
+    src/io/read_rb_scene.cpp
 
     src/physics/rigid_body.cpp
     src/physics/rigid_body_system.cpp
     src/physics/mass_matrix.cpp
     src/physics/center_of_mass.cpp
+    src/physics/moment_of_inertia.cpp
 
     src/opt/barrier.cpp
     src/opt/barrier_constraint.cpp
@@ -80,6 +83,7 @@ add_library(${PROJECT_NAME}
     src/utils/eigen_ext.cpp
 
     src/state.cpp
+    src/SimState.cpp
     src/logger.cpp
     src/profiler.cpp
 
@@ -125,18 +129,19 @@ endif()
 ################################################################################
 
 add_executable(${PROJECT_NAME}_bin
-    src/viewer/edges_to_rectangles.cpp
-    src/viewer/viewer.cpp
-    src/viewer/viewer_crud.cpp
-    src/viewer/viewer_draw.cpp
-    src/viewer/viewer_menu.cpp
-    src/viewer/viewer_editor.cpp
-    src/viewer/imgui_ext.cpp
-    src/viewer/solver_view.cpp
-    src/viewer/constraint_view.cpp
-    src/viewer/procedural_scenes.cpp
+   src/viewer/edges_to_rectangles.cpp
+   src/viewer/viewer.cpp
+   src/viewer/viewer_crud.cpp
+   src/viewer/viewer_draw.cpp
+   src/viewer/viewer_menu.cpp
+   src/viewer/viewer_editor.cpp
+   src/viewer/imgui_ext.cpp
+   src/viewer/solver_view.cpp
+   src/viewer/constraint_view.cpp
+   src/viewer/procedural_scenes.cpp
 
-    src/main.cpp
+   src/main.cpp
+
 )
 
 target_include_directories(${PROJECT_NAME}_bin PRIVATE src)
@@ -147,6 +152,40 @@ add_custom_command(TARGET ${PROJECT_NAME}_bin POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/fixtures
         $<TARGET_FILE_DIR:${PROJECT_NAME}_bin>/fixtures)
+
+################################################################################
+# Simulations Executable
+################################################################################
+
+add_executable(${PROJECT_NAME}_sim
+    src/viewer/edges_to_rectangles.cpp
+    src/viewer/viewer.cpp
+    src/viewer/viewer_crud.cpp
+    src/viewer/viewer_draw.cpp
+    src/viewer/viewer_menu.cpp
+    src/viewer/viewer_editor.cpp
+    src/viewer/rigid_body_view.cpp
+    src/viewer/imgui_ext.cpp
+    src/viewer/solver_view.cpp
+    src/viewer/constraint_view.cpp
+    src/viewer/procedural_scenes.cpp
+
+    src/viewer/igl_viewer_ext.cpp
+    src/viewer/UISimState.cpp
+    src/viewer/UIMenu.cpp
+
+    src/sim_main.cpp
+
+)
+
+target_include_directories(${PROJECT_NAME}_sim PRIVATE src)
+target_link_libraries(${PROJECT_NAME}_sim PUBLIC ${PROJECT_NAME})
+
+# Fixtures folder --------------------------------------------------------------
+add_custom_command(TARGET ${PROJECT_NAME}_sim POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/fixtures
+        $<TARGET_FILE_DIR:${PROJECT_NAME}_sim>/fixtures)
 
 ################################################################################
 # Required Libraries
@@ -202,6 +241,7 @@ if(CODE_COVERAGE)
 
     target_code_coverage(${PROJECT_NAME})
     target_code_coverage(${PROJECT_NAME}_bin)
+    target_code_coverage(${PROJECT_NAME}_sim)
 endif()
 
 if(BUILD_UNIT_TESTS)
