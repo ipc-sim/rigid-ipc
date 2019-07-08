@@ -24,15 +24,11 @@ namespace opt {
         int iteration_number; ///< @brief The current iteration number.
 
     public:
-        Eigen::VectorXi free_dof;  ///< @breif Indices of the free degrees.
         double absolute_tolerance; ///< @brief Convergence tolerance.
         double min_step_length;    ///< @brief Minimum step length.
-        int max_iterations;        ///< @brief Maximum number of iteration.
 
         NewtonSolver();
         virtual ~NewtonSolver() override;
-
-        void init_free_dof(Eigen::MatrixXb is_dof_fixed);
 
         /**
          * @brief Perform Newton's Method to minimize the objective, \f$f(x)\f$,

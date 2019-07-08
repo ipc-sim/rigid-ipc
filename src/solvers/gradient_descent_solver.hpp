@@ -1,5 +1,3 @@
-/// Functions for optimizing functions.
-
 #pragma once
 
 #include <opt/optimization_problem.hpp>
@@ -14,7 +12,7 @@ namespace ccd {
  */
 namespace opt {
 
-    class GradientDescentSolver : public NewtonSolver {
+    class GradientDescentSolver : public OptimizationSolver {
     public:
         GradientDescentSolver();
         virtual ~GradientDescentSolver() override;
@@ -56,6 +54,9 @@ namespace opt {
          */
         static bool compute_direction(
             const Eigen::VectorXd& gradient, Eigen::VectorXd& delta_x);
+
+        double absolute_tolerance; ///< @brief Convergence tolerance.
+        double min_step_length;    ///< @brief Minimum step length.
     };
 
 } // namespace opt

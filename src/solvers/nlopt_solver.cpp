@@ -12,11 +12,11 @@ namespace opt {
         : algorithm(nlopt::LD_SLSQP)
         , absolute_tolerance(1e-8)
         , relative_tolerance(1e-8)
-        , max_iterations(3000)
         , max_time(2e19)
         , verbose(false)
     {
     }
+
     NLOptSolver::~NLOptSolver() {}
 
     OptimizationResults NLOptSolver::solve(OptimizationProblem& problem)

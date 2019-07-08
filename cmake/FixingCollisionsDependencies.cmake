@@ -98,11 +98,3 @@ if(NOT TARGET nlohmann_json::nlohmann_json)
     option(JSON_MultipleHeaders "" ON)
     add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/json json)
 endif()
-
-# LBFGS++
-# if(NOT TARGET lbfgspp::lbfgspp)
-#     download_lbfgspp()
-#     add_library(lbfgspp INTERFACE)
-#     target_include_directories(lbfgspp SYSTEM INTERFACE ${FIXING_COLLISIONS_EXTERNAL}/lbfgspp/include)
-#     add_library(lbfgspp::lbfgspp ALIAS lbfgspp)
-# endif()

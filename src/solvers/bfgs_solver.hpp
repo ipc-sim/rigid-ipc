@@ -1,5 +1,3 @@
-/// Functions for optimizing functions.
-
 #pragma once
 
 #include <opt/optimization_problem.hpp>
@@ -14,7 +12,7 @@ namespace ccd {
  */
 namespace opt {
 
-    class BFGSSolver : public NewtonSolver {
+    class BFGSSolver : public OptimizationSolver {
     public:
         BFGSSolver();
         virtual ~BFGSSolver() override;
@@ -31,6 +29,9 @@ namespace opt {
          */
         virtual OptimizationResults solve(
             OptimizationProblem& problem) override;
+
+        double absolute_tolerance; ///< @brief Convergence tolerance.
+        double min_step_length;    ///< @brief Minimum step length.
     };
 
 } // namespace opt

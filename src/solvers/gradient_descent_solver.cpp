@@ -12,8 +12,12 @@ namespace ccd {
 namespace opt {
 
     GradientDescentSolver::GradientDescentSolver()
-        : NewtonSolver() {};
-    GradientDescentSolver::~GradientDescentSolver() {};
+        : absolute_tolerance(1e-5)
+        , min_step_length(1e-12)
+    {
+    }
+
+    GradientDescentSolver::~GradientDescentSolver() {}
 
     OptimizationResults GradientDescentSolver::solve(
         OptimizationProblem& problem)

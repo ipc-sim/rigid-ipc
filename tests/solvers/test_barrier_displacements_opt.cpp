@@ -126,8 +126,13 @@ TEST_CASE("two rotating edges", "[opt][displacements][barrier]")
     }
 
     state.barrier_solver.min_barrier_epsilon = 1e-3;
-    state.barrier_solver.get_inner_solver().min_step_length = 1e-4;
-    state.barrier_solver.get_inner_solver().absolute_tolerance = 1e-3;
+    state.barrier_solver.inner_solver_type = BarrierInnerSolver::NEWTON;
+    dynamic_cast<NewtonSolver&>(state.barrier_solver.get_inner_solver())
+        .min_step_length
+        = 1e-4;
+    dynamic_cast<NewtonSolver&>(state.barrier_solver.get_inner_solver())
+        .absolute_tolerance
+        = 1e-3;
 
     state.optimize_displacements("");
     CHECK(state.opt_results.success);
@@ -148,8 +153,13 @@ TEST_CASE("corner case", "[opt][displacements][barrier]")
     state.opt_method = ccd::OptimizationMethod::BARRIER_SOLVER;
 
     state.barrier_solver.min_barrier_epsilon = 1e-3;
-    state.barrier_solver.get_inner_solver().min_step_length = 1e-4;
-    state.barrier_solver.get_inner_solver().absolute_tolerance = 1e-3;
+    state.barrier_solver.inner_solver_type = BarrierInnerSolver::NEWTON;
+    dynamic_cast<NewtonSolver&>(state.barrier_solver.get_inner_solver())
+        .min_step_length
+        = 1e-4;
+    dynamic_cast<NewtonSolver&>(state.barrier_solver.get_inner_solver())
+        .absolute_tolerance
+        = 1e-3;
 
     state.optimize_displacements("");
     CHECK(state.opt_results.success);

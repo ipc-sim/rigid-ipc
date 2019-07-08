@@ -72,10 +72,3 @@ function(download_json)
         GIT_TAG v3.5.0
     )
 endfunction()
-
-# function(download_lbfgspp)
-#     custom_download_project(lbfgspp
-#         GIT_REPOSITORY https://github.com/yixuan/LBFGSpp.git
-#         GIT_TAG        8fb4c24cec812a5358abc379b7dde03afa0db591
-#     )
-# endfunction()

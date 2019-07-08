@@ -70,7 +70,6 @@ namespace opt {
         nlopt::algorithm algorithm;
         double absolute_tolerance;
         double relative_tolerance;
-        int max_iterations;
         double max_time;
         bool verbose;
     };

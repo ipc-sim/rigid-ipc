@@ -191,9 +191,6 @@ if(ENABLE_MOSEK)
     target_link_libraries(${PROJECT_NAME} PUBLIC mosek::mosek)
 endif()
 
-# NLopt
-# target_link_libraries(${PROJECT_NAME} PUBLIC lbfgspp::lbfgspp)
-
 ################################################################################
 # Tests
 ################################################################################

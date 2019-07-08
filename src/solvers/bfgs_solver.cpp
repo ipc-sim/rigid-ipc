@@ -15,7 +15,8 @@ namespace ccd {
 namespace opt {
 
     BFGSSolver::BFGSSolver()
-        : NewtonSolver()
+        : absolute_tolerance(1e-5)
+        , min_step_length(1e-12)
     {
     }
 

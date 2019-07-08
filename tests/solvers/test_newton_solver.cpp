@@ -14,7 +14,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
     int num_vars = GENERATE(1, 10, 100), num_constraints = 0;
     // Setup solver
     NewtonSolver solver;
-    solver.free_dof = Eigen::VectorXi::LinSpaced(num_vars, 0, num_vars - 1);
+    solver.init_free_dof(Eigen::VectorXb::Zero(num_vars));
     // Setup problem
     // -----------------------------------------------------------------
     AdHocProblem problem(num_vars, num_constraints);

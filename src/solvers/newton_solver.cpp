@@ -14,25 +14,12 @@ namespace opt {
 
     NewtonSolver::NewtonSolver()
         : iteration_number(0)
-        , free_dof()
         , absolute_tolerance(1e-5)
         , min_step_length(1e-12)
-        , max_iterations(3000)
     {
     }
 
     NewtonSolver::~NewtonSolver() {}
-
-    // Initialize free_dof with indices of dof that are not fixed.
-    void NewtonSolver::init_free_dof(Eigen::MatrixXb is_dof_fixed)
-    {
-        free_dof = Eigen::VectorXi(is_dof_fixed.size() - is_dof_fixed.count());
-        for (int i = 0, j = 0; i < is_dof_fixed.size(); i++) {
-            if (!is_dof_fixed(i)) {
-                free_dof(j++) = i;
-            }
-        }
-    }
 
     OptimizationResults NewtonSolver::solve(OptimizationProblem& problem)
     {

@@ -61,7 +61,6 @@ namespace opt {
         double convergence_tolerance;
         NcpUpdate update_type;
         LCPSolver lcp_solver;
-        int max_iterations;
 
         // ---------------------
         // Optimization Specifics

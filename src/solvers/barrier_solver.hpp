@@ -23,11 +23,10 @@ namespace opt {
         ~BarrierSolver() override;
         OptimizationResults solve(OptimizationProblem& problem) override;
 
-        virtual NewtonSolver& get_inner_solver();
+        virtual OptimizationSolver& get_inner_solver();
 
         BarrierConstraint* barrier_constraint;
         double min_barrier_epsilon;
-        int max_iterations;
         BarrierInnerSolver inner_solver_type;
 
     protected:

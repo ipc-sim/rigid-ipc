@@ -15,7 +15,6 @@ namespace opt {
     BarrierSolver::BarrierSolver()
         : barrier_constraint(nullptr)
         , min_barrier_epsilon(1e-5)
-        , max_iterations(3000)
         , inner_solver_type(BarrierInnerSolver::NEWTON)
     {
         newton_inner_solver = NewtonSolver();
@@ -25,7 +24,7 @@ namespace opt {
 
     BarrierSolver::~BarrierSolver() {}
 
-    NewtonSolver& BarrierSolver::get_inner_solver()
+    OptimizationSolver& BarrierSolver::get_inner_solver()
     {
         switch (inner_solver_type) {
         case BarrierInnerSolver::NEWTON:
@@ -44,7 +43,7 @@ namespace opt {
         BarrierProblem barrier_problem(
             general_problem, barrier_constraint->barrier_epsilon);
 
-        NewtonSolver& inner_solver = get_inner_solver();
+        OptimizationSolver& inner_solver = get_inner_solver();
 
         // Convert from the boolean vector to a vector of free dof indices
         inner_solver.init_free_dof(barrier_problem.is_dof_fixed);

@@ -13,7 +13,6 @@ namespace opt {
     IpoptSolver::IpoptSolver()
         : tolerance(1e-8)
         , print_level(0)
-        , max_iterations(3000)
     {
         initialize();
     }
@@ -22,8 +21,8 @@ namespace opt {
         double tolerance, int print_level, int max_iterations)
         : tolerance(tolerance)
         , print_level(print_level)
-        , max_iterations(max_iterations)
     {
+        this->max_iterations = max_iterations;
         initialize();
     }
 
@@ -148,7 +147,6 @@ namespace opt {
         assert(gk.rows() == m);
 
         Eigen::Map<Eigen::MatrixXd>(gval, m, 1) = gk;
-
 
         return true;
     }

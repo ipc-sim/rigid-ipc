@@ -94,7 +94,9 @@ TEST_CASE("Simple tests of Newton's Method with inequlity constraints",
     solver.barrier_constraint = new BarrierConstraint();
     solver.barrier_constraint->barrier_epsilon = 1;
     solver.min_barrier_epsilon = 1e-12;
-    solver.get_inner_solver().absolute_tolerance = 1e-12;
+    solver.inner_solver_type = BarrierInnerSolver::NEWTON;
+    dynamic_cast<NewtonSolver&>(solver.get_inner_solver()).absolute_tolerance
+        = 1e-12;
     // Setup problem
     int num_vars = 1, num_constraints = num_vars;
     AdHocProblem problem(num_vars, num_constraints);

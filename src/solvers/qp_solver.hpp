@@ -27,7 +27,6 @@ namespace opt {
 
         OptimizationResults solve(OptimizationProblem& problem) override;
 
-        int max_iterations;
         double absolute_tolerance;
         double relative_tolerance;
         QPSolverType qp_solver;
@@ -50,7 +49,6 @@ namespace opt {
         void quadratic_energy(OptimizationProblem& problem);
         void linearized_constraints(OptimizationProblem& problem);
     };
-
 
 } // namespace opt
 
