@@ -66,6 +66,10 @@ namespace opt {
 
         /// @brief Evaluate the objective and its derivatives.
         virtual void eval_f_and_fdiff(const Eigen::VectorXd& x, double& f_uk,
+            Eigen::VectorXd& f_uk_jacobian);
+
+        /// @brief Evaluate the objective and its derivatives.
+        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x, double& f_uk,
             Eigen::VectorXd& f_uk_jacobian, Eigen::MatrixXd& f_uk_hessian);
 
         /// @brief Evaluate the objective and its derivatives.

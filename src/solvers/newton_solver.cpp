@@ -1,9 +1,6 @@
 // Functions for optimizing functions.
-// Includes Newton's method with and without constraints.
 #include "newton_solver.hpp"
 
-#include <Eigen/Core>
-#include <Eigen/Sparse>
 #include <igl/slice.h>
 #include <igl/slice_into.h>
 
@@ -16,25 +13,13 @@ namespace ccd {
 namespace opt {
 
     NewtonSolver::NewtonSolver()
-        : free_dof()
+        : iteration_number(0)
         , absolute_tolerance(1e-5)
-        , line_search_tolerance(1e-12)
-        , max_iterations(3000)
+        , min_step_length(1e-12)
     {
     }
 
     NewtonSolver::~NewtonSolver() {}
-
-    // Initialize free_dof with indices of dof that are not fixed.
-    void NewtonSolver::init_free_dof(Eigen::MatrixXb is_dof_fixed)
-    {
-        free_dof = Eigen::VectorXi(is_dof_fixed.size() - is_dof_fixed.count());
-        for (int i = 0, j = 0; i < is_dof_fixed.size(); i++) {
-            if (!is_dof_fixed(i)) {
-                free_dof(j++) = i;
-            }
-        }
-    }
 
     OptimizationResults NewtonSolver::solve(OptimizationProblem& problem)
     {
@@ -51,7 +36,7 @@ namespace opt {
             return !std::isinf(problem.eval_f(x));
         };
 
-        int iter = 0;
+        iteration_number = 0;
         std::string exit_reason = "exceeded the maximum allowable iterations";
         do {
             // Compute the gradient and hessian
@@ -82,31 +67,31 @@ namespace opt {
             // problem.enable_line_search_mode(x + delta_x);
             found_step_length
                 = constrained_line_search(x, delta_x, problem.func_f(),
-                    gradient, constraint, step_length, line_search_tolerance);
+                    gradient, constraint, step_length, min_step_length);
             // problem.disable_line_search_mode();
 
             if (!found_step_length) {
                 // Revert to gradient descent if the newton direction
                 // fails
-                spdlog::warn("method=newtons_method iter={:d} failure=\"line "
+                spdlog::warn("solver=newton iter={:d} failure=\"line "
                              "search using newton direction\" "
                              "failsafe=\"reverting to gradient descent\"",
-                    iter + 1);
+                    iteration_number + 1);
                 igl::slice_into(-gradient_free, free_dof, 1, delta_x);
 
                 // step_length = std::min(1.0, 2 * step_length);
                 step_length = 1.0;
                 // problem.enable_line_search_mode(x + delta_x);
-                found_step_length = constrained_line_search(x, delta_x,
-                    problem.func_f(), gradient, constraint, step_length,
-                    line_search_tolerance);
+                found_step_length
+                    = constrained_line_search(x, delta_x, problem.func_f(),
+                        gradient, constraint, step_length, min_step_length);
                 // problem.disable_line_search_mode();
 
                 if (!found_step_length) {
                     spdlog::warn(
-                        "method=newtons_method iter={:d} failure=\"line search "
+                        "solver=newton iter={:d} failure=\"line search "
                         "using gradient descent\" failsafe=none",
-                        iter + 1);
+                        iteration_number + 1);
                     exit_reason = "line-search failed";
                     break;
                 }
@@ -116,11 +101,11 @@ namespace opt {
             assert(constraint(x));
 
             problem.eval_intermediate_callback(x);
-        } while (++iter <= max_iterations);
+        } while (++iteration_number <= max_iterations);
 
-        spdlog::trace("method=newtons_method total_iter={:d} "
+        spdlog::trace("solver=newton total_iter={:d} "
                       "exit_reason=\"{:s}\" sqr_norm_grad={:g}",
-            iter, exit_reason, gradient_free.squaredNorm());
+            iteration_number, exit_reason, gradient_free.squaredNorm());
 
         return OptimizationResults(x, problem.eval_f(x),
             gradient_free.squaredNorm() <= absolute_tolerance);
@@ -134,13 +119,13 @@ namespace opt {
         Eigen::VectorXd& delta_x, bool make_psd)
     {
         Eigen::VectorXd delta_x_free;
-        if (!compute_direction(
-                gradient_free, hessian_free, delta_x_free, make_psd)) {
-            return false;
+        bool success = compute_direction(
+            gradient_free, hessian_free, delta_x_free, make_psd);
+        if (success) {
+            // Store the free dof back into delta_x
+            igl::slice_into(delta_x_free, free_dof, delta_x);
         }
-        // Store the free dof back into delta_x
-        igl::slice_into(delta_x_free, free_dof, delta_x);
-        return true;
+        return success;
     }
 
     // Solve for the Newton direction (Δx = -H^{-1}∇f).
@@ -156,17 +141,19 @@ namespace opt {
             // clang-format off
             // TODO: Can we use a better solver than LU?
             Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
-
             solver.compute(hessian);
             if (solver.info() != Eigen::Success) {
                 spdlog::warn(
-                    "method=newtons_method failure=\"sparse decomposition "
-                    "of the hessian failed\" failsafe=none");
+                    "solver=newton iter={:d} failure=\"sparse decomposition "
+                    "of the hessian failed\" failsafe=none",
+                    iteration_number);
             } else {
                 delta_x = solver.solve(-gradient);
                 if (solver.info() != Eigen::Success) {
-                    spdlog::warn("method=newtons_method failure=\"sparse solve "
-                                 "for newton direction failed\" failsafe=none");
+                    spdlog::warn(
+                        "solver=newton iter={:d} failure=\"sparse solve for "
+                        "newton direction failed\" failsafe=none",
+                        iteration_number);
                 } else {
                     solve_success = true;
                 }
@@ -181,16 +168,16 @@ namespace opt {
             // hessian. This can result in doing a step of gradient descent.
             Eigen::SparseMatrix<double> psd_hessian = hessian;
             double mu = make_matrix_positive_definite(psd_hessian);
-            spdlog::debug("method=newtons_method failure=\"newton direction "
+            spdlog::debug("solver=newton iter={:d} failure=\"newton direction "
                           "not descent direction\" failsafe=\"H += μI\" μ={:g}",
-                mu);
+                iteration_number, mu);
             solve_success
                 = compute_direction(gradient, psd_hessian, delta_x, false);
             if (delta_x.transpose() * gradient >= 0) {
                 spdlog::warn(
-                    "method=newtons_method failure=\"newton direction not "
+                    "solver=newton iter={:d} failure=\"newton direction not "
                     "descent direction\" failsafe=none dir_dot_grad={:g}",
-                    delta_x.transpose() * gradient);
+                    iteration_number, delta_x.transpose() * gradient);
             }
         }
 

@@ -1,6 +1,6 @@
 /**
  * Functions for optimizing functions.
- * Includes Newton's method with and without constraints.
+ * Includes Newton's method.
  */
 
 #pragma once
@@ -20,11 +20,15 @@ namespace ccd {
 namespace opt {
 
     class NewtonSolver : public OptimizationSolver {
+    protected:
+        int iteration_number; ///< @brief The current iteration number.
+
     public:
+        double absolute_tolerance; ///< @brief Convergence tolerance.
+        double min_step_length;    ///< @brief Minimum step length.
+
         NewtonSolver();
         virtual ~NewtonSolver() override;
-
-        void init_free_dof(Eigen::MatrixXb is_dof_fixed);
 
         /**
          * @brief Perform Newton's Method to minimize the objective, \f$f(x)\f$,
@@ -36,7 +40,8 @@ namespace opt {
          * @return The results of the optimization including the minimizer,
          * minimum, and if the optimization was successful.
          */
-        OptimizationResults solve(OptimizationProblem& problem) override;
+        virtual OptimizationResults solve(
+            OptimizationProblem& problem) override;
 
         /**
          * @brief Solve for the newton direction for the limited degrees of
@@ -61,7 +66,7 @@ namespace opt {
 
         /**
          * @brief Solve for the Newton direction
-         *        (\f$\nabla x = -H^{-1} \nabla f \f$).
+         *        (\f$\Delta x = -H^{-1} \nabla f \f$).
          *
          * @param[in]  gradient  Gradient of the objective function.
          * @param[in]  hessian   Hessian of the objective function.
@@ -71,14 +76,9 @@ namespace opt {
          *
          * @return Returns true if the solve was successful.
          */
-        static bool compute_direction(const Eigen::VectorXd& gradient,
+        bool compute_direction(const Eigen::VectorXd& gradient,
             const Eigen::SparseMatrix<double>& hessian,
             Eigen::VectorXd& delta_x, bool make_psd = false);
-
-        Eigen::VectorXi free_dof;
-        double absolute_tolerance;
-        double line_search_tolerance;
-        int max_iterations;
     };
 
     /**

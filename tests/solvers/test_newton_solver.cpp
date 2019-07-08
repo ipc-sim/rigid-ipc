@@ -14,7 +14,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
     int num_vars = GENERATE(1, 10, 100), num_constraints = 0;
     // Setup solver
     NewtonSolver solver;
-    solver.free_dof = Eigen::VectorXi::LinSpaced(num_vars, 0, num_vars - 1);
+    solver.init_free_dof(Eigen::VectorXb::Zero(num_vars));
     // Setup problem
     // -----------------------------------------------------------------
     AdHocProblem problem(num_vars, num_constraints);
@@ -44,7 +44,8 @@ TEST_CASE("Test Newton direction solve", "[opt][newtons_method][newton_dir]")
     Eigen::SparseMatrix<double> hessian
         = Eigen::SparseDiagonal<double>(2 * Eigen::VectorXd::Ones(num_vars));
     Eigen::VectorXd delta_x;
-    ccd::opt::NewtonSolver::compute_direction(gradient, hessian, delta_x);
+    ccd::opt::NewtonSolver solver;
+    solver.compute_direction(gradient, hessian, delta_x);
     CHECK((x + delta_x).squaredNorm() == Approx(0.0));
 }
 

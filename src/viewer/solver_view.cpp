@@ -25,24 +25,55 @@ void solver_menu(ccd::opt::QPSolver& solver)
 
 void solver_menu(ccd::opt::BarrierSolver& solver)
 {
+    using namespace ccd::opt;
     ImGui::InputIntBounded(
         "max iter##barrier_solver", &solver.max_iterations, 0);
     ImGui::InputDoubleBounded("min eps##barrier_solver",
         &solver.min_barrier_epsilon, 0.0, 2e19, 0.0, 0.0, "%.3g");
-    // static int idx_inner_solver
-    //     = static_cast<int>(ccd::opt::BarrierInnerSolver::NEWTON);
-    // ImGui::Combo("inner solver##barrier_solver", &idx_inner_solver,
-    //     ccd::opt::BarrierInnerSolverNames,
-    //     CCD_IM_ARRAYSIZE(ccd::opt::BarrierInnerSolverNames));
-    solver_menu(solver.inner_solver);
+    int idx_inner_solver = static_cast<int>(solver.inner_solver_type);
+    if (ImGui::Combo("inner solver##barrier_solver", &idx_inner_solver,
+            BarrierInnerSolverNames,
+            CCD_IM_ARRAYSIZE(BarrierInnerSolverNames))) {
+        solver.inner_solver_type
+            = static_cast<BarrierInnerSolver>(idx_inner_solver);
+    }
+
+    switch (solver.inner_solver_type) {
+    case BarrierInnerSolver::NEWTON:
+        solver_menu(dynamic_cast<NewtonSolver&>(solver.get_inner_solver()));
+        break;
+    case BarrierInnerSolver::BFGS:
+        solver_menu(dynamic_cast<BFGSSolver&>(solver.get_inner_solver()));
+        break;
+    case BarrierInnerSolver::GRADIENT_DESCENT:
+        solver_menu(
+            dynamic_cast<GradientDescentSolver&>(solver.get_inner_solver()));
+        break;
+    }
 }
 
 void solver_menu(ccd::opt::NewtonSolver& solver)
 {
     ImGui::InputDoubleBounded("tol. abs##barrier_solver",
         &solver.absolute_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
-    ImGui::InputDoubleBounded("tol. line_search##barrier_solver",
-        &solver.line_search_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
+    ImGui::InputDoubleBounded("min step##barrier_solver",
+        &solver.min_step_length, 0.0, 2e19, 0.0, 0.0, "%.3g");
+}
+
+void solver_menu(ccd::opt::BFGSSolver& solver)
+{
+    ImGui::InputDoubleBounded("tol. abs##barrier_solver",
+        &solver.absolute_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
+    ImGui::InputDoubleBounded("min step##barrier_solver",
+        &solver.min_step_length, 0.0, 2e19, 0.0, 0.0, "%.3g");
+}
+
+void solver_menu(ccd::opt::GradientDescentSolver& solver)
+{
+    ImGui::InputDoubleBounded("tol. abs##barrier_solver",
+        &solver.absolute_tolerance, 0.0, 2e19, 0.0, 0.0, "%.3g");
+    ImGui::InputDoubleBounded("min step##barrier_solver",
+        &solver.min_step_length, 0.0, 2e19, 0.0, 0.0, "%.3g");
 }
 
 #ifdef BUILD_WITH_IPOPT

@@ -57,7 +57,6 @@ namespace opt {
         // -----------------------
         double tolerance;
         int print_level;
-        int max_iterations;
     };
 
     /**

@@ -18,8 +18,7 @@ namespace ccd {
 namespace opt {
 
     QPSolver::QPSolver()
-        : max_iterations(3000)
-        , absolute_tolerance(1e-8)
+        : absolute_tolerance(1e-8)
         , relative_tolerance(1e-8)
         , qp_solver(QPSolverType::OSQP)
     {

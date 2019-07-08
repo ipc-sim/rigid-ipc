@@ -72,6 +72,7 @@ if(NOT TARGET fmt::fmt)
     add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/fmt)
 endif()
 
+# spdlog
 if(NOT TARGET spdlog::spdlog)
     download_spdlog()
     add_library(spdlog INTERFACE)

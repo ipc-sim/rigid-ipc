@@ -71,6 +71,8 @@ add_library(${PROJECT_NAME}
     src/solvers/ncp_solver.cpp
     src/solvers/line_search.cpp
     src/solvers/newton_solver.cpp
+    src/solvers/gradient_descent_solver.cpp
+    src/solvers/bfgs_solver.cpp
     src/solvers/nlopt_solver.cpp
     src/solvers/optimization_solver.cpp
     src/solvers/qp_solver.cpp

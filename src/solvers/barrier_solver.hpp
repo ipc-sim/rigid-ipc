@@ -6,15 +6,16 @@
  */
 
 #include <opt/barrier_constraint.hpp>
+#include <solvers/bfgs_solver.hpp>
+#include <solvers/gradient_descent_solver.hpp>
 #include <solvers/newton_solver.hpp>
-#include <solvers/optimization_solver.hpp>
 
 namespace ccd {
 namespace opt {
 
-    // enum class BarrierInnerSolver { NEWTON, BFGS };
-    // static const char* BarrierInnerSolverNames[]
-    //     = { "Newton's Method", "BFGS" };
+    enum class BarrierInnerSolver { NEWTON, BFGS, GRADIENT_DESCENT };
+    static const char* BarrierInnerSolverNames[]
+        = { "Newton's Method", "BFGS", "Gradient Descent" };
 
     class BarrierSolver : public OptimizationSolver {
     public:
@@ -22,12 +23,16 @@ namespace opt {
         ~BarrierSolver() override;
         OptimizationResults solve(OptimizationProblem& problem) override;
 
+        virtual OptimizationSolver& get_inner_solver();
+
         BarrierConstraint* barrier_constraint;
-
         double min_barrier_epsilon;
-        int max_iterations;
+        BarrierInnerSolver inner_solver_type;
 
-        NewtonSolver inner_solver;
+    protected:
+        NewtonSolver newton_inner_solver;
+        BFGSSolver bfgs_inner_solver;
+        GradientDescentSolver gradient_descent_inner_solver;
     };
 
     class BarrierProblem : public OptimizationProblem {

@@ -22,8 +22,9 @@ namespace opt {
         , convergence_tolerance(1e-6)
         , update_type(NcpUpdate::LINEARIZED)
         , lcp_solver(LCPSolver::LCP_GAUSS_SEIDEL)
-        , max_iterations(100)
+
     {
+        this->max_iterations = 100;
         Asolver
             = std::make_shared<Eigen::SparseLU<Eigen::SparseMatrix<double>>>();
     }
