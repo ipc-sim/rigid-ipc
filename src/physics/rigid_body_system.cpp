@@ -79,8 +79,7 @@ namespace physics {
     void RigidBodySystem::compute_displacements_gradient(
         const Eigen::VectorXd& v, Eigen::SparseMatrix<double>& grad_u)
     {
-        typedef Eigen::Triplet<double> M;
-        std::vector<M> triplets;
+        std::vector<Eigen::Triplet<double>> triplets;
 
         long num_vertices = acc_vertex_id.back();
         triplets.reserve(size_t(num_vertices) * 2);
@@ -104,16 +103,16 @@ namespace physics {
             // x-axis entries
             for (int j = 0; j < d; ++j) {
                 for (int k = 0; k < el_grad.cols(); ++k) {
-                    triplets.push_back(M(int(acc_vertex_id[i]) + j,
-                        int(3 * i) + k, el_grad(j, k)));
+                    triplets.emplace_back(int(acc_vertex_id[i]) + j,
+                        int(3 * i) + k, el_grad(j, k));
                 }
             }
             // y-axis entries
             for (int j = 0; j < d; ++j) {
                 for (int k = 0; k < el_grad.cols(); ++k) {
-                    triplets.push_back(
-                        M(int(acc_vertex_id[i] + num_vertices) + j,
-                            int(3 * i) + k, el_grad(d + j, k)));
+                    triplets.emplace_back(
+                        int(acc_vertex_id[i] + num_vertices) + j,
+                        int(3 * i) + k, el_grad(d + j, k));
                 }
             }
         }
