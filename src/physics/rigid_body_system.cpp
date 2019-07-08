@@ -1,7 +1,11 @@
 #include <physics/rigid_body_system.hpp>
 
 #include <Eigen/Geometry>
+
 #include <logger.hpp>
+
+#include <autodiff/finitediff.hpp>
+#include <utils/flatten.hpp>
 
 namespace ccd {
 
@@ -75,8 +79,7 @@ namespace physics {
     void RigidBodySystem::compute_displacements_gradient(
         const Eigen::VectorXd& v, Eigen::SparseMatrix<double>& grad_u)
     {
-        typedef Eigen::Triplet<double> M;
-        std::vector<M> triplets;
+        std::vector<Eigen::Triplet<double>> triplets;
 
         long num_vertices = acc_vertex_id.back();
         triplets.reserve(size_t(num_vertices) * 2);
@@ -85,20 +88,31 @@ namespace physics {
             auto& rb = rigid_bodies[i];
             Eigen::MatrixXd el_grad
                 = rb.world_displacements_gradient(v.segment(int(3 * i), 3));
+#ifdef WITH_DERIVATIVE_CHECK
+            auto foo = [&](const Eigen::Vector3d& x) -> Eigen::VectorXd {
+                auto U = rb.world_displacements(x);
+                flatten(U);
+                return U;
+            };
+            Eigen::MatrixXd approx_el_grad;
+            finite_jacobian(v.segment(int(3 * i), 3), foo, approx_el_grad);
+            assert(compare_jacobian(el_grad, approx_el_grad));
+#endif
 
             long d = el_grad.rows() / 2;
             // x-axis entries
             for (int j = 0; j < d; ++j) {
                 for (int k = 0; k < el_grad.cols(); ++k) {
-                    triplets.push_back(M(int(acc_edge_id[i]) + j,
-                        int(3 * i) + k, el_grad(j, k)));
+                    triplets.emplace_back(int(acc_vertex_id[i]) + j,
+                        int(3 * i) + k, el_grad(j, k));
                 }
             }
             // y-axis entries
             for (int j = 0; j < d; ++j) {
                 for (int k = 0; k < el_grad.cols(); ++k) {
-                    triplets.push_back(M(int(acc_edge_id[i] + num_vertices) + j,
-                        int(3 * i) + k, el_grad(d + j, k)));
+                    triplets.emplace_back(
+                        int(acc_vertex_id[i] + num_vertices) + j,
+                        int(3 * i) + k, el_grad(d + j, k));
                 }
             }
         }
