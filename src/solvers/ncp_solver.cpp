@@ -15,23 +15,24 @@ namespace opt {
 
     NCPSolver::~NCPSolver() {}
     NCPSolver::NCPSolver()
-        : keep_in_unfeasible(true)
+        : OptimizationSolver(/*max_iterations=*/1000)
+        , keep_in_unfeasible(true)
         , check_convergence(true)
         , check_volume_increase(true)
         , solve_for_active_cstr(true)
         , convergence_tolerance(1e-6)
         , update_type(NcpUpdate::LINEARIZED)
         , lcp_solver(LCPSolver::LCP_GAUSS_SEIDEL)
-
     {
-        this->max_iterations = 100;
         Asolver
             = std::make_shared<Eigen::SparseLU<Eigen::SparseMatrix<double>>>();
     }
 
     bool NCPSolver::solve_ncp(const Eigen::SparseMatrix<double>& f_A,
-        const Eigen::VectorXd& f_b, OptimizationProblem& opt_problem,
-        Eigen::VectorXd& x_opt, Eigen::VectorXd& alpha_opt)
+        const Eigen::VectorXd& f_b,
+        OptimizationProblem& opt_problem,
+        Eigen::VectorXd& x_opt,
+        Eigen::VectorXd& alpha_opt)
     {
         A = f_A;
         b = f_b;

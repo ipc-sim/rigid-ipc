@@ -19,10 +19,10 @@ namespace opt {
 
     IpoptSolver::IpoptSolver(
         double tolerance, int print_level, int max_iterations)
-        : tolerance(tolerance)
+        : OptimizationSolver(max_iterations)
+        , tolerance(tolerance)
         , print_level(print_level)
     {
-        this->max_iterations = max_iterations;
         initialize();
     }
 
@@ -61,8 +61,11 @@ namespace opt {
         result.x = problem.x0;
     }
 
-    bool EigenInterfaceTNLP::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
-        Index& nnz_h_lag, IndexStyleEnum& index_style)
+    bool EigenInterfaceTNLP::get_nlp_info(Index& n,
+        Index& m,
+        Index& nnz_jac_g,
+        Index& nnz_h_lag,
+        IndexStyleEnum& index_style)
     {
         n = problem->num_vars;
         m = problem->num_constraints;
@@ -79,8 +82,12 @@ namespace opt {
         return true;
     }
 
-    bool EigenInterfaceTNLP::get_bounds_info(Index n, Number* x_lower,
-        Number* x_upper, Index m, Number* g_lower, Number* g_upper)
+    bool EigenInterfaceTNLP::get_bounds_info(Index n,
+        Number* x_lower,
+        Number* x_upper,
+        Index m,
+        Number* g_lower,
+        Number* g_upper)
     {
         assert(n == problem->num_vars);
         assert(m == problem->num_constraints);
@@ -98,9 +105,15 @@ namespace opt {
         return true;
     }
 
-    bool EigenInterfaceTNLP::get_starting_point(Index n, bool init_x, double* x,
-        bool init_z, double* /*z_L*/, double* /*z_U*/, Index /*m*/,
-        bool init_lambda, double* /*lambda*/)
+    bool EigenInterfaceTNLP::get_starting_point(Index n,
+        bool init_x,
+        double* x,
+        bool init_z,
+        double* /*z_L*/,
+        double* /*z_U*/,
+        Index /*m*/,
+        bool init_lambda,
+        double* /*lambda*/)
     {
         assert(n == problem->num_vars);
 
@@ -151,8 +164,13 @@ namespace opt {
         return true;
     }
 
-    bool EigenInterfaceTNLP::eval_jac_g(Index n, const Number* x,
-        bool /*new_x*/, Index m, Index nele_jac, Index* iRow, Index* jCol,
+    bool EigenInterfaceTNLP::eval_jac_g(Index n,
+        const Number* x,
+        bool /*new_x*/,
+        Index m,
+        Index nele_jac,
+        Index* iRow,
+        Index* jCol,
         Number* values)
     {
         assert(n == problem->num_vars);
@@ -185,10 +203,18 @@ namespace opt {
         return true;
     }
     bool EigenInterfaceTNLP::intermediate_callback(AlgorithmMode mode,
-        Index iter, Number obj_value, Number /*inf_pr*/, Number /*inf_du*/,
-        Number /*mu*/, Number /*d_norm*/, Number /*regularization_size*/,
-        Number /*alpha_du*/, Number alpha_pr, Index /*ls_trials*/,
-        const IpoptData* ip_data, IpoptCalculatedQuantities* ip_cq)
+        Index iter,
+        Number obj_value,
+        Number /*inf_pr*/,
+        Number /*inf_du*/,
+        Number /*mu*/,
+        Number /*d_norm*/,
+        Number /*regularization_size*/,
+        Number /*alpha_du*/,
+        Number alpha_pr,
+        Index /*ls_trials*/,
+        const IpoptData* ip_data,
+        IpoptCalculatedQuantities* ip_cq)
     {
         if (mode == RegularMode) {
             Ipopt::TNLPAdapter* tnlp_adapter = nullptr;
@@ -211,10 +237,16 @@ namespace opt {
         return true;
     }
 
-    void EigenInterfaceTNLP::finalize_solution(SolverReturn status, Index n,
-        const Number* x, const Number* /*z_L*/, const Number* /*z_U*/,
-        Index /*m*/, const Number* /*g*/, const Number* /*lambda*/,
-        Number obj_value, const IpoptData* /*ip_data*/,
+    void EigenInterfaceTNLP::finalize_solution(SolverReturn status,
+        Index n,
+        const Number* x,
+        const Number* /*z_L*/,
+        const Number* /*z_U*/,
+        Index /*m*/,
+        const Number* /*g*/,
+        const Number* /*lambda*/,
+        Number obj_value,
+        const IpoptData* /*ip_data*/,
         IpoptCalculatedQuantities* /*ip_cq*/)
     {
         assert(n == problem->num_vars);

@@ -20,6 +20,7 @@ namespace opt {
 
     public:
         OptimizationSolver();
+        OptimizationSolver(const int max_iterations);
         virtual ~OptimizationSolver();
 
         virtual void init_free_dof(Eigen::MatrixXb is_dof_fixed);

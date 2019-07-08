@@ -8,6 +8,11 @@ namespace opt {
         , max_iterations(3000)
     {
     }
+    OptimizationSolver::OptimizationSolver(const int max_iterations)
+        : free_dof()
+        , max_iterations(max_iterations)
+    {
+    }
 
     OptimizationSolver::~OptimizationSolver() {}
 
