@@ -30,8 +30,9 @@ namespace opt {
             return newton_inner_solver;
         case BarrierInnerSolver::BFGS:
             return bfgs_inner_solver;
-        case BarrierInnerSolver::GRADIENT_DESCENT:
+        default:
             return gradient_descent_inner_solver;
+
         }
     }
 
