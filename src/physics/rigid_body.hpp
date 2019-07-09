@@ -12,6 +12,114 @@
 namespace ccd {
 namespace physics {
 
+    class RigidBody {
+
+    protected:
+        ///
+        /// \brief RigidBody:   Create rigid body with center of mass at 0,0
+        ///
+        /// \param vertices:    Vertices of the rigid body in body space
+        /// \param edges:       Vertices pairs defining the topology
+        ///                     of the rigid body
+        /// \param v:           Velocity of the center of mass (v_x, v_y, omega)
+        /// \param x:           Position and orientation of the center of mass
+        /// (x, y, theta)
+        ///
+        RigidBody(const Eigen::MatrixX2d& vertices,
+            const Eigen::MatrixX2i& edges,
+            const Eigen::Vector3d& v,
+            const Eigen::Vector3d& x = Eigen::Vector3d::Zero());
+
+    public:
+        // ------------------------------------------------------------------------
+        // Factory Methods
+        // ------------------------------------------------------------------------
+
+        /// \brief Centered: Factory method to create a RB with
+        /// with position equal to current center of mass.
+        /// \param vertices
+        /// \param edges
+        /// \param velocity
+        /// \return
+        ///
+        static RigidBody Centered(const Eigen::MatrixXd& vertices,
+            const Eigen::MatrixX2i& edges,
+            const Eigen::Vector3d& velocity);
+        // ------------------------------------------------------------------------
+        // State Functions
+        // ------------------------------------------------------------------------
+
+        /// \brief: computes vertices position for current or previous state
+        Eigen::MatrixXd world_vertices(const bool previous = false) const;
+
+        /// \brief: computes vertices position for given state
+        /// returns the positions of all vertices in 'world space',
+        /// taking into account the given body's position
+        template <typename T>
+        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_vertices(
+            const Eigen::Matrix<T, 3, 1>& v) const;
+
+        Eigen::MatrixXd world_vertices_gradient(
+            const Eigen::Vector3d& velocity) const;
+        std::vector<Eigen::Matrix3d> world_vertices_hessian(
+            const Eigen::Vector3d& velocity) const;
+
+        // ------------------------------------------------------------------------
+        // CCD Functions
+        // ------------------------------------------------------------------------
+        Eigen::MatrixXd world_displacements() const;
+
+        template <typename T>
+        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_displacements(
+            const Eigen::Matrix<T, 3, 1>& v) const;
+
+        /// word_displacement_gradient: computes gradient for each
+        /// displacement, xy.
+        ///
+        /// Returns: Matrix size (2n * 3)
+        Eigen::MatrixXd world_displacements_gradient(
+            const Eigen::Vector3d& velocity) const;
+
+        /// word_displacement_gradient: computes hessian for each
+        /// displacement, xy.
+        ///
+        /// Returns: Tensor size (2n * 3 * 3);
+        ///          really a list of 3 * 3 matrices
+        std::vector<Eigen::Matrix3d> world_displacements_hessian(
+            const Eigen::Vector3d& velocity) const;
+
+        Eigen::MatrixXd world_displacements_gradient_finite(
+            const Eigen::Vector3d& velocity) const;
+
+        Eigen::MatrixXd world_displacements_gradient_exact(
+            const Eigen::Vector3d& velocity) const;
+
+        std::vector<Eigen::Matrix3d> world_displacements_hessian_exact(
+            const Eigen::Vector3d& velocity) const;
+
+        // ------------------------------------------------------------------------
+        // Geometry
+        // ------------------------------------------------------------------------
+        Eigen::MatrixX2d vertices; ///< vertices positions in body space
+        Eigen::MatrixX2i edges;    ///< vertices connectivity
+
+        double mass;              ///< total mass (M) of the rigid body
+        double moment_of_inertia; ///< moment of intertia (I) of the rigid body
+        Eigen::Matrix3d mass_matrix;
+
+        // ------------------------------------------------------------------------
+        // State
+        // ------------------------------------------------------------------------
+        /// \brief current timestep velocity (v_x, v_y, v_theta)
+        /// current timestep velocity of the center of mass
+        Eigen::Vector3d velocity;
+
+        /// \brief current timestep position (q_x, q_y, q_theta)
+        /// position and orientation of the center of mass
+        Eigen::Vector3d position;
+        Eigen::Vector3d position_prev; ///> position of previous timestep
+    };
+
     namespace RBDiff {
         static constexpr size_t NUM_VARS = 3;
         typedef Eigen::Vector3d Vector3d;
@@ -61,71 +169,6 @@ namespace physics {
             return hess;
         }
     } // namespace RBDiff
-
-    class RigidBody {
-    public:
-        RigidBody(const Eigen::MatrixX2d& vertices,
-            const Eigen::MatrixX2i& edges, const Eigen::Vector2d& position,
-            const Eigen::Vector3d& velocity);
-
-        Eigen::MatrixXd world_displacements() const;
-
-        template <typename T>
-        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_displacements(
-            const Eigen::Matrix<T, 3, 1>& velocity) const;
-
-        Eigen::MatrixX2d world_vertices() const;
-
-        /// word_displacement_gradient: computes gradient for each
-        /// displacement, xy.
-        ///
-        /// Returns: Matrix size (2n * 3)
-        Eigen::MatrixXd world_displacements_gradient(
-            const Eigen::Vector3d& velocity) const;
-
-        /// word_displacement_gradient: computes hessian for each
-        /// displacement, xy.
-        ///
-        /// Returns: Tensor size (2n * 3 * 3);
-        ///          really a list of 3 * 3 matrices
-        std::vector<Eigen::Matrix3d> world_displacements_hessian(
-            const Eigen::Vector3d& velocity) const;
-
-        Eigen::MatrixXd world_displacements_gradient_finite(
-            const Eigen::Vector3d& velocity) const;
-
-        Eigen::MatrixXd world_displacements_gradient_exact(
-            const Eigen::Vector3d& velocity) const;
-
-        std::vector<Eigen::Matrix3d> world_displacements_hessian_exact(
-            const Eigen::Vector3d& velocity) const;
-
-        /// \brief vertices as distances from the center of mass
-        Eigen::MatrixX2d vertices;
-        Eigen::MatrixX2i edges;
-
-        /// \brief position: position of the object in world space
-        Eigen::Vector2d position;
-
-        /// \brief velocity: linear and angular velicity
-        Eigen::Vector3d velocity;
-
-        ///
-        /// \brief Centered: Factory method to create a RB with
-        /// with position equal to current center of mass.
-        /// \param vertices
-        /// \param edges
-        /// \param velocity
-        /// \return
-        ///
-        static inline RigidBody Centered(const Eigen::MatrixXd& vertices,
-            const Eigen::MatrixX2i& edges, const Eigen::Vector3d& velocity)
-        {
-            Eigen::RowVector2d x = center_of_mass(vertices, edges);
-            Eigen::MatrixX2d centered_vertices = vertices.rowwise() - x;
-            return RigidBody(centered_vertices, edges, x, velocity);
-        }
-    };
 
 } // namespace physics
 } // namespace ccd

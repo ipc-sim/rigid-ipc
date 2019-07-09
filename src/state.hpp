@@ -122,6 +122,7 @@ public:
     // SCENE CRUD
     // ----------------------------------------------------------------------
     void load_scene(const std::string filename);
+    void load_rigidbody_scene(const std::string filename);
     void load_scene(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges, const Eigen::MatrixX2d& displacements);
     void save_scene(const std::string filename);
@@ -161,6 +162,7 @@ public:
     bool record_optimization_step(
         const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk);
     void post_process_optimization();
+
 
     ////////////////////////////////////////////////////////////////////////////
     // UI

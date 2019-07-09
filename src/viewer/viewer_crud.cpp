@@ -85,6 +85,9 @@ void ViewerMenu::clicked__select(
         state.vertices, modifier, coord, thr, state.selected_points);
     if (clicked_vertex) {
         state.selected_displacements.clear();
+        if (state.is_rigid_bodies_mode){
+            select_connected();
+        }
     } else {
         update_selection(state.vertices + state.displacements, modifier, coord,
             thr, state.selected_displacements);

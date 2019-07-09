@@ -33,6 +33,9 @@ add_executable(unit_tests
     physics/test_rigid_body.cpp
     physics/test_rigid_body_system.cpp
 
+    io/test_serialize_json.cpp
+    io/test_read_rb_scene.cpp
+
 )
 
 target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)

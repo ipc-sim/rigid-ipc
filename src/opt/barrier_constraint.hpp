@@ -20,8 +20,13 @@ namespace opt {
 
         void resetBarrierEpsilon();
 
+        bool is_barrier() override { return true; }
+        double get_barrier_epsilon() override { return barrier_epsilon; }
+        void set_barrier_epsilon(const double eps) override { barrier_epsilon = eps; }
+
         void initialize(const Eigen::MatrixX2d& vertices,
-            const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk) override;
+            const Eigen::MatrixX2i& edges,
+            const Eigen::MatrixXd& Uk) override;
 
         void detectCollisions(const Eigen::MatrixXd& Uk) override;
 
@@ -38,7 +43,8 @@ namespace opt {
             override;
 
         void compute_constraints_and_derivatives(const Eigen::MatrixXd& Uk,
-            Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
+            Eigen::VectorXd& g_uk,
+            Eigen::MatrixXd& g_uk_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
 
         template <typename T>

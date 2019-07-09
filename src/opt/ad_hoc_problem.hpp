@@ -14,6 +14,10 @@ namespace opt {
         callback_hessian_g
             hessian_g; ///< @brief Hessian of the constraint function
 
+        std::function<bool()> fhas_barrier_constraint;
+        std::function<double()> fget_barrier_epsilon;
+        std::function<void(const double)> fset_barrier_epsilon;
+
         /// @brief Default constructor
         AdHocProblem();
         /// @brief Resize fields accordingly
@@ -26,6 +30,29 @@ namespace opt {
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x) override;
+
+        bool has_barrier_constraint() override
+        {
+            if (fhas_barrier_constraint != nullptr) {
+                return fhas_barrier_constraint();
+            }
+            return OptimizationProblem::has_barrier_constraint();
+        }
+
+        double get_barrier_epsilon() override
+        {
+            if (fget_barrier_epsilon != nullptr) {
+                return fget_barrier_epsilon();
+            }
+            return OptimizationProblem::get_barrier_epsilon();
+        }
+        void set_barrier_epsilon(const double eps) override
+        {
+            if (fset_barrier_epsilon != nullptr) {
+                return fset_barrier_epsilon(eps);
+            }
+            return OptimizationProblem::set_barrier_epsilon(eps);
+        }
     };
 
 } // namespace opt
