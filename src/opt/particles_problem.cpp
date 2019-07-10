@@ -24,7 +24,8 @@ namespace opt {
     ParticlesDisplProblem::~ParticlesDisplProblem() {}
 
     void ParticlesDisplProblem::initialize(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2i& E, const Eigen::MatrixX2d& U,
+        const Eigen::MatrixX2i& E,
+        const Eigen::MatrixX2d& U,
         CollisionConstraint& cstr)
     {
         vertices = V;
@@ -107,16 +108,20 @@ namespace opt {
         return mass_matrix * (x - u_);
     }
 
-    Eigen::MatrixXd ParticlesDisplProblem::eval_hessian_f(
-        const Eigen::VectorXd& x)
-    {
-        return Eigen::MatrixXd(mass_matrix);
-    }
-
-    Eigen::SparseMatrix<double> ParticlesDisplProblem::eval_hessian_f_sparse(
-        const Eigen::VectorXd& x)
+    Eigen::SparseMatrix<double> ParticlesDisplProblem::eval_hessian_f(
+        const Eigen::VectorXd& /*x*/)
     {
         return mass_matrix;
+    }
+
+    void ParticlesDisplProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
+        double& f_uk,
+        Eigen::VectorXd& f_uk_grad,
+        Eigen::SparseMatrix<double>& f_uk_hessian)
+    {
+        f_uk = eval_f(x);
+        f_uk_grad = eval_grad_f(x);
+        f_uk_hessian = eval_hessian_f(x);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -139,7 +144,8 @@ namespace opt {
     };
 
     void ParticlesDisplProblem::eval_g(const Eigen::VectorXd& x,
-        Eigen::VectorXd& g_uk, Eigen::SparseMatrix<double>& g_uk_jacobian,
+        Eigen::VectorXd& g_uk,
+        Eigen::SparseMatrix<double>& g_uk_jacobian,
         Eigen::VectorXi& g_uk_active)
     {
         Eigen::MatrixXd Uk = x;
@@ -194,7 +200,8 @@ namespace opt {
     }
 
     void ParticlesDisplProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
-        Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian,
+        Eigen::VectorXd& g_uk,
+        Eigen::MatrixXd& g_uk_jacobian,
         std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
     {
         Eigen::MatrixXd Uk = x;
@@ -203,7 +210,7 @@ namespace opt {
         if (!is_collision_set_frozen && constraint->update_collision_set) {
             constraint->detectCollisions(Uk);
         }
-        std::vector<Eigen::SparseMatrix<double>> hess_gx;
+
         constraint->compute_constraints_and_derivatives(
             Uk, g_uk, g_uk_jacobian, g_uk_hessian);
     }

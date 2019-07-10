@@ -53,7 +53,7 @@ add_library(${PROJECT_NAME}
     src/io/read_rb_scene.cpp
 
     src/physics/rigid_body.cpp
-    src/physics/rigid_body_system.cpp
+    src/physics/rigid_body_assembler.cpp
     src/physics/mass_matrix.cpp
     src/physics/center_of_mass.cpp
     src/physics/moment_of_inertia.cpp
@@ -164,7 +164,6 @@ add_executable(${PROJECT_NAME}_sim
     src/viewer/viewer_draw.cpp
     src/viewer/viewer_menu.cpp
     src/viewer/viewer_editor.cpp
-    src/viewer/rigid_body_view.cpp
     src/viewer/imgui_ext.cpp
     src/viewer/solver_view.cpp
     src/viewer/constraint_view.cpp

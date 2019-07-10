@@ -46,9 +46,7 @@ namespace opt {
 
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
 
-        Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& x) override;
-
-        Eigen::SparseMatrix<double> eval_hessian_f_sparse(
+        Eigen::SparseMatrix<double> eval_hessian_f(
             const Eigen::VectorXd& x) override;
 
         void eval_f_and_fdiff(const Eigen::VectorXd& x, double& f_uk,

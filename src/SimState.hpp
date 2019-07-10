@@ -6,7 +6,7 @@
 #include <opt/barrier_constraint.hpp>
 #include <solvers/barrier_solver.hpp>
 
-#include <physics/rigid_body_system.hpp>
+#include <physics/rigid_body_assembler.hpp>
 
 namespace ccd {
 
@@ -21,7 +21,7 @@ public:
 
     // CCD
     // ----------------------------------------------
-    opt::RigidBodyProblem2 m_problem;
+    opt::RigidBodyProblem m_problem;
     opt::BarrierSolver m_ccd_solver;
     opt::BarrierConstraint m_ccd_constraint;
 

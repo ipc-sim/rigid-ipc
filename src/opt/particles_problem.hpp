@@ -40,13 +40,14 @@ namespace opt {
         /// @brief eval_grad_f evaluates gradient of functional at point x
         virtual Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
 
-        /// @brief eval_hessian_f evaluates hessian of functional at point x
-        virtual Eigen::MatrixXd eval_hessian_f(
+        /// @brief Evaluate the hessian of the objective as a sparse matrix.
+        virtual Eigen::SparseMatrix<double> eval_hessian_f(
             const Eigen::VectorXd& x) override;
 
-        /// @brief Evaluate the hessian of the objective as a sparse matrix.
-        virtual Eigen::SparseMatrix<double> eval_hessian_f_sparse(
-            const Eigen::VectorXd& x) override;
+        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
+            double& f_uk,
+            Eigen::VectorXd& f_uk_jacobian,
+            Eigen::SparseMatrix<double>& f_uk_hessian) override;
         ////////////////////////////////////////////////////////////////////////
 
         ////////////////////////////////////////////////////////////////////////

@@ -187,41 +187,41 @@ namespace opt {
         return grad;
     }
 
-    Eigen::MatrixXd BarrierProblem::eval_hessian_f(const Eigen::VectorXd& x)
-    {
-        Eigen::MatrixXd hessian = general_problem->eval_hessian_f(x);
+//    Eigen::MatrixXd BarrierProblem::eval_hessian_f(const Eigen::VectorXd& x)
+//    {
+//        Eigen::MatrixXd hessian = general_problem->eval_hessian_f(x);
 
-        // Eigen::VectorXd gx = general_problem->eval_g(x);
-        // Eigen::MatrixXd dgx = general_problem->eval_jac_g(x);
-        std::vector<Eigen::SparseMatrix<double>> ddgx
-            = general_problem->eval_hessian_g(x);
+//        // Eigen::VectorXd gx = general_problem->eval_g(x);
+//        // Eigen::MatrixXd dgx = general_problem->eval_jac_g(x);
+//        std::vector<Eigen::SparseMatrix<double>> ddgx
+//            = general_problem->eval_hessian_g(x);
 
-        PROFILE(
-            // clang-format off
-            Eigen::SparseMatrix<double> sum_ddgx(
-                hessian.rows(), hessian.cols());
-            for (const auto& ddgx_i : ddgx) {
-                sum_ddgx += ddgx_i;
-            }
-            hessian += sum_ddgx;
-            // clang-format on
-            , ProfiledPoint::SUMMING_HESSIAN)
+//        PROFILE(
+//            // clang-format off
+//            Eigen::SparseMatrix<double> sum_ddgx(
+//                hessian.rows(), hessian.cols());
+//            for (const auto& ddgx_i : ddgx) {
+//                sum_ddgx += ddgx_i;
+//            }
+//            hessian += sum_ddgx;
+//            // clang-format on
+//            , ProfiledPoint::SUMMING_HESSIAN)
 
-        // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
-        // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
-        // Check the sizes of the x's match
-        assert(x.size() == general_problem->x_lower.size());
-        assert(x.size() == general_problem->x_upper.size());
-        hessian.diagonal() += barrier_hessian(x - general_problem->x_lower)
-            + barrier_hessian(-x + general_problem->x_upper);
-        return hessian;
-    }
+//        // ∇ [ϕ'(x_1) ϕ'(x_2) ... ϕ'(x_n)]^T
+//        // = diag([ϕ''(x_1) ϕ''(x_2) ... ϕ''(x_n)]^T)
+//        // Check the sizes of the x's match
+//        assert(x.size() == general_problem->x_lower.size());
+//        assert(x.size() == general_problem->x_upper.size());
+//        hessian.diagonal() += barrier_hessian(x - general_problem->x_lower)
+//            + barrier_hessian(-x + general_problem->x_upper);
+//        return hessian;
+//    }
 
-    Eigen::SparseMatrix<double> BarrierProblem::eval_hessian_f_sparse(
+    Eigen::SparseMatrix<double> BarrierProblem::eval_hessian_f(
         const Eigen::VectorXd& x)
     {
         Eigen::SparseMatrix<double> hessian
-            = general_problem->eval_hessian_f_sparse(x); // mass matrix
+            = general_problem->eval_hessian_f(x); // mass matrix
 
         std::vector<Eigen::SparseMatrix<double>> ddgx
             = general_problem->eval_hessian_g(x); // hessian of constraints

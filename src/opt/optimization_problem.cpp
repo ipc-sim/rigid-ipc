@@ -18,60 +18,16 @@ namespace opt {
         return grad;
     }
 
-    Eigen::SparseMatrix<double> OptimizationProblem::eval_hessian_f_sparse(
-        const Eigen::VectorXd& x)
-    {
-        return eval_hessian_f(x).sparseView();
-    }
-
     Eigen::MatrixXd OptimizationProblem::eval_hessian_f_approx(
         const Eigen::VectorXd& x)
     {
         Eigen::MatrixXd hess;
-        ccd::finite_jacobian(x, func_grad_f(), hess);
+        auto func_grad_f = [&](const Eigen::VectorXd& xk) -> Eigen::VectorXd {
+            return eval_grad_f(xk);
+        };
+
+        ccd::finite_jacobian(x, func_grad_f, hess, AccuracyOrder::SECOND);
         return hess;
-    }
-
-    // Evaluate the objective and its derivatives.
-    void OptimizationProblem::eval_f_and_fdiff(
-        const Eigen::VectorXd& x, double& value, Eigen::VectorXd& grad)
-    {
-        value = eval_f(x);
-        grad = eval_grad_f(x);
-    }
-
-    // Evaluate the objective and its derivatives.
-    void OptimizationProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
-        double& value, Eigen::VectorXd& grad, Eigen::MatrixXd& hessian)
-    {
-        value = eval_f(x);
-        grad = eval_grad_f(x);
-#ifdef WITH_DERIVATIVE_CHECK
-        Eigen::VectorXd approx_grad = eval_grad_f_approx(x);
-        assert(compare_gradient(grad, approx_grad));
-#endif
-        hessian = eval_hessian_f(x);
-#ifdef WITH_DERIVATIVE_CHECK
-        Eigen::MatrixXd approx_hessian = eval_hessian_f_approx(x);
-        assert(compare_jacobian(hessian, approx_hessian));
-#endif
-    }
-
-    void OptimizationProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
-        double& value, Eigen::VectorXd& grad,
-        Eigen::SparseMatrix<double>& hessian)
-    {
-        value = eval_f(x);
-        grad = eval_grad_f(x);
-#ifdef WITH_DERIVATIVE_CHECK
-        Eigen::VectorXd approx_grad = eval_grad_f_approx(x);
-        assert(compare_gradient(grad, approx_grad));
-#endif
-        hessian = eval_hessian_f_sparse(x);
-#ifdef WITH_DERIVATIVE_CHECK
-        Eigen::MatrixXd approx_hessian = eval_hessian_f_approx(x);
-        assert(compare_jacobian(Eigen::MatrixXd(hessian), approx_hessian));
-#endif
     }
 
     callback_f OptimizationProblem::func_f()
@@ -79,89 +35,42 @@ namespace opt {
         return [&](const Eigen::VectorXd& x) -> double { return eval_f(x); };
     }
 
-    callback_grad_f OptimizationProblem::func_grad_f()
+    bool OptimizationProblem::compare_grad_f_approx(
+        const Eigen::VectorXd& x, const Eigen::VectorXd& grad)
     {
-        return [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-            return eval_grad_f(x);
-        };
+        Eigen::VectorXd grad_approx = eval_grad_f_approx(x);
+        return compare_gradient(grad, grad_approx);
     }
 
+    bool OptimizationProblem::compare_hessian_f_approx(
+        const Eigen::VectorXd& x, const Eigen::SparseMatrix<double>& hessian)
+    {
+        Eigen::MatrixXd hess_approx = eval_hessian_f_approx(x);
+        return compare_jacobian(hessian.toDense(), hess_approx);
+    }
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     // Constraint function and its derivatives.
 
-    void OptimizationProblem::eval_g(const Eigen::VectorXd& x,
-        Eigen::VectorXd& gx, Eigen::SparseMatrix<double>& gx_jacobian,
-        Eigen::VectorXi& gx_active)
-    {
-        gx = eval_g(x);
-        eval_jac_g(x, gx_jacobian);
-        gx_active = Eigen::VectorXi::LinSpaced(gx.rows(), 0, int(gx.rows()));
-    }
-
-    void OptimizationProblem::eval_jac_g(
-        const Eigen::VectorXd& x, Eigen::SparseMatrix<double>& jac_gx)
-    {
-        jac_gx = eval_jac_g(x).sparseView();
-    }
-
     Eigen::MatrixXd OptimizationProblem::eval_jac_g_approx(
         const Eigen::VectorXd& x)
     {
         Eigen::MatrixXd jac;
-        ccd::finite_jacobian(x, func_g(), jac);
+        auto func_g = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+            return eval_g(x);
+        };
+        ccd::finite_jacobian(x, func_g, jac);
         return jac;
     }
 
-    std::vector<Eigen::MatrixXd> OptimizationProblem::eval_hessian_g_approx(
-        const Eigen::VectorXd& x)
+    bool OptimizationProblem::compare_jac_g_approx(
+        const Eigen::VectorXd& x, const Eigen::MatrixXd& jac)
     {
-        std::vector<Eigen::MatrixXd> hess(num_constraints, Eigen::MatrixXd());
-        for (int i = 0; i < num_constraints; i++) {
-            auto foo = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-                return eval_jac_g(x).col(i);
-            };
-            ccd::finite_jacobian(x, foo, hess[i]);
-        }
-        return hess;
+        Eigen::MatrixXd jac_approx = eval_jac_g_approx(x);
+        return compare_jacobian(jac, jac_approx);
     }
-
-    void OptimizationProblem::eval_g_and_gdiff(const Eigen::VectorXd& x,
-        Eigen::VectorXd& gx, Eigen::MatrixXd& gx_jacobian,
-        std::vector<Eigen::SparseMatrix<double>>& gx_hessian)
-    {
-        gx = eval_g(x);
-        gx_jacobian = eval_jac_g(x);
-#ifdef WITH_DERIVATIVE_CHECK
-        Eigen::MatrixXd approx_jac = eval_jac_g_approx(x);
-        assert(compare_jacobian(gx_jacobian, approx_jac));
-#endif
-        gx_hessian = eval_hessian_g(x);
-#ifdef WITH_DERIVATIVE_CHECK
-        std::vector<Eigen::MatrixXd> approx_hessian = eval_hessian_g_approx(x);
-        assert(gx_hessian.size() == approx_hessian.size());
-        for (int i = 0; i < gx_hessian.size(); i++) {
-            assert(compare_jacobian(
-                Eigen::MatrixXd(gx_hessian[i]), approx_hessian[i]));
-        }
-#endif
-    }
-
-    callback_g OptimizationProblem::func_g()
-    {
-        return [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-            return eval_g(x);
-        };
-    }
-
     ////////////////////////////////////////////////////////////////////////////
-
-    bool OptimizationProblem::eval_intermediate_callback(
-        const Eigen::VectorXd& /*x*/)
-    {
-        return true;
-    }
 
     bool OptimizationProblem::validate_problem()
     {
@@ -217,13 +126,6 @@ namespace opt {
             && (this->x_lower.array() - 10 * tol <= x.array()).all()
             && (x.array() <= this->x_upper.array() + 10 * tol).all();
     }
-
-    // Enable the line search mode. This functionality is not up to the child
-    // class.
-    void OptimizationProblem::enable_line_search_mode(
-        const Eigen::VectorXd&) {};
-    // Disable the line search mode.
-    void OptimizationProblem::disable_line_search_mode() {};
 
 } // namespace opt
 } // namespace ccd

@@ -3,16 +3,19 @@
 #include <opt/barrier_constraint.hpp>
 #include <opt/particles_problem.hpp>
 
-#include <physics/rigid_body_system.hpp>
+#include <physics/rigid_body_assembler.hpp>
 
 namespace ccd {
 
 namespace opt {
 
-    class RigidBodyProblem2 : public OptimizationProblem {
+    class RigidBodyProblem : public OptimizationProblem {
     public:
-        RigidBodyProblem2() {}
-        virtual ~RigidBodyProblem2() override {}
+        RigidBodyProblem()
+            : use_chain_functional(true)
+        {
+        }
+        virtual ~RigidBodyProblem() override {}
 
         /// \brief initialize problem for new set of rigid bodies.
         void init(const std::vector<physics::RigidBody> rbs,
@@ -28,21 +31,46 @@ namespace opt {
         /// \brief update problem using current status of bodies.
         void update_constraint();
 
+        ////////////////////////////////////////////////////////////////////////
+        // Objective function and its derivatives.
         double eval_f(const Eigen::VectorXd& sigma) override;
+
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& sigma) override;
-        Eigen::SparseMatrix<double> eval_hessian_f_sparse(
+
+        Eigen::SparseMatrix<double> eval_hessian_f(
             const Eigen::VectorXd& sigma) override;
 
-        Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& sigma) override
-        {
-            return Eigen::MatrixXd(eval_hessian_f_sparse(sigma));
-        }
+        void eval_f_and_fdiff(const Eigen::VectorXd& x,
+            double& f_uk,
+            Eigen::VectorXd& f_uk_jacobian,
+            Eigen::SparseMatrix<double>& f_uk_hessian) override;
 
+        /// \brief functional problem using chain rule
+        double eval_f_chain(const Eigen::VectorXd& sigma);
+
+        Eigen::VectorXd eval_grad_f_chain(const Eigen::VectorXd& sigma);
+
+        Eigen::SparseMatrix<double> eval_hessian_f_chain(
+            const Eigen::VectorXd& sigma);
+
+        ////////////////////////////////////////////////////////////////////////
+        // Constraint function and its derivatives.
         Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
+
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
+
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x) override;
 
+        void eval_g_and_gdiff(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
+            Eigen::MatrixXd& gx_jacobian,
+            std::vector<Eigen::SparseMatrix<double>>& gx_hessian) override;
+
+        Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma);
+
+        ///////////////////////////////////////////////////////////////////////
+        /// BARRIER SPECIFIC
         bool has_barrier_constraint() override
         {
             return m_constraint_ptr->is_barrier();
@@ -58,66 +86,13 @@ namespace opt {
 
         physics::RigidBodyAssembler m_assembler;
         std::shared_ptr<opt::BarrierConstraint> m_constraint_ptr;
+        bool use_chain_functional;
 
     protected:
-        Eigen::MatrixXd m_x0; ///< vertices positions at begining of interval
+        Eigen::MatrixXd m_q0; ///< vertices positions at begining of interval
+        Eigen::MatrixXd m_q1; ///< vertices positions at end of interval
         Eigen::VectorXd m_sigma1; ///< rigid body positions at end of interval
     };
 
-    class RigidBodyProblem : public ParticlesDisplProblem {
-    public:
-        RigidBodyProblem();
-        ~RigidBodyProblem() override;
-
-        void initialize(
-            ccd::physics::RigidBodySystem& rbs, CollisionConstraint& cstr);
-
-        ////////////////////////////////////////////////////////////////////////
-        // Objective function and its derivatives.
-        /// @brief eval_f evaluates functional at point x
-        virtual double eval_f(const Eigen::VectorXd& x) override;
-
-        /// @brief eval_grad_f evaluates gradient of functional at point x
-        virtual Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
-
-        /// @brief eval_hessian_f evaluates hessian of functional at point x
-        virtual Eigen::MatrixXd eval_hessian_f(
-            const Eigen::VectorXd& x) override;
-
-        /// @brief eval_hessian_f evaluates hessian of functional at point x
-        virtual Eigen::SparseMatrix<double> eval_hessian_f_sparse(
-            const Eigen::VectorXd& x) override;
-        ////////////////////////////////////////////////////////////////////////
-
-        ////////////////////////////////////////////////////////////////////////
-        // Constraint function and its derivatives.
-        /// @brief eval_g evaluates constraints at point x
-        virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
-
-        /// @brief eval_jac_g evaluates constraints jacobian at point x
-        virtual Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
-
-        // @brief eval_hessian_g evaluates constraints hessian at point x
-        virtual std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
-            const Eigen::VectorXd& x) override;
-
-        /// @brief eval_g_and_gdiff evaluates constraints, jacobian and hessian
-        /// at point x
-        virtual void eval_g_and_gdiff(const Eigen::VectorXd& x,
-            Eigen::VectorXd& g_uk,
-            Eigen::MatrixXd& g_uk_jacobian,
-            std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
-        ////////////////////////////////////////////////////////////////////////
-
-        /// @brief Evaluate the intermediate callback.
-        virtual bool eval_intermediate_callback(
-            const Eigen::VectorXd& x) override;
-
-    protected:
-        virtual void init_num_vars() override;
-
-        /// @brief pointer to the rigid bodies
-        std::shared_ptr<ccd::physics::RigidBodySystem> model;
-    };
 } // namespace opt
 } // namespace ccd

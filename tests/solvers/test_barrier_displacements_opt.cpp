@@ -57,19 +57,18 @@ TEST_CASE("test the setup", "[opt][displacements][barrier]")
     CHECK(compare_gradient(finite_grad, analytic_grad));
 
     // Test ∇²f
-    Eigen::MatrixXd finite_hessian(
-        state.particles_problem.num_vars, state.particles_problem.num_vars);
-    finite_jacobian(state.particles_problem.x0,
-        state.particles_problem.func_grad_f(), finite_hessian);
+    Eigen::MatrixXd finite_hessian
+        = state.particles_problem.eval_hessian_f_approx(
+            state.particles_problem.x0);
     Eigen::MatrixXd analytic_hessian
-        = state.particles_problem.eval_hessian_f(state.particles_problem.x0);
+        = state.particles_problem
+              .eval_hessian_f(state.particles_problem.x0)
+              .toDense();
     CHECK(compare_jacobian(finite_hessian, analytic_hessian));
 
     // Test ∇g
-    Eigen::MatrixXd finite_jac(state.particles_problem.num_constraints,
-        state.particles_problem.num_vars);
-    finite_jacobian(state.particles_problem.x0,
-        state.particles_problem.func_g(), finite_jac);
+    Eigen::MatrixXd finite_jac
+        = state.particles_problem.eval_jac_g_approx(state.particles_problem.x0);
     Eigen::MatrixXd analytic_jac
         = state.particles_problem.eval_jac_g(state.particles_problem.x0);
     CHECK(compare_jacobian(finite_jac, analytic_jac));
@@ -79,10 +78,12 @@ TEST_CASE("test the setup", "[opt][displacements][barrier]")
         state.particles_problem.num_vars, state.particles_problem.num_vars);
     finite_hessian_gi.setOnes();
     long i;
+
     auto diff_i = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
         auto jac = state.particles_problem.eval_jac_g(x);
         return jac.row(i);
     };
+
     std::vector<Eigen::SparseMatrix<double>> analytic_hessian_g
         = state.particles_problem.eval_hessian_g(state.particles_problem.x0);
     for (i = 0; i < long(analytic_hessian_g.size()); i++) {

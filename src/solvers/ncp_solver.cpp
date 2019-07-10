@@ -59,7 +59,7 @@ namespace opt {
     void NCPSolver::compute_linear_system(OptimizationProblem& opt_problem)
     {
         Eigen::VectorXd x0 = Eigen::VectorXd::Zero(opt_problem.num_vars);
-        A = opt_problem.eval_hessian_f_sparse(x0);
+        A = opt_problem.eval_hessian_f(x0);
         b = -opt_problem.eval_grad_f(x0);
     }
 

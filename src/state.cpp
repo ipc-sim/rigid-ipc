@@ -16,8 +16,7 @@
 namespace ccd {
 
 State::State()
-    : is_rigid_bodies_mode(false)
-    , output_dir(DATA_OUTPUT_DIR)
+    : output_dir(DATA_OUTPUT_DIR)
     , opt_method(OptimizationMethod::BARRIER_SOLVER)
     , constraint_function(ConstraintType::BARRIER)
     , log_level(spdlog::level::info)
@@ -30,11 +29,11 @@ State::State()
     , current_opt_iteration(-1)
 
 {
-    rigid_body_problem.intermediate_callback
-        = particles_problem.intermediate_callback
-        = [&](const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk) {
-              return record_optimization_step(x, Uk);
-          };
+    //    rigid_body_problem.intermediate_callback
+    //        = particles_problem.intermediate_callback
+    //        = [&](const Eigen::VectorXd& x, const Eigen::MatrixX2d& Uk) {
+    //              return record_optimization_step(x, Uk);
+    //          };
 
     spdlog::set_level(static_cast<spdlog::level::level_enum>(log_level));
 }
@@ -45,20 +44,7 @@ State::State()
 
 void State::load_scene(std::string filename)
 {
-    using nlohmann::json;
-
-    std::ifstream input(filename);
-    json scene = json::parse(input);
-    auto scene_type = scene["scene_type"];
-    if (scene_type.is_string()
-        && scene_type.get<std::string>().compare("rigid-body") == 0) {
-        return load_rigidbody_scene(filename);
-    }
-
     io::read_scene(filename, vertices, edges, displacements);
-    if (is_rigid_bodies_mode) {
-        convert_connected_components_to_rigid_bodies();
-    }
     fit_scene_to_canvas();
     reset_scene();
 }
@@ -71,18 +57,6 @@ void State::load_scene(const Eigen::MatrixX2d& v,
     this->edges = e;
     this->displacements = d;
 
-    reset_scene();
-}
-
-void State::load_rigidbody_scene(std::string filename)
-{
-    std::vector<ccd::physics::RigidBody> rbs;
-    ccd::io::read_rb_scene(filename, rbs);
-    rigid_body_system.clear();
-    rigid_body_system.add_rigid_body(rbs);
-    rigid_body_system.assemble();
-    is_rigid_bodies_mode = true;
-    update_fields_from_rigid_bodies();
     reset_scene();
 }
 
@@ -345,7 +319,6 @@ void State::run_ccd_pipeline()
     spdlog::debug("grad_vol\n{}", ccd::log::fmt_eigen(volume_grad, 4));
 }
 
-
 // -----------------------------------------------------------------------------
 // OPT
 // -----------------------------------------------------------------------------
@@ -379,23 +352,14 @@ opt::OptimizationSolver& State::getOptimizationSolver()
 
 opt::OptimizationProblem& State::getOptimizationProblem()
 {
-    if (is_rigid_bodies_mode) {
-        return rigid_body_problem;
-    } else {
-        return particles_problem;
-    }
+    return particles_problem;
 }
 
 void State::reset_optimization_problem()
 {
     auto& constraint = getCollisionConstraint();
     constraint.initialize(vertices, edges, displacements);
-    if (is_rigid_bodies_mode) {
-        rigid_body_problem.initialize(rigid_body_system, constraint);
-    } else {
-        particles_problem.initialize(
-            vertices, edges, displacements, constraint);
-    }
+    particles_problem.initialize(vertices, edges, displacements, constraint);
 }
 
 void State::reset_results()
@@ -491,13 +455,7 @@ void State::optimize_displacements(const std::string /*filename*/)
         timer.start();
 #endif
         opt_results = solver.solve(problem);
-        if (is_rigid_bodies_mode) {
-            Eigen::MatrixXd opt_U;
-            rigid_body_system.compute_displacements(opt_results.x, opt_U);
-            opt_results.x = opt_U;
-        } else {
-            opt_results.x.resize(displacements.rows(), 2);
-        }
+        opt_results.x.resize(displacements.rows(), 2);
 
 #ifdef PROFILE_FUNCTIONS
         timer.stop();
@@ -612,101 +570,6 @@ double State::get_opt_functional()
     return -1;
 }
 
-std::vector<std::vector<int>> State::create_adjacency_list()
-{
-    std::vector<std::vector<int>> adjacency_list(vertices.rows());
-    for (int i = 0; i < edges.rows(); i++) {
-        adjacency_list[edges(i, 0)].push_back(edges(i, 1));
-        adjacency_list[edges(i, 1)].push_back(edges(i, 0));
-    }
-    return adjacency_list;
-}
-
-void State::find_connected_vertices(const long& vertex_id,
-    const std::vector<std::vector<int>>& adjacency_list,
-    std::unordered_set<int>& connected_vertices)
-{
-    if (connected_vertices.find(vertex_id) != connected_vertices.end()) {
-        return;
-    }
-    connected_vertices.insert(vertex_id);
-    for (const int& adjacent_vertex_id : adjacency_list[vertex_id]) {
-        find_connected_vertices(
-            adjacent_vertex_id, adjacency_list, connected_vertices);
-    }
-}
-
-void State::update_fields_from_rigid_bodies()
-{
-    rigid_body_system.assemble();
-    vertices = rigid_body_system.vertices;
-    displacements = rigid_body_system.displacements;
-    edges = rigid_body_system.edges;
-}
-
-void State::update_displacements_from_rigid_bodies()
-{
-    rigid_body_system.assemble_displacements();
-    displacements = rigid_body_system.displacements;
-}
-
-void State::convert_connected_components_to_rigid_bodies()
-{
-    auto adjacency_list = create_adjacency_list();
-    rigid_body_system.clear();
-    Eigen::VectorXb is_part_of_body = Eigen::VectorXb::Zero(vertices.rows());
-
-    std::unordered_set<int> connected_vertices;
-    Eigen::MatrixXi body_edges;
-    Eigen::MatrixX2d body_vertices;
-
-    for (long i = 0; i < vertices.rows(); i++) {
-        if (!is_part_of_body(i)) {
-            find_connected_vertices(i, adjacency_list, connected_vertices);
-
-            std::vector<int> ordered_connected_vertices(
-                connected_vertices.begin(), connected_vertices.end());
-            std::unordered_map<int, int> old_ids_to_new_ids;
-            int new_id = 0;
-            for (const auto& old_id : ordered_connected_vertices) {
-                // The new indices are the order of indices
-                old_ids_to_new_ids.insert(std::make_pair(old_id, new_id++));
-            }
-
-            std::vector<int> column0, column1;
-            for (long j = 0; j < edges.rows(); j++) {
-                if (connected_vertices.find(edges(j, 0))
-                    != connected_vertices.end()) {
-                    column0.push_back(old_ids_to_new_ids.at(edges(j, 0)));
-                    column1.push_back(old_ids_to_new_ids.at(edges(j, 1)));
-                }
-            }
-            body_edges = Eigen::MatrixXi(long(column0.size()), 2);
-            body_edges.col(0)
-                = Eigen::VectorXi::Map(column0.data(), long(column0.size()));
-            body_edges.col(1)
-                = Eigen::VectorXi::Map(column1.data(), long(column1.size()));
-
-            Eigen::VectorXi R
-                = Eigen::VectorXi::Map(ordered_connected_vertices.data(),
-                    long(ordered_connected_vertices.size()));
-            igl::slice(vertices, R, Eigen::VectorXi::LinSpaced(2, 0, 1),
-                body_vertices);
-
-            ccd::physics::RigidBody rb = ccd::physics::RigidBody::Centered(
-                body_vertices, body_edges, Eigen::Vector3d(0, 0, 0.0));
-            rigid_body_system.add_rigid_body(rb);
-
-            for (const auto& vertex_id : ordered_connected_vertices) {
-                is_part_of_body(vertex_id) = true;
-            }
-            connected_vertices.clear();
-        }
-    }
-
-    update_fields_from_rigid_bodies();
-    reset_scene();
-}
 
 std::vector<long> State::get_opt_collision_edges()
 {

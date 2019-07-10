@@ -33,6 +33,7 @@ void SimState::load_scene(const std::string& filename)
 
 void SimState::simulation_step()
 {
+    m_step_has_collision = false;
     m_step_had_collision = m_problem.simulation_step(m_timestep_size);
 
     if (m_step_had_collision) {

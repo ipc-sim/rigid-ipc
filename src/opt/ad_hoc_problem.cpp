@@ -63,10 +63,10 @@ namespace opt {
     {
         return grad_f(x);
     }
-
-    Eigen::MatrixXd AdHocProblem::eval_hessian_f(const Eigen::VectorXd& x)
+    Eigen::SparseMatrix<double> AdHocProblem::eval_hessian_f(
+        const Eigen::VectorXd& x)
     {
-        return hessian_f(x);
+        return hessian_f(x).sparseView();
     }
 
     Eigen::VectorXd AdHocProblem::eval_g(const Eigen::VectorXd& x)

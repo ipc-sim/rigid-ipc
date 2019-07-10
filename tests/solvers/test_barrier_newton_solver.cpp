@@ -71,11 +71,9 @@ TEST_CASE(
         CHECK(compare_gradient(finite_grad, analytic_grad));
 
         // Test ∇²f
-        Eigen::MatrixXd finite_hessian(
-            barrier_problem.num_vars, barrier_problem.num_vars);
-        finite_jacobian(x, barrier_problem.func_grad_f(), finite_hessian,
-            AccuracyOrder::SECOND);
-        Eigen::MatrixXd analytic_hessian = barrier_problem.eval_hessian_f(x);
+        Eigen::MatrixXd finite_hessian = barrier_problem.eval_hessian_f_approx(x);
+
+        Eigen::MatrixXd analytic_hessian = barrier_problem.eval_hessian_f(x).toDense();
         CHECK(compare_jacobian(finite_hessian, analytic_hessian));
 
         CAPTURE(x, problem.x_lower, problem.x_upper, problem.g(x),

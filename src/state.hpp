@@ -21,7 +21,7 @@
 #include <opt/rigid_body_problem.hpp>
 #include <opt/volume_constraint.hpp>
 
-#include <physics/rigid_body_system.hpp>
+#include <physics/rigid_body_assembler.hpp>
 
 namespace ccd {
 
@@ -66,9 +66,6 @@ public:
     /// @brief #V,2 vertices displacements
     Eigen::MatrixX2d displacements;
 
-    ccd::physics::RigidBodySystem rigid_body_system;
-    bool is_rigid_bodies_mode;
-
     /// @brief The current number of pruned impacts
     int num_pruned_impacts;
 
@@ -100,7 +97,6 @@ public:
     ConstraintType constraint_function;
 
     opt::ParticlesDisplProblem particles_problem;
-    opt::RigidBodyProblem rigid_body_problem;
 
     /// @brief reuse the current opt_displacements to initialize the
     /// optimization
@@ -122,7 +118,6 @@ public:
     // SCENE CRUD
     // ----------------------------------------------------------------------
     void load_scene(const std::string filename);
-    void load_rigidbody_scene(const std::string filename);
     void load_scene(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges, const Eigen::MatrixX2d& displacements);
     void save_scene(const std::string filename);
@@ -212,14 +207,6 @@ public:
     int current_opt_iteration;
     void reset_results();
 
-    std::vector<std::vector<int>> create_adjacency_list();
-    void find_connected_vertices(const long& vertex_id,
-        const std::vector<std::vector<int>>& adjacency_list,
-        std::unordered_set<int>& connected_vertices);
-
-    void convert_connected_components_to_rigid_bodies();
-    void update_fields_from_rigid_bodies();
-    void update_displacements_from_rigid_bodies();
 };
 
 } // namespace ccd

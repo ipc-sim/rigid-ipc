@@ -31,7 +31,7 @@ namespace opt {
         //  ½ * x^T * Q * x + c^T * x + cf
 
         Eigen::VectorXd x0 = Eigen::VectorXd::Zero(problem.num_vars);
-        Q = problem.eval_hessian_f_sparse(x0);
+        Q = problem.eval_hessian_f(x0);
         c = problem.eval_grad_f(x0);
         cf = problem.eval_f(x0);
     }

@@ -3,7 +3,26 @@
 namespace ccd {
 namespace opt {
 
+
+    /// @brief function type for gradient of functional \nabla f(x)
+    typedef std::function<Eigen::VectorXd(const Eigen::VectorXd&)>
+        callback_grad_f;
+    /// @brief function type for hessian of functional \f$\nabla^2 f(x)\f$
+    typedef std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>
+        callback_hessian_f;
+    /// @brief function type for constraints g(x)
+    typedef std::function<Eigen::VectorXd(const Eigen::VectorXd&)> callback_g;
+    /// @brief function type for jacobian of constraints \nabla g(x)
+    typedef std::function<Eigen::MatrixXd(const Eigen::VectorXd&)>
+        callback_jac_g;
+    /// @brief function type for direvative of the jacobian of constraints
+    /// \f$\nabla^2 g(x)\f$
+    typedef std::function<std::vector<Eigen::SparseMatrix<double>>(
+        const Eigen::VectorXd&)>
+        callback_hessian_g;
+
     class AdHocProblem : public OptimizationProblem {
+
     public:
         callback_f f;           ///< @brief Objective function
         callback_grad_f grad_f; ///< @brief Gradient of the objective function
@@ -25,7 +44,8 @@ namespace opt {
 
         double eval_f(const Eigen::VectorXd& x) override;
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
-        Eigen::MatrixXd eval_hessian_f(const Eigen::VectorXd& x) override;
+        Eigen::SparseMatrix<double> eval_hessian_f(
+            const Eigen::VectorXd& x) override;
         Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(

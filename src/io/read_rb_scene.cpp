@@ -1,8 +1,8 @@
 #include "read_rb_scene.hpp"
 
 #include <fstream>
-#include <iostream>
 #include <io/serialize_json.hpp>
+#include <iostream>
 
 namespace ccd {
 namespace io {
@@ -43,8 +43,9 @@ namespace io {
             from_json(jrb["edges"], edges);
             Eigen::VectorXd velocity;
             from_json(jrb["velocity"], velocity);
-
-            auto rb = physics::RigidBody::Centered(vertices, edges, velocity);
+            bool is_static = jrb.value("is_static", false);
+            auto rb = physics::RigidBody::from_velocity(
+                vertices, edges, velocity, is_static);
             rbs.push_back(rb);
         }
     }

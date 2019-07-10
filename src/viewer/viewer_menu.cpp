@@ -77,9 +77,6 @@ void ViewerMenu::draw_menu()
     ImGui::Separator();
     draw_edit_modes();
 
-    ImGui::Separator();
-    ImGui::Separator();
-    draw_rigid_body_options();
     ImGui::PopItemWidth();
     ImGui::End();
 
@@ -249,16 +246,6 @@ void ViewerMenu::draw_io()
         if (ImGui::Button("Save##Scene", ImVec2((w - p) / 2.f, 0))) {
             save_scene();
         }
-        if (ImGui::Checkbox(
-                "convert to rigid bodies", &state.is_rigid_bodies_mode)) {
-            if (state.is_rigid_bodies_mode) {
-                state.convert_connected_components_to_rigid_bodies();
-            } else {
-                state.rigid_body_system.clear();
-            }
-            state_history.push_back(state);
-            load_state();
-        }
     }
 }
 
@@ -314,9 +301,6 @@ void ViewerMenu::draw_edit_modes()
             subdivide_edges();
         }
         ImGui::SameLine(0, p);
-        if (ImGui::Button("Smooth Vertices##Edit", ImVec2(half, 0))) {
-            smooth_vertices();
-        }
 
         if (ImGui::Button("Remove Free Vertices##Edit", ImVec2(-1, 0))) {
             if (state.remove_free_vertices()) {
@@ -325,22 +309,13 @@ void ViewerMenu::draw_edit_modes()
             }
         }
 
-        if ((state.selected_points.size() > 0
-                || state.selected_displacements.size() > 0)
-            && (state.is_rigid_bodies_mode
-                || ImGui::Button("Select Connected##Edit", ImVec2(-1, 0)))) {
-            select_connected();
-        }
-
-        if (state.selected_points.size() > 0
-            && ImGui::Button("Duplicate Selected##Edit", ImVec2(-1, 0))) {
+        if (ImGui::Button("Duplicate Selected##Edit", ImVec2(-1, 0))) {
             duplicate_selected();
         }
     }
 
     // Menu for fixing vertex positions
-    if (state.selected_points.size() > 0 && !state.is_rigid_bodies_mode
-        && ImGui::CollapsingHeader(
+    if (state.selected_points.size() > 0 && ImGui::CollapsingHeader(
             "Static Vertices##static", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Initial button state is all(is_dof_fixed(selected_points))
         bool x_fixed_originally = true, y_fixed_originally = true;
@@ -381,45 +356,6 @@ void ViewerMenu::draw_edit_modes()
     }
 }
 
-void ViewerMenu::draw_rigid_body_options()
-{
-    if (state.is_rigid_bodies_mode
-        && ImGui::CollapsingHeader(
-            "Rigid Bodies##rigid-bodies", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (state.selected_points.size() > 0) {
-            std::set<int> selected_body_ids;
-            for (const auto& selected_point : state.selected_points) {
-                selected_body_ids.insert(
-                    state.rigid_body_system.vertex_to_body_map(selected_point));
-            }
-            Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
-            for (const auto& body_id : selected_body_ids) {
-                velocity
-                    += state.rigid_body_system.get_velocity(size_t(body_id));
-            }
-
-            velocity /= selected_body_ids.size();
-            velocity(2) /= M_PI / 180.0;
-
-            bool velocity_x_changed
-                = ImGui::InputDouble("x vel.##rigid-bodies", &velocity(0));
-            bool velocity_y_changed
-                = ImGui::InputDouble("y vel.##rigid-bodies", &velocity(1));
-            bool rotation_changed
-                = ImGui::InputDouble("rotation##rigid-bodies", &velocity(2));
-            if (velocity_x_changed || velocity_y_changed || rotation_changed) {
-                velocity(2) *= M_PI / 180.0;
-                for (const auto& body_id : selected_body_ids) {
-                    state.rigid_body_system.set_velocity(
-                        size_t(body_id), velocity);
-                }
-                state.update_displacements_from_rigid_bodies();
-                state_history.push_back(state);
-                load_state();
-            }
-        }
-    }
-}
 
 // //////////////////////////////////////////////////////////////////////////
 // CCD STEPS

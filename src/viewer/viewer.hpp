@@ -86,17 +86,12 @@ public:
     void select_all_vertices();
     /// @brief Select all displacments (clears selected vertices).
     void select_all_displacements();
-    /// @brief Select the vertices of displacements that are connected to the
-    /// selection.
-    void select_connected();
+
     /// @brief Duplicate selected vertices and edges that have both end-points
     /// selected.
     void duplicate_selected();
     /// @brief Loop over edges creating a new vertex in the center.
     void subdivide_edges();
-    /// @brief Smooth the vertices using a weighted average of the adjacent
-    /// vertices.
-    void smooth_vertices();
 
     // CCD actions
     void compute_collisions();
@@ -110,7 +105,6 @@ public:
     // menu windows
     void draw_io();
     void draw_edit_modes();
-    void draw_rigid_body_options();
     void draw_ccd_steps();
     void draw_legends();
     void draw_collision_menu();

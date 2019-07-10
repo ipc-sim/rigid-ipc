@@ -22,26 +22,6 @@ void ViewerMenu::select_all_displacements()
         = std::vector<int>(all_idxs.data(), all_idxs.data() + all_idxs.size());
 }
 
-// Select the vertices of displacements that are connected to the selection.
-void ViewerMenu::select_connected()
-{
-    // Determine which selection we want to extend
-    std::vector<int>& selection = state.selected_points.size() > 0
-        ? state.selected_points
-        : state.selected_displacements;
-    // Build an adjacency list representation of the mesh
-    const auto adjacency_list = state.create_adjacency_list();
-
-    std::unordered_set<int> new_selection;
-    for (const auto& selected_id : selection) {
-        state.find_connected_vertices(
-            selected_id, adjacency_list, new_selection);
-    }
-    selection.assign(new_selection.begin(), new_selection.end());
-
-    recolor_edges();
-    recolor_displacements();
-}
 
 // Duplicate selected vertices and edges that have both end-points selected.
 void ViewerMenu::duplicate_selected()
@@ -107,44 +87,6 @@ void ViewerMenu::subdivide_edges()
 
     // Flatten the is_dof_fixed
     is_dof_fixed.resize(is_dof_fixed.size(), 1);
-    state.getOptimizationProblem().is_dof_fixed = is_dof_fixed;
-
-    state_history.push_back(state);
-    load_state();
-}
-
-// Smooth the vertices using a weighted average of the adjacent vertices.
-void ViewerMenu::smooth_vertices()
-{
-    // Weight for the original position
-    double w0 = 0.75; // TODO: Expose this parameter
-
-    // Copy the vertices/displacements over and weight them
-    Eigen::MatrixX2d smoothed_vertices = w0 * state.vertices;
-    Eigen::MatrixX2d smoothed_displacements = w0 * state.displacements;
-
-    auto adjacency_list = state.create_adjacency_list();
-
-    for (long i = 0; i < state.vertices.rows(); i++) {
-        const unsigned long num_neighbors = adjacency_list[i].size();
-        for (const auto& vertex_idx : adjacency_list[i]) {
-            double w_adjacent = (1 - w0) / num_neighbors;
-            // Equally weight adjacent vertex positions
-            smoothed_vertices.row(i)
-                += w_adjacent * state.vertices.row(vertex_idx);
-            // Equally weight adjacent displacements
-            smoothed_displacements.row(i)
-                += w_adjacent * state.displacements.row(vertex_idx);
-        }
-    }
-
-    // Update the state
-    state.vertices = smoothed_vertices;
-    state.displacements = smoothed_displacements;
-
-    auto is_dof_fixed = state.getOptimizationProblem()
-                            .is_dof_fixed; // Save this from being reset
-    state.reset_scene();
     state.getOptimizationProblem().is_dof_fixed = is_dof_fixed;
 
     state_history.push_back(state);
