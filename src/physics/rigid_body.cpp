@@ -16,7 +16,7 @@ namespace physics {
     RigidBody RigidBody::from_velocity(const Eigen::MatrixXd& vertices,
         const Eigen::MatrixX2i& edges,
         const Eigen::Vector3d& velocity,
-        const bool is_static)
+        const Eigen::Vector3b& is_dof_fixed)
     {
         // move vertices so they center of mass is at 0,0
         Eigen::RowVector2d x = center_of_mass(vertices, edges);
@@ -29,16 +29,14 @@ namespace physics {
         // set previous_step position to:
         Eigen::Vector3d position_t0 = position_t1 - velocity;
 
-        assert(!is_static || velocity.norm() == 0.0);
-
-        return RigidBody(centered_vertices, edges, velocity, position_t1,
-            position_t0, is_static);
+        return RigidBody(centered_vertices, edges, velocity, is_dof_fixed,
+            position_t1, position_t0);
     }
 
     RigidBody RigidBody::from_displacement(const Eigen::MatrixXd& vertices,
         const Eigen::MatrixX2i& edges,
         const Eigen::Vector3d& displacement,
-        const bool is_static)
+        const Eigen::Vector3b& is_dof_fixed)
     {
         // move vertices so they center of mass is at 0,0
         Eigen::RowVector2d x = center_of_mass(vertices, edges);
@@ -54,19 +52,19 @@ namespace physics {
         // set velocity to zero
         Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
 
-        return RigidBody(centered_vertices, edges, velocity, position_t1,
-            position_t0, is_static);
+        return RigidBody(centered_vertices, edges, velocity, is_dof_fixed,
+            position_t1, position_t0);
     }
 
     RigidBody::RigidBody(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges,
         const Eigen::Vector3d& v,
+        const Eigen::Vector3b& is_dof_fixed,
         const Eigen::Vector3d& x,
-        const Eigen::Vector3d& x_prev,
-        const bool is_static)
+        const Eigen::Vector3d& x_prev)
         : vertices(vertices)
         , edges(edges)
-        , is_static(is_static)
+        , is_dof_fixed(is_dof_fixed)
         , velocity(v)
         , position(x)
         , position_prev(x_prev)

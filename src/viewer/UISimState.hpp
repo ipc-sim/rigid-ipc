@@ -17,7 +17,7 @@ private:
 
 public:
     UISimState();
-    ~UISimState() {}
+    ~UISimState() override {}
 
     virtual void init(igl::opengl::glfw::Viewer* _viewer) override;
     virtual void draw_menu() override;
@@ -38,15 +38,18 @@ public:
 
     int m_log_level; ///< brief setup log
 
+    Eigen::RowVector3d color_mesh;
+
     bool load(std::string scene_filename) override
     {
-        if (scene_filename.length() == 0 || scene_filename.empty()) {
-            return false;
-        }
-
         m_state.load_scene(scene_filename);
         load_scene();
         return true;
+    }
+
+    void reload(){
+        m_state.reload_scene();
+        load_scene();
     }
 
     void simulation_step()
@@ -58,7 +61,7 @@ public:
 protected:
     void draw_io();
     void draw_simulation_player();
-    void draw_ccd();
+
 };
 
 } // namespace ccd

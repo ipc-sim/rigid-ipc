@@ -1,19 +1,43 @@
 #include "rigid_body_problem.hpp"
 
+#include <iostream>
+
 #include <utils/flatten.hpp>
 #include <utils/tensor.hpp>
 
-#include <iostream>
+#include <io/read_rb_scene.hpp>
+#include <opt/constraint_factory.hpp>
 
 namespace ccd {
 
-namespace opt {
+namespace physics {
 
-    void RigidBodyProblem::init(const std::vector<physics::RigidBody> rbs,
-        opt::BarrierConstraint& constraint)
+    RigidBodyProblem::RigidBodyProblem()
+        : SimulationProblem("RigidBody")
+        , use_chain_functional(false)
+        , update_constraint_set(true)
     {
-        m_constraint_ptr = std::make_shared<opt::BarrierConstraint>(constraint);
+    }
+
+    void RigidBodyProblem::init(const nlohmann::json& params)
+    {
+        std::vector<physics::RigidBody> rbs;
+        io::read_rb_scene(params, rbs);
         m_assembler.init(rbs);
+
+        m_constraint_ptr = opt::ConstraintFactory::factory().get_constraint(
+            params["constraint"]);
+
+        update_constraint();
+    }
+
+    void RigidBodyProblem::init(
+        const std::vector<RigidBody> rbs, const std::string& constraint)
+    {
+        m_assembler.init(rbs);
+        m_constraint_ptr
+            = opt::ConstraintFactory::factory().get_constraint(constraint);
+
         update_constraint();
     }
 
@@ -67,13 +91,15 @@ namespace opt {
         // base problem initial solution
         x0 = m_assembler.rb_positions_t0(); // start from collision free state
         num_vars = int(x0.size());
-        is_dof_fixed = Eigen::MatrixXb::Zero(num_vars, 1);
 
         // intended displacements
         Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
         m_constraint_ptr->initialize(m_q0, m_assembler.m_edges, q1 - m_q0);
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// Functional
+    ////////////////////////////////////////////////////////////////////////////
     double RigidBodyProblem::eval_f(const Eigen::VectorXd& sigma)
     {
         if (use_chain_functional) {
@@ -129,8 +155,9 @@ namespace opt {
 #endif
     }
 
-    // Functional with Chain Rule
-    // ----------------------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////////
+    /// Functional with CHAIN RULE
+    ////////////////////////////////////////////////////////////////////////////
     double RigidBodyProblem::eval_f_chain(const Eigen::VectorXd& sigma)
     {
         Eigen::MatrixXd qk = m_assembler.world_vertices(sigma);
@@ -172,14 +199,15 @@ namespace opt {
             + tensor::multiply(grad_qk, hess_qk_sigma);
     }
 
-    // Constraints
-    // ----------------------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////////
+    /// Constraints
+    ////////////////////////////////////////////////////////////////////////////
     Eigen::MatrixXd RigidBodyProblem::update_g(const Eigen::VectorXd& sigma)
     {
         Eigen::MatrixXd m_xk = m_assembler.world_vertices(sigma);
         Eigen::MatrixXd uk = m_xk - m_q0;
 
-        if (m_constraint_ptr->update_collision_set) {
+        if (update_constraint_set) {
             m_constraint_ptr->detectCollisions(uk);
         }
         return uk;
@@ -281,5 +309,5 @@ namespace opt {
 #endif
     }
 
-} // namespace opt
+} // namespace physics
 } // namespace ccd

@@ -4,6 +4,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
+#include <utils/eigen_ext.hpp>
 
 #include <physics/center_of_mass.hpp>
 
@@ -29,9 +30,9 @@ namespace physics {
         RigidBody(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
             const Eigen::Vector3d& v,
+            const Eigen::Vector3b& is_dof_fixed,
             const Eigen::Vector3d& x = Eigen::Vector3d::Zero(),
-            const Eigen::Vector3d& x_prev = Eigen::Vector3d::Zero(),
-            const bool is_static = false);
+            const Eigen::Vector3d& x_prev = Eigen::Vector3d::Zero());
 
     public:
         // ------------------------------------------------------------------------
@@ -41,12 +42,12 @@ namespace physics {
         static RigidBody from_velocity(const Eigen::MatrixXd& vertices,
             const Eigen::MatrixX2i& edges,
             const Eigen::Vector3d& velocity,
-            const bool is_static);
+            const Eigen::Vector3b& is_dof_fixed = Eigen::Vector3b::Zero());
 
         static RigidBody from_displacement(const Eigen::MatrixXd& vertices,
             const Eigen::MatrixX2i& edges,
             const Eigen::Vector3d& displacement,
-            const bool is_static);
+            const Eigen::Vector3b& is_dof_fixed = Eigen::Vector3b::Zero());
 
         enum Step { PREVIOUS_STEP = 0, CURRENT_STEP };
 
@@ -97,7 +98,7 @@ namespace physics {
 
         double mass;              ///< total mass (M) of the rigid body
         double moment_of_inertia; ///< moment of intertia (I) of the rigid body
-        bool is_static; ///< flag to indicate if object is static (doesn't move)
+        Eigen::Vector3b is_dof_fixed; ///< flag to indicate if dof is fixed (doesnt' change)
         Eigen::Matrix3d mass_matrix;
 
         // ------------------------------------------------------------------------

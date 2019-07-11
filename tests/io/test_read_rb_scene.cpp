@@ -14,7 +14,30 @@
 TEST_CASE("Read RB Scene", "[io][json][rigid-body]")
 {
     std::vector<ccd::physics::RigidBody> rbs;
-    ccd::io::read_rb_scene(std::string(FIXTURES_DIR) + "/rigid_bodies/one_rb_stationary.json", rbs);
+    using namespace nlohmann;
+    auto j = R"({"rigid_bodies": [
+             {
+               "vertices": [
+                 [0, 0],
+                 [2, 0],
+                 [2, 3],
+                 [5, 3],
+                 [5, 5],
+                 [0, 5]
+               ],
+               "edges": [
+                 [0, 1],
+                 [1, 2],
+                 [2, 3],
+                 [3, 4],
+                 [4, 5],
+                 [5, 0]
+               ],
+               "velocity": [0.0, 0.0, 0.0]
+             }
+           ]})"_json;
+
+    ccd::io::read_rb_scene(j, rbs);
 
     CHECK(rbs.size() == 1);
 

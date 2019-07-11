@@ -4,6 +4,7 @@
 namespace Eigen {
 typedef Array<bool, Dynamic, 1> ArrayXb;
 typedef Matrix<bool, Dynamic, 1> VectorXb;
+typedef Matrix<bool, 3, 1> Vector3b;
 typedef Matrix<bool, Dynamic, Dynamic> MatrixXb;
 
 template <typename T>

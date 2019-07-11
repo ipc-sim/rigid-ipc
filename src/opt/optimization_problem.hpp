@@ -18,20 +18,18 @@ namespace opt {
     /// @brief function type for functional f(x)
     typedef std::function<double(const Eigen::VectorXd&)> callback_f;
 
+
     /// Defines the optimization problems of the form
     ///  minₓ     f(x)       x ∈ Rⁿ
-    ///  s.t.    g_L ≤ g(x) ≤ g_U
-    ///          x_L ≤  x   ≤ x_U
+    ///           g(x) >= 0
+    ///
     class OptimizationProblem {
+
     public:
+        OptimizationProblem(const std::string& name);
         virtual ~OptimizationProblem();
 
-        /// @brief Check that the problem is valid and initalized
-        bool validate_problem();
-
-        /// @brief Check if all constraints are satisfied at a location.
-        bool are_constraints_satisfied(
-            const Eigen::VectorXd& x, const double tol);
+        inline const std::string& name() const { return name_; }
 
         ////////////////////////////////////////////////////////////////////////
         // Objective function and its derivatives.
@@ -105,7 +103,7 @@ namespace opt {
             Eigen::MatrixXd& /*gx_jacobian*/,
             std::vector<Eigen::SparseMatrix<double>>& /*gx_hessian*/)
         {
-            throw NotImplementedError("eval_hessian_g_approx not implemented");
+            throw NotImplementedError("eval_g_and_gdiff not implemented");
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -133,8 +131,8 @@ namespace opt {
 
         virtual bool compare_grad_f_approx(
             const Eigen::VectorXd& x, const Eigen::VectorXd& grad);
-        virtual bool compare_hessian_f_approx(
-            const Eigen::VectorXd& x, const Eigen::SparseMatrix<double>& hessian);
+        virtual bool compare_hessian_f_approx(const Eigen::VectorXd& x,
+            const Eigen::SparseMatrix<double>& hessian);
         virtual bool compare_jac_g_approx(
             const Eigen::VectorXd& x, const Eigen::MatrixXd& jac);
 
@@ -174,18 +172,20 @@ namespace opt {
             return true;
         }
 
+        /// indices if entry x_i is fixed
+        virtual const Eigen::VectorXb& is_dof_fixed() {
+            throw NotImplementedError("is_dof_fixed not implemented");
+        }
+
         ////////////////////////////////////////////////////////////////////////
         // Fields
         int num_vars;                 ///< @brief Number of variables
         int num_constraints;          ///< @brief Number of constraints
         Eigen::VectorXd x0;           ///< @brief Initial value of x
-        Eigen::VectorXd x_lower;      ///< @brief Lower bound of x
-        Eigen::VectorXd x_upper;      ///< @brief Upper bound of x
-        Eigen::VectorXd g_lower;      ///< @brief Lower bound of the constraint
-        Eigen::VectorXd g_upper;      ///< @brief Upper bound of the constraint
-        Eigen::MatrixXb is_dof_fixed; ///< @brief fixed_dof(i) == true indicates
-                                      ///< x(i) is not a variable
+
         ////////////////////////////////////////////////////////////////////////
+    private:
+        std::string name_;
     };
 
 } // namespace opt

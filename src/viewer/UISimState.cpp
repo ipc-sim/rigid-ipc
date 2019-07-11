@@ -10,6 +10,7 @@ UISimState::UISimState()
     , m_bkp_has_collision(true)
     , m_log_level(spdlog::level::info)
 {
+    color_mesh = Eigen::RowVector3d(1.0, 0.0, 0.0); // #ff0000
 }
 
 void UISimState::launch()
@@ -33,19 +34,20 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
 
 void UISimState::load_scene()
 {
-    edges_data->m_data.show_vertid = true;
-    edges_data->set_graph(m_state.m_problem.m_assembler.world_vertices(),
-        m_state.m_problem.m_assembler.m_edges,
-        Eigen::RowVector3d(1.0, 0.0, 0.0)); // #ff0000
+    edges_data->m_data.show_vertid = false;
+    edges_data->set_graph(m_state.problem_ptr->vertices(),
+        m_state.problem_ptr->edges(), color_mesh);
+    edges_data->set_vertex_data(m_state.problem_ptr->particle_dof_fixed());
     edges_data->m_data.point_size = 10 * pixel_ratio();
 
     viewer->core().align_camera_center(edges_data->mV, edges_data->mE);
     m_has_scene = true;
+    m_player_state = PlayerState::Paused;
 }
 
 void UISimState::redraw_scene()
 {
-    edges_data->update_graph(m_state.m_problem.m_assembler.world_vertices());
+    edges_data->update_graph(m_state.problem_ptr->vertices());
 }
 
 bool UISimState::pre_draw_loop()
@@ -53,9 +55,10 @@ bool UISimState::pre_draw_loop()
     if (m_player_state == PlayerState::Playing) {
         simulation_step();
         bool breakpoint = m_bkp_had_collision && m_state.m_step_had_collision;
-        breakpoint = breakpoint || (m_bkp_has_collision && m_state.m_step_has_collision);
+        breakpoint = breakpoint
+            || (m_bkp_has_collision && m_state.m_step_has_collision);
 
-        if (breakpoint){
+        if (breakpoint) {
             m_player_state = PlayerState::Paused;
         }
     }

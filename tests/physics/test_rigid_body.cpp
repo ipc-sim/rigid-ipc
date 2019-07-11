@@ -49,7 +49,7 @@ TEST_CASE("Rigid Body Transform", "[RB][RB-transform]")
     using namespace ccd::physics;
     expected = vertices_t0 + vertices_step;
 
-    auto rb = RigidBody::from_velocity(vertices_t0, edges, velocity, false);
+    auto rb = RigidBody::from_velocity(vertices_t0, edges, velocity);
     Eigen::VectorXd gamma_t1 = rb.position + rb_step;
     Eigen::MatrixXd actual = rb.world_vertices<double>(gamma_t1);
     CHECK((expected - actual).squaredNorm() < 1E-6);
@@ -87,7 +87,7 @@ TEST_CASE("Rigid Body Gradient", "[RB][RB-gradient]")
     }
 
     using namespace ccd::physics;
-    auto rb = RigidBody::from_velocity(vertices, edges, rb_velocity, false);
+    auto rb = RigidBody::from_velocity(vertices, edges, rb_velocity);
 
     Eigen::VectorXd gamma_t1 = rb.position + rb_displacement;
     Eigen::MatrixXd actual = rb.world_vertices_gradient(gamma_t1);
@@ -133,7 +133,7 @@ TEST_CASE("Rigid Body Hessian", "[RB][RB-hessian]")
     }
 
     using namespace ccd::physics;
-    auto rb = RigidBody::from_velocity(vertices, edges, rb_velocity, false);
+    auto rb = RigidBody::from_velocity(vertices, edges, rb_velocity);
 
     Eigen::VectorXd gamma_t1 = rb.position + rb_displacement;
     std::vector<Eigen::Matrix3d> actual = rb.world_vertices_hessian(gamma_t1);

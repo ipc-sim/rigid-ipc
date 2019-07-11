@@ -7,7 +7,7 @@
 #include <igl/PI.h>
 
 #include <autodiff/finitediff.hpp>
-#include <opt/rigid_body_problem.hpp>
+#include <physics/rigid_body_problem.hpp>
 
 // ---------------------------------------------------
 // Tests
@@ -47,12 +47,12 @@ TEST_CASE(
     using namespace ccd::opt;
 
     std::vector<RigidBody> rbs;
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, displ_1, false));
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, displ_2, false));
+    rbs.push_back(RigidBody::from_displacement(vertices, edges, displ_1));
+    rbs.push_back(RigidBody::from_displacement(vertices, edges, displ_2));
 
-    auto rbp = RigidBodyProblem();
-    auto cstr = BarrierConstraint();
-    rbp.init(rbs, cstr);
+    RigidBodyProblem rbp;
+    rbp.init(rbs,"barrier_constraint");
+    rbp.use_chain_functional = true; // test was written for this
 
     // displacement cases
     Eigen::VectorXd x(6);
@@ -99,13 +99,11 @@ TEST_CASE(
     using namespace ccd::opt;
 
     std::vector<RigidBody> rbs;
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_1, false));
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_2, false));
+    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_1));
+    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_2));
 
-    auto rbp = RigidBodyProblem();
-    auto cstr = BarrierConstraint();
-    rbp.init(rbs, cstr);
-
+    RigidBodyProblem rbp;
+    rbp.init(rbs,"barrier_constraint");
 
     // displacement cases
     Eigen::VectorXd x(6);
@@ -150,12 +148,11 @@ TEST_CASE(
     using namespace ccd::opt;
 
     std::vector<RigidBody> rbs;
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_1, false));
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_2, false));
+    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_1));
+    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_2));
 
-    auto rbp = RigidBodyProblem();
-    auto cstr = BarrierConstraint();
-    rbp.init(rbs, cstr);
+    RigidBodyProblem rbp;
+    rbp.init(rbs,"barrier_constraint");
 
     // displacement cases
     Eigen::VectorXd x(6);

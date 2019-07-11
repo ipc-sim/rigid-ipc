@@ -14,7 +14,7 @@ template <typename T>
 inline Eigen::Matrix<T, Eigen::Dynamic, 1> flat(
     const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& x)
 {
-    Eigen::MatrixXd vx = x;
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> vx = x;
     vx.resize(vx.size(), 1);
     return vx;
 }

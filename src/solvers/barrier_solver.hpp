@@ -20,7 +20,8 @@ namespace opt {
     class BarrierSolver : public OptimizationSolver {
     public:
         BarrierSolver();
-        ~BarrierSolver() override;
+        ~BarrierSolver() override {}
+
         OptimizationResults solve(OptimizationProblem& problem) override;
         OptimizationSolver& get_inner_solver();
 
@@ -36,12 +37,9 @@ namespace opt {
     class BarrierProblem : public OptimizationProblem {
     public:
         BarrierProblem(OptimizationProblem& problem, double epsilon);
-        ~BarrierProblem() override;
+        ~BarrierProblem() override {}
 
-        Eigen::VectorXd barrier(const Eigen::VectorXd x);
-        Eigen::VectorXd barrier_gradient(const Eigen::VectorXd x);
-        Eigen::VectorXd barrier_hessian(const Eigen::VectorXd x);
-
+        /////
         double eval_f(const Eigen::VectorXd& x) override;
 
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
@@ -49,10 +47,12 @@ namespace opt {
         Eigen::SparseMatrix<double> eval_hessian_f(
             const Eigen::VectorXd& x) override;
 
-        void eval_f_and_fdiff(const Eigen::VectorXd& x, double& f_uk,
+        void eval_f_and_fdiff(const Eigen::VectorXd& x,
+            double& f_uk,
             Eigen::VectorXd& f_uk_jacobian,
             Eigen::SparseMatrix<double>& f_uk_hessian) override;
 
+        /////
         Eigen::VectorXd eval_g(const Eigen::VectorXd&) override
         {
             return Eigen::VectorXd();
@@ -69,10 +69,13 @@ namespace opt {
             return std::vector<Eigen::SparseMatrix<double>>();
         }
 
+        /////
         void enable_line_search_mode(const Eigen::VectorXd& max_x) override;
         void disable_line_search_mode() override;
 
         bool eval_intermediate_callback(const Eigen::VectorXd& x) override;
+
+        const Eigen::VectorXb& is_dof_fixed() override;
         OptimizationProblem* general_problem;
 
         double epsilon;

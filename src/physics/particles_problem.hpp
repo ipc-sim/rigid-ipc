@@ -10,30 +10,59 @@
 #include <ccd/collision_detection.hpp>
 
 #include <opt/collision_constraint.hpp>
-#include <opt/optimization_problem.hpp>
 #include <opt/volume_constraint.hpp>
-
 #include <solvers/optimization_solver.hpp>
+
+#include <physics/simulation_problem.hpp>
+
+#include <utils/not_implemented_error.hpp>
 
 namespace ccd {
 
-namespace opt {
+namespace physics {
 
     typedef std::function<bool(const Eigen::VectorXd&, const Eigen::MatrixX2d&)>
         intermediate_callback_func;
 
-    class ParticlesDisplProblem : public OptimizationProblem {
+    class ParticlesDisplProblem : public SimulationProblem {
     public:
         ParticlesDisplProblem();
-        virtual ~ParticlesDisplProblem() override;
-
-        void initialize(const Eigen::MatrixX2d& V,
-            const Eigen::MatrixX2i& E,
-            const Eigen::MatrixX2d& U,
-            CollisionConstraint& cstr);
+        ~ParticlesDisplProblem() override {}
 
         ////////////////////////////////////////////////////////////////////////
-        // Objective function and its derivatives.
+        /// SIMULATION
+
+        void init(const nlohmann::json& params) override;
+
+        /// @brief  does a single simulation step. Returns true if there is a
+        /// collision
+        bool simulation_step(const double time_step) override;
+
+        /// @brief moves status to given positions
+        bool take_step(
+            const Eigen::VectorXd& positions, const double time_step) override;
+
+        /// \brief update optimization problem using current status.
+        void update_constraint() override;
+
+        const opt::CollisionConstraint& constraint() override
+        {
+            return *constraint_ptr;
+        }
+
+        Eigen::MatrixXd vertices() override { return vertices_; }
+
+        const Eigen::MatrixXi& edges() override { return edges_; }
+
+        const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
+        const Eigen::MatrixXb& particle_dof_fixed() override
+        {
+            return is_particle_dof_fixed;
+        }
+
+        ////////////////////////////////////////////////////////////////////////
+        /// CCD OPTIMIZATION PROBLEM
+        ///
         /// @brief eval_f evaluates functional at point x
         virtual double eval_f(const Eigen::VectorXd& x) override;
 
@@ -52,6 +81,8 @@ namespace opt {
 
         ////////////////////////////////////////////////////////////////////////
         // Constraint function and its derivatives.
+        Eigen::MatrixXd update_g(const Eigen::VectorXd& x);
+
         /// @brief eval_g evaluates constraints at point x
         virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
 
@@ -82,15 +113,15 @@ namespace opt {
 
         virtual bool has_barrier_constraint() override
         {
-            return constraint->is_barrier();
+            return constraint_ptr->is_barrier();
         }
         virtual double get_barrier_epsilon() override
         {
-            return constraint->get_barrier_epsilon();
+            return constraint_ptr->get_barrier_epsilon();
         }
         virtual void set_barrier_epsilon(const double eps) override
         {
-            return constraint->set_barrier_epsilon(eps);
+            return constraint_ptr->set_barrier_epsilon(eps);
         }
         ////////////////////////////////////////////////////////////////////////
 
@@ -105,29 +136,37 @@ namespace opt {
         /// @brief Disable the line search mode.
         virtual void disable_line_search_mode() override;
 
-        ////////////////////////////////////////////////////////////////////////
-        // Fields
-        Eigen::MatrixX2d vertices;
-        Eigen::MatrixX2i edges;
-        Eigen::MatrixX2d displacements;
-        Eigen::MatrixXd u_; ///< @brief flattened displacements
-        CollisionConstraint* constraint;
+        // ------------------------------------------------------------------------
+        // Geometry
+        // ------------------------------------------------------------------------
+        Eigen::MatrixXi edges_;
+        Eigen::SparseMatrix<double> mass_matrix;
+        Eigen::MatrixXb is_particle_dof_fixed;
+        Eigen::VectorXb is_dof_fixed_; ///> flattened version of above
+
+        // ------------------------------------------------------------------------
+        // State
+        // ------------------------------------------------------------------------
+        Eigen::MatrixXd vertices_prev; ///> vertices position at tau=0
+        Eigen::MatrixXd vertices_;     ///> vertices position at tau=1
+        Eigen::MatrixXd velocity;      ///> velocities at tau=1
+
+        // ------------------------------------------------------------------------
+        // Collision
+        // ------------------------------------------------------------------------
+        std::shared_ptr<opt::CollisionConstraint> constraint_ptr;
         intermediate_callback_func intermediate_callback;
         bool use_mass_matrix;
         ////////////////////////////////////////////////////////////////////////
 
     protected:
-        virtual void initProblem();
-        virtual void init_num_vars();
-        virtual void init_num_constraints();
-        virtual void init_mass_matrix();
+        Eigen::MatrixXd q0_; ///< vertices positions at begining of interval
+        Eigen::MatrixXd q1_; ///< vertices positions at end of interval
 
-        ////////////////////////////////////////////////////////////////////////
-        // Fields
-        bool is_collision_set_frozen;
-        Eigen::SparseMatrix<double> mass_matrix;
+        bool update_constraint_set;
+        bool is_linesearch_active;
         ////////////////////////////////////////////////////////////////////////
     };
 
-} // namespace opt
+} // namespace physics
 } // namespace ccd

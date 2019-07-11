@@ -1,35 +1,53 @@
 #pragma once
 
-#include <opt/barrier_constraint.hpp>
-#include <opt/particles_problem.hpp>
-
+#include <opt/collision_constraint.hpp>
 #include <physics/rigid_body_assembler.hpp>
+#include <physics/simulation_problem.hpp>
 
 namespace ccd {
 
-namespace opt {
+namespace physics {
 
-    class RigidBodyProblem : public OptimizationProblem {
+    class RigidBodyProblem : public SimulationProblem {
     public:
-        RigidBodyProblem()
-            : use_chain_functional(true)
-        {
-        }
+        RigidBodyProblem();
+
         virtual ~RigidBodyProblem() override {}
 
         /// \brief initialize problem for new set of rigid bodies.
-        void init(const std::vector<physics::RigidBody> rbs,
-            opt::BarrierConstraint& constraint);
+        void init(const nlohmann::json& params) override;
+
+        void init(
+            const std::vector<RigidBody> rbs, const std::string& constraint);
 
         /// \brief does a single simulation step. Returns true if there is a
         /// collision
-        bool simulation_step(const double time_step);
+        bool simulation_step(const double time_step) override;
 
-        bool take_step(
-            const Eigen::VectorXd& rb_positions, const double time_step);
+        bool take_step(const Eigen::VectorXd& rb_positions,
+            const double time_step) override;
 
         /// \brief update problem using current status of bodies.
-        void update_constraint();
+        void update_constraint() override;
+
+        const opt::CollisionConstraint& constraint() override
+        {
+            return *m_constraint_ptr;
+        }
+
+        Eigen::MatrixXd vertices() override
+        {
+            return m_assembler.world_vertices_t1();
+        }
+        const Eigen::MatrixXi& edges() override { return m_assembler.m_edges; }
+        const Eigen::VectorXb& is_dof_fixed() override
+        {
+            return m_assembler.is_rb_dof_fixed;
+        }
+        const Eigen::MatrixXb& particle_dof_fixed() override
+        {
+            return m_assembler.is_dof_fixed;
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // Objective function and its derivatives.
@@ -85,8 +103,9 @@ namespace opt {
         }
 
         physics::RigidBodyAssembler m_assembler;
-        std::shared_ptr<opt::BarrierConstraint> m_constraint_ptr;
+        std::shared_ptr<opt::CollisionConstraint> m_constraint_ptr;
         bool use_chain_functional;
+        bool update_constraint_set;
 
     protected:
         Eigen::MatrixXd m_q0; ///< vertices positions at begining of interval
@@ -94,5 +113,5 @@ namespace opt {
         Eigen::VectorXd m_sigma1; ///< rigid body positions at end of interval
     };
 
-} // namespace opt
+} // namespace physics
 } // namespace ccd

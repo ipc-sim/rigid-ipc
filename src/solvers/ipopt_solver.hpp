@@ -46,6 +46,8 @@ namespace opt {
 
     class IpoptSolver : public OptimizationSolver {
     public:
+
+
         IpoptSolver();
         IpoptSolver(double tolerance, int print_level, int max_iterations);
         OptimizationResults solve(OptimizationProblem& problem) override;

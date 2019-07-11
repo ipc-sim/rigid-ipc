@@ -3,7 +3,6 @@
 namespace ccd {
 namespace opt {
 
-
     /// @brief function type for gradient of functional \nabla f(x)
     typedef std::function<Eigen::VectorXd(const Eigen::VectorXd&)>
         callback_grad_f;
@@ -36,20 +35,52 @@ namespace opt {
         std::function<bool()> fhas_barrier_constraint;
         std::function<double()> fget_barrier_epsilon;
         std::function<void(const double)> fset_barrier_epsilon;
+        std::function<Eigen::VectorXb&()> fis_dof_fixed;
 
         /// @brief Default constructor
         AdHocProblem();
         /// @brief Resize fields accordingly
         AdHocProblem(int num_vars, int num_constraints);
 
+        /// FUNCTIONAL
+        /// /////////////////////////
         double eval_f(const Eigen::VectorXd& x) override;
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
         Eigen::SparseMatrix<double> eval_hessian_f(
             const Eigen::VectorXd& x) override;
+
+        void eval_f_and_fdiff(const Eigen::VectorXd& x,
+            double& value,
+            Eigen::VectorXd& grad) override;
+        void eval_f_and_fdiff(const Eigen::VectorXd& /*x*/,
+            double& /*f_uk*/,
+            Eigen::VectorXd& /*f_uk_jacobian*/,
+            Eigen::SparseMatrix<double>& /*f_uk_hessian*/) override;
+
+        /// /////////////////////////
+        /// CONSTRAINTS
+        /// /////////////////////////
         Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x) override;
+
+        virtual void eval_jac_g(const Eigen::VectorXd& x,
+            Eigen::SparseMatrix<double>& jac_gx) override;
+        virtual void eval_g(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
+            Eigen::SparseMatrix<double>& gx_jacobian,
+            Eigen::VectorXi& gx_active) override;
+
+        virtual void eval_g_and_gdiff(const Eigen::VectorXd& /*x*/,
+            Eigen::VectorXd& /*gx*/,
+            Eigen::MatrixXd& /*gx_jacobian*/,
+            std::vector<Eigen::SparseMatrix<double>>& /*gx_hessian*/) override;
+
+        const Eigen::VectorXb& is_dof_fixed() override
+        {
+            return fis_dof_fixed();
+        }
 
         bool has_barrier_constraint() override
         {

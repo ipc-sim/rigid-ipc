@@ -23,7 +23,7 @@ namespace opt {
         OptimizationSolver(const int max_iterations);
         virtual ~OptimizationSolver();
 
-        virtual void init_free_dof(Eigen::MatrixXb is_dof_fixed);
+        virtual void init_free_dof(Eigen::VectorXb is_dof_fixed);
 
         virtual OptimizationResults solve(OptimizationProblem& problem) = 0;
 

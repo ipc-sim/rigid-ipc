@@ -52,8 +52,8 @@ TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
 
     std::vector<RigidBody> rbs;
     RigidBodyAssembler assembler;
-    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity, false));
-    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity, false));
+    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity));
+    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity));
     assembler.init(rbs);
 
     Eigen::VectorXd pos(6);
@@ -134,8 +134,8 @@ TEST_CASE("Rigid Body System Gradient", "[RB][RB-System][RB-System-gradient]")
 
     std::vector<RigidBody> rbs;
     RigidBodyAssembler assembler;
-    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity, false));
-    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity, false));
+    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity));
+    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity));
     assembler.init(rbs);
 
     Eigen::VectorXd pos(6);
@@ -201,8 +201,8 @@ TEST_CASE("Rigid Body System Hessian", "[RB][RB-System][RB-System-hessian]")
 
     std::vector<RigidBody> rbs;
     RigidBodyAssembler assembler;
-    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity, false));
-    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity, false));
+    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity));
+    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity));
     assembler.init(rbs);
 
     Eigen::VectorXd pos(6);

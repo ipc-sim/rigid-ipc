@@ -36,7 +36,7 @@ namespace physics {
                 = (rb.edges.array() + int(m_body_vertex_id[i]));
         }
 
-        // mass-matrix
+        // rigid body mass-matrix
         Eigen::VectorXd mass_vector(int(num_bodies) * 3);
         for (int i = 0; i < int(num_bodies); ++i) {
             auto& rb = rigid_bodies[size_t(i)];
@@ -46,11 +46,28 @@ namespace physics {
         }
         m_rb_mass_matrix = Eigen::SparseDiagonal<double>(mass_vector);
 
+        // particles mass-matrix
         Eigen::VectorXd vertex_masses;
         physics::mass_vector(world_vertices_t0(), m_edges, vertex_masses);
         // Repeat the mass vector to make a mass matrix per dof
         m_mass_matrix
             = Eigen::SparseDiagonal<double>(vertex_masses.replicate(2, 1));
+
+        // rigid_body dof_fixed flag
+        is_rb_dof_fixed.resize(int(num_bodies) * 3);
+        for (int i = 0; i < int(num_bodies); ++i) {
+            auto& rb = rigid_bodies[size_t(i)];
+           is_rb_dof_fixed[3 * i + 0] = rb.is_dof_fixed[0];
+           is_rb_dof_fixed[3 * i + 1] = rb.is_dof_fixed[1];
+           is_rb_dof_fixed[3 * i + 2] = rb.is_dof_fixed[2];
+        }
+
+        is_dof_fixed.resize(m_body_vertex_id.back(), 3);
+        for (size_t i = 0; i < num_bodies; ++i) {
+            auto& rb = rigid_bodies[i];
+            is_dof_fixed.block(m_body_vertex_id[i], 0, rb.vertices.rows(), 3)
+                = rb.is_dof_fixed.transpose().replicate(rb.vertices.rows(), 1);
+        }
     }
 
     Eigen::VectorXd RigidBodyAssembler::rb_positions(const bool previous) const

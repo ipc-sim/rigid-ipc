@@ -1,12 +1,9 @@
 #pragma once
 
-#include <ccd/collision_detection.hpp>
+#include <nlohmann/json.hpp>
 
-#include <opt/rigid_body_problem.hpp>
-#include <opt/barrier_constraint.hpp>
-#include <solvers/barrier_solver.hpp>
-
-#include <physics/rigid_body_assembler.hpp>
+#include <solvers/optimization_solver.hpp>
+#include <physics/simulation_problem.hpp>
 
 namespace ccd {
 
@@ -15,21 +12,25 @@ public:
     SimState();
 
     void load_scene(const std::string& filename);
+    void reload_scene();
+    void init(const nlohmann::json& args);
 
     void simulation_step();
     Eigen::MatrixXd solve_collision();
 
     // CCD
     // ----------------------------------------------
-    opt::RigidBodyProblem m_problem;
-    opt::BarrierSolver m_ccd_solver;
-    opt::BarrierConstraint m_ccd_constraint;
-
+    std::shared_ptr<physics::SimulationProblem> problem_ptr;
+    std::shared_ptr<opt::OptimizationSolver> ccd_solver_ptr;
     double m_timestep_size;
 
-    bool m_step_had_collision; ///< last step had a collision
-    bool m_step_has_collision;///< last step failed to solve collisions
+    bool m_step_had_collision;  ///< last step had a collision
+    bool m_step_has_collision;  ///< last step failed to solve collisions
     int m_num_simulation_steps; ///< counts simulation steps
+
+    std::string scene_file;
+
+    nlohmann::json args;
 };
 
 } // namespace ccd

@@ -52,11 +52,15 @@ add_library(${PROJECT_NAME}
     src/io/serialize_json.cpp
     src/io/read_rb_scene.cpp
 
-    src/physics/rigid_body.cpp
-    src/physics/rigid_body_assembler.cpp
     src/physics/mass_matrix.cpp
     src/physics/center_of_mass.cpp
     src/physics/moment_of_inertia.cpp
+    src/physics/simulation_problem.cpp
+    src/physics/particles_problem.cpp
+    src/physics/rigid_body_problem.cpp
+    src/physics/rigid_body.cpp
+    src/physics/rigid_body_assembler.cpp
+    src/physics/problem_factory.cpp
 
     src/opt/barrier.cpp
     src/opt/barrier_constraint.cpp
@@ -64,9 +68,8 @@ add_library(${PROJECT_NAME}
     src/opt/optimization_problem.cpp
     src/opt/ad_hoc_problem.cpp
     src/opt/optimization_results.cpp
-    src/opt/particles_problem.cpp
     src/opt/volume_constraint.cpp
-    src/opt/rigid_body_problem.cpp
+    src/opt/constraint_factory.cpp
 
     src/solvers/barrier_solver.cpp
     src/solvers/ipopt_solver.cpp
@@ -79,10 +82,11 @@ add_library(${PROJECT_NAME}
     src/solvers/nlopt_solver.cpp
     src/solvers/optimization_solver.cpp
     src/solvers/qp_solver.cpp
+    src/solvers/solver_factory.cpp
 
     src/utils/eigen_ext.cpp
 
-    src/state.cpp
+#    src/state.cpp
     src/SimState.cpp
     src/logger.cpp
     src/profiler.cpp
@@ -125,55 +129,16 @@ if(ENABLE_PROFILING)
 endif()
 
 ################################################################################
-# Fixing Collisions Executable
-################################################################################
-
-add_executable(${PROJECT_NAME}_bin
-   src/viewer/edges_to_rectangles.cpp
-   src/viewer/viewer.cpp
-   src/viewer/viewer_crud.cpp
-   src/viewer/viewer_draw.cpp
-   src/viewer/viewer_menu.cpp
-   src/viewer/viewer_editor.cpp
-   src/viewer/imgui_ext.cpp
-   src/viewer/solver_view.cpp
-   src/viewer/constraint_view.cpp
-   src/viewer/procedural_scenes.cpp
-
-   src/main.cpp
-
-)
-
-target_include_directories(${PROJECT_NAME}_bin PRIVATE src)
-target_link_libraries(${PROJECT_NAME}_bin PUBLIC ${PROJECT_NAME})
-
-# Fixtures folder --------------------------------------------------------------
-add_custom_command(TARGET ${PROJECT_NAME}_bin POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/fixtures
-        $<TARGET_FILE_DIR:${PROJECT_NAME}_bin>/fixtures)
-
-################################################################################
 # Simulations Executable
 ################################################################################
 
 add_executable(${PROJECT_NAME}_sim
-    src/viewer/edges_to_rectangles.cpp
-    src/viewer/viewer.cpp
-    src/viewer/viewer_crud.cpp
-    src/viewer/viewer_draw.cpp
-    src/viewer/viewer_menu.cpp
-    src/viewer/viewer_editor.cpp
     src/viewer/imgui_ext.cpp
-    src/viewer/solver_view.cpp
-    src/viewer/constraint_view.cpp
-    src/viewer/procedural_scenes.cpp
-
     src/viewer/igl_viewer_ext.cpp
     src/viewer/UISimState.cpp
     src/viewer/UIMenu.cpp
 
-    src/sim_main.cpp
+    src/main.cpp
 
 )
 
@@ -239,7 +204,7 @@ if(CODE_COVERAGE)
     add_code_coverage_all_targets()
 
     target_code_coverage(${PROJECT_NAME})
-    target_code_coverage(${PROJECT_NAME}_bin)
+#    target_code_coverage(${PROJECT_NAME}_bin)
     target_code_coverage(${PROJECT_NAME}_sim)
 endif()
 

@@ -4,6 +4,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
+#include <utils/eigen_ext.hpp>
 
 #include <physics/rigid_body.hpp>
 
@@ -71,6 +72,12 @@ namespace physics {
 
         /// @brief  mass_matrix of the vertices
         Eigen::SparseMatrix<double> m_mass_matrix;
+
+        /// @brief flag for rb degrees of freedom
+        Eigen::VectorXb is_rb_dof_fixed;
+
+        /// @brief flag for vertices degrees of freedom (used for visualization)
+        Eigen::MatrixXb is_dof_fixed;
     };
 
 } // namespace physics

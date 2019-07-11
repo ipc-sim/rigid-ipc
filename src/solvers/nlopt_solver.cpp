@@ -25,11 +25,6 @@ namespace opt {
 
         opt.set_min_objective(nlopt_objective, &problem);
 
-        opt.set_lower_bounds(std::vector<double>(problem.x_lower.data(),
-            problem.x_lower.data() + problem.x_lower.size()));
-        opt.set_upper_bounds(std::vector<double>(problem.x_upper.data(),
-            problem.x_upper.data() + problem.x_upper.size()));
-
         // Set inequality constraints if desired
         std::vector<double> tol(
             uint(2 * problem.num_constraints), absolute_tolerance);
@@ -58,8 +53,7 @@ namespace opt {
         results.x = Eigen::Map<Eigen::VectorXd>(x0.data(), problem.num_vars);
         results.minf = minf;
         Eigen::ArrayXd gx = problem.eval_g(results.x).array();
-        results.success = r > 0 && minf >= 0
-            && problem.are_constraints_satisfied(results.x, absolute_tolerance);
+        results.success = r > 0 && minf >= 0;
         return results;
     }
 
@@ -93,14 +87,11 @@ namespace opt {
         const Eigen::MatrixXd X = Eigen::Map<const Eigen::VectorXd>(x, n);
         Eigen::VectorXd gx = problem->eval_g(X);
 
-        // We want g_lower ≤ g(x) ≤ g_upper, but NLopt expects all
+        // We want g(x) >= 0, but NLopt expects all
         // constraints(x) ≤ 0, so stack the constraints and negate as needed.
         assert(uint(2 * problem->num_constraints) == m);
         Eigen::VectorXd::Map(results, problem->num_constraints)
-            = -gx + problem->g_lower;
-        Eigen::VectorXd::Map(
-            results + problem->num_constraints, problem->num_constraints)
-            = gx - problem->g_upper;
+            = -gx;
 
         if (grad) {
             Eigen::MatrixXd dgx = problem->eval_jac_g(X).transpose();

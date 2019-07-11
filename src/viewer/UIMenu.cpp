@@ -1,8 +1,6 @@
 #include "UISimState.hpp"
 
 #include <viewer/imgui_ext.hpp>
-#include <viewer/solver_view.hpp>
-#include <viewer/constraint_view.hpp>
 
 #include <logger.hpp>
 
@@ -35,7 +33,6 @@ void UISimState::draw_menu()
         draw_io();
         if (m_has_scene) {
             draw_simulation_player();
-            draw_ccd();
         }
     }
     ImGui::PopItemWidth();
@@ -48,13 +45,26 @@ void UISimState::draw_io()
         std::string fname = igl::file_dialog_open();
         load(fname);
     }
+    if (m_has_scene) {
+        if (ImGui::Button("Reload##IO", ImVec2(-1, 0))) {
+            reload();
+        }
+        ImGui::BeginChild("##filename",
+            ImVec2(ImGui::GetWindowContentRegionWidth() * 0.9f, ImGui::GetFontSize() * 3), false,
+            ImGuiWindowFlags_HorizontalScrollbar);
+        {
+            ImGui::Text("%s", m_state.scene_file.c_str());
+            ImGui::SetScrollHere(1.0f);
+        }
+        ImGui::EndChild();
+    }
 }
 
 void UISimState::draw_simulation_player()
 {
     int player_state = static_cast<int>(m_player_state);
-    ImGui::InputDouble(
-        "dt##SimPlayer", &m_state.m_timestep_size, 0.01, 0.1, "%.3g");
+    ImGui::Text("timestep_size: %.3g", m_state.m_timestep_size);
+
     ImGui::RadioButton("play##SimPlayer", &player_state, PlayerState::Playing);
     ImGui::RadioButton("pause##SimPlayer", &player_state, PlayerState::Paused);
     m_player_state = static_cast<PlayerState>(player_state);
@@ -68,12 +78,4 @@ void UISimState::draw_simulation_player()
     ImGui::Text("Step %i", m_state.m_num_simulation_steps);
 }
 
-void UISimState::draw_ccd() {
-    if(ImGui::CollapsingHeader("Solver")){
-        solver_menu(m_state.m_ccd_solver);
-    }
-    if(ImGui::CollapsingHeader("Constraint")){
-        barrier_constraint_menu(m_state.m_ccd_constraint);
-    }
-}
 } // namespace ccd
