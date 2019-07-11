@@ -14,9 +14,10 @@ namespace physics {
 
         virtual ~RigidBodyProblem() override {}
 
+        bool validate_params(const nlohmann::json& params);
+
         /// \brief initialize problem for new set of rigid bodies.
         void init(const nlohmann::json& params) override;
-
         void init(
             const std::vector<RigidBody> rbs, const std::string& constraint);
 
@@ -107,7 +108,7 @@ namespace physics {
         bool use_chain_functional;
         bool update_constraint_set;
 
-    protected:
+    protected:        
         Eigen::MatrixXd m_q0; ///< vertices positions at begining of interval
         Eigen::MatrixXd m_q1; ///< vertices positions at end of interval
         Eigen::VectorXd m_sigma1; ///< rigid body positions at end of interval

@@ -44,7 +44,8 @@ void SimState::init(const nlohmann::json& args_in)
         "rigid_body_problem":{
               "rigid_bodies": [],
               "constraint": "barrier_constraint",
-              "update_constraint_set": true
+              "update_constraint_set": true,
+              "use_chain_functional": false
          },
         "particles_problem":{
             "vertices":[],

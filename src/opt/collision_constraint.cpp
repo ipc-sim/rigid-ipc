@@ -243,7 +243,7 @@ namespace opt {
         DScalar& aplha_kl);
 
     // Check if a type, T, is differentiable (differentiable<T>())
-    template <> bool opt::differentiable<DScalar>() { return true; }
-    template <> bool opt::differentiable<double>() { return false; }
+    template <> bool differentiable<DScalar>() { return true; }
+    template <> bool differentiable<double>() { return false; }
 } // namespace opt
 } // namespace ccd

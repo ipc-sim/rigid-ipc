@@ -3,11 +3,13 @@
 #include <iostream>
 
 #include <utils/flatten.hpp>
+#include <utils/invalid_param_error.hpp>
 #include <utils/tensor.hpp>
 
 #include <io/read_rb_scene.hpp>
 #include <opt/constraint_factory.hpp>
 
+#include <logger.hpp>
 namespace ccd {
 
 namespace physics {
@@ -19,14 +21,39 @@ namespace physics {
     {
     }
 
+    bool RigidBodyProblem::validate_params(const nlohmann::json& in_params)
+    {
+        std::vector<std::string> params = { { "rigid_bodies", "constraint",
+            "use_chain_functional", "update_constraint_set" } };
+
+        bool all_valid = true;
+        for (auto& p : in_params.items()) {
+            if (std::find(params.begin(), params.end(), p.key())
+                == params.end()) {
+                all_valid = false;
+                spdlog::error("key {} not used", p.key());
+                break;
+            }
+        }
+        return all_valid;
+    }
+
     void RigidBodyProblem::init(const nlohmann::json& params)
     {
+        if (!validate_params(params)) {
+            throw InvalidParameterError();
+        }
+
         std::vector<physics::RigidBody> rbs;
         io::read_rb_scene(params, rbs);
         m_assembler.init(rbs);
 
         m_constraint_ptr = opt::ConstraintFactory::factory().get_constraint(
             params["constraint"]);
+
+        // set parameters
+        use_chain_functional = params["use_chain_functional"].get<bool>();
+        update_constraint_set = params["update_constraint_set"].get<bool>();
 
         update_constraint();
     }
