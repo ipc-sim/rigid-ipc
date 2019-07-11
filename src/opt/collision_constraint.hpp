@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory> // shared_ptr
 #include <Eigen/SparseCore>
 
 #include <ccd/collision_detection.hpp>

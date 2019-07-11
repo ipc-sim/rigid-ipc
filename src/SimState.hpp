@@ -2,6 +2,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <memory> // shared_ptr
+
 #include <solvers/optimization_solver.hpp>
 #include <physics/simulation_problem.hpp>
 

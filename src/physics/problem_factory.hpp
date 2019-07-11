@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory> // shared_ptr
+
 #include <physics/simulation_problem.hpp>
 
 namespace ccd {

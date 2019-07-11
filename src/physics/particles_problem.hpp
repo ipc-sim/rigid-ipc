@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <memory> // shared_ptr
 #include <Eigen/Core>
 
 #include <ccd/collision_detection.hpp>

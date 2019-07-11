@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory> // shared_ptr
+
 #include <opt/collision_constraint.hpp>
 
 namespace ccd {

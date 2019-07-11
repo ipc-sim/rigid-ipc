@@ -1,4 +1,5 @@
 #pragma once
+#include <memory> // shared_ptr
 
 #include <solvers/optimization_solver.hpp>
 
