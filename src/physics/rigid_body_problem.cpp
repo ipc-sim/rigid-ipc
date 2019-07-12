@@ -7,6 +7,8 @@
 #include <utils/tensor.hpp>
 
 #include <io/read_rb_scene.hpp>
+#include <io/serialize_json.hpp>
+
 #include <opt/constraint_factory.hpp>
 
 #include <logger.hpp>
@@ -18,13 +20,16 @@ namespace physics {
         : SimulationProblem("RigidBody")
         , use_chain_functional(false)
         , update_constraint_set(true)
+        , gravity(Eigen::Vector3d::Zero())
+        , collision_eps(0.1)
     {
     }
 
     bool RigidBodyProblem::validate_params(const nlohmann::json& in_params)
     {
-        std::vector<std::string> params = { { "rigid_bodies", "constraint",
-            "use_chain_functional", "update_constraint_set" } };
+        std::vector<std::string> params
+            = { { "rigid_bodies", "constraint", "use_chain_functional",
+                "update_constraint_set", "gravity", "collision_eps" } };
 
         bool all_valid = true;
         for (auto& p : in_params.items()) {
@@ -54,7 +59,12 @@ namespace physics {
         // set parameters
         use_chain_functional = params["use_chain_functional"].get<bool>();
         update_constraint_set = params["update_constraint_set"].get<bool>();
+        collision_eps = params["collision_eps"].get<double>();
+        io::from_json(params["gravity"], gravity);
+        assert(gravity.rows() == 3);
 
+        m_Fcollision.resize(m_assembler.num_vertices(), 2);
+        m_Fcollision.setZero();
         update_constraint();
     }
 
@@ -65,7 +75,36 @@ namespace physics {
         m_constraint_ptr
             = opt::ConstraintFactory::factory().get_constraint(constraint);
 
+        m_Fcollision.resize(m_assembler.num_vertices(), 2);
+        m_Fcollision.setZero();
         update_constraint();
+    }
+
+    Eigen::Vector3d RigidBodyProblem::rb_position_next(
+        const RigidBody& rb, const double time_step) const
+    {
+        Eigen::Vector3d x = rb.position;
+        x += time_step * rb.velocity;                 // momentum
+        x += time_step * time_step * gravity;         // body-forces
+        x = (rb.is_dof_fixed).select(rb.position, x); // reset fixed nodes
+        return x;
+    }
+
+    bool RigidBodyProblem::detect_collisions(const Eigen::MatrixXd& q0,
+        const Eigen::MatrixXd& q1,
+        const CollisionCheck check_type)
+    {
+        assert(q0.cols() == 2);
+        assert(q1.cols() == 2);
+
+        EdgeVertexImpacts ev_impacts;
+        double scale
+            = check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
+        ccd::detect_edge_vertex_collisions(q0, (q1 - q0) * scale,
+            m_assembler.m_edges, ev_impacts, m_constraint_ptr->detection_method,
+            /*reset_impacts=*/true);
+
+        return ev_impacts.size() > 0;
     }
 
     bool RigidBodyProblem::simulation_step(const double time_step)
@@ -74,17 +113,31 @@ namespace physics {
 
         for (auto& rb : m_assembler.m_rbs) {
             rb.position_prev = rb.position;
-            rb.position += time_step * rb.velocity;
+            rb.position = rb_position_next(rb, time_step);
+            rb.velocity = (rb.position - rb.position_prev) / time_step;
         }
+
+        m_Fcollision.setZero();
+
         Eigen::MatrixXd q0 = m_assembler.world_vertices_t0();
         Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
 
-        EdgeVertexImpacts ev_impacts;
-        ccd::detect_edge_vertex_collisions(q0, q1 - q0, m_assembler.m_edges,
-            ev_impacts, m_constraint_ptr->detection_method,
-            /*reset_impacts=*/true);
+        return detect_collisions(q0, q1, CollisionCheck::CONSERVATIVE);
+    }
 
-        return ev_impacts.size() > 0;
+    Eigen::MatrixXd RigidBodyProblem::vertices_next(const double time_step)
+    {
+        std::vector<Eigen::Vector3d> positions;
+        positions.reserve(m_assembler.m_rbs.size());
+
+        for (auto& rb : m_assembler.m_rbs) {
+            Eigen::Vector3d pos_new;
+            pos_new = rb_position_next(rb, time_step);
+            positions.push_back(pos_new);
+        }
+
+        Eigen::MatrixXd q1 = m_assembler.world_vertices(positions);
+        return q1;
     }
 
     bool RigidBodyProblem::take_step(
@@ -92,22 +145,52 @@ namespace physics {
     {
         assert(m_constraint_ptr != nullptr);
 
+        Eigen::MatrixXd q1_collisions = m_assembler.world_vertices_t1();
+
+        // update final position
         m_assembler.set_rb_positions(rb_positions);
+        Eigen::MatrixXd q1_new = m_assembler.world_vertices_t1();
+
+        // update collision forces
+        Eigen::MatrixXd delta_c = (q1_collisions - q1_new);
+        flatten(delta_c);
+        m_Fcollision
+            = m_assembler.m_mass_matrix * delta_c / (time_step * time_step);
+        unflatten(m_Fcollision, 2);
+
+        // update velocities
         for (auto& rb : m_assembler.m_rbs) {
             rb.velocity = (rb.position - rb.position_prev) / time_step;
         }
+
         // check for collisions
         Eigen::MatrixXd q0 = m_assembler.world_vertices_t0();
-        Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
-
-        EdgeVertexImpacts ev_impacts;
-        ccd::detect_edge_vertex_collisions(q0, q1 - q0, m_assembler.m_edges,
-            ev_impacts, m_constraint_ptr->detection_method,
-            /*reset_impacts=*/true);
-
-        return ev_impacts.size() > 0;
+        return detect_collisions(q0, q1_new, CollisionCheck::EXACT);
     }
 
+    Eigen::MatrixXd RigidBodyProblem::velocities(
+        const bool as_delta, const double time_step)
+    {
+        Eigen::MatrixXd vel = m_assembler.world_velocities();
+        if (as_delta) {
+            vel *= time_step;
+        }
+        return vel;
+    }
+    Eigen::MatrixXd RigidBodyProblem::collision_force(
+        const bool as_delta, const double time_step)
+    {
+        if (as_delta) {
+            flatten(m_Fcollision);
+            Eigen::MatrixXd Fc_delta = m_assembler.m_inv_mass_matrix
+                * m_Fcollision * (time_step * time_step);
+            unflatten(m_Fcollision, 2);
+            unflatten(Fc_delta, 2);
+            return Fc_delta;
+        } else {
+            return m_Fcollision;
+        }
+    }
     void RigidBodyProblem::update_constraint()
     {
         m_q0 = m_assembler.world_vertices_t0();

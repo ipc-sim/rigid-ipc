@@ -1,9 +1,11 @@
 #include "igl_viewer_ext.hpp"
 namespace igl {
 namespace opengl {
-    ViewerDataExt::ViewerDataExt(ViewerData& data)
-        : m_data(data)
+    ViewerDataExt::ViewerDataExt(igl::opengl::glfw::Viewer* _viewer)
+        : m_viewer(_viewer)
+        , show_vertex_data(false)
     {
+        data_id = m_viewer->data_list.size() - 1;
     }
 
     void ViewerDataExt::set_graph(const Eigen::MatrixXd& V,
@@ -16,36 +18,72 @@ namespace opengl {
 
         mE = E;
         m_color = color;
-
     }
 
-    void ViewerDataExt::set_vertex_data(const Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> data){
-        assert(data.rows() == mV.rows());
-
-        vertex_data_labels.clear();
-        vertex_data_labels.resize(size_t(data.rows()));
-        for (uint i=0; i < data.rows(); i++){
-            std::string data_i = std::to_string(i) +":";
-            for (uint j=0; j < data.cols(); j++){
-                if (data(i,j)){
-                    data_i += std::to_string(j) + ",";
-                }
-            }
-            vertex_data_labels[i] = data_i.substr(0,data_i.size()-1);
-        }
-
-        m_data.labels_positions = mV;
-        m_data.labels_strings = vertex_data_labels;
-
-    }
-
-    void ViewerDataExt::update_graph(const Eigen::MatrixXd& V){
+    void ViewerDataExt::update_graph(const Eigen::MatrixXd& V)
+    {
         mV = set_vertices(V);
         set_points(V, m_color);
         set_edges(V, mE, m_color);
-        m_data.labels_positions = mV;
+        data().labels_positions = mV;
     }
 
+    void ViewerDataExt::set_vector_field(const Eigen::MatrixXd& V,
+        const Eigen::MatrixXd& F,
+        const Eigen::RowVector3d& color)
+    {
+        data().lines.resize(0, 9);
+        data().add_edges(V, V + F, color);
+        mV = V;
+        mF = F;
+        m_color = color;
+    }
+
+    void ViewerDataExt::update_vector_field(
+        const Eigen::MatrixXd& V, const Eigen::MatrixXd& F)
+    {
+        set_vector_field(V, F, m_color);
+    }
+    void ViewerDataExt::recolor(){
+        if (mF.size() > 0){
+            set_vector_field(mV, mF, m_color);
+        }
+        if (mE.size() > 0){
+            set_points(mV, m_color);
+            set_edges(mV, mE, m_color);
+        }
+    }
+
+    void ViewerDataExt::set_vertex_data(
+        const Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> vtx_data)
+    {
+        assert(vtx_data.rows() == mV.rows());
+
+        vertex_data_labels.clear();
+        vertex_data_labels.resize(size_t(vtx_data.rows()));
+        for (uint i = 0; i < vtx_data.rows(); i++) {
+            std::string data_i = std::to_string(i) + ":";
+            for (uint j = 0; j < vtx_data.cols(); j++) {
+                if (vtx_data(i, j)) {
+                    data_i += std::to_string(j) + ",";
+                }
+            }
+            vertex_data_labels[i] = data_i.substr(0, data_i.size() - 1);
+        }
+        show_vertex_data = true;
+        data().labels_positions = mV;
+        data().labels_strings = vertex_data_labels;
+    }
+
+    void ViewerDataExt::update_vertex_data(){
+        if (show_vertex_data){
+            data().labels_positions = mV;
+            data().labels_strings = vertex_data_labels;
+        }
+        else {
+            data().labels_positions.resize(0,0);
+        }
+    }
 
     Eigen::MatrixXd ViewerDataExt::set_vertices(const Eigen::MatrixXd& V)
     {
@@ -58,11 +96,11 @@ namespace opengl {
         } else {
             V_temp = V;
         }
-        m_data.set_vertices(V_temp);
+        data().set_vertices(V_temp);
 
         Eigen::MatrixXd nz = Eigen::MatrixXd::Zero(V.rows(), 3);
         nz.col(2).setConstant(1.0);
-        m_data.set_normals(nz);
+        data().set_normals(nz);
         return V_temp;
     }
 
@@ -78,10 +116,11 @@ namespace opengl {
         } else {
             V_temp = V;
         }
-        m_data.set_points(V_temp, color);
+        data().set_points(V_temp, color);
     }
     void ViewerDataExt::set_edges(const Eigen::MatrixXd& V,
-        const Eigen::MatrixXi& E, const Eigen::MatrixXd& color)
+        const Eigen::MatrixXi& E,
+        const Eigen::MatrixXd& color)
     {
         Eigen::MatrixXd V_temp;
 
@@ -92,7 +131,7 @@ namespace opengl {
         } else {
             V_temp = V;
         }
-        m_data.set_edges(V_temp, E, color);
+        data().set_edges(V_temp, E, color);
     }
 
 } // namespace opengl

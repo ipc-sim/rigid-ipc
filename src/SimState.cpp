@@ -22,16 +22,14 @@ void SimState::load_scene(const std::string& filename)
 {
     using nlohmann::json;
     std::ifstream input(filename);
-    if (input.good()){
+    if (input.good()) {
         scene_file = filename;
         json scene = json::parse(input);
         init(scene);
     }
 }
 
-void SimState::reload_scene(){
-    return load_scene(scene_file);
-}
+void SimState::reload_scene() { return load_scene(scene_file); }
 
 void SimState::init(const nlohmann::json& args_in)
 {
@@ -45,7 +43,9 @@ void SimState::init(const nlohmann::json& args_in)
               "rigid_bodies": [],
               "constraint": "barrier_constraint",
               "update_constraint_set": true,
-              "use_chain_functional": false
+              "use_chain_functional": false,
+              "gravity":[0.0,0.0,0.0],
+              "collision_eps": 0.1
          },
         "particles_problem":{
             "vertices":[],
@@ -55,7 +55,9 @@ void SimState::init(const nlohmann::json& args_in)
             "y_fixed":[],
             "use_mass_matrix": true,
             "constraint": "barrier_constraint",
-            "update_constraint_set": true
+            "update_constraint_set": true,
+            "gravity":[0.0,0.0],
+            "collision_eps": 0.1
          },
         "barrier_solver": {},
         "timestep_size": 0.1

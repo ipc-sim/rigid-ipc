@@ -52,14 +52,15 @@ namespace physics {
         // Repeat the mass vector to make a mass matrix per dof
         m_mass_matrix
             = Eigen::SparseDiagonal<double>(vertex_masses.replicate(2, 1));
+        m_inv_mass_matrix = m_mass_matrix.cwiseInverse();
 
         // rigid_body dof_fixed flag
         is_rb_dof_fixed.resize(int(num_bodies) * 3);
         for (int i = 0; i < int(num_bodies); ++i) {
             auto& rb = rigid_bodies[size_t(i)];
-           is_rb_dof_fixed[3 * i + 0] = rb.is_dof_fixed[0];
-           is_rb_dof_fixed[3 * i + 1] = rb.is_dof_fixed[1];
-           is_rb_dof_fixed[3 * i + 2] = rb.is_dof_fixed[2];
+            is_rb_dof_fixed[3 * i + 0] = rb.is_dof_fixed[0];
+            is_rb_dof_fixed[3 * i + 1] = rb.is_dof_fixed[1];
+            is_rb_dof_fixed[3 * i + 2] = rb.is_dof_fixed[2];
         }
 
         is_dof_fixed.resize(m_body_vertex_id.back(), 3);
@@ -110,6 +111,31 @@ namespace physics {
             Eigen::Vector3d p_i = positions.segment(3 * int(i), 3);
             V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), 2)
                 = rb.world_vertices(p_i);
+        }
+        return V;
+    }
+
+    Eigen::MatrixXd RigidBodyAssembler::world_vertices(
+        const std::vector<Eigen::Vector3d>& positions) const
+    {
+        Eigen::MatrixXd V(num_vertices(), 2);
+        for (size_t i = 0; i < m_rbs.size(); ++i) {
+            auto& rb = m_rbs[i];
+            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), 2)
+                = rb.world_vertices(positions[i]);
+        }
+        return V;
+    }
+
+    Eigen::MatrixXd RigidBodyAssembler::world_velocities() const
+    {
+        Eigen::MatrixXd V(num_vertices(), 2);
+        for (size_t i = 0; i < m_rbs.size(); ++i) {
+            auto& rb = m_rbs[i];
+
+            Eigen::Vector3d x = rb.position + rb.velocity;
+            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), 2)
+                = rb.world_velocities();
         }
         return V;
     }

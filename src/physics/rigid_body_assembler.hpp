@@ -24,6 +24,7 @@ namespace physics {
         // World Vertices Functions
         // ----------------------------------------------------------------------
         /// \brief assemble world coordinates of the rigid-body vertices
+        Eigen::MatrixXd world_vertices(const std::vector<Eigen::Vector3d>& positions) const;
         Eigen::MatrixXd world_vertices(const Eigen::VectorXd& positions) const;
         Eigen::MatrixXd world_vertices(
             const RigidBody::Step step = RigidBody::CURRENT_STEP) const;
@@ -35,11 +36,12 @@ namespace physics {
         {
             return world_vertices(RigidBody::CURRENT_STEP);
         }
-
         void world_vertices_gradient(const Eigen::VectorXd& positions,
             Eigen::SparseMatrix<double>& grad) const;
         void world_vertices_hessian(const Eigen::VectorXd& positions,
             std::vector<Eigen::SparseMatrix<double>>& hess) const;
+
+        Eigen::MatrixXd world_velocities() const;
 
         // Ridig Body CM Functions
         // ----------------------------------------------------------------------
@@ -72,6 +74,9 @@ namespace physics {
 
         /// @brief  mass_matrix of the vertices
         Eigen::SparseMatrix<double> m_mass_matrix;
+
+        /// @brief inverted mass_matrix of the vertices
+        Eigen::SparseMatrix<double> m_inv_mass_matrix;
 
         /// @brief flag for rb degrees of freedom
         Eigen::VectorXb is_rb_dof_fixed;

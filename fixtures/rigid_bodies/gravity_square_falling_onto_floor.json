@@ -1,6 +1,7 @@
 {
   "scene_type": "rigid_body_problem",
   "rigid_body_problem": {
+    "gravity": [0.0, -10.0, 0.0],
     "rigid_bodies": [
       {
         "vertices": [
@@ -15,7 +16,7 @@
           [2, 3],
           [3, 0]
         ],
-        "velocity": [0.0, -1.0, 0.0],
+        "velocity": [0.0, 0.0, 0.0],
         "is_dof_fixed": [false, false, false]
       },
       {
@@ -31,7 +32,8 @@
           [2, 3],
           [3, 0]
         ],
-        "velocity": [0.0, 0.0, 0.0]
+        "velocity": [0.0, 0.0, 0.0],
+        "is_dof_fixed": [true, true, true]
       }
     ]
   }

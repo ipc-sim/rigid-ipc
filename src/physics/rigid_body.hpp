@@ -66,6 +66,14 @@ namespace physics {
             return world_vertices(CURRENT_STEP);
         }
 
+        Eigen::MatrixXd world_velocities() const;
+
+        Eigen::Matrix2d grad_theta(const double theta) const
+        {
+            Eigen::Matrix2d gradtheta_R;
+            gradtheta_R << -sin(theta), -cos(theta), cos(theta), -sin(theta);
+            return gradtheta_R;
+        }
         // ------------------------------------------------------------------------
         // CCD Functions
         // ------------------------------------------------------------------------
@@ -98,8 +106,10 @@ namespace physics {
 
         double mass;              ///< total mass (M) of the rigid body
         double moment_of_inertia; ///< moment of intertia (I) of the rigid body
-        Eigen::Vector3b is_dof_fixed; ///< flag to indicate if dof is fixed (doesnt' change)
+        Eigen::Vector3b
+            is_dof_fixed; ///< flag to indicate if dof is fixed (doesnt' change)
         Eigen::Matrix3d mass_matrix;
+        Eigen::Matrix3d inv_mass_matrix;
 
         // ------------------------------------------------------------------------
         // State

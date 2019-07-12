@@ -27,7 +27,7 @@ namespace physics {
         position_t1.segment(0, 2) = x;
 
         // set previous_step position to:
-        Eigen::Vector3d position_t0 = position_t1 - velocity;
+        Eigen::Vector3d position_t0 = position_t1;
 
         return RigidBody(centered_vertices, edges, velocity, is_dof_fixed,
             position_t1, position_t0);
@@ -75,6 +75,8 @@ namespace physics {
         moment_of_inertia = physics::moment_of_inertia(vertices, masses);
 
         mass_matrix << mass, 0, 0, 0, mass, 0, 0, 0, moment_of_inertia;
+        inv_mass_matrix << 1.0 / mass, 0, 0, 0, 1.0 / mass, 0, 0, 0,
+            1.0 / moment_of_inertia;
     }
 
     Eigen::MatrixXd RigidBody::world_vertices(const Step step) const
@@ -92,6 +94,16 @@ namespace physics {
         Matrix2T R = Eigen::Rotation2D<T>(_position.z()).toRotationMatrix();
         return (vertices.cast<T>() * R.transpose()).rowwise()
             + _position.head(2).transpose();
+    }
+
+    Eigen::MatrixXd RigidBody::world_velocities() const
+    {
+        // compute X[i] = dR(theta)/d\theta * r_i * d\theta/dt + dX/dt
+        Eigen::Matrix2d grad_theta_ = grad_theta(position(2));
+        Eigen::MatrixXd grad_theta_r_i = vertices * grad_theta_.transpose();
+
+        return (grad_theta_r_i * velocity(2)).rowwise()
+            + velocity.head(2).transpose();
     }
 
     // AUTODIFF DERIVATIVES
@@ -163,11 +175,7 @@ namespace physics {
 
         // gradient of r wrt \theta
         double theta = _position(2);
-        Eigen::Matrix2d gradtheta_R;
-        // clang-format off
-                gradtheta_R << -sin(theta), -cos(theta),
-                            cos(theta), -sin(theta);
-        // clang-format on
+        Eigen::Matrix2d gradtheta_R = grad_theta(theta);
         Eigen::MatrixXd gradtheta_U = vertices * gradtheta_R.transpose();
         flatten<double>(gradtheta_U);
 

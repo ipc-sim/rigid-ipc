@@ -30,6 +30,16 @@ namespace physics {
         bool take_step(const Eigen::VectorXd& rb_positions,
             const double time_step) override;
 
+        bool detect_collisions(const Eigen::MatrixXd& q0,
+            const Eigen::MatrixXd& q1,
+            const CollisionCheck check_type);
+
+        /// \brief returns world vertices at the END of NEXT step.
+        /// Returns the positions of the next step assuming no collisions forces
+        Eigen::MatrixXd vertices_next(const double time_step) override;
+        Eigen::Vector3d rb_position_next(
+            const RigidBody& rb, const double time_step) const;
+
         /// \brief update problem using current status of bodies.
         void update_constraint() override;
 
@@ -38,10 +48,23 @@ namespace physics {
             return *m_constraint_ptr;
         }
 
+        /// \brief returns world vertices at the END of step (current)
         Eigen::MatrixXd vertices() override
         {
             return m_assembler.world_vertices_t1();
         }
+        /// \brief returns world vertices at the BEGINNING of step (current)
+        Eigen::MatrixXd vertices_prev() override
+        {
+            return m_assembler.world_vertices_t0();
+        }
+
+        Eigen::MatrixXd velocities(
+            const bool as_delta, const double time_step) override;
+
+        Eigen::MatrixXd collision_force(
+            const bool as_delta, const double time_step) override;
+
         const Eigen::MatrixXi& edges() override { return m_assembler.m_edges; }
         const Eigen::VectorXb& is_dof_fixed() override
         {
@@ -109,10 +132,14 @@ namespace physics {
         std::shared_ptr<opt::CollisionConstraint> m_constraint_ptr;
         bool use_chain_functional;
         bool update_constraint_set;
+        Eigen::VectorXd gravity;
+        double collision_eps;
 
-    protected:        
+    protected:
         Eigen::MatrixXd m_q0; ///< vertices positions at begining of interval
         Eigen::MatrixXd m_q1; ///< vertices positions at end of interval
+        Eigen::MatrixXd
+            m_Fcollision; ///< collision forces used to resolve collisions
         Eigen::VectorXd m_sigma1; ///< rigid body positions at end of interval
     };
 

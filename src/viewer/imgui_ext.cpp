@@ -50,7 +50,20 @@ bool DragDouble(const char* label,
 {
 
     return DragScalar(
-        label, ImGuiDataType_Double, v, v_speed, &v_min, &v_max, format, power);
+        label, ImGuiDataType_Double, v, float(v_speed), &v_min, &v_max, format, power);
+}
+
+bool DoubleColorEdit3(const char* label, Eigen::RowVector3d& color)
+{
+    Eigen::Vector3f color_f = color.cast<float>();
+    bool changed = false;
+    if (ImGui::ColorEdit3(label, color_f.data(),
+            ImGuiColorEditFlags_NoInputs
+                | ImGuiColorEditFlags_PickerHueWheel)) {
+        color = color_f.cast<double>();
+        changed = true;
+    }
+    return changed;
 }
 
 } // namespace ImGui

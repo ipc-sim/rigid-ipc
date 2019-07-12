@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include <memory> // shared_ptr
 #include <Eigen/Core>
+#include <memory> // shared_ptr
 
 #include <ccd/collision_detection.hpp>
 
@@ -39,9 +39,16 @@ namespace physics {
         /// collision
         bool simulation_step(const double time_step) override;
 
+        /// @bried return candidate position of vertices, assuming no collisions
+        Eigen::MatrixXd vertices_next(const double time_step) override;
+
         /// @brief moves status to given positions
         bool take_step(
             const Eigen::VectorXd& positions, const double time_step) override;
+
+        bool detect_collisions(const Eigen::MatrixXd& q0,
+            const Eigen::MatrixXd& q1,
+            const CollisionCheck check_type) const;
 
         /// \brief update optimization problem using current status.
         void update_constraint() override;
@@ -52,6 +59,13 @@ namespace physics {
         }
 
         Eigen::MatrixXd vertices() override { return vertices_; }
+        Eigen::MatrixXd vertices_prev() override { return vertices_prev_; }
+        Eigen::MatrixXd velocities(
+            const bool as_delta, const double time_step) override;
+
+        /// \brief collision forced applied to fix END position of vertices
+        Eigen::MatrixXd collision_force(
+            const bool as_delta, const double time_step) override;
 
         const Eigen::MatrixXi& edges() override { return edges_; }
 
@@ -138,26 +152,30 @@ namespace physics {
         virtual void disable_line_search_mode() override;
 
         // ------------------------------------------------------------------------
-        // Geometry
+        // World
         // ------------------------------------------------------------------------
         Eigen::MatrixXi edges_;
         Eigen::SparseMatrix<double> mass_matrix;
+        Eigen::SparseMatrix<double> inv_mass_matrix;
         Eigen::MatrixXb is_particle_dof_fixed;
         Eigen::VectorXb is_dof_fixed_; ///> flattened version of above
+        Eigen::VectorXd gravity;
 
         // ------------------------------------------------------------------------
         // State
         // ------------------------------------------------------------------------
-        Eigen::MatrixXd vertices_prev; ///> vertices position at tau=0
-        Eigen::MatrixXd vertices_;     ///> vertices position at tau=1
-        Eigen::MatrixXd velocity;      ///> velocities at tau=1
-
+        Eigen::MatrixXd vertices_prev_; ///> vertices position at tau=0
+        Eigen::MatrixXd vertices_;      ///> vertices position at tau=1
+        Eigen::MatrixXd velocities_;    ///> velocities at tau=1
+        Eigen::MatrixXd Fcollision;     ///> forced applied to solve collisions
         // ------------------------------------------------------------------------
         // Collision
         // ------------------------------------------------------------------------
         std::shared_ptr<opt::CollisionConstraint> constraint_ptr;
         intermediate_callback_func intermediate_callback;
         bool use_mass_matrix;
+        double collision_eps;
+
         ////////////////////////////////////////////////////////////////////////
 
     protected:

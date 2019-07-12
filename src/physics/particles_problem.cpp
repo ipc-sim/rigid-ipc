@@ -35,11 +35,15 @@ namespace physics {
 
         use_mass_matrix = params["use_mass_matrix"].get<bool>();
         update_constraint_set = params["update_constraint_set"].get<bool>();
+        collision_eps = params["collision_eps"].get<double>();
 
         io::from_json(params["vertices"], vertices_);
         io::from_json(params["edges"], edges_);
-        io::from_json(params["velocities"], velocity);
-        assert(vertices_.rows() == velocity.rows());
+        io::from_json(params["velocities"], velocities_);
+        assert(vertices_.rows() == velocities_.rows());
+
+        io::from_json(params["gravity"], gravity);
+        assert(gravity.rows() == 2);
 
         // some degrees of freedom are actually fixed
         is_particle_dof_fixed.resize(vertices_.rows(), 2);
@@ -63,56 +67,107 @@ namespace physics {
                 int(vertices_.size()), int(vertices_.size()));
             mass_matrix.setIdentity();
         }
+        inv_mass_matrix = mass_matrix.cwiseInverse();
 
         // Simulation State
         // -------------------------------------------------
-        vertices_prev.resize(vertices_.rows(), vertices_.cols());
-        vertices_prev.setZero();
-
+        Fcollision.resizeLike(vertices_);
+        Fcollision.setZero();
+        vertices_prev_ = vertices_;
         update_constraint();
+    }
+
+    bool ParticlesDisplProblem::detect_collisions(const Eigen::MatrixXd& q0,
+        const Eigen::MatrixXd& q1,
+        const CollisionCheck check_type) const
+    {
+        assert(q0.cols() == 2);
+        assert(q1.cols() == 2);
+
+        EdgeVertexImpacts ev_impacts;
+        double scale
+            = check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
+
+        ccd::detect_edge_vertex_collisions(q0, (q1 - q0) * scale, edges_,
+            ev_impacts, constraint_ptr->detection_method,
+            /*reset_impacts=*/true);
+        return ev_impacts.size() > 0;
     }
 
     bool ParticlesDisplProblem::simulation_step(const double time_step)
     {
         assert(constraint_ptr != nullptr);
 
-        vertices_prev = vertices_;
-        vertices_ += time_step * velocity;
+        vertices_prev_ = vertices_;
+        vertices_ = vertices_next(time_step);
+        velocities_ = (vertices_ - vertices_prev_) / time_step;
+
+        Fcollision.setZero();
 
         // check for collisions
-        Eigen::MatrixXd& q0 = vertices_prev;
+        Eigen::MatrixXd& q0 = vertices_prev_;
         Eigen::MatrixXd& q1 = vertices_;
-        EdgeVertexImpacts ev_impacts;
-        ccd::detect_edge_vertex_collisions(q0, q1 - q0, edges_, ev_impacts,
-            constraint_ptr->detection_method,
-            /*reset_impacts=*/true);
 
-        return ev_impacts.size() > 0;
+        return detect_collisions(q0, q1, CollisionCheck::CONSERVATIVE);
+    }
+
+    Eigen::MatrixXd ParticlesDisplProblem::vertices_next(const double time_step)
+    {
+        Eigen::MatrixXd x = vertices_;
+        x += time_step * velocities_; // momentum
+        x.rowwise()
+            += time_step * time_step * gravity.transpose(); // body-forces
+        x = (is_particle_dof_fixed).select(vertices_, x);   // reset fixed nodes
+        return x;
     }
 
     bool ParticlesDisplProblem::take_step(
         const Eigen::VectorXd& x, const double time_step)
     {
         assert(constraint_ptr != nullptr);
-        vertices_ = x;
-        unflatten(vertices_, 2);
+        flatten(vertices_);
 
-        velocity = (vertices_ - vertices_prev) / time_step;
+        // update collision forces Fc = (q* - q) M / (dt^2)
+        Fcollision = mass_matrix * (x - vertices_) / (time_step * time_step);
+        unflatten(Fcollision, 2);
+
+        // update final position
+        vertices_ = x;
+
+        // update velocities
+        unflatten(vertices_, 2);
+        velocities_ = (vertices_ - vertices_prev_) / time_step;
 
         // check for collisions
-        Eigen::MatrixXd& q0 = vertices_prev;
+        Eigen::MatrixXd& q0 = vertices_prev_;
         Eigen::MatrixXd& q1 = vertices_;
-        EdgeVertexImpacts ev_impacts;
-        ccd::detect_edge_vertex_collisions(q0, q1 - q0, edges_, ev_impacts,
-            constraint_ptr->detection_method,
-            /*reset_impacts=*/true);
-
-        return ev_impacts.size() > 0;
+        return detect_collisions(q0, q1, CollisionCheck::EXACT);
     }
 
+    Eigen::MatrixXd ParticlesDisplProblem::velocities(
+        const bool as_delta, const double time_step)
+    {
+        if (as_delta) {
+            return velocities_ * time_step;
+        } else
+            return velocities_;
+    }
+    Eigen::MatrixXd ParticlesDisplProblem::collision_force(
+        const bool as_delta, const double time_step)
+    {
+        if (as_delta) {
+            flatten(Fcollision);
+            Eigen::MatrixXd Fc_delta
+                = inv_mass_matrix * Fcollision * (time_step * time_step);
+            unflatten(Fcollision, 2);
+            unflatten(Fc_delta, 2);
+            return Fc_delta;
+        }
+        return Fcollision;
+    }
     void ParticlesDisplProblem::update_constraint()
     {
-        q0_ = vertices_prev;
+        q0_ = vertices_prev_;
         q1_ = vertices_;
 
         constraint_ptr->initialize(q0_, edges_, q1_ - q0_);
