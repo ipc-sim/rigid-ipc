@@ -74,7 +74,7 @@ namespace physics {
         {
             return is_particle_dof_fixed;
         }
-
+        const Eigen::VectorXd& gravity() override { return gravity_; }
         ////////////////////////////////////////////////////////////////////////
         /// CCD OPTIMIZATION PROBLEM
         ///
@@ -159,7 +159,7 @@ namespace physics {
         Eigen::SparseMatrix<double> inv_mass_matrix;
         Eigen::MatrixXb is_particle_dof_fixed;
         Eigen::VectorXb is_dof_fixed_; ///> flattened version of above
-        Eigen::VectorXd gravity;
+        Eigen::VectorXd gravity_;
 
         // ------------------------------------------------------------------------
         // State

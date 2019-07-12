@@ -10,7 +10,8 @@ UISimState::UISimState()
     , m_bkp_has_collision(true)
     , m_log_level(spdlog::level::info)
     , m_interval_time(0.0)
-    , m_show_as_delta(false)
+    , m_show_as_delta(true)
+    , m_show_next_step(true)
 {
     color_mesh
         = Eigen::RowVector3d(231.0 / 255.0, 76 / 255.0, 60 / 255.0); // #e74c3c
@@ -92,6 +93,7 @@ void UISimState::load_scene()
 
 void UISimState::redraw_scene()
 {
+    auto q0 = m_state.problem_ptr->vertices_prev();
     auto q1 = m_state.problem_ptr->vertices();
     auto q2 = m_state.problem_ptr->vertices_next(m_state.m_timestep_size);
     auto v1 = m_state.problem_ptr->velocities(
@@ -99,8 +101,14 @@ void UISimState::redraw_scene()
     auto fc = m_state.problem_ptr->collision_force(
         m_show_as_delta, m_state.m_timestep_size);
 
-    edges_data->update_graph(q1 + m_interval_time * (q2 - q1));
-    displacement_data->set_vector_field(q1, q2 - q1, color_displ);
+    if (m_show_next_step) {
+        edges_data->update_graph(q1 + m_interval_time * (q2 - q1));
+        displacement_data->set_vector_field(q1, q2 - q1, color_displ);
+    } else {
+        edges_data->update_graph(q0 + m_interval_time * (q1 - q0));
+        displacement_data->set_vector_field(q0, q1 - q0, color_displ);
+    }
+
     velocity_data->set_vector_field(q1, v1, color_velocity);
     collision_force_data->set_vector_field(q1, -fc, color_fc);
 }

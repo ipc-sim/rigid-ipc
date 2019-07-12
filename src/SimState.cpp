@@ -15,6 +15,8 @@ namespace ccd {
 
 SimState::SimState()
     : m_timestep_size(0.1)
+    , m_solve_collisions(true)
+    , m_dirty_constraints(false)
 {
 }
 
@@ -72,35 +74,51 @@ void SimState::init(const nlohmann::json& args_in)
 
     ccd_solver_ptr
         = opt::SolverFactory::factory().get_solver(args["collision_solver"]);
+    ccd_solver_ptr->clear();
 
     m_num_simulation_steps = 0;
+    m_dirty_constraints = false;
 }
 
 void SimState::simulation_step()
 {
     m_step_has_collision = false;
     m_step_had_collision = problem_ptr->simulation_step(m_timestep_size);
+    m_dirty_constraints = true;
 
-    if (m_step_had_collision) {
-        Eigen::VectorXd gamma_1 = solve_collision();
-        m_step_has_collision = problem_ptr->take_step(gamma_1, m_timestep_size);
-
-        if (m_step_has_collision) {
-            spdlog::error("simulation_step it={} collisions=unsolved",
-                m_num_simulation_steps);
-        } else {
-            spdlog::trace("simulation_step it={} collisions=resolved",
-                m_num_simulation_steps);
-        }
+    if (m_solve_collisions && m_step_had_collision) {
+        solve_collision();
     }
     m_num_simulation_steps += 1;
 }
 
-Eigen::MatrixXd SimState::solve_collision()
+bool SimState::solve_collision()
 {
-    problem_ptr->update_constraint();
+    if (m_dirty_constraints){
+        problem_ptr->update_constraint();
+        m_dirty_constraints = false;
+    }
     auto result = ccd_solver_ptr->solve(*problem_ptr);
+    m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 
-    return result.x;
+    if (m_step_has_collision) {
+        spdlog::error("simulation_step it={} collisions=unsolved",
+            m_num_simulation_steps);
+    } else {
+        spdlog::trace("simulation_step it={} collisions=resolved",
+            m_num_simulation_steps);
+    }
+    return m_step_has_collision;
+}
+void SimState::collision_resolution_step(){
+    if (m_dirty_constraints){
+        problem_ptr->update_constraint();
+        ccd_solver_ptr->init(*problem_ptr);
+        m_dirty_constraints = false;
+
+    }
+    auto result = ccd_solver_ptr->step_solve();
+    // TODO: use results.finished
+    problem_ptr->take_step(result.x, m_timestep_size);
 }
 } // namespace ccd

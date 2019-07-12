@@ -16,6 +16,9 @@ namespace physics {
 
         virtual ~RigidBodyProblem() override {}
 
+        ////////////////////////////////////////////////////////////////////////
+        // SIMULATION
+        ////////////////////////////////////////////////////////////////////////
         bool validate_params(const nlohmann::json& params);
 
         /// \brief initialize problem for new set of rigid bodies.
@@ -43,6 +46,12 @@ namespace physics {
         /// \brief update problem using current status of bodies.
         void update_constraint() override;
 
+        Eigen::MatrixXd velocities(
+            const bool as_delta, const double time_step) override;
+
+        Eigen::MatrixXd collision_force(
+            const bool as_delta, const double time_step) override;
+
         const opt::CollisionConstraint& constraint() override
         {
             return *m_constraint_ptr;
@@ -59,12 +68,6 @@ namespace physics {
             return m_assembler.world_vertices_t0();
         }
 
-        Eigen::MatrixXd velocities(
-            const bool as_delta, const double time_step) override;
-
-        Eigen::MatrixXd collision_force(
-            const bool as_delta, const double time_step) override;
-
         const Eigen::MatrixXi& edges() override { return m_assembler.m_edges; }
         const Eigen::VectorXb& is_dof_fixed() override
         {
@@ -74,9 +77,11 @@ namespace physics {
         {
             return m_assembler.is_dof_fixed;
         }
+        const Eigen::VectorXd& gravity() override { return gravity_; }
 
         ////////////////////////////////////////////////////////////////////////
         // Objective function and its derivatives.
+        ////////////////////////////////////////////////////////////////////////
         double eval_f(const Eigen::VectorXd& sigma) override;
 
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& sigma) override;
@@ -99,6 +104,7 @@ namespace physics {
 
         ////////////////////////////////////////////////////////////////////////
         // Constraint function and its derivatives.
+        ////////////////////////////////////////////////////////////////////////
         Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
 
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
@@ -132,14 +138,13 @@ namespace physics {
         std::shared_ptr<opt::CollisionConstraint> m_constraint_ptr;
         bool use_chain_functional;
         bool update_constraint_set;
-        Eigen::VectorXd gravity;
+        Eigen::VectorXd gravity_;
         double collision_eps;
 
     protected:
         Eigen::MatrixXd m_q0; ///< vertices positions at begining of interval
         Eigen::MatrixXd m_q1; ///< vertices positions at end of interval
-        Eigen::MatrixXd
-            m_Fcollision; ///< collision forces used to resolve collisions
+        Eigen::MatrixXd m_Fcollision; ///< forces used to resolve collisions
         Eigen::VectorXd m_sigma1; ///< rigid body positions at end of interval
     };
 

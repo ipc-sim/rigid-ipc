@@ -34,5 +34,5 @@ bool DragDouble(const char* label,
     float power = 1.0f); // If v_min >= v_max we have no bound
 
 bool DoubleColorEdit3(const char* label, Eigen::RowVector3d& color);
-
+void HelpMarker(const char* desc);
 } // namespace ImGui

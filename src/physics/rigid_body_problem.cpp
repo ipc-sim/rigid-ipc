@@ -20,7 +20,7 @@ namespace physics {
         : SimulationProblem("RigidBody")
         , use_chain_functional(false)
         , update_constraint_set(true)
-        , gravity(Eigen::Vector3d::Zero())
+        , gravity_(Eigen::Vector3d::Zero())
         , collision_eps(0.1)
     {
     }
@@ -60,8 +60,8 @@ namespace physics {
         use_chain_functional = params["use_chain_functional"].get<bool>();
         update_constraint_set = params["update_constraint_set"].get<bool>();
         collision_eps = params["collision_eps"].get<double>();
-        io::from_json(params["gravity"], gravity);
-        assert(gravity.rows() == 3);
+        io::from_json(params["gravity"], gravity_);
+        assert(gravity_.rows() == 3);
 
         m_Fcollision.resize(m_assembler.num_vertices(), 2);
         m_Fcollision.setZero();
@@ -85,7 +85,7 @@ namespace physics {
     {
         Eigen::Vector3d x = rb.position;
         x += time_step * rb.velocity;                 // momentum
-        x += time_step * time_step * gravity;         // body-forces
+        x += time_step * time_step * gravity_;         // body-forces
         x = (rb.is_dof_fixed).select(rb.position, x); // reset fixed nodes
         return x;
     }

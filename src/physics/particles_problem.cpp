@@ -42,8 +42,8 @@ namespace physics {
         io::from_json(params["velocities"], velocities_);
         assert(vertices_.rows() == velocities_.rows());
 
-        io::from_json(params["gravity"], gravity);
-        assert(gravity.rows() == 2);
+        io::from_json(params["gravity"], gravity_);
+        assert(gravity_.rows() == 2);
 
         // some degrees of freedom are actually fixed
         is_particle_dof_fixed.resize(vertices_.rows(), 2);
@@ -116,7 +116,7 @@ namespace physics {
         Eigen::MatrixXd x = vertices_;
         x += time_step * velocities_; // momentum
         x.rowwise()
-            += time_step * time_step * gravity.transpose(); // body-forces
+            += time_step * time_step * gravity_.transpose(); // body-forces
         x = (is_particle_dof_fixed).select(vertices_, x);   // reset fixed nodes
         return x;
     }

@@ -4,6 +4,7 @@
  * @brief Solve the optimization problem using Newton's Method with barriers for
  * the constraints.
  */
+#include <memory>
 
 #include <opt/barrier_constraint.hpp>
 #include <solvers/bfgs_solver.hpp>
@@ -17,26 +18,9 @@ namespace opt {
     static const char* BarrierInnerSolverNames[]
         = { "Newton's Method", "BFGS", "Gradient Descent" };
 
-    class BarrierSolver : public OptimizationSolver {
-    public:
-        BarrierSolver();
-        ~BarrierSolver() override {}
-
-        OptimizationResults solve(OptimizationProblem& problem) override;
-        OptimizationSolver& get_inner_solver();
-
-        double min_barrier_epsilon;
-        BarrierInnerSolver inner_solver_type;
-
-    protected:
-        NewtonSolver newton_inner_solver;
-        BFGSSolver bfgs_inner_solver;
-        GradientDescentSolver gradient_descent_inner_solver;
-    };
-
     class BarrierProblem : public OptimizationProblem {
     public:
-        BarrierProblem(OptimizationProblem& problem, double epsilon);
+        BarrierProblem(OptimizationProblem& problem);
         ~BarrierProblem() override {}
 
         /////
@@ -78,7 +62,35 @@ namespace opt {
         const Eigen::VectorXb& is_dof_fixed() override;
         OptimizationProblem* general_problem;
 
-        double epsilon;
+    };
+
+    class BarrierSolver : public OptimizationSolver {
+    public:
+        BarrierSolver();
+        ~BarrierSolver() override {}
+
+        OptimizationResults solve(OptimizationProblem& problem) override;
+        OptimizationSolver& get_inner_solver();
+
+        void clear() override;
+        void init(OptimizationProblem& problem) override;
+        OptimizationResults step_solve() override;
+        int num_outer_iterations() override { return num_outer_iterations_; }
+        inline double barrier_epsilon()
+        {
+            return general_problem_ptr->get_barrier_epsilon();
+        }
+        double min_barrier_epsilon;
+        BarrierInnerSolver inner_solver_type;
+
+    protected:
+        NewtonSolver newton_inner_solver;
+        BFGSSolver bfgs_inner_solver;
+        GradientDescentSolver gradient_descent_inner_solver;
+
+        std::unique_ptr<BarrierProblem> barrier_problem_ptr;
+        OptimizationProblem* general_problem_ptr;
+        int num_outer_iterations_;
     };
 
 } // namespace opt

@@ -18,7 +18,8 @@ public:
     void init(const nlohmann::json& args);
 
     void simulation_step();
-    Eigen::MatrixXd solve_collision();
+    bool solve_collision();
+    void collision_resolution_step();
 
     // CCD
     // ----------------------------------------------
@@ -28,11 +29,14 @@ public:
 
     bool m_step_had_collision;  ///< last step had a collision
     bool m_step_has_collision;  ///< last step failed to solve collisions
+    bool m_solve_collisions;    ///< solve collisions automatically on the step
     int m_num_simulation_steps; ///< counts simulation steps
 
     std::string scene_file;
 
     nlohmann::json args;
+protected:
+    bool m_dirty_constraints;
 };
 
 } // namespace ccd

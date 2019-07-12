@@ -27,6 +27,23 @@ namespace opt {
 
         virtual OptimizationResults solve(OptimizationProblem& problem) = 0;
 
+        /// \brief clear: reset all internal structures used
+        virtual void clear() {
+            throw NotImplementedError("clear OptimizationSolver not implemented");
+        }
+
+        /// \brief clear: initializes the internal structures used to solve
+        virtual void init(OptimizationProblem& /*problem*/) {
+            throw NotImplementedError("init OptimizationSolver not implemented");
+        }
+
+        /// \brief step_solve: takes one outer-step of the solver
+        virtual OptimizationResults step_solve() {
+            throw NotImplementedError("step_solve OptimizationSolver not implemented");
+        }
+        virtual int num_outer_iterations(){
+            throw NotImplementedError("num_outer_iterations OptimizationSolver not implemented");
+        }
         int max_iterations; ///< @brief Maximum number of iteration.
     };
 

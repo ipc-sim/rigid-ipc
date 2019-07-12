@@ -11,6 +11,9 @@ void UISimState::draw_menu()
     draw_labels_window();
 
     float menu_width = 200.f * menu_scaling();
+    static bool player_menu = true;
+    static bool settings_menu = true;
+    static bool collisions_menu = true;
 
     //--------------------------------------------------------------------------
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
@@ -33,7 +36,18 @@ void UISimState::draw_menu()
 
         draw_io();
         if (m_has_scene) {
-            draw_simulation_player();
+
+            if (ImGui::CollapsingHeader(
+                    "Player", &player_menu, ImGuiTreeNodeFlags_DefaultOpen)) {
+                draw_simulation_player();
+            }
+            if (ImGui::CollapsingHeader("Collisions", &collisions_menu,
+                    ImGuiTreeNodeFlags_DefaultOpen)) {
+                draw_collision_menu();
+            }
+            if (ImGui::CollapsingHeader(
+                    "Settings", &settings_menu, ImGuiTreeNodeFlags_DefaultOpen))
+                draw_settings();
         }
     }
     ImGui::PopItemWidth();
@@ -55,10 +69,13 @@ void UISimState::draw_menu()
                 | ImGuiWindowFlags_AlwaysAutoResize);
         {
             draw_legends();
+            if (ImGui::Checkbox("show as position-deltas", &m_show_as_delta)) {
+                redraw_scene();
+            }
         }
         ImGui::End();
     }
-}
+} // namespace ccd
 
 void UISimState::draw_io()
 {
@@ -93,18 +110,63 @@ void UISimState::draw_simulation_player()
     if (ImGui::Button("Step##SimPlayer", ImVec2(-1, 0))) {
         simulation_step();
     }
+    // --------------------------------------------------------------------
+    ImGui::Checkbox("auto. solve collisions", &m_state.m_solve_collisions);
+    ImGui::SameLine();
+    ImGui::HelpMarker("yes - solve collisions automatically on each step.");
+
     ImGui::Checkbox("break had collision", &m_bkp_had_collision);
+    ImGui::SameLine();
+    ImGui::HelpMarker("yes - stop playing if step had a collision.");
+
     ImGui::Checkbox("break has collision", &m_bkp_has_collision);
+    ImGui::SameLine();
+    ImGui::HelpMarker("yes - stop playing if step has unsolved collision.");
+
+    // --------------------------------------------------------------------
     ImGui::Text("Step %i", m_state.m_num_simulation_steps);
-    if (ImGui::DragDouble("t", &m_interval_time, 0.1, 0.0, 1.0)) {
+
+    int item_current = m_show_next_step ? 1 : 0;
+    if (ImGui::Combo(
+            "##prev-next", &item_current, "previous_step\0next_step\0\0")) {
+        m_show_next_step = item_current == 1 ? true : false;
         redraw_scene();
     }
-    ImGui::Separator();
-    if (ImGui::Checkbox("vel and Fc as deltas", &m_show_as_delta)){
+    if (ImGui::DragDouble("interval time", &m_interval_time, 0.1, 0.0, 1.0)) {
         redraw_scene();
     }
-    ImGui::Separator();
+
+    ImGui::SameLine();
+    ImGui::HelpMarker("yes - shows velocities and forces as position-delta\n "
+                      "i.e scaling them by time.");
+}
+
+void UISimState::draw_collision_menu()
+{
+    if (ImGui::Button("Solve Collisions", ImVec2(-1, 0))) {
+        solve_collisions();
+    }
+    if (ImGui::Button("Step Solve Col. ", ImVec2(-1, 0))) {
+        step_solve_collisions();
+    }
+    if (m_state.problem_ptr->has_barrier_constraint()) {
+        double eps = m_state.problem_ptr->get_barrier_epsilon();
+        if (ImGui::InputDouble("epsilon", &eps, 1e-3, 0.1, "%.3g")) {
+            m_state.problem_ptr->set_barrier_epsilon(eps);
+        }
+    }
+    ImGui::Text(
+        "Outer it.: %i", m_state.ccd_solver_ptr->num_outer_iterations());
+}
+void UISimState::draw_settings()
+{
     ImGui::Text("timestep_size: %.3g", m_state.m_timestep_size);
+    Eigen::VectorXd G = m_state.problem_ptr->gravity();
+    if (G.rows() == 2) {
+        ImGui::Text("gravity: %.3g, %.3g", G(0), G(1));
+    } else {
+        ImGui::Text("gravity: %.3g, %.3g, %.3g", G(0), G(1), G(2));
+    }
 }
 
 void UISimState::draw_legends()
@@ -133,7 +195,8 @@ void UISimState::draw_legends()
             }
             ImGui::PopItemWidth();
             ImGui::SameLine();
-            if (ImGui::Checkbox(("data##UI-"+ label).c_str(), &ptr->show_vertex_data)){
+            if (ImGui::Checkbox(
+                    ("data##UI-" + label).c_str(), &ptr->show_vertex_data)) {
                 ptr->update_vertex_data();
             }
         }

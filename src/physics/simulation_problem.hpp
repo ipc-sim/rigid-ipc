@@ -55,8 +55,7 @@ namespace physics {
         virtual const Eigen::MatrixXi& edges() = 0;
 
         virtual const Eigen::MatrixXb& particle_dof_fixed() = 0;
-
-
+        virtual const Eigen::VectorXd& gravity() = 0;
     };
 
 } // namespace physics

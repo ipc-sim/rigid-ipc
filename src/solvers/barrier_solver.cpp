@@ -15,6 +15,7 @@ namespace opt {
     BarrierSolver::BarrierSolver()
         : min_barrier_epsilon(1e-5)
         , inner_solver_type(BarrierInnerSolver::NEWTON)
+        , num_outer_iterations_(0)
     {
         newton_inner_solver = NewtonSolver();
         bfgs_inner_solver = BFGSSolver();
@@ -33,68 +34,98 @@ namespace opt {
         }
     }
 
-    OptimizationResults BarrierSolver::solve(
-        OptimizationProblem& general_problem)
+    void BarrierSolver::clear()
     {
-        assert(general_problem.has_barrier_constraint());
-
-        BarrierProblem barrier_problem(
-            general_problem, general_problem.get_barrier_epsilon());
+        num_outer_iterations_ = 0;
+        general_problem_ptr = nullptr;
+        barrier_problem_ptr.reset();
+    }
+    void BarrierSolver::init(OptimizationProblem& original_problem)
+    {
+        assert(original_problem.has_barrier_constraint());
+        general_problem_ptr = &original_problem;
+        barrier_problem_ptr
+            = std::make_unique<BarrierProblem>(original_problem);
 
         OptimizationSolver& inner_solver = get_inner_solver();
 
         // Convert from the boolean vector to a vector of free dof indices
-        inner_solver.init_free_dof(barrier_problem.is_dof_fixed());
+        inner_solver.init_free_dof(barrier_problem_ptr->is_dof_fixed());
 
         // Calculate the maximum number of iteration allowable
         inner_solver.max_iterations = int(max_iterations
-            / ceil(-log2(min_barrier_epsilon) + log2(barrier_problem.epsilon)));
+            / ceil(-log2(min_barrier_epsilon) + log2(barrier_epsilon())));
 
-        barrier_problem.eval_intermediate_callback(barrier_problem.x0);
+        barrier_problem_ptr->eval_intermediate_callback(
+            barrier_problem_ptr->x0);
+        num_outer_iterations_ = 0;
+    }
+
+    OptimizationResults BarrierSolver::step_solve()
+    {
+        assert(general_problem_ptr != nullptr);
+        assert(barrier_problem_ptr != nullptr);
 
         OptimizationResults results;
-        do {
-            // Log the epsilon and the newton method will log the number of
-            // iterations.
-            spdlog::trace(
-                "solver=barrier ϵ={:g}", general_problem.get_barrier_epsilon());
+        OptimizationSolver& inner_solver = get_inner_solver();
 
-            // Optimize for a fixed epsilon
-            results = inner_solver.solve(barrier_problem);
-            // Save the original problems objective
-            results.minf = general_problem.eval_f(results.x);
+        // Log the epsilon and the newton method will log the number of
+        // iterations.
+        spdlog::trace("solver=barrier ϵ={:g}",
+            general_problem_ptr->get_barrier_epsilon());
 
-            // Steepen the barrier
-            barrier_problem.epsilon /= 2;
-            general_problem.set_barrier_epsilon(barrier_problem.epsilon);
+        // Optimize for a fixed epsilon
+        results = inner_solver.solve(*barrier_problem_ptr);
+        // Save the original problems objective
+        results.minf = general_problem_ptr->eval_f(results.x);
 
-            // Start next iteration from the ending optimal position
-            barrier_problem.x0 = results.x;
-        } while (barrier_problem.epsilon > min_barrier_epsilon);
+        // Steepen the barrier
+        double eps = barrier_epsilon();
+        general_problem_ptr->set_barrier_epsilon(eps / 2);
+
+        // Start next iteration from the ending optimal position
+        barrier_problem_ptr->x0 = results.x;
 
         // TODO: This should check if the barrier constraints are satisfied.
         results.success = results.minf >= 0
-            && barrier_problem.eval_f(results.x)
+            && barrier_problem_ptr->eval_f(results.x)
                 < std::numeric_limits<double>::infinity();
+
+        results.finished = barrier_epsilon() <= min_barrier_epsilon;
+
+        num_outer_iterations_ += 1;
+        return results;
+    }
+
+    OptimizationResults BarrierSolver::solve(
+        OptimizationProblem& original_problem)
+    {
+        init(original_problem);
+
+        OptimizationResults results;
+        do {
+            results = step_solve();
+        } while (barrier_epsilon() > min_barrier_epsilon);
 
         return results;
     }
 
-    BarrierProblem::BarrierProblem(
-        OptimizationProblem& general_problem, const double epsilon)
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// BARRIER PROBLEM
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    BarrierProblem::BarrierProblem(OptimizationProblem& general_problem)
         : OptimizationProblem("BarrierProblem")
         , general_problem(&general_problem)
-        , epsilon(epsilon)
     {
         num_vars = general_problem.num_vars;
         num_constraints = 0;
         x0 = general_problem.x0;
     }
 
-    const Eigen::VectorXb& BarrierProblem::is_dof_fixed(){
+    const Eigen::VectorXb& BarrierProblem::is_dof_fixed()
+    {
         return general_problem->is_dof_fixed();
     }
-
 
     double BarrierProblem::eval_f(const Eigen::VectorXd& x)
     {
