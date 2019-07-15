@@ -85,6 +85,7 @@ add_library(${PROJECT_NAME}
     src/solvers/solver_factory.cpp
 
     src/utils/eigen_ext.cpp
+    src/utils/regular_2d_grid.cpp
 
 #    src/state.cpp
     src/SimState.cpp

@@ -56,6 +56,11 @@ namespace physics {
 
         virtual const Eigen::MatrixXb& particle_dof_fixed() = 0;
         virtual const Eigen::VectorXd& gravity() = 0;
+
+        virtual void create_sample_points(
+                const Eigen::MatrixXd& xy_points, Eigen::MatrixXd& sample_points) {
+            throw NotImplementedError("create_sample_points not implemented");
+        }
     };
 
 } // namespace physics

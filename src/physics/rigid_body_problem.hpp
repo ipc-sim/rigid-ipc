@@ -120,6 +120,13 @@ namespace physics {
         Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma);
 
         ///////////////////////////////////////////////////////////////////////
+        /// FOR DEBUGGING
+        ///
+        /// creates sample points at xy coordinates
+        void create_sample_points(const Eigen::MatrixXd& xy_points,
+            Eigen::MatrixXd& sample_points) override;
+
+        ///////////////////////////////////////////////////////////////////////
         /// BARRIER SPECIFIC
         bool has_barrier_constraint() override
         {

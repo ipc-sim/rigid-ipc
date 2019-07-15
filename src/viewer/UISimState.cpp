@@ -1,6 +1,7 @@
 #include "UISimState.hpp"
 #include <logger.hpp>
 
+
 namespace ccd {
 
 UISimState::UISimState()
@@ -21,6 +22,9 @@ UISimState::UISimState()
         = Eigen::RowVector3d(241 / 255.0, 196 / 255.0, 15 / 255.0); // #f1c40f
     color_fc
         = Eigen::RowVector3d(236 / 255.0, 240 / 255.0, 241 / 255.0); // #ecf0f1
+    color_grid = Eigen::RowVector3d(0.3, 0.3, 0.5); // igl default
+
+    color_inf = Eigen::RowVector3d::Zero(); //black
 }
 
 void UISimState::launch()
@@ -41,22 +45,26 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
     Super::init(_viewer);
     viewer->data().clear();
     collision_force_data
-        = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
+        = std::make_unique<igl::opengl::VectorFieldData>(_viewer);
 
     viewer->append_mesh();
-    edges_data = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
+    edges_data = std::make_unique<igl::opengl::GraphData>(_viewer);
 
     viewer->append_mesh();
-    displacement_data = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
+    displacement_data = std::make_unique<igl::opengl::VectorFieldData>(_viewer);
 
     viewer->append_mesh();
-    velocity_data = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
+    velocity_data = std::make_unique<igl::opengl::VectorFieldData>(_viewer);
 
+    // keep this last!
+    viewer->append_mesh();
+    grid_data = std::make_unique<igl::opengl::ScalarFieldData>(_viewer);
 
     datas_.emplace("edges", edges_data);
     datas_.emplace("displ.", displacement_data);
     datas_.emplace("velocity", velocity_data);
     datas_.emplace("F_c", collision_force_data);
+    datas_.emplace("grid", grid_data);
 
     for (auto it = datas_.begin(); it != datas_.end(); ++it) {
         data_names_.push_back(it->first);
@@ -88,6 +96,7 @@ void UISimState::load_scene()
     displacement_data->set_vector_field(q1, q2 - q1, color_displ);
     velocity_data->set_vector_field(q1, v1, color_velocity);
     collision_force_data->set_vector_field(q1, -fc, color_fc);
+    grid_data->set_mesh(m_state.grid_V, m_state.grid_F, color_grid, color_inf);
 
     viewer->core().align_camera_center(edges_data->mV, edges_data->mE);
     m_has_scene = true;
@@ -115,6 +124,11 @@ void UISimState::redraw_scene()
 
     velocity_data->set_vector_field(q1, v1, color_velocity);
     collision_force_data->set_vector_field(q1, -fc, color_fc);
+
+    Eigen::VectorXd fx;
+    m_state.get_collision_functional_isolines(fx);
+    grid_data->set_vertex_data(fx);
+
 }
 
 bool UISimState::pre_draw_loop()

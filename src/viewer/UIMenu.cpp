@@ -176,9 +176,16 @@ void UISimState::draw_legends()
     for (auto& label : get_data_names()) {
         auto ptr = get_data(label);
 
-        bool tmp = bool(ptr->data().show_overlay);
-        ImGui::Checkbox(("##UI-" + label).c_str(), &tmp);
-        ptr->data().show_overlay = tmp;
+        if (!ptr->is_scalar_field()){
+            bool tmp = bool(ptr->data().show_overlay);
+            ImGui::Checkbox(("##UI-" + label).c_str(), &tmp);
+            ptr->data().show_overlay = tmp;
+        }
+        else {
+            bool tmp = bool(ptr->data().show_faces);
+            ImGui::Checkbox(("##UI-" + label).c_str(), &tmp);
+            ptr->data().show_faces = tmp;
+        }
         ImGui::SameLine();
         if (ImGui::DoubleColorEdit3((label + "##UI").c_str(), ptr->m_color)) {
             ptr->recolor();
@@ -199,6 +206,21 @@ void UISimState::draw_legends()
                     ("data##UI-" + label).c_str(), &ptr->show_vertex_data)) {
                 ptr->update_vertex_data();
             }
+        }
+        else if (ptr->is_scalar_field()) {
+            ImGui::SameLine();
+            if (ImGui::Checkbox(
+                    ("log##UI-" + label).c_str(), &ptr->m_log_scale)) {
+                ptr->recolor();
+            }
+            ImGui::SameLine();
+            bool show_lines = ptr->data().show_lines;
+            if (ImGui::Checkbox(
+                    ("lines##UI-" + label).c_str(), &show_lines)) {
+                ptr->data().show_lines = show_lines;
+                ptr->recolor();
+            }
+
         }
     }
 }

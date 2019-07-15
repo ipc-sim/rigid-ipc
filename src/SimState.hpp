@@ -21,6 +21,8 @@ public:
     bool solve_collision();
     void collision_resolution_step();
 
+    void get_collision_functional_isolines(Eigen::VectorXd& fx);
+
     // CCD
     // ----------------------------------------------
     std::shared_ptr<physics::SimulationProblem> problem_ptr;
@@ -35,8 +37,15 @@ public:
     std::string scene_file;
 
     nlohmann::json args;
+
+    // for visualization
+    Eigen::MatrixXd grid_V;
+    Eigen::MatrixXi grid_F;
+
 protected:
     bool m_dirty_constraints;
+
+
 };
 
 } // namespace ccd

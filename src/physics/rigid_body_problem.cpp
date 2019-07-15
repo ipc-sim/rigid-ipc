@@ -415,5 +415,19 @@ namespace physics {
 #endif
     }
 
+    void RigidBodyProblem::create_sample_points(
+            const Eigen::MatrixXd& xy_points, Eigen::MatrixXd& sample_points){
+        // for now we will use the position as the position of the first rigid body
+        assert(xy_points.cols() == 2);
+        sample_points.resize(xy_points.rows(), num_vars);
+
+        // copy the initial solution
+        sample_points.rowwise() = x0.transpose();
+
+        // then override the rest with the xy_data data;
+        sample_points.block(0, 0, xy_points.rows(), 2) = xy_points;
+
+    }
+
 } // namespace physics
 } // namespace ccd

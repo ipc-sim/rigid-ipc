@@ -2,6 +2,10 @@
   "scene_type": "rigid_body_problem",
   "timestep_size": 1.0,
   "gravity": [0.0, 0.0, 0.0],
+  "viewport_bbox": {
+    "min": [-12, -3.0, 0.0],
+    "max": [12, 5.0, 0.0]
+  },
   "rigid_body_problem": {
     "rigid_bodies": [
       {

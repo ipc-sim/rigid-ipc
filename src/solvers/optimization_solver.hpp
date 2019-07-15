@@ -44,6 +44,11 @@ namespace opt {
         virtual int num_outer_iterations(){
             throw NotImplementedError("num_outer_iterations OptimizationSolver not implemented");
         }
+
+        virtual void eval_f(const Eigen::MatrixXd& /*points*/, Eigen::VectorXd& /*fx*/){
+            throw NotImplementedError("eval_f OptimizationSolver not implemented");
+        }
+
         int max_iterations; ///< @brief Maximum number of iteration.
     };
 

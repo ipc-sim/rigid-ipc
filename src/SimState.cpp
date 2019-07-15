@@ -6,10 +6,13 @@
 #include <nlohmann/json.hpp>
 
 #include <io/read_rb_scene.hpp>
+#include <io/serialize_json.hpp>
 #include <logger.hpp>
 
 #include <physics/problem_factory.hpp>
 #include <solvers/solver_factory.hpp>
+
+#include <utils/regular_2d_grid.hpp>
 
 namespace ccd {
 
@@ -18,6 +21,7 @@ SimState::SimState()
     , m_solve_collisions(true)
     , m_dirty_constraints(false)
 {
+
 }
 
 void SimState::load_scene(const std::string& filename)
@@ -62,7 +66,8 @@ void SimState::init(const nlohmann::json& args_in)
             "collision_eps": 0.1
          },
         "barrier_solver": {},
-        "timestep_size": 0.1
+        "timestep_size": 0.1,
+        "viewport_bbox": {"min":[0,0,0],"max":[0,0,0]}
     })"_json;
     // clang-format on
 
@@ -78,6 +83,28 @@ void SimState::init(const nlohmann::json& args_in)
 
     m_num_simulation_steps = 0;
     m_dirty_constraints = true;
+
+
+    // scale background grid
+    Eigen::VectorXd vmin, vmax;
+    io::from_json(args["viewport_bbox"]["min"], vmin);
+    io::from_json(args["viewport_bbox"]["max"], vmax);
+    if ((vmax - vmin).squaredNorm() == 0.0){
+        // default size to fix data
+        vmin = problem_ptr->vertices().colwise().minCoeff();
+        vmax = problem_ptr->vertices().colwise().maxCoeff();
+    }
+
+    regular_2d_grid(50, /*triangle=*/false, grid_V, grid_F);
+    // center at 0.0
+    grid_V.col(0).array() -= 0.5;
+    grid_V.col(1).array() -= 0.5;
+
+    double scale = (vmax - vmin).norm();
+    grid_V *= scale;
+    grid_V.rowwise() += problem_ptr->vertices().colwise().mean();
+
+
 }
 
 void SimState::simulation_step()
@@ -115,10 +142,23 @@ void SimState::collision_resolution_step(){
         problem_ptr->update_constraint();
         ccd_solver_ptr->init(*problem_ptr);
         m_dirty_constraints = false;
-
     }
+
     auto result = ccd_solver_ptr->step_solve();
     // TODO: use results.finished
     problem_ptr->take_step(result.x, m_timestep_size);
+}
+
+void SimState::get_collision_functional_isolines(Eigen::VectorXd& fx){
+    if (m_dirty_constraints){
+        problem_ptr->update_constraint();
+        ccd_solver_ptr->init(*problem_ptr);
+        m_dirty_constraints = false;
+    }
+
+    Eigen::MatrixXd Xk;
+    problem_ptr->create_sample_points(grid_V, Xk);
+    ccd_solver_ptr->eval_f(Xk, fx);
+
 }
 } // namespace ccd

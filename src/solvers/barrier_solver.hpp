@@ -61,7 +61,6 @@ namespace opt {
 
         const Eigen::VectorXb& is_dof_fixed() override;
         OptimizationProblem* general_problem;
-
     };
 
     class BarrierSolver : public OptimizationSolver {
@@ -80,6 +79,10 @@ namespace opt {
         {
             return general_problem_ptr->get_barrier_epsilon();
         }
+
+        void eval_f(
+            const Eigen::MatrixXd& points, Eigen::VectorXd& fx) override;
+
         double min_barrier_epsilon;
         BarrierInnerSolver inner_solver_type;
 

@@ -77,7 +77,7 @@ public:
     bool m_show_as_delta;
      ///  \brief show animation between current and next step (true) or prev step (false)
     bool m_show_next_step;
-    Eigen::RowVector3d color_mesh, color_displ, color_velocity, color_fc;
+    Eigen::RowVector3d color_mesh, color_displ, color_velocity, color_fc, color_grid, color_inf;
 
 protected:
     void draw_io();
@@ -87,13 +87,15 @@ protected:
     void draw_legends();
 
 private:
-    std::shared_ptr<igl::opengl::ViewerDataExt> edges_data;
-    std::shared_ptr<igl::opengl::ViewerDataExt> displacement_data;
-    std::shared_ptr<igl::opengl::ViewerDataExt> velocity_data;
-    std::shared_ptr<igl::opengl::ViewerDataExt> collision_force_data;
+    std::shared_ptr<igl::opengl::GraphData> edges_data;
+    std::shared_ptr<igl::opengl::VectorFieldData> displacement_data;
+    std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
+    std::shared_ptr<igl::opengl::VectorFieldData> collision_force_data;
+    std::shared_ptr<igl::opengl::ScalarFieldData> grid_data;
 
     std::map<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>> datas_;
     std::vector<std::string> data_names_;
+
 
 };
 

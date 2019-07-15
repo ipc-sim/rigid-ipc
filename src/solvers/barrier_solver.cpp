@@ -40,6 +40,7 @@ namespace opt {
         general_problem_ptr = nullptr;
         barrier_problem_ptr.reset();
     }
+
     void BarrierSolver::init(OptimizationProblem& original_problem)
     {
         assert(original_problem.has_barrier_constraint());
@@ -108,6 +109,16 @@ namespace opt {
         } while (barrier_epsilon() > min_barrier_epsilon);
 
         return results;
+    }
+
+    void BarrierSolver::eval_f(const Eigen::MatrixXd& points, Eigen::VectorXd& fx){
+        fx.resize(points.rows());
+        assert(points.cols() == barrier_problem_ptr->num_vars);
+
+        for (int i=0; i < points.rows();++i) {
+            fx(i) = barrier_problem_ptr->eval_f(points.row(i));
+        }
+
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
