@@ -77,7 +77,7 @@ void SimState::init(const nlohmann::json& args_in)
     ccd_solver_ptr->clear();
 
     m_num_simulation_steps = 0;
-    m_dirty_constraints = false;
+    m_dirty_constraints = true;
 }
 
 void SimState::simulation_step()

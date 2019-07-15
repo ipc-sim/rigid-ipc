@@ -125,10 +125,11 @@ namespace physics {
         const Eigen::VectorXd& x, const double time_step)
     {
         assert(constraint_ptr != nullptr);
-        flatten(vertices_);
+        const Eigen::VectorXd& q1_collision = q1_;
 
-        // update collision forces Fc = (q* - q) M / (dt^2)
-        Fcollision = mass_matrix * (x - vertices_) / (time_step * time_step);
+        // update collision forces q* = q_collision + Fcollision
+        //           Fc = (q* - q) M / (dt^2)
+        Fcollision = mass_matrix * (x - q1_collision) / (time_step * time_step);
         unflatten(Fcollision, 2);
 
         // update final position

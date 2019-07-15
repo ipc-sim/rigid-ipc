@@ -40,14 +40,18 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
 {
     Super::init(_viewer);
     viewer->data().clear();
-    edges_data = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
-    viewer->append_mesh();
-    displacement_data = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
-    viewer->append_mesh();
-    velocity_data = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
-    viewer->append_mesh();
     collision_force_data
         = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
+
+    viewer->append_mesh();
+    edges_data = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
+
+    viewer->append_mesh();
+    displacement_data = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
+
+    viewer->append_mesh();
+    velocity_data = std::make_unique<igl::opengl::ViewerDataExt>(_viewer);
+
 
     datas_.emplace("edges", edges_data);
     datas_.emplace("displ.", displacement_data);

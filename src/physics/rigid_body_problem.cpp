@@ -85,7 +85,7 @@ namespace physics {
     {
         Eigen::Vector3d x = rb.position;
         x += time_step * rb.velocity;                 // momentum
-        x += time_step * time_step * gravity_;         // body-forces
+        x += time_step * time_step * gravity_;        // body-forces
         x = (rb.is_dof_fixed).select(rb.position, x); // reset fixed nodes
         return x;
     }
@@ -145,14 +145,14 @@ namespace physics {
     {
         assert(m_constraint_ptr != nullptr);
 
-        Eigen::MatrixXd q1_collisions = m_assembler.world_vertices_t1();
+        const Eigen::MatrixXd& q1_collisions = m_q1;
 
         // update final position
         m_assembler.set_rb_positions(rb_positions);
         Eigen::MatrixXd q1_new = m_assembler.world_vertices_t1();
 
-        // update collision forces
-        Eigen::MatrixXd delta_c = (q1_collisions - q1_new);
+        // update collision forces // q_new = q_collision + Fcollision
+        Eigen::MatrixXd delta_c = (q1_new - q1_collisions);
         flatten(delta_c);
         m_Fcollision
             = m_assembler.m_mass_matrix * delta_c / (time_step * time_step);
@@ -163,9 +163,7 @@ namespace physics {
             rb.velocity = (rb.position - rb.position_prev) / time_step;
         }
 
-        // check for collisions
-        Eigen::MatrixXd q0 = m_assembler.world_vertices_t0();
-        return detect_collisions(q0, q1_new, CollisionCheck::EXACT);
+        return detect_collisions(m_q0, q1_new, CollisionCheck::EXACT);
     }
 
     Eigen::MatrixXd RigidBodyProblem::velocities(
@@ -202,9 +200,7 @@ namespace physics {
         x0 = m_assembler.rb_positions_t0(); // start from collision free state
         num_vars = int(x0.size());
 
-        // intended displacements
-        Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
-        m_constraint_ptr->initialize(m_q0, m_assembler.m_edges, q1 - m_q0);
+        m_constraint_ptr->initialize(m_q0, m_assembler.m_edges, m_q1 - m_q0);
     }
 
     ////////////////////////////////////////////////////////////////////////////
