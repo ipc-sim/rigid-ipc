@@ -31,7 +31,7 @@ namespace opt {
         //  ½ * x^T * Q * x + c^T * x + cf
 
         Eigen::VectorXd x0 = Eigen::VectorXd::Zero(problem.num_vars);
-        Q = problem.eval_hessian_f_sparse(x0);
+        Q = problem.eval_hessian_f(x0);
         c = problem.eval_grad_f(x0);
         cf = problem.eval_f(x0);
     }
@@ -39,17 +39,18 @@ namespace opt {
     void QPSolver::linearized_constraints(OptimizationProblem& problem)
     {
         // Linearized constraints
-        // ℓ ≤ g(x0) + ∇g(x0)(x - x0) ≤ u →
-        // ℓ - g(x0) + ∇g(x0) * x0 ≤ ∇g(x0) * x ≤ u
+        // 0.0 ≤ g(x0) + ∇g(x0)(x - x0) ≤ INF →
+        // 0.0 - g(x0) + ∇g(x0) * x0 ≤ ∇g(x0) * x ≤ INF
         // Linear constraint matrix
         // A = ∇g(x0) ∈ R^(m × n)
         A = problem.eval_jac_g(problem.x0).sparseView();
         // Linear constraint lower bounds
-        // (ℓ - g(x0) + ∇g(x0) * x0) ∈ R^m
-        lc = problem.g_lower - problem.eval_g(problem.x0) + A * problem.x0;
+        // (0.0 - g(x0) + ∇g(x0) * x0) ∈ R^m
+        lc = - problem.eval_g(problem.x0) + A * problem.x0;
         // Linear constraint upper bounds
         // u ∈ R^m
-        uc = problem.g_upper;
+        uc = Eigen::VectorXd(lc.rows());
+        uc.setConstant(NO_UPPER_BOUND);
     }
 
     OptimizationResults QPSolver::solve(OptimizationProblem& problem)
@@ -74,9 +75,7 @@ namespace opt {
 
         // Check the solve was successful
         auto lhs = (A * results.x).array();
-        results.success &= results.minf >= 0
-            && ((lc.array() - 10 * relative_tolerance) <= lhs).all()
-            && (lhs <= (uc.array() + 10 * relative_tolerance)).all();
+        results.success &= results.minf >= 0;
 
         return results;
     }

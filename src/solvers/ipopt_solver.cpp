@@ -92,15 +92,15 @@ namespace opt {
         assert(n == problem->num_vars);
         assert(m == problem->num_constraints);
 
-        Eigen::Map<Eigen::VectorXd>(&x_lower[0], problem->num_vars)
-            = problem->x_lower;
-        Eigen::Map<Eigen::VectorXd>(&x_upper[0], problem->num_vars)
-            = problem->x_upper;
+        for (Index i=0; i<n; i++){
+            x_lower[i] = NO_LOWER_BOUND;
+            x_upper[i] = NO_UPPER_BOUND;
+        }
 
-        Eigen::Map<Eigen::VectorXd>(&g_lower[0], problem->num_constraints)
-            = problem->g_lower;
-        Eigen::Map<Eigen::VectorXd>(&g_upper[0], problem->num_constraints)
-            = problem->g_upper;
+        for (Index i=0; i<m; i++){
+            g_lower[i] = 0.0;
+            g_upper[i] = NO_UPPER_BOUND;
+        }
 
         return true;
     }

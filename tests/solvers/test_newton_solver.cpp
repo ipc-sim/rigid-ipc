@@ -26,8 +26,6 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
         return Eigen::MatrixXd::Identity(x.rows(), x.rows());
     };
 
-    REQUIRE(problem.validate_problem());
-
     OptimizationResults results = solver.solve(problem);
     REQUIRE(results.success);
     CHECK(results.x.squaredNorm() == Approx(0).margin(1e-6));

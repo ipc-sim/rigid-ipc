@@ -10,7 +10,6 @@ namespace opt {
 
     CollisionConstraint::CollisionConstraint()
         : detection_method(HASH_GRID)
-        , update_collision_set(true)
         , extend_collision_set(true)
     {
     }
@@ -18,7 +17,8 @@ namespace opt {
     CollisionConstraint::~CollisionConstraint() {}
 
     void CollisionConstraint::initialize(const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2i& E, const Eigen::MatrixXd& Uk)
+        const Eigen::MatrixX2i& E,
+        const Eigen::MatrixXd& Uk)
     {
         vertices = std::make_shared<const Eigen::MatrixX2d>(V);
         edges = std::make_shared<const Eigen::MatrixX2i>(E);
@@ -219,8 +219,10 @@ namespace opt {
         return diff_data;
     }
 
-    void slice_vector(const Eigen::MatrixX2d& data, const Eigen::Vector2i e_ij,
-        Eigen::Vector2i e_kl, std::array<Eigen::Vector2d, 4>& d)
+    void slice_vector(const Eigen::MatrixX2d& data,
+        const Eigen::Vector2i e_ij,
+        Eigen::Vector2i e_kl,
+        std::array<Eigen::Vector2d, 4>& d)
     {
         d[0] = data.row(e_ij(0));
         d[1] = data.row(e_ij(1));
@@ -229,11 +231,19 @@ namespace opt {
     }
 
     template bool CollisionConstraint::compute_toi_alpha<double>(
-        const ImpactTData<double>& data, double& toi, double& alpha_ij,
+        const ImpactTData<double>& data,
+        double& toi,
+        double& alpha_ij,
         double& aplha_kl);
 
     template bool CollisionConstraint::compute_toi_alpha<DScalar>(
-        const ImpactTData<DScalar>& data, DScalar& toi, DScalar& alpha_ij,
+        const ImpactTData<DScalar>& data,
+        DScalar& toi,
+        DScalar& alpha_ij,
         DScalar& aplha_kl);
+
+    // Check if a type, T, is differentiable (differentiable<T>())
+    template <> bool differentiable<DScalar>() { return true; }
+    template <> bool differentiable<double>() { return false; }
 } // namespace opt
 } // namespace ccd

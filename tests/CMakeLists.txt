@@ -17,7 +17,6 @@ add_executable(unit_tests
     integration/test_mosek.cpp
     integration/test_lbfgspp.cpp
 
-    solvers/test_ipopt_solver.cpp
     solvers/test_ncp.cpp
     solvers/test_ncp_displacements_opt.cpp
     solvers/test_newton_solver.cpp
@@ -28,10 +27,10 @@ add_executable(unit_tests
     opt/test_barriers.cpp
     opt/test_volume_constraint.cpp
     opt/test_barrier_constraint.cpp
-    opt/test_rigid_body_problem.cpp
 
     physics/test_rigid_body.cpp
     physics/test_rigid_body_system.cpp
+    physics/test_rigid_body_problem.cpp
 
     io/test_serialize_json.cpp
     io/test_read_rb_scene.cpp

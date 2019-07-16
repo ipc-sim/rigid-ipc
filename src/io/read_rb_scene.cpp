@@ -1,28 +1,11 @@
 #include "read_rb_scene.hpp"
 
 #include <fstream>
-#include <iostream>
 #include <io/serialize_json.hpp>
+#include <iostream>
 
 namespace ccd {
 namespace io {
-
-    bool is_rb_scene(const nlohmann::json& scene)
-    {
-        auto scene_type = scene["scene_type"];
-        return scene_type.is_string()
-            && scene_type.get<std::string>().compare("rigid-body") == 0;
-    }
-
-    void read_rb_scene(
-        const std::string filename, std::vector<physics::RigidBody>& rbs)
-    {
-        using nlohmann::json;
-
-        std::ifstream input(filename);
-        json scene = json::parse(input);
-        return read_rb_scene(scene, rbs);
-    }
 
     void read_rb_scene_from_str(
         const std::string str, std::vector<physics::RigidBody>& rbs)
@@ -35,16 +18,30 @@ namespace io {
     void read_rb_scene(
         const nlohmann::json& scene, std::vector<physics::RigidBody>& rbs)
     {
-        assert(std::string("rigid-body").compare(scene["scene_type"]) == 0);
+        using namespace nlohmann;
         for (auto& jrb : scene["rigid_bodies"]) {
-            Eigen::MatrixXd vertices;
-            from_json(jrb["vertices"], vertices);
-            Eigen::MatrixXi edges;
-            from_json(jrb["edges"], edges);
-            Eigen::VectorXd velocity;
-            from_json(jrb["velocity"], velocity);
+            json args = R"({
+                  "vertices":[],
+                  "edges":[],
+                  "velocity":[0.0,0.0,0.0],
+                  "is_dof_fixed":[false,false,false]
+                  })"_json;
+            args.merge_patch(jrb);
 
-            auto rb = physics::RigidBody::Centered(vertices, edges, velocity);
+            Eigen::MatrixXd vertices;
+            from_json(args["vertices"], vertices);
+
+            Eigen::MatrixXi edges;
+            from_json(args["edges"], edges);
+
+            Eigen::VectorXd velocity;
+            from_json(args["velocity"], velocity);
+
+            Eigen::VectorXb is_dof_fixed;
+            from_json(args["is_dof_fixed"], is_dof_fixed);
+
+            auto rb = physics::RigidBody::from_velocity(
+                vertices, edges, velocity, is_dof_fixed);
             rbs.push_back(rb);
         }
     }
