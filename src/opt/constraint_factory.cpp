@@ -15,8 +15,10 @@ namespace opt {
 
     ConstraintFactory::ConstraintFactory()
     {
-        constraints_.emplace("barrier_constraint", std::make_shared<BarrierConstraint>());
-        constraints_.emplace("volume_constraint", std::make_shared<VolumeConstraint>());
+        constraints_.emplace("barrier_constraint",
+            std::make_shared<BarrierConstraint>("barrier_constraint"));
+        constraints_.emplace("volume_constraint",
+            std::make_shared<VolumeConstraint>("volume_constraint"));
 
         for (auto it = constraints_.begin(); it != constraints_.end(); ++it) {
             constraint_names_.push_back(it->first);

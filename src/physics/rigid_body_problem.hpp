@@ -12,6 +12,7 @@ namespace physics {
 
     class RigidBodyProblem : public SimulationProblem {
     public:
+        RigidBodyProblem(const std::string& name);
         RigidBodyProblem();
 
         virtual ~RigidBodyProblem() override {}
@@ -19,65 +20,86 @@ namespace physics {
         ////////////////////////////////////////////////////////////////////////
         // SIMULATION
         ////////////////////////////////////////////////////////////////////////
-        bool validate_params(const nlohmann::json& params);
 
         /// \brief initialize problem for new set of rigid bodies.
         void init(const nlohmann::json& params) override;
         void init(
             const std::vector<RigidBody> rbs, const std::string& constraint);
+        nlohmann::json settings() const override;
+
+        /// Update state of system
+        ///-----------------------------------------------------------------
 
         /// \brief does a single simulation step. Returns true if there is a
         /// collision
         bool simulation_step(const double time_step) override;
 
+        /// @brief moves status to given positions
         bool take_step(const Eigen::VectorXd& rb_positions,
             const double time_step) override;
 
+        /// \brief update problem using current status of bodies.
+        void update_constraint() override;
+
+        /// GET state of system
+        ///-----------------------------------------------------------------
         bool detect_collisions(const Eigen::MatrixXd& q0,
             const Eigen::MatrixXd& q1,
             const CollisionCheck check_type);
 
         /// \brief returns world vertices at the END of NEXT step.
         /// Returns the positions of the next step assuming no collisions forces
-        Eigen::MatrixXd vertices_next(const double time_step) override;
+        Eigen::MatrixXd vertices_next(const double time_step) const override;
+
+        /// \brief returns world vertices at the END of step (current)
+        Eigen::MatrixXd vertices() const override
+        {
+            return m_assembler.world_vertices_t1();
+        }
+        /// \brief returns world vertices at the BEGINNING of step (current)
+        Eigen::MatrixXd vertices_prev() const override
+        {
+            return m_assembler.world_vertices_t0();
+        }
+        /// \brief returns world vertices that we are solving collisions for
+        Eigen::MatrixXd vertices_collision() const override
+        {
+            return vertices_q1;
+        }
+
         Eigen::Vector3d rb_position_next(
             const RigidBody& rb, const double time_step) const;
 
-        /// \brief update problem using current status of bodies.
-        void update_constraint() override;
-
+        /// \brief velocity of vertices at the END of the step
+        /// as_delta = true, will return vertices / time_step;
         Eigen::MatrixXd velocities(
-            const bool as_delta, const double time_step) override;
+            const bool as_delta, const double time_step) const override;
 
+        /// \brief collision forced applied to fix END position of vertices
+        /// as_delta = true, will return Fc M^-1 / (time_step^2);
         Eigen::MatrixXd collision_force(
-            const bool as_delta, const double time_step) override;
+            const bool as_delta, const double time_step) const override;
+
+        const Eigen::MatrixXi& edges() const override
+        {
+            return m_assembler.m_edges;
+        }
+
+        const Eigen::MatrixXb& particle_dof_fixed() const override
+        {
+            return m_assembler.is_dof_fixed;
+        }
+        const Eigen::VectorXb& is_dof_fixed() override
+        {
+            return m_assembler.is_rb_dof_fixed;
+        }
+
+        const Eigen::VectorXd& gravity() const override { return gravity_; }
 
         const opt::CollisionConstraint& constraint() override
         {
             return *m_constraint_ptr;
         }
-
-        /// \brief returns world vertices at the END of step (current)
-        Eigen::MatrixXd vertices() override
-        {
-            return m_assembler.world_vertices_t1();
-        }
-        /// \brief returns world vertices at the BEGINNING of step (current)
-        Eigen::MatrixXd vertices_prev() override
-        {
-            return m_assembler.world_vertices_t0();
-        }
-
-        const Eigen::MatrixXi& edges() override { return m_assembler.m_edges; }
-        const Eigen::VectorXb& is_dof_fixed() override
-        {
-            return m_assembler.is_rb_dof_fixed;
-        }
-        const Eigen::MatrixXb& particle_dof_fixed() override
-        {
-            return m_assembler.is_dof_fixed;
-        }
-        const Eigen::VectorXd& gravity() override { return gravity_; }
 
         ////////////////////////////////////////////////////////////////////////
         // Objective function and its derivatives.
@@ -124,7 +146,7 @@ namespace physics {
         ///
         /// creates sample points at xy coordinates
         void create_sample_points(const Eigen::MatrixXd& xy_points,
-            Eigen::MatrixXd& sample_points) override;
+            Eigen::MatrixXd& sample_points) const override;
 
         ///////////////////////////////////////////////////////////////////////
         /// BARRIER SPECIFIC
@@ -149,10 +171,16 @@ namespace physics {
         double collision_eps;
 
     protected:
-        Eigen::MatrixXd m_q0; ///< vertices positions at begining of interval
-        Eigen::MatrixXd m_q1; ///< vertices positions at end of interval
-        Eigen::MatrixXd m_Fcollision; ///< forces used to resolve collisions
-        Eigen::VectorXd m_sigma1; ///< rigid body positions at end of interval
+        /// Used during collision resolution
+        ///< vertices positions at begining of interval
+        Eigen::MatrixXd vertices_t0;
+        ///< vertices positions at end of interval
+        Eigen::MatrixXd vertices_q1;
+        ///< rigid body positions at end of interval
+        Eigen::VectorXd rb_positions_t1;
+
+        /// Used for visualization and debugging
+        Eigen::MatrixXd Fcollision; ///< forces used to resolve collisions
     };
 
 } // namespace physics

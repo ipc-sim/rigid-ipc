@@ -6,6 +6,8 @@
 #include <opt/barrier.hpp>
 #include <utils/eigen_ext.hpp>
 
+#include <solvers/solver_factory.hpp>
+
 #include <logger.hpp>
 #include <profiler.hpp>
 
@@ -13,25 +15,15 @@ namespace ccd {
 namespace opt {
 
     BarrierSolver::BarrierSolver()
-        : min_barrier_epsilon(1e-5)
-        , inner_solver_type(BarrierInnerSolver::NEWTON)
-        , num_outer_iterations_(0)
+        : BarrierSolver("barrier_solver")
     {
-        newton_inner_solver = NewtonSolver();
-        bfgs_inner_solver = BFGSSolver();
-        gradient_descent_inner_solver = GradientDescentSolver();
     }
 
-    OptimizationSolver& BarrierSolver::get_inner_solver()
+    BarrierSolver::BarrierSolver(const std::string& name)
+        : OptimizationSolver(name)
+        , min_barrier_epsilon(1e-5)
+        , num_outer_iterations_(0)
     {
-        switch (inner_solver_type) {
-        case BarrierInnerSolver::NEWTON:
-            return newton_inner_solver;
-        case BarrierInnerSolver::BFGS:
-            return bfgs_inner_solver;
-        default:
-            return gradient_descent_inner_solver;
-        }
     }
 
     void BarrierSolver::clear()
@@ -39,6 +31,21 @@ namespace opt {
         num_outer_iterations_ = 0;
         general_problem_ptr = nullptr;
         barrier_problem_ptr.reset();
+    }
+
+    void BarrierSolver::settings(const nlohmann::json& json)
+    {
+        min_barrier_epsilon = json["min_barrier_epsilon"].get<double>();
+        inner_solver_ptr = SolverFactory::factory().get_solver(
+            json["inner_solver"].get<std::string>());
+    }
+
+    nlohmann::json BarrierSolver::settings() const
+    {
+        nlohmann::json json;
+        json["min_barrier_epsilon"] = min_barrier_epsilon;
+        json["inner_solver"] = get_inner_solver().name();
+        return json;
     }
 
     void BarrierSolver::init(OptimizationProblem& original_problem)
@@ -111,14 +118,20 @@ namespace opt {
         return results;
     }
 
-    void BarrierSolver::eval_f(const Eigen::MatrixXd& points, Eigen::VectorXd& fx){
+    void BarrierSolver::eval_f(
+        const Eigen::MatrixXd& points, Eigen::VectorXd& fx)
+    {
         fx.resize(points.rows());
         assert(points.cols() == barrier_problem_ptr->num_vars);
 
-        for (int i=0; i < points.rows();++i) {
+        for (int i = 0; i < points.rows(); ++i) {
             fx(i) = barrier_problem_ptr->eval_f(points.row(i));
         }
+    }
 
+    Eigen::VectorXd BarrierSolver::get_grad_f() const
+    {
+        return barrier_problem_ptr->eval_grad_f(barrier_problem_ptr->x0);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

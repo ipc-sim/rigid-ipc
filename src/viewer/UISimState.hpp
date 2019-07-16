@@ -13,7 +13,6 @@ namespace ccd {
 class UISimState : public igl::opengl::glfw::imgui::ImGuiMenu {
     typedef igl::opengl::glfw::imgui::ImGuiMenu Super;
 
-
 public:
     UISimState();
     ~UISimState() override {}
@@ -39,9 +38,11 @@ public:
 
     inline bool load(std::string scene_filename) override
     {
-        m_state.load_scene(scene_filename);
-        load_scene();
-        return true;
+        if (m_state.load_scene(scene_filename)) {
+            load_scene();
+            return true;
+        }
+        return false;
     }
 
     inline void reload()
@@ -56,11 +57,13 @@ public:
         redraw_scene();
     }
 
-    inline void solve_collisions(){
+    inline void solve_collisions()
+    {
         m_state.solve_collision();
         redraw_scene();
     }
-    inline void step_solve_collisions(){
+    inline void step_solve_collisions()
+    {
         m_state.collision_resolution_step();
         redraw_scene();
     }
@@ -72,12 +75,14 @@ public:
     bool m_has_scene;
     bool m_bkp_had_collision;
     bool m_bkp_has_collision;
-    int m_log_level;      ///< brief setup log
+    int m_log_level;        ///< brief setup log
     double m_interval_time; ///< time within the interval
     bool m_show_as_delta;
-     ///  \brief show animation between current and next step (true) or prev step (false)
+    ///  \brief show animation between current and next step (true) or prev step
+    ///  (false)
     bool m_show_next_step;
-    Eigen::RowVector3d color_mesh, color_displ, color_velocity, color_fc, color_grid, color_inf;
+    Eigen::RowVector3d color_mesh, color_displ, color_velocity, color_fc,
+        color_grid, color_inf;
 
 protected:
     void draw_io();
@@ -86,17 +91,18 @@ protected:
     void draw_collision_menu();
     void draw_legends();
 
+
 private:
     std::shared_ptr<igl::opengl::GraphData> edges_data;
-    std::shared_ptr<igl::opengl::VectorFieldData> displacement_data;
+    std::shared_ptr<igl::opengl::VectorFieldData> next_displacement_data;
+    std::shared_ptr<igl::opengl::VectorFieldData> prev_displacement_data;
+    std::shared_ptr<igl::opengl::VectorFieldData> coll_displacement_data;
     std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
     std::shared_ptr<igl::opengl::VectorFieldData> collision_force_data;
     std::shared_ptr<igl::opengl::ScalarFieldData> grid_data;
 
     std::map<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>> datas_;
     std::vector<std::string> data_names_;
-
-
 };
 
 } // namespace ccd

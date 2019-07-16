@@ -28,6 +28,7 @@ namespace opt {
         double min_step_length;    ///< @brief Minimum step length.
 
         NewtonSolver();
+        NewtonSolver(const std::string& name);
         virtual ~NewtonSolver() override;
 
         /**
@@ -62,7 +63,8 @@ namespace opt {
          */
         bool compute_free_direction(const Eigen::VectorXd& gradient_free,
             const Eigen::SparseMatrix<double>& hessian_free,
-            Eigen::VectorXd& delta_x, bool make_psd = false);
+            Eigen::VectorXd& delta_x,
+            bool make_psd = false);
 
         /**
          * @brief Solve for the Newton direction
@@ -78,7 +80,11 @@ namespace opt {
          */
         bool compute_direction(const Eigen::VectorXd& gradient,
             const Eigen::SparseMatrix<double>& hessian,
-            Eigen::VectorXd& delta_x, bool make_psd = false);
+            Eigen::VectorXd& delta_x,
+            bool make_psd = false);
+
+        void settings(const nlohmann::json& /*json*/) override;
+        nlohmann::json settings() const override;
     };
 
     /**

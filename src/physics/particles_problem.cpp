@@ -18,12 +18,19 @@ namespace ccd {
 namespace physics {
 
     ParticlesDisplProblem::ParticlesDisplProblem()
-        : SimulationProblem("ParticlesProblem")
+        : ParticlesDisplProblem("particle_problem")
+    {
+    }
+
+    ParticlesDisplProblem::ParticlesDisplProblem(const std::string& name)
+        : SimulationProblem(name)
         , constraint_ptr(nullptr)
         , intermediate_callback(nullptr)
         , use_mass_matrix(true)
+        , collision_eps(2.0)
         , update_constraint_set(true)
         , is_linesearch_active(false)
+
     {
     }
 
@@ -76,22 +83,15 @@ namespace physics {
         vertices_prev_ = vertices_;
         update_constraint();
     }
-
-    bool ParticlesDisplProblem::detect_collisions(const Eigen::MatrixXd& q0,
-        const Eigen::MatrixXd& q1,
-        const CollisionCheck check_type) const
+    nlohmann::json ParticlesDisplProblem::settings() const
     {
-        assert(q0.cols() == 2);
-        assert(q1.cols() == 2);
-
-        EdgeVertexImpacts ev_impacts;
-        double scale
-            = check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
-
-        ccd::detect_edge_vertex_collisions(q0, (q1 - q0) * scale, edges_,
-            ev_impacts, constraint_ptr->detection_method,
-            /*reset_impacts=*/true);
-        return ev_impacts.size() > 0;
+        nlohmann::json json;
+        json["constraint"] = constraint_ptr->name();
+        json["use_mass_matrix"] = use_mass_matrix;
+        json["update_constraint_set"] = update_constraint_set;
+        json["collision_eps"] = collision_eps;
+        json["gravity"] = io::to_json(gravity_);
+        return json;
     }
 
     bool ParticlesDisplProblem::simulation_step(const double time_step)
@@ -111,21 +111,27 @@ namespace physics {
         return detect_collisions(q0, q1, CollisionCheck::CONSERVATIVE);
     }
 
-    Eigen::MatrixXd ParticlesDisplProblem::vertices_next(const double time_step)
+    void ParticlesDisplProblem::update_constraint()
     {
-        Eigen::MatrixXd x = vertices_;
-        x += time_step * velocities_; // momentum
-        x.rowwise()
-            += time_step * time_step * gravity_.transpose(); // body-forces
-        x = (is_particle_dof_fixed).select(vertices_, x);   // reset fixed nodes
-        return x;
+        vertices_t0 = vec_vertices_t0 = vertices_prev_;
+        vertices_t1 = vec_vertices_t1 = vertices_;
+
+        flatten(vec_vertices_t0);
+        flatten(vec_vertices_t1);
+
+        constraint_ptr->initialize(
+            vertices_t0, edges_, vertices_t1 - vertices_t0);
+
+        // base problem initial solution
+        x0 = vec_vertices_t0; // start from collision free state
+        num_vars = int(x0.size());
     }
 
     bool ParticlesDisplProblem::take_step(
         const Eigen::VectorXd& x, const double time_step)
     {
         assert(constraint_ptr != nullptr);
-        const Eigen::VectorXd& q1_collision = q1_;
+        const Eigen::VectorXd& q1_collision = vec_vertices_t1;
 
         // update collision forces q* = q_collision + Fcollision
         //           Fc = (q* - q) M / (dt^2)
@@ -145,8 +151,40 @@ namespace physics {
         return detect_collisions(q0, q1, CollisionCheck::EXACT);
     }
 
+    /// ------------------------------------------------------------------------------
+    /// GET state of system
+    /// ------------------------------------------------------------------------------
+
+    bool ParticlesDisplProblem::detect_collisions(const Eigen::MatrixXd& q0,
+        const Eigen::MatrixXd& q1,
+        const CollisionCheck check_type) const
+    {
+        assert(q0.cols() == 2);
+        assert(q1.cols() == 2);
+
+        EdgeVertexImpacts ev_impacts;
+        double scale
+            = check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
+
+        ccd::detect_edge_vertex_collisions(q0, (q1 - q0) * scale, edges_,
+            ev_impacts, constraint_ptr->detection_method,
+            /*reset_impacts=*/true);
+        return ev_impacts.size() > 0;
+    }
+
+    Eigen::MatrixXd ParticlesDisplProblem::vertices_next(
+        const double time_step) const
+    {
+        Eigen::MatrixXd x = vertices_;
+        x += time_step * velocities_; // momentum
+        x.rowwise()
+            += time_step * time_step * gravity_.transpose(); // body-forces
+        x = (is_particle_dof_fixed).select(vertices_, x); // reset fixed nodes
+        return x;
+    }
+
     Eigen::MatrixXd ParticlesDisplProblem::velocities(
-        const bool as_delta, const double time_step)
+        const bool as_delta, const double time_step) const
     {
         if (as_delta) {
             return velocities_ * time_step;
@@ -154,31 +192,16 @@ namespace physics {
             return velocities_;
     }
     Eigen::MatrixXd ParticlesDisplProblem::collision_force(
-        const bool as_delta, const double time_step)
+        const bool as_delta, const double time_step) const
     {
         if (as_delta) {
-            flatten(Fcollision);
-            Eigen::MatrixXd Fc_delta
-                = inv_mass_matrix * Fcollision * (time_step * time_step);
-            unflatten(Fcollision, 2);
+            Eigen::MatrixXd Fc_delta = Fcollision;
+            flatten(Fc_delta);
+            Fc_delta = inv_mass_matrix * Fc_delta * (time_step * time_step);
             unflatten(Fc_delta, 2);
             return Fc_delta;
         }
         return Fcollision;
-    }
-    void ParticlesDisplProblem::update_constraint()
-    {
-        q0_ = vertices_prev_;
-        q1_ = vertices_;
-
-        constraint_ptr->initialize(q0_, edges_, q1_ - q0_);
-
-        flatten(q0_);
-        flatten(q1_);
-
-        // base problem initial solution
-        x0 = q0_; // start from collision free state
-        num_vars = int(x0.size());
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -187,14 +210,14 @@ namespace physics {
 
     double ParticlesDisplProblem::eval_f(const Eigen::VectorXd& q1)
     {
-        Eigen::VectorXd diff = q1 - q1_;
+        Eigen::VectorXd diff = q1 - vec_vertices_t1;
         return 0.5 * diff.transpose() * mass_matrix * diff;
     }
 
     Eigen::VectorXd ParticlesDisplProblem::eval_grad_f(
         const Eigen::VectorXd& q1)
     {
-        return mass_matrix * (q1 - q1_);
+        return mass_matrix * (q1 - vec_vertices_t1);
     }
 
     Eigen::SparseMatrix<double> ParticlesDisplProblem::eval_hessian_f(
@@ -218,7 +241,7 @@ namespace physics {
     ////////////////////////////////////////////////////////////////////////////
     Eigen::MatrixXd ParticlesDisplProblem::update_g(const Eigen::VectorXd& q1)
     {
-        Eigen::MatrixXd Uk = q1 - q0_;
+        Eigen::MatrixXd Uk = q1 - vec_vertices_t0;
         unflatten(Uk, 2);
 
         if (!is_linesearch_active && update_constraint_set) {
@@ -312,8 +335,10 @@ namespace physics {
     }
 
     void ParticlesDisplProblem::create_sample_points(
-            const Eigen::MatrixXd& xy_points, Eigen::MatrixXd& sample_points){
-        // for now we will use the position as the position of the first rigid body
+        const Eigen::MatrixXd& xy_points, Eigen::MatrixXd& sample_points) const
+    {
+        // for now we will use the position as the position of the first rigid
+        // body
         assert(xy_points.cols() == 2);
         sample_points.resize(xy_points.rows(), num_vars);
 
@@ -324,8 +349,8 @@ namespace physics {
         // x-entries
         sample_points.block(0, 0, xy_points.rows(), 1) = xy_points.col(0);
         // y-entries
-        sample_points.block(0, num_vars/2, xy_points.rows(), 1) = xy_points.col(1);
-
+        sample_points.block(0, num_vars / 2, xy_points.rows(), 1)
+            = xy_points.col(1);
     }
 
 } // namespace physics

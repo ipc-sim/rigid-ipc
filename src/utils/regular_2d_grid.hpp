@@ -14,4 +14,7 @@ namespace ccd {
 ///
 void regular_2d_grid(
     const int n, const bool tri, Eigen::MatrixXd& V, Eigen::MatrixXi& F);
+
+void regular_2d_grid(
+    const int num_cols, const int num_rows, Eigen::MatrixXd& V, Eigen::MatrixXi& F);
 } // namespace ccd

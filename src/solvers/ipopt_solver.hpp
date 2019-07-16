@@ -46,9 +46,9 @@ namespace opt {
 
     class IpoptSolver : public OptimizationSolver {
     public:
-
-
         IpoptSolver();
+        IpoptSolver(const std::string& name);
+
         IpoptSolver(double tolerance, int print_level, int max_iterations);
         OptimizationResults solve(OptimizationProblem& problem) override;
 
@@ -82,8 +82,11 @@ namespace opt {
          * used for row/col entries in the sparse matrix format (C_STYLE:
          * 0-based, FORTRAN_STYLE: 1-based)
          */
-        virtual bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
-            Index& nnz_h_lag, IndexStyleEnum& index_style) override;
+        virtual bool get_nlp_info(Index& n,
+            Index& m,
+            Index& nnz_jac_g,
+            Index& nnz_h_lag,
+            IndexStyleEnum& index_style) override;
 
         /**
          * n: (in), the number of variables in the problem (dimension of $
@@ -95,8 +98,12 @@ namespace opt {
          * above formulation by setting the corresponding components of g_l
          * and g_u to the same value.
          * */
-        virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u, Index m,
-            Number* g_l, Number* g_u) override;
+        virtual bool get_bounds_info(Index n,
+            Number* x_l,
+            Number* x_u,
+            Index m,
+            Number* g_l,
+            Number* g_u) override;
 
         /**
          * n: (in), the number of variables in the problem (dimension of $
@@ -112,8 +119,14 @@ namespace opt {
          * (out), the initial values for the constraint multipliers, $
          * \lambda$.
          */
-        virtual bool get_starting_point(Index n, bool init_x, Number* x,
-            bool init_z, Number* z_L, Number* z_U, Index m, bool init_lambda,
+        virtual bool get_starting_point(Index n,
+            bool init_x,
+            Number* x,
+            bool init_z,
+            Number* z_L,
+            Number* z_U,
+            Index m,
+            bool init_lambda,
             Number* lambda) override;
 
         /**
@@ -171,8 +184,14 @@ namespace opt {
          * values: (out), the values of the entries in the Jacobian of the
          * constraints.
          */
-        virtual bool eval_jac_g(Index n, const Number* x, bool new_x, Index m,
-            Index nele_jac, Index* iRow, Index* jCol, Number* values) override;
+        virtual bool eval_jac_g(Index n,
+            const Number* x,
+            bool new_x,
+            Index m,
+            Index nele_jac,
+            Index* iRow,
+            Index* jCol,
+            Number* values) override;
 
         /** This method is called once per iteration, after the iteration
          *  summary output has been printed.  It provides the current
@@ -189,10 +208,18 @@ namespace opt {
          *  sorted out, etc.  The status indicates things like whether the
          *  algorithm is in the restoration phase...  In the restoration
          *  phase, the dual variables are probably not not changing. */
-        virtual bool intermediate_callback(AlgorithmMode mode, Index iter,
-            Number obj_value, Number inf_pr, Number inf_du, Number mu,
-            Number d_norm, Number regularization_size, Number alpha_du,
-            Number alpha_pr, Index ls_trials, const IpoptData* ip_data,
+        virtual bool intermediate_callback(AlgorithmMode mode,
+            Index iter,
+            Number obj_value,
+            Number inf_pr,
+            Number inf_du,
+            Number mu,
+            Number d_norm,
+            Number regularization_size,
+            Number alpha_du,
+            Number alpha_pr,
+            Index ls_trials,
+            const IpoptData* ip_data,
             IpoptCalculatedQuantities* ip_cq) override;
 
         /** This method is called at the very end of the optimization.  It
@@ -200,9 +227,15 @@ namespace opt {
          *  stored as the solution.  The status flag indicates the outcome
          *  of the optimization, where SolverReturn is defined in
          *  IpAlgTypes.hpp.  */
-        virtual void finalize_solution(SolverReturn status, Index n,
-            const Number* x, const Number* z_L, const Number* z_U, Index m,
-            const Number* g, const Number* lambda, Number obj_value,
+        virtual void finalize_solution(SolverReturn status,
+            Index n,
+            const Number* x,
+            const Number* z_L,
+            const Number* z_U,
+            Index m,
+            const Number* g,
+            const Number* lambda,
+            Number obj_value,
             const IpoptData* ip_data,
             IpoptCalculatedQuantities* ip_cq) override;
     };

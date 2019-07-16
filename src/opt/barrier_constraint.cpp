@@ -6,15 +6,43 @@
 
 namespace ccd {
 namespace opt {
+    // map TaskState values to JSON as strings
+    NLOHMANN_JSON_SERIALIZE_ENUM(InitialBarrierEpsilon,
+        { { MIN_TOI, "min_toi" }, { MAX_TOI, "max_toi" },
+            { CUSTOM, "custom" } })
 
     BarrierConstraint::BarrierConstraint()
-        : barrier_epsilon(0.0)
-        , initial_epsilon(InitialBarrierEpsilon::MIN_TOI)
+        : BarrierConstraint("barrier_constraint")
     {
     }
 
+    BarrierConstraint::BarrierConstraint(const std::string& name)
+        : CollisionConstraint(name)
+        , barrier_epsilon(0.0)
+        , custom_inital_epsilon(1.0)
+        , initial_epsilon(InitialBarrierEpsilon::MIN_TOI)
+
+    {
+    }
+
+    void BarrierConstraint::settings(const nlohmann::json& json)
+    {
+        initial_epsilon = json["initial_epsilon"].get<InitialBarrierEpsilon>();
+        custom_inital_epsilon = json["custom_initial_epsilon"].get<double>();
+    }
+
+    nlohmann::json BarrierConstraint::settings() const
+    {
+        nlohmann::json json;
+        json["initial_epsilon"] = initial_epsilon;
+        json["custom_inital_epsilon"] = custom_inital_epsilon;
+
+        return json;
+    }
+
     void BarrierConstraint::initialize(const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2i& edges, const Eigen::MatrixXd& Uk)
+        const Eigen::MatrixX2i& edges,
+        const Eigen::MatrixXd& Uk)
     {
         this->barrier_epsilon = 0.0; // Temporary until collisions are computed.
         CollisionConstraint::initialize(vertices, edges, Uk);
@@ -55,8 +83,8 @@ namespace opt {
                     compare_impacts_by_time<EdgeEdgeImpact>)
                                             ->time;
                 break;
-            case InitialBarrierEpsilon::ONE:
-                this->barrier_epsilon = 1;
+            case InitialBarrierEpsilon::CUSTOM:
+                this->barrier_epsilon = custom_inital_epsilon;
                 break;
             }
         } else {
@@ -92,7 +120,8 @@ namespace opt {
     }
 
     void BarrierConstraint::compute_constraints_and_derivatives(
-        const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers,
+        const Eigen::MatrixXd& Uk,
+        Eigen::VectorXd& barriers,
         Eigen::MatrixXd& barriers_jacobian,
         std::vector<Eigen::SparseMatrix<double>>& barriers_hessian)
 

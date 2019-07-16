@@ -11,7 +11,13 @@ namespace ccd {
 namespace opt {
 
     IpoptSolver::IpoptSolver()
-        : tolerance(1e-8)
+        : IpoptSolver("ipopt_solver")
+    {
+    }
+
+    IpoptSolver::IpoptSolver(const std::string& name)
+        : OptimizationSolver(name)
+        , tolerance(1e-8)
         , print_level(0)
     {
         initialize();
@@ -19,7 +25,7 @@ namespace opt {
 
     IpoptSolver::IpoptSolver(
         double tolerance, int print_level, int max_iterations)
-        : OptimizationSolver(max_iterations)
+        : OptimizationSolver("IpoptSolver", max_iterations)
         , tolerance(tolerance)
         , print_level(print_level)
     {
@@ -92,12 +98,12 @@ namespace opt {
         assert(n == problem->num_vars);
         assert(m == problem->num_constraints);
 
-        for (Index i=0; i<n; i++){
+        for (Index i = 0; i < n; i++) {
             x_lower[i] = NO_LOWER_BOUND;
             x_upper[i] = NO_UPPER_BOUND;
         }
 
-        for (Index i=0; i<m; i++){
+        for (Index i = 0; i < m; i++) {
             g_lower[i] = 0.0;
             g_upper[i] = NO_UPPER_BOUND;
         }

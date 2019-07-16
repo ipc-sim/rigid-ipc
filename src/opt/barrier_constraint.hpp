@@ -9,14 +9,15 @@
 namespace ccd {
 namespace opt {
 
-    enum InitialBarrierEpsilon { MIN_TOI, MAX_TOI, ONE };
-
-    static const char* InitialBarrierEpsilonNames[]
-        = { "MIN_TOI", "MAX_TOI", "ONE" };
+    enum InitialBarrierEpsilon { MIN_TOI, MAX_TOI, CUSTOM };
 
     class BarrierConstraint : public CollisionConstraint {
     public:
         BarrierConstraint();
+        BarrierConstraint(const std::string& name);
+
+        void settings(const nlohmann::json& json) override;
+        nlohmann::json settings() const override;
 
         void resetBarrierEpsilon();
 
@@ -54,6 +55,7 @@ namespace opt {
         // Settings
         // ----------
         double barrier_epsilon;
+        double custom_inital_epsilon;
         InitialBarrierEpsilon initial_epsilon;
     };
 

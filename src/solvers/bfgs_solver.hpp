@@ -15,6 +15,7 @@ namespace opt {
     class BFGSSolver : public OptimizationSolver {
     public:
         BFGSSolver();
+        BFGSSolver(const std::string& name);
         virtual ~BFGSSolver() override;
 
         /**
@@ -29,6 +30,9 @@ namespace opt {
          */
         virtual OptimizationResults solve(
             OptimizationProblem& problem) override;
+
+        void settings(const nlohmann::json& /*json*/) override;
+        nlohmann::json settings() const override;
 
         double absolute_tolerance; ///< @brief Convergence tolerance.
         double min_step_length;    ///< @brief Minimum step length.

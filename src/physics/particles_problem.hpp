@@ -28,53 +28,64 @@ namespace physics {
     class ParticlesDisplProblem : public SimulationProblem {
     public:
         ParticlesDisplProblem();
+        ParticlesDisplProblem(const std::string& name);
         ~ParticlesDisplProblem() override {}
 
         ////////////////////////////////////////////////////////////////////////
         /// SIMULATION
 
         void init(const nlohmann::json& params) override;
+        nlohmann::json settings() const override;
 
         /// @brief  does a single simulation step. Returns true if there is a
         /// collision
         bool simulation_step(const double time_step) override;
 
-        /// @bried return candidate position of vertices, assuming no collisions
-        Eigen::MatrixXd vertices_next(const double time_step) override;
-
         /// @brief moves status to given positions
         bool take_step(
             const Eigen::VectorXd& positions, const double time_step) override;
 
+        /// \brief update optimization problem using current status.
+        void update_constraint() override;
+
+        /// --------------------------------------------------------------------------
+        Eigen::MatrixXd vertices() const override { return vertices_; }
+        /// @bried return candidate position of vertices, assuming no collisions
+        Eigen::MatrixXd vertices_next(const double time_step) const override;
+        Eigen::MatrixXd vertices_prev() const override
+        {
+            return vertices_prev_;
+        }
+        Eigen::MatrixXd vertices_collision() const override { return vertices_t1; }
+
+        /// \brief velocity of vertices at the END of the step
+        /// as_delta = true, will return vertices / time_step;
+        Eigen::MatrixXd velocities(
+            const bool as_delta, const double time_step) const override;
+
+        /// \brief collision forced applied to fix END position of vertices
+        /// as_delta = true, will return Fc M^-1 / (time_step^2);
+        Eigen::MatrixXd collision_force(
+            const bool as_delta, const double time_step) const override;
+
+        const Eigen::MatrixXi& edges() const override { return edges_; }
+
+        const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
+        const Eigen::MatrixXb& particle_dof_fixed() const override
+        {
+            return is_particle_dof_fixed;
+        }
+        const Eigen::VectorXd& gravity() const override { return gravity_; }
+
         bool detect_collisions(const Eigen::MatrixXd& q0,
             const Eigen::MatrixXd& q1,
             const CollisionCheck check_type) const;
-
-        /// \brief update optimization problem using current status.
-        void update_constraint() override;
 
         const opt::CollisionConstraint& constraint() override
         {
             return *constraint_ptr;
         }
 
-        Eigen::MatrixXd vertices() override { return vertices_; }
-        Eigen::MatrixXd vertices_prev() override { return vertices_prev_; }
-        Eigen::MatrixXd velocities(
-            const bool as_delta, const double time_step) override;
-
-        /// \brief collision forced applied to fix END position of vertices
-        Eigen::MatrixXd collision_force(
-            const bool as_delta, const double time_step) override;
-
-        const Eigen::MatrixXi& edges() override { return edges_; }
-
-        const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
-        const Eigen::MatrixXb& particle_dof_fixed() override
-        {
-            return is_particle_dof_fixed;
-        }
-        const Eigen::VectorXd& gravity() override { return gravity_; }
         ////////////////////////////////////////////////////////////////////////
         /// CCD OPTIMIZATION PROBLEM
         ///
@@ -131,7 +142,7 @@ namespace physics {
         ///
         /// creates sample points at xy coordinates
         void create_sample_points(const Eigen::MatrixXd& xy_points,
-            Eigen::MatrixXd& sample_points) override;
+            Eigen::MatrixXd& sample_points) const override;
 
         ///////////////////////////////////////////////////////////////////////
         virtual bool has_barrier_constraint() override
@@ -187,8 +198,14 @@ namespace physics {
         ////////////////////////////////////////////////////////////////////////
 
     protected:
-        Eigen::MatrixXd q0_; ///< vertices positions at begining of interval
-        Eigen::MatrixXd q1_; ///< vertices positions at end of interval
+        ///< 2D vertices positions at begining of interval
+        Eigen::MatrixXd vertices_t0;
+        ///< 2D vertices positions at end of interval
+        Eigen::MatrixXd vertices_t1;
+        ///< flatten vertices positions at begining of interval
+        Eigen::MatrixXd vec_vertices_t0;
+        ///< flatten vertices positions at end of interval
+        Eigen::MatrixXd vec_vertices_t1;
 
         bool update_constraint_set;
         bool is_linesearch_active;

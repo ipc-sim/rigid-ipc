@@ -62,6 +62,7 @@ namespace opt {
     class NLOptSolver : public OptimizationSolver {
     public:
         NLOptSolver();
+        NLOptSolver(const std::string& name);
         ~NLOptSolver() override;
         OptimizationResults solve(OptimizationProblem& problem) override;
 

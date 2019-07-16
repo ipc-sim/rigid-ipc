@@ -13,13 +13,32 @@ namespace ccd {
 namespace opt {
 
     NewtonSolver::NewtonSolver()
-        : iteration_number(0)
+        : NewtonSolver("newton_solver")
+    {
+    }
+    NewtonSolver::NewtonSolver(const std::string& name)
+        : OptimizationSolver(name)
+        , iteration_number(0)
         , absolute_tolerance(1e-5)
         , min_step_length(1e-12)
     {
     }
 
     NewtonSolver::~NewtonSolver() {}
+
+    void NewtonSolver::settings(const nlohmann::json& json)
+    {
+        absolute_tolerance = json["absolute_tolerance"].get<double>();
+        min_step_length = json["min_step_length"].get<double>();
+    }
+
+    nlohmann::json NewtonSolver::settings() const
+    {
+        nlohmann::json json;
+        json["absolute_tolerance"] = absolute_tolerance;
+        json["min_step_length"] = min_step_length;
+        return json;
+    }
 
     OptimizationResults NewtonSolver::solve(OptimizationProblem& problem)
     {
@@ -116,7 +135,8 @@ namespace opt {
     bool NewtonSolver::compute_free_direction(
         const Eigen::VectorXd& gradient_free,
         const Eigen::SparseMatrix<double>& hessian_free,
-        Eigen::VectorXd& delta_x, bool make_psd)
+        Eigen::VectorXd& delta_x,
+        bool make_psd)
     {
         Eigen::VectorXd delta_x_free;
         bool success = compute_direction(
@@ -131,7 +151,8 @@ namespace opt {
     // Solve for the Newton direction (Δx = -H^{-1}∇f).
     // Return true if the solve was successful.
     bool NewtonSolver::compute_direction(const Eigen::VectorXd& gradient,
-        const Eigen::SparseMatrix<double>& hessian, Eigen::VectorXd& delta_x,
+        const Eigen::SparseMatrix<double>& hessian,
+        Eigen::VectorXd& delta_x,
         bool make_psd)
     {
         bool solve_success = false;

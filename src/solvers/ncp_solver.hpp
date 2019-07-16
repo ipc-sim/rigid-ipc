@@ -36,6 +36,7 @@ namespace opt {
     class NCPSolver : public OptimizationSolver {
     public:
         NCPSolver();
+        NCPSolver(const std::string& name);
         ~NCPSolver() override;
 
         OptimizationResults solve(OptimizationProblem& problem) override;

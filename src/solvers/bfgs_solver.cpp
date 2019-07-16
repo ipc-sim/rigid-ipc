@@ -15,12 +15,33 @@ namespace ccd {
 namespace opt {
 
     BFGSSolver::BFGSSolver()
-        : absolute_tolerance(1e-5)
+        : BFGSSolver("bfgs_solver")
+    {
+
+    }
+
+    BFGSSolver::BFGSSolver(const std::string& name)
+        : OptimizationSolver(name)
+        , absolute_tolerance(1e-5)
         , min_step_length(1e-12)
     {
     }
 
     BFGSSolver::~BFGSSolver() {}
+
+    void BFGSSolver::settings(const nlohmann::json& json)
+    {
+        absolute_tolerance = json["absolute_tolerance"].get<double>();
+        min_step_length = json["min_step_length"].get<double>();
+    }
+
+    nlohmann::json BFGSSolver::settings() const
+    {
+        nlohmann::json json;
+        json["absolute_tolerance"] = absolute_tolerance;
+        json["min_step_length"] = min_step_length;
+        return json;
+    }
 
     OptimizationResults BFGSSolver::solve(OptimizationProblem& problem)
     {

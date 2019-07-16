@@ -15,6 +15,8 @@ namespace opt {
     class GradientDescentSolver : public OptimizationSolver {
     public:
         GradientDescentSolver();
+        GradientDescentSolver(const std::string& name);
+
         virtual ~GradientDescentSolver() override;
 
         /**
@@ -54,6 +56,9 @@ namespace opt {
          */
         static bool compute_direction(
             const Eigen::VectorXd& gradient, Eigen::VectorXd& delta_x);
+
+        void settings(const nlohmann::json& /*json*/) override;
+        nlohmann::json settings() const override;
 
         double absolute_tolerance; ///< @brief Convergence tolerance.
         double min_step_length;    ///< @brief Minimum step length.

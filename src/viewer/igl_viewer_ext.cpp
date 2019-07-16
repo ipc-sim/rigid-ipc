@@ -8,10 +8,13 @@
 
 namespace igl {
 namespace opengl {
-    ViewerDataExt::ViewerDataExt(igl::opengl::glfw::Viewer* _viewer)
+    ViewerDataExt::ViewerDataExt(
+        igl::opengl::glfw::Viewer* _viewer, const Eigen::RowVector3d& color)
         : m_viewer(_viewer)
+        , m_color(color)
         , show_vertex_data(false)
         , m_log_scale(true)
+
     {
         data_id = m_viewer->data_list.size() - 1;
     }
@@ -70,22 +73,21 @@ namespace opengl {
     /// \brief GraphData::GraphData
     /// \param _viewer
     ////////////////////////////////////////////////////////////////////////
-    GraphData::GraphData(igl::opengl::glfw::Viewer* _viewer)
-        : ViewerDataExt(_viewer)
+    GraphData::GraphData(
+        igl::opengl::glfw::Viewer* _viewer, const Eigen::RowVector3d& color)
+        : ViewerDataExt(_viewer, color)
 
     {
     }
 
-    void GraphData::set_graph(const Eigen::MatrixXd& V,
-        const Eigen::MatrixXi& E,
-        const Eigen::RowVector3d& color)
+    void GraphData::set_graph(
+        const Eigen::MatrixXd& V, const Eigen::MatrixXi& E)
     {
         mV = set_vertices(V);
-        set_points(V, color);
-        set_edges(V, E, color);
+        set_points(V, m_color);
+        set_edges(V, E, m_color);
 
         mE = E;
-        m_color = color;
     }
 
     void GraphData::update_graph(const Eigen::MatrixXd& V)
@@ -138,31 +140,30 @@ namespace opengl {
     /// \brief VectorFieldData::VectorFieldData
     /// \param _viewer
     ////////////////////////////////////////////////////////////////////////
-    VectorFieldData::VectorFieldData(igl::opengl::glfw::Viewer* _viewer)
-        : ViewerDataExt(_viewer)
+    VectorFieldData::VectorFieldData(
+        igl::opengl::glfw::Viewer* _viewer, const Eigen::RowVector3d& color)
+        : ViewerDataExt(_viewer, color)
     {
     }
-    void VectorFieldData::set_vector_field(const Eigen::MatrixXd& V,
-        const Eigen::MatrixXd& F,
-        const Eigen::RowVector3d& color)
+    void VectorFieldData::set_vector_field(
+        const Eigen::MatrixXd& V, const Eigen::MatrixXd& F)
     {
         data().lines.resize(0, 9);
-        data().add_edges(V, V + F, color);
+        data().add_edges(V, V + F, m_color);
         mV = V;
         mF = F;
-        m_color = color;
     }
 
     void VectorFieldData::update_vector_field(
         const Eigen::MatrixXd& V, const Eigen::MatrixXd& F)
     {
-        set_vector_field(V, F, m_color);
+        set_vector_field(V, F);
     }
 
     void VectorFieldData::recolor()
     {
         if (mF.size() > 0) {
-            set_vector_field(mV, mF, m_color);
+            set_vector_field(mV, mF);
         }
     }
 
@@ -170,25 +171,24 @@ namespace opengl {
     /// \brief ScalarFieldData::ScalarFieldData
     /// \param _viewer
     ////////////////////////////////////////////////////////////////////////
-    ScalarFieldData::ScalarFieldData(igl::opengl::glfw::Viewer* _viewer)
-        : ViewerDataExt(_viewer)
+    ScalarFieldData::ScalarFieldData(igl::opengl::glfw::Viewer* _viewer,
+        const Eigen::RowVector3d& inf_color,
+        const Eigen::RowVector3d& bg_color)
+        : ViewerDataExt(_viewer, inf_color)
         , m_colormap_type(igl::COLOR_MAP_TYPE_JET)
-
+        , m_base_color(bg_color)
     {
     }
 
-    void ScalarFieldData::set_mesh(const Eigen::MatrixXd& V,
-        const Eigen::MatrixXi& F,
-        const Eigen::RowVector3d& base_color,
-        const Eigen::RowVector3d& inf_color)
+    void ScalarFieldData::set_mesh(
+        const Eigen::MatrixXd& V, const Eigen::MatrixXi& F)
     {
         mV = V;
         mF = F;
+        data().clear();
         data().set_mesh(V, F);
-        data().set_colors(base_color);
+        data().set_colors(m_base_color);
         data().show_lines = false;
-        m_base_color = base_color;
-        m_color = inf_color;
     }
 
     void ScalarFieldData::set_vertex_data(const Eigen::MatrixXd& fx)
@@ -199,6 +199,10 @@ namespace opengl {
 
     void ScalarFieldData::recolor()
     {
+        if(m_vertex_data.size() == 0){
+            return;
+        }
+
         Eigen::VectorXb is_finite;
         is_finite = m_vertex_data
                         .unaryExpr([](const double x) {

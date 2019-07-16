@@ -9,8 +9,25 @@ namespace ccd {
 namespace opt {
 
     VolumeConstraint::VolumeConstraint()
-        : volume_epsilon(1E-3)
+        : VolumeConstraint("volume_constraint")
     {
+    }
+    VolumeConstraint::VolumeConstraint(const std::string& name)
+        : CollisionConstraint(name)
+        , volume_epsilon(1E-3)
+    {
+    }
+
+    void VolumeConstraint::settings(const nlohmann::json& json)
+    {
+        volume_epsilon = json["volume_epsilon"].get<double>();
+    }
+
+    nlohmann::json VolumeConstraint::settings() const
+    {
+        nlohmann::json json;
+        json["volume_epsilon"] = volume_epsilon;
+        return json;
     }
 
     int VolumeConstraint::number_of_constraints()
@@ -52,7 +69,8 @@ namespace opt {
     }
 
     void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
-        Eigen::VectorXd& g_uk, Eigen::SparseMatrix<double>& g_uk_jacobian,
+        Eigen::VectorXd& g_uk,
+        Eigen::SparseMatrix<double>& g_uk_jacobian,
         Eigen::VectorXi& g_uk_active)
     {
         std::vector<DScalar> impact_volumes;
@@ -63,7 +81,8 @@ namespace opt {
     }
 
     void VolumeConstraint::compute_active_constraints(const Eigen::MatrixXd& Uk,
-        Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian)
+        Eigen::VectorXd& g_uk,
+        Eigen::MatrixXd& g_uk_jacobian)
     {
         std::vector<DScalar> impact_volumes;
         compute_constraints_per_impact(Uk, impact_volumes);

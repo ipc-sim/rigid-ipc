@@ -12,9 +12,28 @@ namespace ccd {
 namespace opt {
 
     GradientDescentSolver::GradientDescentSolver()
-        : absolute_tolerance(1e-5)
+        : GradientDescentSolver("gradient_descent_solver")
+    {
+    }
+    GradientDescentSolver::GradientDescentSolver(const std::string& name)
+        : OptimizationSolver(name)
+        , absolute_tolerance(1e-5)
         , min_step_length(1e-12)
     {
+    }
+
+    void GradientDescentSolver::settings(const nlohmann::json& json)
+    {
+        absolute_tolerance = json["absolute_tolerance"].get<double>();
+        min_step_length = json["min_step_length"].get<double>();
+    }
+
+    nlohmann::json GradientDescentSolver::settings() const
+    {
+        nlohmann::json json;
+        json["absolute_tolerance"] = absolute_tolerance;
+        json["min_step_length"] = min_step_length;
+        return json;
     }
 
     GradientDescentSolver::~GradientDescentSolver() {}

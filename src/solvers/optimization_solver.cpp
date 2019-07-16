@@ -3,14 +3,17 @@
 namespace ccd {
 namespace opt {
 
-    OptimizationSolver::OptimizationSolver()
+    OptimizationSolver::OptimizationSolver(const std::string& name)
         : free_dof()
         , max_iterations(3000)
+        , name_(name)
     {
     }
-    OptimizationSolver::OptimizationSolver(const int max_iterations)
+    OptimizationSolver::OptimizationSolver(
+        const std::string& name, const int max_iterations)
         : free_dof()
         , max_iterations(max_iterations)
+        , name_(name)
     {
     }
 

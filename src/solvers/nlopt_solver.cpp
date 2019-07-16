@@ -9,7 +9,13 @@ namespace ccd {
 namespace opt {
 
     NLOptSolver::NLOptSolver()
-        : algorithm(nlopt::LD_SLSQP)
+        : NLOptSolver("nlopt_solver")
+    {
+    }
+
+    NLOptSolver::NLOptSolver(const std::string& name)
+        : OptimizationSolver(name)
+        , algorithm(nlopt::LD_SLSQP)
         , absolute_tolerance(1e-8)
         , relative_tolerance(1e-8)
         , max_time(2e19)
@@ -78,8 +84,12 @@ namespace opt {
         return problem->eval_f(X);
     }
 
-    void nlopt_inequality_constraints(unsigned m, double* results, unsigned n,
-        const double* x, double* grad, void* data)
+    void nlopt_inequality_constraints(unsigned m,
+        double* results,
+        unsigned n,
+        const double* x,
+        double* grad,
+        void* data)
     {
         assert(data); // Need data to compute volumes
         OptimizationProblem* problem = static_cast<OptimizationProblem*>(data);
@@ -90,8 +100,7 @@ namespace opt {
         // We want g(x) >= 0, but NLopt expects all
         // constraints(x) ≤ 0, so stack the constraints and negate as needed.
         assert(uint(2 * problem->num_constraints) == m);
-        Eigen::VectorXd::Map(results, problem->num_constraints)
-            = -gx;
+        Eigen::VectorXd::Map(results, problem->num_constraints) = -gx;
 
         if (grad) {
             Eigen::MatrixXd dgx = problem->eval_jac_g(X).transpose();

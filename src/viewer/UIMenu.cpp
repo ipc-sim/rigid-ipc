@@ -10,7 +10,7 @@ void UISimState::draw_menu()
 {
     draw_labels_window();
 
-    float menu_width = 200.f * menu_scaling();
+    float menu_width = 220.f * menu_scaling();
     static bool player_menu = true;
     static bool settings_menu = true;
     static bool collisions_menu = true;
@@ -160,13 +160,14 @@ void UISimState::draw_collision_menu()
 }
 void UISimState::draw_settings()
 {
-    ImGui::Text("timestep_size: %.3g", m_state.m_timestep_size);
-    Eigen::VectorXd G = m_state.problem_ptr->gravity();
-    if (G.rows() == 2) {
-        ImGui::Text("gravity: %.3g, %.3g", G(0), G(1));
-    } else {
-        ImGui::Text("gravity: %.3g, %.3g, %.3g", G(0), G(1), G(2));
+    auto config = m_state.get_active_config();
+    ImGui::BeginChild("##config",
+        ImVec2(ImGui::GetWindowContentRegionWidth(), 300), false,
+        ImGuiWindowFlags_HorizontalScrollbar);
+    {
+        ImGui::TreeNodeJson(config);
     }
+    ImGui::EndChild();
 }
 
 void UISimState::draw_legends()
@@ -176,15 +177,19 @@ void UISimState::draw_legends()
     for (auto& label : get_data_names()) {
         auto ptr = get_data(label);
 
-        if (!ptr->is_scalar_field()){
+        if (!ptr->is_scalar_field()) {
             bool tmp = bool(ptr->data().show_overlay);
             ImGui::Checkbox(("##UI-" + label).c_str(), &tmp);
             ptr->data().show_overlay = tmp;
-        }
-        else {
+        } else {
             bool tmp = bool(ptr->data().show_faces);
-            ImGui::Checkbox(("##UI-" + label).c_str(), &tmp);
-            ptr->data().show_faces = tmp;
+            if (ImGui::Checkbox(("##UI-" + label).c_str(), &tmp)){
+                ptr->data().show_faces = tmp;
+                if (tmp){
+                    redraw_scene();
+                }
+            }
+
         }
         ImGui::SameLine();
         if (ImGui::DoubleColorEdit3((label + "##UI").c_str(), ptr->m_color)) {
@@ -206,8 +211,7 @@ void UISimState::draw_legends()
                     ("data##UI-" + label).c_str(), &ptr->show_vertex_data)) {
                 ptr->update_vertex_data();
             }
-        }
-        else if (ptr->is_scalar_field()) {
+        } else if (ptr->is_scalar_field()) {
             ImGui::SameLine();
             if (ImGui::Checkbox(
                     ("log##UI-" + label).c_str(), &ptr->m_log_scale)) {
@@ -215,12 +219,10 @@ void UISimState::draw_legends()
             }
             ImGui::SameLine();
             bool show_lines = ptr->data().show_lines;
-            if (ImGui::Checkbox(
-                    ("lines##UI-" + label).c_str(), &show_lines)) {
+            if (ImGui::Checkbox(("lines##UI-" + label).c_str(), &show_lines)) {
                 ptr->data().show_lines = show_lines;
                 ptr->recolor();
             }
-
         }
     }
 }

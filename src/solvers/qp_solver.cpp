@@ -16,9 +16,14 @@
 
 namespace ccd {
 namespace opt {
-
     QPSolver::QPSolver()
-        : absolute_tolerance(1e-8)
+        : QPSolver("qp_solver")
+    {
+    }
+
+    QPSolver::QPSolver(const std::string& name)
+        : OptimizationSolver(name)
+        , absolute_tolerance(1e-8)
         , relative_tolerance(1e-8)
         , qp_solver(QPSolverType::OSQP)
     {
@@ -46,7 +51,7 @@ namespace opt {
         A = problem.eval_jac_g(problem.x0).sparseView();
         // Linear constraint lower bounds
         // (0.0 - g(x0) + ∇g(x0) * x0) ∈ R^m
-        lc = - problem.eval_g(problem.x0) + A * problem.x0;
+        lc = -problem.eval_g(problem.x0) + A * problem.x0;
         // Linear constraint upper bounds
         // u ∈ R^m
         uc = Eigen::VectorXd(lc.rows());

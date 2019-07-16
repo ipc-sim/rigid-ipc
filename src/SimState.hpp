@@ -4,8 +4,8 @@
 
 #include <memory> // shared_ptr
 
-#include <solvers/optimization_solver.hpp>
 #include <physics/simulation_problem.hpp>
+#include <solvers/optimization_solver.hpp>
 
 namespace ccd {
 
@@ -13,8 +13,8 @@ class SimState {
 public:
     SimState();
 
-    void load_scene(const std::string& filename);
-    void reload_scene();
+    bool load_scene(const std::string& filename);
+    bool reload_scene();
     void init(const nlohmann::json& args);
 
     void simulation_step();
@@ -22,6 +22,9 @@ public:
     void collision_resolution_step();
 
     void get_collision_functional_isolines(Eigen::VectorXd& fx);
+
+    const nlohmann::json& get_config() { return args; }
+    nlohmann::json get_active_config();
 
     // CCD
     // ----------------------------------------------
@@ -44,8 +47,7 @@ public:
 
 protected:
     bool m_dirty_constraints;
-
-
+    void init_background_grid(const nlohmann::json& args);
 };
 
 } // namespace ccd

@@ -12,6 +12,10 @@ namespace opt {
     class VolumeConstraint : public CollisionConstraint {
     public:
         VolumeConstraint();
+        VolumeConstraint(const std::string& name);
+
+        void settings(const nlohmann::json& json) override;
+        nlohmann::json settings() const override;
 
         void compute_constraints(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk) override;

@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <imgui/imgui.h>
 #include <limits>
+#include <nlohmann/json.hpp>
 
 #define CCD_IM_ARRAYSIZE(_ARR) (int(sizeof(_ARR) / sizeof(*_ARR)))
 
@@ -33,6 +34,7 @@ bool DragDouble(const char* label,
     const char* format = "%.3f",
     float power = 1.0f); // If v_min >= v_max we have no bound
 
+void TreeNodeJson(const nlohmann::json json);
 bool DoubleColorEdit3(const char* label, Eigen::RowVector3d& color);
 void HelpMarker(const char* desc);
 } // namespace ImGui

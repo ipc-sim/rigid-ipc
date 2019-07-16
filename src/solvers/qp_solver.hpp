@@ -23,6 +23,7 @@ namespace opt {
     class QPSolver : public OptimizationSolver {
     public:
         QPSolver();
+        QPSolver(const std::string& name);
         ~QPSolver() override;
 
         OptimizationResults solve(OptimizationProblem& problem) override;

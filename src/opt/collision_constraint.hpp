@@ -1,14 +1,14 @@
 #pragma once
 
-#include <memory> // shared_ptr
 #include <Eigen/SparseCore>
+#include <memory> // shared_ptr
+
+#include <nlohmann/json.hpp>
 
 #include <ccd/collision_detection.hpp>
 #include <utils/not_implemented_error.hpp>
 
 #include <autodiff/autodiff_types.hpp>
-
-#include <memory>
 
 namespace ccd {
 namespace opt {
@@ -35,8 +35,17 @@ namespace opt {
 
     class CollisionConstraint {
     public:
-        CollisionConstraint();
+        CollisionConstraint(const std::string& name);
         virtual ~CollisionConstraint();
+
+        virtual void settings(const nlohmann::json& /*json*/)
+        {
+            throw NotImplementedError(
+                "settings OptimizationSolver not implemented");
+        }
+        virtual nlohmann::json settings() const { return nlohmann::json(); }
+
+        inline const std::string& name() const { return name_; }
 
         virtual void initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
@@ -146,6 +155,9 @@ namespace opt {
 
         std::shared_ptr<const Eigen::MatrixX2d> vertices;
         std::shared_ptr<const Eigen::MatrixX2i> edges;
+
+    protected:
+        std::string name_;
     };
 
     void slice_vector(const Eigen::MatrixX2d& data,

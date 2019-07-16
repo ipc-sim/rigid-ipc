@@ -15,7 +15,12 @@ namespace opt {
 
     NCPSolver::~NCPSolver() {}
     NCPSolver::NCPSolver()
-        : OptimizationSolver(/*max_iterations=*/1000)
+        : NCPSolver("ncp_solver")
+    {
+    }
+
+    NCPSolver::NCPSolver(const std::string& name)
+        : OptimizationSolver(name, /*max_iterations=*/1000)
         , keep_in_unfeasible(true)
         , check_convergence(true)
         , check_volume_increase(true)
@@ -78,7 +83,8 @@ namespace opt {
             Eigen::VectorXd delta_x;
             solve_lcp(delta_x);
 
-            // 2.2 Do line-search on delta to ensure volume is increased (-->0)
+            // 2.2 Do line-search on delta to ensure volume is increased
+            // (-->0)
             double gamma = 1.0;
             auto eval_g = [&](const Eigen::VectorXd& y) {
                 return -problem->eval_g(y).sum();

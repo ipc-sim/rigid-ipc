@@ -7,16 +7,10 @@
 #include <memory>
 
 #include <opt/barrier_constraint.hpp>
-#include <solvers/bfgs_solver.hpp>
-#include <solvers/gradient_descent_solver.hpp>
-#include <solvers/newton_solver.hpp>
+#include <solvers/optimization_solver.hpp>
 
 namespace ccd {
 namespace opt {
-
-    enum class BarrierInnerSolver { NEWTON, BFGS, GRADIENT_DESCENT };
-    static const char* BarrierInnerSolverNames[]
-        = { "Newton's Method", "BFGS", "Gradient Descent" };
 
     class BarrierProblem : public OptimizationProblem {
     public:
@@ -66,12 +60,20 @@ namespace opt {
     class BarrierSolver : public OptimizationSolver {
     public:
         BarrierSolver();
+        BarrierSolver(const std::string& name);
         ~BarrierSolver() override {}
 
         OptimizationResults solve(OptimizationProblem& problem) override;
-        OptimizationSolver& get_inner_solver();
+        OptimizationSolver& get_inner_solver() const
+        {
+            return *inner_solver_ptr;
+        }
 
         void clear() override;
+
+        void settings(const nlohmann::json& json) override;
+        nlohmann::json settings() const override;
+
         void init(OptimizationProblem& problem) override;
         OptimizationResults step_solve() override;
         int num_outer_iterations() override { return num_outer_iterations_; }
@@ -83,13 +85,17 @@ namespace opt {
         void eval_f(
             const Eigen::MatrixXd& points, Eigen::VectorXd& fx) override;
 
+        Eigen::VectorXd get_grad_f() const override;
+        bool has_inner_solver() override { return true; }
+        const OptimizationSolver& inner_solver() override
+        {
+            return get_inner_solver();
+        }
+
         double min_barrier_epsilon;
-        BarrierInnerSolver inner_solver_type;
 
     protected:
-        NewtonSolver newton_inner_solver;
-        BFGSSolver bfgs_inner_solver;
-        GradientDescentSolver gradient_descent_inner_solver;
+        std::shared_ptr<OptimizationSolver> inner_solver_ptr;
 
         std::unique_ptr<BarrierProblem> barrier_problem_ptr;
         OptimizationProblem* general_problem_ptr;
