@@ -35,6 +35,7 @@ namespace opt {
 
     void BarrierSolver::settings(const nlohmann::json& json)
     {
+        OptimizationSolver::settings(json);
         min_barrier_epsilon = json["min_barrier_epsilon"].get<double>();
         inner_solver_ptr = SolverFactory::factory().get_solver(
             json["inner_solver"].get<std::string>());
@@ -42,7 +43,7 @@ namespace opt {
 
     nlohmann::json BarrierSolver::settings() const
     {
-        nlohmann::json json;
+        nlohmann::json json = OptimizationSolver::settings();
         json["min_barrier_epsilon"] = min_barrier_epsilon;
         json["inner_solver"] = get_inner_solver().name();
         return json;
@@ -59,10 +60,6 @@ namespace opt {
 
         // Convert from the boolean vector to a vector of free dof indices
         inner_solver.init_free_dof(barrier_problem_ptr->is_dof_fixed());
-
-        // Calculate the maximum number of iteration allowable
-        inner_solver.max_iterations = int(max_iterations
-            / ceil(-log2(min_barrier_epsilon) + log2(barrier_epsilon())));
 
         barrier_problem_ptr->eval_intermediate_callback(
             barrier_problem_ptr->x0);

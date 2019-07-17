@@ -70,7 +70,8 @@ namespace opt {
 
         virtual bool has_inner_solver() { return false; }
 
-        virtual const OptimizationSolver& inner_solver() {
+        virtual const OptimizationSolver& inner_solver()
+        {
             throw NotImplementedError(
                 "inner_solver OptimizationSolver not implemented");
         }
@@ -79,12 +80,17 @@ namespace opt {
 
         inline const std::string& name() const { return name_; }
 
-        virtual void settings(const nlohmann::json& /*json*/)
+        virtual void settings(const nlohmann::json& json)
         {
-            throw NotImplementedError(
-                "settings OptimizationSolver not implemented");
+            max_iterations = json["max_iterations"].get<int>();
         }
-        virtual nlohmann::json settings() const { return nlohmann::json(); }
+
+        virtual nlohmann::json settings() const
+        {
+            nlohmann::json json;
+            json["max_iterations"] = max_iterations;
+            return json;
+        }
 
     protected:
         std::string name_;

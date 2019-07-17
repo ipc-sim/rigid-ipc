@@ -46,6 +46,9 @@ namespace physics {
         /// collisions
         virtual Eigen::MatrixXd vertices_collision() const = 0;
 
+        /// \brief position of degrees of freedom at the END of the step
+        virtual Eigen::MatrixXd dof_positions() const = 0;
+
         /// \brief velocity of vertices at the END of the step
         /// as_delta = true, will return vertices / time_step;
         virtual Eigen::MatrixXd velocities(
@@ -55,6 +58,10 @@ namespace physics {
         /// as_delta = true, will return Fc M^-1 / (time_step^2);
         virtual Eigen::MatrixXd collision_force(
             const bool as_delta, const double time_step) const = 0;
+
+        /// \brief unflattens a vector with all dofs into a matrix with one
+        /// objet dof per row
+        virtual void unflatten_dof(Eigen::MatrixXd& vec) const = 0;
 
         virtual const Eigen::MatrixXi& edges() const = 0;
 

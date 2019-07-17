@@ -6,6 +6,10 @@
 #include <profiler.hpp>
 
 namespace ccd {
+// !important: this needs to be define in the enum namespace
+NLOHMANN_JSON_SERIALIZE_ENUM(DetectionMethod,
+    { { HASH_GRID, "hash_grid" }, { BRUTE_FORCE, "brute_force" } })
+
 namespace opt {
 
     CollisionConstraint::CollisionConstraint(const std::string& name)
@@ -16,6 +20,20 @@ namespace opt {
     }
 
     CollisionConstraint::~CollisionConstraint() {}
+
+    void CollisionConstraint::settings(const nlohmann::json& json)
+    {
+        detection_method = json["detection_method"].get<DetectionMethod>();
+        extend_collision_set = json["extend_collision_set"].get<bool>();
+    }
+
+    nlohmann::json CollisionConstraint::settings() const
+    {
+        nlohmann::json json;
+        json["extend_collision_set"] = extend_collision_set;
+        json["detection_method"] = detection_method;
+        return json;
+    }
 
     void CollisionConstraint::initialize(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2i& E,

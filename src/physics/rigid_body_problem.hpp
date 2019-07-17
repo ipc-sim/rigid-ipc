@@ -67,6 +67,12 @@ namespace physics {
             return vertices_q1;
         }
 
+        Eigen::MatrixXd dof_positions() const override {
+            Eigen::MatrixXd p = m_assembler.rb_positions_t1();
+            unflatten_dof(p);
+            return p;
+        }
+
         Eigen::Vector3d rb_position_next(
             const RigidBody& rb, const double time_step) const;
 
@@ -79,6 +85,15 @@ namespace physics {
         /// as_delta = true, will return Fc M^-1 / (time_step^2);
         Eigen::MatrixXd collision_force(
             const bool as_delta, const double time_step) const override;
+
+        void unflatten_dof(Eigen::MatrixXd& vec) const override
+        {
+            // order is x,y,z,x,y,z,x,y,z,
+            assert(vec.rows() % 3 == 0);
+            vec.resize(3, vec.rows() / 3);
+            vec.transposeInPlace();
+
+        }
 
         const Eigen::MatrixXi& edges() const override
         {

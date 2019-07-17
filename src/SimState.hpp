@@ -21,7 +21,8 @@ public:
     bool solve_collision();
     void collision_resolution_step();
 
-    void get_collision_functional_isolines(Eigen::VectorXd& fx);
+    void get_collision_functional_field(Eigen::VectorXd& fx);
+    void get_collision_gradient(Eigen::MatrixXd& fx);
 
     const nlohmann::json& get_config() { return args; }
     nlohmann::json get_active_config();

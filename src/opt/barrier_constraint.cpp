@@ -6,7 +6,7 @@
 
 namespace ccd {
 namespace opt {
-    // map TaskState values to JSON as strings
+
     NLOHMANN_JSON_SERIALIZE_ENUM(InitialBarrierEpsilon,
         { { MIN_TOI, "min_toi" }, { MAX_TOI, "max_toi" },
             { CUSTOM, "custom" } })
@@ -29,11 +29,12 @@ namespace opt {
     {
         initial_epsilon = json["initial_epsilon"].get<InitialBarrierEpsilon>();
         custom_inital_epsilon = json["custom_initial_epsilon"].get<double>();
+        CollisionConstraint::settings(json);
     }
 
     nlohmann::json BarrierConstraint::settings() const
     {
-        nlohmann::json json;
+        nlohmann::json json = CollisionConstraint::settings();
         json["initial_epsilon"] = initial_epsilon;
         json["custom_inital_epsilon"] = custom_inital_epsilon;
 

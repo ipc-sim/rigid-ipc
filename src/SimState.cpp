@@ -69,24 +69,30 @@ void SimState::init(const nlohmann::json& args_in)
             "collision_eps": 2.0
          },
         "barrier_solver": {
-            "inner_solver": "gradient_descent_solver",
-            "min_barrier_epsilon":1e-5
+            "inner_solver": "newton_solver",
+            "min_barrier_epsilon":1e-5,
+            "max_iterations": 0
         },
         "gradient_descent_solver":{
             "absolute_tolerance": 1e-5,
-            "min_step_length": 1e-12
+            "min_step_length": 1e-12,
+            "max_iterations": 3000
         },
         "newton_solver":{
            "absolute_tolerance": 1e-5,
-           "min_step_length": 1e-12
+           "min_step_length": 1e-12,
+           "max_iterations": 3000
         },
         "bfgs_solver":{
-              "absolute_tolerance": 1e-5,
-              "min_step_length": 1e-12
+            "absolute_tolerance": 1e-5,
+            "min_step_length": 1e-12,
+            "max_iterations": 3000
         },
         "barrier_constraint":{
             "initial_epsilon":"min_toi",
-            "custom_initial_epsilon":1.0
+            "custom_initial_epsilon":1.0,
+            "detection_method": "hash_grid",
+            "extend_collision_set": true
         },
         "timestep_size": 0.1,
         "viewport_bbox": {"min":[0,0],"max":[0,0]}
@@ -189,15 +195,12 @@ void SimState::collision_resolution_step()
     }
 
     auto result = ccd_solver_ptr->step_solve();
-    auto grad_f = ccd_solver_ptr->get_grad_f();
-    std::cout << "grad_f" << std::endl;
-    std::cout << grad_f << std::endl;
 
     // TODO: use results.finished
     problem_ptr->take_step(result.x, m_timestep_size);
 }
 
-void SimState::get_collision_functional_isolines(Eigen::VectorXd& fx)
+void SimState::get_collision_functional_field(Eigen::VectorXd& fx)
 {
     if (m_dirty_constraints) {
         problem_ptr->update_constraint();
@@ -208,6 +211,19 @@ void SimState::get_collision_functional_isolines(Eigen::VectorXd& fx)
     Eigen::MatrixXd Xk;
     problem_ptr->create_sample_points(grid_V, Xk);
     ccd_solver_ptr->eval_f(Xk, fx);
+}
+
+
+void SimState::get_collision_gradient(Eigen::MatrixXd& fgrad)
+{
+    if (m_dirty_constraints) {
+       fgrad.resize(0,0);
+       return;
+    }
+
+    fgrad = ccd_solver_ptr->get_grad_f();
+    problem_ptr->unflatten_dof(fgrad);
+
 }
 
 void SimState::init_background_grid(const nlohmann::json& args_)

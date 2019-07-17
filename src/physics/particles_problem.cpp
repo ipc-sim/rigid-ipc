@@ -136,13 +136,13 @@ namespace physics {
         // update collision forces q* = q_collision + Fcollision
         //           Fc = (q* - q) M / (dt^2)
         Fcollision = mass_matrix * (x - q1_collision) / (time_step * time_step);
-        unflatten(Fcollision, 2);
+        ccd::unflatten(Fcollision, 2);
 
         // update final position
         vertices_ = x;
 
         // update velocities
-        unflatten(vertices_, 2);
+        ccd::unflatten(vertices_, 2);
         velocities_ = (vertices_ - vertices_prev_) / time_step;
 
         // check for collisions
@@ -196,9 +196,9 @@ namespace physics {
     {
         if (as_delta) {
             Eigen::MatrixXd Fc_delta = Fcollision;
-            flatten(Fc_delta);
+            ccd::flatten(Fc_delta);
             Fc_delta = inv_mass_matrix * Fc_delta * (time_step * time_step);
-            unflatten(Fc_delta, 2);
+            ccd::unflatten(Fc_delta, 2);
             return Fc_delta;
         }
         return Fcollision;
@@ -242,7 +242,7 @@ namespace physics {
     Eigen::MatrixXd ParticlesDisplProblem::update_g(const Eigen::VectorXd& q1)
     {
         Eigen::MatrixXd Uk = q1 - vec_vertices_t0;
-        unflatten(Uk, 2);
+        ccd::unflatten(Uk, 2);
 
         if (!is_linesearch_active && update_constraint_set) {
             constraint_ptr->detectCollisions(Uk);

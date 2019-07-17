@@ -38,12 +38,8 @@ namespace opt {
         CollisionConstraint(const std::string& name);
         virtual ~CollisionConstraint();
 
-        virtual void settings(const nlohmann::json& /*json*/)
-        {
-            throw NotImplementedError(
-                "settings OptimizationSolver not implemented");
-        }
-        virtual nlohmann::json settings() const { return nlohmann::json(); }
+        virtual void settings(const nlohmann::json& json);
+        virtual nlohmann::json settings() const;
 
         inline const std::string& name() const { return name_; }
 

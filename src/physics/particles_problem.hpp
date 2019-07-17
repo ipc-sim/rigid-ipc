@@ -56,7 +56,11 @@ namespace physics {
         {
             return vertices_prev_;
         }
-        Eigen::MatrixXd vertices_collision() const override { return vertices_t1; }
+        Eigen::MatrixXd vertices_collision() const override
+        {
+            return vertices_t1;
+        }
+        Eigen::MatrixXd dof_positions() const override { return vertices_; }
 
         /// \brief velocity of vertices at the END of the step
         /// as_delta = true, will return vertices / time_step;
@@ -143,6 +147,12 @@ namespace physics {
         /// creates sample points at xy coordinates
         void create_sample_points(const Eigen::MatrixXd& xy_points,
             Eigen::MatrixXd& sample_points) const override;
+
+        void unflatten_dof(Eigen::MatrixXd& vec) const override
+        {
+            assert(vec.rows() % 2 == 0);
+            vec.resize(vec.rows() / 2, 2);
+        }
 
         ///////////////////////////////////////////////////////////////////////
         virtual bool has_barrier_constraint() override

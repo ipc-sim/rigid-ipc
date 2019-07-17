@@ -1,6 +1,7 @@
 #include "igl_viewer_ext.hpp"
 
 #include <igl/colormap.h>
+#include <igl/isolines.h>
 #include <igl/slice.h>
 #include <igl/slice_mask.h>
 
@@ -13,8 +14,9 @@ namespace opengl {
         : m_viewer(_viewer)
         , m_color(color)
         , show_vertex_data(false)
-        , m_log_scale(true)
-
+        , m_use_log_scale(true)
+        , m_normalized(false)
+        , m_scaling(1.0)
     {
         data_id = m_viewer->data_list.size() - 1;
     }
@@ -148,8 +150,18 @@ namespace opengl {
     void VectorFieldData::set_vector_field(
         const Eigen::MatrixXd& V, const Eigen::MatrixXd& F)
     {
+        Eigen::MatrixXd f = F;
+        if (f.size() == 0){
+            f.resizeLike(V);
+            f.setZero();
+        }
+        if (m_normalized){
+            f.rowwise().normalize();
+            f *= m_scaling;
+        }
+
         data().lines.resize(0, 9);
-        data().add_edges(V, V + F, m_color);
+        data().add_edges(V, V + f, m_color);
         mV = V;
         mF = F;
     }
@@ -177,7 +189,9 @@ namespace opengl {
         : ViewerDataExt(_viewer, inf_color)
         , m_colormap_type(igl::COLOR_MAP_TYPE_JET)
         , m_base_color(bg_color)
+        , is_visible(false)
     {
+        m_num_isolines = 10;
     }
 
     void ScalarFieldData::set_mesh(
@@ -189,51 +203,80 @@ namespace opengl {
         data().set_mesh(V, F);
         data().set_colors(m_base_color);
         data().show_lines = false;
+        data().show_faces = true;
+        data().show_overlay = true;
     }
 
     void ScalarFieldData::set_vertex_data(const Eigen::MatrixXd& fx)
     {
         m_vertex_data = fx;
+        m_vertex_clean_data = inf_to_max(fx);
         recolor();
     }
 
     void ScalarFieldData::recolor()
     {
-        if(m_vertex_data.size() == 0){
+        if (m_vertex_data.size() == 0 || !is_visible) {
             return;
         }
-
-        Eigen::VectorXb is_finite;
-        is_finite = m_vertex_data
-                        .unaryExpr([](const double x) {
-                            if (std::isinf(x)) {
-                                return 0.0;
-                            }
-                            return 1.0;
-                        })
-                        .cast<bool>();
-
-        Eigen::VectorXd fx_clean
-            = igl::slice_mask(m_vertex_data, is_finite.array(), 1);
-        if (m_log_scale) {
-            fx_clean = fx_clean.array().log();
+        Eigen::VectorXd fx = m_vertex_clean_data;
+        if (m_use_log_scale) {
+            fx = fx.array().log();
         }
 
-        Eigen::MatrixXd c;
-        igl::colormap(igl::COLOR_MAP_TYPE_JET, fx_clean, /*normalize=*/true, c);
+        draw_mesh(fx);
+        draw_isolines(fx);
+    }
 
-        Eigen::MatrixXd C(m_vertex_data.rows(), 3);
-        int j = 0;
+    void ScalarFieldData::visibility(const bool show)
+    {
+        static bool _show_faces = data().show_faces;
+        static bool _show_overlay = data().show_overlay;
+
+        is_visible = show;
+        if (is_visible) {
+            data().show_faces = _show_faces;
+            data().show_overlay = _show_overlay;
+        } else {
+            _show_faces = data().show_faces;
+            _show_overlay = data().show_overlay;
+            data().show_faces = false;
+            data().show_overlay = false;
+        }
+    }
+
+    void ScalarFieldData::draw_isolines(const Eigen::VectorXd& fx)
+    {
+        igl::isolines(mV, mF, fx, m_num_isolines, mIsoV, mIsoE);
+        set_edges(mIsoV, mIsoE, m_color);
+    }
+
+    void ScalarFieldData::draw_mesh(const Eigen::VectorXd& fx)
+    {
+        Eigen::MatrixXd c;
+        igl::colormap(igl::COLOR_MAP_TYPE_JET, fx, /*normalize=*/true, c);
+
         for (int i = 0; i < m_vertex_data.rows(); ++i) {
             if (std::isinf(m_vertex_data(i))) {
-                C.row(i) = m_color;
-            } else {
-                C.row(i) = c.row(j);
-                j += 1;
+                c.row(i) = m_color;
             }
         }
+        data().set_colors(c);
+    }
+    Eigen::VectorXd ScalarFieldData::inf_to_max(const Eigen::VectorXd& fx)
+    {
+        auto inf_to_neg = [](const double x) {
+            if (std::isinf(x)) {
+                return -1.0;
+            }
+            return x;
+        };
 
-        data().set_colors(C);
+        Eigen::VectorXd fx_clean = fx.unaryExpr(inf_to_neg);
+        double max_coeff = fx_clean.maxCoeff();
+        // neg to max_coeff
+        fx_clean = (fx_clean.array() < 0).select(max_coeff, fx_clean);
+        return fx_clean;
     }
 } // namespace opengl
 } // namespace igl

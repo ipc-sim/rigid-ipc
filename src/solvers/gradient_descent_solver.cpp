@@ -24,13 +24,14 @@ namespace opt {
 
     void GradientDescentSolver::settings(const nlohmann::json& json)
     {
+        OptimizationSolver::settings(json);
         absolute_tolerance = json["absolute_tolerance"].get<double>();
         min_step_length = json["min_step_length"].get<double>();
     }
 
     nlohmann::json GradientDescentSolver::settings() const
     {
-        nlohmann::json json;
+        nlohmann::json json = OptimizationSolver::settings();
         json["absolute_tolerance"] = absolute_tolerance;
         json["min_step_length"] = min_step_length;
         return json;

@@ -20,12 +20,13 @@ namespace opt {
 
     void VolumeConstraint::settings(const nlohmann::json& json)
     {
+        CollisionConstraint::settings(json);
         volume_epsilon = json["volume_epsilon"].get<double>();
     }
 
     nlohmann::json VolumeConstraint::settings() const
     {
-        nlohmann::json json;
+        nlohmann::json json = CollisionConstraint::settings();
         json["volume_epsilon"] = volume_epsilon;
         return json;
     }

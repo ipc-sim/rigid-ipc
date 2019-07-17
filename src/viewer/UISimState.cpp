@@ -13,17 +13,6 @@ UISimState::UISimState()
     , m_show_as_delta(true)
     , m_show_next_step(true)
 {
-    color_mesh
-        = Eigen::RowVector3d(231.0 / 255.0, 76 / 255.0, 60 / 255.0); // #e74c3c
-    color_displ
-        = Eigen::RowVector3d(46 / 255.0, 204 / 255.0, 113 / 255.0); // #2ecc71
-    color_velocity
-        = Eigen::RowVector3d(241 / 255.0, 196 / 255.0, 15 / 255.0); // #f1c40f
-    color_fc
-        = Eigen::RowVector3d(236 / 255.0, 240 / 255.0, 241 / 255.0); // #ecf0f1
-    color_grid = Eigen::RowVector3d(0.3, 0.3, 0.5); // igl default
-
-    color_inf = Eigen::RowVector3d::Zero(); // black
 }
 
 void UISimState::launch()
@@ -41,42 +30,52 @@ void UISimState::launch()
 
 void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
 {
+
     Super::init(_viewer);
     viewer->data().clear();
-    collision_force_data
-        = std::make_unique<igl::opengl::VectorFieldData>(_viewer, color_fc);
+    collision_force_data = std::make_unique<igl::opengl::VectorFieldData>(
+        _viewer,
+        Eigen::RowVector3d(236, 240, 241) / 255.0); // #ecf0f1 - CLOUDS WHITE
     collision_force_data->data().show_overlay = false;
 
     viewer->append_mesh();
-    edges_data = std::make_unique<igl::opengl::GraphData>(_viewer, color_mesh);
+    gradient_data = std::make_unique<igl::opengl::VectorFieldData>(_viewer,
+        Eigen::RowVector3d(243, 156, 18) / 255.0); // #f39c12 - ORANGE
 
     viewer->append_mesh();
-    next_displacement_data
-        = std::make_unique<igl::opengl::VectorFieldData>(_viewer, color_displ);
+    edges_data = std::make_unique<igl::opengl::GraphData>(_viewer,
+        Eigen::RowVector3d(231.0, 76, 60) / 255.0); // #e74c3c - ALIZARIN RED
 
     viewer->append_mesh();
-    prev_displacement_data
-        = std::make_unique<igl::opengl::VectorFieldData>(_viewer, color_displ);
+    next_displacement_data = std::make_unique<igl::opengl::VectorFieldData>(
+        _viewer,
+        Eigen::RowVector3d(46, 204, 113) / 255.0); // #2ecc71 - EMERALD GREEN
 
     viewer->append_mesh();
-    coll_displacement_data
-        = std::make_unique<igl::opengl::VectorFieldData>(_viewer, color_displ);
+    initial_displacement_data = std::make_unique<igl::opengl::VectorFieldData>(
+        _viewer, Eigen::RowVector3d(46, 204, 113) / 255.0); // #2ecc71
 
     viewer->append_mesh();
-    velocity_data = std::make_unique<igl::opengl::VectorFieldData>(
-        _viewer, color_velocity);
+    final_displacement_data = std::make_unique<igl::opengl::VectorFieldData>(
+        _viewer, Eigen::RowVector3d(155, 89, 182) / 255.0); // #9b59b6 AMETHIST
+
+    viewer->append_mesh();
+    velocity_data = std::make_unique<igl::opengl::VectorFieldData>(_viewer,
+        Eigen::RowVector3d(241, 196, 15) / 255.0); // #f1c40f SUN FLOWER
     velocity_data->data().show_overlay = false;
 
     // keep this last!
     viewer->append_mesh();
-    grid_data = std::make_unique<igl::opengl::ScalarFieldData>(
-        _viewer, color_inf, color_grid);
+    grid_data = std::make_unique<igl::opengl::ScalarFieldData>(_viewer,
+        /*color_inf=*/Eigen::RowVector3d::Zero(),
+        Eigen::RowVector3d(0.3, 0.3, 0.5)); // igl default
     grid_data->data().show_faces = false;
 
     datas_.emplace("edges", edges_data);
+    datas_.emplace("gradient", gradient_data);
     datas_.emplace("next displ.", next_displacement_data);
-    datas_.emplace("prev. displ.", prev_displacement_data);
-    datas_.emplace("coll. displ.", coll_displacement_data);
+    datas_.emplace("initial displ.", initial_displacement_data);
+    datas_.emplace("final displ.", final_displacement_data);
     datas_.emplace("velocity", velocity_data);
     datas_.emplace("F_c", collision_force_data);
     datas_.emplace("grid", grid_data);
@@ -111,11 +110,16 @@ void UISimState::load_scene()
     edges_data->data().point_size = 10 * pixel_ratio();
 
     next_displacement_data->set_vector_field(q1, q2 - q1);
-    prev_displacement_data->set_vector_field(q0, q1 - q0);
-    coll_displacement_data->set_vector_field(q0, q1_coll - q0);
+    initial_displacement_data->set_vector_field(q0, q1_coll - q0);
+    final_displacement_data->set_vector_field(q0, q1 - q0);
 
     velocity_data->set_vector_field(q1, v1);
     collision_force_data->set_vector_field(q1, -fc);
+
+    Eigen::MatrixXd grad_f;
+    auto x1 = m_state.problem_ptr->dof_positions();
+    m_state.get_collision_gradient(grad_f);
+    gradient_data->set_vector_field(x1, -grad_f);
 
     grid_data->set_mesh(m_state.grid_V, m_state.grid_F);
 
@@ -143,15 +147,25 @@ void UISimState::redraw_scene()
     }
 
     next_displacement_data->update_vector_field(q1, q2 - q1);
-    prev_displacement_data->update_vector_field(q0, q1 - q0);
-    coll_displacement_data->update_vector_field(q0, q1_coll - q0);
+    initial_displacement_data->update_vector_field(q0, q1_coll - q0);
+    final_displacement_data->update_vector_field(q0, q1 - q0);
+
+    Eigen::MatrixXd grad_f;
+    auto x1 = m_state.problem_ptr->dof_positions();
+    m_state.get_collision_gradient(grad_f);
+    gradient_data->update_vector_field(x1, -grad_f);
 
     velocity_data->update_vector_field(q1, v1);
     collision_force_data->update_vector_field(q1, -fc);
+    redraw_scalar_fields();
+}
 
-    if (grid_data->data().show_faces){
+void UISimState::redraw_scalar_fields()
+{
+    // Computing this is expensive so we do it on demand
+    if (grid_data->visibility()) {
         Eigen::VectorXd fx;
-        m_state.get_collision_functional_isolines(fx);
+        m_state.get_collision_functional_field(fx);
         grid_data->set_vertex_data(fx);
     }
 }

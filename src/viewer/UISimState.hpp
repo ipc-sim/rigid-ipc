@@ -34,6 +34,7 @@ public:
     void launch();
     void load_scene();
     void redraw_scene();
+    void redraw_scalar_fields();
     bool pre_draw_loop();
 
     inline bool load(std::string scene_filename) override
@@ -81,8 +82,7 @@ public:
     ///  \brief show animation between current and next step (true) or prev step
     ///  (false)
     bool m_show_next_step;
-    Eigen::RowVector3d color_mesh, color_displ, color_velocity, color_fc,
-        color_grid, color_inf;
+
 
 protected:
     void draw_io();
@@ -95,10 +95,11 @@ protected:
 private:
     std::shared_ptr<igl::opengl::GraphData> edges_data;
     std::shared_ptr<igl::opengl::VectorFieldData> next_displacement_data;
-    std::shared_ptr<igl::opengl::VectorFieldData> prev_displacement_data;
-    std::shared_ptr<igl::opengl::VectorFieldData> coll_displacement_data;
+    std::shared_ptr<igl::opengl::VectorFieldData> initial_displacement_data;
+    std::shared_ptr<igl::opengl::VectorFieldData> final_displacement_data;
     std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
     std::shared_ptr<igl::opengl::VectorFieldData> collision_force_data;
+    std::shared_ptr<igl::opengl::VectorFieldData> gradient_data;
     std::shared_ptr<igl::opengl::ScalarFieldData> grid_data;
 
     std::map<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>> datas_;

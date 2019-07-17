@@ -121,7 +121,7 @@ namespace physics {
         flatten(delta_c);
         Fcollision
             = m_assembler.m_mass_matrix * delta_c / (time_step * time_step);
-        unflatten(Fcollision, 2);
+        ccd::unflatten(Fcollision, 2);
 
         // update velocities
         for (auto& rb : m_assembler.m_rbs) {
@@ -180,7 +180,7 @@ namespace physics {
             flatten(Fc_delta);
             Fc_delta = m_assembler.m_inv_mass_matrix * Fc_delta
                 * (time_step * time_step);
-            unflatten(Fc_delta, 2);
+            ccd::unflatten(Fc_delta, 2);
             return Fc_delta;
         } else {
             return Fcollision;
@@ -233,7 +233,8 @@ namespace physics {
         if (use_chain_functional) {
             grad_f = eval_grad_f_chain(sigma);
         } else {
-            grad_f = m_assembler.m_rb_mass_matrix * (sigma - rb_positions_t1);
+            Eigen::VectorXd diff = sigma - rb_positions_t1;
+            grad_f = m_assembler.m_rb_mass_matrix * diff;
         }
 
 #ifdef WITH_DERIVATIVE_CHECK

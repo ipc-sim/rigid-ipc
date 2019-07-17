@@ -55,7 +55,7 @@ void UISimState::draw_menu()
 
     //--------------------------------------------------------------------------
     if (m_has_scene) {
-        float legends_width = 250.f * menu_scaling();
+        float legends_width = 270.f * menu_scaling();
         ImGui::SetNextWindowPos(
             ImVec2(ImGui::GetIO().DisplaySize.x - legends_width, 0.0f),
             ImGuiSetCond_FirstUseEver);
@@ -72,6 +72,9 @@ void UISimState::draw_menu()
             if (ImGui::Checkbox("show as position-deltas", &m_show_as_delta)) {
                 redraw_scene();
             }
+            ImGui::SameLine();
+            ImGui::HelpMarker("yes - show forces and velocities rescaled by "
+                              "mass and time (resp.)");
         }
         ImGui::End();
     }
@@ -172,30 +175,34 @@ void UISimState::draw_settings()
 
 void UISimState::draw_legends()
 {
+    static float second_col = 120;
     float slider_width = ImGui::GetWindowWidth() * 0.25f;
-
     for (auto& label : get_data_names()) {
         auto ptr = get_data(label);
 
-        if (!ptr->is_scalar_field()) {
-            bool tmp = bool(ptr->data().show_overlay);
-            ImGui::Checkbox(("##UI-" + label).c_str(), &tmp);
-            ptr->data().show_overlay = tmp;
-        } else {
-            bool tmp = bool(ptr->data().show_faces);
-            if (ImGui::Checkbox(("##UI-" + label).c_str(), &tmp)){
-                ptr->data().show_faces = tmp;
-                if (tmp){
-                    redraw_scene();
-                }
+        /// visibility checkbox
+        bool tmp = ptr->visibility();
+        if (ImGui::Checkbox(("##UI-" + label).c_str(), &tmp)) {
+            ptr->visibility(tmp);
+            if (ptr->is_scalar_field()) {
+                redraw_scalar_fields();
             }
-
         }
+
+        /// Color
         ImGui::SameLine();
         if (ImGui::DoubleColorEdit3((label + "##UI").c_str(), ptr->m_color)) {
             ptr->recolor();
         }
+
+        /// other specific attributes
         if (ptr->is_graph()) {
+            ImGui::SameLine(second_col);
+            if (ImGui::Checkbox(
+                    ("data##UI-" + label).c_str(), &ptr->show_vertex_data)) {
+                ptr->update_vertex_data();
+            }
+
             ImGui::SameLine();
             ImGui::PushItemWidth(slider_width);
             {
@@ -206,23 +213,41 @@ void UISimState::draw_legends()
                 }
             }
             ImGui::PopItemWidth();
-            ImGui::SameLine();
-            if (ImGui::Checkbox(
-                    ("data##UI-" + label).c_str(), &ptr->show_vertex_data)) {
-                ptr->update_vertex_data();
-            }
+
         } else if (ptr->is_scalar_field()) {
             ImGui::SameLine();
             if (ImGui::Checkbox(
-                    ("log##UI-" + label).c_str(), &ptr->m_log_scale)) {
+                    ("log##UI-" + label).c_str(), &ptr->m_use_log_scale)) {
                 ptr->recolor();
             }
             ImGui::SameLine();
-            bool show_lines = ptr->data().show_lines;
-            if (ImGui::Checkbox(("lines##UI-" + label).c_str(), &show_lines)) {
-                ptr->data().show_lines = show_lines;
+            bool show_iso = ptr->data().show_overlay;
+            if (ImGui::Checkbox(("isolines##UI-" + label).c_str(), &show_iso)) {
+                ptr->data().show_overlay = show_iso;
+            }
+            ImGui::SameLine();
+            bool show_faces = ptr->data().show_faces;
+            if (ImGui::Checkbox(("faces##UI-" + label).c_str(), &show_faces)) {
+                ptr->data().show_faces = show_faces;
+            }
+
+        } else if (ptr->is_vector_field()) {
+            ImGui::SameLine(second_col);
+            if (ImGui::Checkbox(
+                    ("norm##UI-" + label).c_str(), &ptr->m_normalized)) {
                 ptr->recolor();
             }
+            ImGui::SameLine();
+            ImGui::PushItemWidth(slider_width);
+            {
+                float aux = float(ptr->m_scaling);
+                if (ImGui::SliderFloat(("##UI-scaling" + label).c_str(), &aux,
+                        0.00f, 10.0f, "%1.f")) {
+                    ptr->m_scaling = double(aux);
+                    ptr->recolor();
+                }
+            }
+            ImGui::PopItemWidth();
         }
     }
 }
