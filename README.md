@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/geometryprocessing/fixing-collisions.svg?token=uiCkVsJXonpF1gk5xcRf&branch=master)](https://travis-ci.com/geometryprocessing/fixing-collisions)
+
 # Fixing Collisions
 
 A project for robustly resolving collisions with a guarantee of no interpenetrations and/or pass through.
