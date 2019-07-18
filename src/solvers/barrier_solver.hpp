@@ -16,7 +16,6 @@ namespace opt {
         BarrierProblem(OptimizationProblem& problem);
         ~BarrierProblem() override {}
 
-        /////
         double eval_f(const Eigen::VectorXd& x) override;
 
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;

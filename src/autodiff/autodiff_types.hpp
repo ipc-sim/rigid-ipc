@@ -60,10 +60,20 @@ public:
     }
 };
 
+///
+/// \brief DistanceBarrierDiff the variables are 3 positions (x,y)
+/// of an edge and a vertex.
+///
 typedef AutodiffType<6> DistanceBarrierDiff;
 
+///
+/// \brief TimeBarrierDiff the variables are 4 positions (x,y)
+/// of two edges.
+///
+typedef AutodiffType<8> TimeBarrierDiff;
+
 /// Used for time-barrier constraint.
-/// TODO: should rewrite to use class defined above
+/// TODO: should rewrite to use type defined above
 static constexpr size_t N = 2 * 4;
 typedef Eigen::Matrix<double, 8, 1> Vector8d;
 typedef Eigen::Matrix<double, 8, 8> Matrix8d;
@@ -75,7 +85,6 @@ static inline DVector2 dvector(
 {
     return DVector2(DScalar(index, v.x()), DScalar(index + 1, v.y()));
 }
-
 
 } // namespace ccd
 #endif
