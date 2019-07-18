@@ -63,7 +63,8 @@ add_library(${PROJECT_NAME}
     src/physics/problem_factory.cpp
 
     src/opt/barrier.cpp
-    src/opt/barrier_constraint.cpp
+    src/opt/time_barrier_constraint.cpp
+    src/opt/distance_barrier_constraint.cpp
     src/opt/collision_constraint.cpp
     src/opt/optimization_problem.cpp
     src/opt/ad_hoc_problem.cpp

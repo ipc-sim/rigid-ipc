@@ -51,7 +51,7 @@ TEST_CASE(
     rbs.push_back(RigidBody::from_displacement(vertices, edges, displ_2));
 
     RigidBodyProblem rbp;
-    rbp.init(rbs,"barrier_constraint");
+    rbp.init(rbs,"time_barrier_constraint");
     rbp.use_chain_functional = true; // test was written for this
 
     // displacement cases
@@ -103,7 +103,7 @@ TEST_CASE(
     rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_2));
 
     RigidBodyProblem rbp;
-    rbp.init(rbs,"barrier_constraint");
+    rbp.init(rbs,"time_barrier_constraint");
 
     // displacement cases
     Eigen::VectorXd x(6);
@@ -152,7 +152,7 @@ TEST_CASE(
     rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_2));
 
     RigidBodyProblem rbp;
-    rbp.init(rbs,"barrier_constraint");
+    rbp.init(rbs,"time_barrier_constraint");
 
     // displacement cases
     Eigen::VectorXd x(6);

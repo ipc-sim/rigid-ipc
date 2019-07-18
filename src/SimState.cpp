@@ -50,7 +50,7 @@ void SimState::init(const nlohmann::json& args_in)
         "collision_solver":"barrier_solver",
         "rigid_body_problem":{
               "rigid_bodies": [],
-              "constraint": "barrier_constraint",
+              "constraint": "distance_barrier_constraint",
               "update_constraint_set": true,
               "use_chain_functional": false,
               "gravity":[0.0,0.0,0.0],
@@ -63,7 +63,7 @@ void SimState::init(const nlohmann::json& args_in)
             "x_fixed":[],
             "y_fixed":[],
             "use_mass_matrix": true,
-            "constraint": "barrier_constraint",
+            "constraint": "distance_barrier_constraint",
             "update_constraint_set": true,
             "gravity":[0.0,0.0],
             "collision_eps": 2.0
@@ -88,12 +88,17 @@ void SimState::init(const nlohmann::json& args_in)
             "min_step_length": 1e-12,
             "max_iterations": 3000
         },
-        "barrier_constraint":{
+        "time_barrier_constraint":{
             "initial_epsilon":"min_toi",
             "custom_initial_epsilon":1.0,
             "detection_method": "hash_grid",
             "extend_collision_set": true
         },
+       "distance_barrier_constraint":{
+           "custom_initial_epsilon":0.5,
+           "detection_method": "hash_grid",
+           "extend_collision_set": false
+       },
         "timestep_size": 0.1,
         "viewport_bbox": {"min":[0,0],"max":[0,0]}
     })"_json;

@@ -1,4 +1,4 @@
-#include "barrier_constraint.hpp"
+#include "time_barrier_constraint.hpp"
 
 #include <opt/barrier.hpp>
 
@@ -11,12 +11,12 @@ namespace opt {
         { { MIN_TOI, "min_toi" }, { MAX_TOI, "max_toi" },
             { CUSTOM, "custom" } })
 
-    BarrierConstraint::BarrierConstraint()
-        : BarrierConstraint("barrier_constraint")
+    TimeBarrierConstraint::TimeBarrierConstraint()
+        : TimeBarrierConstraint("time_barrier_constraint")
     {
     }
 
-    BarrierConstraint::BarrierConstraint(const std::string& name)
+    TimeBarrierConstraint::TimeBarrierConstraint(const std::string& name)
         : CollisionConstraint(name)
         , barrier_epsilon(0.0)
         , custom_inital_epsilon(1.0)
@@ -25,14 +25,14 @@ namespace opt {
     {
     }
 
-    void BarrierConstraint::settings(const nlohmann::json& json)
+    void TimeBarrierConstraint::settings(const nlohmann::json& json)
     {
         initial_epsilon = json["initial_epsilon"].get<InitialBarrierEpsilon>();
         custom_inital_epsilon = json["custom_initial_epsilon"].get<double>();
         CollisionConstraint::settings(json);
     }
 
-    nlohmann::json BarrierConstraint::settings() const
+    nlohmann::json TimeBarrierConstraint::settings() const
     {
         nlohmann::json json = CollisionConstraint::settings();
         json["initial_epsilon"] = initial_epsilon;
@@ -41,7 +41,7 @@ namespace opt {
         return json;
     }
 
-    void BarrierConstraint::initialize(const Eigen::MatrixX2d& vertices,
+    void TimeBarrierConstraint::initialize(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges,
         const Eigen::MatrixXd& Uk)
     {
@@ -50,7 +50,7 @@ namespace opt {
         resetBarrierEpsilon();
     }
 
-    void BarrierConstraint::detectCollisions(const Eigen::MatrixXd& Uk)
+    void TimeBarrierConstraint::detectCollisions(const Eigen::MatrixXd& Uk)
     {
         const double time_scale = 1 + 2 * this->barrier_epsilon;
         ccd::detect_edge_vertex_collisions(*vertices, time_scale * Uk, *edges,
@@ -62,12 +62,12 @@ namespace opt {
             *edges, ev_impacts, ee_impacts);
     }
 
-    int BarrierConstraint::number_of_constraints()
+    int TimeBarrierConstraint::number_of_constraints()
     {
         return int(ee_impacts.size() * 2);
     }
 
-    void BarrierConstraint::resetBarrierEpsilon()
+    void TimeBarrierConstraint::resetBarrierEpsilon()
     {
         // Assumes the collisions have already been detected
         if (this->ee_impacts.size() > 0) {
@@ -93,7 +93,7 @@ namespace opt {
         }
     }
 
-    void BarrierConstraint::compute_constraints(
+    void TimeBarrierConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers)
     {
         std::vector<double> v_barriers;
@@ -102,7 +102,7 @@ namespace opt {
             v_barriers.data(), int(v_barriers.size()));
     }
 
-    void BarrierConstraint::compute_constraints_jacobian(
+    void TimeBarrierConstraint::compute_constraints_jacobian(
 
         const Eigen::MatrixXd& Uk, Eigen::MatrixXd& barriers_jacobian)
     {
@@ -111,7 +111,7 @@ namespace opt {
         assemble_jacobian(barriers, barriers_jacobian);
     }
 
-    void BarrierConstraint::compute_constraints_hessian(
+    void TimeBarrierConstraint::compute_constraints_hessian(
         const Eigen::MatrixXd& Uk,
         std::vector<Eigen::SparseMatrix<double>>& barriers_hessian)
     {
@@ -120,7 +120,7 @@ namespace opt {
         assemble_hessian(barriers, barriers_hessian);
     }
 
-    void BarrierConstraint::compute_constraints_and_derivatives(
+    void TimeBarrierConstraint::compute_constraints_and_derivatives(
         const Eigen::MatrixXd& Uk,
         Eigen::VectorXd& barriers,
         Eigen::MatrixXd& barriers_jacobian,
@@ -138,7 +138,7 @@ namespace opt {
     }
 
     template <typename T>
-    void BarrierConstraint::compute_constraints_per_impact(
+    void TimeBarrierConstraint::compute_constraints_per_impact(
         const Eigen::MatrixXd& displacements, std::vector<T>& constraints)
     {
         constraints.clear();
@@ -181,10 +181,10 @@ namespace opt {
         }
     }
 
-    template void BarrierConstraint::compute_constraints_per_impact<double>(
+    template void TimeBarrierConstraint::compute_constraints_per_impact<double>(
         const Eigen::MatrixXd& displacements, std::vector<double>& constraints);
 
-    template void BarrierConstraint::compute_constraints_per_impact<DScalar>(
+    template void TimeBarrierConstraint::compute_constraints_per_impact<DScalar>(
         const Eigen::MatrixXd& displacements,
         std::vector<DScalar>& constraints);
 } // namespace opt

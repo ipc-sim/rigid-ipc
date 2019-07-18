@@ -6,7 +6,6 @@
  */
 #include <memory>
 
-#include <opt/barrier_constraint.hpp>
 #include <solvers/optimization_solver.hpp>
 
 namespace ccd {

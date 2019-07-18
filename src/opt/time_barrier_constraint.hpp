@@ -11,10 +11,10 @@ namespace opt {
 
     enum InitialBarrierEpsilon { MIN_TOI, MAX_TOI, CUSTOM };
 
-    class BarrierConstraint : public CollisionConstraint {
+    class TimeBarrierConstraint : public CollisionConstraint {
     public:
-        BarrierConstraint();
-        BarrierConstraint(const std::string& name);
+        TimeBarrierConstraint();
+        TimeBarrierConstraint(const std::string& name);
 
         void settings(const nlohmann::json& json) override;
         nlohmann::json settings() const override;

@@ -1,15 +1,15 @@
 #include <catch2/catch.hpp>
 
 #include <iostream>
-#include <opt/barrier_constraint.hpp>
+#include <opt/time_barrier_constraint.hpp>
 
 //-----------------
 // Tests
 //-----------------
 
-TEST_CASE("Barrier Constraint", "[opt][ccd][Barrier]")
+TEST_CASE("Time Barrier Constraint", "[opt][ccd][Barrier]")
 {
-    ccd::opt::BarrierConstraint barrier;
+    ccd::opt::TimeBarrierConstraint barrier;
     barrier.detection_method = ccd::BRUTE_FORCE;
 
     Eigen::MatrixX2d vertices(4, 2);
@@ -86,9 +86,9 @@ TEST_CASE("Barrier Constraint", "[opt][ccd][Barrier]")
     //    std::cout << v_expected.format(CommaInitFmt) << std::endl;
 }
 
-TEST_CASE("Barrier Constraint Gradient", "[opt][ccd][Barrier][Gradient]")
+TEST_CASE("Time Barrier Constraint Gradient", "[opt][ccd][Barrier][Gradient]")
 {
-    ccd::opt::BarrierConstraint barrier;
+    ccd::opt::TimeBarrierConstraint barrier;
     barrier.detection_method = ccd::BRUTE_FORCE;
 
     Eigen::MatrixX2d vertices(4, 2);
@@ -174,9 +174,9 @@ TEST_CASE("Barrier Constraint Gradient", "[opt][ccd][Barrier][Gradient]")
     //    std::cout << v_expected.format(CommaInitFmt) << std::endl;
 }
 
-TEST_CASE("Barrier Constraint Hessian", "[opt][ccd][Barrier][Hessian]")
+TEST_CASE("Time Barrier Constraint Hessian", "[opt][ccd][Barrier][Hessian]")
 {
-    ccd::opt::BarrierConstraint barrier;
+    ccd::opt::TimeBarrierConstraint barrier;
     barrier.detection_method = ccd::BRUTE_FORCE;
 
     Eigen::MatrixX2d vertices(4, 2);

@@ -133,7 +133,6 @@ namespace physics {
         for (size_t i = 0; i < m_rbs.size(); ++i) {
             auto& rb = m_rbs[i];
 
-            Eigen::Vector3d x = rb.position + rb.velocity;
             V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), 2)
                 = rb.world_velocities();
         }

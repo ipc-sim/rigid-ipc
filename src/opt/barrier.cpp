@@ -29,6 +29,14 @@ namespace opt {
     template double spline_barrier(double x, double s);
     template DScalar spline_barrier(DScalar x, double s);
 
+    template DistanceBarrierDiff::DScalar1
+    spline_barrier<DistanceBarrierDiff::DScalar1>(
+        DistanceBarrierDiff::DScalar1 x, double s);
+
+    template DistanceBarrierDiff::DScalar2
+    spline_barrier<DistanceBarrierDiff::DScalar2>(
+        DistanceBarrierDiff::DScalar2 x, double s);
+
     // Derivative of the spline_barrier function with respect to x.
     double spline_barrier_gradient(double x, double s)
     {

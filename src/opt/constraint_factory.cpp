@@ -1,6 +1,7 @@
 #include "constraint_factory.hpp"
 
-#include <opt/barrier_constraint.hpp>
+#include <opt/distance_barrier_constraint.hpp>
+#include <opt/time_barrier_constraint.hpp>
 #include <opt/volume_constraint.hpp>
 
 namespace ccd {
@@ -15,8 +16,11 @@ namespace opt {
 
     ConstraintFactory::ConstraintFactory()
     {
-        constraints_.emplace("barrier_constraint",
-            std::make_shared<BarrierConstraint>("barrier_constraint"));
+        constraints_.emplace("time_barrier_constraint",
+            std::make_shared<TimeBarrierConstraint>("time_barrier_constraint"));
+        constraints_.emplace("distance_barrier_constraint",
+            std::make_shared<DistanceBarrierConstraint>(
+                "distance_barrier_constraint"));
         constraints_.emplace("volume_constraint",
             std::make_shared<VolumeConstraint>("volume_constraint"));
 
