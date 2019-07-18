@@ -1,26 +1,24 @@
 {
-  "scene_type": "rigid_body_problem",
-  "rigid_body_problem": {
-    "rigid_bodies": [
-      {
-        "vertices": [
-          [0, 0],
-          [2, 0],
-          [2, 3],
-          [5, 3],
-          [5, 5],
-          [0, 5]
-        ],
-        "edges": [
-          [0, 1],
-          [1, 2],
-          [2, 3],
-          [3, 4],
-          [4, 5],
-          [5, 0]
-        ],
-        "velocity": [0.0, 0.0, 0.0]
-      }
-    ]
-  }
+    "scene_type": "rigid_body_problem",
+    "rigid_body_problem": {
+        "rigid_bodies": [{
+            "vertices": [
+                [0, 0],
+                [2, 0],
+                [2, 3],
+                [5, 3],
+                [5, 5],
+                [0, 5]
+            ],
+            "edges": [
+                [0, 1],
+                [1, 2],
+                [2, 3],
+                [3, 4],
+                [4, 5],
+                [5, 0]
+            ],
+            "velocity": [0.0, 0.0, 0.0]
+        }]
+    }
 }

@@ -1,41 +1,40 @@
 {
-  "scene_type": "rigid_body_problem",
-  "timestep_size": 1.0,
-  "gravity": [0.0, 0.0, 0.0],
-  "rigid_body_problem": {
-    "rigid_bodies": [
-      {
-        "vertices": [
-          [-1, 0.000001],
-          [-1, 2],
-          [1, 2],
-          [1, 0.000001]
-        ],
-        "edges": [
-          [0, 1],
-          [1, 2],
-          [2, 3],
-          [3, 0]
-        ],
-        "velocity": [0.0, -5.0, 0.0],
-        "is_dof_fixed": [false, false, false]
-      },
-      {
-        "vertices": [
-          [-10, -1.0],
-          [-10, 0.0],
-          [10, 0.0],
-          [10, -1.0]
-        ],
-        "edges": [
-          [0, 1],
-          [1, 2],
-          [2, 3],
-          [3, 0]
-        ],
-        "velocity": [0.0, 0.0, 0.0],
-        "is_dof_fixed": [true, true, true]
-      }
-    ]
-  }
+    "scene_type": "rigid_body_problem",
+    "timestep_size": 1.0,
+    "gravity": [0.0, 0.0, 0.0],
+    "rigid_body_problem": {
+        "rigid_bodies": [{
+                "vertices": [
+                    [-1, 0.000001],
+                    [-1, 2],
+                    [1, 2],
+                    [1, 0.000001]
+                ],
+                "edges": [
+                    [0, 1],
+                    [1, 2],
+                    [2, 3],
+                    [3, 0]
+                ],
+                "velocity": [0.0, -5.0, 0.0],
+                "is_dof_fixed": [false, false, false]
+            },
+            {
+                "vertices": [
+                    [-10, -1.0],
+                    [-10, 0.0],
+                    [10, 0.0],
+                    [10, -1.0]
+                ],
+                "edges": [
+                    [0, 1],
+                    [1, 2],
+                    [2, 3],
+                    [3, 0]
+                ],
+                "velocity": [0.0, 0.0, 0.0],
+                "is_dof_fixed": [true, true, true]
+            }
+        ]
+    }
 }

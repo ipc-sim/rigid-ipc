@@ -23,9 +23,11 @@ namespace opt {
      *
      * @return True if the line search was successful, false otherwise.
      */
-    bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
+    bool line_search(const Eigen::VectorXd& x,
+        const Eigen::VectorXd& dir,
         const std::function<double(const Eigen::VectorXd&)>& f,
-        double& step_length, const double min_step_length = 1e-10);
+        double& step_length,
+        const double min_step_length = 1e-10);
 
     /**
      * @brief Search along a search direction to find a scalar \f$\step_length
@@ -41,11 +43,13 @@ namespace opt {
      *
      * @return True if the line search was successful, false otherwise.
      */
-    bool line_search(const Eigen::VectorXd& x, const Eigen::VectorXd& dir,
+    bool line_search(const Eigen::VectorXd& x,
+        const Eigen::VectorXd& dir,
         const std::function<double(const Eigen::VectorXd&)>& f,
-        const Eigen::VectorXd& grad_fx, double& step_length,
+        const Eigen::VectorXd& grad_fx,
+        double& step_length,
         const double min_step_length = 1e-10,
-        const double armijo_rule_coeff = 1e-4);
+        const double armijo_rule_coeff = 0);
 
     /**
      * @brief Search along a search direction to find a scalar \f$\step_length
@@ -68,8 +72,9 @@ namespace opt {
         const std::function<double(const Eigen::VectorXd&)>& f,
         const Eigen::VectorXd& grad_fx,
         const std::function<bool(const Eigen::VectorXd&)>& constraint,
-        double& step_length, const double min_step_length = 1e-10,
-        const double armijo_rule_coeff = 1e-4);
+        double& step_length,
+        const double min_step_length = 1e-10,
+        const double armijo_rule_coeff = 0);
 
     /**
      * @brief Log values along a search direction.

@@ -1,0 +1,79 @@
+{
+    "scene_type": "rigid_body_problem",
+    "rigid_body_problem": {
+        "gravity": [0.0, -9.81, 0.0],
+        "rigid_bodies": [{
+                "vertices": [
+                    [10, 10],
+                    [-10, 10],
+                    [-10, -10],
+                    [10, -10]
+                ],
+                "edges": [
+                    [0, 1],
+                    [1, 2],
+                    [2, 3],
+                    [3, 0]
+                ],
+                "velocity": [0.0, 0.0, 0.1],
+                "is_dof_fixed": [true, true, false]
+            },
+            {
+                "vertices": [
+                    [1, 1],
+                    [-1, 1],
+                    [-1, -1],
+                    [1, -1]
+                ],
+                "edges": [
+                    [0, 1],
+                    [1, 2],
+                    [2, 3],
+                    [3, 0]
+                ],
+                "velocity": [0.0, 0.0, 0.0],
+                "is_dof_fixed": [false, false, false]
+            },
+            {
+                "vertices": [
+                    [3.1, 3],
+                    [1.1, 3],
+                    [1.1, 1],
+                    [3.1, 1]
+                ],
+                "edges": [
+                    [0, 1],
+                    [1, 2],
+                    [2, 3],
+                    [3, 0]
+                ],
+                "velocity": [0.0, 0.0, 0.0],
+                "is_dof_fixed": [false, false, false]
+            },
+            {
+                "vertices": [
+                    [-1.1, 3],
+                    [-3.1, 3],
+                    [-3.1, 1],
+                    [-1.1, 1]
+                ],
+                "edges": [
+                    [0, 1],
+                    [1, 2],
+                    [2, 3],
+                    [3, 0]
+                ],
+                "velocity": [0.0, 0.0, 0.0],
+                "is_dof_fixed": [false, false, false]
+            }
+        ]
+    },
+    "barrier_constraint": {
+        "initial_epsilon": "custom",
+        "custom_initial_epsilon": 100.0
+    },
+    "barrier_solver": {
+        "inner_solver": "newton_solver",
+        "min_barrier_epsilon": 1.0
+    }
+}
