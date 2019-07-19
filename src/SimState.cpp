@@ -80,7 +80,7 @@ void SimState::init(const nlohmann::json& args_in)
         },
         "newton_solver":{
            "absolute_tolerance": 1e-5,
-           "min_step_length": 1e-12,
+           "min_step_length": 1e-10,
            "max_iterations": 3000
         },
         "bfgs_solver":{

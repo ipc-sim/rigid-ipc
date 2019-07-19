@@ -51,6 +51,15 @@ namespace opt {
 
         bool eval_intermediate_callback(const Eigen::VectorXd& x) override;
 
+        bool has_barrier_constraint() override
+        {
+            return general_problem->has_barrier_constraint();
+        }
+        double get_barrier_epsilon() override
+        {
+            return general_problem->get_barrier_epsilon();
+        }
+
         const Eigen::VectorXb& is_dof_fixed() override;
         OptimizationProblem* general_problem;
     };

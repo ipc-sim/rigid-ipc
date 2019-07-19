@@ -198,8 +198,6 @@ namespace opt {
 
         f_uk += gx.sum();
         f_uk_gradient += dgx.colwise().sum().transpose();
-        spdlog::trace("problem=barrier fx={:e} max(f'x)={:e}", f_uk,
-            f_uk_gradient.maxCoeff());
 
         PROFILE(
             // clang-format off

@@ -41,6 +41,17 @@ namespace opt {
         return json;
     }
 
+    const static char* NEWTON_STEP_LOG
+        = "solver=newton_solver iter={:d} action=begin_step";
+    const static char* NEWTON_DIRECTION_LOG
+        = "solver=newton_solver iter={:d} action=newton_line_search "
+          "status=failure message=\"reverting to gradient descent\"";
+    const static char* NEWTON_GRADIENT_LOG
+        = "solver=newton_solver iter={:d} action=gradient_line_search "
+          "status=failure message=\"no failsafe - break!\"";
+    const static char* NEWTON_END_LOG = "solver=newton_solver action=END";
+    const static char* NEWTON_BEGIND_LOG = "solver=newton_solver action=BEGIN";
+
     OptimizationResults NewtonSolver::solve(OptimizationProblem& problem)
     {
         // Initalize the working variables
@@ -56,15 +67,24 @@ namespace opt {
             return !std::isinf(problem.eval_f(x));
         };
 
+        double eps = -1;
+        if (problem.has_barrier_constraint()) {
+            eps = problem.get_barrier_epsilon();
+        }
+        spdlog::trace(NEWTON_BEGIND_LOG);
         iteration_number = 0;
         std::string exit_reason = "exceeded the maximum allowable iterations";
         do {
             // Compute the gradient and hessian
-            double _;
-            problem.eval_f_and_fdiff(x, _, gradient, hessian);
+            double fx;
+            problem.eval_f_and_fdiff(x, fx, gradient, hessian);
 
             // Remove rows of fixed dof
             igl::slice(gradient, free_dof, gradient_free);
+
+            spdlog::trace("{} eps={:e} x={} fx={:e} gradient_free={}",
+                fmt::format(NEWTON_STEP_LOG, iteration_number + 1), eps,
+                log::fmt_eigen(x), fx, log::fmt_eigen(gradient_free));
 
             if (gradient_free.squaredNorm() <= absolute_tolerance) {
                 exit_reason = "found a local optimum";
@@ -80,52 +100,45 @@ namespace opt {
                 break;
             }
 
-            // Perform a line search along Δx to stay in the feasible realm
-            bool found_step_length;
-            // step_length = std::min(1.0, 2 * step_length);
-            step_length = 1.0;
-            // problem.enable_line_search_mode(x + delta_x);
-            found_step_length
+            step_length = std::min(1.0, 2.0 * step_length);
+            // to restore when line-search fails
+            double step_length_aux = step_length;
+
+            // Perform a line search along Δx, and stay in the feasible realm
+            bool found_step_length
                 = constrained_line_search(x, delta_x, problem.func_f(),
                     gradient, constraint, step_length, min_step_length);
-            // problem.disable_line_search_mode();
 
+            // Revert to gradient descent if the newton direction fails
             if (!found_step_length) {
-                // Revert to gradient descent if the newton direction
-                // fails
-                spdlog::warn("solver=newton iter={:d} failure=\"line "
-                             "search using newton direction\" "
-                             "failsafe=\"reverting to gradient descent\"",
-                    iteration_number + 1);
-                igl::slice_into(-gradient_free, free_dof, 1, delta_x);
 
-                // step_length = std::min(1.0, 2 * step_length);
-                step_length = 1.0;
-                // problem.enable_line_search_mode(x + delta_x);
+                spdlog::warn(NEWTON_DIRECTION_LOG, iteration_number + 1);
+
+                // replace delta_x by gradient direction
+                igl::slice_into(-gradient_free, free_dof, 1, delta_x);
+                step_length = step_length_aux;
                 found_step_length
                     = constrained_line_search(x, delta_x, problem.func_f(),
                         gradient, constraint, step_length, min_step_length);
-                // problem.disable_line_search_mode();
 
                 if (!found_step_length) {
-                    spdlog::warn(
-                        "solver=newton iter={:d} failure=\"line search "
-                        "using gradient descent\" failsafe=none",
-                        iteration_number + 1);
+                    spdlog::warn(NEWTON_GRADIENT_LOG, iteration_number + 1);
                     exit_reason = "line-search failed";
                     break;
                 }
             }
 
-            x += step_length * delta_x; // Update x
+            x += step_length * delta_x;
             assert(constraint(x));
 
             problem.eval_intermediate_callback(x);
+
         } while (++iteration_number <= max_iterations);
 
-        spdlog::trace("solver=newton total_iter={:d} "
-                      "exit_reason=\"{:s}\" sqr_norm_grad={:g}",
-            iteration_number, exit_reason, gradient_free.squaredNorm());
+        spdlog::trace(
+            "{} total_iter={:d} gradient_free_eq_norm={:e} message='{}'",
+            NEWTON_END_LOG, iteration_number, gradient_free.squaredNorm(),
+            exit_reason);
 
         return OptimizationResults(x, problem.eval_f(x),
             gradient_free.squaredNorm() <= absolute_tolerance);

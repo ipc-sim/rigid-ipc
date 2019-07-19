@@ -2,6 +2,7 @@
 #define AUTODIFF_TYPES_H
 
 #include <autodiff/autodiff.h>
+#include <vector>
 
 namespace ccd {
 
