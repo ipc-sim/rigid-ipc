@@ -10,14 +10,14 @@ public:
     typedef Eigen::Matrix<double, N, 1> VectorNd;
     typedef Eigen::Matrix<double, N, N> MatrixNd;
 
-    typedef DScalar1<double, VectorNd> DScalar1;
-    typedef DScalar2<double, VectorNd, MatrixNd> DScalar2;
+    typedef DScalar1<double, VectorNd> DDouble1;
+    typedef DScalar2<double, VectorNd, MatrixNd> DDouble2;
 
-    typedef Eigen::Matrix<DScalar1, Eigen::Dynamic, Eigen::Dynamic> D1MatrixXd;
-    typedef Eigen::Matrix<DScalar2, Eigen::Dynamic, Eigen::Dynamic> D2MatrixXd;
+    typedef Eigen::Matrix<DDouble1, Eigen::Dynamic, Eigen::Dynamic> D1MatrixXd;
+    typedef Eigen::Matrix<DDouble2, Eigen::Dynamic, Eigen::Dynamic> D2MatrixXd;
 
-    typedef Eigen::Matrix<DScalar1, Eigen::Dynamic, 1> D1VectorXd;
-    typedef Eigen::Matrix<DScalar2, Eigen::Dynamic, 1> D2VectorXd;
+    typedef Eigen::Matrix<DDouble1, Eigen::Dynamic, 1> D1VectorXd;
+    typedef Eigen::Matrix<DDouble2, Eigen::Dynamic, 1> D2VectorXd;
 
     inline static void activate() { DiffScalarBase::setVariableCount(N); }
 
@@ -26,7 +26,7 @@ public:
         D1VectorXd vec;
         vec.resize(v.rows());
         for (int r = 0; r < v.rows(); r++) {
-            vec[r] = DScalar1(i + r, v[r]);
+            vec[r] = DDouble1(i + r, v[r]);
         }
         return vec;
     }
@@ -35,7 +35,7 @@ public:
         D2VectorXd vec;
         vec.resize(v.rows());
         for (int r = 0; r < v.rows(); r++) {
-            vec[r] = DScalar2(i + r, v[r]);
+            vec[r] = DDouble2(i + r, v[r]);
         }
         return vec;
     }
