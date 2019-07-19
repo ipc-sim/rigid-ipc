@@ -194,7 +194,7 @@ namespace opt {
         Diff::D1VectorXd da = Diff::d1vars(0, a);
         Diff::D1VectorXd db = Diff::d1vars(2, b);
         Diff::D1VectorXd dc = Diff::d1vars(4, c);
-        Diff::DScalar1 barrier = distance_barrier<Diff::DScalar1>(da, db, dc);
+        Diff::DDouble1 barrier = distance_barrier<Diff::DDouble1>(da, db, dc);
 
         return barrier.getGradient();
     }
@@ -208,7 +208,7 @@ namespace opt {
         Diff::D2VectorXd da = Diff::d2vars(0, a);
         Diff::D2VectorXd db = Diff::d2vars(2, b);
         Diff::D2VectorXd dc = Diff::d2vars(4, c);
-        Diff::DScalar2 barrier = distance_barrier<Diff::DScalar2>(da, db, dc);
+        Diff::DDouble2 barrier = distance_barrier<Diff::DDouble2>(da, db, dc);
         return barrier.getHessian();
     }
 
