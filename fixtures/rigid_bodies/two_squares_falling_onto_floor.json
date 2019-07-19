@@ -1,6 +1,10 @@
 {
     "scene_type": "rigid_body_problem",
     "timestep_size": 0.1,
+    "barrier_solver": {
+        "inner_solver": "newton_solver",
+        "min_barrier_epsilon": 1e-3
+    },
     "rigid_body_problem": {
         "gravity": [0.0, 0.0, 0.0],
         "rigid_bodies": [{
@@ -21,8 +25,8 @@
             },
             {
                 "vertices": [
-                    [0.5, 40],
-                    [0.5, 42],
+                    [-1.5, 40],
+                    [-1.5, 42],
                     [2.5, 42],
                     [2.5, 40]
                 ],
@@ -52,13 +56,5 @@
                 "is_dof_fixed": [true, true, true]
             }
         ]
-    },
-    "barrier_constraint": {
-        "initial_epsilon": "custom",
-        "custom_initial_epsilon": 100.0
-    },
-    "barrier_solver": {
-        "inner_solver": "newton_solver",
-        "min_barrier_epsilon": 1.0
     }
 }

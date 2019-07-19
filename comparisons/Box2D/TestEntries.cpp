@@ -60,6 +60,7 @@
 #include "RayCast.h"
 #include "Revolute.h"
 #include "RopeJoint.h"
+#include "Saw.h"
 #include "SensorTest.h"
 #include "ShapeCast.h"
 #include "ShapeEditing.h"
@@ -79,6 +80,7 @@
 
 // clang-format off
 TestEntry g_testEntries[] = {
+    { "Saw", Saw::Create },
     { "Ground Plane", GroundPlane::Create },
     { "Line Stack", LineStack::Create },
     { "Simple Chain Links", ChainLinks::CreateThin },

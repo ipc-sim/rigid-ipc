@@ -1,0 +1,86 @@
+{
+    "scene_type": "rigid_body_problem",
+    "collision_solver": "barrier_solver",
+    "rigid_body_problem": {
+        "rigid_bodies": [{
+            "vertices": [
+                [-2.4375, 0.0],
+                [0.0, 0.0],
+                [2.4375, 0.0],
+                [-3.0, -3.0],
+                [0.0, -3.0],
+                [3.0, -3.0],
+                [-3.0, -6.0],
+                [-0.5625, -6.0],
+                [0.5625, -6.0],
+                [3.0, -6.0]
+            ],
+            "edges": [
+                [0, 1],
+                [1, 2],
+                [1, 4],
+                [3, 4],
+                [4, 5],
+                [3, 6],
+                [5, 9],
+                [6, 7],
+                [8, 9]
+            ],
+            "velocity": [0.0, 0.0, 0.0],
+            "is_dof_fixed": [true, true, true]
+        }],
+        "constraint": "distance_barrier_constraint",
+        "update_constraint_set": true,
+        "use_chain_functional": false,
+        "gravity": [0.0, 0.0, 0.0],
+        "collision_eps": 2.0
+    },
+    "particles_problem": {
+        "vertices": [],
+        "edges": [],
+        "velocities": [],
+        "x_fixed": [],
+        "y_fixed": [],
+        "use_mass_matrix": true,
+        "constraint": "distance_barrier_constraint",
+        "update_constraint_set": true,
+        "gravity": [0.0, 0.0],
+        "collision_eps": 2.0
+    },
+    "barrier_solver": {
+        "inner_solver": "newton_solver",
+        "min_barrier_epsilon": 1e-05,
+        "max_iterations": 0
+    },
+    "gradient_descent_solver": {
+        "absolute_tolerance": 1e-05,
+        "min_step_length": 1e-12,
+        "max_iterations": 3000
+    },
+    "newton_solver": {
+        "absolute_tolerance": 1e-05,
+        "min_step_length": 1e-12,
+        "max_iterations": 3000
+    },
+    "bfgs_solver": {
+        "absolute_tolerance": 1e-05,
+        "min_step_length": 1e-12,
+        "max_iterations": 3000
+    },
+    "time_barrier_constraint": {
+        "initial_epsilon": "min_toi",
+        "custom_initial_epsilon": 1.0,
+        "detection_method": "hash_grid",
+        "extend_collision_set": true
+    },
+    "distance_barrier_constraint": {
+        "custom_initial_epsilon": 0.5,
+        "detection_method": "hash_grid",
+        "extend_collision_set": false
+    },
+    "timestep_size": 0.1,
+    "viewport_bbox": {
+        "min": [0, 0],
+        "max": [0, 0]
+    }
+}

@@ -67,13 +67,5 @@
                 "is_dof_fixed": [false, false, false]
             }
         ]
-    },
-    "barrier_constraint": {
-        "initial_epsilon": "custom",
-        "custom_initial_epsilon": 100.0
-    },
-    "barrier_solver": {
-        "inner_solver": "newton_solver",
-        "min_barrier_epsilon": 1.0
     }
 }

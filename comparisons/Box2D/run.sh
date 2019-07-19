@@ -24,6 +24,7 @@ ln -sf $THIS_DIR/TestEntries.cpp $BOX2D_DIR/Testbed/Tests/TestEntries.cpp
 ln -sf $THIS_DIR/ChainLinks.h $BOX2D_DIR/Testbed/Tests/ChainLinks.h
 ln -sf $THIS_DIR/LineStack.h $BOX2D_DIR/Testbed/Tests/LineStack.h
 ln -sf $THIS_DIR/GroundPlane.h $BOX2D_DIR/Testbed/Tests/GroundPlane.h
+ln -sf $THIS_DIR/Saw.h $BOX2D_DIR/Testbed/Tests/Saw.h
 ln -sf $THIS_DIR/Main.cpp $BOX2D_DIR/Testbed/Framework/Main.cpp
 make -C Build
 cd Testbed
