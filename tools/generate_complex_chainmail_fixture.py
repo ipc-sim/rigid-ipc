@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 """
 Script to generate a fixture of a chain with N complex links.
 
@@ -14,7 +15,9 @@ from default_fixture import generate_default_fixture
 
 def generate_fixture(n_links: int) -> dict:
     """Generate a fixture of a chain with N complex links."""
-    with open("complex-link.json") as link_file:
+    link_geometry_path = (pathlib.Path(__file__).resolve().parent /
+                          "complex-link.json")
+    with open(link_geometry_path) as link_file:
         link_mesh = json.load(link_file)
         vertices = numpy.array(link_mesh["vertices"], dtype=float)
         edges = numpy.array(link_mesh["edges"], dtype=int)

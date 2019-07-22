@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 """Script to generate a fixture of a box falling on a saw."""
 
 import sys
