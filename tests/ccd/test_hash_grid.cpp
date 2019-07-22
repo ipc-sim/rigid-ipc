@@ -3,25 +3,24 @@
 #include <fstream>
 #include <iostream>
 
-#include <nlohmann/json.hpp>
 #include <ccd/collision_detection.hpp>
 #include <io/serialize_json.hpp>
+#include <nlohmann/json.hpp>
 
 using namespace ccd;
 using namespace nlohmann;
 
-TEST_CASE("hash grid gets same impacts as brute force", "[ccd][hashgrid]")
+TEST_CASE("hash grid gets same impacts as brute force", "ccdhashgrid")
 {
     Eigen::MatrixXd vertices;
     Eigen::MatrixXi edges;
     Eigen::MatrixXd displacements;
+    vertices.resize(10, 2);
+    vertices << -2.4375, 0.0, 0.0, 0.0, 2.4375, 0.0, -3.0, -3.0, 0.0, -3.0, 3.0,
+        -3.0, -3.0, -6.0, -0.5625, -6.0, 0.5625, -6.0, 3.0, -6.0;
 
-    std::ifstream input(
-        std::string(FIXTURES_DIR) + "/chain/two-links-mesh.json");
-    json scene = json::parse(input);
-
-    ccd::io::from_json(scene["vertices"], vertices);
-    ccd::io::from_json(scene["edges"], edges);
+    edges.resize(9, 2);
+    edges << 0, 1, 1, 2, 1, 4, 3, 4, 4, 5, 3, 6, 5, 9, 6, 7, 8, 9;
 
     displacements.resize(vertices.rows(), vertices.cols());
     for (int i = 0; i < 10; i++) {
