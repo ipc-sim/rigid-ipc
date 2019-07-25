@@ -154,6 +154,14 @@ namespace physics {
             Eigen::MatrixXd& gx_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& gx_hessian) override;
 
+        void eval_g(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
+            Eigen::SparseMatrix<double>& gx_jacobian,
+            Eigen::VectorXi& gx_active) override;
+
+        void eval_jac_g(const Eigen::VectorXd& x,
+            Eigen::SparseMatrix<double>& jac_gx) override;
+
         Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma);
 
         ///////////////////////////////////////////////////////////////////////

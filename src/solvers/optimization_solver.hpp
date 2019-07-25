@@ -62,10 +62,11 @@ namespace opt {
                 "eval_f OptimizationSolver not implemented");
         }
 
-        virtual Eigen::VectorXd get_grad_f() const
+        /// returns the kkt condition \grad f - grad_g^T \lambda = 0
+        virtual Eigen::VectorXd get_grad_kkt() const
         {
             throw NotImplementedError(
-                "get_grad_f OptimizationSolver not implemented");
+                "get_grad_kkt OptimizationSolver not implemented");
         }
 
         virtual bool has_inner_solver() { return false; }

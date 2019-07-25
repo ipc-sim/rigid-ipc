@@ -98,6 +98,10 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         expected << 0.0, 1.5;
     }
     AdHocProblem problem;
+    problem.f = [&](const Eigen::VectorXd& x) -> double {
+        return (A * x -b).squaredNorm() / 2.0;
+    };
+
     problem.g = [&g_diff](const Eigen::VectorXd x) -> Eigen::VectorXd {
         DVector gx = g_diff(x);
         Eigen::VectorXd g(gx.rows());
@@ -122,8 +126,7 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
     NCPSolver solver;
     solver.max_iterations = 300;
     solver.convergence_tolerance = 1E-8;
-    solver.keep_in_unfeasible = false;
-    solver.check_convergence = false;
+    solver.do_line_search = false;
     solver.solve_for_active_cstr = false;
     solver.update_type = NcpUpdate::LINEARIZED;
     solver.lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL;

@@ -16,7 +16,8 @@ namespace ccd {
 namespace opt {
 
     typedef std::function<void(const Eigen::VectorXd& x,
-        const Eigen::VectorXd& alpha, const double gamma)>
+        const Eigen::VectorXd& alpha,
+        const double gamma)>
         callback_intermediate_ncp;
 
     /**
@@ -39,38 +40,43 @@ namespace opt {
         NCPSolver(const std::string& name);
         ~NCPSolver() override;
 
-        OptimizationResults solve(OptimizationProblem& problem) override;
+        void clear() override;
+        void settings(const nlohmann::json& json) override;
+        nlohmann::json settings() const override;
+
+        OptimizationResults solve(OptimizationProblem& problem_ptr_) override;
+        void init(OptimizationProblem& problem) override;
+        OptimizationResults step_solve() override;
+
         bool solve_ncp(const Eigen::SparseMatrix<double>& hessian,
-            const Eigen::VectorXd& b, OptimizationProblem& problem,
-            Eigen::VectorXd& x_opt, Eigen::VectorXd& alpha_opt);
-        void compute_linear_system(OptimizationProblem& problem);
+            const Eigen::VectorXd& b,
+            OptimizationProblem& problem_ptr_,
+            Eigen::VectorXd& x_opt,
+            Eigen::VectorXd& alpha_opt);
 
-        bool compute();
-        void initialize();
-        void solve_lcp(Eigen::VectorXd& delta_x);
-        void move_to_unfeasible_domain(Eigen::VectorXd& delta_x, double& gamma);
-        void update_candidate(Eigen::VectorXd& delta_x, double& gamma);
+        int num_outer_iterations() override { return num_outer_iterations_; }
 
-        Eigen::VectorXd Ainv(const Eigen::VectorXd& x);
+        /// returns the kkt condition \grad f - grad_g^T \lambda = 0
+        Eigen::VectorXd get_grad_kkt() const override;
+
+        void eval_f(
+            const Eigen::MatrixXd& points, Eigen::VectorXd& fx) override;
+
+        void solve_lcp(const Eigen::VectorXd& xi,
+            const Eigen::VectorXd& gxi,
+            const Eigen::SparseMatrix<double>& jac_gxi,
+            const Eigen::VectorXi& gactive,
+            Eigen::VectorXd& delta_x,
+            Eigen::VectorXd& lambda_i) const;
 
         // ---------------------
         // Configuration
         // ---------------------
-        bool keep_in_unfeasible;
-        bool check_convergence;
-        bool check_volume_increase;
+        bool do_line_search;
         bool solve_for_active_cstr;
         double convergence_tolerance;
         NcpUpdate update_type;
         LCPSolver lcp_solver;
-
-        // ---------------------
-        // Optimization Specifics
-        // ---------------------
-        Eigen::SparseMatrix<double> A;
-        Eigen::VectorXd b;
-        OptimizationProblem* problem;
-        //        callback_intermediate_ncp& callback;
 
         // -----------------------
         // Optimization Status
@@ -84,8 +90,21 @@ namespace opt {
         // Optimization results
         // ----------------------
         Eigen::VectorXd xi;
-        Eigen::VectorXd alpha_i;
-    };
+        Eigen::VectorXd lambda_i;
 
+    protected:
+        Eigen::SparseMatrix<double> A;
+        Eigen::VectorXd b;
+        OptimizationProblem* problem_ptr_;
+
+        int num_outer_iterations_;
+
+        void compute_linear_system(OptimizationProblem& problem_ptr_);
+        void compute_initial_solution();
+
+        Eigen::VectorXd Ainv(const Eigen::VectorXd& x) const;
+    };
+    void zero_out_fixed_dof(
+        const Eigen::VectorXb& is_fixed, Eigen::SparseMatrix<double>& m);
 } // namespace opt
 } // namespace ccd

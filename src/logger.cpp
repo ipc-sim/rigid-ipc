@@ -8,12 +8,15 @@
 
 namespace ccd {
 namespace log {
-    static const Eigen::IOFormat CommaFmt(Eigen::StreamPrecision,
-        Eigen::DontAlignCols, ", ", ", ", "", "", "", "");
+    static const Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "", "");
     std::string fmt_eigen(const Eigen::MatrixXd& x, const int precision)
     {
         std::stringstream ssx;
-        ssx << std::setprecision(precision) << x.format(CommaFmt);
+        Eigen::MatrixXd m = x;
+        if (m.cols() == 1){
+            m.transposeInPlace();
+        }
+        ssx << std::setprecision(precision) << m.format(CleanFmt);
         return ssx.str();
     }
 
