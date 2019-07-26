@@ -99,6 +99,11 @@ void UISimState::draw_io()
             ImGui::SetScrollHere(1.0f);
         }
         ImGui::EndChild();
+
+        if (ImGui::Button("Save simulation", ImVec2(-1, 0))) {
+            std::string fname = igl::file_dialog_save();
+            save(fname);
+        }
     }
 }
 
@@ -142,6 +147,7 @@ void UISimState::draw_simulation_player()
     ImGui::SameLine();
     ImGui::HelpMarker("yes - shows velocities and forces as position-delta\n "
                       "i.e scaling them by time.");
+
 }
 
 void UISimState::draw_collision_menu()
@@ -160,6 +166,7 @@ void UISimState::draw_collision_menu()
     }
     ImGui::Text(
         "Outer it.: %i", m_state.ccd_solver_ptr->num_outer_iterations());
+
 }
 void UISimState::draw_settings()
 {

@@ -18,6 +18,7 @@ namespace opt {
         { { NcpUpdate::LINEARIZED, "linearized" },
             { NcpUpdate::G_GRADIENT, "g_gradients" } })
 
+
     NLOHMANN_JSON_SERIALIZE_ENUM(LCPSolver,
         { { LCPSolver::LCP_MOSEK, "lcp_mosek" },
             { LCPSolver::LCP_GAUSS_SEIDEL, "lcp_gauss_seidel" } })
@@ -128,7 +129,7 @@ namespace opt {
         // 1. Solve assumming constraints are not violated
         xi = Ainv(b);
         problem_ptr_->eval_g(xi, g_xi, jac_g_xi, g_active);
-        //        zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
+        zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
 
         lambda_i.resize(g_xi.rows());
         lambda_i.setZero();
@@ -245,7 +246,7 @@ namespace opt {
 
         xi = xi + delta_i * alpha;
         problem_ptr_->eval_g(xi, g_xi, jac_g_xi, g_active);
-        //        zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
+        zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
         result.finished = false;
         result.success = false;
         result.x = xi;

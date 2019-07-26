@@ -360,24 +360,6 @@ namespace physics {
         is_linesearch_active = false;
     }
 
-    void ParticlesDisplProblem::create_sample_points(
-        const Eigen::MatrixXd& xy_points, Eigen::MatrixXd& sample_points) const
-    {
-        // for now we will use the position as the position of the first rigid
-        // body
-        assert(xy_points.cols() == 2);
-        sample_points.resize(xy_points.rows(), num_vars);
-
-        // copy the initial solution
-        sample_points.rowwise() = x0.transpose();
-
-        // then override the rest with the xy_data data;
-        // x-entries
-        sample_points.block(0, 0, xy_points.rows(), 1) = xy_points.col(0);
-        // y-entries
-        sample_points.block(0, num_vars / 2, xy_points.rows(), 1)
-            = xy_points.col(1);
-    }
 
 } // namespace physics
 } // namespace ccd

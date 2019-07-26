@@ -7,8 +7,8 @@
         "volume_epsilon": 1e-16
     },
     "ncp_solver": {
-        "max_iterations": 300,
-        "do_line_search": true,
+        "max_iterations": 1000,
+        "do_line_search": false,
         "solve_for_active_cstr": true,
         "convergence_tolerance": 1e-10,
         "update_type": "linearized",
@@ -33,15 +33,15 @@
         "velocities": [
             [0.0, 0.0],
             [0.0, 0.0],
-            [0.0, -0.3],
-            [0.0, -0.3]
+            [0.08, -0.1],
+            [0.08, -0.1]
         ],
         "x_fixed": [],
         "y_fixed": [],
         "use_mass_matrix": true,
         "constraint": "volume_constraint",
         "update_constraint_set": true,
-        "gravity": [0.0, 0.0],
+        "gravity": [0.0, -0.0],
         "collision_eps": 0.0
     }
 }

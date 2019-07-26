@@ -141,13 +141,6 @@ namespace physics {
             Eigen::MatrixXd& g_uk_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
 
-        ///////////////////////////////////////////////////////////////////////
-        /// FOR DEBUGGING
-        ///
-        /// creates sample points at xy coordinates
-        void create_sample_points(const Eigen::MatrixXd& xy_points,
-            Eigen::MatrixXd& sample_points) const override;
-
         void unflatten_dof(Eigen::MatrixXd& vec) const override
         {
             assert(vec.rows() % 2 == 0);

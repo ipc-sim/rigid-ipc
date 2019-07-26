@@ -17,10 +17,8 @@ namespace opt {
     enum LCPSolver {
         /// Solve the LCP using the Guass-Seidel method
         LCP_GAUSS_SEIDEL,
-#if BUILD_WITH_MOSEK
         /// Solve the LCP as a QP using Mosek
         LCP_MOSEK
-#endif
     };
     static const char* LCPSolverNames[] = { "LCP_GAUSS_SEIDEL", "LCP_MOSEK" };
 

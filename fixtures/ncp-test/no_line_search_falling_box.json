@@ -8,7 +8,7 @@
     },
     "ncp_solver": {
         "max_iterations": 300,
-        "do_line_search": true,
+        "do_line_search": false,
         "solve_for_active_cstr": true,
         "convergence_tolerance": 1e-6,
         "update_type": "linearized",
@@ -20,7 +20,7 @@
         "use_mass_matrix": true,
         "constraint": "volume_constraint",
         "update_constraint_set": true,
-        "gravity": [0.0, 0.0, 0.0],
+        "gravity": [0.0, -0.0, 0.0],
         "collision_eps": 0.0,
         "rigid_bodies": [{
             "vertices": [
@@ -35,14 +35,14 @@
                 [2, 3],
                 [3, 0]
             ],
-            "velocity": [0.0, -0.1, 0.00],
+            "velocity": [0.0, -1.0, 0.05],
             "is_dof_fixed": [false, false, false]
         }, {
             "vertices": [
-                [-10, 11],
-                [-10, 12],
-                [10, 12],
-                [10, 11]
+                [-100, 1],
+                [-100, 12],
+                [100, 12],
+                [100, 1]
             ],
             "edges": [
                 [0, 1],
@@ -51,7 +51,7 @@
                 [3, 0]
             ],
             "velocity": [0.0, 0.0, 0.0],
-        "is_dof_fixed": [false, false, false]
+            "is_dof_fixed": [true, true, true]
         }]
     }
 }

@@ -105,6 +105,7 @@ data/**/*.csv
 data/**/*.json
 data/**/*.pdf
 data/**/*.xlsx
+data/local/
 
 3rdparty*
 

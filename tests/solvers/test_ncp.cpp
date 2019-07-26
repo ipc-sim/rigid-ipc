@@ -99,7 +99,7 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
     }
     AdHocProblem problem;
     problem.f = [&](const Eigen::VectorXd& x) -> double {
-        return (A * x -b).squaredNorm() / 2.0;
+        return (A * x - b).squaredNorm() / 2.0;
     };
 
     problem.g = [&g_diff](const Eigen::VectorXd x) -> Eigen::VectorXd {
@@ -121,6 +121,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
 
         return jac_gx;
     };
+    Eigen::VectorXb is_dof_fixed = Eigen::VectorXb::Zero(NUM_VARS);
+    problem.fis_dof_fixed = [&]() -> Eigen::VectorXb& { return is_dof_fixed; };
 
     Eigen::VectorXd x(NUM_VARS), alpha(NUM_CONSTRAINTS);
     NCPSolver solver;
