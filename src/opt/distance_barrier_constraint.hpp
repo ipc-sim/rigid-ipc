@@ -6,6 +6,8 @@
 
 #include <autodiff/autodiff_types.hpp>
 #include <ccd/collision_detection.hpp>
+#include <ccd/hash_grid.hpp>
+#include <utils/eigen_ext.hpp>
 
 namespace ccd {
 namespace opt {
@@ -33,8 +35,19 @@ namespace opt {
 
         int number_of_constraints() override;
 
+        void compute_candidate_intersections_brute_force(
+            const Eigen::MatrixXd& vertices_t1,
+            EdgeVertexCandidates& candidates);
+
+        void compute_candidate_intersections_hashgrid(
+            const Eigen::MatrixXd& vertices_t1,
+            EdgeVertexCandidates& candidates);
+
         void compute_constraints(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers) override;
+
+        void compute_active_mask(
+            const Eigen::MatrixXd& Uk, Eigen::VectorXb& mask);
 
         void compute_constraints_jacobian(const Eigen::MatrixXd& Uk,
             Eigen::MatrixXd& barriers_jacobian) override;

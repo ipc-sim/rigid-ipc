@@ -114,3 +114,7 @@ docs
 
 ## Symbolic link to Google Drive folder
 results
+
+# Atom beautifier files
+.atom-beautify.*
+distance_AABB.cpp.bak

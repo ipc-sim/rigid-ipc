@@ -1,10 +1,10 @@
 #include <catch2/catch.hpp>
 
+#include <autodiff/finitediff.hpp>
 #include <iostream>
 #include <opt/barrier.hpp>
 #include <opt/distance_barrier_constraint.hpp>
 #include <utils/flatten.hpp>
-#include <autodiff/finitediff.hpp>
 
 TEST_CASE("Distance Barrier Constraint", "[opt][ccd][DistanceBarrier]")
 {
@@ -118,7 +118,7 @@ TEST_CASE("Distance Barrier Constraint", "[opt][ccd][DistanceBarrier]")
 }
 
 TEST_CASE("Distance Barrier Constraint Gradient",
-    "[opt][ccd][DistanceBarrierGradient]")
+    "[opt][ccd][DistanceBarrier][DistanceBarrierGradient]")
 {
     using namespace ccd::opt;
     DistanceBarrierConstraint barrier;
@@ -166,7 +166,6 @@ TEST_CASE("Distance Barrier Constraint Gradient",
     {
         displacements.row(2) << -1.0, 0.0;
         displacements.row(3) << -1.0, 0.0;
-
     }
 
     Eigen::MatrixXd actual_jac;
@@ -174,7 +173,7 @@ TEST_CASE("Distance Barrier Constraint Gradient",
     barrier.compute_constraints_jacobian(displacements, actual_jac);
 
     Eigen::MatrixXd approx_jac;
-    auto f = [&](const Eigen::VectorXd& u) -> Eigen::VectorXd{
+    auto f = [&](const Eigen::VectorXd& u) -> Eigen::VectorXd {
         Eigen::VectorXd fx;
         Eigen::MatrixXd x = u;
         ccd::unflatten(x, 2);
@@ -187,12 +186,10 @@ TEST_CASE("Distance Barrier Constraint Gradient",
     ccd::finite_jacobian(x, f, approx_jac);
 
     CHECK((approx_jac - actual_jac).squaredNorm() < 1e-12);
-
-
 }
 
 TEST_CASE("Distance Barrier Constraint Hessian",
-    "[opt][ccd][DistanceBarrierHessian]")
+    "[opt][ccd][DistanceBarrier][DistanceBarrierHessian]")
 {
     using namespace ccd::opt;
     DistanceBarrierConstraint barrier;
@@ -240,7 +237,6 @@ TEST_CASE("Distance Barrier Constraint Hessian",
     {
         displacements.row(2) << -1.0, 0.0;
         displacements.row(3) << -1.0, 0.0;
-
     }
 
     std::vector<Eigen::SparseMatrix<double>> actual_hess;
@@ -251,9 +247,9 @@ TEST_CASE("Distance Barrier Constraint Hessian",
 
     Eigen::MatrixXd x = displacements;
     ccd::flatten(x);
-    for (size_t i=0; i < actual_hess.size(); i++){
+    for (size_t i = 0; i < actual_hess.size(); i++) {
         Eigen::MatrixXd finite_hess_i;
-        auto f = [&](const Eigen::VectorXd& u) -> Eigen::VectorXd{
+        auto f = [&](const Eigen::VectorXd& u) -> Eigen::VectorXd {
             Eigen::MatrixXd x = u;
             ccd::unflatten(x, 2);
             barrier.initialize(vertices, edges, x);
@@ -264,11 +260,4 @@ TEST_CASE("Distance Barrier Constraint Hessian",
         ccd::finite_jacobian(x, f, finite_hess_i);
         CHECK((finite_hess_i - actual_hess[i].toDense()).squaredNorm() < 1e-12);
     }
-
-
-
-
-
-
-
 }

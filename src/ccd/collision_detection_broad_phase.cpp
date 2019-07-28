@@ -63,7 +63,7 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
 // Find all edge-vertex collisions in one time step using brute-force
 // comparisons of all edges and all vertices.
 void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
+    const Eigen::MatrixXd& /*displacements*/, const Eigen::MatrixX2i& edges,
     EdgeVertexCandidates& ev_candidates)
 {
     // Loop over all edges
