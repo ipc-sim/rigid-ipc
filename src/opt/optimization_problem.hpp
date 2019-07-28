@@ -18,7 +18,6 @@ namespace opt {
     /// @brief function type for functional f(x)
     typedef std::function<double(const Eigen::VectorXd&)> callback_f;
 
-
     /// Defines the optimization problems of the form
     ///  minₓ     f(x)       x ∈ Rⁿ
     ///           g(x) >= 0
@@ -135,6 +134,9 @@ namespace opt {
             const Eigen::SparseMatrix<double>& hessian);
         virtual bool compare_jac_g_approx(
             const Eigen::VectorXd& x, const Eigen::MatrixXd& jac);
+        virtual bool compare_jac_g_approx(const Eigen::VectorXd& x,
+            const Eigen::MatrixXd& jac,
+            double& diff_norm);
 
         ///////////////////////////////////////////////////////////////////////
         /// FUNCTION POINTERS
@@ -173,15 +175,16 @@ namespace opt {
         }
 
         /// indices if entry x_i is fixed
-        virtual const Eigen::VectorXb& is_dof_fixed() {
+        virtual const Eigen::VectorXb& is_dof_fixed()
+        {
             throw NotImplementedError("is_dof_fixed not implemented");
         }
 
         ////////////////////////////////////////////////////////////////////////
         // Fields
-        int num_vars;                 ///< @brief Number of variables
-        int num_constraints;          ///< @brief Number of constraints
-        Eigen::VectorXd x0;           ///< @brief Initial value of x
+        int num_vars;        ///< @brief Number of variables
+        int num_constraints; ///< @brief Number of constraints
+        Eigen::VectorXd x0;  ///< @brief Initial value of x
 
         ////////////////////////////////////////////////////////////////////////
     private:

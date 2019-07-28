@@ -154,14 +154,15 @@ namespace physics {
             Eigen::MatrixXd& gx_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& gx_hessian) override;
 
-        Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma);
+        void eval_g(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
+            Eigen::SparseMatrix<double>& gx_jacobian,
+            Eigen::VectorXi& gx_active) override;
 
-        ///////////////////////////////////////////////////////////////////////
-        /// FOR DEBUGGING
-        ///
-        /// creates sample points at xy coordinates
-        void create_sample_points(const Eigen::MatrixXd& xy_points,
-            Eigen::MatrixXd& sample_points) const override;
+        void eval_jac_g(const Eigen::VectorXd& x,
+            Eigen::SparseMatrix<double>& jac_gx) override;
+
+        Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma);
 
         ///////////////////////////////////////////////////////////////////////
         /// BARRIER SPECIFIC

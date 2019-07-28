@@ -92,7 +92,7 @@ namespace opt {
         void eval_f(
             const Eigen::MatrixXd& points, Eigen::VectorXd& fx) override;
 
-        Eigen::VectorXd get_grad_f() const override;
+        Eigen::VectorXd get_grad_kkt() const override;
         bool has_inner_solver() override { return true; }
         const OptimizationSolver& inner_solver() override
         {

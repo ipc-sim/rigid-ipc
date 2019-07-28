@@ -99,7 +99,7 @@ namespace physics {
         assert(constraint_ptr != nullptr);
 
         vertices_prev_ = vertices_;
-        vertices_ = vertices_next(time_step);
+        vertices_ = vertices_t1 = vertices_next(time_step);
         velocities_ = (vertices_ - vertices_prev_) / time_step;
 
         Fcollision.setZero();
@@ -130,6 +130,9 @@ namespace physics {
     bool ParticlesDisplProblem::take_step(
         const Eigen::VectorXd& x, const double time_step)
     {
+        spdlog::trace(
+            "particles_problem step=take_step xi={}", log::fmt_eigen(x));
+
         assert(constraint_ptr != nullptr);
         const Eigen::VectorXd& q1_collision = vec_vertices_t1;
 
@@ -268,6 +271,15 @@ namespace physics {
         Eigen::MatrixXd Uk = update_g(q1);
         constraint_ptr->compute_constraints(
             Uk, g_uk, g_uk_jacobian, g_uk_active);
+
+#ifdef WITH_DERIVATIVE_CHECK
+        double diff;
+        if (!compare_jac_g_approx(q1, g_uk_jacobian.toDense(), diff)) {
+            spdlog::error(
+                "Derivative Check Failed in `eval_jac_g` diff_norm={} jac_norm={} g_sum={}",
+                diff, g_uk_jacobian.norm(), g_uk.sum());
+        }
+#endif
     }
 
     Eigen::MatrixXd ParticlesDisplProblem::eval_jac_g(const Eigen::VectorXd& q1)
@@ -276,7 +288,13 @@ namespace physics {
         Eigen::MatrixXd jac_gx;
         PROFILE(constraint_ptr->compute_constraints_jacobian(Uk, jac_gx),
             ProfiledPoint::COMPUTING_GRADIENT);
-
+#ifdef WITH_DERIVATIVE_CHECK
+        double diff;
+        if (!compare_jac_g_approx(q1, jac_gx, diff)) {
+            spdlog::error(
+                "Derivative Check Failed in `eval_jac_g` diff_norm={}", diff);
+        }
+#endif
         return jac_gx;
     };
 
@@ -285,6 +303,14 @@ namespace physics {
     {
         Eigen::MatrixXd Uk = update_g(q1);
         constraint_ptr->compute_constraints_jacobian(Uk, jac_gx);
+
+#ifdef WITH_DERIVATIVE_CHECK
+        double diff;
+        if (!compare_jac_g_approx(q1, jac_gx.toDense(), diff)) {
+            spdlog::error(
+                "Derivative Check Failed in `eval_jac_g` diff_norm={} jac_norm={}", diff, jac_gx.norm());
+        }
+#endif
     };
 
     std::vector<Eigen::SparseMatrix<double>>
@@ -334,24 +360,6 @@ namespace physics {
         is_linesearch_active = false;
     }
 
-    void ParticlesDisplProblem::create_sample_points(
-        const Eigen::MatrixXd& xy_points, Eigen::MatrixXd& sample_points) const
-    {
-        // for now we will use the position as the position of the first rigid
-        // body
-        assert(xy_points.cols() == 2);
-        sample_points.resize(xy_points.rows(), num_vars);
-
-        // copy the initial solution
-        sample_points.rowwise() = x0.transpose();
-
-        // then override the rest with the xy_data data;
-        // x-entries
-        sample_points.block(0, 0, xy_points.rows(), 1) = xy_points.col(0);
-        // y-entries
-        sample_points.block(0, num_vars / 2, xy_points.rows(), 1)
-            = xy_points.col(1);
-    }
 
 } // namespace physics
 } // namespace ccd

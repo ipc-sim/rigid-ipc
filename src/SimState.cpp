@@ -29,10 +29,12 @@ bool SimState::load_scene(const std::string& filename)
 {
     using nlohmann::json;
     std::ifstream input(filename);
+
     if (input.good()) {
         scene_file = filename;
         json scene = json::parse(input);
         init(scene);
+
         return true;
     }
     return false;
@@ -88,16 +90,30 @@ void SimState::init(const nlohmann::json& args_in)
             "min_step_length": 1e-12,
             "max_iterations": 3000
         },
+        "ncp_solver":{
+            "max_iterations": 1000,
+            "do_line_search": true,
+            "solve_for_active_cstr": true,
+            "convergence_tolerance":1e-6,
+            "update_type": "linearized",
+            "lcp_solver": "lcp_gauss_seidel"
+        },
         "time_barrier_constraint":{
             "initial_epsilon":"min_toi",
             "custom_initial_epsilon":1.0,
             "detection_method": "hash_grid",
             "extend_collision_set": true
+
         },
        "distance_barrier_constraint":{
            "custom_initial_epsilon":0.5,
            "detection_method": "hash_grid",
            "extend_collision_set": false
+       },
+       "volume_constraint":{
+           "detection_method": "hash_grid",
+           "extend_collision_set": true,
+           "volume_epsilon": 1e-6
        },
         "timestep_size": 0.1,
         "viewport_bbox": {"min":[0,0],"max":[0,0]}
@@ -108,6 +124,7 @@ void SimState::init(const nlohmann::json& args_in)
     m_timestep_size = args["timestep_size"].get<double>();
 
     // Config PROBLEM
+
     auto problem_name = args["scene_type"].get<std::string>();
     problem_ptr = physics::ProblemFactory::factory().get_problem(problem_name);
     problem_ptr->init(args[problem_name]);
@@ -137,6 +154,9 @@ void SimState::init(const nlohmann::json& args_in)
     m_dirty_constraints = true;
 
     init_background_grid(args);
+
+    vertices_sequence.clear();
+    vertices_sequence.push_back(problem_ptr->vertices());
 }
 
 nlohmann::json SimState::get_active_config()
@@ -146,7 +166,8 @@ nlohmann::json SimState::get_active_config()
     active_args["scene_type"] = problem_ptr->name();
 
     active_args[problem_ptr->name()] = problem_ptr->settings();
-    active_args[problem_ptr->constraint().name()] = problem_ptr->constraint().settings();
+    active_args[problem_ptr->constraint().name()]
+        = problem_ptr->constraint().settings();
 
     // Settings for CCD SOLVER
     active_args["collision_solver"] = ccd_solver_ptr->name();
@@ -162,14 +183,19 @@ nlohmann::json SimState::get_active_config()
 }
 void SimState::simulation_step()
 {
+    m_num_simulation_steps += 1;
     m_step_has_collision = false;
     m_step_had_collision = problem_ptr->simulation_step(m_timestep_size);
     m_dirty_constraints = true;
 
+    if (m_step_had_collision) {
+        spdlog::debug("sim_state action=simulation_step status=had_collision");
+    }
+
     if (m_solve_collisions && m_step_had_collision) {
         solve_collision();
     }
-    m_num_simulation_steps += 1;
+    vertices_sequence.push_back(problem_ptr->vertices());
 }
 
 bool SimState::solve_collision()
@@ -182,10 +208,12 @@ bool SimState::solve_collision()
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 
     if (m_step_has_collision) {
-        spdlog::error("simulation_step it={} collisions=unsolved",
+        spdlog::error(
+            "sim_state action=solve_collisions sim_it={} status=collisions_unsolved",
             m_num_simulation_steps);
     } else {
-        spdlog::trace("simulation_step it={} collisions=resolved",
+        spdlog::debug(
+            "sim_state action=solve_collisions sim_it={} status=collisions_solved",
             m_num_simulation_steps);
     }
     return m_step_has_collision;
@@ -202,33 +230,39 @@ void SimState::collision_resolution_step()
     auto result = ccd_solver_ptr->step_solve();
 
     // TODO: use results.finished
-    problem_ptr->take_step(result.x, m_timestep_size);
+    m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
+    spdlog::debug(
+        "sim_state action=collision_resolution_step status=collisions_{}",
+        m_step_has_collision ? "unsolved" : "solved");
 }
 
-void SimState::get_collision_functional_field(Eigen::VectorXd& fx)
-{
-    if (m_dirty_constraints) {
-        problem_ptr->update_constraint();
-        ccd_solver_ptr->init(*problem_ptr);
-        m_dirty_constraints = false;
-    }
 
-    Eigen::MatrixXd Xk;
-    problem_ptr->create_sample_points(grid_V, Xk);
-    ccd_solver_ptr->eval_f(Xk, fx);
+void SimState::save_simulation(const std::string& filename){
+    nlohmann::json results;
+    results["args"] = args;
+    results["active_args"] = get_active_config();
+    std::vector<nlohmann::json> vs;
+    for (auto&v: vertices_sequence) {
+        vs.push_back(io::to_json(v));
+    }
+    results["animation"] = nlohmann::json();
+    results["animation"]["vertices_sequence"] = vs;
+    results["animation"]["edges"] = io::to_json(problem_ptr->edges());
+
+    std::ofstream o(filename);
+    o << std::setw(4) << results << std::endl;
 }
 
 
 void SimState::get_collision_gradient(Eigen::MatrixXd& fgrad)
 {
     if (m_dirty_constraints) {
-       fgrad.resize(0,0);
-       return;
+        fgrad.resize(0, 0);
+        return;
     }
 
-    fgrad = ccd_solver_ptr->get_grad_f();
+    fgrad = ccd_solver_ptr->get_grad_kkt();
     problem_ptr->unflatten_dof(fgrad);
-
 }
 
 void SimState::init_background_grid(const nlohmann::json& args_)

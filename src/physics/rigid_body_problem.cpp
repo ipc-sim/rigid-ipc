@@ -358,6 +358,34 @@ namespace physics {
         return jac;
     }
 
+    void RigidBodyProblem::eval_jac_g(
+        const Eigen::VectorXd& sigma, Eigen::SparseMatrix<double>& jac_gx)
+    {
+        Eigen::MatrixXd uk = update_g(sigma);
+
+        Eigen::SparseMatrix<double> jac_xk_sigma;
+        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+
+        m_constraint_ptr->compute_constraints_jacobian(uk, jac_gx);
+        jac_gx = jac_gx * jac_xk_sigma;
+    };
+
+    void RigidBodyProblem::eval_g(const Eigen::VectorXd& sigma,
+        Eigen::VectorXd& g_uk,
+        Eigen::SparseMatrix<double>& g_uk_jacobian,
+        Eigen::VectorXi& g_uk_active)
+    {
+        Eigen::MatrixXd uk = update_g(sigma);
+
+        Eigen::SparseMatrix<double> jac_xk_sigma;
+        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+
+        m_constraint_ptr->compute_constraints(
+            uk, g_uk, g_uk_jacobian, g_uk_active);
+
+        g_uk_jacobian = g_uk_jacobian * jac_xk_sigma;
+    }
+
     /// @brief: util function to assemble hessian from partial derivatives
     void assemble_hessian(const Eigen::SparseMatrix<double>& jac_xk_sigma,
         const std::vector<Eigen::SparseMatrix<double>>& hess_xk_sigma,
@@ -427,20 +455,6 @@ namespace physics {
 #endif
     }
 
-    void RigidBodyProblem::create_sample_points(
-        const Eigen::MatrixXd& xy_points, Eigen::MatrixXd& sample_points) const
-    {
-        // for now we will use the position as the position of the first rigid
-        // body
-        assert(xy_points.cols() == 2);
-        sample_points.resize(xy_points.rows(), num_vars);
-
-        // copy the initial solution
-        sample_points.rowwise() = x0.transpose();
-
-        // then override the rest with the xy_data data;
-        sample_points.block(0, 0, xy_points.rows(), 2) = xy_points;
-    }
 
 } // namespace physics
 } // namespace ccd

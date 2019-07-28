@@ -1,6 +1,7 @@
 #include "optimization_problem.hpp"
 
 #include <autodiff/finitediff.hpp>
+#include <logger.hpp>
 
 namespace ccd {
 namespace opt {
@@ -73,6 +74,14 @@ namespace opt {
     {
         Eigen::MatrixXd jac_approx = eval_jac_g_approx(x);
         return compare_jacobian(jac, jac_approx);
+    }
+    bool OptimizationProblem::compare_jac_g_approx(
+        const Eigen::VectorXd& x, const Eigen::MatrixXd& jac, double& diff_norm)
+    {
+        Eigen::MatrixXd jac_approx = eval_jac_g_approx(x);
+        diff_norm = (jac_approx - jac).norm();
+        bool same = compare_jacobian(jac, jac_approx);
+        return same;
     }
 
 

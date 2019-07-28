@@ -22,7 +22,7 @@ namespace ccd {
 
 namespace log {
 
-    std::string fmt_eigen(const Eigen::MatrixXd& x, const int precision = 10);
+    std::string fmt_eigen(const Eigen::MatrixXd& x, const int precision = 16);
     std::string now();
 
 } // namespace log

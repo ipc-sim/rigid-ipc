@@ -45,6 +45,11 @@ public:
         }
         return false;
     }
+    inline bool save(std::string scene_filename) override
+    {
+        m_state.save_simulation(scene_filename);
+        return true;
+    }
 
     inline void reload()
     {
@@ -100,7 +105,7 @@ private:
     std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
     std::shared_ptr<igl::opengl::VectorFieldData> collision_force_data;
     std::shared_ptr<igl::opengl::VectorFieldData> gradient_data;
-    std::shared_ptr<igl::opengl::ScalarFieldData> grid_data;
+//    std::shared_ptr<igl::opengl::ScalarFieldData> grid_data;
 
     std::map<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>> datas_;
     std::vector<std::string> data_names_;

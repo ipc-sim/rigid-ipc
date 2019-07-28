@@ -13,8 +13,10 @@ namespace opt {
 
     bool lcp_solve(const Eigen::VectorXd& gxi,
         const Eigen::SparseMatrix<double>& jac_gxi,
-        const Eigen::MatrixXd& tilde_jac_gxi, const Eigen::VectorXd& tilde_b,
-        const LCPSolver solver, Eigen::VectorXd& alpha)
+        const Eigen::MatrixXd& tilde_jac_gxi,
+        const Eigen::VectorXd& tilde_b,
+        const LCPSolver solver,
+        Eigen::VectorXd& alpha)
     {
         bool success = false;
         switch (solver) {
@@ -32,7 +34,7 @@ namespace opt {
 #endif
         }
 
-        Eigen::VectorXd s = jac_gxi * (tilde_jac_gxi * alpha + tilde_b) + gxi;
+        Eigen::VectorXd s = jac_gxi * tilde_jac_gxi * alpha + (jac_gxi* tilde_b + gxi);
         double err = alpha.transpose() * s;
         spdlog::trace("solver=lcp_solver lcp_solver={} x^Ts={}",
             LCPSolverNames[solver], err);
@@ -54,7 +56,8 @@ namespace opt {
 
     bool lcp_gauss_seidel(const Eigen::VectorXd& gxi,
         const Eigen::SparseMatrix<double>& jac_gxi,
-        const Eigen::MatrixXd& tilde_jac_gxi, const Eigen::VectorXd& tilde_b,
+        const Eigen::MatrixXd& tilde_jac_gxi,
+        const Eigen::VectorXd& tilde_b,
         Eigen::VectorXd& alpha)
     {
         // LCP Problem:
@@ -75,7 +78,7 @@ namespace opt {
         // Gauss-Seidel steps
         // ----------------------
 
-        const uint num_gs_steps = 1000;
+        const uint num_gs_steps = 10000;
         Eigen::VectorXd dk(dof);
         alpha.resize(num_constraints);
         alpha.setZero();
@@ -106,11 +109,13 @@ namespace opt {
                 = jac_gxi * (tilde_jac_gxi * alpha + tilde_b) + gxi;
             FB = get_fischer_burmeister(alpha, s);
 
-            if (FB < 1e-4) {
+            if (FB < 1e-10) {
                 break;
             }
         }
-        if (FB >= 1e-4) {
+        spdlog::trace("solver=GaussSeidel gs_convergence={} num_constraints={}",
+            FB, num_constraints);
+        if (FB >= 1e-10) {
             spdlog::warn(
                 "solver=GaussSeidel gs_convergence={} num_constraints={}", FB,
                 num_constraints);

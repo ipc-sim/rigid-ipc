@@ -64,13 +64,6 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
         Eigen::RowVector3d(241, 196, 15) / 255.0); // #f1c40f SUN FLOWER
     velocity_data->data().show_overlay = false;
 
-    // keep this last!
-    viewer->append_mesh();
-    grid_data = std::make_unique<igl::opengl::ScalarFieldData>(_viewer,
-        /*color_inf=*/Eigen::RowVector3d::Zero(),
-        Eigen::RowVector3d(0.3, 0.3, 0.5)); // igl default
-    grid_data->data().show_faces = false;
-
     datas_.emplace("edges", edges_data);
     datas_.emplace("gradient", gradient_data);
     datas_.emplace("next displ.", next_displacement_data);
@@ -78,7 +71,6 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
     datas_.emplace("final displ.", final_displacement_data);
     datas_.emplace("velocity", velocity_data);
     datas_.emplace("F_c", collision_force_data);
-    datas_.emplace("grid", grid_data);
 
     for (auto it = datas_.begin(); it != datas_.end(); ++it) {
         data_names_.push_back(it->first);
@@ -121,8 +113,6 @@ void UISimState::load_scene()
     m_state.get_collision_gradient(grad_f);
     gradient_data->set_vector_field(x1, -grad_f);
 
-    grid_data->set_mesh(m_state.grid_V, m_state.grid_F);
-
     viewer->core().align_camera_center(edges_data->mV, edges_data->mE);
     m_has_scene = true;
     m_player_state = PlayerState::Paused;
@@ -162,12 +152,7 @@ void UISimState::redraw_scene()
 
 void UISimState::redraw_scalar_fields()
 {
-    // Computing this is expensive so we do it on demand
-    if (grid_data->visibility()) {
-        Eigen::VectorXd fx;
-        m_state.get_collision_functional_field(fx);
-        grid_data->set_vertex_data(fx);
-    }
+
 }
 
 bool UISimState::pre_draw_loop()

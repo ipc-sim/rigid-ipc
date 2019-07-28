@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <autogen/collision_volume.hpp>
+#include <logger.hpp>
 
 namespace ccd {
 
@@ -91,6 +92,10 @@ namespace opt {
         assemble_jacobian(impact_volumes, g_uk_jacobian);
     }
 
+    Eigen::VectorXd getGradient(const double& x) { return Eigen::VectorXd(); }
+    Eigen::VectorXd getGradient(const DScalar& x) { return x.getGradient(); }
+    double getValue(const double& x) { return 0.0; }
+    double getValue(const DScalar& x) { return x.getValue(); }
     template <typename T>
     void VolumeConstraint::compute_constraints_per_impact(
         const Eigen::MatrixXd& displacements, std::vector<T>& constraints)
@@ -120,6 +125,28 @@ namespace opt {
                 v_kl = ccd::autogen::space_time_collision_volume<T>(data.v[2],
                     data.v[3], data.u[2], data.u[3], toi, alpha_kl,
                     volume_epsilon);
+
+//                if (differentiable<T>()) {
+//                    int vi = edges->coeffRef(ee_impact.impacted_edge_index, 0);
+//                    int vj = edges->coeffRef(ee_impact.impacted_edge_index, 1);
+
+//                    int vk = edges->coeffRef(ee_impact.impacting_edge_index, 0);
+//                    int vl = edges->coeffRef(ee_impact.impacting_edge_index, 1);
+
+//                    spdlog::trace(
+//                        "constraints vi={} vj={} vk={} vl={} a={} "
+//                        "\ntoi_ij   {}"
+//                        "\nalpha_ij {} "
+//                        "\nvol_ij   {} "
+//                        "\nvol_kl   {}"
+//                        "\ntoi_ij={:10e} alpha_ij={:10e}  vol_ij={:10e} vol_kl={:10e}",
+//                        vi, vj, vk, vl, ee_impact.impacting_alpha,
+//                        log::fmt_eigen(getGradient(toi)),
+//                        log::fmt_eigen(getGradient(alpha_ij)),
+//                        log::fmt_eigen(getGradient(v_ij)),
+//                        log::fmt_eigen(getGradient(v_kl)), getValue(toi),
+//                        getValue(alpha_ij), getValue(v_ij), getValue(v_kl));
+//                }
             }
             constraints.push_back(v_ij);
             constraints.push_back(v_kl);

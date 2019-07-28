@@ -126,7 +126,7 @@ namespace opt {
         }
     }
 
-    Eigen::VectorXd BarrierSolver::get_grad_f() const
+    Eigen::VectorXd BarrierSolver::get_grad_kkt() const
     {
         return barrier_problem_ptr->eval_grad_f(barrier_problem_ptr->x0);
     }
