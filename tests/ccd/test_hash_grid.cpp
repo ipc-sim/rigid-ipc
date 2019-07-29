@@ -10,7 +10,7 @@
 using namespace ccd;
 using namespace nlohmann;
 
-TEST_CASE("hash grid gets same impacts as brute force", "ccdhashgrid")
+TEST_CASE("hash grid gets same impacts as brute force", "[hashgrid]")
 {
     Eigen::MatrixXd vertices;
     Eigen::MatrixXi edges;

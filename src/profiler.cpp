@@ -1,4 +1,5 @@
 #include <profiler.hpp>
+#include <logger.hpp>
 
 #ifdef PROFILE_FUNCTIONS
 

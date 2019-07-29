@@ -35,6 +35,15 @@ extern long number_of_evals_profiled_points[];
 void reset_profiler();
 void print_profile(double total_time);
 
+#define QUICK_PROFILE(message, op)                                             \
+    {                                                                          \
+        igl::Timer timer;                                                      \
+        timer.start();                                                         \
+        op;                                                                    \
+        timer.stop();                                                          \
+        spdlog::debug("{} time_sec={:10e}", message, timer.getElapsedTime());      \
+    }
+
 #define PROFILE(op, point)                                                     \
     {                                                                          \
         number_of_evals_profiled_points[int(point)]++;                         \

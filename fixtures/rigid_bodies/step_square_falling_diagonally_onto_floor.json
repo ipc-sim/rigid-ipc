@@ -2,39 +2,43 @@
     "scene_type": "rigid_body_problem",
     "timestep_size": 1.0,
     "gravity": [0.0, 0.0, 0.0],
+    "distance_barrier_constraint": {
+        "custom_initial_epsilon": 0.5,
+        "detection_method": "hash_grid",
+        "use_hash_grid": false,
+        "extend_collision_set": false
+    },
     "rigid_body_problem": {
         "rigid_bodies": [{
-                "vertices": [
-                    [-1, 3],
-                    [-1, 5],
-                    [1, 5],
-                    [1, 3]
-                ],
-                "edges": [
-                    [0, 1],
-                    [1, 2],
-                    [2, 3],
-                    [3, 0]
-                ],
-                "velocity": [-5.0, -5.0, 0.0],
-                "is_dof_fixed": [false, false, false]
-            },
-            {
-                "vertices": [
-                    [-10, -1.0],
-                    [-10, 0.0],
-                    [10, 0.0],
-                    [10, -1.0]
-                ],
-                "edges": [
-                    [0, 1],
-                    [1, 2],
-                    [2, 3],
-                    [3, 0]
-                ],
-                "velocity": [0.0, 0.0, 0.0],
-                "is_dof_fixed": [true, true, true]
-            }
-        ]
+            "vertices": [
+                [-1, 3],
+                [-1, 5],
+                [1, 5],
+                [1, 3]
+            ],
+            "edges": [
+                [0, 1],
+                [1, 2],
+                [2, 3],
+                [3, 0]
+            ],
+            "velocity": [-5.0, -5.0, 0.0],
+            "is_dof_fixed": [false, false, false]
+        }, {
+            "vertices": [
+                [-10, -1.0],
+                [-10, 0.0],
+                [10, 0.0],
+                [10, -1.0]
+            ],
+            "edges": [
+                [0, 1],
+                [1, 2],
+                [2, 3],
+                [3, 0]
+            ],
+            "velocity": [0.0, 0.0, 0.0],
+            "is_dof_fixed": [true, true, true]
+        }]
     }
 }

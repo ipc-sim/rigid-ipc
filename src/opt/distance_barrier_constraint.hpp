@@ -35,19 +35,10 @@ namespace opt {
 
         int number_of_constraints() override;
 
-        void compute_candidate_intersections_brute_force(
-            const Eigen::MatrixXd& vertices_t1,
-            EdgeVertexCandidates& candidates);
-
-        void compute_candidate_intersections_hashgrid(
-            const Eigen::MatrixXd& vertices_t1,
-            EdgeVertexCandidates& candidates);
+        virtual void detectCollisions(const Eigen::MatrixXd& Uk) override;
 
         void compute_constraints(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers) override;
-
-        void compute_active_mask(
-            const Eigen::MatrixXd& Uk, Eigen::VectorXb& mask);
 
         void compute_constraints_jacobian(const Eigen::MatrixXd& Uk,
             Eigen::MatrixXd& barriers_jacobian) override;
@@ -73,12 +64,27 @@ namespace opt {
         Eigen::MatrixXd distance_barrier_hess(const Eigen::VectorXd& a,
             const Eigen::VectorXd& b,
             const Eigen::VectorXd& c);
+
         // Settings
         // ----------
         double custom_inital_epsilon;
+        bool use_hash_grid;
 
     protected:
         double barrier_epsilon;
+        int num_active_constraints;
+        EdgeVertexCandidates ev_distance_candidates;
+
+        Eigen::VectorXi constraint_map; ///< map total number of possible
+                                        ///< constraints to active set
+
+        void compute_candidate_intersections_hashgrid(
+            const Eigen::MatrixXd& vertices_t1,
+            EdgeVertexCandidates& candidates) const;
+
+        void compute_candidate_intersections_brute_force(
+            const Eigen::MatrixXd& vertices_t1,
+            EdgeVertexCandidates& candidates) const;
     };
 
     template <typename T>

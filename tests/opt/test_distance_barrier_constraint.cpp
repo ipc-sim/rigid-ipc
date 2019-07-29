@@ -6,7 +6,8 @@
 #include <opt/distance_barrier_constraint.hpp>
 #include <utils/flatten.hpp>
 
-TEST_CASE("Distance Barrier Constraint", "[opt][ccd][DistanceBarrier]")
+TEST_CASE("Distance Barrier Constraint",
+    "[opt][ccd][DistanceBarrier][DistanceBarrierConstraint]")
 {
     using namespace ccd::opt;
     DistanceBarrierConstraint barrier;
@@ -38,20 +39,18 @@ TEST_CASE("Distance Barrier Constraint", "[opt][ccd][DistanceBarrier]")
     displacements.row(0) << 0.0, 0.0;
     displacements.row(1) << 0.0, 0.0;
 
-    Eigen::VectorXd expected_barrier = Eigen::VectorXd(8);
+    Eigen::VectorXd expected_barrier = Eigen::VectorXd(4);
     SECTION("No displacements")
     {
         displacements.row(2) << 0.0, 0.0;
         displacements.row(3) << 0.0, 0.0;
-        // v0-e0, v0-e1, v1-e0, v1-e1, v2-e0, v2-e1, v3-e0, v3-e1
-
         // clang-format off
-            expected_barrier <<
-                    0.0, spline_barrier<double>(0.5 * sqrt(2),
-                    barrier_epsilon), 0.0, spline_barrier<double>(0.5 *
-                    sqrt(2), barrier_epsilon), spline_barrier<double>(0.5,
-                    barrier_epsilon), 0.0, spline_barrier<double>(1.0,
-                    barrier_epsilon), 0.0;
+        // loop over edges then vertices
+        expected_barrier <<
+            spline_barrier<double>(0.5, barrier_epsilon),
+            spline_barrier<double>(1.0, barrier_epsilon),
+            spline_barrier<double>(0.5 * sqrt(2),barrier_epsilon),
+            spline_barrier<double>(0.5 * sqrt(2), barrier_epsilon);
         // clang-format on
     }
 
@@ -59,15 +58,14 @@ TEST_CASE("Distance Barrier Constraint", "[opt][ccd][DistanceBarrier]")
     {
         displacements.row(2) << -0.5, 0.0;
         displacements.row(3) << -0.5, 0.0;
-        // v0-e0, v0-e1, v1-e0, v1-e1, v2-e0, v2-e1, v3-e0, v3-e1
 
         // clang-format off
-            expected_barrier <<
-                    0.0, spline_barrier<double>(0.5, barrier_epsilon),
-                    0.0, spline_barrier<double>(sqrt(0.5 * 0.5 + 1),
-                    barrier_epsilon), spline_barrier<double>(0.5,
-                    barrier_epsilon), 0.0, spline_barrier<double>(1.0,
-                    barrier_epsilon), 0.0;
+        // loop over edges then vertices
+        expected_barrier <<
+            spline_barrier<double>(0.5, barrier_epsilon),
+            spline_barrier<double>(1.0, barrier_epsilon),
+            spline_barrier<double>(0.5, barrier_epsilon),
+            spline_barrier<double>(sqrt(0.5 * 0.5 + 1), barrier_epsilon);
         // clang-format on
     }
 
@@ -75,34 +73,34 @@ TEST_CASE("Distance Barrier Constraint", "[opt][ccd][DistanceBarrier]")
     {
         displacements.row(2) << -1.0, 0.0;
         displacements.row(3) << -1.0, 0.0;
-        // v0-e0, v0-e1, v1-e0, v1-e1, v2-e0, v2-e1, v3-e0, v3-e1
 
         // clang-format off
-            expected_barrier <<
-                    0.0, spline_barrier<double>(0.5 * sqrt(2),
-                    barrier_epsilon), 0.0, spline_barrier<double>(sqrt(0.5 *
-                    0.5 + 1.5 * 1.5), barrier_epsilon),
-                    spline_barrier<double>(0.5 * sqrt(2), barrier_epsilon),
-                    0.0, spline_barrier<double>(sqrt(0.5*0.5 + 1.0),
-                    barrier_epsilon), 0.0;
+        // loop over edges then vertices
+        expected_barrier <<
+            spline_barrier<double>(0.5 * sqrt(2), barrier_epsilon),
+            spline_barrier<double>(sqrt(0.5*0.5 + 1.0), barrier_epsilon),
+            spline_barrier<double>(0.5 * sqrt(2), barrier_epsilon),
+            spline_barrier<double>(sqrt(0.5 * 0.5 + 1.5 * 1.5), barrier_epsilon);
+
         // clang-format on
     }
     SECTION("Down displacements, Touchin")
     {
         displacements.row(2) << 0.0, -0.5;
         displacements.row(3) << 0.0, -0.5;
-        // v0-e0, v0-e1, v1-e0, v1-e1, v2-e0, v2-e1, v3-e0, v3-e1
 
         // clang-format off
+        // loop over edges then vertices
         expected_barrier <<
-                0.0, spline_barrier<double>(0.5, barrier_epsilon),
-                0.0, spline_barrier<double>(0.5, barrier_epsilon),
-                std::numeric_limits<double>::infinity(), 0.0,
-                spline_barrier<double>(0.5, barrier_epsilon), 0.0;
+            std::numeric_limits<double>::infinity(),
+            spline_barrier<double>(0.5, barrier_epsilon),
+            spline_barrier<double>(0.5, barrier_epsilon),
+            spline_barrier<double>(0.5, barrier_epsilon);
         // clang-format on
     }
 
     Eigen::VectorXd actual_barrier;
+    barrier.use_hash_grid = false; // use brute force so we know the order
     barrier.initialize(vertices, edges, displacements);
     barrier.compute_constraints(displacements, actual_barrier);
     REQUIRE(actual_barrier.rows() == expected_barrier.rows());
@@ -185,6 +183,7 @@ TEST_CASE("Distance Barrier Constraint Gradient",
     ccd::flatten(x);
     ccd::finite_jacobian(x, f, approx_jac);
 
+    REQUIRE(approx_jac.rows() == actual_jac.rows());
     CHECK((approx_jac - actual_jac).squaredNorm() < 1e-12);
 }
 

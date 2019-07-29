@@ -353,7 +353,13 @@ namespace physics {
         Eigen::MatrixXd jac = jac_g_uk * jac_xk_sigma;
 
 #ifdef WITH_DERIVATIVE_CHECK
-        assert(compare_jac_g_approx(sigma, jac));
+        bool aux = update_constraint_set;
+        update_constraint_set = false;
+        if (!compare_jac_g_approx(sigma, jac)) {
+            spdlog::error(
+                "rigid_body status=fail message='constraint finite-differences failed'");
+        }
+        update_constraint_set = aux;
 #endif
         return jac;
     }
@@ -451,10 +457,15 @@ namespace physics {
             jac_xk_sigma, hess_xk_sigma, jac_g_uk, hessian_g_uk, gx_hessian);
 
 #ifdef WITH_DERIVATIVE_CHECK
-        assert(compare_jac_g_approx(sigma, gx_jacobian));
+        bool aux = update_constraint_set;
+        update_constraint_set = false;
+        if (!compare_jac_g_approx(sigma, gx_jacobian)) {
+            spdlog::error(
+                "rigid_body status=fail message='constraint finite-differences failed'");
+        }
+        update_constraint_set = aux;
 #endif
     }
-
 
 } // namespace physics
 } // namespace ccd

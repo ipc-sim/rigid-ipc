@@ -13,6 +13,7 @@
 #include <physics/problem_factory.hpp>
 #include <solvers/solver_factory.hpp>
 
+#include <profiler.hpp>
 #include <utils/regular_2d_grid.hpp>
 
 namespace ccd {
@@ -103,11 +104,11 @@ void SimState::init(const nlohmann::json& args_in)
             "custom_initial_epsilon":1.0,
             "detection_method": "hash_grid",
             "extend_collision_set": true
-
         },
        "distance_barrier_constraint":{
            "custom_initial_epsilon":0.5,
            "detection_method": "hash_grid",
+           "use_hash_grid": true,
            "extend_collision_set": false
        },
        "volume_constraint":{
@@ -123,17 +124,19 @@ void SimState::init(const nlohmann::json& args_in)
     args.merge_patch(args_in);
     m_timestep_size = args["timestep_size"].get<double>();
 
-    // Config PROBLEM
 
     auto problem_name = args["scene_type"].get<std::string>();
-    problem_ptr = physics::ProblemFactory::factory().get_problem(problem_name);
-    problem_ptr->init(args[problem_name]);
 
     // Config CCD CONSTRAINT
+    // problem_ptr needs to have constraint configured already
     auto constraint_name = args[problem_name]["constraint"].get<std::string>();
     auto constraint_ptr
         = opt::ConstraintFactory::factory().get_constraint(constraint_name);
     constraint_ptr->settings(args[constraint_name]);
+
+    // Config PROBLEM
+    problem_ptr = physics::ProblemFactory::factory().get_problem(problem_name);
+    problem_ptr->init(args[problem_name]);
 
     // Config CCD SOLVER
     auto solver_name = args["collision_solver"].get<std::string>();
@@ -204,7 +207,12 @@ bool SimState::solve_collision()
         problem_ptr->update_constraint();
         m_dirty_constraints = false;
     }
-    auto result = ccd_solver_ptr->solve(*problem_ptr);
+
+    ccd::opt::OptimizationResults result;
+    QUICK_PROFILE("solve_collisions",
+        result = ccd_solver_ptr->solve(*problem_ptr);
+    );
+
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 
     if (m_step_has_collision) {
@@ -227,7 +235,8 @@ void SimState::collision_resolution_step()
         m_dirty_constraints = false;
     }
 
-    auto result = ccd_solver_ptr->step_solve();
+    ccd::opt::OptimizationResults result;
+    result = ccd_solver_ptr->step_solve();
 
     // TODO: use results.finished
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
