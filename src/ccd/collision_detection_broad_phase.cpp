@@ -13,8 +13,24 @@ namespace ccd {
 
 // Find all edge-vertex collisions in one time step.
 void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
-    EdgeVertexImpacts& ev_impacts, DetectionMethod method, bool reset_impacts)
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges,
+    EdgeVertexImpacts& ev_impacts,
+    DetectionMethod method,
+    bool reset_impacts)
+
+{
+    return detect_edge_vertex_collisions(vertices, displacements, edges,
+        Eigen::VectorXi(), ev_impacts, method, reset_impacts);
+}
+
+void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges,
+    const Eigen::VectorXi& group_ids,
+    EdgeVertexImpacts& ev_impacts,
+    DetectionMethod method,
+    bool reset_impacts)
 {
     assert(vertices.size() == displacements.size());
     assert(method == DetectionMethod::BRUTE_FORCE
@@ -36,11 +52,11 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
         switch (method) {
             case BRUTE_FORCE:
                 detect_edge_vertex_collisions_brute_force(
-                    vertices, displacements, edges, ev_candidates);
+                    vertices, displacements, edges, group_ids, ev_candidates);
                 break;
             case HASH_GRID:
                 detect_edge_vertex_collisions_hash_map(
-                    vertices, displacements, edges, ev_candidates);
+                    vertices, displacements, edges, group_ids, ev_candidates);
                 break;
         },
         ProfiledPoint::DETECTING_COLLISIONS_BROAD_PHASE);
@@ -63,17 +79,26 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
 // Find all edge-vertex collisions in one time step using brute-force
 // comparisons of all edges and all vertices.
 void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& /*displacements*/, const Eigen::MatrixX2i& edges,
+    const Eigen::MatrixXd& /*displacements*/,
+    const Eigen::MatrixX2i& edges,
+    const Eigen::VectorXi& group_ids,
     EdgeVertexCandidates& ev_candidates)
 {
+    const bool check_group = group_ids.size() > 0;
     // Loop over all edges
     for (int edge_index = 0; edge_index < edges.rows(); edge_index++) {
         // Loop over all vertices
         for (int vertex_index = 0; vertex_index < vertices.rows();
              vertex_index++) {
             // Check that the vertex is not an endpoint of the edge
-            if (vertex_index != edges(edge_index, 0)
-                && vertex_index != edges(edge_index, 1)) {
+            bool is_endpoint = vertex_index == edges(edge_index, 0)
+                || vertex_index == edges(edge_index, 1);
+            bool same_group = false;
+            if (check_group) {
+                same_group = group_ids(vertex_index)
+                    == group_ids(edges(edge_index, 0));
+            }
+            if (!is_endpoint && !same_group) {
                 ev_candidates.push_back(
                     EdgeVertexCandidate(edge_index, vertex_index));
             }
@@ -84,7 +109,9 @@ void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
 // Find all edge-vertex collisions in one time step using spatial-hashing to
 // only compare points and edge in the same cells.
 void detect_edge_vertex_collisions_hash_map(const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges,
+    const Eigen::VectorXi& group_ids,
     EdgeVertexCandidates& ev_candidates)
 {
     HashGrid hashgrid;
@@ -94,7 +121,7 @@ void detect_edge_vertex_collisions_hash_map(const Eigen::MatrixXd& vertices,
 
     // Assume checking if vertex is and end-point of the edge is done by
     // `hashgrid.getVertexEdgePairs(...)`.
-    hashgrid.getVertexEdgePairs(edges, ev_candidates);
+    hashgrid.getVertexEdgePairs(edges, group_ids, ev_candidates);
 }
 
 } // namespace ccd

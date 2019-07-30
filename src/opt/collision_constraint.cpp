@@ -15,6 +15,7 @@ namespace opt {
     CollisionConstraint::CollisionConstraint(const std::string& name)
         : detection_method(HASH_GRID)
         , extend_collision_set(true)
+        , custom_hashgrid_cellsize(-1)
         , name_(name)
     {
     }
@@ -25,6 +26,8 @@ namespace opt {
     {
         detection_method = json["detection_method"].get<DetectionMethod>();
         extend_collision_set = json["extend_collision_set"].get<bool>();
+        custom_hashgrid_cellsize
+            = json["custom_hashgrid_cellsize"].get<double>();
     }
 
     nlohmann::json CollisionConstraint::settings() const
@@ -32,15 +35,18 @@ namespace opt {
         nlohmann::json json;
         json["extend_collision_set"] = extend_collision_set;
         json["detection_method"] = detection_method;
+        json["custom_hashgrid_cellsize"] = custom_hashgrid_cellsize;
         return json;
     }
 
     void CollisionConstraint::initialize(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2i& E,
+        const Eigen::VectorXi& Gid,
         const Eigen::MatrixXd& Uk)
     {
-        vertices = std::make_shared<const Eigen::MatrixX2d>(V);
-        edges = std::make_shared<const Eigen::MatrixX2i>(E);
+        vertices = V;
+        edges = E;
+        group_ids = Gid;
 
         ev_impacts.clear();
         ee_impacts.clear();
@@ -51,11 +57,12 @@ namespace opt {
 
     void CollisionConstraint::detectCollisions(const Eigen::MatrixXd& Uk)
     {
-        edge_impact_map.resize(edges->rows());
-        ccd::detect_edge_vertex_collisions(*vertices, Uk, *edges, ev_impacts,
-            detection_method, /*reset_impacts=*/!extend_collision_set);
+        edge_impact_map.resize(edges.rows());
+        ccd::detect_edge_vertex_collisions(vertices, Uk, edges, group_ids,
+            ev_impacts, detection_method,
+            /*reset_impacts=*/!extend_collision_set);
         ccd::convert_edge_vertex_to_edge_edge_impacts(
-            *edges, ev_impacts, ee_impacts);
+            edges, ev_impacts, ee_impacts);
         num_pruned_impacts = prune_impacts(ee_impacts, edge_impact_map);
     }
 
@@ -67,7 +74,7 @@ namespace opt {
         const std::vector<DScalar>& constraints,
         std::vector<Eigen::SparseMatrix<double>>& hessian)
     {
-        int num_vertices = int(vertices->rows());
+        int num_vertices = int(vertices.rows());
 
         hessian.clear();
         hessian.reserve(ee_impacts.size() * 2);
@@ -102,7 +109,7 @@ namespace opt {
                 }
 
                 Eigen::SparseMatrix<double> global_hessian(
-                    int(vertices->size()), int(vertices->size()));
+                    int(vertices.size()), int(vertices.size()));
                 global_hessian.setFromTriplets(
                     coefficients.begin(), coefficients.end());
                 hessian.push_back(global_hessian);
@@ -117,7 +124,7 @@ namespace opt {
         std::vector<DoubleTriplet> tripletList;
         assemble_jacobian_triplets(constraints, tripletList);
 
-        jacobian.resize(int(constraints.size()), vertices->size());
+        jacobian.resize(int(constraints.size()), vertices.size());
         jacobian.setZero();
 
         for (auto& triplet : tripletList) {
@@ -131,7 +138,7 @@ namespace opt {
     {
         std::vector<DoubleTriplet> tripletList;
         assemble_jacobian_triplets(constraints, tripletList);
-        jacobian.resize(int(constraints.size()), int(vertices->size()));
+        jacobian.resize(int(constraints.size()), int(vertices.size()));
         jacobian.setFromTriplets(tripletList.begin(), tripletList.end());
     }
 
@@ -142,7 +149,7 @@ namespace opt {
         tripletList.clear();
         tripletList.reserve(2 * ee_impacts.size());
 
-        const int num_vertices = int(vertices->rows());
+        const int num_vertices = int(vertices.rows());
 
         for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
             int nodes[4];
@@ -175,8 +182,8 @@ namespace opt {
     void CollisionConstraint::get_impact_nodes(
         const EdgeEdgeImpact& ee_impact, int nodes[4])
     {
-        Eigen::Vector2i e_ij = edges->row(ee_impact.impacted_edge_index);
-        Eigen::Vector2i e_kl = edges->row(ee_impact.impacting_edge_index);
+        Eigen::Vector2i e_ij = edges.row(ee_impact.impacted_edge_index);
+        Eigen::Vector2i e_kl = edges.row(ee_impact.impacting_edge_index);
 
         nodes[0] = e_ij(0);
         nodes[1] = e_ij(1);
@@ -210,11 +217,11 @@ namespace opt {
     ImpactTData<double> CollisionConstraint::get_impact_data<double>(
         const Eigen::MatrixXd& displacements, const EdgeEdgeImpact ee_impact)
     {
-        Eigen::Vector2i e_ij = edges->row(ee_impact.impacted_edge_index);
-        Eigen::Vector2i e_kl = edges->row(ee_impact.impacting_edge_index);
+        Eigen::Vector2i e_ij = edges.row(ee_impact.impacted_edge_index);
+        Eigen::Vector2i e_kl = edges.row(ee_impact.impacting_edge_index);
 
         ImpactTData<double> data;
-        slice_vector(*vertices, e_ij, e_kl, data.v);
+        slice_vector(vertices, e_ij, e_kl, data.v);
         slice_vector(displacements, e_ij, e_kl, data.u);
         data.impacting_side = ee_impact.impacting_node();
         return data;

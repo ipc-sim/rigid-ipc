@@ -45,6 +45,7 @@ namespace opt {
 
         virtual void initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
+            const Eigen::VectorXi& group_ids,
             const Eigen::MatrixXd& Uk);
 
         virtual void detectCollisions(const Eigen::MatrixXd& Uk);
@@ -132,8 +133,7 @@ namespace opt {
         // Settings
         // ----------
         DetectionMethod detection_method;
-        bool extend_collision_set;
-        bool recompute_toi;
+        double custom_hashgrid_cellsize;
 
         // Structures used for detection
         // ------------
@@ -149,10 +149,12 @@ namespace opt {
         /// @brief The current number of pruned impacts
         int num_pruned_impacts;
 
-        std::shared_ptr<const Eigen::MatrixX2d> vertices;
-        std::shared_ptr<const Eigen::MatrixX2i> edges;
+        Eigen::MatrixX2d vertices;
+        Eigen::MatrixX2i edges;
+        Eigen::VectorXi group_ids;
 
     protected:
+        bool extend_collision_set;
         std::string name_;
     };
 

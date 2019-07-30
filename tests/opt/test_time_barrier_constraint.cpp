@@ -68,7 +68,7 @@ TEST_CASE("Time Barrier Constraint", "[opt][ccd][Barrier]")
 
     REQUIRE(
         barrier.initial_epsilon == ccd::opt::InitialBarrierEpsilon::MIN_TOI);
-    barrier.initialize(vertices, edges, displacements * 2.0);
+    barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements * 2.0);
 
     barrier.compute_constraints(displacements, v_actual);
     CHECK((v_actual - v_expected).squaredNorm() < 1e-6);
@@ -157,7 +157,7 @@ TEST_CASE("Time Barrier Constraint Gradient", "[opt][ccd][Barrier][Gradient]")
 
     REQUIRE(
         barrier.initial_epsilon == ccd::opt::InitialBarrierEpsilon::MIN_TOI);
-    barrier.initialize(vertices, edges, displacements * 2.0);
+    barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements * 2.0);
 
     barrier.compute_constraints_jacobian(displacements, jac_actual);
     CHECK((jac_actual - jac_expected).squaredNorm() < 1e-6);
@@ -378,7 +378,7 @@ TEST_CASE("Time Barrier Constraint Hessian", "[opt][ccd][Barrier][Hessian]")
 
     REQUIRE(
         barrier.initial_epsilon == ccd::opt::InitialBarrierEpsilon::MIN_TOI);
-    barrier.initialize(vertices, edges, displacements * 2.0);
+    barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements * 2.0);
 
     barrier.compute_constraints_hessian(displacements, hess_actual);
     CHECK(hess_actual.size() == hess_expected.size());

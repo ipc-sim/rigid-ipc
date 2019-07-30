@@ -69,7 +69,7 @@ TEST_CASE("Volume Constraint", "[opt][ccd][Volume]")
             0, 0, 0;
     }
 
-    volume.initialize(vertices, edges, displacements);
+    volume.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     volume.compute_constraints(displacements, v_actual);
     CHECK((v_actual - v_expected).squaredNorm() < 1e-10);
 
@@ -170,7 +170,7 @@ TEST_CASE("Volume Constraint Gradient", "[opt][ccd][Volume][Gradient]")
             0, 0, 0, 0, 0, 0, 0, 0, 0;
     }
 
-    volume.initialize(vertices, edges, displacements);
+    volume.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     volume.compute_constraints_jacobian(displacements, jac_actual);
     CHECK((jac_actual - jac_expected).squaredNorm() < 1e-10);
 
@@ -234,7 +234,7 @@ TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
 
     }
 
-    volume.initialize(vertices, edges, displacements);
+    volume.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     volume.compute_constraints_jacobian(displacements, jac_actual);
     volume.compute_constraints_jacobian(displacements, jac_actual_sparse);
     CHECK((jac_actual - jac_actual_sparse.toDense()).squaredNorm() < 1e-10);
@@ -432,7 +432,7 @@ TEST_CASE("Volume Constraint Hessian", "[opt][ccd][Volume][Hessian]")
         hess_expected[3] = hessian.sparseView();
     }
 
-    volume.initialize(vertices, edges, displacements);
+    volume.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     volume.compute_constraints_hessian(displacements, hess_actual);
 
     CHECK(hess_actual.size() == hess_expected.size());

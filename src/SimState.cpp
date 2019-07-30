@@ -33,17 +33,19 @@ bool SimState::load_scene(const std::string& filename)
 
     if (input.good()) {
         scene_file = filename;
-        json scene = json::parse(input);
-        init(scene);
-
-        return true;
+        json scene = json::parse(input, nullptr, false);
+        if (scene.is_discarded()) {
+            spdlog::error("Invalid Json file");
+            return false;
+        }
+        return init(scene);
     }
     return false;
 }
 
 bool SimState::reload_scene() { return load_scene(scene_file); }
 
-void SimState::init(const nlohmann::json& args_in)
+bool SimState::init(const nlohmann::json& args_in)
 {
     using namespace nlohmann;
 
@@ -57,7 +59,7 @@ void SimState::init(const nlohmann::json& args_in)
               "update_constraint_set": true,
               "use_chain_functional": false,
               "gravity":[0.0,0.0,0.0],
-              "collision_eps": 2.0
+              "collision_eps": 0.0
          },
         "particles_problem":{
             "vertices":[],
@@ -69,7 +71,7 @@ void SimState::init(const nlohmann::json& args_in)
             "constraint": "distance_barrier_constraint",
             "update_constraint_set": true,
             "gravity":[0.0,0.0],
-            "collision_eps": 2.0
+            "collision_eps": 0.0
          },
         "barrier_solver": {
             "inner_solver": "newton_solver",
@@ -103,27 +105,50 @@ void SimState::init(const nlohmann::json& args_in)
             "initial_epsilon":"min_toi",
             "custom_initial_epsilon":1.0,
             "detection_method": "hash_grid",
-            "extend_collision_set": true
+            "extend_collision_set": true,
+            "custom_hashgrid_cellsize":-1
         },
        "distance_barrier_constraint":{
            "custom_initial_epsilon":0.5,
            "detection_method": "hash_grid",
-           "use_hash_grid": true,
-           "extend_collision_set": false
+           "use_distance_hashgrid": true,
+           "active_constraint_scale" : 1.5,
+           "extend_collision_set": false,
+           "custom_hashgrid_cellsize":-1
        },
        "volume_constraint":{
            "detection_method": "hash_grid",
            "extend_collision_set": true,
-           "volume_epsilon": 1e-6
+           "volume_epsilon": 1e-6,
+           "custom_hashgrid_cellsize":-1
        },
         "timestep_size": 0.1,
         "viewport_bbox": {"min":[0,0],"max":[0,0]}
     })"_json;
     // clang-format on
 
+    // check that incomming json doesn't have any unkown keys
+    // to avoid stupid bugs
+    auto patch = json::diff(args, args_in);
+    bool valid = true;
+    for (auto& op : patch) {
+        if (op["op"].get<std::string>().compare("add") == 0) {
+            auto new_path = json::json_pointer(op["path"].get<std::string>());
+            if (args_in[new_path.parent_pointer()].is_array()) {
+                valid = true;
+            } else {
+                valid = false;
+                spdlog::error("Unknown key in json path={}",
+                    op["path"].get<std::string>());
+            }
+        }
+    }
+    if (!valid) {
+        return false;
+    }
+
     args.merge_patch(args_in);
     m_timestep_size = args["timestep_size"].get<double>();
-
 
     auto problem_name = args["scene_type"].get<std::string>();
 
@@ -160,6 +185,8 @@ void SimState::init(const nlohmann::json& args_in)
 
     vertices_sequence.clear();
     vertices_sequence.push_back(problem_ptr->vertices());
+
+    return true;
 }
 
 nlohmann::json SimState::get_active_config()
@@ -209,9 +236,8 @@ bool SimState::solve_collision()
     }
 
     ccd::opt::OptimizationResults result;
-    QUICK_PROFILE("solve_collisions",
-        result = ccd_solver_ptr->solve(*problem_ptr);
-    );
+    QUICK_PROFILE(
+        "solve_collisions", result = ccd_solver_ptr->solve(*problem_ptr););
 
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 
@@ -245,13 +271,13 @@ void SimState::collision_resolution_step()
         m_step_has_collision ? "unsolved" : "solved");
 }
 
-
-void SimState::save_simulation(const std::string& filename){
+void SimState::save_simulation(const std::string& filename)
+{
     nlohmann::json results;
     results["args"] = args;
     results["active_args"] = get_active_config();
     std::vector<nlohmann::json> vs;
-    for (auto&v: vertices_sequence) {
+    for (auto& v : vertices_sequence) {
         vs.push_back(io::to_json(v));
     }
     results["animation"] = nlohmann::json();
@@ -261,7 +287,6 @@ void SimState::save_simulation(const std::string& filename){
     std::ofstream o(filename);
     o << std::setw(4) << results << std::endl;
 }
-
 
 void SimState::get_collision_gradient(Eigen::MatrixXd& fgrad)
 {

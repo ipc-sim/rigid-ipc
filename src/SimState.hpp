@@ -15,7 +15,7 @@ public:
 
     bool load_scene(const std::string& filename);
     bool reload_scene();
-    void init(const nlohmann::json& args);
+    bool init(const nlohmann::json& args);
 
     void simulation_step();
     bool solve_collision();

@@ -48,8 +48,19 @@ static const char* DetectionMethodNames[] = { "BRUTE_FORCE", "HASH_GRID" };
  *          vertex index and the time of impact are stored in ev_impacts.
  */
 void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
-    EdgeVertexImpacts& ev_impacts, DetectionMethod method = BRUTE_FORCE,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges,
+    const Eigen::VectorXi& group_ids,
+    EdgeVertexImpacts& ev_impacts,
+    DetectionMethod method = BRUTE_FORCE,
+    bool reset_impacts = true);
+
+/// @brief backward compatibility with old definition
+void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges,
+    EdgeVertexImpacts& ev_impacts,
+    DetectionMethod method = BRUTE_FORCE,
     bool reset_impacts = true);
 
 /**
@@ -73,7 +84,9 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
  *          vertex index and the time of impact are stored in ev_impacts.
  */
 void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges,
+    const Eigen::VectorXi& group_ids,
     EdgeVertexCandidates& ev_candidates);
 
 /**
@@ -97,7 +110,9 @@ void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
  *          vertex index and the time of impact are stored in ev_impacts.
  */
 void detect_edge_vertex_collisions_hash_map(const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements, const Eigen::MatrixX2i& edges,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges,
+    const Eigen::VectorXi& group_ids,
     EdgeVertexCandidates& ev_candidates);
 
 /**
@@ -119,9 +134,12 @@ void detect_edge_vertex_collisions_hash_map(const Eigen::MatrixXd& vertices,
  * @param[out] ev_impacts  List of impacts on to which new impacts are pushed.
  */
 void detect_edge_vertex_collisions_narrow_phase(const Eigen::Vector2d& Vi,
-    const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
-    const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk, const EdgeVertexCandidate& ev_candidate,
+    const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk,
+    const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj,
+    const Eigen::Vector2d& Uk,
+    const EdgeVertexCandidate& ev_candidate,
     EdgeVertexImpacts& ev_impacts);
 
 /**
@@ -148,9 +166,13 @@ void detect_edge_vertex_collisions_narrow_phase(const Eigen::Vector2d& Vi,
  *          impact points spatial parameter along the edge is stored in alpha.
  */
 bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
-    const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
-    const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk, double& toi, double& alpha,
+    const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk,
+    const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj,
+    const Eigen::Vector2d& Uk,
+    double& toi,
+    double& alpha,
     const double tolerance = 1e-8);
 
 /**
@@ -177,9 +199,13 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
  *         the valid spatial parameter in alpha.
  */
 bool temporal_parameterization_to_spatial(const Eigen::Vector2d& Vi,
-    const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
-    const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk, const double t, double& alpha,
+    const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk,
+    const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj,
+    const Eigen::Vector2d& Uk,
+    const double t,
+    double& alpha,
     const double tolerance = 1e-8);
 
 } // namespace ccd

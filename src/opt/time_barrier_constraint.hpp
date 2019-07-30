@@ -23,11 +23,16 @@ namespace opt {
 
         bool is_barrier() override { return true; }
         double get_barrier_epsilon() override { return barrier_epsilon; }
-        void set_barrier_epsilon(const double eps) override { barrier_epsilon = eps; }
+        void set_barrier_epsilon(const double eps) override
+        {
+            barrier_epsilon = eps;
+        }
 
         void initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
+            const Eigen::VectorXi& group_ids,
             const Eigen::MatrixXd& Uk) override;
+
 
         void detectCollisions(const Eigen::MatrixXd& Uk) override;
 

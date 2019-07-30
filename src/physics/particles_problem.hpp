@@ -177,6 +177,7 @@ namespace physics {
         // World
         // ------------------------------------------------------------------------
         Eigen::MatrixXi edges_;
+        Eigen::VectorXi group_ids_;
         Eigen::SparseMatrix<double> mass_matrix;
         Eigen::SparseMatrix<double> inv_mass_matrix;
         Eigen::MatrixXb is_particle_dof_fixed;

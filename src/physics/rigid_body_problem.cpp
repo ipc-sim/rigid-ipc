@@ -141,8 +141,8 @@ namespace physics {
         x0 = m_assembler.rb_positions_t0(); // start from collision free state
         num_vars = int(x0.size());
 
-        m_constraint_ptr->initialize(
-            vertices_t0, m_assembler.m_edges, vertices_q1 - vertices_t0);
+        m_constraint_ptr->initialize(vertices_t0, m_assembler.m_edges,
+            m_assembler.m_vertex_to_body_map, vertices_q1 - vertices_t0);
     }
 
     /// -----------------------------------------------------------------
@@ -208,7 +208,8 @@ namespace physics {
         double scale
             = check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
         ccd::detect_edge_vertex_collisions(q0, (q1 - q0) * scale,
-            m_assembler.m_edges, ev_impacts, m_constraint_ptr->detection_method,
+            m_assembler.m_edges, m_assembler.m_vertex_to_body_map, ev_impacts,
+            m_constraint_ptr->detection_method,
             /*reset_impacts=*/true);
 
         return ev_impacts.size() > 0;

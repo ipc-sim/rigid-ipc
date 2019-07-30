@@ -12,11 +12,12 @@ TEST_CASE("Distance Barrier Constraint",
     using namespace ccd::opt;
     DistanceBarrierConstraint barrier;
 
-    double barrier_epsilon = GENERATE(0.01, 0.5, 1.0, 5.0);
+    double barrier_epsilon = GENERATE(0.5, 1.0, 5.0);
 
     barrier.detection_method = ccd::BRUTE_FORCE;
     barrier.custom_inital_epsilon = barrier_epsilon;
     barrier.set_barrier_epsilon(barrier_epsilon);
+    barrier.active_constraint_scale = 10000;
 
     Eigen::MatrixX2d vertices(4, 2);
     Eigen::MatrixX2i edges(2, 2);
@@ -100,8 +101,8 @@ TEST_CASE("Distance Barrier Constraint",
     }
 
     Eigen::VectorXd actual_barrier;
-    barrier.use_hash_grid = false; // use brute force so we know the order
-    barrier.initialize(vertices, edges, displacements);
+    barrier.use_distance_hashgrid = false; // use brute force so we know the order
+    barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     barrier.compute_constraints(displacements, actual_barrier);
     REQUIRE(actual_barrier.rows() == expected_barrier.rows());
     for (int i = 0; i < expected_barrier.rows(); i++) {
@@ -167,7 +168,7 @@ TEST_CASE("Distance Barrier Constraint Gradient",
     }
 
     Eigen::MatrixXd actual_jac;
-    barrier.initialize(vertices, edges, displacements);
+    barrier.initialize(vertices, edges, Eigen::VectorXi(),displacements);
     barrier.compute_constraints_jacobian(displacements, actual_jac);
 
     Eigen::MatrixXd approx_jac;
@@ -175,7 +176,7 @@ TEST_CASE("Distance Barrier Constraint Gradient",
         Eigen::VectorXd fx;
         Eigen::MatrixXd x = u;
         ccd::unflatten(x, 2);
-        barrier.initialize(vertices, edges, x);
+        barrier.initialize(vertices, edges, Eigen::VectorXi(), x);
         barrier.compute_constraints(x, fx);
         return fx;
     };
@@ -239,7 +240,7 @@ TEST_CASE("Distance Barrier Constraint Hessian",
     }
 
     std::vector<Eigen::SparseMatrix<double>> actual_hess;
-    barrier.initialize(vertices, edges, displacements);
+    barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     barrier.compute_constraints_hessian(displacements, actual_hess);
 
     Eigen::MatrixXd actual_jac;
@@ -251,7 +252,7 @@ TEST_CASE("Distance Barrier Constraint Hessian",
         auto f = [&](const Eigen::VectorXd& u) -> Eigen::VectorXd {
             Eigen::MatrixXd x = u;
             ccd::unflatten(x, 2);
-            barrier.initialize(vertices, edges, x);
+            barrier.initialize(vertices, edges, Eigen::VectorXi(), x);
             barrier.compute_constraints_jacobian(displacements, actual_jac);
             return actual_jac.row(int(i));
         };
