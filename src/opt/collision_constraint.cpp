@@ -14,8 +14,8 @@ namespace opt {
 
     CollisionConstraint::CollisionConstraint(const std::string& name)
         : detection_method(HASH_GRID)
-        , extend_collision_set(true)
         , custom_hashgrid_cellsize(-1)
+        , extend_collision_set(true)
         , name_(name)
     {
     }

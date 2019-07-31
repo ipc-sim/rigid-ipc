@@ -109,7 +109,12 @@ namespace opt {
 
         OptimizationResults results;
         do {
+            auto msg = fmt::format(
+                "class=BarrierSolver function=solve.step epsilon={}",
+                barrier_epsilon());
+
             results = step_solve();
+
         } while (barrier_epsilon() > min_barrier_epsilon);
 
         return results;
@@ -150,13 +155,28 @@ namespace opt {
 
     double BarrierProblem::eval_f(const Eigen::VectorXd& x)
     {
+        NAMED_PROFILE_POINT("barrier_problem__eval_f", EVAL_F)
+        NAMED_PROFILE_POINT("barrier_problem__eval_g", EVAL_G)
+
+        PROFILE_START(EVAL_F)
         double f_uk = general_problem->eval_f(x);
-        double gx = general_problem->eval_g(x).sum();
+        PROFILE_END(EVAL_F)
+
+        PROFILE_START(EVAL_G)
+        auto gx_ = general_problem->eval_g(x);
+        double gx = gx_.sum();
+        PROFILE_MESSAGE(EVAL_G,
+            fmt::format("epsilon,{:10e},gx_sum,{:10e}",
+                general_problem->get_barrier_epsilon(), gx))
+
+        PROFILE_END(EVAL_G)
+
         return f_uk + gx;
     }
 
     Eigen::VectorXd BarrierProblem::eval_grad_f(const Eigen::VectorXd& x)
     {
+
         Eigen::VectorXd f_uk_gradient = general_problem->eval_grad_f(x);
         Eigen::MatrixXd dgx = general_problem->eval_jac_g(x);
 
@@ -173,13 +193,9 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> ddgx
             = general_problem->eval_hessian_g(x);
 
-        PROFILE(
-            // clang-format off
-            for (const auto& ddgx_i : ddgx) {
-                f_uk_hessian += ddgx_i;
-            },
-            // clang-format on
-            ProfiledPoint::SUMMING_HESSIAN)
+        for (const auto& ddgx_i : ddgx) {
+            f_uk_hessian += ddgx_i;
+        }
 
         return f_uk_hessian;
     }
@@ -199,13 +215,9 @@ namespace opt {
         f_uk += gx.sum();
         f_uk_gradient += dgx.colwise().sum().transpose();
 
-        PROFILE(
-            // clang-format off
-            for (const auto& ddgx_i : ddgx) {
-                f_uk_hessian += ddgx_i;
-            },
-            // clang-format on
-            ProfiledPoint::SUMMING_HESSIAN)
+        for (const auto& ddgx_i : ddgx) {
+            f_uk_hessian += ddgx_i;
+        }
     }
 
     void BarrierProblem::enable_line_search_mode(const Eigen::VectorXd& max_x)

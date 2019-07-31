@@ -106,6 +106,10 @@ data/**/*.json
 data/**/*.pdf
 data/**/*.xlsx
 data/local/
+logs/*.csv
+logs/**/*.csv
+logs/*.log
+logs/**/*.log
 
 3rdparty*
 

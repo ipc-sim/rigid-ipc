@@ -3,6 +3,7 @@
 #include "line_search.hpp"
 
 #include <logger.hpp>
+#include <profiler.hpp>
 
 namespace ccd {
 namespace opt {
@@ -91,9 +92,20 @@ namespace opt {
 
         double step_norm = (step_length * dir).norm();
 
+        NAMED_PROFILE_POINT("line_search__minimization_rule", MINIMIZATION_RULE)
+        NAMED_PROFILE_POINT("line_search__constraint", CONSTRAINT)
+
         while (step_norm >= min_step_length) {
+            PROFILE_START(MINIMIZATION_RULE)
             bool min_rule = minimization_rule();
+            PROFILE_SUCCESS(MINIMIZATION_RULE, min_rule)
+            PROFILE_END(MINIMIZATION_RULE)
+
+            PROFILE_START(CONSTRAINT)
             bool cstr = constraint(x + step_length * dir);
+            PROFILE_SUCCESS(CONSTRAINT, cstr)
+            PROFILE_END(CONSTRAINT)
+
             spdlog::trace(
                 "{} min_rule={} constraint={} step_norm={:e} step_length={:e}",
                 fmt::format(LS_BREAK_LOG, num_it), min_rule, cstr, step_norm,

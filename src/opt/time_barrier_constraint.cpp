@@ -130,12 +130,9 @@ namespace opt {
     {
         std::vector<DScalar> v_barriers;
         compute_constraints_per_impact(Uk, v_barriers);
-        PROFILE(assemble_constraints(v_barriers, barriers),
-            ProfiledPoint::COMPUTING_CONSTRAINTS)
-        PROFILE(assemble_jacobian(v_barriers, barriers_jacobian),
-            ProfiledPoint::COMPUTING_GRADIENT)
-        PROFILE(assemble_hessian(v_barriers, barriers_hessian),
-            ProfiledPoint::COMPUTING_HESSIAN)
+        assemble_constraints(v_barriers, barriers);
+        assemble_jacobian(v_barriers, barriers_jacobian);
+        assemble_hessian(v_barriers, barriers_hessian);
     }
 
     template <typename T>

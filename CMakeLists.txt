@@ -122,11 +122,15 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DFIXTURES_DIR=\"${FIXTURES_DI
 set(DATA_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DDATA_OUTPUT_DIR=\"${DATA_OUTPUT_DIR}\")
 
+set(LOGS_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/logs")
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DLOGS_OUTPUT_DIR=\"${LOGS_OUTPUT_DIR}\")
+
 if(ENABLE_DERIVATIVE_CHECK)
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DWITH_DERIVATIVE_CHECK)
 endif()
 
 if(ENABLE_PROFILING)
+    message("Profiling Enabled")
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DPROFILE_FUNCTIONS)
 endif()
 

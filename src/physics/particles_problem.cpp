@@ -81,7 +81,8 @@ namespace physics {
         // Collisions Groups
         // -------------------------------------------------
         // each particle is its own group
-        group_ids_ = Eigen::VectorXi::LinSpaced(vertices_.rows(), 0, int(vertices_.rows()));
+        group_ids_ = Eigen::VectorXi::LinSpaced(
+            vertices_.rows(), 0, int(vertices_.rows()));
 
         // Simulation State
         // -------------------------------------------------
@@ -265,8 +266,7 @@ namespace physics {
         Eigen::MatrixXd Uk = update_g(q1);
 
         Eigen::VectorXd g_uk;
-        PROFILE(constraint_ptr->compute_constraints(Uk, g_uk),
-            ProfiledPoint::COMPUTING_CONSTRAINTS);
+        constraint_ptr->compute_constraints(Uk, g_uk);
         return g_uk;
     };
 
@@ -293,8 +293,8 @@ namespace physics {
     {
         Eigen::MatrixXd Uk = update_g(q1);
         Eigen::MatrixXd jac_gx;
-        PROFILE(constraint_ptr->compute_constraints_jacobian(Uk, jac_gx),
-            ProfiledPoint::COMPUTING_GRADIENT);
+        constraint_ptr->compute_constraints_jacobian(Uk, jac_gx);
+
 #ifdef WITH_DERIVATIVE_CHECK
         double diff;
         if (!compare_jac_g_approx(q1, jac_gx, diff)) {
@@ -326,8 +326,7 @@ namespace physics {
     {
         Eigen::MatrixXd Uk = update_g(q1);
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
-        PROFILE(constraint_ptr->compute_constraints_hessian(Uk, hess_gx);
-                , ProfiledPoint::COMPUTING_HESSIAN);
+        constraint_ptr->compute_constraints_hessian(Uk, hess_gx);
         return hess_gx;
     }
 

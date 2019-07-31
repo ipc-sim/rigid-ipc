@@ -38,29 +38,38 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
 
     Eigen::MatrixXb skip_pair;
     EdgeVertexCandidates ev_candidates;
-    PROFILE(
-        if (reset_impacts) { ev_impacts.clear(); }
 
-        skip_pair
-        = Eigen::MatrixXb::Zero(edges.rows(), vertices.rows());
-        // If we do not reset impacts then we need to prevent duplicates
-        for (EdgeVertexImpact ev_impact
-             : ev_impacts) {
-            skip_pair(ev_impact.edge_index, ev_impact.vertex_index) = true;
-        }
+    PROFILE_POINT("collisions_detection")
+    NAMED_PROFILE_POINT("collisions_detection__broad_phase", BROAD_PHASE);
+    NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
 
-        switch (method) {
-            case BRUTE_FORCE:
-                detect_edge_vertex_collisions_brute_force(
-                    vertices, displacements, edges, group_ids, ev_candidates);
-                break;
-            case HASH_GRID:
-                detect_edge_vertex_collisions_hash_map(
-                    vertices, displacements, edges, group_ids, ev_candidates);
-                break;
-        },
-        ProfiledPoint::DETECTING_COLLISIONS_BROAD_PHASE);
+    PROFILE_START();
+    PROFILE_START(BROAD_PHASE);
 
+    if (reset_impacts) {
+        ev_impacts.clear();
+    }
+
+    skip_pair = Eigen::MatrixXb::Zero(edges.rows(), vertices.rows());
+    // If we do not reset impacts then we need to prevent duplicates
+    for (EdgeVertexImpact ev_impact : ev_impacts) {
+        skip_pair(ev_impact.edge_index, ev_impact.vertex_index) = true;
+    }
+
+    switch (method) {
+    case BRUTE_FORCE:
+        detect_edge_vertex_collisions_brute_force(
+            vertices, displacements, edges, group_ids, ev_candidates);
+        break;
+    case HASH_GRID:
+        detect_edge_vertex_collisions_hash_map(
+            vertices, displacements, edges, group_ids, ev_candidates);
+        break;
+    }
+
+    PROFILE_END(BROAD_PHASE);
+
+    PROFILE_START(NARROW_PHASE);
     for (const EdgeVertexCandidate& ev_candidate : ev_candidates) {
         if (!skip_pair(ev_candidate.edge_index, ev_candidate.vertex_index)) {
             // Check if the pair is colliding using the time of impact code
@@ -74,6 +83,8 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
                 ev_impacts);
         }
     }
+    PROFILE_END(NARROW_PHASE);
+    PROFILE_END();
 }
 
 // Find all edge-vertex collisions in one time step using brute-force

@@ -4,61 +4,106 @@
 
 #include <igl/Timer.h>
 #include <iostream>
+#include <memory>
+#include <numeric>
 #include <vector>
 
-// To add new profile points: add a new value to the `ProfiledPoint` enum, and
-// then add a name for the point in `ProfiledPointNames`.
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
-enum ProfiledPoint {
-    DETECTING_COLLISIONS_BROAD_PHASE,
-    DETECTING_COLLISIONS_NARROW_PHASE,
-    COMPUTING_CONSTRAINTS,
-    COMPUTING_GRADIENT,
-    COMPUTING_HESSIAN,
-    UPDATE_SOLVE,
-    SUMMING_HESSIAN,
-    // LINE_SEARCH,
-    _COUNT
-};
+namespace ccd {
+namespace profiler {
 
-static const char* ProfiledPointNames[] = {
-    "Broad-phase collision detection", "Narrow-phase collision detection",
-    "Computing constraint values", "Computing constraint gradients",
-    "Computing constraint hessians", "Solving for an update",
-    "Summing hessians",
-    // "Line search"
-};
+    class ProfilerPoint {
+    public:
+        ProfilerPoint(const std::string name)
+            : name_(name)
+        {
+        }
+        void begin() { timer.start(); }
+        void end() { each_time.push_back(timer.getElapsedTime()); }
+        void success(const bool val) { success_.push_back(val); }
+        void message(const std::string& m) { messages_.push_back(m); }
+        size_t num_evaluations() const { return each_time.size(); }
+        double total_time() const
+        {
+            return std::accumulate(each_time.begin(), each_time.end(), 0.0);
+        }
+        long num_success() const
+        {
+            if (success_.size() > 0) {
+                return std::count(success_.begin(), success_.end(), true);
+            } else
+                return -1;
+        }
+        const std::string& name() const { return name_; }
+        const std::vector<double>& time() const { return each_time; }
+        const std::vector<bool>& success() const { return success_; }
+        const std::vector<std::string>& messages() const { return messages_; }
 
-extern double time_spent_at_profiled_points[];
-extern long number_of_evals_profiled_points[];
+    protected:
+        std::vector<double> each_time;
+        std::vector<bool> success_;
+        std::vector<std::string> messages_;
+        igl::Timer timer;
+        std::string name_;
+    };
 
-void reset_profiler();
-void print_profile(double total_time);
+    class Profiler {
+    public:
+        static Profiler& instance();
+        std::shared_ptr<ProfilerPoint> create_point(std::string name);
+        std::shared_ptr<ProfilerPoint> create_main_point(std::string name);
+        void log(const std::string& fin = "");
 
-#define QUICK_PROFILE(message, op)                                             \
-    {                                                                          \
-        igl::Timer timer;                                                      \
-        timer.start();                                                         \
-        op;                                                                    \
-        timer.stop();                                                          \
-        spdlog::debug("{} time_sec={:10e}", message, timer.getElapsedTime());      \
-    }
+    protected:
+        Profiler() {}
+        void write_summary(const std::string& dout, const std::string& fin);
+        void write_point(const std::string& dout, const ProfilerPoint& point);
+        std::shared_ptr<ProfilerPoint> main;
+        std::vector<std::shared_ptr<ProfilerPoint>> points;
+    };
 
-#define PROFILE(op, point)                                                     \
-    {                                                                          \
-        number_of_evals_profiled_points[int(point)]++;                         \
-        igl::Timer timer;                                                      \
-        timer.start();                                                         \
-        op;                                                                    \
-        timer.stop();                                                          \
-        time_spent_at_profiled_points[int(point)] += timer.getElapsedTime();   \
-    }
+    class ProfilerLog {
+    public:
+        ProfilerLog();
+        std::shared_ptr<spdlog::logger> logger;
+    };
+    spdlog::logger& log();
+
+} // namespace profiler
+} // namespace ccd
+
+#define PROFILE_MAIN_POINT(Description)                                        \
+    static std::shared_ptr<ccd::profiler::ProfilerPoint> _PROFILER_POINT_      \
+        = ccd::profiler::Profiler::instance().create_main_point(Description);
+
+#define NAMED_PROFILE_POINT(Description, Name)                                 \
+    static std::shared_ptr<ccd::profiler::ProfilerPoint>                       \
+        _PROFILER_POINT_##Name                                                 \
+        = ccd::profiler::Profiler::instance().create_point(Description);
+
+#define PROFILE_POINT(Description)                                             \
+    static std::shared_ptr<ccd::profiler::ProfilerPoint> _PROFILER_POINT_      \
+        = ccd::profiler::Profiler::instance().create_point(Description);
+
+#define PROFILE_START(Name) _PROFILER_POINT_##Name->begin();
+#define PROFILE_END(Name) _PROFILER_POINT_##Name->end();
+#define PROFILE_SUCCESS(Name, Val) _PROFILER_POINT_##Name->success(Val);
+#define PROFILE_MESSAGE(Name, Val) _PROFILER_POINT_##Name->message(Val);
+
+#define LOG_PROFILER(SceneFile)                                                \
+    ccd::profiler::Profiler::instance().log(SceneFile);
 
 #else
 
-#define PROFILE(op, point)                                                     \
-    {                                                                          \
-        op;                                                                    \
-    }
+#define PROFILE_MAIN_POINT(Description) ;
+#define NAMED_PROFILE_POINT(Description, Name) ;
+#define PROFILE_POINT(Description) ;
+#define PROFILE_START(Name) ;
+#define PROFILE_END(Name) ;
+#define PROFILE_SUCCESS(Name, Val) ;
+#define LOG_PROFILER(SceneFile) ;
 
 #endif

@@ -66,6 +66,12 @@ namespace opt {
 
         EdgeVertexCandidates ev_distance_candidates;
 
+        PROFILE_POINT("distance_evaluation")
+        NAMED_PROFILE_POINT("distance_evaluation__broad_phase", BROAD_PHASE)
+        NAMED_PROFILE_POINT("distance_evaluation__narrow_phase", NARROW_PHASE)
+
+        PROFILE_START()
+        PROFILE_START(BROAD_PHASE)
         if (use_distance_hashgrid) {
             compute_candidate_intersections_hashgrid(
                 vertices_t1, ev_distance_candidates);
@@ -73,9 +79,12 @@ namespace opt {
             compute_candidate_intersections_brute_force(
                 vertices_t1, ev_distance_candidates);
         }
+        PROFILE_END(BROAD_PHASE)
 
+        PROFILE_START(NARROW_PHASE)
         filter_active_barriers(vertices_t1, ev_distance_candidates,
             active_constraint_scale, m_ev_distance_active);
+
 
         m_constraint_map.resize(vertices.rows() * edges.rows());
         m_constraint_map.setConstant(-1);
@@ -98,6 +107,8 @@ namespace opt {
                 m_num_active_constraints += 1;
             }
         }
+        PROFILE_END(NARROW_PHASE)
+        PROFILE_END()
     }
 
     void DistanceBarrierConstraint::compute_candidate_intersections_brute_force(

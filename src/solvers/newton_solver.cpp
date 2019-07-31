@@ -54,6 +54,21 @@ namespace opt {
 
     OptimizationResults NewtonSolver::solve(OptimizationProblem& problem)
     {
+        NAMED_PROFILE_POINT(
+            "newton_solver", SOLVER_STEP);
+        NAMED_PROFILE_POINT(
+            "newton_solver__eval_f", EVAL_F);
+        NAMED_PROFILE_POINT(
+            "newton_solver__slice", SLICE);
+        NAMED_PROFILE_POINT(
+            "newton_solver__compute_newton_direction", COMPUTE_DIRECTION);
+        NAMED_PROFILE_POINT(
+            "newton_solver__newton_line_search", NEWTON_LINE_SEARCH);
+        NAMED_PROFILE_POINT(
+            "newton_solver__gradient_line_search", GRADIENT_LINE_SEARCH);
+        NAMED_PROFILE_POINT(
+            "newton_solver__assert_constraint", ASSERT_CONSTRAINT);
+
         // Initalize the working variables
         Eigen::VectorXd x = problem.x0;
         Eigen::VectorXd gradient, gradient_free;
@@ -75,12 +90,18 @@ namespace opt {
         iteration_number = 0;
         std::string exit_reason = "exceeded the maximum allowable iterations";
         do {
+            PROFILE_START(SOLVER_STEP);
+
+            PROFILE_START(EVAL_F)
             // Compute the gradient and hessian
             double fx;
             problem.eval_f_and_fdiff(x, fx, gradient, hessian);
+            PROFILE_END(EVAL_F)
 
+            PROFILE_START(SLICE)
             // Remove rows of fixed dof
             igl::slice(gradient, free_dof, gradient_free);
+            PROFILE_END(SLICE)
 
             spdlog::trace("{} eps={:e} x={} fx={:e} gradient_free={}",
                 fmt::format(NEWTON_STEP_LOG, iteration_number + 1), eps,
@@ -91,11 +112,18 @@ namespace opt {
                 break;
             }
 
+            PROFILE_START(SLICE)
             // Remove rows and columns of fixed dof of the hessian
             igl::slice(hessian, free_dof, free_dof, hessian_free);
+            PROFILE_END(SLICE)
 
-            if (!compute_free_direction(
-                    gradient_free, hessian_free, delta_x, true)) {
+            PROFILE_START(COMPUTE_DIRECTION)
+            bool found_direction = compute_free_direction(
+                gradient_free, hessian_free, delta_x, true);
+            PROFILE_SUCCESS(COMPUTE_DIRECTION, found_direction)
+            PROFILE_END(COMPUTE_DIRECTION)
+
+            if (!found_direction) {
                 exit_reason = "newton direction solve failed";
                 break;
             }
@@ -104,10 +132,13 @@ namespace opt {
             // to restore when line-search fails
             double step_length_aux = step_length;
 
+            PROFILE_START(NEWTON_LINE_SEARCH)
             // Perform a line search along Δx, and stay in the feasible realm
             bool found_step_length
                 = constrained_line_search(x, delta_x, problem.func_f(),
                     gradient, constraint, step_length, min_step_length);
+            PROFILE_SUCCESS(NEWTON_LINE_SEARCH, found_step_length)
+            PROFILE_END(NEWTON_LINE_SEARCH)
 
             // Revert to gradient descent if the newton direction fails
             if (!found_step_length) {
@@ -115,11 +146,17 @@ namespace opt {
                 spdlog::warn(NEWTON_DIRECTION_LOG, iteration_number + 1);
 
                 // replace delta_x by gradient direction
+                PROFILE_START(SLICE)
                 igl::slice_into(-gradient_free, free_dof, 1, delta_x);
                 step_length = step_length_aux;
+                PROFILE_END(SLICE)
+
+                PROFILE_START(GRADIENT_LINE_SEARCH)
                 found_step_length
                     = constrained_line_search(x, delta_x, problem.func_f(),
                         gradient, constraint, step_length, min_step_length);
+                PROFILE_SUCCESS(GRADIENT_LINE_SEARCH, found_step_length)
+                PROFILE_END(GRADIENT_LINE_SEARCH)
 
                 if (!found_step_length) {
                     spdlog::warn(NEWTON_GRADIENT_LOG, iteration_number + 1);
@@ -129,9 +166,12 @@ namespace opt {
             }
 
             x += step_length * delta_x;
+            PROFILE_START(ASSERT_CONSTRAINT)
             assert(constraint(x));
+            PROFILE_END(ASSERT_CONSTRAINT)
 
             problem.eval_intermediate_callback(x);
+            PROFILE_END(SOLVER_STEP);
 
         } while (++iteration_number <= max_iterations);
 
@@ -171,30 +211,23 @@ namespace opt {
     {
         bool solve_success = false;
 
-        // Profile the performance of the solve.
-        PROFILE(
-            // clang-format off
-            // TODO: Can we use a better solver than LU?
-            Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
-            solver.compute(hessian);
+        // TODO: Can we use a better solver than LU?
+        Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+        solver.compute(hessian);
+        if (solver.info() != Eigen::Success) {
+            spdlog::warn(
+                "solver=newton iter={:d} failure=\"sparse decomposition of the hessian failed\" failsafe=none",
+                iteration_number);
+        } else {
+            delta_x = solver.solve(-gradient);
             if (solver.info() != Eigen::Success) {
                 spdlog::warn(
-                    "solver=newton iter={:d} failure=\"sparse decomposition "
-                    "of the hessian failed\" failsafe=none",
+                    "solver=newton iter={:d} failure=\"sparse solve for newton direction failed\" failsafe=none",
                     iteration_number);
             } else {
-                delta_x = solver.solve(-gradient);
-                if (solver.info() != Eigen::Success) {
-                    spdlog::warn(
-                        "solver=newton iter={:d} failure=\"sparse solve for "
-                        "newton direction failed\" failsafe=none",
-                        iteration_number);
-                } else {
-                    solve_success = true;
-                }
-            },
-            // clang-format on
-            ProfiledPoint::UPDATE_SOLVE);
+                solve_success = true;
+            }
+        }
 
         if (solve_success && make_psd && delta_x.transpose() * gradient >= 0) {
             // If delta_x is not a descent direction then we want to modify the
@@ -203,20 +236,19 @@ namespace opt {
             // hessian. This can result in doing a step of gradient descent.
             Eigen::SparseMatrix<double> psd_hessian = hessian;
             double mu = make_matrix_positive_definite(psd_hessian);
-            spdlog::debug("solver=newton iter={:d} failure=\"newton direction "
-                          "not descent direction\" failsafe=\"H += μI\" μ={:g}",
+            spdlog::debug(
+                "solver=newton iter={:d} failure=\"newton direction not descent direction\" failsafe=\"H += μI\" μ={:g}",
                 iteration_number, mu);
             solve_success
                 = compute_direction(gradient, psd_hessian, delta_x, false);
             if (delta_x.transpose() * gradient >= 0) {
                 spdlog::warn(
-                    "solver=newton iter={:d} failure=\"newton direction not "
-                    "descent direction\" failsafe=none dir_dot_grad={:g}",
+                    "solver=newton iter={:d} failure=\"newton direction not descent direction\" failsafe=none dir_dot_grad={:g}",
                     iteration_number, delta_x.transpose() * gradient);
             }
         }
 
-        return solve_success; // Was the solve successful
+        return solve_success;
     }
 
     // Make the matrix positive definite (x^T A x > 0).

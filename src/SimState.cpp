@@ -230,14 +230,21 @@ void SimState::simulation_step()
 
 bool SimState::solve_collision()
 {
+    PROFILE_MAIN_POINT("sim_state_solve_collisions");
+
     if (m_dirty_constraints) {
         problem_ptr->update_constraint();
         m_dirty_constraints = false;
     }
 
     ccd::opt::OptimizationResults result;
-    QUICK_PROFILE(
-        "solve_collisions", result = ccd_solver_ptr->solve(*problem_ptr););
+
+    PROFILE_START();
+
+    result = ccd_solver_ptr->solve(*problem_ptr);
+
+    PROFILE_END();
+    LOG_PROFILER(scene_file);
 
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 

@@ -30,7 +30,7 @@ void UISimState::draw_menu()
         const char* level_strings[] = SPDLOG_LEVEL_NAMES;
         if (ImGui::Combo("log-level##logger", &m_log_level, level_strings,
                 CCD_IM_ARRAYSIZE(level_strings))) {
-            spdlog::set_level(
+            logger_->set_level(
                 static_cast<spdlog::level::level_enum>(m_log_level));
         }
 
@@ -147,7 +147,6 @@ void UISimState::draw_simulation_player()
     ImGui::SameLine();
     ImGui::HelpMarker("yes - shows velocities and forces as position-delta\n "
                       "i.e scaling them by time.");
-
 }
 
 void UISimState::draw_collision_menu()
@@ -166,7 +165,6 @@ void UISimState::draw_collision_menu()
     }
     ImGui::Text(
         "Outer it.: %i", m_state.ccd_solver_ptr->num_outer_iterations());
-
 }
 void UISimState::draw_settings()
 {
