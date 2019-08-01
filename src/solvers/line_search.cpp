@@ -59,7 +59,9 @@ namespace opt {
         const double armijo_rule_coeff)
     {
         const double fx = f(x); // Function value we want to beat
-        ;
+        PROFILE_POINT("line_search");
+        PROFILE_START();
+
         spdlog::trace("{} step_length={:e} f(x0)={:e} x0={} dir={}",
             LS_BEGIN_LOG, step_length, fx, log::fmt_eigen(x),
             log::fmt_eigen(dir));
@@ -95,15 +97,17 @@ namespace opt {
         NAMED_PROFILE_POINT("line_search__minimization_rule", MINIMIZATION_RULE)
         NAMED_PROFILE_POINT("line_search__constraint", CONSTRAINT)
 
+        bool success = false;
         while (step_norm >= min_step_length) {
             PROFILE_START(MINIMIZATION_RULE)
             bool min_rule = minimization_rule();
-            PROFILE_SUCCESS(MINIMIZATION_RULE, min_rule)
+            PROFILE_MESSAGE(
+                MINIMIZATION_RULE, fmt::format("min_rule,{}", min_rule))
             PROFILE_END(MINIMIZATION_RULE)
 
             PROFILE_START(CONSTRAINT)
             bool cstr = constraint(x + step_length * dir);
-            PROFILE_SUCCESS(CONSTRAINT, cstr)
+            PROFILE_MESSAGE(CONSTRAINT, fmt::format("cstr,{}", cstr))
             PROFILE_END(CONSTRAINT)
 
             spdlog::trace(
@@ -112,15 +116,23 @@ namespace opt {
                 step_length);
 
             if (min_rule && cstr) {
-                return true;
+                success = true;
+                break; // while loop
             }
             step_length /= 2.0;
             step_norm = (step_length * dir).norm();
             num_it += 1;
         }
-        spdlog::debug("{} step_norm={:e} step_length={:e} min_step_length={:e}",
-            LS_FAIL_LOG, step_norm, step_length, min_step_length);
-        return false;
+        if (!success) {
+            spdlog::debug(
+                "{} step_norm={:e} step_length={:e} min_step_length={:e}",
+                LS_FAIL_LOG, step_norm, step_length, min_step_length);
+        }
+        PROFILE_MESSAGE(,
+            fmt::format(
+                "success,{},it,{},dir,{:10e}", success, num_it, dir.norm()))
+        PROFILE_END();
+        return success;
     }
 
     // Log samples along the search direction.

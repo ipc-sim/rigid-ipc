@@ -30,6 +30,7 @@ bool SimState::load_scene(const std::string& filename)
 {
     using nlohmann::json;
     std::ifstream input(filename);
+    PROFILER_CLEAR()
 
     if (input.good()) {
         scene_file = filename;

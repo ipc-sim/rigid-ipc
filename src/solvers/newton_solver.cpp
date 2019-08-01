@@ -109,6 +109,7 @@ namespace opt {
 
             if (gradient_free.squaredNorm() <= absolute_tolerance) {
                 exit_reason = "found a local optimum";
+                PROFILE_END(SOLVER_STEP);
                 break;
             }
 
@@ -120,11 +121,11 @@ namespace opt {
             PROFILE_START(COMPUTE_DIRECTION)
             bool found_direction = compute_free_direction(
                 gradient_free, hessian_free, delta_x, true);
-            PROFILE_SUCCESS(COMPUTE_DIRECTION, found_direction)
             PROFILE_END(COMPUTE_DIRECTION)
 
             if (!found_direction) {
                 exit_reason = "newton direction solve failed";
+                PROFILE_END(SOLVER_STEP);
                 break;
             }
 
@@ -134,10 +135,10 @@ namespace opt {
 
             PROFILE_START(NEWTON_LINE_SEARCH)
             // Perform a line search along Δx, and stay in the feasible realm
+            std::string message = "";
             bool found_step_length
                 = constrained_line_search(x, delta_x, problem.func_f(),
                     gradient, constraint, step_length, min_step_length);
-            PROFILE_SUCCESS(NEWTON_LINE_SEARCH, found_step_length)
             PROFILE_END(NEWTON_LINE_SEARCH)
 
             // Revert to gradient descent if the newton direction fails
@@ -155,12 +156,12 @@ namespace opt {
                 found_step_length
                     = constrained_line_search(x, delta_x, problem.func_f(),
                         gradient, constraint, step_length, min_step_length);
-                PROFILE_SUCCESS(GRADIENT_LINE_SEARCH, found_step_length)
                 PROFILE_END(GRADIENT_LINE_SEARCH)
 
                 if (!found_step_length) {
                     spdlog::warn(NEWTON_GRADIENT_LOG, iteration_number + 1);
                     exit_reason = "line-search failed";
+                    PROFILE_END(SOLVER_STEP);
                     break;
                 }
             }

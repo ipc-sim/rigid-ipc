@@ -205,12 +205,20 @@ namespace opt {
         Eigen::VectorXd& f_uk_gradient,
         Eigen::SparseMatrix<double>& f_uk_hessian)
     {
+        NAMED_PROFILE_POINT("barrier_problem__eval_f_and_fdiff", EVAL_F)
+        NAMED_PROFILE_POINT("barrier_problem__eval_g_and_gdiff", EVAL_G)
+
+        PROFILE_START(EVAL_F)
         general_problem->eval_f_and_fdiff(x, f_uk, f_uk_gradient, f_uk_hessian);
+        PROFILE_END(EVAL_F)
 
         Eigen::VectorXd gx;
         Eigen::MatrixXd dgx;
         std::vector<Eigen::SparseMatrix<double>> ddgx;
+
+        PROFILE_START(EVAL_G)
         general_problem->eval_g_and_gdiff(x, gx, dgx, ddgx);
+        PROFILE_END(EVAL_G)
 
         f_uk += gx.sum();
         f_uk_gradient += dgx.colwise().sum().transpose();
@@ -218,6 +226,7 @@ namespace opt {
         for (const auto& ddgx_i : ddgx) {
             f_uk_hessian += ddgx_i;
         }
+
     }
 
     void BarrierProblem::enable_line_search_mode(const Eigen::VectorXd& max_x)

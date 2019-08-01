@@ -12,6 +12,9 @@
 #include <opt/constraint_factory.hpp>
 
 #include <logger.hpp>
+#include <profiler.hpp>
+
+
 namespace ccd {
 
 namespace physics {
@@ -440,22 +443,38 @@ namespace physics {
         Eigen::MatrixXd& gx_jacobian,
         std::vector<Eigen::SparseMatrix<double>>& gx_hessian)
     {
+        NAMED_PROFILE_POINT("rigid_body_problem__update_g", UPDATE_G)
+        NAMED_PROFILE_POINT("rigid_body_problem__rigid_body_gradient", RIGID_BODY_GRADS)
+        NAMED_PROFILE_POINT("rigid_body_problem__rigid_body_hessian", RIGID_BODY_HESSIAN)
+        NAMED_PROFILE_POINT("rigid_body_problem__particles_gradients", PARTICLES_GRADS)
+        NAMED_PROFILE_POINT("rigid_body_problem__assemble_hessian", ASSEMBLE_HESSIAN)
+
+        PROFILE_START(UPDATE_G)
         Eigen::MatrixXd uk = update_g(sigma);
+        PROFILE_END(UPDATE_G)
 
         Eigen::SparseMatrix<double> jac_xk_sigma;
         std::vector<Eigen::SparseMatrix<double>> hess_xk_sigma;
+        PROFILE_START(RIGID_BODY_GRADS)
         m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+        PROFILE_END(RIGID_BODY_GRADS)
+        PROFILE_START(RIGID_BODY_HESSIAN)
         m_assembler.world_vertices_hessian(sigma, hess_xk_sigma);
+        PROFILE_END(RIGID_BODY_HESSIAN)
+
 
         Eigen::MatrixXd jac_g_uk;
         std::vector<Eigen::SparseMatrix<double>> hessian_g_uk;
+        PROFILE_START(PARTICLES_GRADS)
         m_constraint_ptr->compute_constraints_and_derivatives(
             uk, gx, jac_g_uk, hessian_g_uk);
+        PROFILE_END(PARTICLES_GRADS)
 
         gx_jacobian = jac_g_uk * jac_xk_sigma;
-
+        PROFILE_START(ASSEMBLE_HESSIAN)
         assemble_hessian(
             jac_xk_sigma, hess_xk_sigma, jac_g_uk, hessian_g_uk, gx_hessian);
+        PROFILE_END(ASSEMBLE_HESSIAN)
 
 #ifdef WITH_DERIVATIVE_CHECK
         bool aux = update_constraint_set;
