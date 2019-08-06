@@ -103,6 +103,7 @@ figures/*.data
 data/**/*.data
 data/**/*.csv
 data/**/*.json
+data/**/*.vtk
 data/**/*.pdf
 data/**/*.xlsx
 data/local/

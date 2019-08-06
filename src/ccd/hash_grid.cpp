@@ -12,6 +12,7 @@ void HashGrid::resize(Eigen::Vector2d mn, Eigen::Vector2d mx, double cellSize)
         std::ceil(std::max(mx.x() - mn.x(), mx.y() - mn.y()) / m_cellSize));
 }
 
+/// @brief Compute an AABB around a given 2D mesh.
 void calculate_mesh_extents(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements, Eigen::Vector2d& lower_bound,
     Eigen::Vector2d& upper_bound)
@@ -27,6 +28,7 @@ void calculate_mesh_extents(const Eigen::MatrixX2d& vertices,
     upper_bound.y() = points.col(1).maxCoeff();
 }
 
+/// @brief Compute the average edge length of a mesh.
 double average_edge_length(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges)
 {
@@ -40,6 +42,7 @@ double average_edge_length(const Eigen::MatrixX2d& vertices,
     return sum / (2 * edges.rows());
 }
 
+/// @brief Compute the average displacement length.
 double average_displacement_length(const Eigen::MatrixX2d& displacements)
 {
     double sum = 0;
@@ -60,6 +63,7 @@ void HashGrid::resize(const Eigen::MatrixX2d& vertices,
             + average_displacement_length(displacements));
 }
 
+/// @brief Compute a AABB for a vertex moving through time (i.e. temporal edge).
 void calculate_vertex_extents(const Eigen::Vector2d& v,
     const Eigen::Vector2d& u, Eigen::Vector2d& lower_bound,
     Eigen::Vector2d& upper_bound)
@@ -95,6 +99,7 @@ void HashGrid::addVertices(
     }
 }
 
+/// @brief Compute a AABB for an edge moving through time (i.e. temporal quad).
 void calculate_edge_extents(const Eigen::Vector2d& vi,
     const Eigen::Vector2d& vj, const Eigen::Vector2d& ui,
     const Eigen::Vector2d& uj, Eigen::Vector2d& lower_bound,

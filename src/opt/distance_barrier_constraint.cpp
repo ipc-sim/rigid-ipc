@@ -105,12 +105,15 @@ namespace opt {
         const Eigen::MatrixXd& vertices_t1,
         EdgeVertexCandidates& ev_candidates) const
     {
-        // TODO: add vertex groups
+        // TODO: Add vertex groups.
         ev_candidates.clear();
 
         HashGrid hashgrid;
+        // TODO: Add the actual displacements, so we can have a complete
+        //       candidate set.
         Eigen::MatrixXd displacements
             = Eigen::MatrixXd::Zero(vertices_t1.rows(), vertices_t1.cols());
+        // TODO: Use vertices_t0 with displacements instead of the vertices_t1.
         hashgrid.resize(vertices_t1, displacements, *edges, barrier_epsilon);
         hashgrid.addVertices(vertices_t1, displacements, barrier_epsilon);
         hashgrid.addEdges(vertices_t1, displacements, *edges, barrier_epsilon);

@@ -34,9 +34,9 @@ namespace std {
 template <> struct hash<ccd::EdgeVertexCandidate> {
     inline size_t operator()(const ccd::EdgeVertexCandidate& ev_candidate) const
     {
-        // std::hash<size_t> int_hasher;
-        // return int_hasher(v.first) ^ int_hasher(v.second);
-        return ev_candidate.edge_index * 31 + ev_candidate.vertex_index;
+        std::hash<size_t> int_hasher;
+        return int_hasher(ev_candidate.edge_index) ^
+               int_hasher(ev_candidate.vertex_index);
     }
 };
 } // namespace std
