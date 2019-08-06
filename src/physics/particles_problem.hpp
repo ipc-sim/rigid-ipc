@@ -36,6 +36,8 @@ namespace physics {
 
         void init(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
+        nlohmann::json state() const override;
+        void state(const nlohmann::json& s) override;
 
         /// @brief  does a single simulation step. Returns true if there is a
         /// collision

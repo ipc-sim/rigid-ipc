@@ -14,7 +14,6 @@
 #include <logger.hpp>
 #include <profiler.hpp>
 
-
 namespace ccd {
 
 namespace physics {
@@ -86,6 +85,39 @@ namespace physics {
         Fcollision.resize(m_assembler.num_vertices(), 2);
         Fcollision.setZero();
         update_constraint();
+    }
+
+    nlohmann::json RigidBodyProblem::state() const
+    {
+        nlohmann::json json;
+        std::vector<nlohmann::json> rbs;
+        for (auto& rb : m_assembler.m_rbs) {
+            nlohmann::json jrb;
+            jrb["position"] = io::to_json(Eigen::VectorXd(rb.position));
+            jrb["velocity"] = io::to_json(Eigen::VectorXd(rb.velocity));
+            rbs.push_back(jrb);
+        }
+        json["rigid_bodies"] = rbs;
+        return json;
+    }
+
+    void RigidBodyProblem::state(const nlohmann::json& args)
+    {
+        nlohmann::json json;
+        auto& rbs = args["rigid_bodies"];
+        assert(rbs.size() == m_assembler.m_rbs.size());
+        size_t i = 0;
+        for (auto& jrb: args["rigid_bodies"] ) {
+            Eigen::VectorXd velocity;
+            io::from_json(jrb["velocity"], velocity);
+            Eigen::VectorXd position;
+            io::from_json(jrb["position"], position);
+
+            m_assembler.m_rbs[i].position = position;
+            m_assembler.m_rbs[i].velocity = velocity;
+            i+=1;
+        }
+
     }
 
     bool RigidBodyProblem::simulation_step(const double time_step)
@@ -444,10 +476,14 @@ namespace physics {
         std::vector<Eigen::SparseMatrix<double>>& gx_hessian)
     {
         NAMED_PROFILE_POINT("rigid_body_problem__update_g", UPDATE_G)
-        NAMED_PROFILE_POINT("rigid_body_problem__rigid_body_gradient", RIGID_BODY_GRADS)
-        NAMED_PROFILE_POINT("rigid_body_problem__rigid_body_hessian", RIGID_BODY_HESSIAN)
-        NAMED_PROFILE_POINT("rigid_body_problem__particles_gradients", PARTICLES_GRADS)
-        NAMED_PROFILE_POINT("rigid_body_problem__assemble_hessian", ASSEMBLE_HESSIAN)
+        NAMED_PROFILE_POINT(
+            "rigid_body_problem__rigid_body_gradient", RIGID_BODY_GRADS)
+        NAMED_PROFILE_POINT(
+            "rigid_body_problem__rigid_body_hessian", RIGID_BODY_HESSIAN)
+        NAMED_PROFILE_POINT(
+            "rigid_body_problem__particles_gradients", PARTICLES_GRADS)
+        NAMED_PROFILE_POINT(
+            "rigid_body_problem__assemble_hessian", ASSEMBLE_HESSIAN)
 
         PROFILE_START(UPDATE_G)
         Eigen::MatrixXd uk = update_g(sigma);
@@ -461,7 +497,6 @@ namespace physics {
         PROFILE_START(RIGID_BODY_HESSIAN)
         m_assembler.world_vertices_hessian(sigma, hess_xk_sigma);
         PROFILE_END(RIGID_BODY_HESSIAN)
-
 
         Eigen::MatrixXd jac_g_uk;
         std::vector<Eigen::SparseMatrix<double>> hessian_g_uk;

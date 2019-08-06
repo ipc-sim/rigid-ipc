@@ -115,7 +115,8 @@ namespace profiler {
 #define PROFILE_POINT(Description) ;
 #define PROFILE_START(Name) ;
 #define PROFILE_END(Name) ;
-#define PROFILE_SUCCESS(Name, Val) ;
+#define PROFILE_MESSAGE(Name, Val) ;
+#define PROFILER_CLEAR() ;
 #define LOG_PROFILER(SceneFile) ;
 
 #endif

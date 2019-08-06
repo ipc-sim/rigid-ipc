@@ -102,6 +102,20 @@ namespace physics {
         return json;
     }
 
+    nlohmann::json ParticlesDisplProblem::state() const {
+        nlohmann::json json;
+        json["vertices"] = io::to_json(vertices_);
+        json["velocities"] = io::to_json(velocities_);
+        return json;
+    }
+    void ParticlesDisplProblem::state(const nlohmann::json& params)  {
+        nlohmann::json json;
+
+        io::from_json(params["vertices"], vertices_);
+        io::from_json(params["velocities"], velocities_);
+
+    }
+
     bool ParticlesDisplProblem::simulation_step(const double time_step)
     {
         assert(constraint_ptr != nullptr);

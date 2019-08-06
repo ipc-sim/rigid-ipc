@@ -16,6 +16,8 @@ namespace physics {
         SimulationProblem(const std::string& name);
 
         virtual void init(const nlohmann::json& params) = 0;
+        virtual nlohmann::json state() const = 0;
+        virtual void state(const nlohmann::json& s) = 0;
         virtual nlohmann::json settings() const = 0;
 
         virtual const opt::CollisionConstraint& constraint() = 0;

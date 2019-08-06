@@ -167,7 +167,11 @@ bool UISimState::pre_draw_loop()
         bool breakpoint = m_bkp_had_collision && m_state.m_step_had_collision;
         breakpoint = breakpoint
             || (m_bkp_has_collision && m_state.m_step_has_collision);
-
+        if (m_state.m_max_simulation_steps > -1) {
+            breakpoint = breakpoint
+                || (m_state.m_num_simulation_steps
+                       >= m_state.m_max_simulation_steps);
+        }
         if (breakpoint) {
             m_player_state = PlayerState::Paused;
         }
