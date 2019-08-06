@@ -23,14 +23,15 @@ namespace opt {
         nlohmann::json settings() const override;
 
         bool is_barrier() override { return true; }
-        double get_barrier_epsilon() override { return barrier_epsilon; }
+        double get_barrier_epsilon() override { return m_barrier_epsilon; }
         void set_barrier_epsilon(const double eps) override
         {
-            barrier_epsilon = eps;
+            m_barrier_epsilon = eps;
         }
 
         void initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
+            const Eigen::VectorXi& group_ids,
             const Eigen::MatrixXd& Uk) override;
 
         int number_of_constraints() override;
@@ -67,15 +68,19 @@ namespace opt {
 
         // Settings
         // ----------
+        /// @brief initial epsilon to use in barrier function
         double custom_inital_epsilon;
-        bool use_hash_grid;
+        /// @brief active constraints have distances < scale * barrier_epsilon
+        double active_constraint_scale;
+        /// @brief use hashgrid for distance-constraint evaluation
+        bool use_distance_hashgrid;
 
     protected:
-        double barrier_epsilon;
-        int num_active_constraints;
-        EdgeVertexCandidates ev_distance_candidates;
+        double m_barrier_epsilon;
+        int m_num_active_constraints;
+        EdgeVertexCandidates m_ev_distance_active;
 
-        Eigen::VectorXi constraint_map; ///< map total number of possible
+        Eigen::VectorXi m_constraint_map; ///< map total number of possible
                                         ///< constraints to active set
 
         void compute_candidate_intersections_hashgrid(
@@ -85,6 +90,11 @@ namespace opt {
         void compute_candidate_intersections_brute_force(
             const Eigen::MatrixXd& vertices_t1,
             EdgeVertexCandidates& candidates) const;
+
+        void filter_active_barriers(const Eigen::MatrixXd& vertices,
+            const EdgeVertexCandidates& candidates,
+            const double thr,
+            EdgeVertexCandidates& active);
     };
 
     template <typename T>

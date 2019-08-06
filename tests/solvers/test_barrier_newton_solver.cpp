@@ -42,6 +42,9 @@ TEST_CASE(
     };
 
     double epsilon = GENERATE(1.0, 0.5, 1e-1, 5e-2);
+    problem.fget_barrier_epsilon = [&](){
+        return epsilon;
+    };
     BarrierProblem barrier_problem(problem);
 
     Eigen::VectorXd x(num_vars);

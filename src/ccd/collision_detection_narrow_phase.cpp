@@ -6,33 +6,38 @@
 
 #include <autogen/time_of_impact_coeff.hpp>
 
-#include <profiler.hpp>
-
 namespace ccd {
 
 // Determine if a single edge-vertext pair intersects.
 void detect_edge_vertex_collisions_narrow_phase(const Eigen::Vector2d& Vi,
-    const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
-    const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk, const EdgeVertexCandidate& ev_candidate,
+    const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk,
+    const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj,
+    const Eigen::Vector2d& Uk,
+    const EdgeVertexCandidate& ev_candidate,
     EdgeVertexImpacts& ev_impacts)
 {
     double toi, alpha;
-    PROFILE(
-        bool are_colliding = compute_edge_vertex_time_of_impact(
-            Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha);
-        if (are_colliding) {
-            ev_impacts.push_back(EdgeVertexImpact(toi, ev_candidate.edge_index,
-                alpha, ev_candidate.vertex_index));
-        },
-        ProfiledPoint::DETECTING_COLLISIONS_NARROW_PHASE);
+
+    bool are_colliding = compute_edge_vertex_time_of_impact(
+        Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha);
+    if (are_colliding) {
+        ev_impacts.push_back(EdgeVertexImpact(
+            toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index));
+    }
+
 }
 
 // Compute the time of impact of a point and edge moVing in 2D.
 bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
-    const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
-    const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk, double& toi, double& alpha,
+    const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk,
+    const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj,
+    const Eigen::Vector2d& Uk,
+    double& toi,
+    double& alpha,
     const double tolerance)
 {
     // In 2D the intersecton of a point and edge moVing through time is the a
@@ -51,7 +56,7 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
     auto check_solution = [&](double t, double& s) {
         return t >= 0 && t <= 1
             && temporal_parameterization_to_spatial(
-                Vi, Vj, Vk, Ui, Uj, Uk, t, s, tolerance)
+                   Vi, Vj, Vk, Ui, Uj, Uk, t, s, tolerance)
             && s >= 0 && s <= 1;
     };
 
@@ -111,9 +116,13 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
 
 // Convert a temporal parameterization to a spatial parameterization.
 bool temporal_parameterization_to_spatial(const Eigen::Vector2d& Vi,
-    const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
-    const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk, const double t, double& alpha,
+    const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk,
+    const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj,
+    const Eigen::Vector2d& Uk,
+    const double t,
+    double& alpha,
     const double tolerance)
 {
     Eigen::Vector2d numerator = Vi - Vk + t * (Ui - Uk);

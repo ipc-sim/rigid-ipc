@@ -43,23 +43,24 @@ namespace opt {
 
     void TimeBarrierConstraint::initialize(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges,
+        const Eigen::VectorXi& group_ids,
         const Eigen::MatrixXd& Uk)
     {
         this->barrier_epsilon = 0.0; // Temporary until collisions are computed.
-        CollisionConstraint::initialize(vertices, edges, Uk);
+        CollisionConstraint::initialize(vertices, edges, group_ids, Uk);
         resetBarrierEpsilon();
     }
 
     void TimeBarrierConstraint::detectCollisions(const Eigen::MatrixXd& Uk)
     {
         const double time_scale = 1 + 2 * this->barrier_epsilon;
-        ccd::detect_edge_vertex_collisions(*vertices, time_scale * Uk, *edges,
-            ev_impacts, detection_method, true);
+        ccd::detect_edge_vertex_collisions(vertices, time_scale * Uk, edges,
+            group_ids, ev_impacts, detection_method, true);
         for (EdgeVertexImpact& ev_impact : ev_impacts) {
             ev_impact.time *= time_scale;
         }
         ccd::convert_edge_vertex_to_edge_edge_impacts(
-            *edges, ev_impacts, ee_impacts);
+            edges, ev_impacts, ee_impacts);
     }
 
     int TimeBarrierConstraint::number_of_constraints()
@@ -129,12 +130,9 @@ namespace opt {
     {
         std::vector<DScalar> v_barriers;
         compute_constraints_per_impact(Uk, v_barriers);
-        PROFILE(assemble_constraints(v_barriers, barriers),
-            ProfiledPoint::COMPUTING_CONSTRAINTS)
-        PROFILE(assemble_jacobian(v_barriers, barriers_jacobian),
-            ProfiledPoint::COMPUTING_GRADIENT)
-        PROFILE(assemble_hessian(v_barriers, barriers_hessian),
-            ProfiledPoint::COMPUTING_HESSIAN)
+        assemble_constraints(v_barriers, barriers);
+        assemble_jacobian(v_barriers, barriers_jacobian);
+        assemble_hessian(v_barriers, barriers_hessian);
     }
 
     template <typename T>
@@ -184,7 +182,8 @@ namespace opt {
     template void TimeBarrierConstraint::compute_constraints_per_impact<double>(
         const Eigen::MatrixXd& displacements, std::vector<double>& constraints);
 
-    template void TimeBarrierConstraint::compute_constraints_per_impact<DScalar>(
+    template void
+    TimeBarrierConstraint::compute_constraints_per_impact<DScalar>(
         const Eigen::MatrixXd& displacements,
         std::vector<DScalar>& constraints);
 } // namespace opt

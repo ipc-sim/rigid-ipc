@@ -2,6 +2,8 @@
 
 #include <memory> // shared_ptr
 
+#include <spdlog/spdlog.h>
+
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/opengl/glfw/imgui/ImGuiMenu.h>
 #include <viewer/igl_viewer_ext.hpp>
@@ -82,6 +84,7 @@ public:
     bool m_bkp_had_collision;
     bool m_bkp_has_collision;
     int m_log_level;        ///< brief setup log
+    std::shared_ptr<spdlog::logger> logger_;
     double m_interval_time; ///< time within the interval
     bool m_show_as_delta;
     ///  \brief show animation between current and next step (true) or prev step

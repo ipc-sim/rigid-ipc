@@ -1,4 +1,5 @@
 #include <ccd/hash_grid.hpp>
+#include <logger.hpp>
 
 namespace ccd {
 
@@ -14,7 +15,8 @@ void HashGrid::resize(Eigen::Vector2d mn, Eigen::Vector2d mx, double cellSize)
 
 /// @brief Compute an AABB around a given 2D mesh.
 void calculate_mesh_extents(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements, Eigen::Vector2d& lower_bound,
+    const Eigen::MatrixX2d& displacements,
+    Eigen::Vector2d& lower_bound,
     Eigen::Vector2d& upper_bound)
 {
     Eigen::MatrixXd points(vertices.rows() + displacements.rows(), 2);
@@ -30,7 +32,8 @@ void calculate_mesh_extents(const Eigen::MatrixX2d& vertices,
 
 /// @brief Compute the average edge length of a mesh.
 double average_edge_length(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i& edges)
+    const Eigen::MatrixX2d& displacements,
+    const Eigen::MatrixX2i& edges)
 {
     double sum = 0;
     for (int i = 0; i < edges.rows(); i++) {
@@ -53,7 +56,8 @@ double average_displacement_length(const Eigen::MatrixX2d& displacements)
 }
 
 void HashGrid::resize(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i edges,
+    const Eigen::MatrixX2d& displacements,
+    const Eigen::MatrixX2i edges,
     const double radius)
 {
     static Eigen::Vector2d mesh_min, mesh_max;
@@ -65,7 +69,8 @@ void HashGrid::resize(const Eigen::MatrixX2d& vertices,
 
 /// @brief Compute a AABB for a vertex moving through time (i.e. temporal edge).
 void calculate_vertex_extents(const Eigen::Vector2d& v,
-    const Eigen::Vector2d& u, Eigen::Vector2d& lower_bound,
+    const Eigen::Vector2d& u,
+    Eigen::Vector2d& lower_bound,
     Eigen::Vector2d& upper_bound)
 {
     static Eigen::Matrix<double, 2, 2> points;
@@ -78,20 +83,19 @@ void calculate_vertex_extents(const Eigen::Vector2d& v,
     upper_bound.y() = points.col(1).maxCoeff();
 }
 
-void HashGrid::addVertex(
-    const Eigen::Vector2d& v, const Eigen::Vector2d& u, const int index,
+void HashGrid::addVertex(const Eigen::Vector2d& v,
+    const Eigen::Vector2d& u,
+    const int index,
     const double radius)
 {
     static Eigen::Vector2d lower_bound, upper_bound;
     calculate_vertex_extents(v, u, lower_bound, upper_bound);
-    this->addElement(
-        lower_bound.array() - radius,
-        upper_bound.array() + radius,
+    this->addElement(lower_bound.array() - radius, upper_bound.array() + radius,
         -(index + 1)); // Vertices have a negative id
 }
 
-void HashGrid::addVertices(
-    const Eigen::MatrixX2d& vertices, const Eigen::MatrixX2d& displacements,
+void HashGrid::addVertices(const Eigen::MatrixX2d& vertices,
+    const Eigen::MatrixX2d& displacements,
     const double radius)
 {
     for (int i = 0; i < vertices.rows(); i++) {
@@ -101,8 +105,10 @@ void HashGrid::addVertices(
 
 /// @brief Compute a AABB for an edge moving through time (i.e. temporal quad).
 void calculate_edge_extents(const Eigen::Vector2d& vi,
-    const Eigen::Vector2d& vj, const Eigen::Vector2d& ui,
-    const Eigen::Vector2d& uj, Eigen::Vector2d& lower_bound,
+    const Eigen::Vector2d& vj,
+    const Eigen::Vector2d& ui,
+    const Eigen::Vector2d& uj,
+    Eigen::Vector2d& lower_bound,
     Eigen::Vector2d& upper_bound)
 {
     static Eigen::Matrix<double, 4, 2> points;
@@ -117,20 +123,22 @@ void calculate_edge_extents(const Eigen::Vector2d& vi,
     upper_bound.y() = points.col(1).maxCoeff();
 }
 
-void HashGrid::addEdge(const Eigen::Vector2d& vi, const Eigen::Vector2d& vj,
-    const Eigen::Vector2d& ui, const Eigen::Vector2d& uj, const int index,
+void HashGrid::addEdge(const Eigen::Vector2d& vi,
+    const Eigen::Vector2d& vj,
+    const Eigen::Vector2d& ui,
+    const Eigen::Vector2d& uj,
+    const int index,
     const double radius)
 {
     static Eigen::Vector2d lower_bound, upper_bound;
     calculate_edge_extents(vi, vj, ui, uj, lower_bound, upper_bound);
-    this->addElement(
-        lower_bound.array() - radius,
-        upper_bound.array() + radius,
+    this->addElement(lower_bound.array() - radius, upper_bound.array() + radius,
         index + 1); // Edges have a positive id
 }
 
 void HashGrid::addEdges(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i edges,
+    const Eigen::MatrixX2d& displacements,
+    const Eigen::MatrixX2i& edges,
     const double radius)
 {
     for (int i = 0; i < edges.rows(); i++) {
@@ -140,53 +148,34 @@ void HashGrid::addEdges(const Eigen::MatrixX2d& vertices,
     }
 }
 
-AABBi HashGrid::makeAABBi(Eigen::Vector2d mn, Eigen::Vector2d mx)
+void HashGrid::addElement(const Eigen::Vector2d& lower_bound,
+    const Eigen::Vector2d& upper_bound,
+    const int id)
 {
+
     AABBi aabbi;
-    aabbi.min
-        = Eigen::Vector2i(int(mn.x() / m_cellSize), int(mn.y() / m_cellSize));
-    aabbi.max = Eigen::Vector2i(int(std::ceil(mx.x() / m_cellSize)),
-        int(std::ceil(mx.y() / m_cellSize)));
-    return aabbi;
-}
+    aabbi.min = ((lower_bound - m_domainMin) / m_cellSize).cast<int>();
+    aabbi.max = ((upper_bound - m_domainMin) / m_cellSize)
+                    .unaryExpr([](const double x) { return std::ceil(x); })
+                    .cast<int>();
 
-void HashGrid::addElement(Eigen::Vector2d lower_bound, Eigen::Vector2d upper_bound, int id)
-{
-    AABBi aabbi = makeAABBi(lower_bound, upper_bound);
-    this->add(aabbi, id);
-}
-
-void HashGrid::add(AABBi aabbi, int id)
-{
     for (int x = aabbi.min.x(); x <= aabbi.max.x(); ++x) {
         for (int y = aabbi.min.y(); y <= aabbi.max.y(); ++y) {
-            add(Eigen::Vector2i(x, y), id);
+            m_hash.push_back(HashItem(hash(x, y), id));
         }
     }
 }
 
-void HashGrid::add(Eigen::Vector2i p, int id)
-{
-    m_hash.push_back(HashItem(hash(p), id));
-}
-
-int HashGrid::hash(Eigen::Vector2i p) { return p.y() * m_gridSize + p.x(); }
-
-void HashGrid::sort() { std::sort(m_hash.begin(), m_hash.end()); }
-
-void HashGrid::clear() { m_hash.clear(); }
-
-HashItem& HashGrid::get(unsigned int i) { return m_hash[i]; }
-
-void HashGrid::getVertexEdgePairs(
-    const Eigen::MatrixX2i& edges, EdgeVertexCandidates& ev_candidates)
+void HashGrid::getVertexEdgePairs(const Eigen::MatrixX2i& edges,
+    const Eigen::VectorXi& group_ids,
+    EdgeVertexCandidates& ev_candidates)
 {
     EdgeVertexCandidateSet unique_ev_candidates;
 
     std::vector<int> edge_ids;
-    // edge_ids.reserve(edges.rows() / 10);
     std::vector<int> vertex_ids;
-    // vertex_ids.reserve(edges.rows() / 5);
+
+    bool check_groups = group_ids.size() > 0;
 
     // Sorted all they (key,value) pairs, where key is the hash key, and value
     // is the element index
@@ -216,8 +205,14 @@ void HashGrid::getVertexEdgePairs(
             // vertex-edge pairs encountered in the bucket that just ended
             for (const int& edge_id : edge_ids) {
                 for (const int& vertex_id : vertex_ids) {
-                    if (edges(edge_id, 0) != vertex_id
-                        && edges(edge_id, 1) != vertex_id) {
+                    bool is_endpoint = edges(edge_id, 0) == vertex_id
+                        || edges(edge_id, 1) == vertex_id;
+                    bool same_group = false;
+                    if (check_groups) {
+                        same_group = group_ids(vertex_id)
+                            == group_ids(edges(edge_id, 0));
+                    }
+                    if (!is_endpoint && !same_group) {
                         unique_ev_candidates.insert(
                             EdgeVertexCandidate(edge_id, vertex_id));
                     }

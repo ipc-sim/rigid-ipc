@@ -34,7 +34,7 @@ namespace opt {
 
     int VolumeConstraint::number_of_constraints()
     {
-        return int(get_constraints_size(int(edges->rows())));
+        return int(get_constraints_size(int(edges.rows())));
     }
 
     void VolumeConstraint::compute_constraints(
@@ -92,9 +92,9 @@ namespace opt {
         assemble_jacobian(impact_volumes, g_uk_jacobian);
     }
 
-    Eigen::VectorXd getGradient(const double& x) { return Eigen::VectorXd(); }
+    Eigen::VectorXd getGradient(const double& /*x*/) { return Eigen::VectorXd(); }
     Eigen::VectorXd getGradient(const DScalar& x) { return x.getGradient(); }
-    double getValue(const double& x) { return 0.0; }
+    double getValue(const double& x) { return x; }
     double getValue(const DScalar& x) { return x.getValue(); }
     template <typename T>
     void VolumeConstraint::compute_constraints_per_impact(
@@ -158,7 +158,7 @@ namespace opt {
         Eigen::VectorXd& dense_volumes)
     {
 
-        const int num_edges = int(edges->rows());
+        const int num_edges = int(edges.rows());
         const long num_constr = get_constraints_size(num_edges);
         dense_volumes.resize(num_constr);
         dense_volumes.setZero();
@@ -183,7 +183,7 @@ namespace opt {
         Eigen::VectorXd volumes;
         assemble_constraints(impact_volumes, volumes);
 
-        const int num_edges = int(edges->rows());
+        const int num_edges = int(edges.rows());
         const long num_constr = get_constraints_size(num_edges);
         dense_volumes.resize(num_constr);
         dense_volumes.setZero();
@@ -210,10 +210,10 @@ namespace opt {
         Eigen::MatrixXd impact_volumes_jac;
         assemble_jacobian(impact_volumes, impact_volumes_jac);
 
-        assert(impact_volumes_jac.cols() == vertices->size());
+        assert(impact_volumes_jac.cols() == vertices.size());
         assert(impact_volumes_jac.rows() == int(impact_volumes.size()));
 
-        const int num_edges = int(edges->rows());
+        const int num_edges = int(edges.rows());
         const long num_constr = get_constraints_size(num_edges);
         volumes_jac.resize(num_constr, impact_volumes_jac.cols());
         volumes_jac.setZero();
@@ -239,7 +239,7 @@ namespace opt {
         std::vector<DoubleTriplet> tripletList;
         assemble_jacobian_triplets(constraints, tripletList);
 
-        const int num_edges = int(edges->rows());
+        const int num_edges = int(edges.rows());
         const long num_constr = get_constraints_size(num_edges);
 
         size_t counter = 0;
@@ -259,7 +259,7 @@ namespace opt {
             }
         }
 
-        jacobian.resize(int(num_constr), int(vertices->size()));
+        jacobian.resize(int(num_constr), int(vertices.size()));
         jacobian.setFromTriplets(tripletList.begin(), tripletList.end());
     }
 
@@ -267,7 +267,7 @@ namespace opt {
     {
         dense_indices.resize(int(ee_impacts.size()) * 2);
 
-        const int num_edges = int(edges->rows());
+        const int num_edges = int(edges.rows());
 
         for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
             auto& ee_impact = ee_impacts[ee];

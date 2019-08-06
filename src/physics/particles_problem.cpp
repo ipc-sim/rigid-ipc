@@ -53,6 +53,7 @@ namespace physics {
         assert(gravity_.rows() == 2);
 
         // some degrees of freedom are actually fixed
+        // -------------------------------------------------
         is_particle_dof_fixed.resize(vertices_.rows(), 2);
         is_particle_dof_fixed.setConstant(false);
         for (auto i : params["x_fixed"].get<std::vector<int>>()) {
@@ -64,6 +65,7 @@ namespace physics {
         is_dof_fixed_ = flat<bool>(is_particle_dof_fixed);
 
         // mass matrix
+        // -------------------------------------------------
         if (use_mass_matrix) {
             Eigen::VectorXd vertex_masses;
             physics::mass_vector(vertices_, edges_, vertex_masses);
@@ -75,6 +77,12 @@ namespace physics {
             mass_matrix.setIdentity();
         }
         inv_mass_matrix = mass_matrix.cwiseInverse();
+
+        // Collisions Groups
+        // -------------------------------------------------
+        // each particle is its own group
+        group_ids_ = Eigen::VectorXi::LinSpaced(
+            vertices_.rows(), 0, int(vertices_.rows()));
 
         // Simulation State
         // -------------------------------------------------
@@ -92,6 +100,20 @@ namespace physics {
         json["collision_eps"] = collision_eps;
         json["gravity"] = io::to_json(gravity_);
         return json;
+    }
+
+    nlohmann::json ParticlesDisplProblem::state() const {
+        nlohmann::json json;
+        json["vertices"] = io::to_json(vertices_);
+        json["velocities"] = io::to_json(velocities_);
+        return json;
+    }
+    void ParticlesDisplProblem::state(const nlohmann::json& params)  {
+        nlohmann::json json;
+
+        io::from_json(params["vertices"], vertices_);
+        io::from_json(params["velocities"], velocities_);
+
     }
 
     bool ParticlesDisplProblem::simulation_step(const double time_step)
@@ -120,7 +142,7 @@ namespace physics {
         flatten(vec_vertices_t1);
 
         constraint_ptr->initialize(
-            vertices_t0, edges_, vertices_t1 - vertices_t0);
+            vertices_t0, edges_, group_ids_, vertices_t1 - vertices_t0);
 
         // base problem initial solution
         x0 = vec_vertices_t0; // start from collision free state
@@ -170,7 +192,7 @@ namespace physics {
             = check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
 
         ccd::detect_edge_vertex_collisions(q0, (q1 - q0) * scale, edges_,
-            ev_impacts, constraint_ptr->detection_method,
+            group_ids_, ev_impacts, constraint_ptr->detection_method,
             /*reset_impacts=*/true);
         return ev_impacts.size() > 0;
     }
@@ -258,8 +280,7 @@ namespace physics {
         Eigen::MatrixXd Uk = update_g(q1);
 
         Eigen::VectorXd g_uk;
-        PROFILE(constraint_ptr->compute_constraints(Uk, g_uk),
-            ProfiledPoint::COMPUTING_CONSTRAINTS);
+        constraint_ptr->compute_constraints(Uk, g_uk);
         return g_uk;
     };
 
@@ -286,8 +307,8 @@ namespace physics {
     {
         Eigen::MatrixXd Uk = update_g(q1);
         Eigen::MatrixXd jac_gx;
-        PROFILE(constraint_ptr->compute_constraints_jacobian(Uk, jac_gx),
-            ProfiledPoint::COMPUTING_GRADIENT);
+        constraint_ptr->compute_constraints_jacobian(Uk, jac_gx);
+
 #ifdef WITH_DERIVATIVE_CHECK
         double diff;
         if (!compare_jac_g_approx(q1, jac_gx, diff)) {
@@ -308,7 +329,8 @@ namespace physics {
         double diff;
         if (!compare_jac_g_approx(q1, jac_gx.toDense(), diff)) {
             spdlog::error(
-                "Derivative Check Failed in `eval_jac_g` diff_norm={} jac_norm={}", diff, jac_gx.norm());
+                "Derivative Check Failed in `eval_jac_g` diff_norm={} jac_norm={}",
+                diff, jac_gx.norm());
         }
 #endif
     };
@@ -318,8 +340,7 @@ namespace physics {
     {
         Eigen::MatrixXd Uk = update_g(q1);
         std::vector<Eigen::SparseMatrix<double>> hess_gx;
-        PROFILE(constraint_ptr->compute_constraints_hessian(Uk, hess_gx);
-                , ProfiledPoint::COMPUTING_HESSIAN);
+        constraint_ptr->compute_constraints_hessian(Uk, hess_gx);
         return hess_gx;
     }
 
@@ -359,7 +380,6 @@ namespace physics {
     {
         is_linesearch_active = false;
     }
-
 
 } // namespace physics
 } // namespace ccd

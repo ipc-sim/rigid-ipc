@@ -122,11 +122,15 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DFIXTURES_DIR=\"${FIXTURES_DI
 set(DATA_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DDATA_OUTPUT_DIR=\"${DATA_OUTPUT_DIR}\")
 
+set(LOGS_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/logs")
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DLOGS_OUTPUT_DIR=\"${LOGS_OUTPUT_DIR}\")
+
 if(ENABLE_DERIVATIVE_CHECK)
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DWITH_DERIVATIVE_CHECK)
 endif()
 
 if(ENABLE_PROFILING)
+    message("Profiling Enabled")
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DPROFILE_FUNCTIONS)
 endif()
 
@@ -141,7 +145,6 @@ add_executable(${PROJECT_NAME}_sim
     src/viewer/UIMenu.cpp
 
     src/main.cpp
-
 )
 
 target_include_directories(${PROJECT_NAME}_sim PRIVATE src)
@@ -152,6 +155,16 @@ add_custom_command(TARGET ${PROJECT_NAME}_sim POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/fixtures
         $<TARGET_FILE_DIR:${PROJECT_NAME}_sim>/fixtures)
+
+################################################################################
+# No UI Executable
+################################################################################
+add_executable(${PROJECT_NAME}_ngui
+     src/main2.cpp
+)
+
+target_include_directories(${PROJECT_NAME}_ngui PRIVATE src)
+target_link_libraries(${PROJECT_NAME}_ngui PUBLIC ${PROJECT_NAME})
 
 ################################################################################
 # Required Libraries
@@ -208,6 +221,7 @@ if(CODE_COVERAGE)
     target_code_coverage(${PROJECT_NAME})
 #    target_code_coverage(${PROJECT_NAME}_bin)
     target_code_coverage(${PROJECT_NAME}_sim)
+    target_code_coverage(${PROJECT_NAME}_ngui)
 endif()
 
 if(BUILD_UNIT_TESTS)

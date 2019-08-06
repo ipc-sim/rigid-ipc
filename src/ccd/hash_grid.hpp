@@ -87,55 +87,60 @@ class HashGrid {
 public:
     void resize(Eigen::Vector2d mn, Eigen::Vector2d mx, double cellSize);
     void resize(const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i edges,
+        const Eigen::MatrixX2d& displacements,
+        const Eigen::MatrixX2i edges,
         const double radius = 0.0);
 
     /// @brief Add a vertex as a AABB containing the time swept edge.
-    void addVertex(
-        const Eigen::Vector2d& v, const Eigen::Vector2d& u, const int index,
-        const double radius=0.0);
+    void addVertex(const Eigen::Vector2d& v,
+        const Eigen::Vector2d& u,
+        const int index,
+        const double radius = 0.0);
 
     /// @brief Add all vertices as AABBs containing the time swept edge.
     void addVertices(const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2d& displacements, const double radius=0.0);
+        const Eigen::MatrixX2d& displacements,
+        const double radius = 0.0);
 
     /// @brief Add an edge as a AABB containing the time swept quad.
-    void addEdge(const Eigen::Vector2d& vi, const Eigen::Vector2d& vj,
-        const Eigen::Vector2d& ui, const Eigen::Vector2d& uj, const int index,
-        const double radius=0.0);
+    void addEdge(const Eigen::Vector2d& vi,
+        const Eigen::Vector2d& vj,
+        const Eigen::Vector2d& ui,
+        const Eigen::Vector2d& uj,
+        const int index,
+        const double radius = 0.0);
 
     /// @brief Add all edges as AABBs containing the time swept quad.
     void addEdges(const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2d& displacements, const Eigen::MatrixX2i edges,
-        const double radius=0.0);
+        const Eigen::MatrixX2d& displacements,
+        const Eigen::MatrixX2i& edges,
+        const double radius = 0.0);
 
     /// @brief Compute the candidate edge-vertex intersections.
-    void getVertexEdgePairs(
-        const Eigen::MatrixX2i& edges, EdgeVertexCandidates& ev_candidates);
+    void getVertexEdgePairs(const Eigen::MatrixX2i& edges,
+        const Eigen::VectorXi& group_ids,
+        EdgeVertexCandidates& ev_candidates);
 
 protected:
     /// @brief Add an AABB of the extents to the hash grid.
-    void addElement(Eigen::Vector2d xmin, Eigen::Vector2d xmax, int id);
-
-    /// @brief Make a AABB that fits an integer number of cells.
-    AABBi makeAABBi(Eigen::Vector2d mn, Eigen::Vector2d mx);
+    void addElement(const Eigen::Vector2d& lower_bound,
+        const Eigen::Vector2d& upper_bound,
+        const int id);
 
     /// @brief Sort all hash items.
-    void sort();
-
-    /// @brief Add an AABB to the hash grid.
-    void add(AABBi aabbi, int id);
-    /// @brief Add a (cell, id) pair to the hash grid.
-    void add(Eigen::Vector2i p, int id);
+    inline void sort() { std::sort(m_hash.begin(), m_hash.end()); }
 
     /// @brief Create the hash of a cell location.
-    int hash(Eigen::Vector2i p);
+    inline int hash(const int& x, const int& y) const
+    {
+        return y * m_gridSize + x;
+    }
 
     /// @brief Clear the hash grid.
-    void clear();
+    inline void clear() { m_hash.clear(); }
 
     /// @brief Get the item with the given id.
-    HashItem& get(unsigned int i);
+    inline HashItem& get(unsigned int i) { return m_hash[i]; }
 
 protected:
     double m_cellSize;

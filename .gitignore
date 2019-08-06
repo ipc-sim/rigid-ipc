@@ -106,7 +106,12 @@ data/**/*.json
 data/**/*.vtk
 data/**/*.pdf
 data/**/*.xlsx
+data/**/*.vtk
 data/local/
+logs/*.csv
+logs/**/*.csv
+logs/*.log
+logs/**/*.log
 
 3rdparty*
 

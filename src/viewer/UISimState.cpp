@@ -1,6 +1,8 @@
 #include "UISimState.hpp"
 #include <logger.hpp>
 
+#include <spdlog/sinks/stdout_color_sinks.h>
+
 namespace ccd {
 
 UISimState::UISimState()
@@ -13,6 +15,12 @@ UISimState::UISimState()
     , m_show_as_delta(true)
     , m_show_next_step(true)
 {
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    console_sink->set_level(spdlog::level::debug);
+
+    logger_ = std::make_shared<spdlog::logger>("Sim", console_sink);
+    logger_->set_level(static_cast<spdlog::level::level_enum>(m_log_level));
+    spdlog::set_default_logger(logger_);
 }
 
 void UISimState::launch()
@@ -39,8 +47,8 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
     collision_force_data->data().show_overlay = false;
 
     viewer->append_mesh();
-    gradient_data = std::make_unique<igl::opengl::VectorFieldData>(_viewer,
-        Eigen::RowVector3d(243, 156, 18) / 255.0); // #f39c12 - ORANGE
+    gradient_data = std::make_unique<igl::opengl::VectorFieldData>(
+        _viewer, Eigen::RowVector3d(243, 156, 18) / 255.0); // #f39c12 - ORANGE
 
     viewer->append_mesh();
     edges_data = std::make_unique<igl::opengl::GraphData>(_viewer,
@@ -150,10 +158,7 @@ void UISimState::redraw_scene()
     redraw_scalar_fields();
 }
 
-void UISimState::redraw_scalar_fields()
-{
-
-}
+void UISimState::redraw_scalar_fields() {}
 
 bool UISimState::pre_draw_loop()
 {
@@ -162,7 +167,11 @@ bool UISimState::pre_draw_loop()
         bool breakpoint = m_bkp_had_collision && m_state.m_step_had_collision;
         breakpoint = breakpoint
             || (m_bkp_has_collision && m_state.m_step_has_collision);
-
+        if (m_state.m_max_simulation_steps > -1) {
+            breakpoint = breakpoint
+                || (m_state.m_num_simulation_steps
+                       >= m_state.m_max_simulation_steps);
+        }
         if (breakpoint) {
             m_player_state = PlayerState::Paused;
         }

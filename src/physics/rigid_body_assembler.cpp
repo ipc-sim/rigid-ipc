@@ -35,6 +35,14 @@ namespace physics {
             m_edges.block(m_body_edge_id[i], 0, rb.edges.rows(), 2)
                 = (rb.edges.array() + int(m_body_vertex_id[i]));
         }
+        // vertex to body map
+        m_vertex_to_body_map.resize(m_body_vertex_id.back());
+        for (size_t i = 0; i < num_bodies; ++i) {
+            auto& rb = rigid_bodies[i];
+            m_vertex_to_body_map
+                .segment(m_body_vertex_id[i], rb.vertices.rows())
+                .setConstant(int(i));
+        }
 
         // rigid body mass-matrix
         Eigen::VectorXd mass_vector(int(num_bodies) * 3);
