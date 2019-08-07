@@ -24,12 +24,17 @@ namespace io {
                   "vertices":[],
                   "edges":[],
                   "velocity":[0.0,0.0,0.0],
+                  "position":[0.0,0.0],
                   "is_dof_fixed":[false,false,false]
                   })"_json;
             args.merge_patch(jrb);
 
             Eigen::MatrixXd vertices;
             from_json(args["vertices"], vertices);
+
+            Eigen::VectorXd position;
+            from_json(args["position"], position);
+            vertices.rowwise() += position.transpose();
 
             Eigen::MatrixXi edges;
             from_json(args["edges"], edges);

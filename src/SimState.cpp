@@ -86,6 +86,7 @@ bool SimState::init(const nlohmann::json& args_in)
               "constraint": "distance_barrier_constraint",
               "update_constraint_set": true,
               "use_chain_functional": false,
+              "coefficient_restitution":0.0,
               "gravity":[0.0,0.0,0.0],
               "collision_eps": 0.0
          },

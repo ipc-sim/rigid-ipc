@@ -185,10 +185,12 @@ namespace physics {
         std::shared_ptr<opt::CollisionConstraint> m_constraint_ptr;
         bool use_chain_functional;
         bool update_constraint_set;
+        double coefficient_restitution;
         Eigen::VectorXd gravity_;
         double collision_eps;
 
     protected:
+        void solve_velocities();
         /// Used during collision resolution
         ///< vertices positions at begining of interval
         Eigen::MatrixXd vertices_t0;
@@ -196,6 +198,9 @@ namespace physics {
         Eigen::MatrixXd vertices_q1;
         ///< rigid body positions at end of interval
         Eigen::VectorXd rb_positions_t1;
+
+        /// Used for velocity restoration
+        EdgeVertexImpacts original_ev_impacts;
 
         /// Used for visualization and debugging
         Eigen::MatrixXd Fcollision; ///< forces used to resolve collisions

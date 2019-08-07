@@ -27,8 +27,10 @@ namespace physics {
         : SimulationProblem(name)
         , use_chain_functional(false)
         , update_constraint_set(true)
+        , coefficient_restitution(0)
         , gravity_(Eigen::Vector3d::Zero())
         , collision_eps(2)
+
     {
     }
 
@@ -45,6 +47,8 @@ namespace physics {
         use_chain_functional = params["use_chain_functional"].get<bool>();
         update_constraint_set = params["update_constraint_set"].get<bool>();
         collision_eps = params["collision_eps"].get<double>();
+        coefficient_restitution
+            = params["coefficient_restitution"].get<double>();
         io::from_json(params["gravity"], gravity_);
         assert(gravity_.rows() == 3);
 
@@ -66,6 +70,7 @@ namespace physics {
         json["use_chain_functional"] = use_chain_functional;
         json["update_constraint_set"] = update_constraint_set;
         json["collision_eps"] = collision_eps;
+        json["coefficient_restitution"] = coefficient_restitution;
         json["gravity"] = io::to_json(gravity_);
         return json;
     }
@@ -107,7 +112,7 @@ namespace physics {
         auto& rbs = args["rigid_bodies"];
         assert(rbs.size() == m_assembler.m_rbs.size());
         size_t i = 0;
-        for (auto& jrb: args["rigid_bodies"] ) {
+        for (auto& jrb : args["rigid_bodies"]) {
             Eigen::VectorXd velocity;
             io::from_json(jrb["velocity"], velocity);
             Eigen::VectorXd position;
@@ -115,9 +120,8 @@ namespace physics {
 
             m_assembler.m_rbs[i].position = position;
             m_assembler.m_rbs[i].velocity = velocity;
-            i+=1;
+            i += 1;
         }
-
     }
 
     bool RigidBodyProblem::simulation_step(const double time_step)
@@ -145,25 +149,142 @@ namespace physics {
     {
         assert(m_constraint_ptr != nullptr);
 
-        const Eigen::MatrixXd& q1_collisions = vertices_q1;
-
         // update final position
+        // -------------------------------------
         m_assembler.set_rb_positions(rb_positions);
-        Eigen::MatrixXd q1_new = m_assembler.world_vertices_t1();
+        Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
 
-        // update collision forces // q_new = q_collision + Fcollision
-        Eigen::MatrixXd delta_c = (q1_new - q1_collisions);
+        // [DEBUG!] update collision forces
+        // -------------------------------------
+        const Eigen::MatrixXd& q1_0 = vertices_q1;
+        Eigen::MatrixXd delta_c = (q1 - q1_0);
         flatten(delta_c);
         Fcollision
             = m_assembler.m_mass_matrix * delta_c / (time_step * time_step);
         ccd::unflatten(Fcollision, 2);
 
         // update velocities
-        for (auto& rb : m_assembler.m_rbs) {
-            rb.velocity = (rb.position - rb.position_prev) / time_step;
+        // -------------------------------------
+        if (coefficient_restitution > 0) {
+            solve_velocities();
+        } else {
+            for (auto& rb : m_assembler.m_rbs) {
+                rb.velocity = (rb.position - rb.position_prev) / time_step;
+            }
         }
 
-        return detect_collisions(vertices_t0, q1_new, CollisionCheck::EXACT);
+        return detect_collisions(vertices_t0, q1, CollisionCheck::EXACT);
+    }
+    void RigidBodyProblem::solve_velocities()
+    {
+        Eigen::MatrixXd impulses(m_assembler.m_rbs.size(), 3);
+        impulses.setZero();
+
+        for (const auto& ev_candidate : original_ev_impacts) {
+            double toi = ev_candidate.time;
+            double alpha = ev_candidate.alpha;
+
+            // global ids of the vertices
+            const long edge_id = ev_candidate.edge_index;
+            const long a_id = ev_candidate.vertex_index;
+            const int b0_id = m_assembler.m_edges.coeff(edge_id, 0);
+            const int b1_id = m_assembler.m_edges.coeff(edge_id, 1);
+
+            const size_t body_A_id
+                = size_t(m_assembler.m_vertex_to_body_map(a_id));
+            const size_t body_B_id
+                = size_t(m_assembler.m_vertex_to_body_map(b0_id));
+
+            // local (rigid body) ids of the vertices
+            const long r_A_id = a_id - m_assembler.m_body_vertex_id[body_A_id];
+            const long r_B0_id
+                = b0_id - m_assembler.m_body_vertex_id[body_B_id];
+            const long r_B1_id
+                = b1_id - m_assembler.m_body_vertex_id[body_B_id];
+
+            auto& body_A = m_assembler.m_rbs[body_A_id];
+            auto& body_B = m_assembler.m_rbs[body_B_id];
+
+            // The velocities of the center of mass
+            const Eigen::Vector2d& V_Aprev = body_A.velocity.head(2);
+            const Eigen::Vector2d& V_Bprev = body_B.velocity.head(2);
+            // The angular velocities
+            const double& w_Aprev = body_A.velocity(2);
+            const double& w_Bprev = body_B.velocity(2);
+            // The masss
+            const double& m_A = body_A.mass;
+            const double& m_B = body_B.mass;
+            // The moment of innertia
+            const double& I_A = body_A.moment_of_inertia;
+            const double& I_B = body_B.moment_of_inertia;
+
+            // Vectors from the center of mass to the collision point
+            // (90deg rotation counter clockwise)
+            //
+            //      (1) first get vertices position wrt rigid bodies
+            const Eigen::Vector2d r0_A = body_A.vertices.row(r_A_id);
+            const Eigen::Vector2d r0_B0
+                = body_B.vertices.row(r_B0_id); // edge vertex 0
+            const Eigen::Vector2d r0_B1
+                = body_B.vertices.row(r_B1_id); // edge vertex 1
+            const Eigen::Vector2d r0_B = r0_B0 + alpha * (r0_B1 - r0_B0);
+
+            //      (2) and the angular displacement at time of collision
+            const double theta_Atoi = body_A.position_prev(2)
+                + toi * (body_A.position - body_A.position_prev)(2);
+            const double theta_Btoi = body_B.position_prev(2)
+                + toi * (body_B.position - body_B.position_prev)(2);
+            //      (3) then the vectors are given by r = R(\theta_{t})*r_0
+            const Eigen::Vector2d r_Aperp_toi
+                = body_A.grad_theta(theta_Atoi) * r0_A;
+            const Eigen::Vector2d r_Bperp_toi
+                = body_A.grad_theta(theta_Btoi) * r0_B;
+
+            // The collision point velocities BEFORE collision
+            const Eigen::Vector2d v_Aprev = V_Aprev + w_Aprev * r_Aperp_toi;
+            const Eigen::Vector2d v_Bprev = V_Bprev + w_Bprev * r_Bperp_toi;
+
+            // The relative veolicity magnitud BEFORE collision
+            Eigen::Vector2d n_toi;
+            auto v_toi = vertices_t0 + (vertices_q1 - vertices_t0) * toi;
+            Eigen::VectorXd e_toi
+                = v_toi.row(b1_id) - v_toi.row(b0_id); // edge at toi
+            n_toi << -e_toi(1), e_toi(0);              // 90deg rotation
+            n_toi.normalize();
+
+            // check correct diraction
+            Eigen::Vector2d va = vertices_t0.row(a_id);
+            Eigen::Vector2d vb = vertices_t0.row(b0_id);
+            if ((va - vb).transpose() * n_toi <= 0.0) {
+                n_toi *= -1;
+            }
+
+            const double vrel_prev_toi
+                = (v_Aprev - v_Bprev).transpose() * n_toi;
+
+            // solve for the impulses
+            const double nr_A_toi = n_toi.transpose() * r_Aperp_toi;
+            const double nr_B_toi = n_toi.transpose() * r_Bperp_toi;
+            const double K = (1.0 / m_A + 1.0 / m_B //
+                + 1.0 / I_A * nr_A_toi * nr_A_toi
+                + 1.0 / I_B * nr_B_toi * nr_B_toi);
+
+            const double j
+                = -1.0 / K * (1.0 + coefficient_restitution) * vrel_prev_toi;
+
+            // update
+            Eigen::Vector2d V_A_delta = 1.0 / m_A * j * n_toi;
+            Eigen::Vector2d V_B_delta = -1.0 / m_B * j * n_toi;
+            double w_A_delta = 1.0 / I_A * j * nr_A_toi;
+            double w_B_delta = -1.0 / I_B * j * nr_B_toi;
+            impulses.row(int(body_A_id)).head(2) += V_A_delta;
+            impulses.row(int(body_B_id)).head(2) += V_B_delta;
+            impulses(int(body_A_id), 2) += w_A_delta;
+            impulses(int(body_B_id), 2) += w_B_delta;
+        }
+        for (int i = 0; i < impulses.rows(); ++i) {
+            m_assembler.m_rbs[size_t(i)].velocity += impulses.row(i);
+        }
     }
     void RigidBodyProblem::update_constraint()
     {
@@ -178,6 +299,8 @@ namespace physics {
 
         m_constraint_ptr->initialize(vertices_t0, m_assembler.m_edges,
             m_assembler.m_vertex_to_body_map, vertices_q1 - vertices_t0);
+
+        original_ev_impacts = m_constraint_ptr->ev_impacts;
     }
 
     /// -----------------------------------------------------------------
