@@ -25,6 +25,7 @@ namespace io {
                   "edges":[],
                   "velocity":[0.0,0.0,0.0],
                   "position":[0.0,0.0],
+                  "theta":0.0,
                   "is_dof_fixed":[false,false,false]
                   })"_json;
             args.merge_patch(jrb);
@@ -47,6 +48,10 @@ namespace io {
 
             auto rb = physics::RigidBody::from_velocity(
                 vertices, edges, velocity, is_dof_fixed);
+
+            double theta = args["theta"].get<double>() * M_PI / 180.0;
+            rb.position(2) = theta;
+
             rbs.push_back(rb);
         }
     }
