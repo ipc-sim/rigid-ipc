@@ -80,7 +80,6 @@ namespace opt {
         double m_barrier_epsilon;
         int m_num_active_constraints;
         EdgeVertexCandidates m_ev_candidates;
-        EdgeVertexCandidates m_ev_impacts_active;
         EdgeVertexCandidates m_ev_distance_active;
 
         void filter_active_barriers(const Eigen::MatrixXd& vertices,

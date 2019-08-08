@@ -15,8 +15,7 @@ void detect_edge_vertex_collisions_from_candidates(
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     const EdgeVertexCandidates& ev_candidates,
-    EdgeVertexImpacts& ev_impacts,
-    const bool reset_impacts)
+    EdgeVertexImpacts& ev_impacts)
 {
     PROFILE_POINT("collisions_detection");
     NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
@@ -24,29 +23,17 @@ void detect_edge_vertex_collisions_from_candidates(
     PROFILE_START();
     PROFILE_START(NARROW_PHASE);
 
-    // Determine if we should reset impacts and skip pairs
-    if (reset_impacts) {
-        ev_impacts.clear();
-    }
-    Eigen::MatrixXb skip_pair
-        = Eigen::MatrixXb::Zero(edges.rows(), vertices.rows());
-    // If we do not reset impacts then we need to prevent duplicates
-    for (EdgeVertexImpact ev_impact : ev_impacts) {
-        skip_pair(ev_impact.edge_index, ev_impact.vertex_index) = true;
-    }
+    ev_impacts.clear();
 
     for (const EdgeVertexCandidate& ev_candidate : ev_candidates) {
-        if (!skip_pair(ev_candidate.edge_index, ev_candidate.vertex_index)) {
-            // Check if the pair is colliding using the time of impact code
-            detect_edge_vertex_collisions_narrow_phase(
-                vertices.row(edges(ev_candidate.edge_index, 0)),
-                vertices.row(edges(ev_candidate.edge_index, 1)),
-                vertices.row(ev_candidate.vertex_index),
-                displacements.row(edges(ev_candidate.edge_index, 0)),
-                displacements.row(edges(ev_candidate.edge_index, 1)),
-                displacements.row(ev_candidate.vertex_index), ev_candidate,
-                ev_impacts);
-        }
+        detect_edge_vertex_collisions_narrow_phase(
+            vertices.row(edges(ev_candidate.edge_index, 0)),
+            vertices.row(edges(ev_candidate.edge_index, 1)),
+            vertices.row(ev_candidate.vertex_index),
+            displacements.row(edges(ev_candidate.edge_index, 0)),
+            displacements.row(edges(ev_candidate.edge_index, 1)),
+            displacements.row(ev_candidate.vertex_index), ev_candidate,
+            ev_impacts);
     }
 
     PROFILE_END(NARROW_PHASE);

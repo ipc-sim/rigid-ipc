@@ -33,9 +33,8 @@ namespace io {
             Eigen::MatrixXd vertices;
             from_json(args["vertices"], vertices);
 
-            Eigen::VectorXd position;
-            from_json(args["position"], position);
-            vertices.rowwise() += position.transpose();
+            Eigen::VectorXd xy_position;
+            from_json(args["position"], xy_position);
 
             Eigen::MatrixXi edges;
             from_json(args["edges"], edges);
@@ -46,11 +45,14 @@ namespace io {
             Eigen::VectorXb is_dof_fixed;
             from_json(args["is_dof_fixed"], is_dof_fixed);
 
-            auto rb = physics::RigidBody::from_velocity(
-                vertices, edges, velocity, is_dof_fixed);
-
             double theta = args["theta"].get<double>() * M_PI / 180.0;
-            rb.position(2) = theta;
+            Eigen::Vector3d position;
+            position.head(2) = xy_position;
+            position(2) = theta;
+            auto rb = physics::RigidBody::from_velocity(
+                vertices, edges, position, velocity, is_dof_fixed);
+
+
 
             rbs.push_back(rb);
         }

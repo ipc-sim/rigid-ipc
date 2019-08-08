@@ -419,8 +419,7 @@ namespace physics {
             = check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
         ccd::detect_edge_vertex_collisions(q0, (q1 - q0) * scale,
             m_assembler.m_edges, m_assembler.m_vertex_to_body_map, ev_impacts,
-            m_constraint_ptr->detection_method,
-            /*reset_impacts=*/true);
+            m_constraint_ptr->detection_method);
 
         return ev_impacts.size() > 0;
     }
@@ -578,13 +577,10 @@ namespace physics {
         Eigen::MatrixXd jac = jac_g_uk * jac_xk_sigma;
 
 #ifdef WITH_DERIVATIVE_CHECK
-        bool aux = update_constraint_set;
-        update_constraint_set = false;
         if (!compare_jac_g_approx(sigma, jac)) {
             spdlog::error(
                 "rigid_body status=fail message='constraint finite-differences failed'");
         }
-        update_constraint_set = aux;
 #endif
         return jac;
     }
@@ -701,13 +697,11 @@ namespace physics {
         PROFILE_END(ASSEMBLE_HESSIAN)
 
 #ifdef WITH_DERIVATIVE_CHECK
-        bool aux = update_constraint_set;
-        update_constraint_set = false;
         if (!compare_jac_g_approx(sigma, gx_jacobian)) {
             spdlog::error(
                 "rigid_body status=fail message='constraint finite-differences failed'");
         }
-        update_constraint_set = aux;
+
 #endif
     }
 

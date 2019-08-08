@@ -41,23 +41,20 @@ static const char* DetectionMethodNames[] = { "BRUTE_FORCE", "HASH_GRID" };
  *                           detected impacts.
  * @param[in] method         Which method should be used to detect the
  *                           collisions.
- * @param[in] reset_impacts  Reset the vector of impacts.
  */
 void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     const Eigen::VectorXi& group_ids,
     EdgeVertexImpacts& ev_impacts,
-    DetectionMethod method = BRUTE_FORCE,
-    bool reset_impacts = true);
+    DetectionMethod method = BRUTE_FORCE);
 
 /// @brief Backward compatibility with old definition.
 void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     EdgeVertexImpacts& ev_impacts,
-    DetectionMethod method = BRUTE_FORCE,
-    bool reset_impacts = true);
+    DetectionMethod method = BRUTE_FORCE);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Broad-Phase CCD
@@ -130,8 +127,7 @@ void detect_edge_vertex_collisions_from_candidates(
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     const EdgeVertexCandidates& ev_candidates,
-    EdgeVertexImpacts& ev_impacts,
-    bool reset_impacts = true);
+    EdgeVertexImpacts& ev_impacts);
 
 /**
  * @brief Determine if a single edge-vertext pair intersects.

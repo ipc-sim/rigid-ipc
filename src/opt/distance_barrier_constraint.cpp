@@ -23,7 +23,7 @@ namespace opt {
         , m_num_active_constraints(0)
 
     {
-        extend_collision_set = false;
+
     }
 
     void DistanceBarrierConstraint::settings(const nlohmann::json& json)
@@ -31,7 +31,6 @@ namespace opt {
         CollisionConstraint::settings(json);
         custom_inital_epsilon = json["custom_initial_epsilon"].get<double>();
         active_constraint_scale = json["active_constraint_scale"].get<double>();
-        extend_collision_set = false;
     }
 
     nlohmann::json DistanceBarrierConstraint::settings() const
@@ -61,9 +60,10 @@ namespace opt {
     void DistanceBarrierConstraint::update_collision_set(
         const Eigen::MatrixXd& Uk)
     {
-        NAMED_PROFILE_POINT("update_collision_set", BROAD_PHASE)
+        NAMED_PROFILE_POINT("distance_barrier__update_collision_set", BROAD_PHASE)
 
         PROFILE_START(BROAD_PHASE)
+        m_ev_candidates.clear();
         detect_edge_vertex_collision_candidates(vertices, Uk, edges, group_ids,
             m_ev_candidates, detection_method, m_barrier_epsilon);
         PROFILE_END(BROAD_PHASE)
@@ -71,11 +71,11 @@ namespace opt {
 
     void DistanceBarrierConstraint::update_active_set(const Eigen::MatrixXd& Uk)
     {
-        NAMED_PROFILE_POINT("update_active_set", NARROW_PHASE)
+        NAMED_PROFILE_POINT("distance_barrier__update_active_set", NARROW_PHASE)
         PROFILE_START(NARROW_PHASE)
 
-        m_ev_impacts_active.clear();
-        m_ev_impacts_active.reserve(ev_impacts.size());
+        m_ev_distance_active.clear();
+        ev_impacts.clear();
 
         Eigen::MatrixXd vertices_t1 = vertices + Uk;
         for (const EdgeVertexCandidate& ev_candidate : m_ev_candidates) {
@@ -89,8 +89,10 @@ namespace opt {
                 Uk.row(ev_candidate.vertex_index), toi, alpha);
 
             if (active_impact) {
-                m_ev_impacts_active.push_back(ev_candidate);
-                break;
+                // NOTE: ev_impacts are used during post-process of velocities
+                ev_impacts.push_back(EdgeVertexImpact(
+                            toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index));
+                continue;
             }
 
             double distance = sqrt(point_to_edge_sq_distance<double>(
@@ -106,11 +108,11 @@ namespace opt {
         }
         PROFILE_MESSAGE(NARROW_PHASE,
             fmt::format("num_candidates,{},impacts,{},distance,{}",
-                m_ev_candidates.size(), m_ev_impacts_active.size(),
+                m_ev_candidates.size(), ev_impacts.size(),
                 m_ev_distance_active.size()));
         PROFILE_END(NARROW_PHASE)
         m_num_active_constraints
-            = int(m_ev_impacts_active.size() + m_ev_distance_active.size());
+            = int(ev_impacts.size() + m_ev_distance_active.size());
     }
 
     void DistanceBarrierConstraint::compute_constraints(
@@ -138,7 +140,7 @@ namespace opt {
 
         /// add inf if collision
         int N = int(m_ev_distance_active.size());
-        for (size_t i = 0; i < m_ev_impacts_active.size(); ++i) {
+        for (size_t i = 0; i < ev_impacts.size(); ++i) {
             barriers(int(i) + N) += std::numeric_limits<double>::infinity();
         }
     }

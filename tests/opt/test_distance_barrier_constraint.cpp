@@ -93,10 +93,10 @@ TEST_CASE("Distance Barrier Constraint",
         // clang-format off
         // loop over edges then vertices
         expected_barrier <<
-            std::numeric_limits<double>::infinity(),
             spline_barrier<double>(0.5, barrier_epsilon),
             spline_barrier<double>(0.5, barrier_epsilon),
-            spline_barrier<double>(0.5, barrier_epsilon);
+            spline_barrier<double>(0.5, barrier_epsilon),
+            std::numeric_limits<double>::infinity();
         // clang-format on
     }
 
@@ -176,11 +176,11 @@ TEST_CASE("Distance Barrier Constraint Gradient",
         Eigen::VectorXd fx;
         Eigen::MatrixXd x = u;
         ccd::unflatten(x, 2);
-        barrier.initialize(vertices, edges, Eigen::VectorXi(), x);
         barrier.compute_constraints(x, fx);
         return fx;
     };
     Eigen::MatrixXd x = displacements;
+
     ccd::flatten(x);
     ccd::finite_jacobian(x, f, approx_jac);
 

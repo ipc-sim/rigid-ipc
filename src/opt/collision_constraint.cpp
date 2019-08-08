@@ -15,7 +15,6 @@ namespace opt {
     CollisionConstraint::CollisionConstraint(const std::string& name)
         : detection_method(HASH_GRID)
         , custom_hashgrid_cellsize(-1)
-        , extend_collision_set(true)
         , name_(name)
     {
     }
@@ -25,7 +24,6 @@ namespace opt {
     void CollisionConstraint::settings(const nlohmann::json& json)
     {
         detection_method = json["detection_method"].get<DetectionMethod>();
-        extend_collision_set = json["extend_collision_set"].get<bool>();
         custom_hashgrid_cellsize
             = json["custom_hashgrid_cellsize"].get<double>();
     }
@@ -33,7 +31,6 @@ namespace opt {
     nlohmann::json CollisionConstraint::settings() const
     {
         nlohmann::json json;
-        json["extend_collision_set"] = extend_collision_set;
         json["detection_method"] = detection_method;
         json["custom_hashgrid_cellsize"] = custom_hashgrid_cellsize;
         return json;
@@ -59,8 +56,7 @@ namespace opt {
     {
         edge_impact_map.resize(edges.rows());
         ccd::detect_edge_vertex_collisions(vertices, Uk, edges, group_ids,
-            ev_impacts, detection_method,
-            /*reset_impacts=*/!extend_collision_set);
+            ev_impacts, detection_method);
         ccd::convert_edge_vertex_to_edge_edge_impacts(
             edges, ev_impacts, ee_impacts);
         num_pruned_impacts = prune_impacts(ee_impacts, edge_impact_map);

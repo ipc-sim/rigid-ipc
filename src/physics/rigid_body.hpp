@@ -42,6 +42,16 @@ namespace physics {
         static RigidBody from_velocity(const Eigen::MatrixXd& vertices,
             const Eigen::MatrixX2i& edges,
             const Eigen::Vector3d& velocity,
+            const Eigen::Vector3b& is_dof_fixed = Eigen::Vector3b::Zero())
+        {
+            return from_velocity(vertices, edges, Eigen::Vector3d::Zero(),
+                velocity, is_dof_fixed);
+        }
+
+        static RigidBody from_velocity(const Eigen::MatrixXd& vertices,
+            const Eigen::MatrixX2i& edges,
+            const Eigen::Vector3d& position,
+            const Eigen::Vector3d& velocity,
             const Eigen::Vector3b& is_dof_fixed = Eigen::Vector3b::Zero());
 
         static RigidBody from_displacement(const Eigen::MatrixXd& vertices,

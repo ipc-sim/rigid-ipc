@@ -161,7 +161,6 @@ namespace opt {
         Eigen::VectorXi group_ids;
 
     protected:
-        bool extend_collision_set;
         std::string name_;
     };
 

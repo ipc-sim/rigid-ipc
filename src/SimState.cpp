@@ -134,7 +134,6 @@ bool SimState::init(const nlohmann::json& args_in)
             "initial_epsilon":"min_toi",
             "custom_initial_epsilon":1.0,
             "detection_method": "hash_grid",
-            "extend_collision_set": true,
             "custom_hashgrid_cellsize":-1
         },
        "distance_barrier_constraint":{
@@ -142,12 +141,10 @@ bool SimState::init(const nlohmann::json& args_in)
            "detection_method": "hash_grid",
            "use_distance_hashgrid": true,
            "active_constraint_scale" : 1.5,
-           "extend_collision_set": false,
            "custom_hashgrid_cellsize":-1
        },
        "volume_constraint":{
            "detection_method": "hash_grid",
-           "extend_collision_set": true,
            "volume_epsilon": 1e-6,
            "custom_hashgrid_cellsize":-1
        },

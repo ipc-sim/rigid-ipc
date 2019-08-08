@@ -1,6 +1,6 @@
 {
-    "max_iterations": 3000,
-    "timestep_size": 0.01,
+    "max_iterations": 300,
+    "timestep_size": 0.1,
     "scene_type": "rigid_body_problem",
     "distance_barrier_constraint": {
         "custom_initial_epsilon": 0.1,

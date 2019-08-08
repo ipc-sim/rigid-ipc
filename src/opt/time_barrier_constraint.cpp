@@ -55,7 +55,7 @@ namespace opt {
     {
         const double time_scale = 1 + 2 * this->barrier_epsilon;
         ccd::detect_edge_vertex_collisions(vertices, time_scale * Uk, edges,
-            group_ids, ev_impacts, detection_method, true);
+            group_ids, ev_impacts, detection_method);
         for (EdgeVertexImpact& ev_impact : ev_impacts) {
             ev_impact.time *= time_scale;
         }
