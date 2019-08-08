@@ -1,12 +1,13 @@
 {
     "scene_type": "rigid_body_problem",
-    "timestep_size": 0.1,
+    "timestep_size": 0.01,
     "barrier_solver": {
         "inner_solver": "newton_solver",
         "min_barrier_epsilon": 1e-3
     },
     "rigid_body_problem": {
-        "gravity": [0.0, 0.0, 0.0],
+        "gravity": [0.0, -1, 0.0],
+        "coefficient_restitution": 1.0,
         "rigid_bodies": [{
                 "vertices": [
                     [-2.5, 20],

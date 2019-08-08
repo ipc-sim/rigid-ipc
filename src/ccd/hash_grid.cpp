@@ -58,12 +58,13 @@ double average_displacement_length(const Eigen::MatrixX2d& displacements)
 void HashGrid::resize(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements,
     const Eigen::MatrixX2i edges,
-    const double radius)
+    const double inflation_radius)
 {
     static Eigen::Vector2d mesh_min, mesh_max;
     calculate_mesh_extents(vertices, displacements, mesh_min, mesh_max);
-    this->resize(mesh_min.array() - radius, mesh_max.array() + radius,
-        average_edge_length(vertices, displacements, edges) + radius
+    this->resize(mesh_min.array() - inflation_radius,
+        mesh_max.array() + inflation_radius,
+        average_edge_length(vertices, displacements, edges) + inflation_radius
             + average_displacement_length(displacements));
 }
 
@@ -86,20 +87,22 @@ void calculate_vertex_extents(const Eigen::Vector2d& v,
 void HashGrid::addVertex(const Eigen::Vector2d& v,
     const Eigen::Vector2d& u,
     const int index,
-    const double radius)
+    const double inflation_radius)
 {
     static Eigen::Vector2d lower_bound, upper_bound;
     calculate_vertex_extents(v, u, lower_bound, upper_bound);
-    this->addElement(lower_bound.array() - radius, upper_bound.array() + radius,
+    this->addElement(lower_bound.array() - inflation_radius,
+        upper_bound.array() + inflation_radius,
         -(index + 1)); // Vertices have a negative id
 }
 
 void HashGrid::addVertices(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements,
-    const double radius)
+    const double inflation_radius)
 {
     for (int i = 0; i < vertices.rows(); i++) {
-        this->addVertex(vertices.row(i), displacements.row(i), i, radius);
+        this->addVertex(
+            vertices.row(i), displacements.row(i), i, inflation_radius);
     }
 }
 
@@ -128,23 +131,24 @@ void HashGrid::addEdge(const Eigen::Vector2d& vi,
     const Eigen::Vector2d& ui,
     const Eigen::Vector2d& uj,
     const int index,
-    const double radius)
+    const double inflation_radius)
 {
     static Eigen::Vector2d lower_bound, upper_bound;
     calculate_edge_extents(vi, vj, ui, uj, lower_bound, upper_bound);
-    this->addElement(lower_bound.array() - radius, upper_bound.array() + radius,
+    this->addElement(lower_bound.array() - inflation_radius,
+        upper_bound.array() + inflation_radius,
         index + 1); // Edges have a positive id
 }
 
 void HashGrid::addEdges(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2d& displacements,
     const Eigen::MatrixX2i& edges,
-    const double radius)
+    const double inflation_radius)
 {
     for (int i = 0; i < edges.rows(); i++) {
         this->addEdge(vertices.row(edges(i, 0)), vertices.row(edges(i, 1)),
             displacements.row(edges(i, 1)), displacements.row(edges(i, 1)), i,
-            radius);
+            inflation_radius);
     }
 }
 

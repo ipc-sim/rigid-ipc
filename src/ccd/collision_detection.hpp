@@ -12,10 +12,7 @@
 
 #include <ccd/hash_grid.hpp>
 #include <ccd/impact.hpp>
-
-namespace Eigen {
-typedef Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> MatrixXb;
-}
+#include <utils/eigen_ext.hpp>
 
 namespace ccd {
 
@@ -38,14 +35,13 @@ static const char* DetectionMethodNames[] = { "BRUTE_FORCE", "HASH_GRID" };
  * @param[in] edges          The edges of the bodies defined as pairs of indices
  *                           into the rows of the vertices matrix. Each row is
  *                           an edge.
+ * @param[in] group_ids      If two vertices share a group they are not
+ *                           considered possible collisions.
  * @param[out] ev_impacts    Reference for the vector for where to store the
  *                           detected impacts.
  * @param[in] method         Which method should be used to detect the
  *                           collisions.
  * @param[in] reset_impacts  Reset the vector of impacts.
- *
- * @return  All impacts as impact structures containing the impacting edge and
- *          vertex index and the time of impact are stored in ev_impacts.
  */
 void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
@@ -55,7 +51,7 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     DetectionMethod method = BRUTE_FORCE,
     bool reset_impacts = true);
 
-/// @brief backward compatibility with old definition
+/// @brief Backward compatibility with old definition.
 void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
@@ -63,35 +59,47 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     DetectionMethod method = BRUTE_FORCE,
     bool reset_impacts = true);
 
-/**
- * @brief Find all edge-vertex collisions in one time step using brute-force
- * comparisons of all edges and all vertices.
- *
- * @param[in] vertices       The vertices of the bodies.
- * @param[in] displacements  The displacements of the vertices in one time-step.
- *                           There must be an equal number of vertices and
- *                           displacements. The trajectories are linear over one
- *                           time-step and the velocity is constant.
- * @param[in] edges          The edges of the bodies defined as pairs of indices
- *                           into the rows of the vertices matrix. Each row is
- *                           an edge.
- * @param[in] skip_pair      A boolean matrix of size |V|x|E| for if a pair
- *                           should be skipped.
- * @param[out] ev_impacts    Reference for the vector for where to store the
- *                           detected impacts.
- *
- * @return  All impacts as impact structures containing the impacting edge and
- *          vertex index and the time of impact are stored in ev_impacts.
- */
-void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
+///////////////////////////////////////////////////////////////////////////////
+// Broad-Phase CCD
+///////////////////////////////////////////////////////////////////////////////
+
+/// @brief Use broad-phase method to create a set of candidate collisions.
+void detect_edge_vertex_collision_candidates(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     const Eigen::VectorXi& group_ids,
-    EdgeVertexCandidates& ev_candidates);
+    EdgeVertexCandidates& ev_candidates,
+    DetectionMethod method,
+    const double inflation_radius = 0.0);
 
 /**
- * @brief Find all edge-vertex collisions in one time step using spatial-hashing
- * to only compare points and edge in the same cells.
+ * @brief Use a brute force method to create a set of all candidate edge-vertex
+ * collisions.
+ *
+ * @param[in] vertices       The vertices of the bodies.
+ * @param[in] displacements  The displacements of the vertices in one
+ *                           time-step. There must be an equal number of
+ *                           vertices and displacements. The trajectories are
+ *                           linear over one time-step and the velocity is
+ *                           constant.
+ * @param[in] edges          The edges of the bodies defined as pairs of
+ *                           indices into the rows of the vertices matrix. Each
+ *                           row is an edge.
+ * @param[in] group_ids      If two vertices share a group they are not
+ *                           considered possible collisions.
+ * @param[out] ev_candidates Vector of candidates to build.
+ */
+void detect_edge_vertex_collision_candidates_brute_force(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges,
+    const Eigen::VectorXi& group_ids,
+    EdgeVertexCandidates& ev_candidates,
+    const double inflation_radius = 0.0);
+
+/**
+ * @brief Use a hash grid method to create a set of all candidate edge-vertex
+ * collisions.
  *
  * @param[in] vertices       The vertices of the bodies.
  * @param[in] displacements  The displacements of the vertices in one time-step.
@@ -101,19 +109,29 @@ void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
  * @param[in] edges          The edges of the bodies defined as pairs of indices
  *                           into the rows of the vertices matrix. Each row is
  *                           an edge.
- * @param[in] skip_pair      A boolean matrix of size |V|x|E| for if a pair
- *                           should be skipped.
- * @param[out] ev_impacts    Reference for the vector for where to store the
- *                           detected impacts.
- *
- * @return  All impacts as impact structures containing the impacting edge and
- *          vertex index and the time of impact are stored in ev_impacts.
+ * @param[in] group_ids      If two vertices share a group they are not
+ *                           considered possible collisions.
+ * @param[out] ev_candidates Vector of candidates to build.
  */
-void detect_edge_vertex_collisions_hash_map(const Eigen::MatrixXd& vertices,
+void detect_edge_vertex_collision_candidates_hash_grid(
+    const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     const Eigen::VectorXi& group_ids,
-    EdgeVertexCandidates& ev_candidates);
+    EdgeVertexCandidates& ev_candidates,
+    const double inflation_radius = 0.0);
+
+///////////////////////////////////////////////////////////////////////////////
+// Narrow-Phase CCD
+///////////////////////////////////////////////////////////////////////////////
+
+void detect_edge_vertex_collisions_from_candidates(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges,
+    const EdgeVertexCandidates& ev_candidates,
+    EdgeVertexImpacts& ev_impacts,
+    bool reset_impacts = true);
 
 /**
  * @brief Determine if a single edge-vertext pair intersects.

@@ -2,10 +2,11 @@
 // Includes continous collision detection to compute the time of impact.
 // Supported geometry: point vs edge
 
-#include <ccd/collision_detection.hpp>
-#include <ccd/hash_grid.hpp>
+#include "collision_detection.hpp"
 
 #include <iostream>
+
+#include <ccd/hash_grid.hpp>
 
 #include <profiler.hpp>
 
@@ -24,6 +25,7 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
         Eigen::VectorXi(), ev_impacts, method, reset_impacts);
 }
 
+// Find all edge-vertex collisions in one time step.
 void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
@@ -33,67 +35,57 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     bool reset_impacts)
 {
     assert(vertices.size() == displacements.size());
+
+    // Do the broad phase by detecting candidate impacts
+    EdgeVertexCandidates ev_candidates;
+    detect_edge_vertex_collision_candidates(
+        vertices, displacements, edges, group_ids, ev_candidates, method);
+
+    // Do the narrow phase by detecting actual impacts from the candidate set
+    detect_edge_vertex_collisions_from_candidates(vertices, displacements,
+        edges, ev_candidates, ev_impacts, reset_impacts);
+}
+
+void detect_edge_vertex_collision_candidates(const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixX2i& edges,
+    const Eigen::VectorXi& group_ids,
+    EdgeVertexCandidates& ev_candidates,
+    DetectionMethod method,
+    const double inflation_radius)
+{
     assert(method == DetectionMethod::BRUTE_FORCE
         || method == DetectionMethod::HASH_GRID);
-
-    Eigen::MatrixXb skip_pair;
-    EdgeVertexCandidates ev_candidates;
-
-    PROFILE_POINT("collisions_detection")
+    PROFILE_POINT("collisions_detection");
     NAMED_PROFILE_POINT("collisions_detection__broad_phase", BROAD_PHASE);
-    NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
 
     PROFILE_START();
     PROFILE_START(BROAD_PHASE);
 
-    if (reset_impacts) {
-        ev_impacts.clear();
-    }
-
-    skip_pair = Eigen::MatrixXb::Zero(edges.rows(), vertices.rows());
-    // If we do not reset impacts then we need to prevent duplicates
-    for (EdgeVertexImpact ev_impact : ev_impacts) {
-        skip_pair(ev_impact.edge_index, ev_impact.vertex_index) = true;
-    }
-
     switch (method) {
     case BRUTE_FORCE:
-        detect_edge_vertex_collisions_brute_force(
+        detect_edge_vertex_collision_candidates_brute_force(
             vertices, displacements, edges, group_ids, ev_candidates);
         break;
     case HASH_GRID:
-        detect_edge_vertex_collisions_hash_map(
+        detect_edge_vertex_collision_candidates_hash_grid(
             vertices, displacements, edges, group_ids, ev_candidates);
         break;
     }
 
     PROFILE_END(BROAD_PHASE);
-
-    PROFILE_START(NARROW_PHASE);
-    for (const EdgeVertexCandidate& ev_candidate : ev_candidates) {
-        if (!skip_pair(ev_candidate.edge_index, ev_candidate.vertex_index)) {
-            // Check if the pair is colliding using the time of impact code
-            detect_edge_vertex_collisions_narrow_phase(
-                vertices.row(edges(ev_candidate.edge_index, 0)),
-                vertices.row(edges(ev_candidate.edge_index, 1)),
-                vertices.row(ev_candidate.vertex_index),
-                displacements.row(edges(ev_candidate.edge_index, 0)),
-                displacements.row(edges(ev_candidate.edge_index, 1)),
-                displacements.row(ev_candidate.vertex_index), ev_candidate,
-                ev_impacts);
-        }
-    }
-    PROFILE_END(NARROW_PHASE);
     PROFILE_END();
 }
 
 // Find all edge-vertex collisions in one time step using brute-force
 // comparisons of all edges and all vertices.
-void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& /*displacements*/,
+void detect_edge_vertex_collision_candidates_brute_force(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& /* displacements */,
     const Eigen::MatrixX2i& edges,
     const Eigen::VectorXi& group_ids,
-    EdgeVertexCandidates& ev_candidates)
+    EdgeVertexCandidates& ev_candidates,
+    const double /* inflation_radius */)
 {
     const bool check_group = group_ids.size() > 0;
     // Loop over all edges
@@ -106,6 +98,7 @@ void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
                 || vertex_index == edges(edge_index, 1);
             bool same_group = false;
             if (check_group) {
+                // TODO: Check for the other vertex of the edge too.
                 same_group = group_ids(vertex_index)
                     == group_ids(edges(edge_index, 0));
             }
@@ -119,16 +112,18 @@ void detect_edge_vertex_collisions_brute_force(const Eigen::MatrixXd& vertices,
 
 // Find all edge-vertex collisions in one time step using spatial-hashing to
 // only compare points and edge in the same cells.
-void detect_edge_vertex_collisions_hash_map(const Eigen::MatrixXd& vertices,
+void detect_edge_vertex_collision_candidates_hash_grid(
+    const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     const Eigen::VectorXi& group_ids,
-    EdgeVertexCandidates& ev_candidates)
+    EdgeVertexCandidates& ev_candidates,
+    const double inflation_radius)
 {
     HashGrid hashgrid;
-    hashgrid.resize(vertices, displacements, edges);
-    hashgrid.addVertices(vertices, displacements);
-    hashgrid.addEdges(vertices, displacements, edges);
+    hashgrid.resize(vertices, displacements, edges, inflation_radius);
+    hashgrid.addVertices(vertices, displacements, inflation_radius);
+    hashgrid.addEdges(vertices, displacements, edges, inflation_radius);
 
     // Assume checking if vertex is and end-point of the edge is done by
     // `hashgrid.getVertexEdgePairs(...)`.
