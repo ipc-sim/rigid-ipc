@@ -92,12 +92,8 @@ namespace opt {
         }
 
         // Do the CCD narrow-phase to get the actual impacts.
-        edge_impact_map.resize(edges.rows());
-        if (!extend_collision_set) {
-            ev_impacts.clear();
-        }
-        ccd::detect_edge_vertex_collisions_from_candidates(
-            vertices, Uk, edges, ev_candidates, ev_impacts);
+        ccd::detect_edge_vertex_collisions_from_candidates(vertices, Uk, edges,
+            ev_candidates, ev_impacts, /*reset_impacts=*/!extend_collision_set);
 
         // Extend to include collisions.
         for (auto& ev_impact : ev_impacts) {

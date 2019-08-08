@@ -41,20 +41,9 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     detect_edge_vertex_collision_candidates(
         vertices, displacements, edges, group_ids, ev_candidates, method);
 
-    // Determine if we should reset impacts and skip pairs
-    if (reset_impacts) {
-        ev_impacts.clear();
-    }
-    Eigen::MatrixXb skip_pair
-        = Eigen::MatrixXb::Zero(edges.rows(), vertices.rows());
-    // If we do not reset impacts then we need to prevent duplicates
-    for (EdgeVertexImpact ev_impact : ev_impacts) {
-        skip_pair(ev_impact.edge_index, ev_impact.vertex_index) = true;
-    }
-
     // Do the narrow phase by detecting actual impacts from the candidate set
-    detect_edge_vertex_collisions_from_candidates(
-        vertices, displacements, edges, ev_candidates, skip_pair, ev_impacts);
+    detect_edge_vertex_collisions_from_candidates(vertices, displacements,
+        edges, ev_candidates, ev_impacts, reset_impacts);
 }
 
 void detect_edge_vertex_collision_candidates(const Eigen::MatrixXd& vertices,

@@ -130,15 +130,8 @@ void detect_edge_vertex_collisions_from_candidates(
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     const EdgeVertexCandidates& ev_candidates,
-    EdgeVertexImpacts& ev_impacts);
-
-void detect_edge_vertex_collisions_from_candidates(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixX2i& edges,
-    const EdgeVertexCandidates& ev_candidates,
-    const Eigen::MatrixXb& skip_pair,
-    EdgeVertexImpacts& ev_impacts);
+    EdgeVertexImpacts& ev_impacts,
+    bool reset_impacts = true);
 
 /**
  * @brief Determine if a single edge-vertext pair intersects.
