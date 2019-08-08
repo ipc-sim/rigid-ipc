@@ -35,8 +35,8 @@ template <> struct hash<ccd::EdgeVertexCandidate> {
     inline size_t operator()(const ccd::EdgeVertexCandidate& ev_candidate) const
     {
         std::hash<size_t> int_hasher;
-        return int_hasher(ev_candidate.edge_index) ^
-               int_hasher(ev_candidate.vertex_index);
+        return int_hasher(ev_candidate.edge_index)
+            ^ int_hasher(ev_candidate.vertex_index);
     }
 };
 } // namespace std
@@ -89,18 +89,18 @@ public:
     void resize(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements,
         const Eigen::MatrixX2i edges,
-        const double radius = 0.0);
+        const double inflation_radius = 0.0);
 
     /// @brief Add a vertex as a AABB containing the time swept edge.
     void addVertex(const Eigen::Vector2d& v,
         const Eigen::Vector2d& u,
         const int index,
-        const double radius = 0.0);
+        const double inflation_radius = 0.0);
 
     /// @brief Add all vertices as AABBs containing the time swept edge.
     void addVertices(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements,
-        const double radius = 0.0);
+        const double inflation_radius = 0.0);
 
     /// @brief Add an edge as a AABB containing the time swept quad.
     void addEdge(const Eigen::Vector2d& vi,
@@ -108,13 +108,13 @@ public:
         const Eigen::Vector2d& ui,
         const Eigen::Vector2d& uj,
         const int index,
-        const double radius = 0.0);
+        const double inflation_radius = 0.0);
 
     /// @brief Add all edges as AABBs containing the time swept quad.
     void addEdges(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements,
         const Eigen::MatrixX2i& edges,
-        const double radius = 0.0);
+        const double inflation_radius = 0.0);
 
     /// @brief Compute the candidate edge-vertex intersections.
     void getVertexEdgePairs(const Eigen::MatrixX2i& edges,

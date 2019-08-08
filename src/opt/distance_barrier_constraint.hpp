@@ -81,15 +81,7 @@ namespace opt {
         EdgeVertexCandidates m_ev_distance_active;
 
         Eigen::VectorXi m_constraint_map; ///< map total number of possible
-                                        ///< constraints to active set
-
-        void compute_candidate_intersections_hashgrid(
-            const Eigen::MatrixXd& vertices_t1,
-            EdgeVertexCandidates& candidates) const;
-
-        void compute_candidate_intersections_brute_force(
-            const Eigen::MatrixXd& vertices_t1,
-            EdgeVertexCandidates& candidates) const;
+                                          ///< constraints to active set
 
         void filter_active_barriers(const Eigen::MatrixXd& vertices,
             const EdgeVertexCandidates& candidates,

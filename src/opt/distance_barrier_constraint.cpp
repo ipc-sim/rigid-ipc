@@ -61,10 +61,8 @@ namespace opt {
 
     void DistanceBarrierConstraint::detectCollisions(const Eigen::MatrixXd& Uk)
     {
-        CollisionConstraint::detectCollisions(Uk);
-        Eigen::MatrixXd vertices_t1 = vertices + Uk;
-
-        EdgeVertexCandidates ev_distance_candidates;
+        // We want the distance barrier and the CCD to have a common broad-phase
+        EdgeVertexCandidates ev_candidates;
 
         PROFILE_POINT("distance_evaluation")
         NAMED_PROFILE_POINT("distance_evaluation__broad_phase", BROAD_PHASE)
@@ -72,31 +70,36 @@ namespace opt {
 
         PROFILE_START()
         PROFILE_START(BROAD_PHASE)
-        if (use_distance_hashgrid) {
-            compute_candidate_intersections_hashgrid(
-                vertices_t1, ev_distance_candidates);
-        } else {
-            compute_candidate_intersections_brute_force(
-                vertices_t1, ev_distance_candidates);
-        }
+        detect_edge_vertex_collision_candidates(vertices, Uk, edges, group_ids,
+            ev_candidates, detection_method, m_barrier_epsilon);
         PROFILE_END(BROAD_PHASE)
 
         PROFILE_START(NARROW_PHASE)
-        filter_active_barriers(vertices_t1, ev_distance_candidates,
+        // Active candidates are those that are within the epsilon bound.
+        Eigen::MatrixXd vertices_t1 = vertices + Uk;
+        filter_active_barriers(vertices_t1, ev_candidates,
             active_constraint_scale, m_ev_distance_active);
-
 
         m_constraint_map.resize(vertices.rows() * edges.rows());
         m_constraint_map.setConstant(-1);
         m_num_active_constraints = int(m_ev_distance_active.size());
 
         for (size_t i = 0; i < m_ev_distance_active.size(); ++i) {
-            const auto& ev_candidate = ev_distance_candidates[i];
+            const auto& ev_candidate = ev_candidates[i];
             long edge_id = ev_candidate.edge_index;
             long vertex_id = ev_candidate.vertex_index;
             m_constraint_map(vertex_id * edges.rows() + edge_id) = int(i);
         }
-        /// extend to include collisions
+
+        // Do the CCD narrow-phase to get the actual impacts.
+        edge_impact_map.resize(edges.rows());
+        if (!extend_collision_set) {
+            ev_impacts.clear();
+        }
+        ccd::detect_edge_vertex_collisions_from_candidates(
+            vertices, Uk, edges, ev_candidates, ev_impacts);
+
+        // Extend to include collisions.
         for (auto& ev_impact : ev_impacts) {
             long vertex_id = ev_impact.vertex_index;
             long edge_id = ev_impact.edge_index;
@@ -111,43 +114,12 @@ namespace opt {
         PROFILE_END()
     }
 
-    void DistanceBarrierConstraint::compute_candidate_intersections_brute_force(
-        const Eigen::MatrixXd& vertices_t1,
-        EdgeVertexCandidates& ev_candidates) const
-    {
-        detect_edge_vertex_collisions_brute_force(vertices_t1,
-            Eigen::MatrixXd::Zero(vertices_t1.rows(), vertices_t1.cols()),
-            edges, group_ids, ev_candidates);
-    }
-
-    void DistanceBarrierConstraint::compute_candidate_intersections_hashgrid(
-        const Eigen::MatrixXd& vertices_t1,
-        EdgeVertexCandidates& ev_candidates) const
-    {
-        // TODO: Add vertex groups.
-        ev_candidates.clear();
-
-        HashGrid hashgrid;
-        // TODO: Add the actual displacements, so we can have a complete
-        //       candidate set.
-        Eigen::MatrixXd displacements
-            = Eigen::MatrixXd::Zero(vertices_t1.rows(), vertices_t1.cols());
-        // TODO: Use vertices_t0 with displacements instead of the vertices_t1.
-        hashgrid.resize(vertices_t1, displacements, edges, m_barrier_epsilon);
-        hashgrid.addVertices(vertices_t1, displacements, m_barrier_epsilon);
-        hashgrid.addEdges(vertices_t1, displacements, edges, m_barrier_epsilon);
-
-        // Assume checking if vertex is and end-point of the edge is done by
-        // `hashgrid.getVertexEdgePairs(...)`.
-        hashgrid.getVertexEdgePairs(edges, group_ids, ev_candidates);
-    }
     void DistanceBarrierConstraint::filter_active_barriers(
         const Eigen::MatrixXd& vertices,
         const EdgeVertexCandidates& candidates,
         const double thr,
         EdgeVertexCandidates& active)
     {
-
         active.clear();
         for (size_t i = 0; i < candidates.size(); ++i) {
             const auto& ev_candidate = candidates[i];
