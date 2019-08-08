@@ -17,6 +17,8 @@ namespace opt {
         ~BarrierProblem() override {}
 
         double eval_f(const Eigen::VectorXd& x) override;
+        double eval_f(const Eigen::VectorXd& x,
+            const bool update_constraint_set) override;
 
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
 

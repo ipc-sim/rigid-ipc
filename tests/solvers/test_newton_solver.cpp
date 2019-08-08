@@ -21,6 +21,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
     problem.x0.setRandom();
 
     problem.f = [](const Eigen::VectorXd& x) { return x.squaredNorm() / 2.0; };
+    problem.f = [](const Eigen::VectorXd& x) { return x.squaredNorm() / 2.0; };
     problem.grad_f = [](const Eigen::VectorXd& x) { return x; };
     problem.hessian_f = [](const Eigen::VectorXd& x) {
         return Eigen::MatrixXd::Identity(x.rows(), x.rows());

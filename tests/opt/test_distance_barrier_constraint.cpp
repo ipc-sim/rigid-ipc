@@ -101,7 +101,7 @@ TEST_CASE("Distance Barrier Constraint",
     }
 
     Eigen::VectorXd actual_barrier;
-    barrier.use_distance_hashgrid = false; // use brute force so we know the order
+    barrier.detection_method = ccd::DetectionMethod::BRUTE_FORCE; // use brute force so we know the order
     barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     barrier.compute_constraints(displacements, actual_barrier);
     REQUIRE(actual_barrier.rows() == expected_barrier.rows());

@@ -26,7 +26,7 @@ namespace physics {
     RigidBodyProblem::RigidBodyProblem(const std::string& name)
         : SimulationProblem(name)
         , use_chain_functional(false)
-        , update_constraint_set(true)
+        , m_update_constraint_set(true)
         , coefficient_restitution(0)
         , gravity_(Eigen::Vector3d::Zero())
         , collision_eps(2)
@@ -45,7 +45,7 @@ namespace physics {
 
         // set parameters
         use_chain_functional = params["use_chain_functional"].get<bool>();
-        update_constraint_set = params["update_constraint_set"].get<bool>();
+        m_update_constraint_set = params["update_constraint_set"].get<bool>();
         collision_eps = params["collision_eps"].get<double>();
         coefficient_restitution
             = params["coefficient_restitution"].get<double>();
@@ -68,7 +68,7 @@ namespace physics {
         nlohmann::json json;
         json["constraint"] = m_constraint_ptr->name();
         json["use_chain_functional"] = use_chain_functional;
-        json["update_constraint_set"] = update_constraint_set;
+        json["update_constraint_set"] = m_update_constraint_set;
         json["collision_eps"] = collision_eps;
         json["coefficient_restitution"] = coefficient_restitution;
         json["gravity"] = io::to_json(gravity_);
@@ -107,10 +107,11 @@ namespace physics {
             rbs.push_back(jrb);
             p += rb.mass * rb.velocity.head(2);
             L += rb.moment_of_inertia * rb.velocity(2);
-            T += 1.0/2.0 * rb.mass * rb.velocity.head(2).transpose() * rb.velocity.head(2);
-            T += 1.0/2.0 * rb.moment_of_inertia * rb.velocity(2) * rb.velocity(2);
-            G += - rb.mass * gravity().transpose() * rb.position;
-
+            T += 1.0 / 2.0 * rb.mass * rb.velocity.head(2).transpose()
+                * rb.velocity.head(2);
+            T += 1.0 / 2.0 * rb.moment_of_inertia * rb.velocity(2)
+                * rb.velocity(2);
+            G += -rb.mass * gravity().transpose() * rb.position;
         }
         json["rigid_bodies"] = rbs;
         json["linear_momentum"] = io::to_json(Eigen::VectorXd(p));
@@ -181,13 +182,14 @@ namespace physics {
         // -------------------------------------
         solve_velocities();
         // TODO: check this two are the same !!!
-//        if (coefficient_restitution > 0) {
-//            solve_velocities();
-//        } else {
-//            for (auto& rb : m_assembler.m_rbs) {
-//                rb.velocity = (rb.position - rb.position_prev) / time_step;
-//            }
-//        }
+        //        if (coefficient_restitution > 0) {
+        //            solve_velocities();
+        //        } else {
+        //            for (auto& rb : m_assembler.m_rbs) {
+        //                rb.velocity = (rb.position - rb.position_prev) /
+        //                time_step;
+        //            }
+        //        }
 
         return detect_collisions(vertices_t0, q1, CollisionCheck::EXACT);
     }
@@ -531,23 +533,37 @@ namespace physics {
     ////////////////////////////////////////////////////////////////////////////
     Eigen::MatrixXd RigidBodyProblem::update_g(const Eigen::VectorXd& sigma)
     {
+        return update_g(sigma, m_update_constraint_set);
+    }
+
+    Eigen::MatrixXd RigidBodyProblem::update_g(
+        const Eigen::VectorXd& sigma, const bool update_constraint_set)
+    {
         Eigen::MatrixXd m_xk = m_assembler.world_vertices(sigma);
         Eigen::MatrixXd uk = m_xk - vertices_t0;
 
         if (update_constraint_set) {
-            m_constraint_ptr->detectCollisions(uk);
+            m_constraint_ptr->update_collision_set(uk);
+        }
+        if (m_constraint_ptr->is_distance_barrier()){
+            m_constraint_ptr->update_active_set(uk);
         }
         return uk;
     }
 
     Eigen::VectorXd RigidBodyProblem::eval_g(const Eigen::VectorXd& sigma)
     {
+        return eval_g(sigma, /*update_cstr_set=*/m_update_constraint_set);
+    }
+
+    Eigen::VectorXd RigidBodyProblem::eval_g(
+        const Eigen::VectorXd& sigma, const bool update_constraint_set)
+    {
         Eigen::VectorXd g_uk;
-        Eigen::MatrixXd uk = update_g(sigma);
+        Eigen::MatrixXd uk = update_g(sigma, update_constraint_set);
         m_constraint_ptr->compute_constraints(uk, g_uk);
         return g_uk;
     }
-
     Eigen::MatrixXd RigidBodyProblem::eval_jac_g(const Eigen::VectorXd& sigma)
     {
 

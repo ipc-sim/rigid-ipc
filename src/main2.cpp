@@ -1,21 +1,46 @@
 #include <SimState.hpp>
 #include <logger.hpp>
+#include <profiler.hpp>
+
+#include <CLI/CLI.hpp>
 
 int main(int argc, char* argv[])
 {
     spdlog::set_level(spdlog::level::info);
     ccd::SimState sim;
 
-    // TODO: add proper CLI
-    if (argc >= 3) {
-        sim.load_scene(argv[1]);
-        if (argc >= 4) {
-            int max_iter = atoi(argv[3]);
-            sim.m_max_simulation_steps = max_iter;
-            spdlog::info("running {} iterations", max_iter);
-        }
-        sim.run_simulation(argv[2]);
-    } else {
-        spdlog::error("provided only {} arguments ", argc);
+    struct {
+        std::string scene_path = "";
+        std::string output_dir = "";
+        int num_it = -1;
+    } args;
+
+    CLI::App app { "run headless simulation" };
+    app.add_option("scene_path,-s,--scene-path", args.scene_path,
+           "JSON file with input scene.")
+        ->required();
+    app.add_option("output_dir,-o,--output-path", args.output_dir,
+           "directory for results.")
+        ->required();
+
+    app.add_option("--num-iterations", args.num_it, "number of iterations");
+
+    try {
+        app.parse(argc, argv);
+    } catch (const CLI::ParseError& e) {
+        return app.exit(e);
     }
+
+    PROFILER_OUTDIR(args.output_dir)
+    std::string fout = fmt::format("{}/sim.json", args.output_dir);
+
+    sim.load_scene(args.scene_path);
+    if (args.num_it > 0) {
+        sim.m_max_simulation_steps = args.num_it;
+    }
+    spdlog::info("Running {} iterations", sim.m_max_simulation_steps);
+    sim.run_simulation(fout);
+    spdlog::info(
+        "To postprocess run:\n `python python/process_results/to_vtk_files.py {} {}`",
+        fout, args.output_dir);
 }

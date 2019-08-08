@@ -40,7 +40,7 @@ def main(args=None):
     output = args.output
     a = 0.4
     b = 0.5
-    c = 0.45
+    c = 0.40
     d = 0.4
     e = 0.5
     f = 0.25
@@ -76,6 +76,7 @@ def main(args=None):
         },
 
         "rigid_body_problem": { 
+            "coefficient_restitution": 1.0,
             "gravity": [0.0, -0.5, 0.0],
             "rigid_bodies" : rigid_bodies
         }

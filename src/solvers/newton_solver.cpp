@@ -171,16 +171,24 @@ namespace opt {
         double& step_length)
     {
 
+        PROFILE_POINT("line_search");
+        PROFILE_START();
+
         double step_norm = (step_length * dir).norm();
         bool success = false;
 
         int num_it = 0;
+        bool first_iter = true;
         while (step_norm >= min_step_length) {
+
             Eigen::VectorXd xi = x + step_length * dir;
-            double fxi = problem.eval_f(xi);
+            double fxi = problem.eval_f(xi, /*update_cstr_set=*/first_iter);
+            first_iter = false;
+
             bool min_rule = fxi < fx;
             bool cstr = !std::isinf(fxi);
 
+            num_it += 1;
             if (min_rule && cstr) {
                 success = true;
                 break; // while loop
@@ -188,8 +196,12 @@ namespace opt {
 
             step_length /= 2.0;
             step_norm = (step_length * dir).norm();
-            num_it += 1;
+
         }
+        PROFILE_MESSAGE(,
+            fmt::format(
+                "success,{},it,{},dir,{:10e}", success, num_it, dir.norm()))
+        PROFILE_END();
         return success;
     }
 

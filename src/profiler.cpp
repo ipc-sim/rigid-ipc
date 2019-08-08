@@ -80,8 +80,7 @@ namespace profiler {
     void Profiler::log(const std::string& fin)
     {
 
-        std::string parent_name
-            = fmt::format("{}/log_{}", LOGS_OUTPUT_DIR, log::now());
+        std::string parent_name = fmt::format("{}/log_{}", dout, log::now());
         if (mkdir(parent_name.c_str(), ACCESSPERMS) == 0) {
             write_summary(parent_name, fin);
             for (auto& p : points) {

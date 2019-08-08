@@ -9,6 +9,8 @@
 #include <viewer/igl_viewer_ext.hpp>
 
 #include "SimState.hpp"
+#include <profiler.hpp>
+
 
 namespace ccd {
 
@@ -61,7 +63,11 @@ public:
 
     inline void simulation_step()
     {
+        PROFILE_MAIN_POINT("simulation_step")
+        PROFILE_START()
         m_state.simulation_step();
+        PROFILE_END()
+        LOG_PROFILER(m_state.scene_file);
         redraw_scene();
     }
 

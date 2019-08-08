@@ -69,7 +69,8 @@ namespace physics {
             return vertices_q1;
         }
 
-        Eigen::MatrixXd dof_positions() const override {
+        Eigen::MatrixXd dof_positions() const override
+        {
             Eigen::MatrixXd p = m_assembler.rb_positions_t1();
             unflatten_dof(p);
             return p;
@@ -94,7 +95,6 @@ namespace physics {
             assert(vec.rows() % 3 == 0);
             vec.resize(3, vec.rows() / 3);
             vec.transposeInPlace();
-
         }
 
         const Eigen::MatrixXi& edges() const override
@@ -165,6 +165,7 @@ namespace physics {
             Eigen::SparseMatrix<double>& jac_gx) override;
 
         Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma);
+        Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma, const bool update_constraint_set);
 
         ///////////////////////////////////////////////////////////////////////
         /// BARRIER SPECIFIC
@@ -181,10 +182,13 @@ namespace physics {
             return m_constraint_ptr->set_barrier_epsilon(eps);
         }
 
+        Eigen::VectorXd eval_g(const Eigen::VectorXd& x,
+            const bool update_constraint_set) override;
+
         physics::RigidBodyAssembler m_assembler;
         std::shared_ptr<opt::CollisionConstraint> m_constraint_ptr;
         bool use_chain_functional;
-        bool update_constraint_set;
+        bool m_update_constraint_set;
         double coefficient_restitution;
         Eigen::VectorXd gravity_;
         double collision_eps;

@@ -270,7 +270,7 @@ namespace physics {
         ccd::unflatten(Uk, 2);
 
         if (!is_linesearch_active && update_constraint_set) {
-            constraint_ptr->detectCollisions(Uk);
+            constraint_ptr->update_collision_set(Uk);
         }
         return Uk;
     }

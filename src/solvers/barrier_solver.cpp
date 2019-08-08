@@ -153,7 +153,11 @@ namespace opt {
         return general_problem->is_dof_fixed();
     }
 
-    double BarrierProblem::eval_f(const Eigen::VectorXd& x)
+    double BarrierProblem::eval_f(const Eigen::VectorXd& x) {
+        return eval_f(x, /*update_cstr_set=*/true);
+    }
+    double BarrierProblem::eval_f(
+        const Eigen::VectorXd& x, const bool update_constraint_set)
     {
         NAMED_PROFILE_POINT("barrier_problem__eval_f", EVAL_F)
         NAMED_PROFILE_POINT("barrier_problem__eval_g", EVAL_G)
@@ -163,7 +167,7 @@ namespace opt {
         PROFILE_END(EVAL_F)
 
         PROFILE_START(EVAL_G)
-        auto gx_ = general_problem->eval_g(x);
+        auto gx_ = general_problem->eval_g(x, update_constraint_set);
         double gx = gx_.sum();
         PROFILE_MESSAGE(EVAL_G,
             fmt::format("epsilon,{:10e},gx_sum,{:10e}",
@@ -226,7 +230,6 @@ namespace opt {
         for (const auto& ddgx_i : ddgx) {
             f_uk_hessian += ddgx_i;
         }
-
     }
 
     void BarrierProblem::enable_line_search_mode(const Eigen::VectorXd& max_x)

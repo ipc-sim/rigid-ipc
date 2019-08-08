@@ -51,7 +51,7 @@ namespace opt {
         resetBarrierEpsilon();
     }
 
-    void TimeBarrierConstraint::detectCollisions(const Eigen::MatrixXd& Uk)
+    void TimeBarrierConstraint::update_collision_set(const Eigen::MatrixXd& Uk)
     {
         const double time_scale = 1 + 2 * this->barrier_epsilon;
         ccd::detect_edge_vertex_collisions(vertices, time_scale * Uk, edges,
