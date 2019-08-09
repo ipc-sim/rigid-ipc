@@ -48,7 +48,7 @@ namespace opt {
             const Eigen::VectorXi& group_ids,
             const Eigen::MatrixXd& Uk);
 
-        virtual void detectCollisions(const Eigen::MatrixXd& Uk);
+        virtual void update_collision_set(const Eigen::MatrixXd& Uk);
 
         // For barrier constraints
         // -------------------------------------------------------------------
@@ -60,6 +60,13 @@ namespace opt {
         virtual void set_barrier_epsilon(const double)
         {
             throw NotImplementedError("set_barrier_epsilon not implemented");
+        }
+        // For distance barrier constraints
+        // -------------------------------------------------------------------
+        virtual bool is_distance_barrier() { return false; }
+        virtual void update_active_set(const Eigen::MatrixXd& Uk)
+        {
+            throw NotImplementedError("update_active_set not implemented");
         }
 
         // Assembly of global Matrices
@@ -154,7 +161,6 @@ namespace opt {
         Eigen::VectorXi group_ids;
 
     protected:
-        bool extend_collision_set;
         std::string name_;
     };
 

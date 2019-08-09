@@ -15,16 +15,21 @@ namespace physics {
 
     RigidBody RigidBody::from_velocity(const Eigen::MatrixXd& vertices,
         const Eigen::MatrixX2i& edges,
+        const Eigen::Vector3d& position,
         const Eigen::Vector3d& velocity,
         const Eigen::Vector3b& is_dof_fixed)
     {
         // move vertices so they center of mass is at 0,0
-        Eigen::RowVector2d x = center_of_mass(vertices, edges);
-        Eigen::MatrixX2d centered_vertices = vertices.rowwise() - x;
+        Eigen::MatrixXd vertices_ = vertices;
+        vertices_.rowwise() += position.head(2).transpose();
+
+        Eigen::RowVector2d x = center_of_mass(vertices_, edges);
+        Eigen::MatrixX2d centered_vertices = vertices_.rowwise() - x;
 
         // set position so current vertices match input
         Eigen::Vector3d position_t1 = Eigen::Vector3d::Zero();
-        position_t1.segment(0, 2) = x;
+        position_t1.segment(0, 2) += x;
+        position_t1(2) = position(2);
 
         // set previous_step position to:
         Eigen::Vector3d position_t0 = position_t1;

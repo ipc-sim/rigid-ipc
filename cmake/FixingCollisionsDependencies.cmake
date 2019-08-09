@@ -98,3 +98,8 @@ if(NOT TARGET nlohmann_json::nlohmann_json)
     option(JSON_MultipleHeaders "" ON)
     add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/json json)
 endif()
+
+if(NOT TARGET CLI11::CLI11)
+    download_cli11()
+    add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/cli11)
+endif()

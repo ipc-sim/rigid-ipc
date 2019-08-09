@@ -165,6 +165,7 @@ add_executable(${PROJECT_NAME}_ngui
 
 target_include_directories(${PROJECT_NAME}_ngui PRIVATE src)
 target_link_libraries(${PROJECT_NAME}_ngui PUBLIC ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_ngui PUBLIC CLI11::CLI11)
 
 ################################################################################
 # Required Libraries

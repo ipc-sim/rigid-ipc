@@ -93,15 +93,15 @@ TEST_CASE("Distance Barrier Constraint",
         // clang-format off
         // loop over edges then vertices
         expected_barrier <<
-            std::numeric_limits<double>::infinity(),
             spline_barrier<double>(0.5, barrier_epsilon),
             spline_barrier<double>(0.5, barrier_epsilon),
-            spline_barrier<double>(0.5, barrier_epsilon);
+            spline_barrier<double>(0.5, barrier_epsilon),
+            std::numeric_limits<double>::infinity();
         // clang-format on
     }
 
     Eigen::VectorXd actual_barrier;
-    barrier.use_distance_hashgrid = false; // use brute force so we know the order
+    barrier.detection_method = ccd::DetectionMethod::BRUTE_FORCE; // use brute force so we know the order
     barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     barrier.compute_constraints(displacements, actual_barrier);
     REQUIRE(actual_barrier.rows() == expected_barrier.rows());
@@ -176,11 +176,11 @@ TEST_CASE("Distance Barrier Constraint Gradient",
         Eigen::VectorXd fx;
         Eigen::MatrixXd x = u;
         ccd::unflatten(x, 2);
-        barrier.initialize(vertices, edges, Eigen::VectorXi(), x);
         barrier.compute_constraints(x, fx);
         return fx;
     };
     Eigen::MatrixXd x = displacements;
+
     ccd::flatten(x);
     ccd::finite_jacobian(x, f, approx_jac);
 

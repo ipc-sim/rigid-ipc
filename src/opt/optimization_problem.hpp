@@ -166,7 +166,16 @@ namespace opt {
         {
             throw NotImplementedError("set_barrier_epsilon not implemented");
         }
-
+        virtual double eval_f(
+            const Eigen::VectorXd& /*x*/, const bool /*update_constraint_set*/)
+        {
+            throw NotImplementedError("eval_f cstr_flag not implemented");
+        };
+        virtual Eigen::VectorXd eval_g(
+            const Eigen::VectorXd& /*x*/, const bool /*update_constraint_set*/)
+        {
+            throw NotImplementedError("eval_g cstr_flag not implemented");
+        }
         ////////////////////////////////////////////////////////////////////////
         /// @brief Call the intermediate_callback function.
         virtual bool eval_intermediate_callback(const Eigen::VectorXd& /*x*/)

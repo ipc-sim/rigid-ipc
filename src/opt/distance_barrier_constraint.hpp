@@ -28,6 +28,7 @@ namespace opt {
         {
             m_barrier_epsilon = eps;
         }
+        bool is_distance_barrier() override { return true; }
 
         void initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
@@ -36,7 +37,8 @@ namespace opt {
 
         int number_of_constraints() override;
 
-        virtual void detectCollisions(const Eigen::MatrixXd& Uk) override;
+        void update_collision_set(const Eigen::MatrixXd& Uk) override;
+        void update_active_set(const Eigen::MatrixXd& Uk) override;
 
         void compute_constraints(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers) override;
@@ -72,16 +74,13 @@ namespace opt {
         double custom_inital_epsilon;
         /// @brief active constraints have distances < scale * barrier_epsilon
         double active_constraint_scale;
-        /// @brief use hashgrid for distance-constraint evaluation
-        bool use_distance_hashgrid;
+
 
     protected:
         double m_barrier_epsilon;
         int m_num_active_constraints;
+        EdgeVertexCandidates m_ev_candidates;
         EdgeVertexCandidates m_ev_distance_active;
-
-        Eigen::VectorXi m_constraint_map; ///< map total number of possible
-                                          ///< constraints to active set
 
         void filter_active_barriers(const Eigen::MatrixXd& vertices,
             const EdgeVertexCandidates& candidates,

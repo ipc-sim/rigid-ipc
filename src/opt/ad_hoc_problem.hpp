@@ -23,7 +23,8 @@ namespace opt {
     class AdHocProblem : public OptimizationProblem {
 
     public:
-        callback_f f;           ///< @brief Objective function
+        std::function<double(const Eigen::VectorXd&)>
+            f;                  ///< @brief Objective function
         callback_grad_f grad_f; ///< @brief Gradient of the objective function
         callback_hessian_f
             hessian_f;        ///< @brief Hessian of the objective function
@@ -45,6 +46,10 @@ namespace opt {
         /// FUNCTIONAL
         /// /////////////////////////
         double eval_f(const Eigen::VectorXd& x) override;
+        double eval_f(const Eigen::VectorXd& x, const bool) override
+        {
+            return eval_f(x);
+        }
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
         Eigen::SparseMatrix<double> eval_hessian_f(
             const Eigen::VectorXd& x) override;
@@ -61,6 +66,9 @@ namespace opt {
         /// CONSTRAINTS
         /// /////////////////////////
         Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
+        Eigen::VectorXd eval_g(const Eigen::VectorXd& x, const bool ) override{
+            return eval_g(x);
+        }
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x) override;

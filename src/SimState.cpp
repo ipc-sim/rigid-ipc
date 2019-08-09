@@ -134,7 +134,6 @@ bool SimState::init(const nlohmann::json& args_in)
             "initial_epsilon":"min_toi",
             "custom_initial_epsilon":1.0,
             "detection_method": "hash_grid",
-            "extend_collision_set": true,
             "custom_hashgrid_cellsize":-1
         },
        "distance_barrier_constraint":{
@@ -142,12 +141,10 @@ bool SimState::init(const nlohmann::json& args_in)
            "detection_method": "hash_grid",
            "use_distance_hashgrid": true,
            "active_constraint_scale" : 1.5,
-           "extend_collision_set": false,
            "custom_hashgrid_cellsize":-1
        },
        "volume_constraint":{
            "detection_method": "hash_grid",
-           "extend_collision_set": true,
            "volume_epsilon": 1e-6,
            "custom_hashgrid_cellsize":-1
        },
@@ -247,6 +244,10 @@ nlohmann::json SimState::get_active_config()
 
 void SimState::run_simulation(const std::string& fout)
 {
+
+    PROFILE_MAIN_POINT("run_simulation")
+    PROFILE_START()
+
     spdlog::info("starting simulation {}", scene_file);
     m_solve_collisions = true;
     for (int i = 0; i < m_max_simulation_steps; ++i) {
@@ -255,6 +256,9 @@ void SimState::run_simulation(const std::string& fout)
     }
     save_simulation(fout);
     spdlog::info("simulation results saved to {}", fout);
+
+    PROFILE_END()
+    LOG_PROFILER(scene_file);
 }
 
 void SimState::simulation_step()
@@ -277,7 +281,7 @@ void SimState::simulation_step()
 
 bool SimState::solve_collision()
 {
-    PROFILE_MAIN_POINT("sim_state_solve_collisions");
+    PROFILE_POINT("sim_state_solve_collisions");
 
     if (m_dirty_constraints) {
         problem_ptr->update_constraint();
@@ -291,7 +295,7 @@ bool SimState::solve_collision()
     result = ccd_solver_ptr->solve(*problem_ptr);
 
     PROFILE_END();
-    LOG_PROFILER(scene_file);
+
 
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 

@@ -53,6 +53,7 @@ namespace profiler {
 
         void push(const std::shared_ptr<ProfilerPoint>& point);
         void pop();
+        void output_dir(const std::string& d) { dout = d; }
         const std::vector<std::string>& stack() { return stack_; }
         std::shared_ptr<ProfilerPoint> create_point(std::string name);
         std::shared_ptr<ProfilerPoint> create_main_point(std::string name);
@@ -60,6 +61,7 @@ namespace profiler {
         void log(const std::string& fin = "");
 
     protected:
+        std::string dout = LOGS_OUTPUT_DIR;
         Profiler() {}
         void write_summary(const std::string& dout, const std::string& fin);
         void write_point_summary(
@@ -107,7 +109,8 @@ namespace profiler {
 #define PROFILER_CLEAR() ccd::profiler::Profiler::instance().clear();
 #define LOG_PROFILER(SceneFile)                                                \
     ccd::profiler::Profiler::instance().log(SceneFile);
-
+#define PROFILER_OUTDIR(OutputDir)                                             \
+    ccd::profiler::Profiler::instance().output_dir(OutputDir);
 #else
 
 #define PROFILE_MAIN_POINT(Description) ;
@@ -118,5 +121,6 @@ namespace profiler {
 #define PROFILE_MESSAGE(Name, Val) ;
 #define PROFILER_CLEAR() ;
 #define LOG_PROFILER(SceneFile) ;
+#define PROFILER_OUTDIR(OutputDir)  ;
 
 #endif

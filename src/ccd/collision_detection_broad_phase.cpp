@@ -17,12 +17,11 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     EdgeVertexImpacts& ev_impacts,
-    DetectionMethod method,
-    bool reset_impacts)
+    DetectionMethod method)
 
 {
     return detect_edge_vertex_collisions(vertices, displacements, edges,
-        Eigen::VectorXi(), ev_impacts, method, reset_impacts);
+        Eigen::VectorXi(), ev_impacts, method);
 }
 
 // Find all edge-vertex collisions in one time step.
@@ -31,8 +30,7 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     const Eigen::MatrixX2i& edges,
     const Eigen::VectorXi& group_ids,
     EdgeVertexImpacts& ev_impacts,
-    DetectionMethod method,
-    bool reset_impacts)
+    DetectionMethod method)
 {
     assert(vertices.size() == displacements.size());
 
@@ -43,7 +41,7 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
 
     // Do the narrow phase by detecting actual impacts from the candidate set
     detect_edge_vertex_collisions_from_candidates(vertices, displacements,
-        edges, ev_candidates, ev_impacts, reset_impacts);
+        edges, ev_candidates, ev_impacts);
 }
 
 void detect_edge_vertex_collision_candidates(const Eigen::MatrixXd& vertices,
@@ -69,7 +67,7 @@ void detect_edge_vertex_collision_candidates(const Eigen::MatrixXd& vertices,
         break;
     case HASH_GRID:
         detect_edge_vertex_collision_candidates_hash_grid(
-            vertices, displacements, edges, group_ids, ev_candidates);
+            vertices, displacements, edges, group_ids, ev_candidates, inflation_radius);
         break;
     }
 

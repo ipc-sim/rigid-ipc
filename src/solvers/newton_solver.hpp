@@ -45,28 +45,6 @@ namespace opt {
             OptimizationProblem& problem) override;
 
         /**
-         * @brief Solve for the newton direction for the limited degrees of
-         * freedom.
-         *
-         * The fixed dof of x will have a delta_x of zero.
-         *
-         * @param[in]  gradient  Gradient of the free dof of the objective
-         *                       function.
-         * @param[in]  hessian   Hessian of the free dof of the objective
-         *                       function.
-         * @param[in]  free_dof  Indices of the free degrees of freedom.
-         * @param[out] delta_x   Output full dof newton direction.
-         * @param[in]  make_psd  If delta_x is not a descent direction, then
-         * make the hessian positive semi-definite.
-         *
-         * @return Returns true if the solve was successful.
-         */
-        bool compute_free_direction(const Eigen::VectorXd& gradient_free,
-            const Eigen::SparseMatrix<double>& hessian_free,
-            Eigen::VectorXd& delta_x,
-            bool make_psd = false);
-
-        /**
          * @brief Solve for the Newton direction
          *        (\f$\Delta x = -H^{-1} \nabla f \f$).
          *
@@ -85,6 +63,12 @@ namespace opt {
 
         void settings(const nlohmann::json& /*json*/) override;
         nlohmann::json settings() const override;
+
+        bool line_search(OptimizationProblem& problem,
+            const Eigen::VectorXd& x,
+            const Eigen::VectorXd& dir,
+            const double fx,
+            double& step_length);
     };
 
     /**

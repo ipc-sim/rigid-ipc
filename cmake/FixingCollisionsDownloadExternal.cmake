@@ -72,3 +72,11 @@ function(download_json)
         GIT_TAG v3.7.0
     )
 endfunction()
+
+
+function(download_cli11)
+    custom_download_project(cli11
+        URL     https://github.com/CLIUtils/CLI11/archive/v1.6.1.tar.gz
+        URL_MD5 48ef97262adb0b47a2f0a7edbda6e2aa
+    )
+endfunction()

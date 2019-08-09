@@ -1,5 +1,6 @@
 #include "distance_barrier_constraint.hpp"
 
+#include <ccd/collision_detection.hpp>
 #include <igl/slice_mask.h>
 
 #include <opt/barrier.hpp>
@@ -18,28 +19,24 @@ namespace opt {
         : CollisionConstraint(name)
         , custom_inital_epsilon(1.0)
         , active_constraint_scale(1.5)
-        , use_distance_hashgrid(true)
         , m_barrier_epsilon(0.0)
         , m_num_active_constraints(0)
 
     {
-        extend_collision_set = false;
+
     }
 
     void DistanceBarrierConstraint::settings(const nlohmann::json& json)
     {
         CollisionConstraint::settings(json);
         custom_inital_epsilon = json["custom_initial_epsilon"].get<double>();
-        use_distance_hashgrid = json["use_distance_hashgrid"].get<bool>();
         active_constraint_scale = json["active_constraint_scale"].get<double>();
-        extend_collision_set = false;
     }
 
     nlohmann::json DistanceBarrierConstraint::settings() const
     {
         nlohmann::json json = CollisionConstraint::settings();
         json["custom_inital_epsilon"] = custom_inital_epsilon;
-        json["use_distance_hashgrid"] = use_distance_hashgrid;
         json["active_constraint_scale"] = active_constraint_scale;
 
         return json;
@@ -52,6 +49,7 @@ namespace opt {
     {
         m_barrier_epsilon = custom_inital_epsilon;
         CollisionConstraint::initialize(vertices, edges, group_ids, Uk);
+        update_active_set(Uk);
     }
 
     int DistanceBarrierConstraint::number_of_constraints()
@@ -59,82 +57,62 @@ namespace opt {
         return m_num_active_constraints;
     }
 
-    void DistanceBarrierConstraint::detectCollisions(const Eigen::MatrixXd& Uk)
+    void DistanceBarrierConstraint::update_collision_set(
+        const Eigen::MatrixXd& Uk)
     {
-        // We want the distance barrier and the CCD to have a common broad-phase
-        EdgeVertexCandidates ev_candidates;
+        NAMED_PROFILE_POINT("distance_barrier__update_collision_set", BROAD_PHASE)
 
-        PROFILE_POINT("distance_evaluation")
-        NAMED_PROFILE_POINT("distance_evaluation__broad_phase", BROAD_PHASE)
-        NAMED_PROFILE_POINT("distance_evaluation__narrow_phase", NARROW_PHASE)
-
-        PROFILE_START()
         PROFILE_START(BROAD_PHASE)
+        m_ev_candidates.clear();
         detect_edge_vertex_collision_candidates(vertices, Uk, edges, group_ids,
-            ev_candidates, detection_method, m_barrier_epsilon);
+            m_ev_candidates, detection_method, m_barrier_epsilon);
         PROFILE_END(BROAD_PHASE)
-
-        PROFILE_START(NARROW_PHASE)
-        // Active candidates are those that are within the epsilon bound.
-        Eigen::MatrixXd vertices_t1 = vertices + Uk;
-        filter_active_barriers(vertices_t1, ev_candidates,
-            active_constraint_scale, m_ev_distance_active);
-
-        m_constraint_map.resize(vertices.rows() * edges.rows());
-        m_constraint_map.setConstant(-1);
-        m_num_active_constraints = int(m_ev_distance_active.size());
-
-        for (size_t i = 0; i < m_ev_distance_active.size(); ++i) {
-            const auto& ev_candidate = ev_candidates[i];
-            long edge_id = ev_candidate.edge_index;
-            long vertex_id = ev_candidate.vertex_index;
-            m_constraint_map(vertex_id * edges.rows() + edge_id) = int(i);
-        }
-
-        // Do the CCD narrow-phase to get the actual impacts.
-        ccd::detect_edge_vertex_collisions_from_candidates(vertices, Uk, edges,
-            ev_candidates, ev_impacts, /*reset_impacts=*/!extend_collision_set);
-
-        // Extend to include collisions.
-        for (auto& ev_impact : ev_impacts) {
-            long vertex_id = ev_impact.vertex_index;
-            long edge_id = ev_impact.edge_index;
-            long c_id = vertex_id * edges.rows() + edge_id;
-
-            if (m_constraint_map(c_id) == -1) {
-                m_constraint_map(c_id) = m_num_active_constraints;
-                m_num_active_constraints += 1;
-            }
-        }
-        PROFILE_END(NARROW_PHASE)
-        PROFILE_END()
     }
 
-    void DistanceBarrierConstraint::filter_active_barriers(
-        const Eigen::MatrixXd& vertices,
-        const EdgeVertexCandidates& candidates,
-        const double thr,
-        EdgeVertexCandidates& active)
+    void DistanceBarrierConstraint::update_active_set(const Eigen::MatrixXd& Uk)
     {
-        active.clear();
-        for (size_t i = 0; i < candidates.size(); ++i) {
-            const auto& ev_candidate = candidates[i];
-            // a and b are the endpoints of the edge; c is the vertex
-            long edge_id = ev_candidate.edge_index;
-            int a_id = edges.coeff(edge_id, 0);
-            int b_id = edges.coeff(edge_id, 1);
-            long c_id = ev_candidate.vertex_index;
-            assert(a_id != c_id && b_id != c_id);
-            Eigen::VectorXd a = vertices.row(a_id);
-            Eigen::VectorXd b = vertices.row(b_id);
-            Eigen::VectorXd c = vertices.row(c_id);
+        NAMED_PROFILE_POINT("distance_barrier__update_active_set", NARROW_PHASE)
+        PROFILE_START(NARROW_PHASE)
 
-            double distance = sqrt(point_to_edge_sq_distance<double>(a, b, c));
-            bool is_active = distance < thr * m_barrier_epsilon;
-            if (is_active) {
-                active.push_back(ev_candidate);
+        m_ev_distance_active.clear();
+        ev_impacts.clear();
+
+        Eigen::MatrixXd vertices_t1 = vertices + Uk;
+        for (const EdgeVertexCandidate& ev_candidate : m_ev_candidates) {
+            double toi, alpha;
+            bool active_impact = compute_edge_vertex_time_of_impact(
+                vertices.row(edges(ev_candidate.edge_index, 0)),
+                vertices.row(edges(ev_candidate.edge_index, 1)),
+                vertices.row(ev_candidate.vertex_index),
+                Uk.row(edges(ev_candidate.edge_index, 0)),
+                Uk.row(edges(ev_candidate.edge_index, 1)),
+                Uk.row(ev_candidate.vertex_index), toi, alpha);
+
+            if (active_impact) {
+                // NOTE: ev_impacts are used during post-process of velocities
+                ev_impacts.push_back(EdgeVertexImpact(
+                            toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index));
+                continue;
+            }
+
+            double distance = sqrt(point_to_edge_sq_distance<double>(
+                vertices_t1.row(edges(ev_candidate.edge_index, 0)),
+                vertices_t1.row(edges(ev_candidate.edge_index, 1)),
+                vertices_t1.row(ev_candidate.vertex_index)));
+
+            bool distance_active
+                = distance < active_constraint_scale * m_barrier_epsilon;
+            if (distance_active) {
+                m_ev_distance_active.push_back(ev_candidate);
             }
         }
+        PROFILE_MESSAGE(NARROW_PHASE,
+            fmt::format("num_candidates,{},impacts,{},distance,{}",
+                m_ev_candidates.size(), ev_impacts.size(),
+                m_ev_distance_active.size()));
+        PROFILE_END(NARROW_PHASE)
+        m_num_active_constraints
+            = int(ev_impacts.size() + m_ev_distance_active.size());
     }
 
     void DistanceBarrierConstraint::compute_constraints(
@@ -161,11 +139,9 @@ namespace opt {
         }
 
         /// add inf if collision
-        for (auto& ev_impact : ev_impacts) {
-            long vertex_id = ev_impact.vertex_index;
-            long edge_id = ev_impact.edge_index;
-            int ac_id = m_constraint_map(vertex_id * edges.rows() + edge_id);
-            barriers(ac_id) += std::numeric_limits<double>::infinity();
+        int N = int(m_ev_distance_active.size());
+        for (size_t i = 0; i < ev_impacts.size(); ++i) {
+            barriers(int(i) + N) += std::numeric_limits<double>::infinity();
         }
     }
 

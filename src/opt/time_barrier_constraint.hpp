@@ -34,7 +34,7 @@ namespace opt {
             const Eigen::MatrixXd& Uk) override;
 
 
-        void detectCollisions(const Eigen::MatrixXd& Uk) override;
+        void update_collision_set(const Eigen::MatrixXd& Uk) override;
 
         int number_of_constraints() override;
 

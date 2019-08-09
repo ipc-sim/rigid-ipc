@@ -68,7 +68,7 @@ void HashGrid::resize(const Eigen::MatrixX2d& vertices,
     const Eigen::MatrixX2i edges,
     const double inflation_radius)
 {
-    static Eigen::Vector2d mesh_min, mesh_max;
+    Eigen::Vector2d mesh_min, mesh_max;
     calculate_mesh_extents(vertices, displacements, mesh_min, mesh_max);
     this->resize(mesh_min.array() - inflation_radius,
         mesh_max.array() + inflation_radius,

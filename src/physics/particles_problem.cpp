@@ -192,8 +192,7 @@ namespace physics {
             = check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
 
         ccd::detect_edge_vertex_collisions(q0, (q1 - q0) * scale, edges_,
-            group_ids_, ev_impacts, constraint_ptr->detection_method,
-            /*reset_impacts=*/true);
+            group_ids_, ev_impacts, constraint_ptr->detection_method);
         return ev_impacts.size() > 0;
     }
 
@@ -270,7 +269,7 @@ namespace physics {
         ccd::unflatten(Uk, 2);
 
         if (!is_linesearch_active && update_constraint_set) {
-            constraint_ptr->detectCollisions(Uk);
+            constraint_ptr->update_collision_set(Uk);
         }
         return Uk;
     }
