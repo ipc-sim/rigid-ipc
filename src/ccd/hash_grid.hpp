@@ -34,6 +34,7 @@ namespace std {
 template <> struct hash<ccd::EdgeVertexCandidate> {
     inline size_t operator()(const ccd::EdgeVertexCandidate& ev_candidate) const
     {
+        // https://www.techiedelight.com/use-std-pair-key-std-unordered_map-cpp/
         std::hash<size_t> int_hasher;
         return int_hasher(ev_candidate.edge_index)
             ^ int_hasher(ev_candidate.vertex_index);
@@ -43,45 +44,58 @@ template <> struct hash<ccd::EdgeVertexCandidate> {
 
 namespace ccd {
 
+/// @brief Axis aligned bounding-box of some type
+class AABB {
+public:
+    AABB()
+        : AABB(Eigen::Vector2d(0, 0), Eigen::Vector2d(0, 0))
+    {
+    }
+
+    AABB(const Eigen::Vector2d& min, const Eigen::Vector2d& max)
+        : min(min)
+        , max(max)
+    {
+        half_width = (max.x() - min.x()) / 2.0;
+        half_height = (max.y() - min.y()) / 2.0;
+        center = min + Eigen::Vector2d(half_width, half_height);
+    }
+
+    virtual ~AABB() {}
+
+    static bool are_overlaping(const AABB& a, const AABB& b);
+
+    Eigen::Vector2d getMin() const { return min; }
+    Eigen::Vector2d getMax() const { return max; }
+    double getHalfWidth() const { return half_width; }
+    double getHalfHeight() const { return half_height; }
+    Eigen::Vector2d getCenter() const { return center; }
+
+private:
+    Eigen::Vector2d min;
+    Eigen::Vector2d max;
+    double half_width, half_height;
+    Eigen::Vector2d center;
+};
+
 /// @brief An entry into the hash grid as a (key, value) pair.
 class HashItem {
 public:
-    int key; /// @brief The key of the item.
-    int id;  /// @brief The value of the item.
+    int key;   /// @brief The key of the item.
+    int id;    /// @brief The value of the item.
+    AABB aabb; /// @brief The axis-aligned bounding box of the element
 
     /// @breif Construct a hash item as a (key, value) pair.
-    HashItem(int key, int id)
+    HashItem(int key, int id, const AABB aabb)
         : key(key)
         , id(id)
+        , aabb(aabb)
     {
     }
 
     /// @brief Compare HashItems by their keys for sorting.
     bool operator<(const HashItem& other) const { return key < other.key; }
 };
-
-/// @brief Axis aligned bounding-box of some type
-template <class T> class AABBT {
-public:
-    T min;
-    T max;
-
-    AABBT()
-        : AABBT(T(0, 0), T(0, 0))
-    {
-    }
-
-    AABBT(const T& min, const T& max)
-        : min(min)
-        , max(max)
-    {
-    }
-
-    virtual ~AABBT() {}
-};
-
-typedef AABBT<Eigen::Vector2i> AABBi;
-typedef AABBT<Eigen::Vector2d> AABBd;
 
 class HashGrid {
 public:
@@ -123,9 +137,7 @@ public:
 
 protected:
     /// @brief Add an AABB of the extents to the hash grid.
-    void addElement(const Eigen::Vector2d& lower_bound,
-        const Eigen::Vector2d& upper_bound,
-        const int id);
+    void addElement(const AABB& aabb, const int id);
 
     /// @brief Sort all hash items.
     inline void sort() { std::sort(m_hash.begin(), m_hash.end()); }

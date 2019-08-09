@@ -3,6 +3,14 @@
 
 namespace ccd {
 
+bool AABB::are_overlaping(const AABB& a, const AABB& b)
+{
+    // https://bit.ly/2ZP3tW4
+    return (abs(a.center.x() - b.center.x()) <= (a.half_width + b.half_width))
+        && (abs(a.center.y() - b.center.y())
+               <= (a.half_height + b.half_height));
+};
+
 void HashGrid::resize(Eigen::Vector2d mn, Eigen::Vector2d mx, double cellSize)
 {
     clear();
@@ -91,8 +99,8 @@ void HashGrid::addVertex(const Eigen::Vector2d& v,
 {
     static Eigen::Vector2d lower_bound, upper_bound;
     calculate_vertex_extents(v, u, lower_bound, upper_bound);
-    this->addElement(lower_bound.array() - inflation_radius,
-        upper_bound.array() + inflation_radius,
+    this->addElement(AABB(lower_bound.array() - inflation_radius,
+                         upper_bound.array() + inflation_radius),
         -(index + 1)); // Vertices have a negative id
 }
 
@@ -135,8 +143,8 @@ void HashGrid::addEdge(const Eigen::Vector2d& vi,
 {
     static Eigen::Vector2d lower_bound, upper_bound;
     calculate_edge_extents(vi, vj, ui, uj, lower_bound, upper_bound);
-    this->addElement(lower_bound.array() - inflation_radius,
-        upper_bound.array() + inflation_radius,
+    this->addElement(AABB(lower_bound.array() - inflation_radius,
+                         upper_bound.array() + inflation_radius),
         index + 1); // Edges have a positive id
 }
 
@@ -147,25 +155,23 @@ void HashGrid::addEdges(const Eigen::MatrixX2d& vertices,
 {
     for (int i = 0; i < edges.rows(); i++) {
         this->addEdge(vertices.row(edges(i, 0)), vertices.row(edges(i, 1)),
-            displacements.row(edges(i, 1)), displacements.row(edges(i, 1)), i,
+            displacements.row(edges(i, 0)), displacements.row(edges(i, 1)), i,
             inflation_radius);
     }
 }
 
-void HashGrid::addElement(const Eigen::Vector2d& lower_bound,
-    const Eigen::Vector2d& upper_bound,
-    const int id)
+void HashGrid::addElement(const AABB& aabb, const int id)
 {
+    Eigen::Vector2i int_min
+        = ((aabb.getMin() - m_domainMin) / m_cellSize).cast<int>();
+    Eigen::Vector2i int_max
+        = ((aabb.getMax() - m_domainMin) / m_cellSize)
+              .unaryExpr([](const double x) { return std::ceil(x); })
+              .cast<int>();
 
-    AABBi aabbi;
-    aabbi.min = ((lower_bound - m_domainMin) / m_cellSize).cast<int>();
-    aabbi.max = ((upper_bound - m_domainMin) / m_cellSize)
-                    .unaryExpr([](const double x) { return std::ceil(x); })
-                    .cast<int>();
-
-    for (int x = aabbi.min.x(); x <= aabbi.max.x(); ++x) {
-        for (int y = aabbi.min.y(); y <= aabbi.max.y(); ++y) {
-            m_hash.push_back(HashItem(hash(x, y), id));
+    for (int x = int_min.x(); x <= int_max.x(); ++x) {
+        for (int y = int_min.y(); y <= int_max.y(); ++y) {
+            m_hash.push_back(HashItem(hash(x, y), id, aabb));
         }
     }
 }
@@ -176,8 +182,8 @@ void HashGrid::getVertexEdgePairs(const Eigen::MatrixX2i& edges,
 {
     EdgeVertexCandidateSet unique_ev_candidates;
 
-    std::vector<int> edge_ids;
-    std::vector<int> vertex_ids;
+    std::vector<HashItem> edge_items;
+    std::vector<HashItem> vertex_items;
 
     bool check_groups = group_ids.size() > 0;
 
@@ -190,14 +196,17 @@ void HashGrid::getVertexEdgePairs(const Eigen::MatrixX2i& edges,
     // testing. So we loop over the entire sorted set of (key,value) pairs
     // creating Candidate entries for vertex-edge pairs with the same key
     for (unsigned i = 0; i < m_hash.size(); ++i) {
-        const int& currH = get(i).key;
-        const int& currId = get(i).id;
+        HashItem& item = get(i);
+        const int currH = item.key;
+        const int currId = item.id;
 
         // read this element
         if (currId > 0) { // Edge elements have positive id
-            edge_ids.push_back(currId - 1);
+            item.id = currId - 1;
+            edge_items.push_back(item);
         } else if (currId < 0) { // Vertex elements have negative id
-            vertex_ids.push_back(-currId - 1);
+            item.id = -currId - 1;
+            vertex_items.push_back(item);
         } else {
             throw "Invalid id given to Hash!";
         }
@@ -207,8 +216,14 @@ void HashGrid::getVertexEdgePairs(const Eigen::MatrixX2i& edges,
         if ((i == m_hash.size() - 1) || currH != get(i + 1).key) {
             // We are closing the bucket (key entry), so tally up all
             // vertex-edge pairs encountered in the bucket that just ended
-            for (const int& edge_id : edge_ids) {
-                for (const int& vertex_id : vertex_ids) {
+            for (const HashItem& edge_item : edge_items) {
+                const int& edge_id = edge_item.id;
+                const AABB& edge_aabb = edge_item.aabb;
+
+                for (const HashItem& vertex_item : vertex_items) {
+                    const int& vertex_id = vertex_item.id;
+                    const AABB& vertex_aabb = vertex_item.aabb;
+
                     bool is_endpoint = edges(edge_id, 0) == vertex_id
                         || edges(edge_id, 1) == vertex_id;
                     bool same_group = false;
@@ -216,15 +231,16 @@ void HashGrid::getVertexEdgePairs(const Eigen::MatrixX2i& edges,
                         same_group = group_ids(vertex_id)
                             == group_ids(edges(edge_id, 0));
                     }
-                    if (!is_endpoint && !same_group) {
+                    if (!is_endpoint && !same_group
+                        && AABB::are_overlaping(edge_aabb, vertex_aabb)) {
                         unique_ev_candidates.insert(
                             EdgeVertexCandidate(edge_id, vertex_id));
                     }
                 }
             }
 
-            edge_ids.clear();
-            vertex_ids.clear();
+            edge_items.clear();
+            vertex_items.clear();
         }
     }
 
