@@ -8,11 +8,11 @@ import meshio
 
 def main(args=[]):
     parser = argparse.ArgumentParser(
-        description='Make a bunch of vtk files with the sequence')
+        description='Make one vtk file with the sequence')
     parser.add_argument('results_file', metavar='input.json',
                         type=str,  help='result file to process')
     parser.add_argument('output_folder', metavar='output/', type=str,
-                        default=".", help='result file to process')
+                        default=".", help='folder where to save output(s)')
     args = parser.parse_args()
 
     fin = Path(args.results_file)
@@ -56,11 +56,11 @@ def main(args=[]):
             # end RB
 
             # individual files
-            meshio.write_points_cells(
-                str(fout),
-                points=xyz,
-                cells={'line': edges}
-                )
+            # meshio.write_points_cells(
+            #     str(fout),
+            #     points=xyz,
+            #     cells={'line': edges}
+            #     )
 
             # for single file
             total_edges = np.append(total_edges, edges + total_xyz.shape[0], axis=0)
