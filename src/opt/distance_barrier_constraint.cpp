@@ -23,7 +23,6 @@ namespace opt {
         , m_num_active_constraints(0)
 
     {
-
     }
 
     void DistanceBarrierConstraint::settings(const nlohmann::json& json)
@@ -60,7 +59,8 @@ namespace opt {
     void DistanceBarrierConstraint::update_collision_set(
         const Eigen::MatrixXd& Uk)
     {
-        NAMED_PROFILE_POINT("distance_barrier__update_collision_set", BROAD_PHASE)
+        NAMED_PROFILE_POINT(
+            "distance_barrier__update_collision_set", BROAD_PHASE)
 
         PROFILE_START(BROAD_PHASE)
         m_ev_candidates.clear();
@@ -90,8 +90,8 @@ namespace opt {
 
             if (active_impact) {
                 // NOTE: ev_impacts are used during post-process of velocities
-                ev_impacts.push_back(EdgeVertexImpact(
-                            toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index));
+                ev_impacts.push_back(EdgeVertexImpact(toi,
+                    ev_candidate.edge_index, alpha, ev_candidate.vertex_index));
                 continue;
             }
 
@@ -214,10 +214,11 @@ namespace opt {
                 for (size_t nid_j = 0; nid_j < 3; ++nid_j) {
                     for (int dim_i = 0; dim_i < 2; ++dim_i) {
                         for (int dim_j = 0; dim_j < 2; ++dim_j) {
-                            M(nodes[nid_i] + num_vertices * dim_i,
-                                nodes[nid_j] + num_vertices * dim_j,
-                                hess(2 * int(nid_i) + dim_i,
-                                    2 * int(nid_j) + dim_j));
+                            triplets.push_back(
+                                M(nodes[nid_i] + num_vertices * dim_i,
+                                    nodes[nid_j] + num_vertices * dim_j,
+                                    hess(2 * int(nid_i) + dim_i,
+                                        2 * int(nid_j) + dim_j)));
                         }
                     }
                 }
