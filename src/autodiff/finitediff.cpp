@@ -76,9 +76,9 @@ void finite_gradient(const Eigen::VectorXd& x,
 
 void finite_jacobian(const Eigen::VectorXd& x,
     std::function<Eigen::VectorXd(const Eigen::VectorXd&)> value,
-    Eigen::MatrixXd& jac, AccuracyOrder accuracy)
+    Eigen::MatrixXd& jac,  const AccuracyOrder accuracy, const double eps)
 {
-    const double eps = 1.0e-8;
+
     // Create an array of the coefficients for finite differences.
     // See: https://en.wikipedia.org/wiki/Finite_difference_coefficient
     // clang-format off

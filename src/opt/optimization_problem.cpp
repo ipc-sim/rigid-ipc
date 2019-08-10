@@ -63,18 +63,45 @@ namespace opt {
     {
         Eigen::MatrixXd jac;
         auto func_g = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
-            return eval_g(x);
+            return eval_g(x, /*update_constraints=*/false);
         };
-        ccd::finite_jacobian(x, func_g, jac);
+        ccd::finite_jacobian(x, func_g, jac, AccuracyOrder::SECOND, 1e-8);
         return jac;
+    }
+
+    std::vector<Eigen::MatrixXd> OptimizationProblem::eval_hessian_g_approx(
+        const Eigen::VectorXd& x)
+    {
+        Eigen::MatrixXd finite_hess_i;
+        int num_constraints = eval_jac_g(x).rows();
+        std::vector<Eigen::MatrixXd> hessians;
+
+        for (int i = 0; i < num_constraints; ++i) {
+            auto f = [&](const Eigen::VectorXd& xk) -> Eigen::VectorXd {
+                Eigen::MatrixXd actual_jac
+                    = eval_jac_g(xk, /*update_constraints=*/false);
+                return actual_jac.row(int(i));
+            };
+            Eigen::MatrixXd finite_hess_i;
+            ccd::finite_jacobian(x, f, finite_hess_i, AccuracyOrder::SECOND, 1e-8);
+            hessians.push_back(finite_hess_i);
+        }
+        return hessians;
     }
 
     bool OptimizationProblem::compare_jac_g_approx(
         const Eigen::VectorXd& x, const Eigen::MatrixXd& jac)
     {
         Eigen::MatrixXd jac_approx = eval_jac_g_approx(x);
-        return compare_jacobian(jac, jac_approx);
+        auto r = compare_jacobian(jac, jac_approx);
+        if (r){
+            return true;
+        }
+        else {
+            return false;
+        }
     }
+
     bool OptimizationProblem::compare_jac_g_approx(
         const Eigen::VectorXd& x, const Eigen::MatrixXd& jac, double& diff_norm)
     {
@@ -83,7 +110,23 @@ namespace opt {
         bool same = compare_jacobian(jac, jac_approx);
         return same;
     }
-
+    bool OptimizationProblem::compare_hessian_g_approx(const Eigen::VectorXd& x,
+        const std::vector<Eigen::SparseMatrix<double>>& hessians)
+    {
+        std::vector<Eigen::MatrixXd> hessians_approx = eval_hessian_g_approx(x);
+        bool same = hessians_approx.size() == hessians.size();
+        if (!same) {
+            return false;
+        }
+        for (size_t i = 0; i < hessians_approx.size(); i++) {
+            Eigen::MatrixXd hessian_i = hessians[i].toDense();
+            same = compare_jacobian(hessian_i, hessians_approx[i]);
+            if (!same) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 } // namespace opt
 } // namespace ccd

@@ -544,7 +544,7 @@ namespace physics {
         if (update_constraint_set) {
             m_constraint_ptr->update_collision_set(uk);
         }
-        if (m_constraint_ptr->is_distance_barrier()){
+        if (m_constraint_ptr->is_distance_barrier()) {
             m_constraint_ptr->update_active_set(uk);
         }
         return uk;
@@ -552,7 +552,18 @@ namespace physics {
 
     Eigen::VectorXd RigidBodyProblem::eval_g(const Eigen::VectorXd& sigma)
     {
-        return eval_g(sigma, /*update_cstr_set=*/m_update_constraint_set);
+        return eval_g(sigma, m_update_constraint_set);
+    }
+
+    Eigen::MatrixXd RigidBodyProblem::eval_jac_g(const Eigen::VectorXd& sigma)
+    {
+        return eval_jac_g(sigma, m_update_constraint_set);
+    }
+
+    std::vector<Eigen::SparseMatrix<double>> RigidBodyProblem::eval_hessian_g(
+        const Eigen::VectorXd& sigma)
+    {
+        return eval_hessian_g(sigma, m_update_constraint_set);
     }
 
     Eigen::VectorXd RigidBodyProblem::eval_g(
@@ -563,10 +574,12 @@ namespace physics {
         m_constraint_ptr->compute_constraints(uk, g_uk);
         return g_uk;
     }
-    Eigen::MatrixXd RigidBodyProblem::eval_jac_g(const Eigen::VectorXd& sigma)
+
+    Eigen::MatrixXd RigidBodyProblem::eval_jac_g(
+        const Eigen::VectorXd& sigma, const bool update_constraint_set)
     {
 
-        Eigen::MatrixXd uk = update_g(sigma);
+        Eigen::MatrixXd uk = update_g(sigma, update_constraint_set);
 
         Eigen::SparseMatrix<double> jac_xk_sigma;
         m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
@@ -579,7 +592,7 @@ namespace physics {
 #ifdef WITH_DERIVATIVE_CHECK
         if (!compare_jac_g_approx(sigma, jac)) {
             spdlog::error(
-                "rigid_body status=fail message='constraint finite-differences failed'");
+                "rigid_body status=fail message='constraint gradient finite-differences failed'");
         }
 #endif
         return jac;
@@ -634,10 +647,10 @@ namespace physics {
     }
 
     std::vector<Eigen::SparseMatrix<double>> RigidBodyProblem::eval_hessian_g(
-        const Eigen::VectorXd& sigma)
+        const Eigen::VectorXd& sigma, const bool update_constraints)
     {
 
-        Eigen::MatrixXd uk = update_g(sigma);
+        Eigen::MatrixXd uk = update_g(sigma, update_constraints);
 
         Eigen::SparseMatrix<double> jac_xk_sigma;
         std::vector<Eigen::SparseMatrix<double>> hess_xk_sigma;
@@ -652,6 +665,12 @@ namespace physics {
         std::vector<Eigen::SparseMatrix<double>> gx_hessian;
         assemble_hessian(
             jac_xk_sigma, hess_xk_sigma, jac_g_uk, hessian_g_uk, gx_hessian);
+#ifdef WITH_DERIVATIVE_CHECK
+        if (!compare_hessian_g_approx(sigma, gx_hessian)) {
+            spdlog::error(
+                "rigid_body status=fail message='constraint hessian finite-differences failed'");
+        }
+#endif
         return gx_hessian;
     }
 
@@ -699,7 +718,17 @@ namespace physics {
 #ifdef WITH_DERIVATIVE_CHECK
         if (!compare_jac_g_approx(sigma, gx_jacobian)) {
             spdlog::error(
-                "rigid_body status=fail message='constraint finite-differences failed'");
+                "rigid_body status=fail message='constraint gradient finite-differences failed'");
+        } else {
+            spdlog::info(
+                "rigid_body status=OK message='constraint gradient finite-differences OK'");
+        }
+        if (!compare_hessian_g_approx(sigma, gx_hessian)) {
+            spdlog::error(
+                "rigid_body status=fail message='constraint hessian finite-differences failed'");
+        } else {
+            spdlog::info(
+                "rigid_body status=OK message='constraint hessian finite-differences OK'");
         }
 
 #endif

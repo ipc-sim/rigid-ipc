@@ -164,8 +164,17 @@ namespace physics {
         void eval_jac_g(const Eigen::VectorXd& x,
             Eigen::SparseMatrix<double>& jac_gx) override;
 
+        Eigen::VectorXd eval_g(const Eigen::VectorXd& x,
+            const bool update_constraint_set) override;
+        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x,
+            const bool update_constraint_set) override;
+        std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
+            const Eigen::VectorXd& x,
+            const bool update_constraint_set) override;
+
         Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma);
-        Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma, const bool update_constraint_set);
+        Eigen::MatrixXd update_g(
+            const Eigen::VectorXd& gamma, const bool update_constraint_set);
 
         ///////////////////////////////////////////////////////////////////////
         /// BARRIER SPECIFIC
@@ -181,9 +190,6 @@ namespace physics {
         {
             return m_constraint_ptr->set_barrier_epsilon(eps);
         }
-
-        Eigen::VectorXd eval_g(const Eigen::VectorXd& x,
-            const bool update_constraint_set) override;
 
         physics::RigidBodyAssembler m_assembler;
         std::shared_ptr<opt::CollisionConstraint> m_constraint_ptr;

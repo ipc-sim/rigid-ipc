@@ -194,7 +194,7 @@ TEST_CASE("Distance Barrier Constraint Hessian",
     using namespace ccd::opt;
     DistanceBarrierConstraint barrier;
 
-    double barrier_epsilon = GENERATE(0.01, 0.5, 1.0, 5.0);
+    double barrier_epsilon = GENERATE(0.5, 1.0, 5.0);
 
     barrier.detection_method = ccd::BRUTE_FORCE;
     barrier.custom_inital_epsilon = barrier_epsilon;
@@ -220,6 +220,8 @@ TEST_CASE("Distance Barrier Constraint Hessian",
 
     displacements.row(0) << 0.0, 0.0;
     displacements.row(1) << 0.0, 0.0;
+    displacements.row(2) << 0.0, 0.0;
+    displacements.row(3) << 0.0, 0.0;
 
     SECTION("No displacements")
     {
@@ -229,8 +231,8 @@ TEST_CASE("Distance Barrier Constraint Hessian",
 
     SECTION("Left displacements")
     {
-        displacements.row(2) << -0.5, 0.0;
-        displacements.row(3) << -0.5, 0.0;
+        displacements.row(2) << -0.49, 0.0;
+        displacements.row(3) << -0.49, 0.0;
     }
 
     SECTION("Farther Left displacements")
@@ -238,6 +240,20 @@ TEST_CASE("Distance Barrier Constraint Hessian",
         displacements.row(2) << -1.0, 0.0;
         displacements.row(3) << -1.0, 0.0;
     }
+
+    SECTION("Up displacements")
+    {
+        displacements.row(2) << 0.0, 0.1;
+        displacements.row(3) << 0.0, 0.1;
+    }
+
+    SECTION("Down displacements")
+    {
+        displacements.row(2) << 0.0, -0.1;
+        displacements.row(3) << 0.0, -0.1;
+    }
+
+
 
     std::vector<Eigen::SparseMatrix<double>> actual_hess;
     barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements);
@@ -252,12 +268,12 @@ TEST_CASE("Distance Barrier Constraint Hessian",
         auto f = [&](const Eigen::VectorXd& u) -> Eigen::VectorXd {
             Eigen::MatrixXd x = u;
             ccd::unflatten(x, 2);
-            barrier.initialize(vertices, edges, Eigen::VectorXi(), x);
-            barrier.compute_constraints_jacobian(displacements, actual_jac);
+            barrier.compute_constraints_jacobian(x, actual_jac);
             return actual_jac.row(int(i));
         };
-
         ccd::finite_jacobian(x, f, finite_hess_i);
-        CHECK((finite_hess_i - actual_hess[i].toDense()).squaredNorm() < 1e-12);
+        bool pass = (finite_hess_i - actual_hess[i].toDense()).squaredNorm() < 1e-12;
+
+        CHECK(pass);
     }
 }

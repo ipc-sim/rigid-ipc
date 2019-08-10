@@ -46,6 +46,6 @@ void finite_gradient(const Eigen::VectorXd& x,
 
 void finite_jacobian(const Eigen::VectorXd& x,
     std::function<Eigen::VectorXd(const Eigen::VectorXd&)> value,
-    Eigen::MatrixXd& jac, AccuracyOrder accuracy = SECOND);
+    Eigen::MatrixXd& jac, const AccuracyOrder accuracy = SECOND, const double eps = 1.0e-8);
 } // namespace ccd
 #endif

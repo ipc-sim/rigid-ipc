@@ -44,6 +44,12 @@ namespace opt {
             const Eigen::VectorXd& x)
             = 0;
 
+        virtual double eval_f(
+            const Eigen::VectorXd& /*x*/, const bool /*update_constraint_set*/)
+        {
+            throw NotImplementedError("eval_f cstr_flag not implemented");
+        };
+
         ////////////////////////////////////////////////////////////////////////
         // Constraint function and its derivatives.
 
@@ -57,6 +63,23 @@ namespace opt {
         virtual std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x)
             = 0;
+
+        virtual Eigen::VectorXd eval_g(
+            const Eigen::VectorXd& /*x*/, const bool /*update_constraint_set*/)
+        {
+            throw NotImplementedError("eval_g cstr_flag not implemented");
+        }
+        virtual Eigen::MatrixXd eval_jac_g(
+            const Eigen::VectorXd& /*x*/, const bool /*update_constraint_set*/)
+        {
+            throw NotImplementedError("eval_jac_g cstr_flag not implemented");
+        }
+        virtual std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
+            const Eigen::VectorXd& /*x*/, const bool /*update_constraint_set*/)
+        {
+            throw NotImplementedError(
+                "eval_hessian_g cstr_flag not implemented");
+        }
 
         ////////////////////////////////////////////////////////////////////////
 
@@ -123,10 +146,7 @@ namespace opt {
         /// @brief Evaluate the hessian of the constraint at point x using
         /// finitite differences.
         std::vector<Eigen::MatrixXd> eval_hessian_g_approx(
-            const Eigen::VectorXd& /*x*/)
-        {
-            throw NotImplementedError("eval_hessian_g_approx not implemented");
-        }
+            const Eigen::VectorXd&);
 
         virtual bool compare_grad_f_approx(
             const Eigen::VectorXd& x, const Eigen::VectorXd& grad);
@@ -134,6 +154,8 @@ namespace opt {
             const Eigen::SparseMatrix<double>& hessian);
         virtual bool compare_jac_g_approx(
             const Eigen::VectorXd& x, const Eigen::MatrixXd& jac);
+        virtual bool compare_hessian_g_approx(const Eigen::VectorXd& x,
+            const std::vector<Eigen::SparseMatrix<double>>& hessians);
         virtual bool compare_jac_g_approx(const Eigen::VectorXd& x,
             const Eigen::MatrixXd& jac,
             double& diff_norm);
@@ -166,16 +188,7 @@ namespace opt {
         {
             throw NotImplementedError("set_barrier_epsilon not implemented");
         }
-        virtual double eval_f(
-            const Eigen::VectorXd& /*x*/, const bool /*update_constraint_set*/)
-        {
-            throw NotImplementedError("eval_f cstr_flag not implemented");
-        };
-        virtual Eigen::VectorXd eval_g(
-            const Eigen::VectorXd& /*x*/, const bool /*update_constraint_set*/)
-        {
-            throw NotImplementedError("eval_g cstr_flag not implemented");
-        }
+
         ////////////////////////////////////////////////////////////////////////
         /// @brief Call the intermediate_callback function.
         virtual bool eval_intermediate_callback(const Eigen::VectorXd& /*x*/)
