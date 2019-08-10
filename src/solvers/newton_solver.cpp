@@ -53,7 +53,7 @@ namespace opt {
     OptimizationResults NewtonSolver::solve(OptimizationProblem& problem)
     {
         NAMED_PROFILE_POINT("newton_solver", SOLVER_STEP);
-        NAMED_PROFILE_POINT("newton_solver__eval_f", EVAL_F);
+        NAMED_PROFILE_POINT("newton_solver__eval_f_and_fdiff", EVAL_F);
         NAMED_PROFILE_POINT(
             "newton_solver__compute_newton_direction", COMPUTE_DIRECTION);
         NAMED_PROFILE_POINT(

@@ -67,7 +67,6 @@ def main(args=None):
             "detection_method": "hash_grid",
             "use_distance_hashgrid": True,
             "active_constraint_scale": 1.01,
-            "extend_collision_set": False,
             "custom_hashgrid_cellsize": -1
         },
         "barrier_solver": {
