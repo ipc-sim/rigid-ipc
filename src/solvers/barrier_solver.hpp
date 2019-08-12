@@ -55,7 +55,7 @@ namespace opt {
         BarrierSolver(const std::string& name);
         ~BarrierSolver() override {}
 
-        void set_problem(OptimizationProblem& problem);
+        void set_problem(IBarrierGeneralProblem& problem);
 
         OptimizationResults solve() override;
         void init_solve() override;

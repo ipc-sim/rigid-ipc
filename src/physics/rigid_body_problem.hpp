@@ -3,6 +3,8 @@
 #include <memory> // shared_ptr
 
 #include <opt/collision_constraint.hpp>
+#include <opt/optimization_problem.hpp>
+
 #include <physics/rigid_body_assembler.hpp>
 #include <physics/simulation_problem.hpp>
 
@@ -10,27 +12,24 @@ namespace ccd {
 
 namespace physics {
 
-    class RigidBodyProblem : public SimulationProblem {
+    class RigidBodyProblem : public virtual ISimulationProblem,
+                             public virtual opt::IConstraintedProblem {
     public:
         RigidBodyProblem(const std::string& name);
         RigidBodyProblem();
 
-        virtual ~RigidBodyProblem() override {}
+        virtual ~RigidBodyProblem() override = default;
 
         ////////////////////////////////////////////////////////////////////////
-        // SIMULATION
-        ////////////////////////////////////////////////////////////////////////
-
-        /// \brief initialize problem for new set of rigid bodies.
+        /// I-SIMULATION
+        std::string name() override { return name_; }
         void init(const nlohmann::json& params) override;
-        void init(
-            const std::vector<RigidBody> rbs, const std::string& constraint);
         nlohmann::json settings() const override;
         nlohmann::json state() const override;
         void state(const nlohmann::json& s) override;
 
-        /// Update state of system
-        ///-----------------------------------------------------------------
+        void init(
+            const std::vector<RigidBody> rbs, const std::string& constraint);
 
         /// \brief does a single simulation step. Returns true if there is a
         /// collision
@@ -42,12 +41,6 @@ namespace physics {
 
         /// \brief update problem using current status of bodies.
         void update_constraint() override;
-
-        /// GET state of system
-        ///-----------------------------------------------------------------
-        bool detect_collisions(const Eigen::MatrixXd& q0,
-            const Eigen::MatrixXd& q1,
-            const CollisionCheck check_type);
 
         /// \brief returns world vertices at the END of NEXT step.
         /// Returns the positions of the next step assuming no collisions forces
@@ -106,10 +99,10 @@ namespace physics {
         {
             return m_assembler.is_dof_fixed;
         }
-        const Eigen::VectorXb& is_dof_fixed() override
-        {
-            return m_assembler.is_rb_dof_fixed;
-        }
+        //        const Eigen::VectorXb& is_dof_fixed() override
+        //        {
+        //            return m_assembler.is_rb_dof_fixed;
+        //        }
 
         const Eigen::VectorXd& gravity() const override { return gravity_; }
 
@@ -119,80 +112,38 @@ namespace physics {
         }
 
         ////////////////////////////////////////////////////////////////////////
-        // Objective function and its derivatives.
-        ////////////////////////////////////////////////////////////////////////
+        /// IConstraintedProblem
+
+        /// @brief eval_f evaluates functional at point x
         double eval_f(const Eigen::VectorXd& sigma) override;
 
+        /// @brief eval_grad_f evaluates gradient of functional at point x
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& sigma) override;
 
+        /// @brief Evaluate the hessian of the objective as a sparse matrix.
         Eigen::SparseMatrix<double> eval_hessian_f(
             const Eigen::VectorXd& sigma) override;
 
-        void eval_f_and_fdiff(const Eigen::VectorXd& x,
-            double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian,
-            Eigen::SparseMatrix<double>& f_uk_hessian) override;
+//        /// @brief eval_g evaluates constraints at point x
+//        Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
 
-        /// \brief functional problem using chain rule
-        double eval_f_chain(const Eigen::VectorXd& sigma);
+//        /// @brief eval_jac_g evaluates constraints jacobian at point x
+//        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
 
-        Eigen::VectorXd eval_grad_f_chain(const Eigen::VectorXd& sigma);
+//        // @brief eval_hessian_g evaluates constraints hessian at point x
+//        std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
+//            const Eigen::VectorXd& x) override;
 
-        Eigen::SparseMatrix<double> eval_hessian_f_chain(
-            const Eigen::VectorXd& sigma);
-
-        ////////////////////////////////////////////////////////////////////////
-        // Constraint function and its derivatives.
-        ////////////////////////////////////////////////////////////////////////
-        Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
-
-        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
-
-        std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
-            const Eigen::VectorXd& x) override;
-
-        void eval_g_and_gdiff(const Eigen::VectorXd& x,
-            Eigen::VectorXd& gx,
-            Eigen::MatrixXd& gx_jacobian,
-            std::vector<Eigen::SparseMatrix<double>>& gx_hessian) override;
-
-        void eval_g(const Eigen::VectorXd& x,
-            Eigen::VectorXd& gx,
-            Eigen::SparseMatrix<double>& gx_jacobian,
-            Eigen::VectorXi& gx_active) override;
-
-        void eval_jac_g(const Eigen::VectorXd& x,
-            Eigen::SparseMatrix<double>& jac_gx) override;
-
-        Eigen::VectorXd eval_g(const Eigen::VectorXd& x,
-            const bool update_constraint_set) override;
-        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x,
-            const bool update_constraint_set) override;
-        std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
-            const Eigen::VectorXd& x,
-            const bool update_constraint_set) override;
-
-        Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma);
-        Eigen::MatrixXd update_g(
-            const Eigen::VectorXd& gamma, const bool update_constraint_set);
-
-        ///////////////////////////////////////////////////////////////////////
-        /// BARRIER SPECIFIC
-        bool has_barrier_constraint() override
-        {
-            return m_constraint_ptr->is_barrier();
-        }
-        double get_barrier_epsilon() override
-        {
-            return m_constraint_ptr->get_barrier_epsilon();
-        }
-        void set_barrier_epsilon(const double eps) override
-        {
-            return m_constraint_ptr->set_barrier_epsilon(eps);
-        }
+        const int& num_vars() override { return num_vars_; }
+        const int& num_constraints() override { return num_constraints_; }
+        const Eigen::VectorXd& starting_point() override { return x0; }
 
         physics::RigidBodyAssembler m_assembler;
         std::shared_ptr<opt::CollisionConstraint> m_constraint_ptr;
+
+        // ------------------------------------------------------------------------
+        // Settings
+        // ------------------------------------------------------------------------
         bool use_chain_functional;
         bool m_update_constraint_set;
         double coefficient_restitution;
@@ -201,6 +152,20 @@ namespace physics {
 
     protected:
         void solve_velocities();
+
+        bool detect_collisions(const Eigen::MatrixXd& q0,
+            const Eigen::MatrixXd& q1,
+            const CollisionCheck check_type);
+
+//        Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma);
+//        Eigen::MatrixXd update_g(
+//            const Eigen::VectorXd& gamma, const bool update_constraint_set);
+
+        int num_vars_;
+        int num_constraints_;
+        Eigen::VectorXd x0;
+
+
         /// Used during collision resolution
         ///< vertices positions at begining of interval
         Eigen::MatrixXd vertices_t0;
@@ -214,7 +179,16 @@ namespace physics {
 
         /// Used for visualization and debugging
         Eigen::MatrixXd Fcollision; ///< forces used to resolve collisions
+
+        std::string name_;
     };
+
+
+    void assemble_hessian(const Eigen::SparseMatrix<double>& jac_xk_sigma,
+        const std::vector<Eigen::SparseMatrix<double>>& hess_xk_sigma,
+        const Eigen::MatrixXd& jac_g_uk,
+        const std::vector<Eigen::SparseMatrix<double>>& hessian_g_uk,
+        std::vector<Eigen::SparseMatrix<double>>& gx_hessian);
 
 } // namespace physics
 } // namespace ccd

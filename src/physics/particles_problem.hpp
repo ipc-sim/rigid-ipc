@@ -25,15 +25,16 @@ namespace physics {
     typedef std::function<bool(const Eigen::VectorXd&, const Eigen::MatrixX2d&)>
         intermediate_callback_func;
 
-    class ParticlesDisplProblem : public SimulationProblem {
+    class ParticlesDisplProblem : public virtual ISimulationProblem,
+                                  public virtual opt::IConstraintedProblem {
     public:
         ParticlesDisplProblem();
         ParticlesDisplProblem(const std::string& name);
         ~ParticlesDisplProblem() override {}
 
         ////////////////////////////////////////////////////////////////////////
-        /// SIMULATION
-
+        /// I-SIMULATION
+        std::string name() override {return name_; }
         void init(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
         nlohmann::json state() const override;
@@ -50,7 +51,6 @@ namespace physics {
         /// \brief update optimization problem using current status.
         void update_constraint() override;
 
-        /// --------------------------------------------------------------------------
         Eigen::MatrixXd vertices() const override { return vertices_; }
         /// @bried return candidate position of vertices, assuming no collisions
         Eigen::MatrixXd vertices_next(const double time_step) const override;
@@ -76,25 +76,30 @@ namespace physics {
 
         const Eigen::MatrixXi& edges() const override { return edges_; }
 
-        const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
+        //        const Eigen::VectorXb& is_dof_fixed() override { return
+        //        is_dof_fixed_; }
         const Eigen::MatrixXb& particle_dof_fixed() const override
         {
             return is_particle_dof_fixed;
         }
         const Eigen::VectorXd& gravity() const override { return gravity_; }
 
-        bool detect_collisions(const Eigen::MatrixXd& q0,
-            const Eigen::MatrixXd& q1,
-            const CollisionCheck check_type) const;
+
 
         const opt::CollisionConstraint& constraint() override
         {
             return *constraint_ptr;
         }
 
+        void unflatten_dof(Eigen::MatrixXd& vec) const override
+        {
+            assert(vec.rows() % 2 == 0);
+            vec.resize(vec.rows() / 2, 2);
+        }
+
         ////////////////////////////////////////////////////////////////////////
-        /// CCD OPTIMIZATION PROBLEM
-        ///
+        /// IConstraintedProblem
+
         /// @brief eval_f evaluates functional at point x
         virtual double eval_f(const Eigen::VectorXd& x) override;
 
@@ -105,75 +110,19 @@ namespace physics {
         virtual Eigen::SparseMatrix<double> eval_hessian_f(
             const Eigen::VectorXd& x) override;
 
-        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
-            double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian,
-            Eigen::SparseMatrix<double>& f_uk_hessian) override;
-        ////////////////////////////////////////////////////////////////////////
-
-        ////////////////////////////////////////////////////////////////////////
-        // Constraint function and its derivatives.
-        Eigen::MatrixXd update_g(const Eigen::VectorXd& x);
-
         /// @brief eval_g evaluates constraints at point x
         virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
 
-        /// @brief eval_g evaluates constraints and jacobian at point x. Also
-        /// returns list of active constraints (indices)
-        virtual void eval_g(const Eigen::VectorXd& x,
-            Eigen::VectorXd& gx,
-            Eigen::SparseMatrix<double>& gx_jacobian,
-            Eigen::VectorXi& gx_active) override;
-
         /// @brief eval_jac_g evaluates constraints jacobian at point x
         virtual Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
-
-        /// @brief eval_jac_g evaluates constraints jacobian at point x
-        virtual void eval_jac_g(const Eigen::VectorXd& x,
-            Eigen::SparseMatrix<double>& jac_gx) override;
 
         // @brief eval_hessian_g evaluates constraints hessian at point x
         virtual std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
             const Eigen::VectorXd& x) override;
 
-        /// @brief eval_g_and_gdiff evaluates constraints, jacobian and hessian
-        /// at point x
-        virtual void eval_g_and_gdiff(const Eigen::VectorXd& x,
-            Eigen::VectorXd& g_uk,
-            Eigen::MatrixXd& g_uk_jacobian,
-            std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
-
-        void unflatten_dof(Eigen::MatrixXd& vec) const override
-        {
-            assert(vec.rows() % 2 == 0);
-            vec.resize(vec.rows() / 2, 2);
-        }
-
-        ///////////////////////////////////////////////////////////////////////
-        virtual bool has_barrier_constraint() override
-        {
-            return constraint_ptr->is_barrier();
-        }
-        virtual double get_barrier_epsilon() override
-        {
-            return constraint_ptr->get_barrier_epsilon();
-        }
-        virtual void set_barrier_epsilon(const double eps) override
-        {
-            return constraint_ptr->set_barrier_epsilon(eps);
-        }
-        ////////////////////////////////////////////////////////////////////////
-
-        /// @brief Evaluate the intermediate callback.
-        virtual bool eval_intermediate_callback(
-            const Eigen::VectorXd& x) override;
-
-        /// @brief Enable the line search mode. This functionality is not up to
-        /// the child class.
-        virtual void enable_line_search_mode(
-            const Eigen::VectorXd& max_x) override;
-        /// @brief Disable the line search mode.
-        virtual void disable_line_search_mode() override;
+        const int& num_vars() override { return num_vars_; }
+        const int& num_constraints() override { return num_constraints_; }
+        const Eigen::VectorXd& starting_point() override { return x0; }
 
         // ------------------------------------------------------------------------
         // World
@@ -204,6 +153,15 @@ namespace physics {
         ////////////////////////////////////////////////////////////////////////
 
     protected:
+        Eigen::MatrixXd update_g(const Eigen::VectorXd& x);
+        bool detect_collisions(const Eigen::MatrixXd& q0,
+            const Eigen::MatrixXd& q1,
+            const CollisionCheck check_type) const;
+
+        int num_vars_;
+        int num_constraints_;
+        Eigen::VectorXd x0;
+
         ///< 2D vertices positions at begining of interval
         Eigen::MatrixXd vertices_t0;
         ///< 2D vertices positions at end of interval
@@ -215,6 +173,7 @@ namespace physics {
 
         bool update_constraint_set;
         bool is_linesearch_active;
+        std::string name_;
         ////////////////////////////////////////////////////////////////////////
     };
 

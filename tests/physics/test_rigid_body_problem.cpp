@@ -109,7 +109,7 @@ TEST_CASE(
     Eigen::VectorXd x(6);
     x << vel_1, vel_2;
     Eigen::VectorXd grad_fx = rbp.eval_grad_f(x);
-    Eigen::VectorXd grad_fx_approx = rbp.eval_grad_f_approx(x);
+    Eigen::VectorXd grad_fx_approx = eval_grad_f_approx(rbp, x);
 
     CHECK(ccd::compare_gradient(grad_fx, grad_fx_approx));
 }
@@ -158,7 +158,7 @@ TEST_CASE(
     Eigen::VectorXd x(6);
     x << vel_1, vel_2;
     Eigen::MatrixXd hess_fx = rbp.eval_hessian_f(x).toDense();
-    Eigen::MatrixXd hess_fx_approx = rbp.eval_hessian_f_approx(x);
+    Eigen::MatrixXd hess_fx_approx = eval_hess_f_approx(rbp, x);
 
     CHECK(ccd::compare_jacobian(hess_fx, hess_fx_approx));
 }

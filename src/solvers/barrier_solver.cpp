@@ -27,6 +27,9 @@ namespace opt {
 
     {
     }
+    void BarrierSolver::set_problem(IBarrierGeneralProblem& problem){
+        general_problem_ptr = &problem;
+    }
 
     void BarrierSolver::settings(const nlohmann::json& json)
     {

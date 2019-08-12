@@ -79,6 +79,14 @@ namespace physics {
         }
     }
 
+    void RigidBodyAssembler::global_to_local(
+        const int global_vertex_id, int& rigid_body_id, int& local_vertex_id)
+    {
+        rigid_body_id = m_vertex_to_body_map(global_vertex_id);
+        local_vertex_id
+            = global_vertex_id - m_body_vertex_id[size_t(rigid_body_id)];
+    }
+
     Eigen::VectorXd RigidBodyAssembler::rb_positions(const bool previous) const
     {
         Eigen::VectorXd X(int(m_rbs.size()) * 3);

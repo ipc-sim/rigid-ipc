@@ -2,8 +2,6 @@
 
 #include <Eigen/Eigenvalues>
 #include <utils/eigen_ext.hpp>
-
-#include <opt/ad_hoc_problem.hpp>
 #include <solvers/newton_solver.hpp>
 
 using namespace ccd;

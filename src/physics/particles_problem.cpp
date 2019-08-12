@@ -23,13 +23,13 @@ namespace physics {
     }
 
     ParticlesDisplProblem::ParticlesDisplProblem(const std::string& name)
-        : SimulationProblem(name)
-        , constraint_ptr(nullptr)
+        : constraint_ptr(nullptr)
         , intermediate_callback(nullptr)
         , use_mass_matrix(true)
         , collision_eps(2.0)
         , update_constraint_set(true)
         , is_linesearch_active(false)
+        , name_(name)
 
     {
     }
@@ -102,18 +102,19 @@ namespace physics {
         return json;
     }
 
-    nlohmann::json ParticlesDisplProblem::state() const {
+    nlohmann::json ParticlesDisplProblem::state() const
+    {
         nlohmann::json json;
         json["vertices"] = io::to_json(vertices_);
         json["velocities"] = io::to_json(velocities_);
         return json;
     }
-    void ParticlesDisplProblem::state(const nlohmann::json& params)  {
+    void ParticlesDisplProblem::state(const nlohmann::json& params)
+    {
         nlohmann::json json;
 
         io::from_json(params["vertices"], vertices_);
         io::from_json(params["velocities"], velocities_);
-
     }
 
     bool ParticlesDisplProblem::simulation_step(const double time_step)
@@ -146,7 +147,7 @@ namespace physics {
 
         // base problem initial solution
         x0 = vec_vertices_t0; // start from collision free state
-        num_vars = int(x0.size());
+        num_vars_ = int(x0.size());
     }
 
     bool ParticlesDisplProblem::take_step(
@@ -250,15 +251,15 @@ namespace physics {
         return mass_matrix;
     }
 
-    void ParticlesDisplProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
-        double& f_uk,
-        Eigen::VectorXd& f_uk_grad,
-        Eigen::SparseMatrix<double>& f_uk_hessian)
-    {
-        f_uk = eval_f(x);
-        f_uk_grad = eval_grad_f(x);
-        f_uk_hessian = eval_hessian_f(x);
-    }
+    //    void ParticlesDisplProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
+    //        double& f_uk,
+    //        Eigen::VectorXd& f_uk_grad,
+    //        Eigen::SparseMatrix<double>& f_uk_hessian)
+    //    {
+    //        f_uk = eval_f(x);
+    //        f_uk_grad = eval_grad_f(x);
+    //        f_uk_hessian = eval_hessian_f(x);
+    //    }
 
     ////////////////////////////////////////////////////////////////////////////
     /// Constraints
@@ -283,24 +284,24 @@ namespace physics {
         return g_uk;
     };
 
-    void ParticlesDisplProblem::eval_g(const Eigen::VectorXd& q1,
-        Eigen::VectorXd& g_uk,
-        Eigen::SparseMatrix<double>& g_uk_jacobian,
-        Eigen::VectorXi& g_uk_active)
-    {
-        Eigen::MatrixXd Uk = update_g(q1);
-        constraint_ptr->compute_constraints(
-            Uk, g_uk, g_uk_jacobian, g_uk_active);
+    //    void ParticlesDisplProblem::eval_g(const Eigen::VectorXd& q1,
+    //        Eigen::VectorXd& g_uk,
+    //        Eigen::SparseMatrix<double>& g_uk_jacobian,
+    //        Eigen::VectorXi& g_uk_active)
+    //    {
+    //        Eigen::MatrixXd Uk = update_g(q1);
+    //        constraint_ptr->compute_constraints(
+    //            Uk, g_uk, g_uk_jacobian, g_uk_active);
 
-#ifdef WITH_DERIVATIVE_CHECK
-        double diff;
-        if (!compare_jac_g_approx(q1, g_uk_jacobian.toDense(), diff)) {
-            spdlog::error(
-                "Derivative Check Failed in `eval_jac_g` diff_norm={} jac_norm={} g_sum={}",
-                diff, g_uk_jacobian.norm(), g_uk.sum());
-        }
-#endif
-    }
+    //#ifdef WITH_DERIVATIVE_CHECK
+    ////        double diff;
+    ////        if (!compare_jac_g_approx(q1, g_uk_jacobian.toDense(), diff)) {
+    ////            spdlog::error(
+    ////                "Derivative Check Failed in `eval_jac_g` diff_norm={}
+    /// jac_norm={} g_sum={}", /                diff, g_uk_jacobian.norm(),
+    /// g_uk.sum()); /        }
+    //#endif
+    //    }
 
     Eigen::MatrixXd ParticlesDisplProblem::eval_jac_g(const Eigen::VectorXd& q1)
     {
@@ -309,30 +310,30 @@ namespace physics {
         constraint_ptr->compute_constraints_jacobian(Uk, jac_gx);
 
 #ifdef WITH_DERIVATIVE_CHECK
-        double diff;
-        if (!compare_jac_g_approx(q1, jac_gx, diff)) {
-            spdlog::error(
-                "Derivative Check Failed in `eval_jac_g` diff_norm={}", diff);
-        }
+//        double diff;
+//        if (!compare_jac_g_approx(q1, jac_gx, diff)) {
+//            spdlog::error(
+//                "Derivative Check Failed in `eval_jac_g` diff_norm={}", diff);
+//        }
 #endif
         return jac_gx;
     };
 
-    void ParticlesDisplProblem::eval_jac_g(
-        const Eigen::VectorXd& q1, Eigen::SparseMatrix<double>& jac_gx)
-    {
-        Eigen::MatrixXd Uk = update_g(q1);
-        constraint_ptr->compute_constraints_jacobian(Uk, jac_gx);
+    //    void ParticlesDisplProblem::eval_jac_g(
+    //        const Eigen::VectorXd& q1, Eigen::SparseMatrix<double>& jac_gx)
+    //    {
+    //        Eigen::MatrixXd Uk = update_g(q1);
+    //        constraint_ptr->compute_constraints_jacobian(Uk, jac_gx);
 
-#ifdef WITH_DERIVATIVE_CHECK
-        double diff;
-        if (!compare_jac_g_approx(q1, jac_gx.toDense(), diff)) {
-            spdlog::error(
-                "Derivative Check Failed in `eval_jac_g` diff_norm={} jac_norm={}",
-                diff, jac_gx.norm());
-        }
-#endif
-    };
+    //#ifdef WITH_DERIVATIVE_CHECK
+    //        double diff;
+    //        if (!compare_jac_g_approx(q1, jac_gx.toDense(), diff)) {
+    //            spdlog::error(
+    //                "Derivative Check Failed in `eval_jac_g` diff_norm={}
+    //                jac_norm={}", diff, jac_gx.norm());
+    //        }
+    //#endif
+    //    };
 
     std::vector<Eigen::SparseMatrix<double>>
     ParticlesDisplProblem::eval_hessian_g(const Eigen::VectorXd& q1)
@@ -343,42 +344,31 @@ namespace physics {
         return hess_gx;
     }
 
-    void ParticlesDisplProblem::eval_g_and_gdiff(const Eigen::VectorXd& q1,
-        Eigen::VectorXd& g_uk,
-        Eigen::MatrixXd& g_uk_jacobian,
-        std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
-    {
-        Eigen::MatrixXd Uk = update_g(q1);
+    //    void ParticlesDisplProblem::eval_g_and_gdiff(const Eigen::VectorXd&
+    //    q1,
+    //        Eigen::VectorXd& g_uk,
+    //        Eigen::MatrixXd& g_uk_jacobian,
+    //        std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian)
+    //    {
+    //        Eigen::MatrixXd Uk = update_g(q1);
 
-        constraint_ptr->compute_constraints_and_derivatives(
-            Uk, g_uk, g_uk_jacobian, g_uk_hessian);
-    }
+    //        constraint_ptr->compute_constraints_and_derivatives(
+    //            Uk, g_uk, g_uk_jacobian, g_uk_hessian);
+    //    }
 
     ////////////////////////////////////////////////////////////////////////////
 
-    bool ParticlesDisplProblem::eval_intermediate_callback(
-        const Eigen::VectorXd& x)
-    {
-        if (intermediate_callback != nullptr) {
-            Eigen::MatrixXd Uk = x;
-            Uk.resize(x.rows() / 2, 2);
-            return intermediate_callback(x, Uk);
-        }
+    //    bool ParticlesDisplProblem::eval_intermediate_callback(
+    //        const Eigen::VectorXd& x)
+    //    {
+    //        if (intermediate_callback != nullptr) {
+    //            Eigen::MatrixXd Uk = x;
+    //            Uk.resize(x.rows() / 2, 2);
+    //            return intermediate_callback(x, Uk);
+    //        }
 
-        return true;
-    }
-
-    void ParticlesDisplProblem::enable_line_search_mode(
-        const Eigen::VectorXd& max_x)
-    {
-        update_g(max_x);
-        is_linesearch_active = true;
-    }
-
-    void ParticlesDisplProblem::disable_line_search_mode()
-    {
-        is_linesearch_active = false;
-    }
+    //        return true;
+    //    }
 
 } // namespace physics
 } // namespace ccd

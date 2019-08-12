@@ -10,7 +10,7 @@ namespace physics {
     public:
         static const ProblemFactory& factory();
 
-        std::shared_ptr<SimulationProblem> get_problem(const std::string& problem) const;
+        std::shared_ptr<ISimulationProblem> get_problem(const std::string& problem) const;
         inline const std::vector<std::string>& get_problem_names() const
         {
             return problem_names_;
@@ -18,7 +18,7 @@ namespace physics {
 
     private:
         ProblemFactory();
-        std::map<std::string, std::shared_ptr<SimulationProblem>> problems_;
+        std::map<std::string, std::shared_ptr<ISimulationProblem>> problems_;
         std::vector<std::string> problem_names_;
     };
 } // namespace opt

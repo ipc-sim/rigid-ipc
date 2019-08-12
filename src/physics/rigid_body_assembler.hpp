@@ -24,7 +24,8 @@ namespace physics {
         // World Vertices Functions
         // ----------------------------------------------------------------------
         /// \brief assemble world coordinates of the rigid-body vertices
-        Eigen::MatrixXd world_vertices(const std::vector<Eigen::Vector3d>& positions) const;
+        Eigen::MatrixXd world_vertices(
+            const std::vector<Eigen::Vector3d>& positions) const;
         Eigen::MatrixXd world_vertices(const Eigen::VectorXd& positions) const;
         Eigen::MatrixXd world_vertices(
             const RigidBody::Step step = RigidBody::CURRENT_STEP) const;
@@ -42,6 +43,10 @@ namespace physics {
             std::vector<Eigen::SparseMatrix<double>>& hess) const;
 
         Eigen::MatrixXd world_velocities() const;
+
+        void global_to_local(const int global_vertex_id,
+            int& rigid_body_id,
+            int& local_vertex_id);
 
         // Ridig Body CM Functions
         // ----------------------------------------------------------------------

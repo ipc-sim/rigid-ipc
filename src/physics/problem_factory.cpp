@@ -25,7 +25,7 @@ namespace physics {
         }
     }
 
-    std::shared_ptr<SimulationProblem> ProblemFactory::get_problem(
+    std::shared_ptr<ISimulationProblem> ProblemFactory::get_problem(
         const std::string& problem) const
     {
         auto it = problems_.find(problem);

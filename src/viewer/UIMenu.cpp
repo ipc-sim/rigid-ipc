@@ -157,12 +157,12 @@ void UISimState::draw_collision_menu()
     if (ImGui::Button("Step Solve Col. ", ImVec2(-1, 0))) {
         step_solve_collisions();
     }
-    if (m_state.problem_ptr->has_barrier_constraint()) {
-        double eps = m_state.problem_ptr->get_barrier_epsilon();
-        if (ImGui::InputDouble("epsilon", &eps, 1e-3, 0.1, "%.3g")) {
-            m_state.problem_ptr->set_barrier_epsilon(eps);
-        }
-    }
+//    if (m_state.problem_ptr->has_barrier_constraint()) {
+//        double eps = m_state.problem_ptr->get_barrier_epsilon();
+//        if (ImGui::InputDouble("epsilon", &eps, 1e-3, 0.1, "%.3g")) {
+//            m_state.problem_ptr->set_barrier_epsilon(eps);
+//        }
+//    }
     ImGui::Text(
         "Outer it.: %i", m_state.ccd_solver_ptr->num_outer_iterations());
 }

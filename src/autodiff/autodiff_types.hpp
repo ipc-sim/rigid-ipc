@@ -20,6 +20,9 @@ public:
     typedef Eigen::Matrix<DDouble1, Eigen::Dynamic, 1> D1VectorXd;
     typedef Eigen::Matrix<DDouble2, Eigen::Dynamic, 1> D2VectorXd;
 
+    typedef Eigen::Matrix<DDouble1, 3, 1> D1Vector3d;
+    typedef Eigen::Matrix<DDouble2, 3, 1> D2Vector3d;
+
     inline static void activate() { DiffScalarBase::setVariableCount(N); }
 
     inline static D1VectorXd d1vars(const size_t i, const Eigen::VectorXd& v)

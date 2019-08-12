@@ -34,7 +34,7 @@ public:
 
     // CCD
     // ----------------------------------------------
-    std::shared_ptr<physics::SimulationProblem> problem_ptr;
+    std::shared_ptr<physics::ISimulationProblem> problem_ptr;
     std::shared_ptr<opt::IStateOptimizationSolver> ccd_solver_ptr;
     double m_timestep_size;
 

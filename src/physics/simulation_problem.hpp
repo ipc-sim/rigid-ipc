@@ -3,18 +3,17 @@
 #include <nlohmann/json.hpp>
 
 #include <opt/collision_constraint.hpp>
-#include <opt/optimization_problem.hpp>
 
 namespace ccd {
 namespace physics {
 
     /// @brief interface class for simulation specific methods
-    class SimulationProblem : public opt::OptimizationProblem {
+    class ISimulationProblem {
     public:
+        virtual ~ISimulationProblem() = default;
         enum CollisionCheck { EXACT = 0, CONSERVATIVE };
 
-        SimulationProblem(const std::string& name);
-
+        virtual std::string name() = 0;
         virtual void init(const nlohmann::json& params) = 0;
         virtual nlohmann::json state() const = 0;
         virtual void state(const nlohmann::json& s) = 0;
@@ -69,7 +68,6 @@ namespace physics {
 
         virtual const Eigen::MatrixXb& particle_dof_fixed() const = 0;
         virtual const Eigen::VectorXd& gravity() const = 0;
-
     };
 
 } // namespace physics

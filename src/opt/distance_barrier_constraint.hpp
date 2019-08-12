@@ -74,14 +74,12 @@ namespace opt {
         double custom_inital_epsilon;
         /// @brief active constraints have distances < scale * barrier_epsilon
         double active_constraint_scale;
-
-
-    protected:
-        double m_barrier_epsilon;
         int m_num_active_constraints;
+        double m_barrier_epsilon;
         EdgeVertexCandidates m_ev_candidates;
         EdgeVertexCandidates m_ev_distance_active;
 
+    protected:
         void filter_active_barriers(const Eigen::MatrixXd& vertices,
             const EdgeVertexCandidates& candidates,
             const double thr,

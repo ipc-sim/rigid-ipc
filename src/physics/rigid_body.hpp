@@ -95,6 +95,18 @@ namespace physics {
         Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_vertices(
             const Eigen::Matrix<T, 3, 1>& v) const;
 
+        template <typename T>
+        Eigen::Matrix<T, 2, 1> world_vertex(
+            const Eigen::Matrix<T, 3, 1>& _position, const int vertex_idx) const
+        {
+            typedef Eigen::Matrix<T, 2, 2> Matrix2T;
+
+            // compute X[i] = R(theta) * r_i + X
+            Matrix2T R = Eigen::Rotation2D<T>(_position.z()).toRotationMatrix();
+            return (vertices.row(vertex_idx).cast<T>() * R.transpose())
+                + _position.head(2).transpose();
+        }
+
         Eigen::MatrixXd world_vertices_gradient(
             const Eigen::Vector3d& velocity) const;
         std::vector<Eigen::Matrix3d> world_vertices_hessian(

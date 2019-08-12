@@ -63,14 +63,14 @@ namespace opt {
         const std::vector<double>& x, std::vector<double>& grad, void* data)
     {
         assert(data != nullptr);
-        OptimizationProblem* problem = static_cast<OptimizationProblem*>(data);
+        IConstraintedProblem* problem = static_cast<IConstraintedProblem*>(data);
 
         const Eigen::VectorXd X
-            = Eigen::Map<const Eigen::VectorXd>(x.data(), problem->num_vars);
+            = Eigen::Map<const Eigen::VectorXd>(x.data(), problem->num_vars());
 
         if (!grad.empty()) {
             // This should always be true according to NLopt.
-            assert(size_t(grad.size()) == size_t(problem->num_vars));
+            assert(size_t(grad.size()) == size_t(problem->num_vars()));
 
             // Store the gradient of f(X) in grad
             Eigen::VectorXd::Map(grad.data(), int(grad.size()))
@@ -88,15 +88,15 @@ namespace opt {
         void* data)
     {
         assert(data); // Need data to compute volumes
-        OptimizationProblem* problem = static_cast<OptimizationProblem*>(data);
+        IConstraintedProblem* problem = static_cast<IConstraintedProblem*>(data);
 
         const Eigen::MatrixXd X = Eigen::Map<const Eigen::VectorXd>(x, n);
         Eigen::VectorXd gx = problem->eval_g(X);
 
         // We want g(x) >= 0, but NLopt expects all
         // constraints(x) ≤ 0, so stack the constraints and negate as needed.
-        assert(uint(2 * problem->num_constraints) == m);
-        Eigen::VectorXd::Map(results, problem->num_constraints) = -gx;
+        assert(uint(2 * problem->num_constraints()) == m);
+        Eigen::VectorXd::Map(results, problem->num_constraints()) = -gx;
 
         if (grad) {
             Eigen::MatrixXd dgx = problem->eval_jac_g(X).transpose();

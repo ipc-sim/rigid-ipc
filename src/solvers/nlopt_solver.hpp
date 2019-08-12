@@ -13,44 +13,8 @@
 namespace ccd {
 namespace opt {
 
-    /**
-     * @brief Computes NLopt's objective for an OptimizationProblem
-     *
-     * @param[in] x Optimization variable for which to compute \f$f(x)\f$ and
-     *              \f$\nabla f(x)\f$.
-     * @param[out] grad Location to store \f$\nabla f(x)\f$.
-     * @param[in] data A pointer to the OptimizationProblem.
-     * @return Returns the value \f$f(x)\f$.
-     */
-    double nlopt_objective(
-        const std::vector<double>& x, std::vector<double>& grad, void* data);
-    /**
-     * @brief Computes NLopt's constraints for an OptimizationProblem
-     *
-     * These are NLopt inequality constraints where constraints(x) ≤ 0.
-     *
-     * @param[in] m Number of constraints
-     * @param[out] results Storage for the constraint values
-     * @param[in] n Number of varaibles
-     * @param[in] x The optimization variables
-     * @param[out] grad Storage for the constraint Jacobian values
-     * @param[in] data A pointer to the OptimizationProblem.
-     */
-    void nlopt_inequality_constraints(unsigned m, double* results, unsigned n,
-        const double* x, double* grad, void* data);
-
-    /**
-     * @brief Output the reason for NLopt's termination
-     *
-     * @param[in] opt Optimizer object
-     * @param[in] reuslt Optimization result to parse
-     */
-    void print_nlopt_termination_reason(
-        const nlopt::opt& opt, const nlopt::result result);
-
     static const std::array<nlopt::algorithm, 2> NLOptAlgorithm
         = { { nlopt::LD_MMA, nlopt::LD_SLSQP } };
-
 
     class NLOptSolver : public virtual IBasicOptimizationSolver {
     public:
@@ -67,6 +31,45 @@ namespace opt {
         double max_time;
         bool verbose;
     };
+
+    /**
+     * @brief Computes NLopt's objective
+     *
+     * @param[in] x Optimization variable for which to compute \f$f(x)\f$ and
+     *              \f$\nabla f(x)\f$.
+     * @param[out] grad Location to store \f$\nabla f(x)\f$.
+     * @param[in] data A pointer to the IConstraintedProblem.
+     * @return Returns the value \f$f(x)\f$.
+     */
+    double nlopt_objective(
+        const std::vector<double>& x, std::vector<double>& grad, void* data);
+    /**
+     * @brief Computes NLopt's constraints
+     *
+     * These are NLopt inequality constraints where constraints(x) ≤ 0.
+     *
+     * @param[in] m Number of constraints
+     * @param[out] results Storage for the constraint values
+     * @param[in] n Number of varaibles
+     * @param[in] x The optimization variables
+     * @param[out] grad Storage for the constraint Jacobian values
+     * @param[in] data A pointer to the IConstraintedProblem.
+     */
+    void nlopt_inequality_constraints(unsigned m,
+        double* results,
+        unsigned n,
+        const double* x,
+        double* grad,
+        void* data);
+
+    /**
+     * @brief Output the reason for NLopt's termination
+     *
+     * @param[in] opt Optimizer object
+     * @param[in] reuslt Optimization result to parse
+     */
+    void print_nlopt_termination_reason(
+        const nlopt::opt& opt, const nlopt::result result);
 
 } // namespace opt
 } // namespace ccd

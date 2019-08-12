@@ -67,7 +67,6 @@ add_library(${PROJECT_NAME}
     src/opt/distance_barrier_constraint.cpp
     src/opt/collision_constraint.cpp
     src/opt/optimization_problem.cpp
-    src/opt/ad_hoc_problem.cpp
     src/opt/optimization_results.cpp
     src/opt/volume_constraint.cpp
     src/opt/constraint_factory.cpp

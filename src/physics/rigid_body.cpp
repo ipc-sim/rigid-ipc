@@ -101,6 +101,7 @@ namespace physics {
             + _position.head(2).transpose();
     }
 
+
     Eigen::MatrixXd RigidBody::world_velocities() const
     {
         // compute X[i] = dR(theta)/d\theta * r_i * d\theta/dt + dX/dt
