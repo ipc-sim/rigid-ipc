@@ -18,7 +18,6 @@ namespace opt {
         { { NcpUpdate::LINEARIZED, "linearized" },
             { NcpUpdate::G_GRADIENT, "g_gradients" } })
 
-
     NLOHMANN_JSON_SERIALIZE_ENUM(LCPSolver,
         { { LCPSolver::LCP_MOSEK, "lcp_mosek" },
             { LCPSolver::LCP_GAUSS_SEIDEL, "lcp_gauss_seidel" } })
@@ -30,22 +29,23 @@ namespace opt {
     }
 
     NCPSolver::NCPSolver(const std::string& name)
-        : OptimizationSolver(name, /*max_iterations=*/1000)
-        , do_line_search(true)
+        : do_line_search(true)
         , solve_for_active_cstr(true)
         , convergence_tolerance(1e-6)
         , update_type(NcpUpdate::LINEARIZED)
         , lcp_solver(LCPSolver::LCP_GAUSS_SEIDEL)
+        , max_iterations(1000)
         , num_outer_iterations_(0)
+        , name_(name)
+
     {
         Asolver
             = std::make_shared<Eigen::SparseLU<Eigen::SparseMatrix<double>>>();
     }
-    void NCPSolver::clear() { num_outer_iterations_ = 0; }
 
     void NCPSolver::settings(const nlohmann::json& json)
     {
-        OptimizationSolver::settings(json);
+        max_iterations = json["max_iterations"].get<int>();
         do_line_search = json["do_line_search"].get<bool>();
         solve_for_active_cstr = json["solve_for_active_cstr"].get<bool>();
         convergence_tolerance = json["convergence_tolerance"].get<double>();
@@ -55,7 +55,8 @@ namespace opt {
 
     nlohmann::json NCPSolver::settings() const
     {
-        nlohmann::json json = OptimizationSolver::settings();
+        nlohmann::json json;
+        json["max_iterations"] = max_iterations;
         json["do_line_search"] = do_line_search;
         json["solve_for_active_cstr"] = solve_for_active_cstr;
         json["convergence_tolerance"] = convergence_tolerance;
@@ -350,11 +351,11 @@ namespace opt {
         return A * xi - (b + jac_g_xi.transpose() * lambda_i);
     }
 
-    void NCPSolver::eval_f(
-        const Eigen::MatrixXd& /*points*/, Eigen::VectorXd& /*fx*/)
-    {
-        // TODO!!!!
-    }
+//    void NCPSolver::eval_f(
+//        const Eigen::MatrixXd& /*points*/, Eigen::VectorXd& /*fx*/)
+//    {
+//        // TODO!!!!
+//    }
 
     void zero_out_fixed_dof(
         const Eigen::VectorXb& is_fixed, Eigen::SparseMatrix<double>& jac)

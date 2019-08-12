@@ -17,17 +17,13 @@
 namespace ccd {
 namespace opt {
     QPSolver::QPSolver()
-        : QPSolver("qp_solver")
-    {
-    }
-
-    QPSolver::QPSolver(const std::string& name)
-        : OptimizationSolver(name)
-        , absolute_tolerance(1e-8)
+        : absolute_tolerance(1e-8)
         , relative_tolerance(1e-8)
+        , max_iterations(1000)
         , qp_solver(QPSolverType::OSQP)
     {
     }
+
     QPSolver::~QPSolver() {}
 
     void QPSolver::quadratic_energy(OptimizationProblem& problem)

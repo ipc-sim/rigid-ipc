@@ -18,10 +18,11 @@ namespace opt {
     /// @brief function type for functional f(x)
     typedef std::function<double(const Eigen::VectorXd&)> callback_f;
 
-    /// Defines the optimization problems of the form
+    /// Defines  optimization problems of the form
     ///  minₓ     f(x)       x ∈ Rⁿ
     ///           g(x) >= 0
     ///
+
     class OptimizationProblem {
 
     public:

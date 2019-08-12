@@ -193,7 +193,7 @@ bool SimState::init(const nlohmann::json& args_in)
     // Config CCD SOLVER
     auto solver_name = args["collision_solver"].get<std::string>();
     ccd_solver_ptr = opt::SolverFactory::factory().get_solver(solver_name);
-    ccd_solver_ptr->clear();
+//    ccd_solver_ptr->clear();
     ccd_solver_ptr->settings(args[solver_name]);
 
     // Config CCD INNER solver
@@ -201,7 +201,7 @@ bool SimState::init(const nlohmann::json& args_in)
         auto inner_solver_name
             = args[solver_name]["inner_solver"].get<std::string>();
         auto inner_solver_ptr
-            = opt::SolverFactory::factory().get_solver(inner_solver_name);
+            = opt::SolverFactory::factory().get_barrier_inner_solver(inner_solver_name);
         inner_solver_ptr->settings(args[inner_solver_name]);
     }
 

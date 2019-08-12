@@ -11,23 +11,15 @@ namespace ccd {
 namespace opt {
 
     IpoptSolver::IpoptSolver()
-        : IpoptSolver("ipopt_solver")
+        : IpoptSolver(1e-8, 0, 100)
     {
-    }
-
-    IpoptSolver::IpoptSolver(const std::string& name)
-        : OptimizationSolver(name)
-        , tolerance(1e-8)
-        , print_level(0)
-    {
-        initialize();
     }
 
     IpoptSolver::IpoptSolver(
         double tolerance, int print_level, int max_iterations)
-        : OptimizationSolver("IpoptSolver", max_iterations)
-        , tolerance(tolerance)
+        : tolerance(tolerance)
         , print_level(print_level)
+        , max_iterations(max_iterations)
     {
         initialize();
     }

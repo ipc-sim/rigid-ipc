@@ -66,49 +66,53 @@ namespace opt {
         OptimizationProblem* general_problem;
     };
 
-    class BarrierSolver : public OptimizationSolver {
+    class BarrierSolver : public IFullOptimizationSolver {
     public:
         BarrierSolver();
         BarrierSolver(const std::string& name);
         ~BarrierSolver() override {}
 
+        // From IOptimizationSolver
         OptimizationResults solve(OptimizationProblem& problem) override;
-        OptimizationSolver& get_inner_solver() const
+
+        // From IFullOptimizationSolver
+        void init(OptimizationProblem& problem) override;
+        void settings(const nlohmann::json& json) override;
+        nlohmann::json settings() const override;
+
+        const std::string& name() const override { return name_; }
+        bool has_inner_solver() override { return true; }
+        const IBarrierOptimizationSolver& inner_solver() override
         {
             return *inner_solver_ptr;
         }
 
-        void clear() override;
-
-        void settings(const nlohmann::json& json) override;
-        nlohmann::json settings() const override;
-
-        void init(OptimizationProblem& problem) override;
         OptimizationResults step_solve() override;
-        int num_outer_iterations() override { return num_outer_iterations_; }
+        Eigen::VectorXd get_grad_kkt() const override;
+        int num_outer_iterations() const override
+        {
+            return num_outer_iterations_;
+        }
+
+        double min_barrier_epsilon;
+        int max_iterations;
+
+    protected:
+        IBarrierOptimizationSolver& get_inner_solver() const
+        {
+            return *inner_solver_ptr;
+        }
+
         inline double barrier_epsilon()
         {
             return general_problem_ptr->get_barrier_epsilon();
         }
 
-        void eval_f(
-            const Eigen::MatrixXd& points, Eigen::VectorXd& fx) override;
-
-        Eigen::VectorXd get_grad_kkt() const override;
-        bool has_inner_solver() override { return true; }
-        const OptimizationSolver& inner_solver() override
-        {
-            return get_inner_solver();
-        }
-
-        double min_barrier_epsilon;
-
-    protected:
-        std::shared_ptr<OptimizationSolver> inner_solver_ptr;
-
+        std::shared_ptr<IBarrierOptimizationSolver> inner_solver_ptr;
         std::unique_ptr<BarrierProblem> barrier_problem_ptr;
         OptimizationProblem* general_problem_ptr;
         int num_outer_iterations_;
+        std::string name_;
     };
 
 } // namespace opt

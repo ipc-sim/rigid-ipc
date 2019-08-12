@@ -48,21 +48,13 @@ namespace opt {
     void print_nlopt_termination_reason(
         const nlopt::opt& opt, const nlopt::result result);
 
-    enum class NLOptAlgorithm {
-        /// \f$\Delta x = A^{-1} jac_x(x_i)^T \alpha_i\f$
-        G_GRADIENT,
-        /// \f$\Delta x = A^{-1} jac_x(x_i)^T \alpha_i + A^{-1}b - x_i\f$
-        LINEARIZED
-    };
     static const std::array<nlopt::algorithm, 2> NLOptAlgorithm
         = { { nlopt::LD_MMA, nlopt::LD_SLSQP } };
 
-    static const char* NLOptAlgorithmNames[] = { "MMA", "SLSQP" };
 
-    class NLOptSolver : public OptimizationSolver {
+    class NLOptSolver : public IOptimizationSolver {
     public:
         NLOptSolver();
-        NLOptSolver(const std::string& name);
         ~NLOptSolver() override;
         OptimizationResults solve(OptimizationProblem& problem) override;
 
@@ -71,6 +63,7 @@ namespace opt {
         nlopt::algorithm algorithm;
         double absolute_tolerance;
         double relative_tolerance;
+        int max_iterations;
         double max_time;
         bool verbose;
     };

@@ -44,10 +44,10 @@ namespace opt {
         SolverReturn status;
     };
 
-    class IpoptSolver : public OptimizationSolver {
+    class IpoptSolver : public virtual IOptimizationSolver {
     public:
         IpoptSolver();
-        IpoptSolver(const std::string& name);
+        ~IpoptSolver() override = default;
 
         IpoptSolver(double tolerance, int print_level, int max_iterations);
         OptimizationResults solve(OptimizationProblem& problem) override;
@@ -59,6 +59,7 @@ namespace opt {
         // -----------------------
         double tolerance;
         int print_level;
+        int max_iterations;
     };
 
     /**

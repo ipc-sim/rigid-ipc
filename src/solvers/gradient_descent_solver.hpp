@@ -12,13 +12,22 @@ namespace ccd {
  */
 namespace opt {
 
-    class GradientDescentSolver : public OptimizationSolver {
+    class GradientDescentSolver : public IBarrierOptimizationSolver {
     public:
         GradientDescentSolver();
         GradientDescentSolver(const std::string& name);
 
         virtual ~GradientDescentSolver() override;
 
+        // From IBarrierOptimizationSolver
+        // --------------------------------
+        const std::string& name() const override { return name_; }
+        void settings(const nlohmann::json& /*json*/) override;
+        nlohmann::json settings() const override;
+        void init_free_dof(Eigen::VectorXb is_dof_fixed) override;
+
+        // From IOptimizationSolver
+        // --------------------------------
         /**
          * @brief Perform gradient descent to minimize the objective,
          * \f$f(x)\f$, of the problem unconstrained.
@@ -32,6 +41,10 @@ namespace opt {
         virtual OptimizationResults solve(
             OptimizationProblem& problem) override;
 
+        double absolute_tolerance; ///< @brief Convergence tolerance.
+        double min_step_length;    ///< @brief Minimum step length.
+        int max_iterations;
+    protected:
         /**
          * @brief Compute the direction for the limited degrees of freedom.
          *
@@ -57,11 +70,8 @@ namespace opt {
         static bool compute_direction(
             const Eigen::VectorXd& gradient, Eigen::VectorXd& delta_x);
 
-        void settings(const nlohmann::json& /*json*/) override;
-        nlohmann::json settings() const override;
-
-        double absolute_tolerance; ///< @brief Convergence tolerance.
-        double min_step_length;    ///< @brief Minimum step length.
+        Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
+        std::string name_;
     };
 
 } // namespace opt

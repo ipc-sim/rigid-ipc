@@ -19,18 +19,14 @@ namespace ccd {
  */
 namespace opt {
 
-    class NewtonSolver : public OptimizationSolver {
-    protected:
-        int iteration_number; ///< @brief The current iteration number.
-
+    class NewtonSolver : public IBarrierOptimizationSolver {
     public:
-        double absolute_tolerance; ///< @brief Convergence tolerance.
-        double min_step_length;    ///< @brief Minimum step length.
-
         NewtonSolver();
         NewtonSolver(const std::string& name);
         virtual ~NewtonSolver() override;
 
+        // From IOptimizationSolver
+        // -------------------------------------------------
         /**
          * @brief Perform Newton's Method to minimize the objective, \f$f(x)\f$,
          * of the problem unconstrained.
@@ -44,6 +40,14 @@ namespace opt {
         virtual OptimizationResults solve(
             OptimizationProblem& problem) override;
 
+        // From IBarrierOptimizationSolver
+        // -------------------------------------------------
+        const std::string& name() const override { return name_; }
+        void settings(const nlohmann::json& /*json*/) override;
+        nlohmann::json settings() const override;
+        void init_free_dof(Eigen::VectorXb is_dof_fixed) override;
+
+        // -------------------------------------------------
         /**
          * @brief Solve for the Newton direction
          *        (\f$\Delta x = -H^{-1} \nabla f \f$).
@@ -61,14 +65,20 @@ namespace opt {
             Eigen::VectorXd& delta_x,
             bool make_psd = false);
 
-        void settings(const nlohmann::json& /*json*/) override;
-        nlohmann::json settings() const override;
+        double absolute_tolerance; ///< @brief Convergence tolerance.
+        double min_step_length;    ///< @brief Minimum step length.
+        int max_iterations;
 
+    protected:
         bool line_search(OptimizationProblem& problem,
             const Eigen::VectorXd& x,
             const Eigen::VectorXd& dir,
             const double fx,
             double& step_length);
+
+        Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
+        int iteration_number;     ///< @brief The current iteration number.
+        std::string name_;
     };
 
     /**

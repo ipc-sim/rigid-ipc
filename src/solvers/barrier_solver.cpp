@@ -20,30 +20,26 @@ namespace opt {
     }
 
     BarrierSolver::BarrierSolver(const std::string& name)
-        : OptimizationSolver(name)
-        , min_barrier_epsilon(1e-5)
+        : min_barrier_epsilon(1e-5)
+        , max_iterations(1000)
         , num_outer_iterations_(0)
-    {
-    }
+        , name_(name)
 
-    void BarrierSolver::clear()
     {
-        num_outer_iterations_ = 0;
-        general_problem_ptr = nullptr;
-        barrier_problem_ptr.reset();
     }
 
     void BarrierSolver::settings(const nlohmann::json& json)
     {
-        OptimizationSolver::settings(json);
+        max_iterations = json["max_iterations"].get<int>();
         min_barrier_epsilon = json["min_barrier_epsilon"].get<double>();
-        inner_solver_ptr = SolverFactory::factory().get_solver(
+        inner_solver_ptr = SolverFactory::factory().get_barrier_inner_solver(
             json["inner_solver"].get<std::string>());
     }
 
     nlohmann::json BarrierSolver::settings() const
     {
-        nlohmann::json json = OptimizationSolver::settings();
+        nlohmann::json json;
+        json["max_iterations"] = max_iterations;
         json["min_barrier_epsilon"] = min_barrier_epsilon;
         json["inner_solver"] = get_inner_solver().name();
         return json;
@@ -51,12 +47,16 @@ namespace opt {
 
     void BarrierSolver::init(OptimizationProblem& original_problem)
     {
+        num_outer_iterations_ = 0;
+        general_problem_ptr = nullptr;
+        barrier_problem_ptr.reset();
+
         assert(original_problem.has_barrier_constraint());
         general_problem_ptr = &original_problem;
         barrier_problem_ptr
             = std::make_unique<BarrierProblem>(original_problem);
 
-        OptimizationSolver& inner_solver = get_inner_solver();
+        IBarrierOptimizationSolver& inner_solver = get_inner_solver();
 
         // Convert from the boolean vector to a vector of free dof indices
         inner_solver.init_free_dof(barrier_problem_ptr->is_dof_fixed());
@@ -72,7 +72,7 @@ namespace opt {
         assert(barrier_problem_ptr != nullptr);
 
         OptimizationResults results;
-        OptimizationSolver& inner_solver = get_inner_solver();
+        IBarrierOptimizationSolver& inner_solver = get_inner_solver();
 
         // Log the epsilon and the newton method will log the number of
         // iterations.
@@ -120,16 +120,16 @@ namespace opt {
         return results;
     }
 
-    void BarrierSolver::eval_f(
-        const Eigen::MatrixXd& points, Eigen::VectorXd& fx)
-    {
-        fx.resize(points.rows());
-        assert(points.cols() == barrier_problem_ptr->num_vars);
+    //    void BarrierSolver::eval_f(
+    //        const Eigen::MatrixXd& points, Eigen::VectorXd& fx)
+    //    {
+    //        fx.resize(points.rows());
+    //        assert(points.cols() == barrier_problem_ptr->num_vars);
 
-        for (int i = 0; i < points.rows(); ++i) {
-            fx(i) = barrier_problem_ptr->eval_f(points.row(i));
-        }
-    }
+    //        for (int i = 0; i < points.rows(); ++i) {
+    //            fx(i) = barrier_problem_ptr->eval_f(points.row(i));
+    //        }
+    //    }
 
     Eigen::VectorXd BarrierSolver::get_grad_kkt() const
     {
@@ -153,7 +153,8 @@ namespace opt {
         return general_problem->is_dof_fixed();
     }
 
-    double BarrierProblem::eval_f(const Eigen::VectorXd& x) {
+    double BarrierProblem::eval_f(const Eigen::VectorXd& x)
+    {
         return eval_f(x, /*update_cstr_set=*/true);
     }
     double BarrierProblem::eval_f(

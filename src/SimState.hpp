@@ -35,7 +35,7 @@ public:
     // CCD
     // ----------------------------------------------
     std::shared_ptr<physics::SimulationProblem> problem_ptr;
-    std::shared_ptr<opt::OptimizationSolver> ccd_solver_ptr;
+    std::shared_ptr<opt::IFullOptimizationSolver> ccd_solver_ptr;
     double m_timestep_size;
 
     bool m_step_had_collision;  ///< last step had a collision

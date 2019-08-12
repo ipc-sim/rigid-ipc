@@ -17,13 +17,12 @@ namespace opt {
     BFGSSolver::BFGSSolver()
         : BFGSSolver("bfgs_solver")
     {
-
     }
 
     BFGSSolver::BFGSSolver(const std::string& name)
-        : OptimizationSolver(name)
-        , absolute_tolerance(1e-5)
+        : absolute_tolerance(1e-5)
         , min_step_length(1e-12)
+        , name_(name)
     {
     }
 
@@ -31,14 +30,15 @@ namespace opt {
 
     void BFGSSolver::settings(const nlohmann::json& json)
     {
-        OptimizationSolver::settings(json);
+        max_iterations = json["max_iterations"].get<int>();
         absolute_tolerance = json["absolute_tolerance"].get<double>();
         min_step_length = json["min_step_length"].get<double>();
     }
 
     nlohmann::json BFGSSolver::settings() const
     {
-        nlohmann::json json = OptimizationSolver::settings();
+        nlohmann::json json;
+        json["max_iterations"] = max_iterations;
         json["absolute_tolerance"] = absolute_tolerance;
         json["min_step_length"] = min_step_length;
         return json;
@@ -97,6 +97,16 @@ namespace opt {
                          "(f(x) < ∞)\"");
         }
         return results;
+    }
+
+    void BFGSSolver::init_free_dof(Eigen::VectorXb is_dof_fixed)
+    {
+        free_dof = Eigen::VectorXi(is_dof_fixed.size() - is_dof_fixed.count());
+        for (int i = 0, j = 0; i < is_dof_fixed.size(); i++) {
+            if (!is_dof_fixed(i)) {
+                free_dof(j++) = i;
+            }
+        }
     }
 
 } // namespace opt

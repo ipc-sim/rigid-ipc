@@ -9,15 +9,10 @@ namespace ccd {
 namespace opt {
 
     NLOptSolver::NLOptSolver()
-        : NLOptSolver("nlopt_solver")
-    {
-    }
-
-    NLOptSolver::NLOptSolver(const std::string& name)
-        : OptimizationSolver(name)
-        , algorithm(nlopt::LD_SLSQP)
+        : algorithm(nlopt::LD_SLSQP)
         , absolute_tolerance(1e-8)
         , relative_tolerance(1e-8)
+        , max_iterations(1000)
         , max_time(2e19)
         , verbose(false)
     {

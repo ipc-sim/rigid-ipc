@@ -9,17 +9,20 @@ namespace opt {
     public:
         static const SolverFactory& factory();
 
-        std::shared_ptr<OptimizationSolver> get_solver(
+        std::shared_ptr<IFullOptimizationSolver> get_solver(
             const std::string& problem) const;
-        inline const std::vector<std::string>& get_solver_names() const
-        {
-            return solver_names_;
-        }
+
+        std::shared_ptr<IBarrierOptimizationSolver> get_barrier_inner_solver(
+            const std::string& problem) const;
+
 
     private:
         SolverFactory();
-        std::map<std::string, std::shared_ptr<OptimizationSolver>> solvers_;
-        std::vector<std::string> solver_names_;
+        std::map<std::string, std::shared_ptr<IFullOptimizationSolver>>
+            solvers_;
+        std::map<std::string, std::shared_ptr<IBarrierOptimizationSolver>>
+            barrier_inner_solvers_;
+
     };
 } // namespace opt
 } // namespace ccd

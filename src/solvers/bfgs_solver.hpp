@@ -12,12 +12,14 @@ namespace ccd {
  */
 namespace opt {
 
-    class BFGSSolver : public OptimizationSolver {
+    class BFGSSolver : public IBarrierOptimizationSolver {
     public:
         BFGSSolver();
         BFGSSolver(const std::string& name);
         virtual ~BFGSSolver() override;
 
+        // from IOptimizationSolver
+        // --------------------------------
         /**
          * @brief Perform Newton's Method to minimize the objective, \f$f(x)\f$,
          * of the problem unconstrained.
@@ -31,11 +33,20 @@ namespace opt {
         virtual OptimizationResults solve(
             OptimizationProblem& problem) override;
 
+        // From IBarrierOptimizationSolver
+        // --------------------------------
+        const std::string& name() const override { return name_; }
         void settings(const nlohmann::json& /*json*/) override;
         nlohmann::json settings() const override;
+        void init_free_dof(Eigen::VectorXb is_dof_fixed) override;
 
         double absolute_tolerance; ///< @brief Convergence tolerance.
         double min_step_length;    ///< @brief Minimum step length.
+        int max_iterations;
+
+    protected:
+        Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
+        std::string name_;
     };
 
 } // namespace opt

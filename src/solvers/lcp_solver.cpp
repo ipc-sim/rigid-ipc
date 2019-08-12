@@ -11,6 +11,8 @@
 namespace ccd {
 namespace opt {
 
+    static const char* LCPSolverNames[] = { "LCP_GAUSS_SEIDEL", "LCP_MOSEK" };
+
     bool lcp_solve(const Eigen::VectorXd& gxi,
         const Eigen::SparseMatrix<double>& jac_gxi,
         const Eigen::MatrixXd& tilde_jac_gxi,
