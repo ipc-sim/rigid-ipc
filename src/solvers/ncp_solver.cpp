@@ -67,7 +67,7 @@ namespace opt {
 
     bool NCPSolver::solve_ncp(const Eigen::SparseMatrix<double>& f_A,
         const Eigen::VectorXd& f_b,
-        OptimizationProblem& opt_problem,
+        IVolumeProblem& opt_problem,
         Eigen::VectorXd& x_opt,
         Eigen::VectorXd& lambda_opt)
     {
@@ -90,9 +90,14 @@ namespace opt {
         return result.success;
     }
 
-    OptimizationResults NCPSolver::solve(OptimizationProblem& opt_problem)
+    void NCPSolver::set_problem(IVolumeProblem& problem)
     {
-        init(opt_problem);
+        problem_ptr_ = &problem;
+    }
+
+    OptimizationResults NCPSolver::solve()
+    {
+        init_solve();
 
         OptimizationResults result;
         for (int i = 0; i < max_iterations; ++i) {
@@ -111,11 +116,11 @@ namespace opt {
         return result;
     }
 
-    void NCPSolver::init(OptimizationProblem& opt_problem)
+    void NCPSolver::init_solve()
     {
-        problem_ptr_ = &opt_problem;
+        assert(problem_ptr_ != nullptr);
         num_outer_iterations_ = 0;
-        compute_linear_system(opt_problem);
+        compute_linear_system(*problem_ptr_);
         compute_initial_solution();
     }
 
@@ -136,9 +141,9 @@ namespace opt {
         lambda_i.setZero();
     }
 
-    void NCPSolver::compute_linear_system(OptimizationProblem& opt_problem)
+    void NCPSolver::compute_linear_system(IVolumeProblem& opt_problem)
     {
-        Eigen::VectorXd x0 = Eigen::VectorXd::Zero(opt_problem.num_vars);
+        Eigen::VectorXd x0 = Eigen::VectorXd::Zero(opt_problem.num_vars());
         A = opt_problem.eval_hessian_f(x0);
         b = -opt_problem.eval_grad_f(x0);
     }
@@ -351,11 +356,11 @@ namespace opt {
         return A * xi - (b + jac_g_xi.transpose() * lambda_i);
     }
 
-//    void NCPSolver::eval_f(
-//        const Eigen::MatrixXd& /*points*/, Eigen::VectorXd& /*fx*/)
-//    {
-//        // TODO!!!!
-//    }
+    //    void NCPSolver::eval_f(
+    //        const Eigen::MatrixXd& /*points*/, Eigen::VectorXd& /*fx*/)
+    //    {
+    //        // TODO!!!!
+    //    }
 
     void zero_out_fixed_dof(
         const Eigen::VectorXb& is_fixed, Eigen::SparseMatrix<double>& jac)

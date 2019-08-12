@@ -19,7 +19,7 @@ namespace ccd {
  */
 namespace opt {
 
-    class NewtonSolver : public IBarrierOptimizationSolver {
+    class NewtonSolver : public virtual IBarrierOptimizationSolver {
     public:
         NewtonSolver();
         NewtonSolver(const std::string& name);
@@ -38,7 +38,7 @@ namespace opt {
          * minimum, and if the optimization was successful.
          */
         virtual OptimizationResults solve(
-            OptimizationProblem& problem) override;
+            IBarrierProblem& problem) override;
 
         // From IBarrierOptimizationSolver
         // -------------------------------------------------
@@ -70,7 +70,7 @@ namespace opt {
         int max_iterations;
 
     protected:
-        bool line_search(OptimizationProblem& problem,
+        bool line_search(IBarrierProblem& problem,
             const Eigen::VectorXd& x,
             const Eigen::VectorXd& dir,
             const double fx,

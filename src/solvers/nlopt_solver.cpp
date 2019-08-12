@@ -20,15 +20,15 @@ namespace opt {
 
     NLOptSolver::~NLOptSolver() {}
 
-    OptimizationResults NLOptSolver::solve(OptimizationProblem& problem)
+    OptimizationResults NLOptSolver::solve(IConstraintedProblem& problem)
     {
-        nlopt::opt opt(algorithm, unsigned(problem.num_vars));
+        nlopt::opt opt(algorithm, unsigned(problem.num_vars()));
 
         opt.set_min_objective(nlopt_objective, &problem);
 
         // Set inequality constraints if desired
         std::vector<double> tol(
-            uint(2 * problem.num_constraints), absolute_tolerance);
+            uint(2 * problem.num_constraints()), absolute_tolerance);
         opt.add_inequality_mconstraint(
             nlopt_inequality_constraints, &problem, tol);
 
@@ -40,8 +40,9 @@ namespace opt {
         opt.set_maxtime(max_time);
 
         // Initial guess is the value of Uopt
-        std::vector<double> x0(
-            problem.x0.data(), problem.x0.data() + problem.x0.size());
+        auto const& starting_point = problem.starting_point();
+        std::vector<double> x0(starting_point.data(),
+            starting_point.data() + starting_point.size());
         double minf; // The minimum objective value, upon return
 
         // Optimize the displacements
@@ -51,7 +52,7 @@ namespace opt {
         }
 
         OptimizationResults results;
-        results.x = Eigen::Map<Eigen::VectorXd>(x0.data(), problem.num_vars);
+        results.x = Eigen::Map<Eigen::VectorXd>(x0.data(), problem.num_vars());
         results.minf = minf;
         Eigen::ArrayXd gx = problem.eval_g(results.x).array();
         results.success = r > 0 && minf >= 0;

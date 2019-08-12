@@ -52,7 +52,7 @@ namespace opt {
     const static char* NEWTON_END_LOG = "solver=newton_solver action=END";
     const static char* NEWTON_BEGIND_LOG = "solver=newton_solver action=BEGIN";
 
-    OptimizationResults NewtonSolver::solve(OptimizationProblem& problem)
+    OptimizationResults NewtonSolver::solve(IBarrierProblem& problem)
     {
         NAMED_PROFILE_POINT("newton_solver", SOLVER_STEP);
         NAMED_PROFILE_POINT("newton_solver__eval_f_and_fdiff", EVAL_F);
@@ -66,16 +66,13 @@ namespace opt {
             "newton_solver__assert_constraint", ASSERT_CONSTRAINT);
 
         // Initalize the working variables
-        Eigen::VectorXd x = problem.x0;
+        Eigen::VectorXd x = problem.starting_point();
         Eigen::VectorXd gradient, gradient_free;
         Eigen::SparseMatrix<double> hessian, hessian_free;
 
         double step_length = 1.0;
 
-        double eps = -1;
-        if (problem.has_barrier_constraint()) {
-            eps = problem.get_barrier_epsilon();
-        }
+        double eps = problem.get_barrier_epsilon();
 
         spdlog::trace(NEWTON_BEGIND_LOG);
         iteration_number = 0;
@@ -102,7 +99,7 @@ namespace opt {
 
             PROFILE_START(COMPUTE_DIRECTION)
 
-            Eigen::VectorXd direction = Eigen::VectorXd::Zero(problem.num_vars);
+            Eigen::VectorXd direction = Eigen::VectorXd::Zero(problem.num_vars());
             Eigen::VectorXd direction_free(free_dof.size());
             bool found_direction = compute_direction(
                 gradient_free, hessian_free, direction_free, /*make_psd=*/true);
@@ -152,7 +149,6 @@ namespace opt {
             assert(!std::isinf(problem.eval_f(x)));
             PROFILE_END(ASSERT_CONSTRAINT)
 
-            problem.eval_intermediate_callback(x);
             PROFILE_END(SOLVER_STEP);
 
         } while (++iteration_number <= max_iterations);
@@ -176,7 +172,7 @@ namespace opt {
         }
     }
 
-    bool NewtonSolver::line_search(OptimizationProblem& problem,
+    bool NewtonSolver::line_search(IBarrierProblem& problem,
         const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const double fx,
@@ -194,7 +190,7 @@ namespace opt {
         while (step_norm >= min_step_length) {
 
             Eigen::VectorXd xi = x + step_length * dir;
-            double fxi = problem.eval_f(xi, /*update_cstr_set=*/first_iter);
+            double fxi = problem.eval_f_(xi, /*update_cstr_set=*/first_iter);
             first_iter = false;
 
             bool min_rule = fxi < fx;

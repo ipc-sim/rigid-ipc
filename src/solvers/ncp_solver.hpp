@@ -32,19 +32,20 @@ namespace opt {
         LINEARIZED
     };
 
-    class NCPSolver : public IFullOptimizationSolver {
+    class NCPSolver : public virtual IStateOptimizationSolver {
     public:
         NCPSolver();
         NCPSolver(const std::string& name);
         ~NCPSolver() override;
 
-        // From IOptimizationSolver
-        // -----------------------------------------
-        OptimizationResults solve(OptimizationProblem& problem_ptr_) override;
+        void set_problem(IVolumeProblem& problem) ;
 
-        // From IFullOptimizationSolver
-        // -----------------------------------------
-        void init(OptimizationProblem& problem) override;
+        OptimizationResults solve() override;
+        void init_solve() override;
+
+//        OptimizationResults solve(IVolumeProblem& problem) ;
+//        void init(IVolumeProblem& problem);
+
         void settings(const nlohmann::json& json) override;
         nlohmann::json settings() const override;
         const std::string& name() const override { return name_; }
@@ -67,7 +68,7 @@ namespace opt {
 
         bool solve_ncp(const Eigen::SparseMatrix<double>& hessian,
             const Eigen::VectorXd& b,
-            OptimizationProblem& problem_ptr_,
+            IVolumeProblem& problem_ptr_,
             Eigen::VectorXd& x_opt,
             Eigen::VectorXd& alpha_opt);
 
@@ -96,7 +97,7 @@ namespace opt {
         Eigen::VectorXd lambda_i;
 
     protected:
-        void compute_linear_system(OptimizationProblem& problem_ptr_);
+        void compute_linear_system(IVolumeProblem& problem_ptr_);
         void compute_initial_solution();
 
         void solve_lcp(const Eigen::VectorXd& xi,
@@ -110,7 +111,7 @@ namespace opt {
 
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd b;
-        OptimizationProblem* problem_ptr_;
+        IVolumeProblem* problem_ptr_;
 
         int num_outer_iterations_;
         std::string name_;

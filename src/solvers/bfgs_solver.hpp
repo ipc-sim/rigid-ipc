@@ -12,7 +12,7 @@ namespace ccd {
  */
 namespace opt {
 
-    class BFGSSolver : public IBarrierOptimizationSolver {
+    class BFGSSolver : public virtual IBarrierOptimizationSolver {
     public:
         BFGSSolver();
         BFGSSolver(const std::string& name);
@@ -31,7 +31,7 @@ namespace opt {
          * minimum, and if the optimization was successful.
          */
         virtual OptimizationResults solve(
-            OptimizationProblem& problem) override;
+            IBarrierProblem& problem) override;
 
         // From IBarrierOptimizationSolver
         // --------------------------------

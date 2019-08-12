@@ -11,13 +11,13 @@
 namespace ccd {
 namespace opt {
 
-    class BarrierProblem : public OptimizationProblem {
+    class BarrierProblem : public virtual IBarrierProblem {
     public:
-        BarrierProblem(OptimizationProblem& problem);
-        ~BarrierProblem() override {}
+        BarrierProblem(IBarrierGeneralProblem& problem);
+        ~BarrierProblem() override = default;
 
         double eval_f(const Eigen::VectorXd& x) override;
-        double eval_f(const Eigen::VectorXd& x,
+        double eval_f_(const Eigen::VectorXd& x,
             const bool update_constraint_set) override;
 
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
@@ -27,56 +27,40 @@ namespace opt {
 
         void eval_f_and_fdiff(const Eigen::VectorXd& x,
             double& f_uk,
+            Eigen::VectorXd& f_uk_jacobian) override;
+
+        void eval_f_and_fdiff(const Eigen::VectorXd& x,
+            double& f_uk,
             Eigen::VectorXd& f_uk_jacobian,
             Eigen::SparseMatrix<double>& f_uk_hessian) override;
 
-        /////
-        Eigen::VectorXd eval_g(const Eigen::VectorXd&) override
-        {
-            return Eigen::VectorXd();
-        }
-
-        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd&) override
-        {
-            return Eigen::MatrixXd();
-        }
-
-        std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
-            const Eigen::VectorXd&) override
-        {
-            return std::vector<Eigen::SparseMatrix<double>>();
-        }
-
-        /////
-        void enable_line_search_mode(const Eigen::VectorXd& max_x) override;
-        void disable_line_search_mode() override;
-
-        bool eval_intermediate_callback(const Eigen::VectorXd& x) override;
-
-        bool has_barrier_constraint() override
-        {
-            return general_problem->has_barrier_constraint();
-        }
         double get_barrier_epsilon() override
         {
             return general_problem->get_barrier_epsilon();
         }
 
+        const Eigen::VectorXd& starting_point() override { return x0; }
+        const int& num_vars() override { return num_vars_; }
         const Eigen::VectorXb& is_dof_fixed() override;
-        OptimizationProblem* general_problem;
+
+        IBarrierGeneralProblem* general_problem;
+        Eigen::VectorXd x0;
+
+        int num_vars_;
     };
 
-    class BarrierSolver : public IFullOptimizationSolver {
+    class BarrierSolver : public virtual IStateOptimizationSolver {
     public:
         BarrierSolver();
         BarrierSolver(const std::string& name);
         ~BarrierSolver() override {}
 
-        // From IOptimizationSolver
-        OptimizationResults solve(OptimizationProblem& problem) override;
+        void set_problem(OptimizationProblem& problem);
 
-        // From IFullOptimizationSolver
-        void init(OptimizationProblem& problem) override;
+        OptimizationResults solve() override;
+        void init_solve() override;
+        OptimizationResults step_solve() override;
+
         void settings(const nlohmann::json& json) override;
         nlohmann::json settings() const override;
 
@@ -87,7 +71,6 @@ namespace opt {
             return *inner_solver_ptr;
         }
 
-        OptimizationResults step_solve() override;
         Eigen::VectorXd get_grad_kkt() const override;
         int num_outer_iterations() const override
         {
@@ -110,7 +93,7 @@ namespace opt {
 
         std::shared_ptr<IBarrierOptimizationSolver> inner_solver_ptr;
         std::unique_ptr<BarrierProblem> barrier_problem_ptr;
-        OptimizationProblem* general_problem_ptr;
+        IBarrierGeneralProblem* general_problem_ptr;
         int num_outer_iterations_;
         std::string name_;
     };

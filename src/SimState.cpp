@@ -292,7 +292,7 @@ bool SimState::solve_collision()
 
     PROFILE_START();
 
-    result = ccd_solver_ptr->solve(*problem_ptr);
+    result = ccd_solver_ptr->solve();
 
     PROFILE_END();
 
@@ -314,7 +314,7 @@ void SimState::collision_resolution_step()
 {
     if (m_dirty_constraints) {
         problem_ptr->update_constraint();
-        ccd_solver_ptr->init(*problem_ptr);
+        ccd_solver_ptr->init_solve();
         m_dirty_constraints = false;
     }
 

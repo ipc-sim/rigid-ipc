@@ -32,7 +32,7 @@ namespace opt {
             std::make_shared<GradientDescentSolver>("gradient_descent_solver"));
     }
 
-    std::shared_ptr<IFullOptimizationSolver> SolverFactory::get_solver(
+    std::shared_ptr<IStateOptimizationSolver> SolverFactory::get_solver(
         const std::string& problem) const
     {
         auto it = solvers_.find(problem);

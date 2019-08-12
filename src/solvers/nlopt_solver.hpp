@@ -52,11 +52,11 @@ namespace opt {
         = { { nlopt::LD_MMA, nlopt::LD_SLSQP } };
 
 
-    class NLOptSolver : public IOptimizationSolver {
+    class NLOptSolver : public virtual IBasicOptimizationSolver {
     public:
         NLOptSolver();
         ~NLOptSolver() override;
-        OptimizationResults solve(OptimizationProblem& problem) override;
+        OptimizationResults solve(IConstraintedProblem& problem) override;
 
         // Settings
         // -----------

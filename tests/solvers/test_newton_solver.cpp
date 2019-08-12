@@ -11,21 +11,68 @@ using namespace opt;
 
 TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
 {
-    int num_vars = GENERATE(1, 10, 100), num_constraints = 0;
-    // Setup solver
+    int num_vars = GENERATE(1, 10, 100);
+
     NewtonSolver solver;
     solver.init_free_dof(Eigen::VectorXb::Zero(num_vars));
+
     // Setup problem
     // -----------------------------------------------------------------
-    AdHocProblem problem(num_vars, num_constraints);
-    problem.x0.setRandom();
+    class AdHocProblem : public virtual IBarrierProblem {
+    public:
+        AdHocProblem(int num_vars)
+        {
+            num_vars_ = num_vars;
+            x0.resize(num_vars);
+            x0.setRandom();
+            is_dof_fixed_ = Eigen::VectorXb::Zero(num_vars);
+        }
+        double eval_f(const Eigen::VectorXd& x) override
+        {
+            return x.squaredNorm() / 2.0;
+        }
+        double eval_f_(const Eigen::VectorXd& x,
+            const bool /*update_constraint_set*/) override
+        {
+            return eval_f(x);
+        }
 
-    problem.f = [](const Eigen::VectorXd& x) { return x.squaredNorm() / 2.0; };
-    problem.f = [](const Eigen::VectorXd& x) { return x.squaredNorm() / 2.0; };
-    problem.grad_f = [](const Eigen::VectorXd& x) { return x; };
-    problem.hessian_f = [](const Eigen::VectorXd& x) {
-        return Eigen::MatrixXd::Identity(x.rows(), x.rows());
+        Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override
+        {
+            return x;
+        }
+        Eigen::SparseMatrix<double> eval_hessian_f(
+            const Eigen::VectorXd& x) override
+        {
+            return Eigen::MatrixXd::Identity(x.rows(), x.rows()).sparseView();
+        }
+        void eval_f_and_fdiff(const Eigen::VectorXd& x,
+            double& f_uk,
+            Eigen::VectorXd& f_uk_jacobian) override
+        {
+            f_uk = eval_f(x);
+            f_uk_jacobian = eval_grad_f(x);
+        }
+        void eval_f_and_fdiff(const Eigen::VectorXd& x,
+            double& f_uk,
+            Eigen::VectorXd& f_uk_jacobian,
+            Eigen::SparseMatrix<double>& f_uk_hessian) override
+        {
+            f_uk = eval_f(x);
+            f_uk_jacobian = eval_grad_f(x);
+            f_uk_hessian = eval_hessian_f(x);
+        }
+        double get_barrier_epsilon() override { return 1.0; }
+        const Eigen::VectorXd& starting_point() override { return x0; }
+        const int& num_vars() override { return num_vars_; }
+        const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
+
+        int num_vars_;
+        Eigen::VectorXb is_dof_fixed_;
+        Eigen::VectorXd x0;
     };
+
+    AdHocProblem problem(num_vars);
 
     OptimizationResults results = solver.solve(problem);
     REQUIRE(results.success);

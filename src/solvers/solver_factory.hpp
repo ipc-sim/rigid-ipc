@@ -9,7 +9,7 @@ namespace opt {
     public:
         static const SolverFactory& factory();
 
-        std::shared_ptr<IFullOptimizationSolver> get_solver(
+        std::shared_ptr<IStateOptimizationSolver> get_solver(
             const std::string& problem) const;
 
         std::shared_ptr<IBarrierOptimizationSolver> get_barrier_inner_solver(
@@ -18,7 +18,7 @@ namespace opt {
 
     private:
         SolverFactory();
-        std::map<std::string, std::shared_ptr<IFullOptimizationSolver>>
+        std::map<std::string, std::shared_ptr<IStateOptimizationSolver>>
             solvers_;
         std::map<std::string, std::shared_ptr<IBarrierOptimizationSolver>>
             barrier_inner_solvers_;

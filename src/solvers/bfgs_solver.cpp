@@ -44,7 +44,7 @@ namespace opt {
         return json;
     }
 
-    OptimizationResults BFGSSolver::solve(OptimizationProblem& problem)
+    OptimizationResults BFGSSolver::solve(IBarrierProblem& problem)
     {
         // Functional in the form expected by LBFGS++
         auto f = [&problem](const Eigen::VectorXd& x, Eigen::VectorXd& grad) {
@@ -55,7 +55,8 @@ namespace opt {
 
         // Callback as a function pointer
         auto callback = [&problem](const Eigen::VectorXd& x) -> bool {
-            return problem.eval_intermediate_callback(x);
+            // TODO: refactor to allow intermediate steps instead
+            return true;
         };
 
         // Set up parameters
@@ -70,7 +71,7 @@ namespace opt {
         LBFGSpp::LBFGSSolver<double> solver(param);
 
         std::string exit_reason = "found a local optimum";
-        Eigen::VectorXd x = problem.x0;
+        Eigen::VectorXd x = problem.starting_point();
         int niter = -1;
         try {
             double _;

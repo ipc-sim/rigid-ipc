@@ -2,7 +2,7 @@
 
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
-#include <solvers/newton_solver.hpp>
+#include <solvers/optimization_solver.hpp>
 
 namespace ccd {
 
@@ -12,7 +12,7 @@ namespace ccd {
  */
 namespace opt {
 
-    class GradientDescentSolver : public IBarrierOptimizationSolver {
+    class GradientDescentSolver : public virtual IBarrierOptimizationSolver {
     public:
         GradientDescentSolver();
         GradientDescentSolver(const std::string& name);
@@ -39,7 +39,7 @@ namespace opt {
          * minimum, and if the optimization was successful.
          */
         virtual OptimizationResults solve(
-            OptimizationProblem& problem) override;
+            IBarrierProblem& problem) override;
 
         double absolute_tolerance; ///< @brief Convergence tolerance.
         double min_step_length;    ///< @brief Minimum step length.
@@ -69,6 +69,12 @@ namespace opt {
          */
         static bool compute_direction(
             const Eigen::VectorXd& gradient, Eigen::VectorXd& delta_x);
+
+        bool line_search(IBarrierProblem& problem,
+            const Eigen::VectorXd& x,
+            const Eigen::VectorXd& dir,
+            const double fx,
+            double& step_length);
 
         Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
         std::string name_;

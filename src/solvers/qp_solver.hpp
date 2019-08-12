@@ -18,12 +18,12 @@ namespace opt {
         MOSEK ///< @brief Use MOSEK to solve the qudratic program
     };
 
-    class QPSolver : public IOptimizationSolver {
+    class QPSolver : public virtual IBasicOptimizationSolver {
     public:
         QPSolver();
         ~QPSolver() override;
 
-        OptimizationResults solve(OptimizationProblem& problem) override;
+        OptimizationResults solve(IConstraintedProblem& problem) override;
 
         double absolute_tolerance;
         double relative_tolerance;
@@ -46,8 +46,8 @@ namespace opt {
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd lc, uc;
         Eigen::VectorXd lx, ux;
-        void quadratic_energy(OptimizationProblem& problem);
-        void linearized_constraints(OptimizationProblem& problem);
+        void quadratic_energy(IConstraintedProblem& problem);
+        void linearized_constraints(IConstraintedProblem& problem);
     };
 
 } // namespace opt
