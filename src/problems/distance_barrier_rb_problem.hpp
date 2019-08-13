@@ -10,6 +10,14 @@ namespace ccd {
 
 namespace opt {
 
+    struct RB2Candidate {
+        int vertex_body_id;
+        int edge_body_id;
+        int vertex_local_id;
+        int edge0_local_id;
+        int edge1_local_id;
+    };
+
     class DistanceBarrierRBProblem
         : public physics::RigidBodyProblem,
           public virtual opt::IBarrierGeneralProblem {
@@ -77,6 +85,13 @@ namespace opt {
     protected:
         void update_constraints(
             const Eigen::MatrixXd& xk, const CstrSetFlag flag);
+
+        void extract_local_system(
+            const EdgeVertexCandidate& c, RB2Candidate& rbc);
+
+        template <typename T>
+        T distance_barrier(
+            const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
 
         Eigen::MatrixXd eval_jac_g_core(const Eigen::VectorXd& sigma);
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g_core(

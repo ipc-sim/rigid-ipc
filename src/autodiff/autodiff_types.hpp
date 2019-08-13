@@ -25,8 +25,19 @@ public:
     typedef Eigen::Matrix<DDouble1, 2, 1> D1Vector2d;
     typedef Eigen::Matrix<DDouble2, 2, 1> D2Vector2d;
 
-
     inline static void activate() { DiffScalarBase::setVariableCount(N); }
+
+    template <typename T>
+    inline static Eigen::Matrix<T, Eigen::Dynamic, 1> dTvars(
+        const size_t i, const Eigen::VectorXd& v)
+    {
+        Eigen::Matrix<T, Eigen::Dynamic, 1> vec;
+        vec.resize(v.rows());
+        for (int r = 0; r < v.rows(); r++) {
+            vec[r] = T(i + r, v[r]);
+        }
+        return vec;
+    }
 
     inline static D1VectorXd d1vars(const size_t i, const Eigen::VectorXd& v)
     {
@@ -37,6 +48,7 @@ public:
         }
         return vec;
     }
+
     inline static D2VectorXd d2vars(const size_t i, const Eigen::VectorXd& v)
     {
         D2VectorXd vec;
