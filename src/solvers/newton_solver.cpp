@@ -42,7 +42,6 @@ namespace opt {
         return json;
     }
 
-
     const static char* NEWTON_DIRECTION_LOG
         = "solver=newton_solver iter={:d} action=newton_line_search "
           "status=failure message=\"reverting to gradient descent\"";
@@ -99,7 +98,8 @@ namespace opt {
 
             PROFILE_START(COMPUTE_DIRECTION)
 
-            Eigen::VectorXd direction = Eigen::VectorXd::Zero(problem.num_vars());
+            Eigen::VectorXd direction
+                = Eigen::VectorXd::Zero(problem.num_vars());
             Eigen::VectorXd direction_free(free_dof.size());
             bool found_direction = compute_direction(
                 gradient_free, hessian_free, direction_free, /*make_psd=*/true);
@@ -186,12 +186,12 @@ namespace opt {
         bool success = false;
 
         int num_it = 0;
-        bool first_iter = true;
+        auto set_flag = CstrSetFlag::UPDATE_CSTR_SET;
         while (step_norm >= min_step_length) {
 
             Eigen::VectorXd xi = x + step_length * dir;
-            double fxi = problem.eval_f_(xi, /*update_cstr_set=*/first_iter);
-            first_iter = false;
+            double fxi = problem.eval_f_set(xi, set_flag);
+            set_flag = CstrSetFlag::KEEP_CSTR_SET;
 
             bool min_rule = fxi < fx;
             bool cstr = !std::isinf(fxi);
@@ -204,7 +204,6 @@ namespace opt {
 
             step_length /= 2.0;
             step_norm = (step_length * dir).norm();
-
         }
         PROFILE_MESSAGE(,
             fmt::format(
@@ -235,13 +234,14 @@ namespace opt {
                     "solver=newton iter={:d} failure=\"sparse solve for newton direction failed\" failsafe=none",
                     iteration_number);
             }
-        }else{
+        } else {
             spdlog::warn(
                 "solver=newton iter={:d} failure=\"sparse decomposition of the hessian failed\" failsafe=none",
                 iteration_number);
         }
 
-        if (solve_success && make_psd && direction.transpose() * gradient >= 0) {
+        if (solve_success && make_psd
+            && direction.transpose() * gradient >= 0) {
             // If delta_x is not a descent direction then we want to modify the
             // hessian to be diagonally dominant with positive elements on the
             // diagonal (positive definite). We do this by adding μI to the

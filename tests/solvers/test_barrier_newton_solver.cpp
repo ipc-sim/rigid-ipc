@@ -59,8 +59,8 @@ TEST_CASE(
             gx.setConstant(eval_f(x));
             return gx;
         }
-        Eigen::VectorXd eval_g_(const Eigen::VectorXd& x,
-            const bool /*update_constraint_set*/) override
+        Eigen::VectorXd eval_g_set(
+            const Eigen::VectorXd& x, const CstrSetFlag /*flag*/) override
         {
             return eval_g(x);
         }

@@ -7,11 +7,10 @@
 #include <igl/PI.h>
 
 #include <autodiff/finitediff.hpp>
-#include <physics/rigid_body_problem.hpp>
+#include <problems/distance_barrier_rb_problem.hpp>
+#include <utils/not_implemented_error.hpp>
 
-// ---------------------------------------------------
-// Tests
-// ---------------------------------------------------
+
 
 TEST_CASE(
     "Rigid Body Problem Functional", "[RB][RB-Problem][RB-Problem-functional]")
@@ -29,18 +28,23 @@ TEST_CASE(
     // expected displacement of nodes
     double dx = 0.0;
 
+    double mass = 4.0; // \sum mi = 4 * 1.0
+    double moment_inertia
+        = 8.0 * 0.5 * 0.5; // sum mi ||ri||2 =  4 * 1.0 * 2.0 * (0.5)**2
+
     SECTION("Translation Case")
     {
         displ_1 << 0.5, 0.5, 0.0;
         displ_2 << 1.0, 1.0, 0.0;
-        dx = 0.5 * 0.5 * 8;
+        dx = 0.5 * mass * (displ_1.dot(displ_1) + displ_2.dot(displ_2));
     }
 
     SECTION("90 Deg Rotation Case")
     {
         displ_1 << 0.0, 0.0, 0.5 * M_PI;
         displ_2 << 0.0, 0.0, M_PI;
-        dx = 1.0 * 1.0 * 4;
+        dx = 0.5 * moment_inertia
+            * (displ_1.dot(displ_1) + displ_2.dot(displ_2));
     }
 
     using namespace ccd::physics;
@@ -50,9 +54,8 @@ TEST_CASE(
     rbs.push_back(RigidBody::from_displacement(vertices, edges, displ_1));
     rbs.push_back(RigidBody::from_displacement(vertices, edges, displ_2));
 
-    RigidBodyProblem rbp;
-    rbp.init(rbs,"time_barrier_constraint");
-    rbp.use_chain_functional = true; // test was written for this
+    DistanceBarrierRBProblem rbp("rb_problem");
+    rbp.init(rbs);
 
     // displacement cases
     Eigen::VectorXd x(6);
@@ -60,9 +63,9 @@ TEST_CASE(
     double fx = rbp.eval_f(x);
     CHECK(fx == Approx(0.0));
 
-    x << rbs[0].position_prev + 2 * displ_1, rbs[1].position_prev + displ_2;
+    x << rbs[0].position_prev + 2 * displ_1, rbs[1].position_prev + 2 * displ_2;
     fx = rbp.eval_f(x);
-    CHECK(fx == Approx(dx / 2));
+    CHECK(fx == Approx(dx));
 }
 
 TEST_CASE(
@@ -102,8 +105,8 @@ TEST_CASE(
     rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_1));
     rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_2));
 
-    RigidBodyProblem rbp;
-    rbp.init(rbs,"time_barrier_constraint");
+    DistanceBarrierRBProblem rbp("rb_problem");
+    rbp.init(rbs);
 
     // displacement cases
     Eigen::VectorXd x(6);
@@ -114,8 +117,7 @@ TEST_CASE(
     CHECK(ccd::compare_gradient(grad_fx, grad_fx_approx));
 }
 
-TEST_CASE(
-    "Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
+TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
 {
 
     Eigen::MatrixX2d vertices(4, 2);
@@ -151,8 +153,8 @@ TEST_CASE(
     rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_1));
     rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_2));
 
-    RigidBodyProblem rbp;
-    rbp.init(rbs,"time_barrier_constraint");
+    DistanceBarrierRBProblem rbp("rb_problem");
+    rbp.init(rbs);
 
     // displacement cases
     Eigen::VectorXd x(6);

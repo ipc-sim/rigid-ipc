@@ -86,12 +86,21 @@ namespace opt {
         virtual const int& num_vars() = 0;
     };
 
+    enum class CstrSetFlag {
+        UPDATE_CSTR_SET = 0,
+        KEEP_CSTR_SET = 0,
+    };
+
     class IBarrierGeneralProblem : public virtual IConstraintedProblem {
     public:
         virtual ~IBarrierGeneralProblem() = default;
 
-        virtual Eigen::VectorXd eval_g_(
-            const Eigen::VectorXd& x, const bool update_constraint_set)
+        ///
+        /// \brief eval_g_set: evals the constraints with option of updating or
+        /// freezing constraint set
+        ///
+        virtual Eigen::VectorXd eval_g_set(
+            const Eigen::VectorXd& x, const CstrSetFlag flag)
             = 0;
 
         virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
@@ -119,8 +128,8 @@ namespace opt {
     public:
         virtual ~IBarrierProblem() = default;
 
-        virtual double eval_f_(
-            const Eigen::VectorXd& x, const bool /*update_constraint_set*/)
+        virtual double eval_f_set(
+            const Eigen::VectorXd& x, const CstrSetFlag flag)
             = 0;
 
         virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,

@@ -259,6 +259,20 @@ namespace opt {
         return opt::spline_barrier<T>(distance, m_barrier_epsilon);
     }
 
+    template ccd::DistanceBarrierDiff::DDouble2
+    DistanceBarrierConstraint::distance_barrier<
+        ccd::DistanceBarrierDiff::DDouble2>(
+        const ccd::DistanceBarrierDiff::D2VectorXd& a,
+        const ccd::DistanceBarrierDiff::D2VectorXd& b,
+        const ccd::DistanceBarrierDiff::D2VectorXd& c);
+
+    template ccd::DistanceBarrierDiff::DDouble1
+    DistanceBarrierConstraint::distance_barrier<
+        ccd::DistanceBarrierDiff::DDouble1>(
+        const ccd::DistanceBarrierDiff::D1VectorXd& a,
+        const ccd::DistanceBarrierDiff::D1VectorXd& b,
+        const ccd::DistanceBarrierDiff::D1VectorXd& c);
+
     Eigen::VectorXd DistanceBarrierConstraint::distance_barrier_grad(
         const Eigen::VectorXd& a,
         const Eigen::VectorXd& b,

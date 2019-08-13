@@ -2,9 +2,6 @@
 
 #include <memory> // shared_ptr
 
-#include <opt/collision_constraint.hpp>
-#include <opt/optimization_problem.hpp>
-
 #include <physics/rigid_body_assembler.hpp>
 #include <physics/simulation_problem.hpp>
 
@@ -20,16 +17,16 @@ namespace physics {
 
         virtual ~RigidBodyProblem() override = default;
 
+
         ////////////////////////////////////////////////////////////////////////
         /// I-SIMULATION
         std::string name() override { return name_; }
-        void init(const nlohmann::json& params) override;
+        virtual void settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
         nlohmann::json state() const override;
         void state(const nlohmann::json& s) override;
 
-        void init(
-            const std::vector<RigidBody> rbs, const std::string& constraint);
+        void init(const std::vector<RigidBody> rbs);
 
         /// \brief does a single simulation step. Returns true if there is a
         /// collision
@@ -41,6 +38,16 @@ namespace physics {
 
         /// \brief update problem using current status of bodies.
         void update_constraint() override;
+        opt::OptimizationResults solve_constraints() override
+        {
+            return solver().solve();
+        }
+
+        void init_solve() override { solver().init_solve(); }
+        opt::OptimizationResults step_solve() override
+        {
+            return solver().step_solve();
+        }
 
         /// \brief returns world vertices at the END of NEXT step.
         /// Returns the positions of the next step assuming no collisions forces
@@ -99,17 +106,8 @@ namespace physics {
         {
             return m_assembler.is_dof_fixed;
         }
-        //        const Eigen::VectorXb& is_dof_fixed() override
-        //        {
-        //            return m_assembler.is_rb_dof_fixed;
-        //        }
 
         const Eigen::VectorXd& gravity() const override { return gravity_; }
-
-        const opt::CollisionConstraint& constraint() override
-        {
-            return *m_constraint_ptr;
-        }
 
         ////////////////////////////////////////////////////////////////////////
         /// IConstraintedProblem
@@ -124,28 +122,14 @@ namespace physics {
         Eigen::SparseMatrix<double> eval_hessian_f(
             const Eigen::VectorXd& sigma) override;
 
-//        /// @brief eval_g evaluates constraints at point x
-//        Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
-
-//        /// @brief eval_jac_g evaluates constraints jacobian at point x
-//        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
-
-//        // @brief eval_hessian_g evaluates constraints hessian at point x
-//        std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
-//            const Eigen::VectorXd& x) override;
-
         const int& num_vars() override { return num_vars_; }
-        const int& num_constraints() override { return num_constraints_; }
         const Eigen::VectorXd& starting_point() override { return x0; }
 
         physics::RigidBodyAssembler m_assembler;
-        std::shared_ptr<opt::CollisionConstraint> m_constraint_ptr;
 
         // ------------------------------------------------------------------------
         // Settings
         // ------------------------------------------------------------------------
-        bool use_chain_functional;
-        bool m_update_constraint_set;
         double coefficient_restitution;
         Eigen::VectorXd gravity_;
         double collision_eps;
@@ -157,14 +141,9 @@ namespace physics {
             const Eigen::MatrixXd& q1,
             const CollisionCheck check_type);
 
-//        Eigen::MatrixXd update_g(const Eigen::VectorXd& gamma);
-//        Eigen::MatrixXd update_g(
-//            const Eigen::VectorXd& gamma, const bool update_constraint_set);
-
         int num_vars_;
         int num_constraints_;
         Eigen::VectorXd x0;
-
 
         /// Used during collision resolution
         ///< vertices positions at begining of interval
@@ -182,7 +161,6 @@ namespace physics {
 
         std::string name_;
     };
-
 
     void assemble_hessian(const Eigen::SparseMatrix<double>& jac_xk_sigma,
         const std::vector<Eigen::SparseMatrix<double>>& hess_xk_sigma,

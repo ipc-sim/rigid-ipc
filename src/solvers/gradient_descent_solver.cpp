@@ -47,7 +47,6 @@ namespace opt {
         Eigen::VectorXd delta_x = Eigen::VectorXd::Zero(problem.num_vars());
         double step_length = 1.0;
 
-
         int iter = 0;
         std::string exit_reason = "exceeded the maximum allowable iterations";
         do {
@@ -82,7 +81,6 @@ namespace opt {
 
             x += step_length * delta_x; // Update x
 
-
         } while (++iter <= max_iterations);
 
         spdlog::trace("solver=newtons_method total_iter={:d} "
@@ -104,12 +102,12 @@ namespace opt {
         bool success = false;
 
         int num_it = 0;
-        bool first_iter = true;
+        auto cstr_flag = CstrSetFlag::UPDATE_CSTR_SET;
         while (step_norm >= min_step_length) {
 
             Eigen::VectorXd xi = x + step_length * dir;
-            double fxi = problem.eval_f_(xi, /*update_cstr_set=*/first_iter);
-            first_iter = false;
+            double fxi = problem.eval_f_set(xi, cstr_flag);
+            cstr_flag = CstrSetFlag::KEEP_CSTR_SET;
 
             bool min_rule = fxi < fx;
             bool cstr = !std::isinf(fxi);

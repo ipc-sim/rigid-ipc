@@ -2,7 +2,11 @@
 
 #include <nlohmann/json.hpp>
 
+#include <opt/optimization_problem.hpp>
+#include <opt/optimization_results.hpp>
 #include <opt/collision_constraint.hpp>
+
+#include <solvers/optimization_solver.hpp>
 
 namespace ccd {
 namespace physics {
@@ -13,13 +17,14 @@ namespace physics {
         virtual ~ISimulationProblem() = default;
         enum CollisionCheck { EXACT = 0, CONSERVATIVE };
 
+        virtual opt::CollisionConstraint& constraint() = 0;
+        virtual opt::IStateOptimizationSolver& solver() = 0;
+
         virtual std::string name() = 0;
-        virtual void init(const nlohmann::json& params) = 0;
+        virtual void settings(const nlohmann::json& params) = 0;
         virtual nlohmann::json state() const = 0;
         virtual void state(const nlohmann::json& s) = 0;
         virtual nlohmann::json settings() const = 0;
-
-        virtual const opt::CollisionConstraint& constraint() = 0;
 
         /// @brief  does a single simulation step. Returns true if there is
         /// a collision
@@ -32,6 +37,9 @@ namespace physics {
 
         /// \brief update optimization problem using current status.
         virtual void update_constraint() = 0;
+        virtual opt::OptimizationResults solve_constraints() = 0;
+        virtual void init_solve() = 0;
+        virtual opt::OptimizationResults step_solve() = 0;
 
         /// -----------------------------------------------------------------
         /// @bried return candidate position of vertices, assuming no collisions

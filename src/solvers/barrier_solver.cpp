@@ -27,7 +27,8 @@ namespace opt {
 
     {
     }
-    void BarrierSolver::set_problem(IBarrierGeneralProblem& problem){
+    void BarrierSolver::set_problem(IBarrierGeneralProblem& problem)
+    {
         general_problem_ptr = &problem;
     }
 
@@ -141,10 +142,11 @@ namespace opt {
 
     double BarrierProblem::eval_f(const Eigen::VectorXd& x)
     {
-        return eval_f_(x, /*update_cstr_set=*/true);
+        return eval_f_set(x, CstrSetFlag::UPDATE_CSTR_SET);
     }
-    double BarrierProblem::eval_f_(
-        const Eigen::VectorXd& x, const bool update_constraint_set)
+
+    double BarrierProblem::eval_f_set(
+        const Eigen::VectorXd& x, const CstrSetFlag flag)
     {
         NAMED_PROFILE_POINT("barrier_problem__eval_f", EVAL_F)
         NAMED_PROFILE_POINT("barrier_problem__eval_g", EVAL_G)
@@ -154,7 +156,7 @@ namespace opt {
         PROFILE_END(EVAL_F)
 
         PROFILE_START(EVAL_G)
-        auto gx_ = general_problem->eval_g_(x, update_constraint_set);
+        auto gx_ = general_problem->eval_g_set(x, flag);
         double gx = gx_.sum();
         PROFILE_MESSAGE(EVAL_G,
             fmt::format("epsilon,{:10e},gx_sum,{:10e}",

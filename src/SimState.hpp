@@ -35,7 +35,6 @@ public:
     // CCD
     // ----------------------------------------------
     std::shared_ptr<physics::ISimulationProblem> problem_ptr;
-    std::shared_ptr<opt::IStateOptimizationSolver> ccd_solver_ptr;
     double m_timestep_size;
 
     bool m_step_had_collision;  ///< last step had a collision
@@ -51,8 +50,6 @@ public:
     // for visualization
     Eigen::MatrixXd grid_V;
     Eigen::MatrixXi grid_F;
-
-
 
 
 protected:

@@ -35,7 +35,7 @@ namespace physics {
         ////////////////////////////////////////////////////////////////////////
         /// I-SIMULATION
         std::string name() override {return name_; }
-        void init(const nlohmann::json& params) override;
+        void settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
         nlohmann::json state() const override;
         void state(const nlohmann::json& s) override;
@@ -86,10 +86,10 @@ namespace physics {
 
 
 
-        const opt::CollisionConstraint& constraint() override
-        {
-            return *constraint_ptr;
-        }
+//        const opt::CollisionConstraint& constraint() override
+//        {
+//            return *constraint_ptr;
+//        }
 
         void unflatten_dof(Eigen::MatrixXd& vec) const override
         {

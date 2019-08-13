@@ -34,7 +34,7 @@ namespace physics {
     {
     }
 
-    void ParticlesDisplProblem::init(const nlohmann::json& params)
+    void ParticlesDisplProblem::settings(const nlohmann::json &params)
     {
 
         constraint_ptr = opt::ConstraintFactory::factory().get_constraint(

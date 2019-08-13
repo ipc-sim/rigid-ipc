@@ -22,6 +22,9 @@ public:
 
     typedef Eigen::Matrix<DDouble1, 3, 1> D1Vector3d;
     typedef Eigen::Matrix<DDouble2, 3, 1> D2Vector3d;
+    typedef Eigen::Matrix<DDouble1, 2, 1> D1Vector2d;
+    typedef Eigen::Matrix<DDouble2, 2, 1> D2Vector2d;
+
 
     inline static void activate() { DiffScalarBase::setVariableCount(N); }
 

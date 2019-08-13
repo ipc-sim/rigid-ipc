@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
 
 #include <Eigen/Eigenvalues>
-#include <utils/eigen_ext.hpp>
 #include <solvers/newton_solver.hpp>
+#include <utils/eigen_ext.hpp>
 
 using namespace ccd;
 using namespace opt;
@@ -29,8 +29,8 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
         {
             return x.squaredNorm() / 2.0;
         }
-        double eval_f_(const Eigen::VectorXd& x,
-            const bool /*update_constraint_set*/) override
+        double eval_f_set(
+            const Eigen::VectorXd& x, const CstrSetFlag flag) override
         {
             return eval_f(x);
         }

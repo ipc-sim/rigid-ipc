@@ -60,7 +60,7 @@ add_library(${PROJECT_NAME}
     src/physics/rigid_body_problem.cpp
     src/physics/rigid_body.cpp
     src/physics/rigid_body_assembler.cpp
-    src/physics/problem_factory.cpp
+
 
     src/opt/barrier.cpp
     src/opt/time_barrier_constraint.cpp
@@ -84,7 +84,11 @@ add_library(${PROJECT_NAME}
     src/solvers/qp_solver.cpp
     src/solvers/solver_factory.cpp
 
+    src/problems/distance_barrier_rb_problem.cpp
+    src/problems/problem_factory.cpp
+
     src/utils/eigen_ext.cpp
+    src/utils/tensor.cpp
     src/utils/regular_2d_grid.cpp
 
 #    src/state.cpp

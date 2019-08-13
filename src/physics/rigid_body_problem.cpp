@@ -24,8 +24,7 @@ namespace physics {
     }
 
     RigidBodyProblem::RigidBodyProblem(const std::string& name)
-        : m_update_constraint_set(true)
-        , coefficient_restitution(0)
+        : coefficient_restitution(0)
         , gravity_(Eigen::Vector3d::Zero())
         , collision_eps(2)
         , name_(name)
@@ -33,52 +32,38 @@ namespace physics {
     {
     }
 
-    void RigidBodyProblem::init(const nlohmann::json& params)
+    void RigidBodyProblem::settings(const nlohmann::json& params)
     {
-        std::vector<physics::RigidBody> rbs;
-        io::read_rb_scene(params, rbs);
-        m_assembler.init(rbs);
 
-        m_constraint_ptr = opt::ConstraintFactory::factory().get_constraint(
-            params["constraint"]);
 
-        // set parameters
-        use_chain_functional = params["use_chain_functional"].get<bool>();
-        m_update_constraint_set = params["update_constraint_set"].get<bool>();
         collision_eps = params["collision_eps"].get<double>();
         coefficient_restitution
             = params["coefficient_restitution"].get<double>();
+
         io::from_json(params["gravity"], gravity_);
         assert(gravity_.rows() == 3);
 
-        vertices_t0.resize(m_assembler.num_vertices(), 2);
-        vertices_t0.setZero();
+        std::vector<physics::RigidBody> rbs;
+        io::read_rb_scene(params, rbs);
 
-        vertices_q1.resize(m_assembler.num_vertices(), 2);
-        vertices_q1.setZero();
+        init(rbs);
+        m_assembler.init(rbs);
 
-        Fcollision.resize(m_assembler.num_vertices(), 2);
-        Fcollision.setZero();
-        update_constraint();
     }
 
     nlohmann::json RigidBodyProblem::settings() const
     {
         nlohmann::json json;
-        json["constraint"] = m_constraint_ptr->name();
-        json["use_chain_functional"] = use_chain_functional;
-        json["update_constraint_set"] = m_update_constraint_set;
+
         json["collision_eps"] = collision_eps;
         json["coefficient_restitution"] = coefficient_restitution;
         json["gravity"] = io::to_json(gravity_);
         return json;
     }
-    void RigidBodyProblem::init(
-        const std::vector<RigidBody> rbs, const std::string& constraint)
+
+    void RigidBodyProblem::init(const std::vector<RigidBody> rbs)
     {
         m_assembler.init(rbs);
-        m_constraint_ptr
-            = opt::ConstraintFactory::factory().get_constraint(constraint);
 
         vertices_t0.resize(m_assembler.num_vertices(), 2);
         vertices_t0.setZero();
@@ -140,7 +125,6 @@ namespace physics {
 
     bool RigidBodyProblem::simulation_step(const double time_step)
     {
-        assert(m_constraint_ptr != nullptr);
 
         for (auto& rb : m_assembler.m_rbs) {
             rb.position_prev = rb.position;
@@ -161,7 +145,6 @@ namespace physics {
     bool RigidBodyProblem::take_step(
         const Eigen::VectorXd& rb_positions, const double time_step)
     {
-        assert(m_constraint_ptr != nullptr);
 
         // update final position
         // -------------------------------------
@@ -334,6 +317,7 @@ namespace physics {
             body_B.velocity(2) += w_B_delta;
         }
     }
+
     void RigidBodyProblem::update_constraint()
     {
         vertices_t0 = m_assembler.world_vertices_t0();
@@ -345,10 +329,10 @@ namespace physics {
         x0 = m_assembler.rb_positions_t0(); // start from collision free state
         num_vars_ = int(x0.size());
 
-        m_constraint_ptr->initialize(vertices_t0, m_assembler.m_edges,
+        constraint().initialize(vertices_t0, m_assembler.m_edges,
             m_assembler.m_vertex_to_body_map, vertices_q1 - vertices_t0);
 
-        original_ev_impacts = m_constraint_ptr->ev_impacts;
+        original_ev_impacts = constraint().ev_impacts;
         std::sort(original_ev_impacts.begin(), original_ev_impacts.end(),
             ccd::compare_impacts_by_time<ccd::EdgeVertexImpact>);
     }
@@ -417,7 +401,7 @@ namespace physics {
             = check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
         ccd::detect_edge_vertex_collisions(q0, (q1 - q0) * scale,
             m_assembler.m_edges, m_assembler.m_vertex_to_body_map, ev_impacts,
-            m_constraint_ptr->detection_method);
+            constraint().detection_method);
 
         return ev_impacts.size() > 0;
     }
@@ -437,9 +421,9 @@ namespace physics {
         Eigen::VectorXd diff = sigma - rb_positions_t1;
         grad_f = m_assembler.m_rb_mass_matrix * diff;
 
-//#ifdef WITH_DERIVATIVE_CHECK
-//        assert(compare_grad_f_approx(sigma, grad_f));
-//#endif
+        //#ifdef WITH_DERIVATIVE_CHECK
+        //        assert(compare_grad_f_approx(sigma, grad_f));
+        //#endif
         return grad_f;
     }
 
@@ -448,77 +432,80 @@ namespace physics {
     {
         Eigen::SparseMatrix<double> hessian_f;
         hessian_f = m_assembler.m_rb_mass_matrix;
-//#ifdef WITH_DERIVATIVE_CHECK
-//        assert(compare_hessian_f_approx(sigma, hessian_f));
-//#endif
+        //#ifdef WITH_DERIVATIVE_CHECK
+        //        assert(compare_hessian_f_approx(sigma, hessian_f));
+        //#endif
         return hessian_f;
     }
 
-//    Eigen::MatrixXd RigidBodyProblem::update_g(const Eigen::VectorXd& sigma)
-//    {
-//        return update_g(sigma, m_update_constraint_set);
-//    }
+    //    Eigen::MatrixXd RigidBodyProblem::update_g(const Eigen::VectorXd&
+    //    sigma)
+    //    {
+    //        return update_g(sigma, m_update_constraint_set);
+    //    }
 
-//    Eigen::MatrixXd RigidBodyProblem::update_g(
-//        const Eigen::VectorXd& sigma, const bool update_constraint_set)
-//    {
-//        Eigen::MatrixXd m_xk = m_assembler.world_vertices(sigma);
-//        Eigen::MatrixXd uk = m_xk - vertices_t0;
+    //    Eigen::MatrixXd RigidBodyProblem::update_g(
+    //        const Eigen::VectorXd& sigma, const bool update_constraint_set)
+    //    {
+    //        Eigen::MatrixXd m_xk = m_assembler.world_vertices(sigma);
+    //        Eigen::MatrixXd uk = m_xk - vertices_t0;
 
-//        if (update_constraint_set) {
-//            m_constraint_ptr->update_collision_set(uk);
-//        }
-//        if (m_constraint_ptr->is_distance_barrier()) {
-//            m_constraint_ptr->update_active_set(uk);
-//        }
-//        return uk;
-//    }
+    //        if (update_constraint_set) {
+    //            m_constraint_ptr->update_collision_set(uk);
+    //        }
+    //        if (m_constraint_ptr->is_distance_barrier()) {
+    //            m_constraint_ptr->update_active_set(uk);
+    //        }
+    //        return uk;
+    //    }
 
+    //    Eigen::VectorXd RigidBodyProblem::eval_g(const Eigen::VectorXd& sigma)
+    //    {
+    //        Eigen::VectorXd g_uk;
+    //        Eigen::MatrixXd uk = update_g(sigma);
+    //        m_constraint_ptr->compute_constraints(uk, g_uk);
+    //        return g_uk;
+    //    }
 
-//    Eigen::VectorXd RigidBodyProblem::eval_g(const Eigen::VectorXd& sigma)
-//    {
-//        Eigen::VectorXd g_uk;
-//        Eigen::MatrixXd uk = update_g(sigma);
-//        m_constraint_ptr->compute_constraints(uk, g_uk);
-//        return g_uk;
-//    }
+    //    Eigen::MatrixXd RigidBodyProblem::eval_jac_g(const Eigen::VectorXd&
+    //    sigma)
+    //    {
+    //        Eigen::MatrixXd uk = update_g(sigma);
 
-//    Eigen::MatrixXd RigidBodyProblem::eval_jac_g(const Eigen::VectorXd& sigma)
-//    {
-//        Eigen::MatrixXd uk = update_g(sigma);
+    //        Eigen::SparseMatrix<double> jac_xk_sigma;
+    //        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
 
-//        Eigen::SparseMatrix<double> jac_xk_sigma;
-//        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+    //        Eigen::MatrixXd jac_g_uk;
+    //        m_constraint_ptr->compute_constraints_jacobian(uk, jac_g_uk);
 
-//        Eigen::MatrixXd jac_g_uk;
-//        m_constraint_ptr->compute_constraints_jacobian(uk, jac_g_uk);
+    //        Eigen::MatrixXd jac = jac_g_uk * jac_xk_sigma;
 
-//        Eigen::MatrixXd jac = jac_g_uk * jac_xk_sigma;
+    //        return jac;
+    //    }
 
-//        return jac;
-//    }
+    //    std::vector<Eigen::SparseMatrix<double>>
+    //    RigidBodyProblem::eval_hessian_g(
+    //        const Eigen::VectorXd& sigma)
+    //    {
+    //        Eigen::MatrixXd uk = update_g(sigma);
 
-//    std::vector<Eigen::SparseMatrix<double>> RigidBodyProblem::eval_hessian_g(
-//        const Eigen::VectorXd& sigma)
-//    {
-//        Eigen::MatrixXd uk = update_g(sigma);
+    //        Eigen::SparseMatrix<double> jac_xk_sigma;
+    //        std::vector<Eigen::SparseMatrix<double>> hess_xk_sigma;
+    //        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+    //        m_assembler.world_vertices_hessian(sigma, hess_xk_sigma);
 
-//        Eigen::SparseMatrix<double> jac_xk_sigma;
-//        std::vector<Eigen::SparseMatrix<double>> hess_xk_sigma;
-//        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
-//        m_assembler.world_vertices_hessian(sigma, hess_xk_sigma);
+    //        Eigen::MatrixXd jac_g_uk;
+    //        std::vector<Eigen::SparseMatrix<double>> hessian_g_uk;
+    //        m_constraint_ptr->compute_constraints_jacobian(uk, jac_g_uk);
+    //        m_constraint_ptr->compute_constraints_hessian(uk, hessian_g_uk);
 
-//        Eigen::MatrixXd jac_g_uk;
-//        std::vector<Eigen::SparseMatrix<double>> hessian_g_uk;
-//        m_constraint_ptr->compute_constraints_jacobian(uk, jac_g_uk);
-//        m_constraint_ptr->compute_constraints_hessian(uk, hessian_g_uk);
+    //        std::vector<Eigen::SparseMatrix<double>> gx_hessian;
+    //        assemble_hessian(
+    //            jac_xk_sigma, hess_xk_sigma, jac_g_uk, hessian_g_uk,
+    //            gx_hessian);
 
-//        std::vector<Eigen::SparseMatrix<double>> gx_hessian;
-//        assemble_hessian(
-//            jac_xk_sigma, hess_xk_sigma, jac_g_uk, hessian_g_uk, gx_hessian);
-
-//        return gx_hessian;
-//    }
+    //        return gx_hessian;
+    //    }
 
     void assemble_hessian(const Eigen::SparseMatrix<double>& jac_xk_sigma,
         const std::vector<Eigen::SparseMatrix<double>>& hess_xk_sigma,
@@ -539,193 +526,204 @@ namespace physics {
         }
     }
 
-//    Eigen::MatrixXd RigidBodyProblem::eval_jac_g(
-//        const Eigen::VectorXd& sigma, const bool update_constraint_set)
-//    {
+    //    Eigen::MatrixXd RigidBodyProblem::eval_jac_g(
+    //        const Eigen::VectorXd& sigma, const bool update_constraint_set)
+    //    {
 
-//        Eigen::MatrixXd uk = update_g(sigma, update_constraint_set);
+    //        Eigen::MatrixXd uk = update_g(sigma, update_constraint_set);
 
-//        Eigen::SparseMatrix<double> jac_xk_sigma;
-//        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+    //        Eigen::SparseMatrix<double> jac_xk_sigma;
+    //        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
 
-//        Eigen::MatrixXd jac_g_uk;
-//        m_constraint_ptr->compute_constraints_jacobian(uk, jac_g_uk);
+    //        Eigen::MatrixXd jac_g_uk;
+    //        m_constraint_ptr->compute_constraints_jacobian(uk, jac_g_uk);
 
-//        Eigen::MatrixXd jac = jac_g_uk * jac_xk_sigma;
+    //        Eigen::MatrixXd jac = jac_g_uk * jac_xk_sigma;
 
-////#ifdef WITH_DERIVATIVE_CHECK
-////        if (!compare_jac_g_approx(sigma, jac)) {
-////            spdlog::error(
-////                "rigid_body status=fail message='constraint gradient finite-differences failed'");
-////        }
-////#endif
+    ////#ifdef WITH_DERIVATIVE_CHECK
+    ////        if (!compare_jac_g_approx(sigma, jac)) {
+    ////            spdlog::error(
+    ////                "rigid_body status=fail message='constraint gradient
+    ///finite-differences failed'"); /        }
+    ////#endif
+    //        return jac;
+    //    }
+
+    //    void RigidBodyProblem::eval_jac_g(
+    //        const Eigen::VectorXd& sigma, Eigen::SparseMatrix<double>& jac_gx)
+    //    {
+    //        Eigen::MatrixXd uk = update_g(sigma);
+
+    //        Eigen::SparseMatrix<double> jac_xk_sigma;
+    //        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+
+    //        m_constraint_ptr->compute_constraints_jacobian(uk, jac_gx);
+    //        jac_gx = jac_gx * jac_xk_sigma;
+    //    };
+
+//<<<<<<< HEAD
+//<<<<<<< HEAD
+//#ifdef WITH_DERIVATIVE_CHECK
+//        double diff_norm;
+//        if (!compare_jac_g_approx(sigma, jac, diff_norm)) {
+//            spdlog::error(
+//                "rigid_body status=fail message='constraint gradient finite-differences failed' diff_norm={:g}",
+//                diff_norm);
+//        }
+//#endif
 //        return jac;
 //    }
-
-//    void RigidBodyProblem::eval_jac_g(
-//        const Eigen::VectorXd& sigma, Eigen::SparseMatrix<double>& jac_gx)
-//    {
-//        Eigen::MatrixXd uk = update_g(sigma);
-
-//        Eigen::SparseMatrix<double> jac_xk_sigma;
-//        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
-
-//        m_constraint_ptr->compute_constraints_jacobian(uk, jac_gx);
-//        jac_gx = jac_gx * jac_xk_sigma;
-//    };
-
-<<<<<<< HEAD
-#ifdef WITH_DERIVATIVE_CHECK
-        double diff_norm;
-        if (!compare_jac_g_approx(sigma, jac, diff_norm)) {
-            spdlog::error(
-                "rigid_body status=fail message='constraint gradient finite-differences failed' diff_norm={:g}",
-                diff_norm);
-        }
-#endif
-        return jac;
-    }
-=======
+//=======
 //    void RigidBodyProblem::eval_g(const Eigen::VectorXd& sigma,
 //        Eigen::VectorXd& g_uk,
 //        Eigen::SparseMatrix<double>& g_uk_jacobian,
 //        Eigen::VectorXi& g_uk_active)
 //    {
 //        Eigen::MatrixXd uk = update_g(sigma);
->>>>>>> f3a617e... adding rigid body distance barrier specialization
+//>>>>>>> f3a617e... adding rigid body distance barrier specialization
+//=======
+    //    void RigidBodyProblem::eval_g(const Eigen::VectorXd& sigma,
+    //        Eigen::VectorXd& g_uk,
+    //        Eigen::SparseMatrix<double>& g_uk_jacobian,
+    //        Eigen::VectorXi& g_uk_active)
+    //    {
+    //        Eigen::MatrixXd uk = update_g(sigma);
+//>>>>>>> 530295a... Fix bugs on distance barrier rb problem
 
-//        Eigen::SparseMatrix<double> jac_xk_sigma;
-//        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+    //        Eigen::SparseMatrix<double> jac_xk_sigma;
+    //        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
 
-//        m_constraint_ptr->compute_constraints(
-//            uk, g_uk, g_uk_jacobian, g_uk_active);
+    //        m_constraint_ptr->compute_constraints(
+    //            uk, g_uk, g_uk_jacobian, g_uk_active);
 
-//        g_uk_jacobian = g_uk_jacobian * jac_xk_sigma;
-//    }
+    //        g_uk_jacobian = g_uk_jacobian * jac_xk_sigma;
+    //    }
 
     /// @brief: util function to assemble hessian from partial derivatives
 
+    //    void RigidBodyProblem::eval_g_and_gdiff(const Eigen::VectorXd& sigma,
+    //        Eigen::VectorXd& gx,
+    //        Eigen::MatrixXd& gx_jacobian,
+    //        std::vector<Eigen::SparseMatrix<double>>& gx_hessian)
+    //    {
+    //        NAMED_PROFILE_POINT("rigid_body_problem__update_g", UPDATE_G)
+    //        NAMED_PROFILE_POINT(
+    //            "rigid_body_problem__rigid_body_gradient", RIGID_BODY_GRADS)
+    //        NAMED_PROFILE_POINT(
+    //            "rigid_body_problem__rigid_body_hessian", RIGID_BODY_HESSIAN)
+    //        NAMED_PROFILE_POINT(
+    //            "rigid_body_problem__particles_gradients", PARTICLES_GRADS)
+    //        NAMED_PROFILE_POINT(
+    //            "rigid_body_problem__assemble_hessian", ASSEMBLE_HESSIAN)
 
+    //        PROFILE_START(UPDATE_G)
+    //        Eigen::MatrixXd uk = update_g(sigma);
+    //        PROFILE_END(UPDATE_G)
 
-//    void RigidBodyProblem::eval_g_and_gdiff(const Eigen::VectorXd& sigma,
-//        Eigen::VectorXd& gx,
-//        Eigen::MatrixXd& gx_jacobian,
-//        std::vector<Eigen::SparseMatrix<double>>& gx_hessian)
-//    {
-//        NAMED_PROFILE_POINT("rigid_body_problem__update_g", UPDATE_G)
-//        NAMED_PROFILE_POINT(
-//            "rigid_body_problem__rigid_body_gradient", RIGID_BODY_GRADS)
-//        NAMED_PROFILE_POINT(
-//            "rigid_body_problem__rigid_body_hessian", RIGID_BODY_HESSIAN)
-//        NAMED_PROFILE_POINT(
-//            "rigid_body_problem__particles_gradients", PARTICLES_GRADS)
-//        NAMED_PROFILE_POINT(
-//            "rigid_body_problem__assemble_hessian", ASSEMBLE_HESSIAN)
+    //        Eigen::SparseMatrix<double> jac_xk_sigma;
+    //        std::vector<Eigen::SparseMatrix<double>> hess_xk_sigma;
+    //        PROFILE_START(RIGID_BODY_GRADS)
+    //        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+    //        PROFILE_END(RIGID_BODY_GRADS)
+    //        PROFILE_START(RIGID_BODY_HESSIAN)
+    //        m_assembler.world_vertices_hessian(sigma, hess_xk_sigma);
+    //        PROFILE_END(RIGID_BODY_HESSIAN)
 
-//        PROFILE_START(UPDATE_G)
-//        Eigen::MatrixXd uk = update_g(sigma);
-//        PROFILE_END(UPDATE_G)
+    //        Eigen::MatrixXd jac_g_uk;
+    //        std::vector<Eigen::SparseMatrix<double>> hessian_g_uk;
+    //        PROFILE_START(PARTICLES_GRADS)
+    //        m_constraint_ptr->compute_constraints_and_derivatives(
+    //            uk, gx, jac_g_uk, hessian_g_uk);
+    //        PROFILE_END(PARTICLES_GRADS)
 
-//        Eigen::SparseMatrix<double> jac_xk_sigma;
-//        std::vector<Eigen::SparseMatrix<double>> hess_xk_sigma;
-//        PROFILE_START(RIGID_BODY_GRADS)
-//        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
-//        PROFILE_END(RIGID_BODY_GRADS)
-//        PROFILE_START(RIGID_BODY_HESSIAN)
-//        m_assembler.world_vertices_hessian(sigma, hess_xk_sigma);
-//        PROFILE_END(RIGID_BODY_HESSIAN)
+    //        gx_jacobian = jac_g_uk * jac_xk_sigma;
+    //        PROFILE_START(ASSEMBLE_HESSIAN)
+    //        assemble_hessian(
+    //            jac_xk_sigma, hess_xk_sigma, jac_g_uk, hessian_g_uk,
+    //            gx_hessian);
+    //        PROFILE_END(ASSEMBLE_HESSIAN)
 
-//        Eigen::MatrixXd jac_g_uk;
-//        std::vector<Eigen::SparseMatrix<double>> hessian_g_uk;
-//        PROFILE_START(PARTICLES_GRADS)
-//        m_constraint_ptr->compute_constraints_and_derivatives(
-//            uk, gx, jac_g_uk, hessian_g_uk);
-//        PROFILE_END(PARTICLES_GRADS)
+    //#ifdef WITH_DERIVATIVE_CHECK
+    //        if (!compare_jac_g_approx(sigma, gx_jacobian)) {
+    //            spdlog::error(
+    //                "rigid_body status=fail message='constraint gradient
+    //                finite-differences failed'");
+    //        } else {
+    //            spdlog::info(
+    //                "rigid_body status=OK message='constraint gradient
+    //                finite-differences OK'");
+    //        }
+    //        if (!compare_hessian_g_approx(sigma, gx_hessian)) {
+    //            spdlog::error(
+    //                "rigid_body status=fail message='constraint hessian
+    //                finite-differences failed'");
+    //        } else {
+    //            spdlog::info(
+    //                "rigid_body status=OK message='constraint hessian
+    //                finite-differences OK'");
+    //        }
 
-//        gx_jacobian = jac_g_uk * jac_xk_sigma;
-//        PROFILE_START(ASSEMBLE_HESSIAN)
-//        assemble_hessian(
-//            jac_xk_sigma, hess_xk_sigma, jac_g_uk, hessian_g_uk, gx_hessian);
-//        PROFILE_END(ASSEMBLE_HESSIAN)
+    //#endif
+    //    }
 
-//#ifdef WITH_DERIVATIVE_CHECK
-//        if (!compare_jac_g_approx(sigma, gx_jacobian)) {
-//            spdlog::error(
-//                "rigid_body status=fail message='constraint gradient finite-differences failed'");
-//        } else {
-//            spdlog::info(
-//                "rigid_body status=OK message='constraint gradient finite-differences OK'");
-//        }
-//        if (!compare_hessian_g_approx(sigma, gx_hessian)) {
-//            spdlog::error(
-//                "rigid_body status=fail message='constraint hessian finite-differences failed'");
-//        } else {
-//            spdlog::info(
-//                "rigid_body status=OK message='constraint hessian finite-differences OK'");
-//        }
-
-//#endif
-//    }
-
-
-//    void RigidBodyProblem::eval_f_and_fdiff(const Eigen::VectorXd& sigma,
-//        double& f_uk,
-//        Eigen::VectorXd& f_uk_grad,
-//        Eigen::SparseMatrix<double>& f_uk_hessian)
-//    {
-//        // TODO: make this call efficient
-//        f_uk = eval_f(sigma);
-//        f_uk_grad = eval_grad_f(sigma);
-//        f_uk_hessian = eval_hessian_f(sigma);
-//#ifdef WITH_DERIVATIVE_CHECK
-//        assert(compare_grad_f_approx(sigma, f_uk_grad));
-//        assert(compare_hessian_f_approx(sigma, f_uk_hessian));
-//#endif
-//    }
+    //    void RigidBodyProblem::eval_f_and_fdiff(const Eigen::VectorXd& sigma,
+    //        double& f_uk,
+    //        Eigen::VectorXd& f_uk_grad,
+    //        Eigen::SparseMatrix<double>& f_uk_hessian)
+    //    {
+    //        // TODO: make this call efficient
+    //        f_uk = eval_f(sigma);
+    //        f_uk_grad = eval_grad_f(sigma);
+    //        f_uk_hessian = eval_hessian_f(sigma);
+    //#ifdef WITH_DERIVATIVE_CHECK
+    //        assert(compare_grad_f_approx(sigma, f_uk_grad));
+    //        assert(compare_hessian_f_approx(sigma, f_uk_hessian));
+    //#endif
+    //    }
 
     ////////////////////////////////////////////////////////////////////////////
     /// Functional with CHAIN RULE
     ////////////////////////////////////////////////////////////////////////////
-//    double RigidBodyProblem::eval_f_chain(const Eigen::VectorXd& sigma)
-//    {
-//        Eigen::MatrixXd qk = m_assembler.world_vertices(sigma);
-//        Eigen::VectorXd diff = flat(Eigen::MatrixXd(qk - vertices_q1));
+    //    double RigidBodyProblem::eval_f_chain(const Eigen::VectorXd& sigma)
+    //    {
+    //        Eigen::MatrixXd qk = m_assembler.world_vertices(sigma);
+    //        Eigen::VectorXd diff = flat(Eigen::MatrixXd(qk - vertices_q1));
 
-//        return 0.5
-//            * (diff.transpose() * m_assembler.m_mass_matrix * diff).sum();
-//    }
+    //        return 0.5
+    //            * (diff.transpose() * m_assembler.m_mass_matrix * diff).sum();
+    //    }
 
-//    Eigen::VectorXd RigidBodyProblem::eval_grad_f_chain(
-//        const Eigen::VectorXd& sigma)
-//    {
-//        Eigen::MatrixXd qk = m_assembler.world_vertices(sigma);
-//        Eigen::VectorXd diff = flat(Eigen::MatrixXd(qk - vertices_q1));
+    //    Eigen::VectorXd RigidBodyProblem::eval_grad_f_chain(
+    //        const Eigen::VectorXd& sigma)
+    //    {
+    //        Eigen::MatrixXd qk = m_assembler.world_vertices(sigma);
+    //        Eigen::VectorXd diff = flat(Eigen::MatrixXd(qk - vertices_q1));
 
-//        Eigen::VectorXd grad_qk = m_assembler.m_mass_matrix * diff;
+    //        Eigen::VectorXd grad_qk = m_assembler.m_mass_matrix * diff;
 
-//        Eigen::SparseMatrix<double> jac_qk_sigma;
-//        m_assembler.world_vertices_gradient(sigma, jac_qk_sigma);
+    //        Eigen::SparseMatrix<double> jac_qk_sigma;
+    //        m_assembler.world_vertices_gradient(sigma, jac_qk_sigma);
 
-//        return grad_qk.transpose() * jac_qk_sigma;
-//    }
+    //        return grad_qk.transpose() * jac_qk_sigma;
+    //    }
 
-//    Eigen::SparseMatrix<double> RigidBodyProblem::eval_hessian_f_chain(
-//        const Eigen::VectorXd& sigma)
-//    {
-//        Eigen::MatrixXd qk = m_assembler.world_vertices(sigma);
-//        Eigen::VectorXd diff = flat(Eigen::MatrixXd(qk - vertices_q1));
+    //    Eigen::SparseMatrix<double> RigidBodyProblem::eval_hessian_f_chain(
+    //        const Eigen::VectorXd& sigma)
+    //    {
+    //        Eigen::MatrixXd qk = m_assembler.world_vertices(sigma);
+    //        Eigen::VectorXd diff = flat(Eigen::MatrixXd(qk - vertices_q1));
 
-//        Eigen::SparseMatrix<double> jac_qk_sigma;
-//        m_assembler.world_vertices_gradient(sigma, jac_qk_sigma);
-//        std::vector<Eigen::SparseMatrix<double>> hess_qk_sigma;
-//        m_assembler.world_vertices_hessian(sigma, hess_qk_sigma);
+    //        Eigen::SparseMatrix<double> jac_qk_sigma;
+    //        m_assembler.world_vertices_gradient(sigma, jac_qk_sigma);
+    //        std::vector<Eigen::SparseMatrix<double>> hess_qk_sigma;
+    //        m_assembler.world_vertices_hessian(sigma, hess_qk_sigma);
 
-//        Eigen::VectorXd grad_qk = m_assembler.m_mass_matrix * diff;
-//        Eigen::SparseMatrix<double> hess_qk = m_assembler.m_mass_matrix;
+    //        Eigen::VectorXd grad_qk = m_assembler.m_mass_matrix * diff;
+    //        Eigen::SparseMatrix<double> hess_qk = m_assembler.m_mass_matrix;
 
-//        return jac_qk_sigma.transpose() * hess_qk * jac_qk_sigma
-//            + tensor::multiply(grad_qk, hess_qk_sigma);
-//    }
+    //        return jac_qk_sigma.transpose() * hess_qk * jac_qk_sigma
+    //            + tensor::multiply(grad_qk, hess_qk_sigma);
+    //    }
 
     ////////////////////////////////////////////////////////////////////////////
     /// Constraints

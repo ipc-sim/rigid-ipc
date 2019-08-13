@@ -163,8 +163,8 @@ void UISimState::draw_collision_menu()
 //            m_state.problem_ptr->set_barrier_epsilon(eps);
 //        }
 //    }
-    ImGui::Text(
-        "Outer it.: %i", m_state.ccd_solver_ptr->num_outer_iterations());
+//    ImGui::Text(
+//        "Outer it.: %i", m_state.ccd_solver_ptr->num_outer_iterations());
 }
 void UISimState::draw_settings()
 {
