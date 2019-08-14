@@ -1,5 +1,4 @@
-#ifndef CCD_AUTO_TOI_HPP
-#define CCD_AUTO_TOI_HPP
+#pragma once
 
 #include <Eigen/Core>
 #include <autodiff/autodiff_types.hpp>
@@ -22,4 +21,5 @@ namespace autogen {
 
 }
 }
-#endif
+
+#include "auto_time_of_impact_coeff.ipp"

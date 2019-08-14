@@ -94,7 +94,7 @@ def main(args=None):
     print("saving ...")
     path = os.path.abspath(args.output)
 
-    filename_cpp = os.path.join(path, "%s.cpp" % filename)
+    filename_cpp = os.path.join(path, "%s.ipp" % filename)
     with open(filename_cpp, "w") as file:
         file.write(cpp)
 

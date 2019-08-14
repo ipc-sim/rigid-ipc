@@ -1,5 +1,4 @@
-#ifndef TIME_OF_IMPACT_HPP
-#define TIME_OF_IMPACT_HPP
+#pragma once
 
 #include <Eigen/Core>
 #include <autodiff/autodiff_types.hpp>
@@ -82,4 +81,5 @@ namespace autodiff {
         const Eigen::Vector2d& Uk, Vector8d& grad);
 } // namespace autodiff
 } // namespace ccd
-#endif
+
+#include "time_of_impact.tpp"

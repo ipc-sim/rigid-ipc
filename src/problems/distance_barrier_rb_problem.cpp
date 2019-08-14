@@ -125,6 +125,7 @@ namespace opt {
         PROFILE_END(UPDATE)
 
         constraint_.compute_constraints(uk, gx);
+
         PROFILE_START(EVAL_GRAD)
         gx_jacobian = eval_jac_g_core(sigma);
         PROFILE_END(EVAL_GRAD)
@@ -260,8 +261,8 @@ namespace opt {
         const EdgeVertexCandidate& ev_candidate, RB2Candidate& rbc)
     {
         const long v_id = ev_candidate.vertex_index;
-        const int e0_id = m_assembler.m_edges.coeff(ev_candidate.edge_index, 0);
-        const int e1_id = m_assembler.m_edges.coeff(ev_candidate.edge_index, 1);
+        const int e0_id = m_assembler.m_edges(ev_candidate.edge_index, 0);
+        const int e1_id = m_assembler.m_edges(ev_candidate.edge_index, 1);
         int body_V_id, lv_id, body_E_id, le0_id, le1_id;
 
         m_assembler.global_to_local(v_id, body_V_id, lv_id);

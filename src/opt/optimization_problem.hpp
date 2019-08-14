@@ -42,11 +42,7 @@ namespace opt {
     ///           g(x) >= 0
     ///
 
-    enum class CstrSetFlag {
-        UPDATE_CSTR_SET = 0,
-        KEEP_CSTR_SET
-    };
-
+    enum class CstrSetFlag { UPDATE_CSTR_SET = 0, KEEP_CSTR_SET };
 
     class IConstraintedProblem : public virtual IUnconstraintedProblem {
     public:
@@ -74,19 +70,9 @@ namespace opt {
     };
 
     //  Used for the Volume Constraint Solvers (i.e just NCP)
-    class IVolumeProblem {
+    class INCPProblem : public virtual IUnconstraintedProblem {
     public:
-        virtual ~IVolumeProblem() = default;
-
-        /// @brief Evaulate the objective function.
-        virtual double eval_f(const Eigen::VectorXd& x) = 0;
-        /// @brief Evaulate the gradient of the objective function.
-        virtual Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) = 0;
-
-        /// @brief Evaluate the hessian of the objective as a sparse matrix.
-        virtual Eigen::SparseMatrix<double> eval_hessian_f(
-            const Eigen::VectorXd& x)
-            = 0;
+        virtual ~INCPProblem() = default;
 
         /// @brief eval_g evaluates constraints at point x
         virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) = 0;
@@ -97,13 +83,12 @@ namespace opt {
             = 0;
 
         virtual const Eigen::VectorXb& is_dof_fixed() = 0;
-        virtual const int& num_vars() = 0;
+
     };
 
     class IBarrierGeneralProblem : public virtual IConstraintedProblem {
     public:
         virtual ~IBarrierGeneralProblem() = default;
-
 
         virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
             double& f_uk,
@@ -157,7 +142,7 @@ namespace opt {
         IUnconstraintedProblem& problem, const Eigen::VectorXd& x);
 
     Eigen::MatrixXd eval_jac_g_approx(
-            IConstraintedProblem& problem, const Eigen::VectorXd& x);
+        IConstraintedProblem& problem, const Eigen::VectorXd& x);
 
 } // namespace opt
 } // namespace ccd

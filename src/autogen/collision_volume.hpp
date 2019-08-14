@@ -1,5 +1,4 @@
-#ifndef CCD_AUTO_COLLISION_VOLUME_HPP
-#define CCD_AUTO_COLLISION_VOLUME_HPP
+#pragma once
 
 #include <Eigen/Core>
 #include <autodiff/autodiff_types.hpp>
@@ -34,4 +33,5 @@ namespace autogen {
 
 }
 }
-#endif
+
+#include "auto_collision_volume.ipp"

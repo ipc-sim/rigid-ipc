@@ -38,7 +38,7 @@ namespace opt {
         NCPSolver(const std::string& name);
         ~NCPSolver() override;
 
-        void set_problem(IVolumeProblem& problem) ;
+        void set_problem(INCPProblem& problem) ;
 
         OptimizationResults solve() override;
         void init_solve() override;
@@ -68,7 +68,7 @@ namespace opt {
 
         bool solve_ncp(const Eigen::SparseMatrix<double>& hessian,
             const Eigen::VectorXd& b,
-            IVolumeProblem& problem_ptr_,
+            INCPProblem& problem_ptr_,
             Eigen::VectorXd& x_opt,
             Eigen::VectorXd& alpha_opt);
 
@@ -97,7 +97,7 @@ namespace opt {
         Eigen::VectorXd lambda_i;
 
     protected:
-        void compute_linear_system(IVolumeProblem& problem_ptr_);
+        void compute_linear_system(INCPProblem& problem_ptr_);
         void compute_initial_solution();
 
         void solve_lcp(const Eigen::VectorXd& xi,
@@ -111,7 +111,7 @@ namespace opt {
 
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd b;
-        IVolumeProblem* problem_ptr_;
+        INCPProblem* problem_ptr_;
 
         int num_outer_iterations_;
         std::string name_;

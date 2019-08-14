@@ -97,7 +97,7 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         expected << 0.0, 1.5;
     }
 
-    class AdHocProblem : public virtual IVolumeProblem {
+    class AdHocProblem : public virtual INCPProblem {
     public:
         AdHocProblem(Eigen::SparseMatrix<double>& _A,
             Eigen::VectorXd& _b,
@@ -154,6 +154,9 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
             gx_jacobian = eval_jac_g(x).sparseView();
             gx_active
                 = Eigen::VectorXi::LinSpaced(gx.rows(), 0, int(gx.rows()));
+        }
+        const Eigen::VectorXd& starting_point() override {
+            return b;
         }
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
 

@@ -67,7 +67,7 @@ namespace opt {
 
     bool NCPSolver::solve_ncp(const Eigen::SparseMatrix<double>& f_A,
         const Eigen::VectorXd& f_b,
-        IVolumeProblem& opt_problem,
+        INCPProblem& opt_problem,
         Eigen::VectorXd& x_opt,
         Eigen::VectorXd& lambda_opt)
     {
@@ -90,7 +90,7 @@ namespace opt {
         return result.success;
     }
 
-    void NCPSolver::set_problem(IVolumeProblem& problem)
+    void NCPSolver::set_problem(INCPProblem& problem)
     {
         problem_ptr_ = &problem;
     }
@@ -141,7 +141,7 @@ namespace opt {
         lambda_i.setZero();
     }
 
-    void NCPSolver::compute_linear_system(IVolumeProblem& opt_problem)
+    void NCPSolver::compute_linear_system(INCPProblem& opt_problem)
     {
         Eigen::VectorXd x0 = Eigen::VectorXd::Zero(opt_problem.num_vars());
         A = opt_problem.eval_hessian_f(x0);
@@ -182,40 +182,6 @@ namespace opt {
         bool line_search_success = false;
         spdlog::trace("solver=ncp_solver it={} action=line_search status=BEGIN",
             num_outer_iterations_);
-
-        /// write file for Denis v.v
-        //        int N = 1000;
-        //        std::string filename = DATA_OUTPUT_DIR
-        //            + fmt::format("/solve_it_{}.csv", num_outer_iterations_);
-        //        spdlog::debug("writting into {}", filename);
-        //        std::ofstream myfile;
-        //        myfile.open(filename);
-        //        myfile << fmt::format("delta_i,
-        //        {}\n",log::fmt_eigen(delta_i)); myfile << "s,sum V, |Ax -(b
-        //        +J^T lambda)|, g_xi, J\n"; for (int it = 0; it < N; it++) {
-        //            double s = (it + 1) / double(N);
-        //            Eigen::VectorXd x_next = xi + s * delta_i;
-        //            problem_ptr_->eval_g(x_next, g_xi, jac_g_xi, g_active);
-
-        //            double residual
-        //                = (A * x_next - (b + jac_g_xi.transpose() *
-        //                lambda_i)).norm();
-        //            Eigen::VectorXd g_xi_active;
-        //            igl::slice(g_xi, g_active, g_xi_active);
-
-        //            uint dof = uint(xi.rows());
-        //            Eigen::SparseMatrix<double> jac_g_xi_active;
-        //            igl::slice(jac_g_xi, g_active,
-        //                Eigen::VectorXi::LinSpaced(dof, 0, int(dof)),
-        //                jac_g_xi_active);
-        //            myfile << fmt::format("{:10e},{:10e}, {:10e}, {}, {}\n",
-        //            s,
-        //                g_xi.sum(), residual, log::fmt_eigen(g_xi, 10),
-        //                log::fmt_eigen(jac_g_xi, 10));
-        //        }
-        //        myfile.close();
-
-        /// line search
 
         if (do_line_search) {
             while (step_norm >= convergence_tolerance) {

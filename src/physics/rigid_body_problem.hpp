@@ -10,23 +10,28 @@ namespace ccd {
 namespace physics {
 
     class RigidBodyProblem : public virtual ISimulationProblem,
-                             public virtual opt::IConstraintedProblem {
+                             public virtual opt::IUnconstraintedProblem {
     public:
         RigidBodyProblem(const std::string& name);
         RigidBodyProblem();
 
         virtual ~RigidBodyProblem() override = default;
 
-
         ////////////////////////////////////////////////////////////////////////
         /// I-SIMULATION
+        ////////////////////////////////////////////////////////////////////////
+
+
+        // virtual functions to implement by child classes
+        // ----------------------------------------------------
+        // virtual opt::CollisionConstraint& constraint() = 0;
+        // virtual opt::IStateOptimizationSolver& solver() = 0;
+
         std::string name() override { return name_; }
         virtual void settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
         nlohmann::json state() const override;
         void state(const nlohmann::json& s) override;
-
-        void init(const std::vector<RigidBody> rbs);
 
         /// \brief does a single simulation step. Returns true if there is a
         /// collision
@@ -42,7 +47,6 @@ namespace physics {
         {
             return solver().solve();
         }
-
         void init_solve() override { solver().init_solve(); }
         opt::OptimizationResults step_solve() override
         {
@@ -76,9 +80,6 @@ namespace physics {
             return p;
         }
 
-        Eigen::Vector3d rb_position_next(
-            const RigidBody& rb, const double time_step) const;
-
         /// \brief velocity of vertices at the END of the step
         /// as_delta = true, will return vertices / time_step;
         Eigen::MatrixXd velocities(
@@ -109,8 +110,14 @@ namespace physics {
 
         const Eigen::VectorXd& gravity() const override { return gravity_; }
 
+        void init(const std::vector<RigidBody> rbs);
+
+        Eigen::Vector3d rb_position_next(
+            const RigidBody& rb, const double time_step) const;
+
         ////////////////////////////////////////////////////////////////////////
-        /// IConstraintedProblem
+        /// IUnconstraintedProblem
+        ////////////////////////////////////////////////////////////////////////
 
         /// @brief eval_f evaluates functional at point x
         double eval_f(const Eigen::VectorXd& sigma) override;
@@ -125,14 +132,15 @@ namespace physics {
         const int& num_vars() override { return num_vars_; }
         const Eigen::VectorXd& starting_point() override { return x0; }
 
-        physics::RigidBodyAssembler m_assembler;
-
         // ------------------------------------------------------------------------
         // Settings
         // ------------------------------------------------------------------------
         double coefficient_restitution;
         Eigen::VectorXd gravity_;
         double collision_eps;
+
+        physics::RigidBodyAssembler m_assembler;
+
 
     protected:
         void solve_velocities();

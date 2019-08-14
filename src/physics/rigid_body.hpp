@@ -191,3 +191,6 @@ namespace physics {
 
 } // namespace physics
 } // namespace ccd
+
+#include "rigid_body.tpp"
+

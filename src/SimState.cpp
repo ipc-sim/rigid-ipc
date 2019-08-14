@@ -118,7 +118,7 @@ bool SimState::init(const nlohmann::json& args_in)
         },
         "ncp_solver":{
             "max_iterations": 1000,
-            "do_line_search": true,
+            "do_line_search": false,
             "solve_for_active_cstr": true,
             "convergence_tolerance":1e-6,
             "update_type": "linearized",

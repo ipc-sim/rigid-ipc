@@ -22,9 +22,10 @@ namespace physics {
 
         virtual std::string name() = 0;
         virtual void settings(const nlohmann::json& params) = 0;
+        virtual nlohmann::json settings() const = 0;
         virtual nlohmann::json state() const = 0;
         virtual void state(const nlohmann::json& s) = 0;
-        virtual nlohmann::json settings() const = 0;
+
 
         /// @brief  does a single simulation step. Returns true if there is
         /// a collision
