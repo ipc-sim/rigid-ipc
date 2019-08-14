@@ -55,7 +55,7 @@ bool SimState::load_simulation(const nlohmann::json& args)
 {
     // load original setup
     bool success = init(args["args"]);
-    if (! success) {
+    if (!success) {
         return false;
     }
 
@@ -295,7 +295,6 @@ bool SimState::solve_collision()
     result = ccd_solver_ptr->solve(*problem_ptr);
 
     PROFILE_END();
-
 
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 

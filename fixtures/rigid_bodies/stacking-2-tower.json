@@ -1,25 +1,26 @@
 {
     "scene_type": "rigid_body_problem",
+    "collision_solver": "barrier_solver",
+    "timestep_size": 0.01,
     "distance_barrier_constraint": {
-        "custom_initial_epsilon": 0.1,
+        "custom_initial_epsilon": 0.01,
         "detection_method": "hash_grid",
         "use_distance_hashgrid": true,
         "active_constraint_scale": 1.01,
-        "extend_collision_set": false,
         "custom_hashgrid_cellsize": -1
     },
     "barrier_solver": {
-        "inner_solver": "newton_solver",
-        "min_barrier_epsilon": 1e-2,
-        "max_iterations": 0
+        "min_barrier_epsilon": 1e-4
     },
     "rigid_body_problem": {
+        "gravity": [0, -9.81, 0],
+        "coefficient_restitution": 0.0,
         "rigid_bodies": [{
             "vertices": [
-                [0.0, 1.2000000000000002],
-                [1.0, 1.2000000000000002],
-                [1.0, 2.2],
-                [0.0, 2.2]
+                [-10, -1],
+                [10, -1],
+                [10, 0],
+                [-10, 0]
             ],
             "edges": [
                 [0, 1],
@@ -28,7 +29,7 @@
                 [3, 0]
             ],
             "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [false, false, false]
+            "is_dof_fixed": [true, true, true]
         }, {
             "vertices": [
                 [0.0, 0.1],
@@ -46,10 +47,10 @@
             "is_dof_fixed": [false, false, false]
         }, {
             "vertices": [
-                [-10, -1],
-                [10, -1],
-                [10, 0],
-                [-10, 0]
+                [0.0, 1.2000000000000002],
+                [1.0, 1.2000000000000002],
+                [1.0, 2.2],
+                [0.0, 2.2]
             ],
             "edges": [
                 [0, 1],
@@ -58,8 +59,7 @@
                 [3, 0]
             ],
             "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [true, true, true]
-        }],
-        "gravity": [0, -9.81, 0]
+            "is_dof_fixed": [false, false, false]
+        }]
     }
 }

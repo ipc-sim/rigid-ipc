@@ -182,14 +182,13 @@ namespace physics {
         // -------------------------------------
         solve_velocities();
         // TODO: check this two are the same !!!
-        //        if (coefficient_restitution > 0) {
-        //            solve_velocities();
-        //        } else {
-        //            for (auto& rb : m_assembler.m_rbs) {
-        //                rb.velocity = (rb.position - rb.position_prev) /
-        //                time_step;
-        //            }
-        //        }
+        // if (coefficient_restitution > 0) {
+        //     solve_velocities();
+        // } else {
+        //     for (auto& rb : m_assembler.m_rbs) {
+        //         rb.velocity = (rb.position - rb.position_prev) / time_step;
+        //     }
+        // }
 
         return detect_collisions(vertices_t0, q1, CollisionCheck::EXACT);
     }
@@ -235,7 +234,7 @@ namespace physics {
 
             double toi = ev_candidate.time;
 #ifndef NDEBUG
-            assert(prev_toi < toi);
+            assert(prev_toi <= toi);
             prev_toi = toi;
 #endif
             double alpha = ev_candidate.alpha;

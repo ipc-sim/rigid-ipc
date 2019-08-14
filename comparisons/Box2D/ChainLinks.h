@@ -13,7 +13,8 @@ protected:
 
 public:
     static void createLinkVertexEdgeArrays(std::vector<b2Vec2>& vertices,
-        std::vector<std::array<int, 2>>& edges, float thickness)
+        std::vector<std::array<int, 2>>& edges,
+        float thickness)
     {
         auto f1 = [](float x) -> float { return -1.25 * x + 1.625; };
         auto f2 = [](float x) -> float { return 1.25 * x + 0.375; };
@@ -48,7 +49,7 @@ public:
         linkBodyDef.type = type;
         linkBodyDef.bullet = type == b2_dynamicBody;
         linkBodyDef.position.Set(x, y);
-        linkBodyDef.angle = 3.14159f * 3.0f / 4.0f;
+        linkBodyDef.angle = 3.14159f / 2.0f;
         // Call the body factory which allocates memory for the ground body
         // from a pool and creates the link (also from a pool).
         // The body is also added to the world.
@@ -95,10 +96,9 @@ public:
         m_world->SetGravity(b2Vec2(0, -9.81));
         float y = 15;
         float x = -30;
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 30; i++) {
             createLink(m_world, x, y, i ? b2_dynamicBody : b2_staticBody);
-            x += 3 * scale;
-            y += 3 * scale;
+            x += 4.5 * scale;
         }
     }
 

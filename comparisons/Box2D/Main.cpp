@@ -383,9 +383,9 @@ static void sInterface()
 		ImGui::Separator();
 
 		ImGui::Text("Vel Iters");
-		ImGui::SliderInt("##Vel Iters", &settings.velocityIterations, 0, 300);
+		ImGui::SliderInt("##Vel Iters", &settings.velocityIterations, 0, 3000);
 		ImGui::Text("Pos Iters");
-		ImGui::SliderInt("##Pos Iters", &settings.positionIterations, 0, 300);
+		ImGui::SliderInt("##Pos Iters", &settings.positionIterations, 0, 3000);
 		ImGui::Text("Hertz");
 		ImGui::SliderFloat("##Hertz", &settings.hz, 5.0f, 1000.0f, "%.0f hz");
 		ImGui::PopItemWidth();
