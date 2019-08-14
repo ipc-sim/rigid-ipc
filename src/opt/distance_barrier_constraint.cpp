@@ -20,7 +20,7 @@ namespace opt {
         , custom_inital_epsilon(1.0)
         , active_constraint_scale(1.5)
         , m_barrier_epsilon(0.0)
-        , m_num_active_constraints(0)
+        , m_num_constraints(0)
 
     {
     }
@@ -53,7 +53,7 @@ namespace opt {
 
     int DistanceBarrierConstraint::number_of_constraints()
     {
-        return m_num_active_constraints;
+        return m_num_constraints;
     }
 
     void DistanceBarrierConstraint::update_collision_set(
@@ -75,10 +75,16 @@ namespace opt {
         PROFILE_START(NARROW_PHASE)
 
         m_ev_distance_active.clear();
-        ev_impacts.clear();
+        m_ev_distance_active_map.clear();
 
+        ev_impacts.clear();
+        m_ev_impact_active_map.clear();
+        m_ev_inactive_map.clear();
+
+        m_num_constraints = int(m_ev_candidates.size());
         Eigen::MatrixXd vertices_t1 = vertices + Uk;
-        for (const EdgeVertexCandidate& ev_candidate : m_ev_candidates) {
+        for (size_t i = 0; i < m_ev_candidates.size(); i++) {
+            const EdgeVertexCandidate& ev_candidate = m_ev_candidates[i];
             double toi, alpha;
             bool active_impact = compute_edge_vertex_time_of_impact(
                 vertices.row(edges(ev_candidate.edge_index, 0)),
@@ -92,6 +98,7 @@ namespace opt {
                 // NOTE: ev_impacts are used during post-process of velocities
                 ev_impacts.push_back(EdgeVertexImpact(toi,
                     ev_candidate.edge_index, alpha, ev_candidate.vertex_index));
+                m_ev_impact_active_map.push_back(i);
                 continue;
             }
 
@@ -104,15 +111,13 @@ namespace opt {
                 = distance < active_constraint_scale * m_barrier_epsilon;
             if (distance_active) {
                 m_ev_distance_active.push_back(ev_candidate);
+                m_ev_distance_active_map.push_back(i);
+                continue;
             }
+            m_ev_inactive_map.push_back(i);
         }
-        PROFILE_MESSAGE(NARROW_PHASE,
-            fmt::format("num_candidates,{},impacts,{},distance,{}",
-                m_ev_candidates.size(), ev_impacts.size(),
-                m_ev_distance_active.size()));
+
         PROFILE_END(NARROW_PHASE)
-        m_num_active_constraints
-            = int(ev_impacts.size() + m_ev_distance_active.size());
     }
 
     void DistanceBarrierConstraint::compute_constraints(
@@ -121,7 +126,7 @@ namespace opt {
         // distance barrier is evaluated at end-positions
         Eigen::MatrixXd vertices_t1 = vertices + Uk;
 
-        barriers.resize(m_num_active_constraints);
+        barriers.resize(m_num_constraints);
         barriers.setZero();
         for (size_t i = 0; i < m_ev_distance_active.size(); ++i) {
             const auto& ev_candidate = m_ev_distance_active[i];
@@ -135,13 +140,14 @@ namespace opt {
             Eigen::VectorXd b = vertices_t1.row(b_id);
             Eigen::VectorXd c = vertices_t1.row(c_id);
 
-            barriers(int(i)) = distance_barrier<double>(a, b, c);
+            barriers(int(m_ev_distance_active_map[i]))
+                = distance_barrier<double>(a, b, c);
         }
 
         /// add inf if collision
-        int N = int(m_ev_distance_active.size());
-        for (size_t i = 0; i < ev_impacts.size(); ++i) {
-            barriers(int(i) + N) += std::numeric_limits<double>::infinity();
+        for (size_t i = 0; i < m_ev_impact_active_map.size(); ++i) {
+            barriers(int(m_ev_impact_active_map[i]))
+                += std::numeric_limits<double>::infinity();
         }
     }
 
@@ -151,7 +157,7 @@ namespace opt {
         Eigen::MatrixXd vertices_t1 = vertices + Uk;
 
         int num_vertices = int(vertices.rows());
-        barriers_jacobian.resize(m_num_active_constraints, vertices.size());
+        barriers_jacobian.resize(m_num_constraints, vertices.size());
         barriers_jacobian.setZero();
 
         for (size_t i = 0; i < m_ev_distance_active.size(); ++i) {
@@ -171,7 +177,8 @@ namespace opt {
 
             for (size_t nid = 0; nid < 3; ++nid) {
                 for (int dim = 0; dim < 2; ++dim) {
-                    barriers_jacobian(int(i), nodes[nid] + num_vertices * dim)
+                    barriers_jacobian(int(m_ev_distance_active_map[i]),
+                        nodes[nid] + num_vertices * dim)
                         = grad[2 * int(nid) + dim];
                 }
             }
@@ -190,7 +197,8 @@ namespace opt {
         int num_vertices = int(vertices.rows());
 
         barriers_hessian.clear();
-        barriers_hessian.reserve(size_t(m_num_active_constraints));
+        barriers_hessian.resize(size_t(m_num_constraints));
+
         for (size_t i = 0; i < m_ev_distance_active.size(); ++i) {
             const auto& ev_candidate = m_ev_distance_active[i];
             Eigen::SparseMatrix<double> global_el_hessian(
@@ -225,17 +233,21 @@ namespace opt {
             }
 
             global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
-            barriers_hessian.push_back(global_el_hessian);
+            barriers_hessian[m_ev_distance_active_map[i]] = global_el_hessian;
         }
 
         /// fill in for collisions
-        for (size_t i = barriers_hessian.size();
-             i < size_t(m_num_active_constraints); ++i) {
-            Eigen::SparseMatrix<double> global_el_hessian(
-                int(vertices.size()), int(vertices.size()));
-            barriers_hessian.push_back(global_el_hessian);
+        Eigen::SparseMatrix<double> global_el_hessian(
+            int(vertices.size()), int(vertices.size()));
+
+        for (size_t i : m_ev_impact_active_map) {
+            barriers_hessian[i] = global_el_hessian;
         }
-        assert(int(barriers_hessian.size()) == m_num_active_constraints);
+        for (size_t i : m_ev_inactive_map) {
+            barriers_hessian[i] = global_el_hessian;
+        }
+
+        assert(int(barriers_hessian.size()) == m_num_constraints);
     }
 
     void DistanceBarrierConstraint::compute_constraints_and_derivatives(
@@ -321,7 +333,8 @@ namespace opt {
         }
 
         // Handle cases where c projects onto ab
-        return ac.dot(ac) - e * e / f;
+        T g  = ac.dot(ac);
+        return g - e * e / f;
     }
 
 } // namespace opt

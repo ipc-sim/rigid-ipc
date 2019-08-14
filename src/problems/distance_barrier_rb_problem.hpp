@@ -41,7 +41,7 @@ namespace opt {
 
         const int& num_constraints() override
         {
-            return constraint_.m_num_active_constraints;
+            return constraint_.m_num_constraints;
         }
 
         ////////////////////////////////////////////////////////////

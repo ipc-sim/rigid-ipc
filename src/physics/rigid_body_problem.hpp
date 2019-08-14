@@ -142,7 +142,6 @@ namespace physics {
             const CollisionCheck check_type);
 
         int num_vars_;
-        int num_constraints_;
         Eigen::VectorXd x0;
 
         /// Used during collision resolution
