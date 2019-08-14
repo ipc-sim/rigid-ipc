@@ -38,7 +38,6 @@ public:
     void launch();
     void load_scene();
     void redraw_scene();
-    void redraw_scalar_fields();
     bool pre_draw_loop();
 
     inline bool load(std::string scene_filename) override

@@ -208,27 +208,6 @@ namespace physics {
         return x;
     }
 
-    Eigen::MatrixXd ParticlesDisplProblem::velocities(
-        const bool as_delta, const double time_step) const
-    {
-        if (as_delta) {
-            return velocities_ * time_step;
-        } else
-            return velocities_;
-    }
-    Eigen::MatrixXd ParticlesDisplProblem::collision_force(
-        const bool as_delta, const double time_step) const
-    {
-        if (as_delta) {
-            Eigen::MatrixXd Fc_delta = Fcollision;
-            ccd::flatten(Fc_delta);
-            Fc_delta = inv_mass_matrix * Fc_delta * (time_step * time_step);
-            ccd::unflatten(Fc_delta, 2);
-            return Fc_delta;
-        }
-        return Fcollision;
-    }
-
     ////////////////////////////////////////////////////////////////////////////
     /// Functional
     ////////////////////////////////////////////////////////////////////////////
@@ -251,15 +230,6 @@ namespace physics {
         return mass_matrix;
     }
 
-    //    void ParticlesDisplProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
-    //        double& f_uk,
-    //        Eigen::VectorXd& f_uk_grad,
-    //        Eigen::SparseMatrix<double>& f_uk_hessian)
-    //    {
-    //        f_uk = eval_f(x);
-    //        f_uk_grad = eval_grad_f(x);
-    //        f_uk_hessian = eval_hessian_f(x);
-    //    }
 
     ////////////////////////////////////////////////////////////////////////////
     /// Constraints

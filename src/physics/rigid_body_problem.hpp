@@ -21,7 +21,6 @@ namespace physics {
         /// I-SIMULATION
         ////////////////////////////////////////////////////////////////////////
 
-
         // virtual functions to implement by child classes
         // ----------------------------------------------------
         // virtual opt::CollisionConstraint& constraint() = 0;
@@ -43,59 +42,14 @@ namespace physics {
 
         /// \brief update problem using current status of bodies.
         void update_constraint() override;
-        opt::OptimizationResults solve_constraints() override
-        {
-            return solver().solve();
-        }
-        void init_solve() override { solver().init_solve(); }
-        opt::OptimizationResults step_solve() override
-        {
-            return solver().step_solve();
-        }
-
-        /// \brief returns world vertices at the END of NEXT step.
-        /// Returns the positions of the next step assuming no collisions forces
-        Eigen::MatrixXd vertices_next(const double time_step) const override;
+        opt::OptimizationResults solve_constraints() override;
+        void init_solve() override;
+        opt::OptimizationResults step_solve() override;
 
         /// \brief returns world vertices at the END of step (current)
         Eigen::MatrixXd vertices() const override
         {
             return m_assembler.world_vertices_t1();
-        }
-        /// \brief returns world vertices at the BEGINNING of step (current)
-        Eigen::MatrixXd vertices_prev() const override
-        {
-            return m_assembler.world_vertices_t0();
-        }
-        /// \brief returns world vertices that we are solving collisions for
-        Eigen::MatrixXd vertices_collision() const override
-        {
-            return vertices_q1;
-        }
-
-        Eigen::MatrixXd dof_positions() const override
-        {
-            Eigen::MatrixXd p = m_assembler.rb_positions_t1();
-            unflatten_dof(p);
-            return p;
-        }
-
-        /// \brief velocity of vertices at the END of the step
-        /// as_delta = true, will return vertices / time_step;
-        Eigen::MatrixXd velocities(
-            const bool as_delta, const double time_step) const override;
-
-        /// \brief collision forced applied to fix END position of vertices
-        /// as_delta = true, will return Fc M^-1 / (time_step^2);
-        Eigen::MatrixXd collision_force(
-            const bool as_delta, const double time_step) const override;
-
-        void unflatten_dof(Eigen::MatrixXd& vec) const override
-        {
-            // order is x,y,z,x,y,z,x,y,z,
-            assert(vec.rows() % 3 == 0);
-            vec.resize(3, vec.rows() / 3);
-            vec.transposeInPlace();
         }
 
         const Eigen::MatrixXi& edges() const override
@@ -107,9 +61,6 @@ namespace physics {
         {
             return m_assembler.is_dof_fixed;
         }
-
-        const Eigen::VectorXd& gravity() const override { return gravity_; }
-
         void init(const std::vector<RigidBody> rbs);
 
         Eigen::Vector3d rb_position_next(
@@ -140,7 +91,6 @@ namespace physics {
         double collision_eps;
 
         physics::RigidBodyAssembler m_assembler;
-
 
     protected:
         void solve_velocities();

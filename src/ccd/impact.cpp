@@ -33,19 +33,6 @@ bool EdgeVertexImpact::operator==(const EdgeVertexImpact& other) const
         && this->vertex_index == other.vertex_index;
 }
 
-// Compare two edge-vertex impacts to determine if impact0 comes before impact1.
-template <typename Impact>
-bool compare_impacts_by_time(Impact impact1, Impact impact2)
-{
-    return impact1.time < impact2.time;
-}
-
-// Template instantiations
-template bool compare_impacts_by_time<EdgeVertexImpact>(
-    EdgeVertexImpact impact1, EdgeVertexImpact impact2);
-template bool compare_impacts_by_time<EdgeEdgeImpact>(
-    EdgeEdgeImpact impact1, EdgeEdgeImpact impact2);
-
 // Convert all edge-vertex impacts to correspoding edge-edge impacts. There may
 // be multiple edge-edge impacts per edge-vertex impact depending on the
 // connectivity.

@@ -34,7 +34,7 @@ namespace physics {
 
         ////////////////////////////////////////////////////////////////////////
         /// I-SIMULATION
-        std::string name() override {return name_; }
+        std::string name() override { return name_; }
         void settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
         nlohmann::json state() const override;
@@ -52,49 +52,12 @@ namespace physics {
         void update_constraint() override;
 
         Eigen::MatrixXd vertices() const override { return vertices_; }
-        /// @bried return candidate position of vertices, assuming no collisions
-        Eigen::MatrixXd vertices_next(const double time_step) const override;
-        Eigen::MatrixXd vertices_prev() const override
-        {
-            return vertices_prev_;
-        }
-        Eigen::MatrixXd vertices_collision() const override
-        {
-            return vertices_t1;
-        }
-        Eigen::MatrixXd dof_positions() const override { return vertices_; }
-
-        /// \brief velocity of vertices at the END of the step
-        /// as_delta = true, will return vertices / time_step;
-        Eigen::MatrixXd velocities(
-            const bool as_delta, const double time_step) const override;
-
-        /// \brief collision forced applied to fix END position of vertices
-        /// as_delta = true, will return Fc M^-1 / (time_step^2);
-        Eigen::MatrixXd collision_force(
-            const bool as_delta, const double time_step) const override;
 
         const Eigen::MatrixXi& edges() const override { return edges_; }
 
-        //        const Eigen::VectorXb& is_dof_fixed() override { return
-        //        is_dof_fixed_; }
         const Eigen::MatrixXb& particle_dof_fixed() const override
         {
             return is_particle_dof_fixed;
-        }
-        const Eigen::VectorXd& gravity() const override { return gravity_; }
-
-
-
-//        const opt::CollisionConstraint& constraint() override
-//        {
-//            return *constraint_ptr;
-//        }
-
-        void unflatten_dof(Eigen::MatrixXd& vec) const override
-        {
-            assert(vec.rows() % 2 == 0);
-            vec.resize(vec.rows() / 2, 2);
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -153,6 +116,8 @@ namespace physics {
         ////////////////////////////////////////////////////////////////////////
 
     protected:
+        Eigen::MatrixXd vertices_next(const double time_step) const;
+
         Eigen::MatrixXd update_g(const Eigen::VectorXd& x);
         bool detect_collisions(const Eigen::MatrixXd& q0,
             const Eigen::MatrixXd& q1,

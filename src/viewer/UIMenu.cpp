@@ -69,12 +69,6 @@ void UISimState::draw_menu()
                 | ImGuiWindowFlags_AlwaysAutoResize);
         {
             draw_legends();
-            if (ImGui::Checkbox("show as position-deltas", &m_show_as_delta)) {
-                redraw_scene();
-            }
-            ImGui::SameLine();
-            ImGui::HelpMarker("yes - show forces and velocities rescaled by "
-                              "mass and time (resp.)");
         }
         ImGui::End();
     }
@@ -134,15 +128,6 @@ void UISimState::draw_simulation_player()
     // --------------------------------------------------------------------
     ImGui::Text("Step %i", m_state.m_num_simulation_steps);
 
-    int item_current = m_show_next_step ? 1 : 0;
-    if (ImGui::Combo(
-            "##prev-next", &item_current, "previous_step\0next_step\0\0")) {
-        m_show_next_step = item_current == 1 ? true : false;
-        redraw_scene();
-    }
-    if (ImGui::DragDouble("interval time", &m_interval_time, 0.1, 0.0, 1.0)) {
-        redraw_scene();
-    }
 
     ImGui::SameLine();
     ImGui::HelpMarker("yes - shows velocities and forces as position-delta\n "
@@ -157,14 +142,7 @@ void UISimState::draw_collision_menu()
     if (ImGui::Button("Step Solve Col. ", ImVec2(-1, 0))) {
         step_solve_collisions();
     }
-//    if (m_state.problem_ptr->has_barrier_constraint()) {
-//        double eps = m_state.problem_ptr->get_barrier_epsilon();
-//        if (ImGui::InputDouble("epsilon", &eps, 1e-3, 0.1, "%.3g")) {
-//            m_state.problem_ptr->set_barrier_epsilon(eps);
-//        }
-//    }
-//    ImGui::Text(
-//        "Outer it.: %i", m_state.ccd_solver_ptr->num_outer_iterations());
+
 }
 void UISimState::draw_settings()
 {
@@ -189,9 +167,6 @@ void UISimState::draw_legends()
         bool tmp = ptr->visibility();
         if (ImGui::Checkbox(("##UI-" + label).c_str(), &tmp)) {
             ptr->visibility(tmp);
-            if (ptr->is_scalar_field()) {
-                redraw_scalar_fields();
-            }
         }
 
         /// Color

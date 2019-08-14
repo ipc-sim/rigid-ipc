@@ -22,8 +22,6 @@ public:
     bool solve_collision();
     void collision_resolution_step();
 
-    void get_collision_gradient(Eigen::MatrixXd& fx);
-
     void save_simulation(const std::string& filename);
 
     void run_simulation(const std::string& fout);

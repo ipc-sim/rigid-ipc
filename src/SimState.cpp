@@ -51,22 +51,22 @@ bool SimState::load_scene(const std::string& filename)
 
 bool SimState::reload_scene() { return load_scene(scene_file); }
 
-bool SimState::load_simulation(const nlohmann::json& args)
+bool SimState::load_simulation(const nlohmann::json& input_args)
 {
     // load original setup
-    bool success = init(args["args"]);
+    bool success = init(input_args["args"]);
     if (!success) {
         return false;
     }
 
     // now reload simulation history
     vertices_sequence.clear();
-    for (auto& jv : args["animation"]["vertices_sequence"]) {
+    for (auto& jv : input_args["animation"]["vertices_sequence"]) {
         Eigen::MatrixXd v;
         io::from_json(jv, v);
         vertices_sequence.push_back(v);
     };
-    state_sequence = args["animation"]["state_sequence"]
+    state_sequence = input_args["animation"]["state_sequence"]
                          .get<std::vector<nlohmann::json>>();
     problem_ptr->state(state_sequence.back());
     return true;
@@ -312,16 +312,6 @@ void SimState::save_simulation(const std::string& filename)
     o << std::setw(4) << results << std::endl;
 }
 
-void SimState::get_collision_gradient(Eigen::MatrixXd& fgrad)
-{
-    if (m_dirty_constraints) {
-        fgrad.resize(0, 0);
-        return;
-    }
-
-    //    fgrad = ccd_solver_ptr->get_grad_kkt();
-    problem_ptr->unflatten_dof(fgrad);
-}
 
 void SimState::init_background_grid(const nlohmann::json& args_)
 {

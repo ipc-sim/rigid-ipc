@@ -1,7 +1,4 @@
-/** Data structures for impacts between different geometry. */
-
-#ifndef IMPACT_H
-#define IMPACT_H
+#pragma once
 
 #include <Eigen/Core>
 #include <vector>
@@ -87,4 +84,4 @@ void convert_edge_edge_to_edge_vertex_impacts(const Eigen::MatrixX2i& edges,
 
 } // namespace ccd
 
-#endif
+#include "impact.tpp"
