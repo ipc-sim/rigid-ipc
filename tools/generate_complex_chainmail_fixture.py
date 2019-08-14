@@ -19,8 +19,8 @@ def generate_fixture(n_links: int) -> dict:
                           "complex-link.json")
     with open(link_geometry_path) as link_file:
         link_mesh = json.load(link_file)
-        vertices = numpy.array(link_mesh["vertices"], dtype=float)
-        edges = numpy.array(link_mesh["edges"], dtype=int)
+    vertices = numpy.array(link_mesh["vertices"], dtype=float)
+    edges = numpy.array(link_mesh["edges"], dtype=int)
     fixture = generate_default_fixture()
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
     for i in range(n_links):

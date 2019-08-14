@@ -43,8 +43,7 @@ TEST_CASE("Test barriers and their derivatives", "[opt][barrier]")
     Eigen::VectorXd grad = x.unaryExpr(phi_gradient);
     CHECK(compare_gradient(fgrad, grad));
 
-    ccd::finite_gradient(
-        x,
+    ccd::finite_gradient(x,
         [&phi_gradient](
             const Eigen::VectorXd& x) { return phi_gradient(x[0]); },
         fgrad);

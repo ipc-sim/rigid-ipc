@@ -39,10 +39,11 @@ bool compare_jacobian(const Eigen::MatrixXd& x, const Eigen::MatrixXd& y)
 
 // Compute the gradient of a function at a point using finite differences.
 void finite_gradient(const Eigen::VectorXd& x,
-    std::function<double(const Eigen::VectorXd&)> value, Eigen::VectorXd& grad,
-    AccuracyOrder accuracy)
+    std::function<double(const Eigen::VectorXd&)> value,
+    Eigen::VectorXd& grad,
+    AccuracyOrder accuracy,
+    const double eps)
 {
-    const double eps = 1.0e-8;
     // Create an array of the coefficients for finite differences.
     // See: https://en.wikipedia.org/wiki/Finite_difference_coefficient
     // clang-format off
@@ -76,9 +77,10 @@ void finite_gradient(const Eigen::VectorXd& x,
 
 void finite_jacobian(const Eigen::VectorXd& x,
     std::function<Eigen::VectorXd(const Eigen::VectorXd&)> value,
-    Eigen::MatrixXd& jac,  const AccuracyOrder accuracy, const double eps)
+    Eigen::MatrixXd& jac,
+    const AccuracyOrder accuracy,
+    const double eps)
 {
-
     // Create an array of the coefficients for finite differences.
     // See: https://en.wikipedia.org/wiki/Finite_difference_coefficient
     // clang-format off

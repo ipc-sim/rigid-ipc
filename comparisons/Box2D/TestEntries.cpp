@@ -80,11 +80,12 @@
 
 // clang-format off
 TestEntry g_testEntries[] = {
+    { "Chain Links",  ChainLinks::Create },
+    { "Simple Chain Links", SimpleChainLinks::Create },
+    // { "Simple Chain Links", ChainLinks::CreateThin },
     { "Saw", Saw::Create },
     { "Ground Plane", GroundPlane::Create },
     { "Line Stack", LineStack::Create },
-    { "Simple Chain Links", ChainLinks::CreateThin },
-    { "Chain Links",  ChainLinks::Create },
     { "Shape Cast", ShapeCast::Create },
     { "Time of Impact", TimeOfImpact::Create },
     { "Character Collision", CharacterCollision::Create },

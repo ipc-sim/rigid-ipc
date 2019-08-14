@@ -77,8 +77,7 @@ TEST_CASE("Volume Constraint", "[opt][ccd][Volume]")
     Eigen::VectorXi active;
     volume.compute_constraints(
         displacements, v_actual, jac_actual_sparse, active);
-     CHECK((v_actual - v_expected).squaredNorm() < 1e-6);
-
+    CHECK((v_actual - v_expected).squaredNorm() < 1e-6);
 }
 
 TEST_CASE("Volume Constraint Gradient", "[opt][ccd][Volume][Gradient]")
@@ -173,7 +172,6 @@ TEST_CASE("Volume Constraint Gradient", "[opt][ccd][Volume][Gradient]")
     volume.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     volume.compute_constraints_jacobian(displacements, jac_actual);
     CHECK((jac_actual - jac_expected).squaredNorm() < 1e-10);
-
 }
 
 TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
@@ -204,7 +202,6 @@ TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
         vertices.row(3) << 0.0, 1.0;
         displacements.row(2) << 0.0, -0.6;
         displacements.row(3) << 0.0, -0.6;
-
     }
 
     SECTION("Vertical Displ Long")
@@ -213,7 +210,6 @@ TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
         vertices.row(3) << 0.0, 1.0;
         displacements.row(2) << 0.0, -1.0;
         displacements.row(3) << 0.0, -1.0;
-
     }
 
     SECTION("Horizontal Displ Small")
@@ -222,7 +218,6 @@ TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
         vertices.row(3) << 0.3, 0.5;
         displacements.row(2) << 0.0, -0.6;
         displacements.row(3) << 0.0, -0.6;
-
     }
 
     SECTION("Horizontal Displ Long")
@@ -231,7 +226,6 @@ TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
         vertices.row(3) << 0.3, 0.5;
         displacements.row(2) << 0.0, -1.0;
         displacements.row(3) << 0.0, -1.0;
-
     }
 
     volume.initialize(vertices, edges, Eigen::VectorXi(), displacements);
@@ -244,8 +238,6 @@ TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
     volume.compute_constraints(
         displacements, v_actual, jac_actual_sparse, active);
     CHECK((jac_actual - jac_actual_sparse.toDense()).squaredNorm() < 1e-6);
-
-
 }
 
 TEST_CASE("Volume Constraint Hessian", "[opt][ccd][Volume][Hessian]")
@@ -437,8 +429,8 @@ TEST_CASE("Volume Constraint Hessian", "[opt][ccd][Volume][Hessian]")
 
     CHECK(hess_actual.size() == hess_expected.size());
     for (size_t i = 0; i < hess_actual.size(); i++) {
-        CHECK((hess_actual[i].toDense() - hess_expected[i].toDense()).squaredNorm()
+        CHECK((hess_actual[i].toDense() - hess_expected[i].toDense())
+                  .squaredNorm()
             < 1e-6);
     }
-
 }

@@ -10,13 +10,13 @@ protected:
     float displacement_scale;
 
 public:
-    GroundPlane(float displacement_scale = 100000.0)
+    GroundPlane(float displacement_scale = 10.0)
         : displacement_scale(displacement_scale)
     {
-        m_world->SetGravity(b2Vec2(0, 0));
+        m_world->SetGravity(b2Vec2(0, -9.8));
 
         float friction_coeff = 0.0;
-        float restitution_coeff = 0.0;
+        float restitution_coeff = 1.0;
         float density = 1.0f;
 
         {
@@ -32,7 +32,7 @@ public:
             b2PolygonShape groundShape;
 
             // Add the shape fixtures to the line body
-            groundShape.SetAsBox(20, 0.01);
+            groundShape.SetAsBox(20, 1);
             b2Fixture* fixture = ground->CreateFixture(&groundShape, density);
             fixture->SetFriction(friction_coeff);
             fixture->SetRestitution(restitution_coeff);
@@ -43,16 +43,19 @@ public:
             b2BodyDef lineBodyDef;
             lineBodyDef.type = b2_dynamicBody;
             lineBodyDef.bullet = true;
-            lineBodyDef.position.Set(0.0f, 35.0f);
+            lineBodyDef.position.Set(-10.0f, 50.0f);
+            lineBodyDef.angle = 3.14 / 4;
             lineBodyDef.linearVelocity = b2Vec2(0, -displacement_scale);
 
             b2Body* line = m_world->CreateBody(&lineBodyDef);
 
             // Define the line shape
-            b2EdgeShape lineShape;
+            b2ChainShape lineShape;
 
             // Add the shape fixtures to the line body
-            lineShape.Set(b2Vec2(-15, 0), b2Vec2(-5, 0));
+            b2Vec2 vertices[4] = { b2Vec2(-5, 0.5), b2Vec2(5, 0.5),
+                b2Vec2(5, -0.5), b2Vec2(-5, -0.5) };
+            lineShape.CreateLoop(vertices, 4);
             b2Fixture* fixture = line->CreateFixture(&lineShape, density);
             fixture->SetFriction(friction_coeff);
             fixture->SetRestitution(restitution_coeff);

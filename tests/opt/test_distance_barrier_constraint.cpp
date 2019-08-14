@@ -101,7 +101,9 @@ TEST_CASE("Distance Barrier Constraint",
     }
 
     Eigen::VectorXd actual_barrier;
-    barrier.detection_method = ccd::DetectionMethod::BRUTE_FORCE; // use brute force so we know the order
+    barrier.detection_method
+        = ccd::DetectionMethod::BRUTE_FORCE; // use brute force so we know the
+                                             // order
     barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     barrier.compute_constraints(displacements, actual_barrier);
     REQUIRE(actual_barrier.rows() == expected_barrier.rows());
@@ -168,7 +170,7 @@ TEST_CASE("Distance Barrier Constraint Gradient",
     }
 
     Eigen::MatrixXd actual_jac;
-    barrier.initialize(vertices, edges, Eigen::VectorXi(),displacements);
+    barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     barrier.compute_constraints_jacobian(displacements, actual_jac);
 
     Eigen::MatrixXd approx_jac;
@@ -253,8 +255,6 @@ TEST_CASE("Distance Barrier Constraint Hessian",
         displacements.row(3) << 0.0, -0.1;
     }
 
-
-
     std::vector<Eigen::SparseMatrix<double>> actual_hess;
     barrier.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     barrier.compute_constraints_hessian(displacements, actual_hess);
@@ -272,7 +272,8 @@ TEST_CASE("Distance Barrier Constraint Hessian",
             return actual_jac.row(int(i));
         };
         ccd::finite_jacobian(x, f, finite_hess_i);
-        bool pass = (finite_hess_i - actual_hess[i].toDense()).squaredNorm() < 1e-12;
+        bool pass
+            = (finite_hess_i - actual_hess[i].toDense()).squaredNorm() < 1e-12;
 
         CHECK(pass);
     }

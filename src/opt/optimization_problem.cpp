@@ -72,7 +72,6 @@ namespace opt {
     std::vector<Eigen::MatrixXd> OptimizationProblem::eval_hessian_g_approx(
         const Eigen::VectorXd& x)
     {
-        Eigen::MatrixXd finite_hess_i;
         int num_constraints = eval_jac_g(x).rows();
         std::vector<Eigen::MatrixXd> hessians;
 
@@ -83,7 +82,8 @@ namespace opt {
                 return actual_jac.row(int(i));
             };
             Eigen::MatrixXd finite_hess_i;
-            ccd::finite_jacobian(x, f, finite_hess_i, AccuracyOrder::SECOND, 1e-8);
+            ccd::finite_jacobian(
+                x, f, finite_hess_i, AccuracyOrder::SECOND, 1e-8);
             hessians.push_back(finite_hess_i);
         }
         return hessians;
@@ -94,10 +94,9 @@ namespace opt {
     {
         Eigen::MatrixXd jac_approx = eval_jac_g_approx(x);
         auto r = compare_jacobian(jac, jac_approx);
-        if (r){
+        if (r) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -110,6 +109,7 @@ namespace opt {
         bool same = compare_jacobian(jac, jac_approx);
         return same;
     }
+
     bool OptimizationProblem::compare_hessian_g_approx(const Eigen::VectorXd& x,
         const std::vector<Eigen::SparseMatrix<double>>& hessians)
     {

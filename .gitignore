@@ -125,3 +125,5 @@ results
 # Atom beautifier files
 .atom-beautify.*
 distance_AABB.cpp.bak
+
+logs

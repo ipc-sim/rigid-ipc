@@ -589,9 +589,11 @@ namespace physics {
         Eigen::MatrixXd jac = jac_g_uk * jac_xk_sigma;
 
 #ifdef WITH_DERIVATIVE_CHECK
-        if (!compare_jac_g_approx(sigma, jac)) {
+        double diff_norm;
+        if (!compare_jac_g_approx(sigma, jac, diff_norm)) {
             spdlog::error(
-                "rigid_body status=fail message='constraint gradient finite-differences failed'");
+                "rigid_body status=fail message='constraint gradient finite-differences failed' diff_norm={:g}",
+                diff_norm);
         }
 #endif
         return jac;
