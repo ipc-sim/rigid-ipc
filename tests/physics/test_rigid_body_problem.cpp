@@ -10,17 +10,48 @@
 #include <problems/distance_barrier_rb_problem.hpp>
 #include <utils/not_implemented_error.hpp>
 
+namespace test_utils {
 
+using namespace ccd::physics;
+RigidBody rb_from_displacements(Eigen::MatrixXd& vertices,
+    Eigen::MatrixXi& edges,
+    Eigen::MatrixXd displacements)
+{
+    // move vertices so they center of mass is at 0,0
+    Eigen::RowVector2d x = center_of_mass(vertices, edges);
+    Eigen::MatrixX2d centered_vertices = vertices.rowwise() - x;
+
+    // set position so current vertices match input
+    Eigen::Vector3d position_t0 = Eigen::Vector3d::Zero();
+    position_t0.segment(0, 2) = x;
+
+    // set previous_step position to:
+    Eigen::Vector3d position_t1 = position_t0 + displacements;
+
+    // set velocity to zero
+    Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
+
+    auto rb = RigidBody::from_points(vertices, edges,
+        /*mass=*/Eigen::VectorXd(),
+        /*dof=*/Eigen::Vector3b::Zero(),
+        /*oriented=*/false,
+        /*position=*/position_t0, velocity);
+    rb.position = position_t1;
+    return rb;
+}
+
+} // namespace test_utils
 
 TEST_CASE(
     "Rigid Body Problem Functional", "[RB][RB-Problem][RB-Problem-functional]")
 {
+    using namespace test_utils;
 
-    Eigen::MatrixX2d vertices(4, 2);
-    Eigen::MatrixX2i edges(4, 2);
+    Eigen::MatrixXd vertices(4, 2);
+    Eigen::MatrixXi edges(4, 2);
     Eigen::Vector3d displ_1, displ_2;
 
-    Eigen::MatrixX2d expected(4, 2);
+    Eigen::MatrixXd expected(4, 2);
 
     vertices << -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5;
     edges << 0, 1, 1, 2, 2, 3, 3, 0;
@@ -51,8 +82,8 @@ TEST_CASE(
     using namespace ccd::opt;
 
     std::vector<RigidBody> rbs;
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, displ_1));
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, displ_2));
+    rbs.push_back(rb_from_displacements(vertices, edges, displ_1));
+    rbs.push_back(rb_from_displacements(vertices, edges, displ_2));
 
     DistanceBarrierRBProblem rbp("rb_problem");
     rbp.init(rbs);
@@ -72,11 +103,13 @@ TEST_CASE(
     "Rigid Body Problem Gradient", "[RB][RB-Problem][RB-Problem-gradient]")
 {
 
-    Eigen::MatrixX2d vertices(4, 2);
-    Eigen::MatrixX2i edges(4, 2);
+    using namespace test_utils;
+
+    Eigen::MatrixXd vertices(4, 2);
+    Eigen::MatrixXi edges(4, 2);
     Eigen::Vector3d vel_1, vel_2;
 
-    Eigen::MatrixX2d expected(4, 2);
+    Eigen::MatrixXd expected(4, 2);
 
     vertices << -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5;
     edges << 0, 1, 1, 2, 2, 3, 3, 0;
@@ -102,8 +135,8 @@ TEST_CASE(
     using namespace ccd::opt;
 
     std::vector<RigidBody> rbs;
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_1));
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_2));
+    rbs.push_back(rb_from_displacements(vertices, edges, vel_1));
+    rbs.push_back(rb_from_displacements(vertices, edges, vel_2));
 
     DistanceBarrierRBProblem rbp("rb_problem");
     rbp.init(rbs);
@@ -120,11 +153,12 @@ TEST_CASE(
 TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
 {
 
-    Eigen::MatrixX2d vertices(4, 2);
-    Eigen::MatrixX2i edges(4, 2);
+    using namespace test_utils;
+    Eigen::MatrixXd vertices(4, 2);
+    Eigen::MatrixXi edges(4, 2);
     Eigen::Vector3d vel_1, vel_2;
 
-    Eigen::MatrixX2d expected(4, 2);
+    Eigen::MatrixXd expected(4, 2);
 
     vertices << -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5;
     edges << 0, 1, 1, 2, 2, 3, 3, 0;
@@ -150,8 +184,8 @@ TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
     using namespace ccd::opt;
 
     std::vector<RigidBody> rbs;
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_1));
-    rbs.push_back(RigidBody::from_displacement(vertices, edges, vel_2));
+    rbs.push_back(rb_from_displacements(vertices, edges, vel_1));
+    rbs.push_back(rb_from_displacements(vertices, edges, vel_2));
 
     DistanceBarrierRBProblem rbp("rb_problem");
     rbp.init(rbs);

@@ -12,15 +12,30 @@
 // Tests
 // ---------------------------------------------------
 
+namespace test_utils {
+
+using namespace ccd::physics;
+RigidBody simple_rigid_body(
+    Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Eigen::MatrixXd velocity)
+{
+    return RigidBody::from_points(vertices, edges,
+        /*mass=*/Eigen::VectorXd(),
+        /*dof=*/Eigen::Vector3b::Zero(),
+        /*oriented=*/false,
+        /*position=*/Eigen::Vector3d::Zero(), velocity);
+}
+
+}
+
 TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
 {
-
-    Eigen::MatrixX2d vertices(4, 2);
-    Eigen::MatrixX2i edges(4, 2);
+    using namespace  test_utils;
+    Eigen::MatrixXd vertices(4, 2);
+    Eigen::MatrixXi edges(4, 2);
     Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
     Eigen::Vector3d rb_displ_1, rb_displ_2;
 
-    Eigen::MatrixX2d expected(4, 2);
+    Eigen::MatrixXd expected(4, 2);
 
     vertices << -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5;
     edges << 0, 1, 1, 2, 2, 3, 3, 0;
@@ -52,8 +67,8 @@ TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
 
     std::vector<RigidBody> rbs;
     RigidBodyAssembler assembler;
-    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity));
-    rbs.push_back(RigidBody::from_velocity(vertices, edges, velocity));
+    rbs.push_back(simple_rigid_body(vertices, edges, velocity));
+    rbs.push_back(simple_rigid_body(vertices, edges, velocity));
     assembler.init(rbs);
 
     Eigen::VectorXd pos(6);

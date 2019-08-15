@@ -13,17 +13,27 @@
 // ---------------------------------------------------
 // Tests
 // ---------------------------------------------------
+using namespace ccd::physics;
+RigidBody simple(
+    Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Eigen::MatrixXd velocity)
+{
+    return RigidBody::from_points(vertices, edges,
+        /*mass=*/Eigen::VectorXd(),
+        /*dof=*/Eigen::Vector3b::Zero(),
+        /*oriented=*/false,
+        /*position=*/Eigen::Vector3d::Zero(), velocity);
+}
 
 TEST_CASE("Rigid Body Transform", "[RB][RB-transform]")
 {
     // Test vertices positions for given rb position
 
-    Eigen::MatrixX2d vertices_t0(4, 2);
-    Eigen::MatrixX2i edges(4, 2);
+    Eigen::MatrixXd vertices_t0(4, 2);
+    Eigen::MatrixXi edges(4, 2);
     Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
     Eigen::Vector3d rb_step;
 
-    Eigen::MatrixX2d vertices_step(4, 2), expected(4, 2);
+    Eigen::MatrixXd vertices_step(4, 2), expected(4, 2);
 
     vertices_t0 << -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5;
     edges << 0, 1, 1, 2, 2, 3, 3, 0;
@@ -49,9 +59,8 @@ TEST_CASE("Rigid Body Transform", "[RB][RB-transform]")
     using namespace ccd::physics;
     expected = vertices_t0 + vertices_step;
 
-    auto rb = RigidBody::from_velocity(vertices_t0, edges, velocity);
+    auto rb = simple(vertices_t0, edges, velocity);
     Eigen::VectorXd gamma_t1 = rb.position + rb_step;
     Eigen::MatrixXd actual = rb.world_vertices(gamma_t1);
     CHECK((expected - actual).squaredNorm() < 1E-6);
 }
-

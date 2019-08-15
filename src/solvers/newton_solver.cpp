@@ -132,11 +132,11 @@ namespace opt {
                 igl::slice_into(-gradient_free, free_dof, 1, direction);
 
                 PROFILE_START(GRADIENT_LINE_SEARCH)
-                found_step_length
+                bool found_step_length2
                     = line_search(problem, x, direction, fx, step_length);
                 PROFILE_END(GRADIENT_LINE_SEARCH)
 
-                if (!found_step_length) {
+                if (!found_step_length2) {
                     spdlog::warn(NEWTON_GRADIENT_LOG, iteration_number + 1);
                     exit_reason = "line-search failed";
                     PROFILE_END(SOLVER_STEP);
@@ -199,12 +199,15 @@ namespace opt {
             num_it += 1;
             if (min_rule && cstr) {
                 success = true;
+                assert(!std::isinf(problem.eval_f(xi)));
                 break; // while loop
+
             }
 
             step_length /= 2.0;
             step_norm = (step_length * dir).norm();
         }
+
         PROFILE_MESSAGE(,
             fmt::format(
                 "success,{},it,{},dir,{:10e}", success, num_it, dir.norm()))
