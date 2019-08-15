@@ -12,6 +12,8 @@ from default_fixture import generate_default_fixture
 def generate_fixture(height=2):
     """Generate a fixture of a N boxes stacked on top of each other."""
     fixture = generate_default_fixture()
+    fixture["distance_barrier_constraint"]["custom_initial_epsilon"] = 1e-2
+    fixture["barrier_solver"]["min_barrier_epsilon"] = 1e-4
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
     box_vertices = numpy.array([[0, 0], [1, 0], [1, 1], [0, 1]])

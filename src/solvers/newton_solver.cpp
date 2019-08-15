@@ -137,7 +137,7 @@ namespace opt {
                 PROFILE_END(GRADIENT_LINE_SEARCH)
 
                 if (!found_step_length) {
-                    spdlog::warn(NEWTON_GRADIENT_LOG, iteration_number + 1);
+                    spdlog::error(NEWTON_GRADIENT_LOG, iteration_number + 1);
                     exit_reason = "line-search failed";
                     PROFILE_END(SOLVER_STEP);
                     break;

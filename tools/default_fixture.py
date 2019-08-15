@@ -5,7 +5,6 @@ def generate_default_fixture():
     """Create the default fixture as a dictionary."""
     return {
         "scene_type": "distance_barrier_rb_problem",
-        "collision_solver": "barrier_solver",
         "timestep_size": 1e-2,
         "distance_barrier_constraint": {
             "custom_initial_epsilon": 0.1,
