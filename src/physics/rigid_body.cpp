@@ -90,39 +90,15 @@ namespace physics {
         return world_vertices(step == PREVIOUS_STEP ? position_prev : position);
     }
 
-    template <typename T>
-    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> RigidBody::world_vertices(
-        const Eigen::Matrix<T, 3, 1>& _position) const
+    Eigen::MatrixXd RigidBody::world_vertices(
+        const Eigen::Vector3d& _position) const
     {
-        typedef Eigen::Matrix<T, 2, 2> Matrix2T;
-
         // compute X[i] = R(theta) * r_i + X
-        Matrix2T R = Eigen::Rotation2D<T>(_position.z()).toRotationMatrix();
-        return (vertices.cast<T>() * R.transpose()).rowwise()
+        Eigen::Matrix2d R
+            = Eigen::Rotation2D<double>(_position.z()).toRotationMatrix();
+        return  (vertices * R.transpose()).rowwise()
             + _position.head(2).transpose();
     }
-
-//    template <typename T>
-//    Eigen::Matrix<T, 2, 1> RigidBody::world_vertex(
-//        const Eigen::Matrix<T, 3, 1>& _position, const int vertex_idx) const
-//    {
-//        typedef Eigen::Matrix<T, 2, 2> Matrix2T;
-
-//        // compute X[i] = R(theta) * r_i + X
-//        Matrix2T R = Eigen::Rotation2D<T>(_position.z()).toRotationMatrix();
-//        return (vertices.row(vertex_idx).cast<T>() * R.transpose())
-//            + _position.head(2).transpose();
-//    }
-
-//    template ccd::DistanceBarrierDiff::D1Vector2d
-//    RigidBody::world_vertex<ccd::DistanceBarrierDiff::DDouble1>(
-//        const ccd::DistanceBarrierDiff::D1Vector3d& _position,
-//        const int vertex_idx) const;
-
-//    template ccd::DistanceBarrierDiff::D2Vector2d
-//    RigidBody::world_vertex<ccd::DistanceBarrierDiff::DDouble2>(
-//        const ccd::DistanceBarrierDiff::D2Vector3d& _position,
-//        const int vertex_idx) const;
 
     Eigen::MatrixXd RigidBody::world_velocities() const
     {
@@ -134,50 +110,13 @@ namespace physics {
             + velocity.head(2).transpose();
     }
 
-    // AUTODIFF DERIVATIVES
-    // ---------------------------------------------------------------
-    Eigen::MatrixXd RigidBody::world_vertices_gradient(
-        const Eigen::Vector3d& _position) const
+    Eigen::Matrix2d RigidBody::grad_theta(const double theta) const
     {
-        RBDiff::activate();
-        RBDiff::D1Vector3 dpos = RBDiff::d1vars(0, _position);
-        RBDiff::D1MatrixXd dx = world_vertices<RBDiff::DScalar1>(dpos);
-
-        flatten<RBDiff::DScalar1>(dx);
-        return RBDiff::get_gradient(dx);
+        Eigen::Matrix2d gradtheta_R;
+        gradtheta_R << -sin(theta), -cos(theta), cos(theta), -sin(theta);
+        return gradtheta_R;
     }
 
-    std::vector<Eigen::Matrix3d> RigidBody::world_vertices_hessian(
-        const Eigen::Vector3d& _position) const
-    {
-        RBDiff::activate();
-        RBDiff::D2Vector3 dpos = RBDiff::d2vars(0, _position);
-        RBDiff::D2MatrixXd dx = world_vertices<RBDiff::DScalar2>(dpos);
-
-        flatten<RBDiff::DScalar2>(dx);
-        return RBDiff::get_hessian(dx);
-    }
-
-    // FINITE DERIVATIVES
-    // ---------------------------------------------------------------
-    Eigen::MatrixXd RigidBody::world_vertices_gradient_finite(
-        const Eigen::Vector3d& _position) const
-    {
-        auto f = [&](const Eigen::VectorXd& v) -> Eigen::VectorXd {
-            assert(v.rows() == 3);
-            Eigen::Vector3d v3 = v;
-            Eigen::MatrixXd d = world_vertices<double>(v3);
-            flatten<double>(d);
-            return d;
-        };
-
-        Eigen::MatrixXd grad;
-        ccd::finite_jacobian(_position, f, grad);
-        return grad;
-    }
-
-    // EXACT DERIVATIVES
-    // ---------------------------------------------------------------
     Eigen::MatrixXd RigidBody::world_vertices_gradient_exact(
         const Eigen::Vector3d& _position) const
     {
@@ -211,6 +150,7 @@ namespace physics {
         gradient << gradx_U, grady_U, gradtheta_U;
         return gradient;
     }
+
     std::vector<Eigen::Matrix3d> RigidBody::world_vertices_hessian_exact(
         const Eigen::Vector3d& _position) const
     {

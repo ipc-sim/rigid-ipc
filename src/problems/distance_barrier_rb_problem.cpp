@@ -142,7 +142,7 @@ namespace opt {
         jac_g.resize(constraint_.number_of_constraints(), num_vars_);
         jac_g.setZero();
 
-        typedef ccd::DistanceBarrierDiff Diff;
+        typedef AutodiffType<6> Diff;
 
         const auto& distance_candidates = constraint_.ev_distance_active();
         for (size_t i = 0; i < distance_candidates.size(); ++i) {
@@ -178,7 +178,7 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> gx_hessian;
         gx_hessian.resize(size_t(constraint_.number_of_constraints()));
 
-        typedef ccd::DistanceBarrierDiff Diff;
+        typedef AutodiffType<6> Diff;
         typedef Eigen::Triplet<double> M;
         std::vector<M> triplets;
 
@@ -233,17 +233,18 @@ namespace opt {
     T DistanceBarrierRBProblem::distance_barrier(
         const Eigen::VectorXd& sigma, const RB2Candidate& rbc)
     {
+        typedef AutodiffType<6> Diff;
 
-        ccd::DistanceBarrierDiff::activate();
+        Diff::activate();
         typedef Eigen::Matrix<T, 3, 1> DTVector3d;
         typedef Eigen::Matrix<T, 2, 1> DTVector2d;
 
         DTVector3d position_E;
         DTVector3d position_V;
 
-        position_V = ccd::DistanceBarrierDiff::dTvars<T>(
+        position_V = Diff::dTvars<T>(
             0, sigma.segment(3 * rbc.vertex_body_id, 3));
-        position_E = ccd::DistanceBarrierDiff::dTvars<T>(
+        position_E = Diff::dTvars<T>(
             3, sigma.segment(3 * rbc.edge_body_id, 3));
 
         const auto& rbs = m_assembler.m_rbs;

@@ -13,25 +13,6 @@
 namespace ccd {
 namespace opt {
 
-    /// @brief Generic type 2×1 vector
-    template <typename T> using Vector2T = Eigen::Matrix<T, 2, 1>;
-    typedef Eigen::Matrix<DScalar, Eigen::Dynamic, 1> VectorXDS;
-
-    template <typename T> struct ImpactTData {
-        std::array<Eigen::Vector2d, 4> v;
-        std::array<Vector2T<T>, 4> u;
-        size_t impacting_side; ///< @brief 0 or 1, indicates node of edge_23
-        size_t impacting_index() const { return 2 + impacting_side; }
-    };
-
-    class DoubleTriplet : public Eigen::Triplet<double> {
-    public:
-        DoubleTriplet(const int& i, const int& j, const double& v)
-            : Eigen::Triplet<double>(i, j, v)
-        {
-        }
-        void set_row(const int& i) { m_row = i; }
-    };
 
     class CollisionConstraint {
     public:

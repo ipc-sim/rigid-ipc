@@ -52,33 +52,6 @@ namespace autodiff {
         const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,
         T& toi);
 
-    /**
-     * Computes the gradient of time of impact using AUTODIFF
-     *
-     *   @param[in]   V_{i,j,k}       : vertex positions
-     *   @param[in]   U_{i,j,k}       : vertex displacements
-     *
-     *   @param[out]  grad            : gradient
-     *
-     */
-    void compute_edge_vertex_time_of_impact_grad(const Eigen::Vector2d& Vi,
-        const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
-        const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-        const Eigen::Vector2d& Uk, Vector8d& grad);
-
-    /**
-     * Computes the gradient of time of impact using FINITE DIFFERENCES
-     *
-     *   @param[in]   V_{i,j,k}       : vertex positions
-     *   @param[in]   U_{i,j,k}       : vertex displacements
-     *
-     *   @param[out]  grad            : gradient
-     *
-     */
-    void compute_edge_vertex_time_of_impact_grad_fd(const Eigen::Vector2d& Vi,
-        const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
-        const Eigen::Vector2d& Ui, const Eigen::Vector2d& Uj,
-        const Eigen::Vector2d& Uk, Vector8d& grad);
 } // namespace autodiff
 } // namespace ccd
 

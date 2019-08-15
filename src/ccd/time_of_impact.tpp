@@ -5,6 +5,7 @@
 namespace ccd {
 namespace autodiff {
 template <typename T>
+
 bool temporal_parameterization_to_spatial(const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
     const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,

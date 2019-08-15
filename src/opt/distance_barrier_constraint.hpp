@@ -14,7 +14,8 @@ namespace opt {
 
     class DistanceBarrierConstraint : public CollisionConstraint {
     public:
-        typedef DistanceBarrierDiff Diff;
+
+        typedef AutodiffType<6> Diff;
 
         DistanceBarrierConstraint();
         DistanceBarrierConstraint(const std::string& name);

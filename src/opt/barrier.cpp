@@ -7,35 +7,10 @@
 
 #include <autodiff/autodiff_types.hpp>
 
-#define INF_D (std::numeric_limits<double>::infinity())
-
 namespace ccd {
 
 namespace opt {
 
-    // Function that grows to infinity as x approaches 0 from the right.
-    template <typename T> T spline_barrier(T x, double s)
-    {
-        if (x <= 0)
-            return T(INF_D);
-        if (x >= s)
-            return T(0);
-        T x_s = x / s;
-        // g(x) = (x / s)^3 - 3 * (x / s)^2 + 3 * (x / s)
-        T g = x_s * (3 + x_s * (-3 + x_s)); // Horner's method
-        return 1 / g - 1;
-    }
-
-    template double spline_barrier(double x, double s);
-    template DScalar spline_barrier(DScalar x, double s);
-
-    template DistanceBarrierDiff::DDouble1
-    spline_barrier<DistanceBarrierDiff::DDouble1>(
-        DistanceBarrierDiff::DDouble1 x, double s);
-
-    template DistanceBarrierDiff::DDouble2
-    spline_barrier<DistanceBarrierDiff::DDouble2>(
-        DistanceBarrierDiff::DDouble2 x, double s);
 
     // Derivative of the spline_barrier function with respect to x.
     double spline_barrier_gradient(double x, double s)
@@ -73,7 +48,7 @@ namespace opt {
     double log_barrier(double x, double s)
     {
         if (x <= 0)
-            return INF_D;
+            return std::numeric_limits<double>::infinity();
         if (x >= s)
             return 0;
         return -log(x / s);
@@ -99,7 +74,7 @@ namespace opt {
     double hookean_barrier(double x, double s)
     {
         // ϕ(x) = log(x / s) ^ 2
-        return x > 0 ? pow(log(x / s), 2) : INF_D;
+        return x > 0 ? pow(log(x / s), 2) : std::numeric_limits<double>::infinity();
     }
 
     // Derivative of the hookean_barrier function with respect to x.

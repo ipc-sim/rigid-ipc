@@ -224,19 +224,10 @@ namespace opt {
         Eigen::SparseMatrix<double>& g_uk_jacobian,
         Eigen::VectorXi& g_uk_active)
     {
-        std::vector<DScalar> impact_volumes;
         compute_constraints(Uk, g_uk);
         compute_constraints_jacobian(Uk, g_uk_jacobian);
         dense_indices(g_uk_active);
     }
-
-    Eigen::VectorXd getGradient(const double& /*x*/)
-    {
-        return Eigen::VectorXd();
-    }
-    Eigen::VectorXd getGradient(const DScalar& x) { return x.getGradient(); }
-    double getValue(const double& x) { return x; }
-    double getValue(const DScalar& x) { return x.getValue(); }
 
     void VolumeConstraint::dense_indices(Eigen::VectorXi& dense_indices)
     {
