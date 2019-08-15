@@ -181,10 +181,11 @@ namespace physics {
         if (coefficient_restitution > -1){
             solve_velocities();
         }
-
-        for (auto& rb : m_assembler.m_rbs) {
-            rb.velocity = (rb.position - rb.position_prev) /
-            time_step;
+        else{
+            for (auto& rb : m_assembler.m_rbs) {
+                rb.velocity = (rb.position - rb.position_prev) /
+                time_step;
+            }
         }
         return detect_collisions(vertices_t0, q1, CollisionCheck::EXACT);
     }
