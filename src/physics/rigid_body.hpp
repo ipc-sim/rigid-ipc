@@ -29,35 +29,21 @@ namespace physics {
         ///
         RigidBody(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
-            const Eigen::Vector3d& v,
+            const Eigen::VectorXd& vertex_mass,
             const Eigen::Vector3b& is_dof_fixed,
-            const Eigen::Vector3d& x = Eigen::Vector3d::Zero(),
-            const Eigen::Vector3d& x_prev = Eigen::Vector3d::Zero());
+            const bool oriented,
+            const Eigen::Vector3d& velocity,
+            const Eigen::Vector3d& position,
+            const Eigen::Vector3d& position_prev);
 
     public:
-        // ------------------------------------------------------------------------
-        // Factory Methods
-        // ------------------------------------------------------------------------
-
-        static RigidBody from_velocity(const Eigen::MatrixXd& vertices,
+        static RigidBody from_points(const Eigen::MatrixXd& vertices,
             const Eigen::MatrixX2i& edges,
-            const Eigen::Vector3d& velocity,
-            const Eigen::Vector3b& is_dof_fixed = Eigen::Vector3b::Zero())
-        {
-            return from_velocity(vertices, edges, Eigen::Vector3d::Zero(),
-                velocity, is_dof_fixed);
-        }
-
-        static RigidBody from_velocity(const Eigen::MatrixXd& vertices,
-            const Eigen::MatrixX2i& edges,
+            const Eigen::VectorXd& vertex_mass,
+            const Eigen::Vector3b& is_dof_fixed,
+            const bool oriented,
             const Eigen::Vector3d& position,
-            const Eigen::Vector3d& velocity,
-            const Eigen::Vector3b& is_dof_fixed = Eigen::Vector3b::Zero());
-
-        static RigidBody from_displacement(const Eigen::MatrixXd& vertices,
-            const Eigen::MatrixX2i& edges,
-            const Eigen::Vector3d& displacement,
-            const Eigen::Vector3b& is_dof_fixed = Eigen::Vector3b::Zero());
+            const Eigen::Vector3d& velocity);
 
         enum Step { PREVIOUS_STEP = 0, CURRENT_STEP };
 
@@ -91,8 +77,7 @@ namespace physics {
 
         template <typename T>
         Eigen::Matrix<T, 2, 1> world_vertex(
-            const Eigen::Matrix<T, 3, 1>& position,
-            const int vertex_idx) const;
+            const Eigen::Matrix<T, 3, 1>& position, const int vertex_idx) const;
 
         Eigen::MatrixXd world_vertices_gradient_exact(
             const Eigen::Vector3d& position) const;
@@ -102,8 +87,9 @@ namespace physics {
         // ------------------------------------------------------------------------
         // Geometry
         // ------------------------------------------------------------------------
-        Eigen::MatrixX2d vertices; ///< vertices positions in body space
-        Eigen::MatrixX2i edges;    ///< vertices connectivity
+        Eigen::MatrixX2d vertices;       ///< vertices positions in body space
+        Eigen::MatrixX2i edges;          ///< vertices connectivity
+        Eigen::VectorXd per_vertex_mass; ///< vertices masses
 
         double mass;              ///< total mass (M) of the rigid body
         double moment_of_inertia; ///< moment of intertia (I) of the rigid body
@@ -111,6 +97,8 @@ namespace physics {
             is_dof_fixed; ///< flag to indicate if dof is fixed (doesnt' change)
         Eigen::Matrix3d mass_matrix;
         Eigen::Matrix3d inv_mass_matrix;
+
+        bool is_oriented; ///< use edge orientation for normals
 
         // ------------------------------------------------------------------------
         // State
@@ -129,4 +117,3 @@ namespace physics {
 } // namespace ccd
 
 #include "rigid_body.tpp"
-

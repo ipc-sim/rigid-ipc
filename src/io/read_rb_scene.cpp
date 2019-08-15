@@ -24,10 +24,12 @@ namespace io {
             json args = R"({
                   "vertices":[],
                   "edges":[],
+                  "masses":[],
+                  "is_dof_fixed":[false,false,false],
+                  "oriented":false,
                   "velocity":[0.0,0.0,0.0],
                   "position":[0.0,0.0],
-                  "theta":0.0,
-                  "is_dof_fixed":[false,false,false]
+                  "theta":0.0
                   })"_json;
             args.merge_patch(jrb);
 
@@ -50,10 +52,12 @@ namespace io {
             Eigen::Vector3d position;
             position.head(2) = xy_position;
             position(2) = theta;
-            auto rb = physics::RigidBody::from_velocity(
-                vertices, edges, position, velocity, is_dof_fixed);
 
-
+            Eigen::VectorXd vertex_masses;
+            from_json<double>(args["masses"], vertex_masses);
+            bool is_oriented = args["oriented"].get<bool>();
+            auto rb = physics::RigidBody::from_points(vertices, edges,
+                vertex_masses, is_dof_fixed, is_oriented, position, velocity);
 
             rbs.push_back(rb);
         }

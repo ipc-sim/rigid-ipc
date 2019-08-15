@@ -13,16 +13,16 @@
         "inner_solver": "newton_solver",
         "min_barrier_epsilon": 0.01
     },
-
     "rigid_body_problem": {
         "coefficient_restitution": 1.0,
         "gravity": [0.0, -3.0, 0.0],
         "rigid_bodies": [{
+            "oriented": true,
             "vertices": [
                 [-1, -1],
-                [-1, 1],
+                [1, -1],
                 [1, 1],
-                [1, -1]
+                [-1, 1]
             ],
             "edges": [
                 [0, 1],
@@ -35,11 +35,12 @@
             "velocity": [1.0, 0.0, 0.0],
             "is_dof_fixed": [false, false, false]
         }, {
+            "oriented": true,
             "vertices": [
                 [-10, 0],
-                [-10, 1],
+                [10, 0],
                 [10, 1],
-                [10, 0]
+                [-10, 1]
             ],
             "edges": [
                 [0, 1],

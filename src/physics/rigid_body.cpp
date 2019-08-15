@@ -14,11 +14,13 @@ namespace ccd {
 
 namespace physics {
 
-    RigidBody RigidBody::from_velocity(const Eigen::MatrixXd& vertices,
+    RigidBody RigidBody::from_points(const Eigen::MatrixXd& vertices,
         const Eigen::MatrixX2i& edges,
+        const Eigen::VectorXd& vertex_mass,
+        const Eigen::Vector3b& is_dof_fixed,
+        const bool oriented,
         const Eigen::Vector3d& position,
-        const Eigen::Vector3d& velocity,
-        const Eigen::Vector3b& is_dof_fixed)
+        const Eigen::Vector3d& velocity)
     {
         // move vertices so they center of mass is at 0,0
         Eigen::MatrixXd vertices_ = vertices;
@@ -35,50 +37,37 @@ namespace physics {
         // set previous_step position to:
         Eigen::Vector3d position_t0 = position_t1;
 
-        return RigidBody(centered_vertices, edges, velocity, is_dof_fixed,
-            position_t1, position_t0);
-    }
-
-    RigidBody RigidBody::from_displacement(const Eigen::MatrixXd& vertices,
-        const Eigen::MatrixX2i& edges,
-        const Eigen::Vector3d& displacement,
-        const Eigen::Vector3b& is_dof_fixed)
-    {
-        // move vertices so they center of mass is at 0,0
-        Eigen::RowVector2d x = center_of_mass(vertices, edges);
-        Eigen::MatrixX2d centered_vertices = vertices.rowwise() - x;
-
-        // set position so current vertices match input
-        Eigen::Vector3d position_t0 = Eigen::Vector3d::Zero();
-        position_t0.segment(0, 2) = x;
-
-        // set previous_step position to:
-        Eigen::Vector3d position_t1 = position_t0 + displacement;
-
-        // set velocity to zero
-        Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
-
-        return RigidBody(centered_vertices, edges, velocity, is_dof_fixed,
-            position_t1, position_t0);
+        return RigidBody(centered_vertices, edges, vertex_mass, is_dof_fixed,
+            oriented, velocity, position_t1, position_t0);
     }
 
     RigidBody::RigidBody(const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges,
-        const Eigen::Vector3d& v,
+        const Eigen::VectorXd& vertex_mass,
         const Eigen::Vector3b& is_dof_fixed,
-        const Eigen::Vector3d& x,
-        const Eigen::Vector3d& x_prev)
+        const bool oriented,
+        const Eigen::Vector3d& velocity,
+        const Eigen::Vector3d& position,
+        const Eigen::Vector3d& position_prev)
         : vertices(vertices)
         , edges(edges)
+        , per_vertex_mass(vertex_mass)
         , is_dof_fixed(is_dof_fixed)
-        , velocity(v)
-        , position(x)
-        , position_prev(x_prev)
+        , is_oriented(oriented)
+        , velocity(velocity)
+        , position(position)
+        , position_prev(position_prev)
+
     {
-        Eigen::VectorXd masses;
-        mass_vector(vertices, edges, masses);
-        mass = masses.sum();
-        moment_of_inertia = physics::moment_of_inertia(vertices, masses);
+        assert(per_vertex_mass.size() == 0
+            || per_vertex_mass.rows() == vertices.rows());
+
+        if (per_vertex_mass.size() == 0) {
+            mass_vector(vertices, edges, per_vertex_mass);
+        }
+        mass = per_vertex_mass.sum();
+        moment_of_inertia
+            = physics::moment_of_inertia(vertices, per_vertex_mass);
 
         mass_matrix << mass, 0, 0, 0, mass, 0, 0, 0, moment_of_inertia;
         inv_mass_matrix << 1.0 / mass, 0, 0, 0, 1.0 / mass, 0, 0, 0,
@@ -96,7 +85,7 @@ namespace physics {
         // compute X[i] = R(theta) * r_i + X
         Eigen::Matrix2d R
             = Eigen::Rotation2D<double>(_position.z()).toRotationMatrix();
-        return  (vertices * R.transpose()).rowwise()
+        return (vertices * R.transpose()).rowwise()
             + _position.head(2).transpose();
     }
 

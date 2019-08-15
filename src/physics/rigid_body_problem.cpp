@@ -33,7 +33,6 @@ namespace physics {
 
     void RigidBodyProblem::settings(const nlohmann::json& params)
     {
-
         collision_eps = params["collision_eps"].get<double>();
         coefficient_restitution
             = params["coefficient_restitution"].get<double>();
@@ -201,20 +200,31 @@ namespace physics {
             const int b0_id = m_assembler.m_edges.coeff(edge_id, 0);
             const int b1_id = m_assembler.m_edges.coeff(edge_id, 1);
 
+            const size_t body_B_id
+                = size_t(m_assembler.m_vertex_to_body_map(b0_id));
+            bool is_oriented = m_assembler.m_rbs[body_B_id].is_oriented;
+
             Eigen::Vector2d n_toi;
             auto v_toi = vertices_t0 + (vertices_q1 - vertices_t0) * toi;
             Eigen::VectorXd e_toi
                 = v_toi.row(b1_id) - v_toi.row(b0_id); // edge at toi
-            n_toi << -e_toi(1), e_toi(0);              // 90deg rotation
+            n_toi << -e_toi(1), e_toi(0);              // 90deg ccw rotation
             n_toi.normalize();
 
-            // check correct diraction
-            Eigen::Vector2d va = vertices_t0.row(a_id);
-            Eigen::Vector2d vb = vertices_t0.row(b0_id);
-            if ((va - vb).transpose() * n_toi <= 0.0) {
-                n_toi *= -1;
+            if (is_oriented){
+                n_toi = - n_toi;
+            }
+            else {
+                // check normal points towards A
+                Eigen::Vector2d va = vertices_t0.row(a_id);
+                Eigen::Vector2d vb = vertices_t0.row(b0_id);
+                if ((va - vb).transpose() * n_toi <= 0.0) {
+                    n_toi *= -1;
+                }
             }
             normals.row(i) = n_toi.transpose();
+            spdlog::trace("a={} b0={}  b1={} normal {}", a_id, b0_id, b1_id,
+                ccd::log::fmt_eigen(n_toi));
         }
 
 #ifndef NDEBUG
@@ -388,7 +398,6 @@ namespace physics {
 #endif
         return hessian_f;
     }
-
 
 } // namespace physics
 } // namespace ccd
