@@ -32,42 +32,45 @@ namespace opt {
         LINEARIZED
     };
 
-    static const char* NcpUpdateNames[] = { "G_GRADIENT", "LINEARIZED" };
-
-    class NCPSolver : public OptimizationSolver {
+    class NCPSolver : public virtual IStateOptimizationSolver {
     public:
         NCPSolver();
         NCPSolver(const std::string& name);
         ~NCPSolver() override;
 
-        void clear() override;
+        void set_problem(INCPProblem& problem) ;
+
+        OptimizationResults solve() override;
+        void init_solve() override;
+
+//        OptimizationResults solve(IVolumeProblem& problem) ;
+//        void init(IVolumeProblem& problem);
+
         void settings(const nlohmann::json& json) override;
         nlohmann::json settings() const override;
+        const std::string& name() const override { return name_; }
 
-        OptimizationResults solve(OptimizationProblem& problem_ptr_) override;
-        void init(OptimizationProblem& problem) override;
+        bool has_inner_solver() override { return false; }
+        const IBarrierOptimizationSolver& inner_solver() override
+        {
+            throw NotImplementedError("inner_solver NCPSolver not implemented");
+        }
+
         OptimizationResults step_solve() override;
+
+        int num_outer_iterations() const override
+        {
+            return num_outer_iterations_;
+        }
+        Eigen::VectorXd get_grad_kkt() const override;
+
+        // -----------------------------------------s
 
         bool solve_ncp(const Eigen::SparseMatrix<double>& hessian,
             const Eigen::VectorXd& b,
-            OptimizationProblem& problem_ptr_,
+            INCPProblem& problem_ptr_,
             Eigen::VectorXd& x_opt,
             Eigen::VectorXd& alpha_opt);
-
-        int num_outer_iterations() override { return num_outer_iterations_; }
-
-        /// returns the kkt condition \grad f - grad_g^T \lambda = 0
-        Eigen::VectorXd get_grad_kkt() const override;
-
-        void eval_f(
-            const Eigen::MatrixXd& points, Eigen::VectorXd& fx) override;
-
-        void solve_lcp(const Eigen::VectorXd& xi,
-            const Eigen::VectorXd& gxi,
-            const Eigen::SparseMatrix<double>& jac_gxi,
-            const Eigen::VectorXi& gactive,
-            Eigen::VectorXd& delta_x,
-            Eigen::VectorXd& lambda_i) const;
 
         // ---------------------
         // Configuration
@@ -77,6 +80,7 @@ namespace opt {
         double convergence_tolerance;
         NcpUpdate update_type;
         LCPSolver lcp_solver;
+        int max_iterations;
 
         // -----------------------
         // Optimization Status
@@ -93,16 +97,24 @@ namespace opt {
         Eigen::VectorXd lambda_i;
 
     protected:
-        Eigen::SparseMatrix<double> A;
-        Eigen::VectorXd b;
-        OptimizationProblem* problem_ptr_;
-
-        int num_outer_iterations_;
-
-        void compute_linear_system(OptimizationProblem& problem_ptr_);
+        void compute_linear_system(INCPProblem& problem_ptr_);
         void compute_initial_solution();
 
+        void solve_lcp(const Eigen::VectorXd& xi,
+            const Eigen::VectorXd& gxi,
+            const Eigen::SparseMatrix<double>& jac_gxi,
+            const Eigen::VectorXi& gactive,
+            Eigen::VectorXd& delta_x,
+            Eigen::VectorXd& lambda_i) const;
+
         Eigen::VectorXd Ainv(const Eigen::VectorXd& x) const;
+
+        Eigen::SparseMatrix<double> A;
+        Eigen::VectorXd b;
+        INCPProblem* problem_ptr_;
+
+        int num_outer_iterations_;
+        std::string name_;
     };
     void zero_out_fixed_dof(
         const Eigen::VectorXb& is_fixed, Eigen::SparseMatrix<double>& m);

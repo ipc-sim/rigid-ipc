@@ -9,15 +9,10 @@ namespace ccd {
 namespace opt {
 
     NLOptSolver::NLOptSolver()
-        : NLOptSolver("nlopt_solver")
-    {
-    }
-
-    NLOptSolver::NLOptSolver(const std::string& name)
-        : OptimizationSolver(name)
-        , algorithm(nlopt::LD_SLSQP)
+        : algorithm(nlopt::LD_SLSQP)
         , absolute_tolerance(1e-8)
         , relative_tolerance(1e-8)
+        , max_iterations(1000)
         , max_time(2e19)
         , verbose(false)
     {
@@ -25,15 +20,15 @@ namespace opt {
 
     NLOptSolver::~NLOptSolver() {}
 
-    OptimizationResults NLOptSolver::solve(OptimizationProblem& problem)
+    OptimizationResults NLOptSolver::solve(IConstraintedProblem& problem)
     {
-        nlopt::opt opt(algorithm, unsigned(problem.num_vars));
+        nlopt::opt opt(algorithm, unsigned(problem.num_vars()));
 
         opt.set_min_objective(nlopt_objective, &problem);
 
         // Set inequality constraints if desired
         std::vector<double> tol(
-            uint(2 * problem.num_constraints), absolute_tolerance);
+            uint(2 * problem.num_constraints()), absolute_tolerance);
         opt.add_inequality_mconstraint(
             nlopt_inequality_constraints, &problem, tol);
 
@@ -45,8 +40,9 @@ namespace opt {
         opt.set_maxtime(max_time);
 
         // Initial guess is the value of Uopt
-        std::vector<double> x0(
-            problem.x0.data(), problem.x0.data() + problem.x0.size());
+        auto const& starting_point = problem.starting_point();
+        std::vector<double> x0(starting_point.data(),
+            starting_point.data() + starting_point.size());
         double minf; // The minimum objective value, upon return
 
         // Optimize the displacements
@@ -56,7 +52,7 @@ namespace opt {
         }
 
         OptimizationResults results;
-        results.x = Eigen::Map<Eigen::VectorXd>(x0.data(), problem.num_vars);
+        results.x = Eigen::Map<Eigen::VectorXd>(x0.data(), problem.num_vars());
         results.minf = minf;
         Eigen::ArrayXd gx = problem.eval_g(results.x).array();
         results.success = r > 0 && minf >= 0;
@@ -67,14 +63,14 @@ namespace opt {
         const std::vector<double>& x, std::vector<double>& grad, void* data)
     {
         assert(data != nullptr);
-        OptimizationProblem* problem = static_cast<OptimizationProblem*>(data);
+        IConstraintedProblem* problem = static_cast<IConstraintedProblem*>(data);
 
         const Eigen::VectorXd X
-            = Eigen::Map<const Eigen::VectorXd>(x.data(), problem->num_vars);
+            = Eigen::Map<const Eigen::VectorXd>(x.data(), problem->num_vars());
 
         if (!grad.empty()) {
             // This should always be true according to NLopt.
-            assert(size_t(grad.size()) == size_t(problem->num_vars));
+            assert(size_t(grad.size()) == size_t(problem->num_vars()));
 
             // Store the gradient of f(X) in grad
             Eigen::VectorXd::Map(grad.data(), int(grad.size()))
@@ -92,15 +88,15 @@ namespace opt {
         void* data)
     {
         assert(data); // Need data to compute volumes
-        OptimizationProblem* problem = static_cast<OptimizationProblem*>(data);
+        IConstraintedProblem* problem = static_cast<IConstraintedProblem*>(data);
 
         const Eigen::MatrixXd X = Eigen::Map<const Eigen::VectorXd>(x, n);
         Eigen::VectorXd gx = problem->eval_g(X);
 
         // We want g(x) >= 0, but NLopt expects all
         // constraints(x) ≤ 0, so stack the constraints and negate as needed.
-        assert(uint(2 * problem->num_constraints) == m);
-        Eigen::VectorXd::Map(results, problem->num_constraints) = -gx;
+        assert(uint(2 * problem->num_constraints()) == m);
+        Eigen::VectorXd::Map(results, problem->num_constraints()) = -gx;
 
         if (grad) {
             Eigen::MatrixXd dgx = problem->eval_jac_g(X).transpose();

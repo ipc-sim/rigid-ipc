@@ -1,9 +1,10 @@
 #include <catch2/catch.hpp>
 
-#include <autodiff/finitediff.hpp>
 #include <iostream>
 #include <opt/barrier.hpp>
 #include <opt/distance_barrier_constraint.hpp>
+
+#include <autodiff/finitediff.hpp>
 #include <utils/flatten.hpp>
 
 TEST_CASE("Distance Barrier Constraint",
@@ -93,10 +94,11 @@ TEST_CASE("Distance Barrier Constraint",
         // clang-format off
         // loop over edges then vertices
         expected_barrier <<
+            std::numeric_limits<double>::infinity(),
             spline_barrier<double>(0.5, barrier_epsilon),
             spline_barrier<double>(0.5, barrier_epsilon),
-            spline_barrier<double>(0.5, barrier_epsilon),
-            std::numeric_limits<double>::infinity();
+            spline_barrier<double>(0.5, barrier_epsilon);
+
         // clang-format on
     }
 

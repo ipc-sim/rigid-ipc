@@ -20,7 +20,6 @@ namespace opt {
         /// Solve the LCP as a QP using Mosek
         LCP_MOSEK
     };
-    static const char* LCPSolverNames[] = { "LCP_GAUSS_SEIDEL", "LCP_MOSEK" };
 
     bool lcp_solve(const Eigen::VectorXd& gxi,
         const Eigen::SparseMatrix<double>& jac_gxi,

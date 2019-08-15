@@ -20,7 +20,24 @@ public:
     typedef Eigen::Matrix<DDouble1, Eigen::Dynamic, 1> D1VectorXd;
     typedef Eigen::Matrix<DDouble2, Eigen::Dynamic, 1> D2VectorXd;
 
+    typedef Eigen::Matrix<DDouble1, 3, 1> D1Vector3d;
+    typedef Eigen::Matrix<DDouble2, 3, 1> D2Vector3d;
+    typedef Eigen::Matrix<DDouble1, 2, 1> D1Vector2d;
+    typedef Eigen::Matrix<DDouble2, 2, 1> D2Vector2d;
+
     inline static void activate() { DiffScalarBase::setVariableCount(N); }
+
+    template <typename T>
+    inline static Eigen::Matrix<T, Eigen::Dynamic, 1> dTvars(
+        const size_t i, const Eigen::VectorXd& v)
+    {
+        Eigen::Matrix<T, Eigen::Dynamic, 1> vec;
+        vec.resize(v.rows());
+        for (int r = 0; r < v.rows(); r++) {
+            vec[r] = T(i + r, v[r]);
+        }
+        return vec;
+    }
 
     inline static D1VectorXd d1vars(const size_t i, const Eigen::VectorXd& v)
     {
@@ -31,6 +48,7 @@ public:
         }
         return vec;
     }
+
     inline static D2VectorXd d2vars(const size_t i, const Eigen::VectorXd& v)
     {
         D2VectorXd vec;
@@ -60,32 +78,6 @@ public:
         return hess;
     }
 };
-
-///
-/// \brief DistanceBarrierDiff the variables are 3 positions (x,y)
-/// of an edge and a vertex.
-///
-typedef AutodiffType<6> DistanceBarrierDiff;
-
-///
-/// \brief TimeBarrierDiff the variables are 4 positions (x,y)
-/// of two edges.
-///
-typedef AutodiffType<8> TimeBarrierDiff;
-
-/// Used for time-barrier constraint.
-/// TODO: should rewrite to use type defined above
-static constexpr size_t N = 2 * 4;
-typedef Eigen::Matrix<double, 8, 1> Vector8d;
-typedef Eigen::Matrix<double, 8, 8> Matrix8d;
-typedef DScalar2<double, Vector8d, Matrix8d> DScalar;
-typedef DScalar::DVector2 DVector2;
-
-static inline DVector2 dvector(
-    size_t index, const Eigen::Matrix<double, 2, 1>& v)
-{
-    return DVector2(DScalar(index, v.x()), DScalar(index + 1, v.y()));
-}
 
 } // namespace ccd
 #endif

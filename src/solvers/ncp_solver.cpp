@@ -18,7 +18,6 @@ namespace opt {
         { { NcpUpdate::LINEARIZED, "linearized" },
             { NcpUpdate::G_GRADIENT, "g_gradients" } })
 
-
     NLOHMANN_JSON_SERIALIZE_ENUM(LCPSolver,
         { { LCPSolver::LCP_MOSEK, "lcp_mosek" },
             { LCPSolver::LCP_GAUSS_SEIDEL, "lcp_gauss_seidel" } })
@@ -30,22 +29,23 @@ namespace opt {
     }
 
     NCPSolver::NCPSolver(const std::string& name)
-        : OptimizationSolver(name, /*max_iterations=*/1000)
-        , do_line_search(true)
+        : do_line_search(true)
         , solve_for_active_cstr(true)
         , convergence_tolerance(1e-6)
         , update_type(NcpUpdate::LINEARIZED)
         , lcp_solver(LCPSolver::LCP_GAUSS_SEIDEL)
+        , max_iterations(1000)
         , num_outer_iterations_(0)
+        , name_(name)
+
     {
         Asolver
             = std::make_shared<Eigen::SparseLU<Eigen::SparseMatrix<double>>>();
     }
-    void NCPSolver::clear() { num_outer_iterations_ = 0; }
 
     void NCPSolver::settings(const nlohmann::json& json)
     {
-        OptimizationSolver::settings(json);
+        max_iterations = json["max_iterations"].get<int>();
         do_line_search = json["do_line_search"].get<bool>();
         solve_for_active_cstr = json["solve_for_active_cstr"].get<bool>();
         convergence_tolerance = json["convergence_tolerance"].get<double>();
@@ -55,7 +55,8 @@ namespace opt {
 
     nlohmann::json NCPSolver::settings() const
     {
-        nlohmann::json json = OptimizationSolver::settings();
+        nlohmann::json json;
+        json["max_iterations"] = max_iterations;
         json["do_line_search"] = do_line_search;
         json["solve_for_active_cstr"] = solve_for_active_cstr;
         json["convergence_tolerance"] = convergence_tolerance;
@@ -66,7 +67,7 @@ namespace opt {
 
     bool NCPSolver::solve_ncp(const Eigen::SparseMatrix<double>& f_A,
         const Eigen::VectorXd& f_b,
-        OptimizationProblem& opt_problem,
+        INCPProblem& opt_problem,
         Eigen::VectorXd& x_opt,
         Eigen::VectorXd& lambda_opt)
     {
@@ -89,9 +90,14 @@ namespace opt {
         return result.success;
     }
 
-    OptimizationResults NCPSolver::solve(OptimizationProblem& opt_problem)
+    void NCPSolver::set_problem(INCPProblem& problem)
     {
-        init(opt_problem);
+        problem_ptr_ = &problem;
+    }
+
+    OptimizationResults NCPSolver::solve()
+    {
+        init_solve();
 
         OptimizationResults result;
         for (int i = 0; i < max_iterations; ++i) {
@@ -110,11 +116,11 @@ namespace opt {
         return result;
     }
 
-    void NCPSolver::init(OptimizationProblem& opt_problem)
+    void NCPSolver::init_solve()
     {
-        problem_ptr_ = &opt_problem;
+        assert(problem_ptr_ != nullptr);
         num_outer_iterations_ = 0;
-        compute_linear_system(opt_problem);
+        compute_linear_system(*problem_ptr_);
         compute_initial_solution();
     }
 
@@ -129,15 +135,16 @@ namespace opt {
         // 1. Solve assumming constraints are not violated
         xi = Ainv(b);
         problem_ptr_->eval_g(xi, g_xi, jac_g_xi, g_active);
+
         zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
 
         lambda_i.resize(g_xi.rows());
         lambda_i.setZero();
     }
 
-    void NCPSolver::compute_linear_system(OptimizationProblem& opt_problem)
+    void NCPSolver::compute_linear_system(INCPProblem& opt_problem)
     {
-        Eigen::VectorXd x0 = Eigen::VectorXd::Zero(opt_problem.num_vars);
+        Eigen::VectorXd x0 = Eigen::VectorXd::Zero(opt_problem.num_vars());
         A = opt_problem.eval_hessian_f(x0);
         b = -opt_problem.eval_grad_f(x0);
     }
@@ -177,40 +184,6 @@ namespace opt {
         spdlog::trace("solver=ncp_solver it={} action=line_search status=BEGIN",
             num_outer_iterations_);
 
-        /// write file for Denis v.v
-        //        int N = 1000;
-        //        std::string filename = DATA_OUTPUT_DIR
-        //            + fmt::format("/solve_it_{}.csv", num_outer_iterations_);
-        //        spdlog::debug("writting into {}", filename);
-        //        std::ofstream myfile;
-        //        myfile.open(filename);
-        //        myfile << fmt::format("delta_i,
-        //        {}\n",log::fmt_eigen(delta_i)); myfile << "s,sum V, |Ax -(b
-        //        +J^T lambda)|, g_xi, J\n"; for (int it = 0; it < N; it++) {
-        //            double s = (it + 1) / double(N);
-        //            Eigen::VectorXd x_next = xi + s * delta_i;
-        //            problem_ptr_->eval_g(x_next, g_xi, jac_g_xi, g_active);
-
-        //            double residual
-        //                = (A * x_next - (b + jac_g_xi.transpose() *
-        //                lambda_i)).norm();
-        //            Eigen::VectorXd g_xi_active;
-        //            igl::slice(g_xi, g_active, g_xi_active);
-
-        //            uint dof = uint(xi.rows());
-        //            Eigen::SparseMatrix<double> jac_g_xi_active;
-        //            igl::slice(jac_g_xi, g_active,
-        //                Eigen::VectorXi::LinSpaced(dof, 0, int(dof)),
-        //                jac_g_xi_active);
-        //            myfile << fmt::format("{:10e},{:10e}, {:10e}, {}, {}\n",
-        //            s,
-        //                g_xi.sum(), residual, log::fmt_eigen(g_xi, 10),
-        //                log::fmt_eigen(jac_g_xi, 10));
-        //        }
-        //        myfile.close();
-
-        /// line search
-
         if (do_line_search) {
             while (step_norm >= convergence_tolerance) {
                 Eigen::VectorXd x_next = xi + delta_i * alpha;
@@ -246,6 +219,7 @@ namespace opt {
 
         xi = xi + delta_i * alpha;
         problem_ptr_->eval_g(xi, g_xi, jac_g_xi, g_active);
+
         zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
         result.finished = false;
         result.success = false;
@@ -350,11 +324,11 @@ namespace opt {
         return A * xi - (b + jac_g_xi.transpose() * lambda_i);
     }
 
-    void NCPSolver::eval_f(
-        const Eigen::MatrixXd& /*points*/, Eigen::VectorXd& /*fx*/)
-    {
-        // TODO!!!!
-    }
+    //    void NCPSolver::eval_f(
+    //        const Eigen::MatrixXd& /*points*/, Eigen::VectorXd& /*fx*/)
+    //    {
+    //        // TODO!!!!
+    //    }
 
     void zero_out_fixed_dof(
         const Eigen::VectorXb& is_fixed, Eigen::SparseMatrix<double>& jac)

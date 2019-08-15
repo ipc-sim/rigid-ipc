@@ -1,8 +1,9 @@
 #include "read_rb_scene.hpp"
 
 #include <fstream>
-#include <io/serialize_json.hpp>
 #include <iostream>
+
+#include <io/serialize_json.hpp>
 
 namespace ccd {
 namespace io {
@@ -31,19 +32,19 @@ namespace io {
             args.merge_patch(jrb);
 
             Eigen::MatrixXd vertices;
-            from_json(args["vertices"], vertices);
+            from_json<double>(args["vertices"], vertices);
 
             Eigen::VectorXd xy_position;
-            from_json(args["position"], xy_position);
+            from_json<double>(args["position"], xy_position);
 
             Eigen::MatrixXi edges;
-            from_json(args["edges"], edges);
+            from_json<int>(args["edges"], edges);
 
             Eigen::VectorXd velocity;
-            from_json(args["velocity"], velocity);
+            from_json<double>(args["velocity"], velocity);
 
             Eigen::VectorXb is_dof_fixed;
-            from_json(args["is_dof_fixed"], is_dof_fixed);
+            from_json<bool>(args["is_dof_fixed"], is_dof_fixed);
 
             double theta = args["theta"].get<double>() * M_PI / 180.0;
             Eigen::Vector3d position;

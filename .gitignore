@@ -96,7 +96,7 @@ bin*
 __pycache__
 
 ## AUTOGEN!
-src/autogen/*.cpp
+src/autogen/*.ipp
 #src/autogen/*.hpp
 fixtures/auto_*.json
 figures/*.data

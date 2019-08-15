@@ -17,54 +17,51 @@
 namespace ccd {
 namespace opt {
     QPSolver::QPSolver()
-        : QPSolver("qp_solver")
-    {
-    }
-
-    QPSolver::QPSolver(const std::string& name)
-        : OptimizationSolver(name)
-        , absolute_tolerance(1e-8)
+        : absolute_tolerance(1e-8)
         , relative_tolerance(1e-8)
+        , max_iterations(1000)
         , qp_solver(QPSolverType::OSQP)
     {
     }
+
     QPSolver::~QPSolver() {}
 
-    void QPSolver::quadratic_energy(OptimizationProblem& problem)
+    void QPSolver::quadratic_energy(IConstraintedProblem& problem)
     {
         // Approximate to Quadratic Energy of the form
         //  ½ * x^T * Q * x + c^T * x + cf
 
-        Eigen::VectorXd x0 = Eigen::VectorXd::Zero(problem.num_vars);
+        Eigen::VectorXd x0 = Eigen::VectorXd::Zero(problem.num_vars());
         Q = problem.eval_hessian_f(x0);
         c = problem.eval_grad_f(x0);
         cf = problem.eval_f(x0);
     }
 
-    void QPSolver::linearized_constraints(OptimizationProblem& problem)
+    void QPSolver::linearized_constraints(IConstraintedProblem& problem)
     {
+        const auto& x0 = problem.starting_point();
         // Linearized constraints
         // 0.0 ≤ g(x0) + ∇g(x0)(x - x0) ≤ INF →
         // 0.0 - g(x0) + ∇g(x0) * x0 ≤ ∇g(x0) * x ≤ INF
         // Linear constraint matrix
         // A = ∇g(x0) ∈ R^(m × n)
-        A = problem.eval_jac_g(problem.x0).sparseView();
+        A = problem.eval_jac_g(x0).sparseView();
         // Linear constraint lower bounds
         // (0.0 - g(x0) + ∇g(x0) * x0) ∈ R^m
-        lc = -problem.eval_g(problem.x0) + A * problem.x0;
+        lc = -problem.eval_g(x0) + A * x0;
         // Linear constraint upper bounds
         // u ∈ R^m
         uc = Eigen::VectorXd(lc.rows());
         uc.setConstant(NO_UPPER_BOUND);
     }
 
-    OptimizationResults QPSolver::solve(OptimizationProblem& problem)
+    OptimizationResults QPSolver::solve(IConstraintedProblem& problem)
     {
         quadratic_energy(problem);
         linearized_constraints(problem);
 
         OptimizationResults results;
-        results.x.resize(problem.num_vars, 1);
+        results.x.resize(problem.num_vars(), 1);
 
         switch (qp_solver) {
         case QPSolverType::OSQP:

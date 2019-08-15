@@ -21,25 +21,6 @@ namespace autogen {
         // {{toi_abc_ccode}}
     }
 
-    template void time_of_impact_coeff<double>(
-        Eigen::Vector2d const&,
-        Eigen::Vector2d const&,
-        Eigen::Vector2d const&,
-        Eigen::Vector2d const&,
-        Eigen::Vector2d const&,
-        Eigen::Vector2d const&,
-        double&, double&, double&);
-
-    template void time_of_impact_coeff<DScalar>(
-        Eigen::Vector2d const&,
-        Eigen::Vector2d const&,
-        Eigen::Vector2d const&,
-        DVector2 const&,
-        DVector2 const&,
-        DVector2 const&,
-        DScalar&,
-        DScalar&,
-        DScalar&);
 
 }
 }

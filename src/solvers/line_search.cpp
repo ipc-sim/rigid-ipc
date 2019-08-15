@@ -135,6 +135,7 @@ namespace opt {
         return success;
     }
 
+
     // Log samples along the search direction.
     void sample_search_direction(const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
@@ -150,6 +151,8 @@ namespace opt {
                 grad_f(x + step_length * dir).squaredNorm());
         }
     }
+
+
 
 } // namespace opt
 } // namespace ccd

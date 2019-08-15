@@ -9,9 +9,7 @@
 #include <io/serialize_json.hpp>
 #include <logger.hpp>
 
-#include <opt/constraint_factory.hpp>
-#include <physics/problem_factory.hpp>
-#include <solvers/solver_factory.hpp>
+#include <problems/problem_factory.hpp>
 
 #include <profiler.hpp>
 #include <utils/regular_2d_grid.hpp>
@@ -51,22 +49,22 @@ bool SimState::load_scene(const std::string& filename)
 
 bool SimState::reload_scene() { return load_scene(scene_file); }
 
-bool SimState::load_simulation(const nlohmann::json& args)
+bool SimState::load_simulation(const nlohmann::json& input_args)
 {
     // load original setup
-    bool success = init(args["args"]);
+    bool success = init(input_args["args"]);
     if (!success) {
         return false;
     }
 
     // now reload simulation history
     vertices_sequence.clear();
-    for (auto& jv : args["animation"]["vertices_sequence"]) {
+    for (auto& jv : input_args["animation"]["vertices_sequence"]) {
         Eigen::MatrixXd v;
         io::from_json(jv, v);
         vertices_sequence.push_back(v);
     };
-    state_sequence = args["animation"]["state_sequence"]
+    state_sequence = input_args["animation"]["state_sequence"]
                          .get<std::vector<nlohmann::json>>();
     problem_ptr->state(state_sequence.back());
     return true;
@@ -79,13 +77,9 @@ bool SimState::init(const nlohmann::json& args_in)
     // clang-format off
     args = R"({
         "max_iterations":-1,
-        "scene_type":"rigid_body_problem",
-        "collision_solver":"barrier_solver",
+        "scene_type":"distance_barrier_rb_problem",
         "rigid_body_problem":{
               "rigid_bodies": [],
-              "constraint": "distance_barrier_constraint",
-              "update_constraint_set": true,
-              "use_chain_functional": false,
               "coefficient_restitution":0.0,
               "gravity":[0.0,0.0,0.0],
               "collision_eps": 0.0
@@ -96,9 +90,6 @@ bool SimState::init(const nlohmann::json& args_in)
             "velocities":[],
             "x_fixed":[],
             "y_fixed":[],
-            "use_mass_matrix": true,
-            "constraint": "distance_barrier_constraint",
-            "update_constraint_set": true,
             "gravity":[0.0,0.0],
             "collision_eps": 0.0
          },
@@ -124,7 +115,7 @@ bool SimState::init(const nlohmann::json& args_in)
         },
         "ncp_solver":{
             "max_iterations": 1000,
-            "do_line_search": true,
+            "do_line_search": false,
             "solve_for_active_cstr": true,
             "convergence_tolerance":1e-6,
             "update_type": "linearized",
@@ -179,31 +170,8 @@ bool SimState::init(const nlohmann::json& args_in)
 
     auto problem_name = args["scene_type"].get<std::string>();
 
-    // Config CCD CONSTRAINT
-    // problem_ptr needs to have constraint configured already
-    auto constraint_name = args[problem_name]["constraint"].get<std::string>();
-    auto constraint_ptr
-        = opt::ConstraintFactory::factory().get_constraint(constraint_name);
-    constraint_ptr->settings(args[constraint_name]);
-
-    // Config PROBLEM
-    problem_ptr = physics::ProblemFactory::factory().get_problem(problem_name);
-    problem_ptr->init(args[problem_name]);
-
-    // Config CCD SOLVER
-    auto solver_name = args["collision_solver"].get<std::string>();
-    ccd_solver_ptr = opt::SolverFactory::factory().get_solver(solver_name);
-    ccd_solver_ptr->clear();
-    ccd_solver_ptr->settings(args[solver_name]);
-
-    // Config CCD INNER solver
-    if (ccd_solver_ptr->has_inner_solver()) {
-        auto inner_solver_name
-            = args[solver_name]["inner_solver"].get<std::string>();
-        auto inner_solver_ptr
-            = opt::SolverFactory::factory().get_solver(inner_solver_name);
-        inner_solver_ptr->settings(args[inner_solver_name]);
-    }
+    problem_ptr = ProblemFactory::factory().get_problem(problem_name);
+    problem_ptr->settings(args);
 
     m_num_simulation_steps = 0;
     m_dirty_constraints = true;
@@ -228,15 +196,11 @@ nlohmann::json SimState::get_active_config()
     active_args[problem_ptr->name()] = problem_ptr->settings();
     active_args[problem_ptr->constraint().name()]
         = problem_ptr->constraint().settings();
-
-    // Settings for CCD SOLVER
-    active_args["collision_solver"] = ccd_solver_ptr->name();
-    active_args[ccd_solver_ptr->name()] = ccd_solver_ptr->settings();
-
-    // Settings for CCD INNER solver
-    if (ccd_solver_ptr->has_inner_solver()) {
-        auto& inner_solver = ccd_solver_ptr->inner_solver();
-        active_args[inner_solver.name()] = inner_solver.settings();
+    active_args[problem_ptr->solver().name()]
+        = problem_ptr->solver().settings();
+    if (problem_ptr->solver().has_inner_solver()) {
+        active_args[problem_ptr->solver().inner_solver().name()]
+            = problem_ptr->solver().inner_solver().settings();
     }
 
     return active_args;
@@ -252,7 +216,7 @@ void SimState::run_simulation(const std::string& fout)
     m_solve_collisions = true;
     for (int i = 0; i < m_max_simulation_steps; ++i) {
         simulation_step();
-        spdlog::info("finished iteration {}", i);
+        spdlog::info("finished step {}", i);
     }
     save_simulation(fout);
     spdlog::info("simulation results saved to {}", fout);
@@ -292,7 +256,7 @@ bool SimState::solve_collision()
 
     PROFILE_START();
 
-    result = ccd_solver_ptr->solve(*problem_ptr);
+    result = problem_ptr->solve_constraints();
 
     PROFILE_END();
 
@@ -314,12 +278,12 @@ void SimState::collision_resolution_step()
 {
     if (m_dirty_constraints) {
         problem_ptr->update_constraint();
-        ccd_solver_ptr->init(*problem_ptr);
+        problem_ptr->init_solve();
         m_dirty_constraints = false;
     }
 
     ccd::opt::OptimizationResults result;
-    result = ccd_solver_ptr->step_solve();
+    result = problem_ptr->step_solve();
 
     // TODO: use results.finished
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
@@ -346,16 +310,6 @@ void SimState::save_simulation(const std::string& filename)
     o << std::setw(4) << results << std::endl;
 }
 
-void SimState::get_collision_gradient(Eigen::MatrixXd& fgrad)
-{
-    if (m_dirty_constraints) {
-        fgrad.resize(0, 0);
-        return;
-    }
-
-    fgrad = ccd_solver_ptr->get_grad_kkt();
-    problem_ptr->unflatten_dof(fgrad);
-}
 
 void SimState::init_background_grid(const nlohmann::json& args_)
 {

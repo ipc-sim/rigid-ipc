@@ -4,7 +4,6 @@
 #include <catch2/catch.hpp>
 
 #include <autodiff/autodiff_types.hpp>
-#include <opt/ad_hoc_problem.hpp>
 #include <solvers/ncp_solver.hpp>
 
 // ---------------------------------------------------
@@ -97,34 +96,81 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         };
         expected << 0.0, 1.5;
     }
-    AdHocProblem problem;
-    problem.f = [&](const Eigen::VectorXd& x) -> double {
-        return (A * x - b).squaredNorm() / 2.0;
-    };
 
-    problem.g = [&g_diff](const Eigen::VectorXd x) -> Eigen::VectorXd {
-        DVector gx = g_diff(x);
-        Eigen::VectorXd g(gx.rows());
-        for (int i = 0; i < gx.rows(); ++i) {
-            g(i) = gx(i).getValue();
+    class AdHocProblem : public virtual INCPProblem {
+    public:
+        AdHocProblem(Eigen::SparseMatrix<double>& _A,
+            Eigen::VectorXd& _b,
+            std::function<DVector(const Eigen::VectorXd& x)>& _gdiff)
+            : A(_A)
+            , b(_b)
+            , gdiff(_gdiff)
+        {
+            is_dof_fixed_ = Eigen::VectorXb::Zero(NUM_VARS);
         }
 
-        return g;
-    };
-
-    problem.jac_g = [&g_diff](const Eigen::VectorXd& x) -> Eigen::MatrixXd {
-        DVector gx = g_diff(x);
-        Eigen::MatrixXd jac_gx(gx.rows(), NUM_VARS);
-        for (int i = 0; i < gx.rows(); ++i) {
-            jac_gx.row(i) = gx(i).getGradient();
+        double eval_f(const Eigen::VectorXd& x) override
+        {
+            return (A * x - b).squaredNorm() / 2.0;
         }
 
-        return jac_gx;
+        Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override
+        {
+            return (A * x - b);
+        }
+        Eigen::SparseMatrix<double> eval_hessian_f(
+            const Eigen::VectorXd& /*x*/) override
+        {
+            return A;
+        }
+
+        Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override
+        {
+            DVector gx = gdiff(x);
+            Eigen::VectorXd g(gx.rows());
+            for (int i = 0; i < gx.rows(); ++i) {
+                g(i) = gx(i).getValue();
+            }
+
+            return g;
+        }
+        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x)
+        {
+            DVector gx = gdiff(x);
+            Eigen::MatrixXd jac_gx(gx.rows(), NUM_VARS);
+            for (int i = 0; i < gx.rows(); ++i) {
+                jac_gx.row(i) = gx(i).getGradient();
+            }
+            return jac_gx;
+        }
+
+        void eval_g(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
+            Eigen::SparseMatrix<double>& gx_jacobian,
+            Eigen::VectorXi& gx_active) override
+        {
+            gx = eval_g(x);
+
+            gx_jacobian = eval_jac_g(x).sparseView();
+            gx_active
+                = Eigen::VectorXi::LinSpaced(gx.rows(), 0, int(gx.rows()));
+        }
+        const Eigen::VectorXd& starting_point() override {
+            return b;
+        }
+        const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
+
+        virtual const int& num_vars() override { return NUM_VARS; }
+
+        Eigen::SparseMatrix<double> A;
+        Eigen::VectorXd b;
+        std::function<DVector(const Eigen::VectorXd& x)> gdiff;
+        Eigen::VectorXb is_dof_fixed_;
     };
-    Eigen::VectorXb is_dof_fixed = Eigen::VectorXb::Zero(NUM_VARS);
-    problem.fis_dof_fixed = [&]() -> Eigen::VectorXb& { return is_dof_fixed; };
 
     Eigen::VectorXd x(NUM_VARS), alpha(NUM_CONSTRAINTS);
+    AdHocProblem problem(A, b, g_diff);
+
     NCPSolver solver;
     solver.max_iterations = 300;
     solver.convergence_tolerance = 1E-8;

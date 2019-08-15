@@ -18,18 +18,17 @@ namespace opt {
         MOSEK ///< @brief Use MOSEK to solve the qudratic program
     };
 
-    static const char* QPSolverNames[] = { "OSQP", "MOSEK" };
-
-    class QPSolver : public OptimizationSolver {
+    class QPSolver : public virtual IBasicOptimizationSolver {
     public:
         QPSolver();
-        QPSolver(const std::string& name);
         ~QPSolver() override;
 
-        OptimizationResults solve(OptimizationProblem& problem) override;
+        OptimizationResults solve(IConstraintedProblem& problem) override;
 
         double absolute_tolerance;
         double relative_tolerance;
+        int max_iterations;
+
         QPSolverType qp_solver;
 
         bool solve_with_osqp(Eigen::MatrixXd& x);
@@ -47,8 +46,8 @@ namespace opt {
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd lc, uc;
         Eigen::VectorXd lx, ux;
-        void quadratic_energy(OptimizationProblem& problem);
-        void linearized_constraints(OptimizationProblem& problem);
+        void quadratic_energy(IConstraintedProblem& problem);
+        void linearized_constraints(IConstraintedProblem& problem);
     };
 
 } // namespace opt

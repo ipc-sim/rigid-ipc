@@ -79,6 +79,14 @@ namespace physics {
         }
     }
 
+    void RigidBodyAssembler::global_to_local(
+        const int global_vertex_id, int& rigid_body_id, int& local_vertex_id)
+    {
+        rigid_body_id = m_vertex_to_body_map(global_vertex_id);
+        local_vertex_id
+            = global_vertex_id - m_body_vertex_id[size_t(rigid_body_id)];
+    }
+
     Eigen::VectorXd RigidBodyAssembler::rb_positions(const bool previous) const
     {
         Eigen::VectorXd X(int(m_rbs.size()) * 3);
@@ -121,103 +129,6 @@ namespace physics {
                 = rb.world_vertices(p_i);
         }
         return V;
-    }
-
-    Eigen::MatrixXd RigidBodyAssembler::world_vertices(
-        const std::vector<Eigen::Vector3d>& positions) const
-    {
-        Eigen::MatrixXd V(num_vertices(), 2);
-        for (size_t i = 0; i < m_rbs.size(); ++i) {
-            auto& rb = m_rbs[i];
-            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), 2)
-                = rb.world_vertices(positions[i]);
-        }
-        return V;
-    }
-
-    Eigen::MatrixXd RigidBodyAssembler::world_velocities() const
-    {
-        Eigen::MatrixXd V(num_vertices(), 2);
-        for (size_t i = 0; i < m_rbs.size(); ++i) {
-            auto& rb = m_rbs[i];
-
-            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), 2)
-                = rb.world_velocities();
-        }
-        return V;
-    }
-
-    void RigidBodyAssembler::world_vertices_gradient(
-        const Eigen::VectorXd& positions,
-        Eigen::SparseMatrix<double>& grad_u) const
-    {
-        typedef Eigen::Triplet<double> M;
-        std::vector<M> triplets;
-
-        long num_vertices = m_body_vertex_id.back();
-        triplets.reserve(size_t(num_vertices) * 2);
-
-        grad_u.resize(int(num_vertices * 2), int(m_rbs.size()) * 3);
-        for (size_t i = 0; i < m_rbs.size(); ++i) {
-            auto& rb = m_rbs[i];
-            Eigen::Vector3d p_i = positions.segment(3 * int(i), 3);
-            Eigen::MatrixXd el_grad = rb.world_vertices_gradient(p_i);
-
-            long d = el_grad.rows() / 2;
-            // x-axis entries
-            for (int j = 0; j < d; ++j) {
-                for (int k = 0; k < el_grad.cols(); ++k) {
-                    triplets.push_back(M(int(m_body_vertex_id[i]) + j,
-                        int(3 * i) + k, el_grad(j, k)));
-                }
-            }
-            // y-axis entries
-            for (int j = 0; j < d; ++j) {
-                for (int k = 0; k < el_grad.cols(); ++k) {
-                    triplets.push_back(
-                        M(int(m_body_vertex_id[i] + num_vertices) + j,
-                            int(3 * i) + k, el_grad(d + j, k)));
-                }
-            }
-        }
-
-        grad_u.setFromTriplets(triplets.begin(), triplets.end());
-    }
-
-    void RigidBodyAssembler::world_vertices_hessian(const Eigen::VectorXd& v,
-        std::vector<Eigen::SparseMatrix<double>>& hess_u) const
-    {
-        // for local entry hessian
-        typedef Eigen::Triplet<double> M;
-        std::array<M, 9> triplets;
-
-        long num_vertices = m_body_vertex_id.back();
-        hess_u.resize(size_t(num_vertices) * 2);
-
-        for (size_t i = 0; i < m_rbs.size(); ++i) {
-            auto& rb = m_rbs[i];
-            std::vector<Eigen::Matrix3d> el_hessians
-                = rb.world_vertices_hessian(v.segment(int(3 * i), 3));
-            for (size_t ii = 0; ii < el_hessians.size(); ++ii) {
-                auto& el_hess = el_hessians[ii];
-                for (int j = 0; j < 3; ++j) {
-                    for (int k = 0; k < 3; ++k) {
-                        triplets[size_t(3 * j + k)]
-                            = M(int(3 * i) + j, int(3 * i) + k, el_hess(j, k));
-                    }
-                }
-                Eigen::SparseMatrix<double> global_el_hessian(
-                    int(m_rbs.size()) * 3, int(m_rbs.size()) * 3);
-                global_el_hessian.setFromTriplets(
-                    triplets.begin(), triplets.end());
-
-                int d = int(el_hessians.size() / 2);
-                int padding
-                    = int(ii) >= d ? int(ii) - d + int(num_vertices) : int(ii);
-                hess_u[size_t(m_body_vertex_id[i] + padding)]
-                    = global_el_hessian;
-            }
-        }
     }
 
 } // namespace physics

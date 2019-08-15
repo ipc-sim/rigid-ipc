@@ -3,6 +3,9 @@
 #include <iostream>
 
 #include <autogen/collision_volume.hpp>
+#include <ccd/prune_impacts.hpp>
+#include <ccd/time_of_impact.hpp>
+
 #include <logger.hpp>
 
 namespace ccd {
@@ -32,42 +35,188 @@ namespace opt {
         return json;
     }
 
-    int VolumeConstraint::number_of_constraints()
+    void VolumeConstraint::initialize(const Eigen::MatrixX2d& vertices,
+        const Eigen::MatrixX2i& edges,
+        const Eigen::VectorXi& group_ids,
+        const Eigen::MatrixXd& Uk)
     {
-        return int(get_constraints_size(int(edges.rows())));
+        m_ee_impacts.clear();
+        m_edge_impact_map.resize(edges.rows());
+        m_edge_impact_map.setZero();
+
+        CollisionConstraint::initialize(vertices, edges, group_ids, Uk);
+        num_constraints = get_constraints_size(edges.rows());
     }
+
+    void VolumeConstraint::update_collision_set(const Eigen::MatrixXd& Uk)
+    {
+        CollisionConstraint::update_collision_set(Uk);
+        ccd::convert_edge_vertex_to_edge_edge_impacts(
+            edges, m_ev_impacts, m_ee_impacts);
+        prune_impacts(m_ee_impacts, m_edge_impact_map);
+    }
+
+    int VolumeConstraint::number_of_constraints() { return num_constraints; }
 
     void VolumeConstraint::compute_constraints(
-        const Eigen::MatrixXd& displacements, Eigen::VectorXd& volumes)
+        const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk)
     {
-        std::vector<double> impact_volumes;
-        compute_constraints_per_impact(displacements, impact_volumes);
-        assemble_constraints_all(impact_volumes, volumes);
+        g_uk.resize(num_constraints);
+        g_uk.setZero();
+
+        for (size_t i = 0; i < m_ee_impacts.size(); ++i) {
+            auto& ee_impact = m_ee_impacts[i];
+
+            Eigen::Vector2i e_ij = edges.row(ee_impact.impacted_edge_index);
+            Eigen::Vector2i e_kl = edges.row(ee_impact.impacting_edge_index);
+
+            int node_i, node_j, node_k, node_l;
+            node_i = e_ij(0);
+            node_j = e_ij(1);
+            node_k = e_kl(0);
+            node_l = e_kl(1);
+
+
+            Eigen::VectorXd v_i, v_j, v_k, v_l;
+            v_i = vertices.row(node_i);
+            v_j = vertices.row(node_j);
+            v_k = vertices.row(node_k);
+            v_l = vertices.row(node_l);
+
+            Eigen::VectorXd u_i, u_j, u_k, u_l;
+            u_i = Uk.row(node_i);
+            u_j = Uk.row(node_j);
+            u_k = Uk.row(node_k);
+            u_l = Uk.row(node_l);
+
+            Eigen::VectorXd v_c, u_c;
+            if (ee_impact.impacting_node() == 0) {
+                v_c = v_k;
+                u_c = u_k;
+            } else {
+                v_c = v_l;
+                u_c = u_l;
+            }
+
+            double toi, alpha_ij, alpha_kl;
+            alpha_kl = ee_impact.impacting_node();
+            // get toi and alpha
+            bool success;
+            success = ccd::autodiff::compute_edge_vertex_time_of_impact<double>(
+                v_i, v_j, v_c, u_i, u_j, u_c, toi);
+            success = success
+                && ccd::autodiff::temporal_parameterization_to_spatial<double>(
+                       v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
+
+            double vol_ij(0), vol_kl(0);
+            if (success) {
+                vol_ij = ccd::autogen::space_time_collision_volume<double>(
+                    v_i, v_j, u_i, u_j, toi, alpha_ij, volume_epsilon);
+                vol_kl = ccd::autogen::space_time_collision_volume<double>(
+                    v_k, v_l, u_k, u_l, toi, alpha_kl, volume_epsilon);
+            }
+            long c_ij = get_constraint_index(
+                ee_impact, /*impacted=*/true, edges.rows());
+            long c_kl = get_constraint_index(
+                ee_impact, /*impacted=*/false, edges.rows());
+
+            g_uk(c_ij) = vol_ij;
+            g_uk(c_kl) = vol_kl;
+        }
     }
 
     void VolumeConstraint::compute_constraints_jacobian(
-        const Eigen::MatrixXd& Uk, Eigen::MatrixXd& g_uk_jacobian)
+        const Eigen::MatrixXd& Uk, Eigen::SparseMatrix<double>& jac_uk)
     {
-        std::vector<DScalar> impact_volumes;
-        compute_constraints_per_impact(Uk, impact_volumes);
-        assemble_jacobian_all(impact_volumes, g_uk_jacobian);
-    }
 
-    void VolumeConstraint::compute_constraints_hessian(
-        const Eigen::MatrixXd& Uk,
-        std::vector<Eigen::SparseMatrix<double>>& volumes_hessian)
-    {
-        std::vector<DScalar> impact_volumes;
-        compute_constraints_per_impact(Uk, impact_volumes);
-        assemble_hessian(impact_volumes, volumes_hessian);
-    }
+        typedef Eigen::Triplet<double> M;
+        std::vector<M> triplets;
 
-    void VolumeConstraint::compute_constraints_jacobian(
-        const Eigen::MatrixXd& Uk, Eigen::SparseMatrix<double>& g_uk_jacobian)
-    {
-        std::vector<DScalar> impact_volumes;
-        compute_constraints_per_impact(Uk, impact_volumes);
-        assemble_sparse_jacobian_all(impact_volumes, g_uk_jacobian);
+        typedef AutodiffType<8> Diff;
+        Diff::activate();
+
+        for (size_t i = 0; i < m_ee_impacts.size(); ++i) {
+            auto& ee_impact = m_ee_impacts[i];
+
+            Eigen::Vector2i e_ij = edges.row(ee_impact.impacted_edge_index);
+            Eigen::Vector2i e_kl = edges.row(ee_impact.impacting_edge_index);
+
+            int node_i, node_j, node_k, node_l;
+            node_i = e_ij(0);
+            node_j = e_ij(1);
+            node_k = e_kl(0);
+            node_l = e_kl(1);
+
+            Eigen::VectorXd v_i, v_j, v_k, v_l;
+            v_i = vertices.row(node_i);
+            v_j = vertices.row(node_j);
+            v_k = vertices.row(node_k);
+            v_l = vertices.row(node_l);
+
+            Diff::D1Vector2d u_i, u_j, u_k, u_l;
+            u_i = Diff::d1vars(0, Uk.row(node_i));
+            u_j = Diff::d1vars(2, Uk.row(node_j));
+            u_k = Diff::d1vars(4, Uk.row(node_k));
+            u_l = Diff::d1vars(6, Uk.row(node_l));
+
+            Eigen::VectorXd v_c;
+            Diff::D1Vector2d u_c;
+            if (ee_impact.impacting_node() == 0) {
+                v_c = v_k;
+                u_c = u_k;
+            } else {
+                v_c = v_l;
+                u_c = u_l;
+            }
+
+            Diff::DDouble1 toi, alpha_ij, alpha_kl;
+            alpha_kl = ee_impact.impacting_node();
+            // get toi and alpha
+            bool success;
+            success = ccd::autodiff::compute_edge_vertex_time_of_impact<
+                Diff::DDouble1>(v_i, v_j, v_c, u_i, u_j, u_c, toi);
+            success = success
+                && ccd::autodiff::temporal_parameterization_to_spatial<
+                       Diff::DDouble1>(
+                       v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
+
+            Diff::DDouble1 vol_ij(0), vol_kl(0);
+            if (success) {
+                vol_ij
+                    = ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
+                        v_i, v_j, u_i, u_j, toi, alpha_ij, volume_epsilon);
+                vol_kl
+                    = ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
+                        v_k, v_l, u_k, u_l, toi, alpha_kl, volume_epsilon);
+            }
+            long c_ij = get_constraint_index(
+                ee_impact, /*impacted=*/true, edges.rows());
+            long c_kl = get_constraint_index(
+                ee_impact, /*impacted=*/false, edges.rows());
+
+            // local gradients
+            Eigen::VectorXd grad_vol_ij = vol_ij.getGradient();
+            Eigen::VectorXd grad_vol_kl = vol_kl.getGradient();
+
+            // x entries:
+            int nodes[4] = { node_i, node_j, node_k, node_l };
+            for (int n_id = 0; n_id < 4; ++n_id) {
+                // x and y entries
+                triplets.emplace_back(
+                    int(c_ij), nodes[n_id], grad_vol_ij(2 * n_id));
+                triplets.emplace_back(int(c_ij), nodes[n_id] + vertices.rows(),
+                    grad_vol_ij(2 * n_id + 1));
+
+                // x and y entries
+                triplets.emplace_back(
+                    int(c_kl), nodes[n_id], grad_vol_kl(2 * n_id));
+                triplets.emplace_back(int(c_kl), nodes[n_id] + vertices.rows(),
+                    grad_vol_kl(2 * n_id + 1));
+            }
+        }
+
+        jac_uk.resize(int(num_constraints), int(vertices.size()));
+        jac_uk.setFromTriplets(triplets.begin(), triplets.end());
     }
 
     void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
@@ -75,202 +224,19 @@ namespace opt {
         Eigen::SparseMatrix<double>& g_uk_jacobian,
         Eigen::VectorXi& g_uk_active)
     {
-        std::vector<DScalar> impact_volumes;
-        compute_constraints_per_impact(Uk, impact_volumes);
-        assemble_constraints_all(impact_volumes, g_uk);
-        assemble_sparse_jacobian_all(impact_volumes, g_uk_jacobian);
+        compute_constraints(Uk, g_uk);
+        compute_constraints_jacobian(Uk, g_uk_jacobian);
         dense_indices(g_uk_active);
-    }
-
-    void VolumeConstraint::compute_active_constraints(const Eigen::MatrixXd& Uk,
-        Eigen::VectorXd& g_uk,
-        Eigen::MatrixXd& g_uk_jacobian)
-    {
-        std::vector<DScalar> impact_volumes;
-        compute_constraints_per_impact(Uk, impact_volumes);
-        assemble_constraints(impact_volumes, g_uk);
-        assemble_jacobian(impact_volumes, g_uk_jacobian);
-    }
-
-    Eigen::VectorXd getGradient(const double& /*x*/) { return Eigen::VectorXd(); }
-    Eigen::VectorXd getGradient(const DScalar& x) { return x.getGradient(); }
-    double getValue(const double& x) { return x; }
-    double getValue(const DScalar& x) { return x.getValue(); }
-    template <typename T>
-    void VolumeConstraint::compute_constraints_per_impact(
-        const Eigen::MatrixXd& displacements, std::vector<T>& constraints)
-    {
-        constraints.clear();
-        constraints.reserve(2 * ee_impacts.size());
-
-        if (differentiable<T>()) {
-            // !!! All definitions using DScalar must be done after this !!!
-            DiffScalarBase::setVariableCount(8);
-        }
-
-        for (size_t i = 0; i < ee_impacts.size(); ++i) {
-            auto& ee_impact = ee_impacts[i];
-
-            ImpactTData<T> data = get_impact_data<T>(displacements, ee_impact);
-
-            T toi, alpha_ij, alpha_kl;
-            T v_ij(0), v_kl(0);
-
-            if (compute_toi_alpha(data, toi, alpha_ij, alpha_kl)) {
-
-                v_ij = ccd::autogen::space_time_collision_volume<T>(data.v[0],
-                    data.v[1], data.u[0], data.u[1], toi, alpha_ij,
-                    volume_epsilon);
-
-                v_kl = ccd::autogen::space_time_collision_volume<T>(data.v[2],
-                    data.v[3], data.u[2], data.u[3], toi, alpha_kl,
-                    volume_epsilon);
-
-//                if (differentiable<T>()) {
-//                    int vi = edges->coeffRef(ee_impact.impacted_edge_index, 0);
-//                    int vj = edges->coeffRef(ee_impact.impacted_edge_index, 1);
-
-//                    int vk = edges->coeffRef(ee_impact.impacting_edge_index, 0);
-//                    int vl = edges->coeffRef(ee_impact.impacting_edge_index, 1);
-
-//                    spdlog::trace(
-//                        "constraints vi={} vj={} vk={} vl={} a={} "
-//                        "\ntoi_ij   {}"
-//                        "\nalpha_ij {} "
-//                        "\nvol_ij   {} "
-//                        "\nvol_kl   {}"
-//                        "\ntoi_ij={:10e} alpha_ij={:10e}  vol_ij={:10e} vol_kl={:10e}",
-//                        vi, vj, vk, vl, ee_impact.impacting_alpha,
-//                        log::fmt_eigen(getGradient(toi)),
-//                        log::fmt_eigen(getGradient(alpha_ij)),
-//                        log::fmt_eigen(getGradient(v_ij)),
-//                        log::fmt_eigen(getGradient(v_kl)), getValue(toi),
-//                        getValue(alpha_ij), getValue(v_ij), getValue(v_kl));
-//                }
-            }
-            constraints.push_back(v_ij);
-            constraints.push_back(v_kl);
-        }
-    }
-
-    void VolumeConstraint::assemble_constraints_all(
-        const std::vector<double>& impact_volumes,
-        Eigen::VectorXd& dense_volumes)
-    {
-
-        const int num_edges = int(edges.rows());
-        const long num_constr = get_constraints_size(num_edges);
-        dense_volumes.resize(num_constr);
-        dense_volumes.setZero();
-
-        for (size_t i = 0; i < ee_impacts.size(); ++i) {
-            auto& ee_impact = ee_impacts[i];
-
-            long c_ij
-                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = get_constraint_index(
-                ee_impact, /*impacted=*/false, num_edges);
-
-            dense_volumes[c_ij] = impact_volumes[2 * i + 0];
-            dense_volumes[c_kl] = impact_volumes[2 * i + 1];
-        }
-    }
-
-    void VolumeConstraint::assemble_constraints_all(
-        const std::vector<DScalar>& impact_volumes,
-        Eigen::VectorXd& dense_volumes)
-    {
-        Eigen::VectorXd volumes;
-        assemble_constraints(impact_volumes, volumes);
-
-        const int num_edges = int(edges.rows());
-        const long num_constr = get_constraints_size(num_edges);
-        dense_volumes.resize(num_constr);
-        dense_volumes.setZero();
-
-        for (size_t i = 0; i < ee_impacts.size(); ++i) {
-            auto& ee_impact = ee_impacts[i];
-
-            long c_ij
-                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = get_constraint_index(
-                ee_impact, /*impacted=*/false, num_edges);
-
-            dense_volumes[c_ij] = volumes(2 * int(i) + 0);
-            dense_volumes[c_kl] = volumes(2 * int(i) + 1);
-        }
-    }
-
-    [[deprecated("Replaced by sparse jabobian")]] void
-    VolumeConstraint::assemble_jacobian_all(
-        const std::vector<DScalar>& impact_volumes,
-        Eigen::MatrixXd& volumes_jac)
-    {
-
-        Eigen::MatrixXd impact_volumes_jac;
-        assemble_jacobian(impact_volumes, impact_volumes_jac);
-
-        assert(impact_volumes_jac.cols() == vertices.size());
-        assert(impact_volumes_jac.rows() == int(impact_volumes.size()));
-
-        const int num_edges = int(edges.rows());
-        const long num_constr = get_constraints_size(num_edges);
-        volumes_jac.resize(num_constr, impact_volumes_jac.cols());
-        volumes_jac.setZero();
-
-        for (size_t i = 0; i < ee_impacts.size(); ++i) {
-            auto& ee_impact = ee_impacts[i];
-
-            long c_ij
-                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = get_constraint_index(
-                ee_impact, /*impacted=*/false, num_edges);
-
-            volumes_jac.row(c_ij) = impact_volumes_jac.row(2 * int(i) + 0);
-            volumes_jac.row(c_kl) = impact_volumes_jac.row(2 * int(i) + 1);
-        }
-    }
-
-    void VolumeConstraint::assemble_sparse_jacobian_all(
-        const std::vector<DScalar>& constraints,
-        Eigen::SparseMatrix<double>& jacobian)
-    {
-
-        std::vector<DoubleTriplet> tripletList;
-        assemble_jacobian_triplets(constraints, tripletList);
-
-        const int num_edges = int(edges.rows());
-        const long num_constr = get_constraints_size(num_edges);
-
-        size_t counter = 0;
-        for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
-            auto& ee_impact = ee_impacts[ee];
-
-            long c_ij
-                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = get_constraint_index(
-                ee_impact, /*impacted=*/false, num_edges);
-            int rows[2] = { int(c_ij), int(c_kl) };
-
-            for (size_t k = 0; k < 2; k++) {
-                for (int i = 0; i < 8; i++) {
-                    tripletList[counter++].set_row(rows[k]);
-                }
-            }
-        }
-
-        jacobian.resize(int(num_constr), int(vertices.size()));
-        jacobian.setFromTriplets(tripletList.begin(), tripletList.end());
     }
 
     void VolumeConstraint::dense_indices(Eigen::VectorXi& dense_indices)
     {
-        dense_indices.resize(int(ee_impacts.size()) * 2);
+        dense_indices.resize(int(m_ee_impacts.size()) * 2);
 
         const int num_edges = int(edges.rows());
 
-        for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
-            auto& ee_impact = ee_impacts[ee];
+        for (size_t ee = 0; ee < m_ee_impacts.size(); ++ee) {
+            auto& ee_impact = m_ee_impacts[ee];
 
             long c_ij
                 = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
@@ -281,13 +247,6 @@ namespace opt {
             dense_indices(int(2 * ee) + 1) = int(c_kl);
         }
     }
-
-    template void VolumeConstraint::compute_constraints_per_impact<double>(
-        const Eigen::MatrixXd& displacements, std::vector<double>& constraints);
-
-    template void VolumeConstraint::compute_constraints_per_impact<DScalar>(
-        const Eigen::MatrixXd& displacements,
-        std::vector<DScalar>& constraints);
 
     long get_constraint_index(
         const EdgeEdgeImpact& impact, const bool impacted, const int num_edges)

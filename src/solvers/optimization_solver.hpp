@@ -16,86 +16,51 @@
 namespace ccd {
 namespace opt {
 
-    class OptimizationSolver {
-    protected:
-        Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
-
+    /// Basic Interface class for non-spetiallized solvers
+    class IBasicOptimizationSolver {
     public:
-        OptimizationSolver(const std::string& name);
-        OptimizationSolver(const std::string& name, const int max_iterations);
-        virtual ~OptimizationSolver();
-
-        virtual void init_free_dof(Eigen::VectorXb is_dof_fixed);
-
-        virtual OptimizationResults solve(OptimizationProblem& problem) = 0;
-
-        /// \brief clear: reset all internal structures used
-        virtual void clear()
-        {
-            throw NotImplementedError(
-                "clear OptimizationSolver not implemented");
-        }
-
-        /// \brief clear: initializes the internal structures used to solve
-        virtual void init(OptimizationProblem& /*problem*/)
-        {
-            throw NotImplementedError(
-                "init OptimizationSolver not implemented");
-        }
-
-        /// \brief step_solve: takes one outer-step of the solver
-        virtual OptimizationResults step_solve()
-        {
-            throw NotImplementedError(
-                "step_solve OptimizationSolver not implemented");
-        }
-        virtual int num_outer_iterations()
-        {
-            throw NotImplementedError(
-                "num_outer_iterations OptimizationSolver not implemented");
-        }
-
-        virtual void eval_f(
-            const Eigen::MatrixXd& /*points*/, Eigen::VectorXd& /*fx*/)
-        {
-            throw NotImplementedError(
-                "eval_f OptimizationSolver not implemented");
-        }
-
-        /// returns the kkt condition \grad f - grad_g^T \lambda = 0
-        virtual Eigen::VectorXd get_grad_kkt() const
-        {
-            throw NotImplementedError(
-                "get_grad_kkt OptimizationSolver not implemented");
-        }
-
-        virtual bool has_inner_solver() { return false; }
-
-        virtual const OptimizationSolver& inner_solver()
-        {
-            throw NotImplementedError(
-                "inner_solver OptimizationSolver not implemented");
-        }
-
-        int max_iterations; ///< @brief Maximum number of iteration.
-
-        inline const std::string& name() const { return name_; }
-
-        virtual void settings(const nlohmann::json& json)
-        {
-            max_iterations = json["max_iterations"].get<int>();
-        }
-
-        virtual nlohmann::json settings() const
-        {
-            nlohmann::json json;
-            json["max_iterations"] = max_iterations;
-            return json;
-        }
-
-    protected:
-        std::string name_;
+        virtual ~IBasicOptimizationSolver() = default;
+        virtual OptimizationResults solve(IConstraintedProblem& problem)
+            = 0;
     };
+
+
+    // Interface class for optimization solvers used by BarrierSolver
+    class IBarrierOptimizationSolver  {
+    public:
+        virtual ~IBarrierOptimizationSolver() = default;
+        virtual OptimizationResults solve(IBarrierProblem& problem)
+            = 0;
+        virtual const std::string& name() const = 0;
+        virtual void settings(const nlohmann::json& json) = 0;
+        virtual nlohmann::json settings() const = 0;
+        virtual void init_free_dof(Eigen::VectorXb is_dof_fixed) = 0;
+    };
+
+    // Interface class for optimizatino solvers used by State
+    class IStateOptimizationSolver {
+    public:
+        virtual ~IStateOptimizationSolver() = default;
+
+        virtual OptimizationResults solve() = 0;
+        virtual void init_solve() = 0;
+        virtual OptimizationResults step_solve() = 0;
+
+        virtual void settings(const nlohmann::json& json) = 0;
+        virtual nlohmann::json settings() const = 0;
+        virtual const std::string& name() const = 0;
+
+        virtual bool has_inner_solver() = 0;
+        virtual const IBarrierOptimizationSolver& inner_solver() = 0;
+
+
+
+        // UI debugging
+        virtual Eigen::VectorXd get_grad_kkt() const = 0;
+        virtual int num_outer_iterations() const = 0;
+    };
+
+
 
 } // namespace opt
 } // namespace ccd

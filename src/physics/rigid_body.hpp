@@ -78,12 +78,8 @@ namespace physics {
 
         Eigen::MatrixXd world_velocities() const;
 
-        Eigen::Matrix2d grad_theta(const double theta) const
-        {
-            Eigen::Matrix2d gradtheta_R;
-            gradtheta_R << -sin(theta), -cos(theta), cos(theta), -sin(theta);
-            return gradtheta_R;
-        }
+        Eigen::Matrix2d grad_theta(const double theta) const;
+
         // ------------------------------------------------------------------------
         // CCD Functions
         // ------------------------------------------------------------------------
@@ -91,17 +87,12 @@ namespace physics {
         /// \brief: computes vertices position for given state
         /// returns the positions of all vertices in 'world space',
         /// taking into account the given body's position
+        Eigen::MatrixXd world_vertices(const Eigen::Vector3d& v) const;
+
         template <typename T>
-        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_vertices(
-            const Eigen::Matrix<T, 3, 1>& v) const;
-
-        Eigen::MatrixXd world_vertices_gradient(
-            const Eigen::Vector3d& velocity) const;
-        std::vector<Eigen::Matrix3d> world_vertices_hessian(
-            const Eigen::Vector3d& velocity) const;
-
-        Eigen::MatrixXd world_vertices_gradient_finite(
-            const Eigen::Vector3d& position) const;
+        Eigen::Matrix<T, 2, 1> world_vertex(
+            const Eigen::Matrix<T, 3, 1>& position,
+            const int vertex_idx) const;
 
         Eigen::MatrixXd world_vertices_gradient_exact(
             const Eigen::Vector3d& position) const;
@@ -134,55 +125,8 @@ namespace physics {
         Eigen::Vector3d position_prev; ///> position of previous timestep
     };
 
-    namespace RBDiff {
-        static constexpr size_t NUM_VARS = 3;
-        typedef Eigen::Vector3d Vector3d;
-        typedef Eigen::Matrix3d Matrix3d;
-        typedef DScalar1<double, Vector3d> DScalar1;
-        typedef DScalar2<double, Vector3d, Matrix3d> DScalar2;
-        typedef Eigen::Matrix<DScalar1, 3, 1> D1Vector3;
-        typedef Eigen::Matrix<DScalar2, 3, 1> D2Vector3;
-        typedef Eigen::Matrix<DScalar1, Eigen::Dynamic, Eigen::Dynamic>
-            D1MatrixXd;
-        typedef Eigen::Matrix<DScalar2, Eigen::Dynamic, Eigen::Dynamic>
-            D2MatrixXd;
-        typedef Eigen::Matrix<DScalar1, Eigen::Dynamic, 1> D1VectorXd;
-        typedef Eigen::Matrix<DScalar2, Eigen::Dynamic, 1> D2VectorXd;
-
-        inline void activate() { DiffScalarBase::setVariableCount(NUM_VARS); }
-
-        inline D1Vector3 d1vars(const size_t i, const Vector3d& v)
-        {
-            return D1Vector3(DScalar1(i, v[0]), DScalar1(i + 1, v[1]),
-                DScalar1(i + 2, v[2]));
-        }
-
-        inline D2Vector3 d2vars(const size_t i, const Vector3d& v)
-        {
-            return D2Vector3(DScalar2(i, v[0]), DScalar2(i + 1, v[1]),
-                DScalar2(i + 2, v[2]));
-        }
-
-        inline Eigen::MatrixXd get_gradient(const D1VectorXd& x)
-        {
-            Eigen::MatrixXd grad(x.rows(), NUM_VARS);
-            for (int i = 0; i < x.rows(); ++i) {
-                grad.row(i) = x(i).getGradient();
-            }
-            return grad;
-        }
-
-        inline std::vector<Matrix3d> get_hessian(const D2VectorXd& x)
-        {
-            std::vector<Matrix3d> hess;
-            hess.reserve(x.rows());
-
-            for (int i = 0; i < x.rows(); ++i) {
-                hess.push_back(x(i).getHessian());
-            }
-            return hess;
-        }
-    } // namespace RBDiff
-
 } // namespace physics
 } // namespace ccd
+
+#include "rigid_body.tpp"
+

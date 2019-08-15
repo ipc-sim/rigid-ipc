@@ -1,0 +1,36 @@
+{
+    "scene_type": "distance_barrier_particles_problem",
+    "max_iterations": 300,
+    "timestep_size": 0.1,
+    "distance_barrier_constraint": {
+        "custom_initial_epsilon": 0.1,
+        "detection_method": "hash_grid",
+        "use_distance_hashgrid": true,
+        "active_constraint_scale": 1.01,
+        "custom_hashgrid_cellsize": -1
+    },
+    "barrier_solver": {
+        "inner_solver": "newton_solver",
+        "min_barrier_epsilon": 0.01
+    },
+    "particles_problem": {
+        "x_fixed": [2, 3],
+        "y_fixed": [2, 3],
+        "vertices": [
+            [0, 1],
+            [0, 6],
+            [-10, 0],
+            [10, 0]
+        ],
+        "velocities": [
+            [-5.0, -5.0],
+            [-5.0, -5.0],
+            [0.0, 0.0],
+            [0.0, 0.0]
+        ],
+        "edges": [
+            [0, 1],
+            [2, 3]
+        ]
+    }
+}

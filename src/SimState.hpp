@@ -22,8 +22,6 @@ public:
     bool solve_collision();
     void collision_resolution_step();
 
-    void get_collision_gradient(Eigen::MatrixXd& fx);
-
     void save_simulation(const std::string& filename);
 
     void run_simulation(const std::string& fout);
@@ -34,8 +32,7 @@ public:
 
     // CCD
     // ----------------------------------------------
-    std::shared_ptr<physics::SimulationProblem> problem_ptr;
-    std::shared_ptr<opt::OptimizationSolver> ccd_solver_ptr;
+    std::shared_ptr<physics::ISimulationProblem> problem_ptr;
     double m_timestep_size;
 
     bool m_step_had_collision;  ///< last step had a collision
@@ -51,8 +48,6 @@ public:
     // for visualization
     Eigen::MatrixXd grid_V;
     Eigen::MatrixXi grid_F;
-
-
 
 
 protected:

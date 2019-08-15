@@ -44,13 +44,13 @@ namespace opt {
         SolverReturn status;
     };
 
-    class IpoptSolver : public OptimizationSolver {
+    class IpoptSolver : public virtual IBasicOptimizationSolver {
     public:
         IpoptSolver();
-        IpoptSolver(const std::string& name);
+        ~IpoptSolver() override = default;
 
         IpoptSolver(double tolerance, int print_level, int max_iterations);
-        OptimizationResults solve(OptimizationProblem& problem) override;
+        OptimizationResults solve(IConstraintedProblem& problem) override;
 
         void initialize();
         SmartPtr<IpoptApplication> app;
@@ -59,6 +59,7 @@ namespace opt {
         // -----------------------
         double tolerance;
         int print_level;
+        int max_iterations;
     };
 
     /**
@@ -68,10 +69,10 @@ namespace opt {
     class EigenInterfaceTNLP : public TNLP {
 
     public:
-        EigenInterfaceTNLP(OptimizationProblem& problem);
+        EigenInterfaceTNLP(IConstraintedProblem& problem);
 
         OptimizationResults result;
-        OptimizationProblem* problem;
+        IConstraintedProblem* problem;
 
         /**
          * n: (out) the number of variables in the problem (dimension of

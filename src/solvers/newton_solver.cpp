@@ -15,10 +15,12 @@ namespace opt {
     {
     }
     NewtonSolver::NewtonSolver(const std::string& name)
-        : OptimizationSolver(name)
-        , iteration_number(0)
-        , absolute_tolerance(1e-5)
+        : absolute_tolerance(1e-5)
         , min_step_length(1e-12)
+        , max_iterations(1000)
+        , iteration_number(0)
+        , name_(name)
+
     {
     }
 
@@ -26,21 +28,20 @@ namespace opt {
 
     void NewtonSolver::settings(const nlohmann::json& json)
     {
-        OptimizationSolver::settings(json);
+        max_iterations = json["max_iterations"].get<int>();
         absolute_tolerance = json["absolute_tolerance"].get<double>();
         min_step_length = json["min_step_length"].get<double>();
     }
 
     nlohmann::json NewtonSolver::settings() const
     {
-        nlohmann::json json = OptimizationSolver::settings();
+        nlohmann::json json;
+        json["max_iterations"] = max_iterations;
         json["absolute_tolerance"] = absolute_tolerance;
         json["min_step_length"] = min_step_length;
         return json;
     }
 
-    const static char* NEWTON_STEP_LOG
-        = "solver=newton_solver iter={:d} action=begin_step";
     const static char* NEWTON_DIRECTION_LOG
         = "solver=newton_solver iter={:d} action=newton_line_search "
           "status=failure message=\"reverting to gradient descent\"";
@@ -50,7 +51,7 @@ namespace opt {
     const static char* NEWTON_END_LOG = "solver=newton_solver action=END";
     const static char* NEWTON_BEGIND_LOG = "solver=newton_solver action=BEGIN";
 
-    OptimizationResults NewtonSolver::solve(OptimizationProblem& problem)
+    OptimizationResults NewtonSolver::solve(IBarrierProblem& problem)
     {
         NAMED_PROFILE_POINT("newton_solver", SOLVER_STEP);
         NAMED_PROFILE_POINT("newton_solver__eval_f_and_fdiff", EVAL_F);
@@ -64,16 +65,13 @@ namespace opt {
             "newton_solver__assert_constraint", ASSERT_CONSTRAINT);
 
         // Initalize the working variables
-        Eigen::VectorXd x = problem.x0;
+        Eigen::VectorXd x = problem.starting_point();
         Eigen::VectorXd gradient, gradient_free;
         Eigen::SparseMatrix<double> hessian, hessian_free;
 
         double step_length = 1.0;
 
-        double eps = -1;
-        if (problem.has_barrier_constraint()) {
-            eps = problem.get_barrier_epsilon();
-        }
+        double eps = problem.get_barrier_epsilon();
 
         spdlog::trace(NEWTON_BEGIND_LOG);
         iteration_number = 0;
@@ -100,7 +98,8 @@ namespace opt {
 
             PROFILE_START(COMPUTE_DIRECTION)
 
-            Eigen::VectorXd direction = Eigen::VectorXd::Zero(problem.num_vars);
+            Eigen::VectorXd direction
+                = Eigen::VectorXd::Zero(problem.num_vars());
             Eigen::VectorXd direction_free(free_dof.size());
             bool found_direction = compute_direction(
                 gradient_free, hessian_free, direction_free, /*make_psd=*/true);
@@ -150,7 +149,6 @@ namespace opt {
             assert(!std::isinf(problem.eval_f(x)));
             PROFILE_END(ASSERT_CONSTRAINT)
 
-            problem.eval_intermediate_callback(x);
             PROFILE_END(SOLVER_STEP);
 
         } while (++iteration_number <= max_iterations);
@@ -164,7 +162,17 @@ namespace opt {
             gradient_free.squaredNorm() <= absolute_tolerance);
     }
 
-    bool NewtonSolver::line_search(OptimizationProblem& problem,
+    void NewtonSolver::init_free_dof(Eigen::VectorXb is_dof_fixed)
+    {
+        free_dof = Eigen::VectorXi(is_dof_fixed.size() - is_dof_fixed.count());
+        for (int i = 0, j = 0; i < is_dof_fixed.size(); i++) {
+            if (!is_dof_fixed(i)) {
+                free_dof(j++) = i;
+            }
+        }
+    }
+
+    bool NewtonSolver::line_search(IBarrierProblem& problem,
         const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const double fx,
@@ -178,12 +186,12 @@ namespace opt {
         bool success = false;
 
         int num_it = 0;
-        bool first_iter = true;
+        auto set_flag = CstrSetFlag::UPDATE_CSTR_SET;
         while (step_norm >= min_step_length) {
 
             Eigen::VectorXd xi = x + step_length * dir;
-            double fxi = problem.eval_f(xi, /*update_cstr_set=*/first_iter);
-            first_iter = false;
+            double fxi = problem.eval_f_set(xi, set_flag);
+            set_flag = CstrSetFlag::KEEP_CSTR_SET;
 
             bool min_rule = fxi < fx;
             bool cstr = !std::isinf(fxi);
@@ -196,7 +204,6 @@ namespace opt {
 
             step_length /= 2.0;
             step_norm = (step_length * dir).norm();
-
         }
         PROFILE_MESSAGE(,
             fmt::format(
@@ -227,13 +234,14 @@ namespace opt {
                     "solver=newton iter={:d} failure=\"sparse solve for newton direction failed\" failsafe=none",
                     iteration_number);
             }
-        }else{
+        } else {
             spdlog::warn(
                 "solver=newton iter={:d} failure=\"sparse decomposition of the hessian failed\" failsafe=none",
                 iteration_number);
         }
 
-        if (solve_success && make_psd && direction.transpose() * gradient >= 0) {
+        if (solve_success && make_psd
+            && direction.transpose() * gradient >= 0) {
             // If delta_x is not a descent direction then we want to modify the
             // hessian to be diagonally dominant with positive elements on the
             // diagonal (positive definite). We do this by adding μI to the
