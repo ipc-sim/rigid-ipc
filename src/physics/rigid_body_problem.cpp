@@ -169,7 +169,7 @@ namespace physics {
     }
 
     bool RigidBodyProblem::take_step(
-        const Eigen::VectorXd& rb_positions, const double /*time_step*/)
+        const Eigen::VectorXd& rb_positions, const double time_step)
     {
         // update final position
         // -------------------------------------
@@ -178,8 +178,15 @@ namespace physics {
 
         // update velocities
         // -------------------------------------
-        solve_velocities();
-
+        if (coefficient_restitution > -1){
+            solve_velocities();
+        }
+        else{
+            for (auto& rb : m_assembler.m_rbs) {
+                rb.velocity = (rb.position - rb.position_prev) /
+                time_step;
+            }
+        }
         return detect_collisions(vertices_t0, q1, CollisionCheck::EXACT);
     }
 

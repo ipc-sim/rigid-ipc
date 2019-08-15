@@ -62,11 +62,11 @@ public:
 
     inline void simulation_step()
     {
-        PROFILE_MAIN_POINT("simulation_step")
-        PROFILE_START()
+//        PROFILE_MAIN_POINT("simulation_step")
+//        PROFILE_START()
         m_state.simulation_step();
-        PROFILE_END()
-        LOG_PROFILER(m_state.scene_file);
+//        PROFILE_END()
+//        LOG_PROFILER(m_state.scene_file);
         redraw_scene();
     }
 
