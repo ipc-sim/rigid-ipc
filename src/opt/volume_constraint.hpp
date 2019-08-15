@@ -17,47 +17,38 @@ namespace opt {
         void settings(const nlohmann::json& json) override;
         nlohmann::json settings() const override;
 
+        void initialize(const Eigen::MatrixX2d& vertices,
+            const Eigen::MatrixX2i& edges,
+            const Eigen::VectorXi& group_ids,
+            const Eigen::MatrixXd& Uk) override;
+
+        void update_collision_set(const Eigen::MatrixXd& Uk) override;
+
         void compute_constraints(
-            const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk) override;
+            const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk);
 
         void compute_constraints_jacobian(
-            const Eigen::MatrixXd& Uk, Eigen::MatrixXd& g_uk_jacobian) override;
-
-        void compute_constraints_jacobian(const Eigen::MatrixXd& Uk,
-            Eigen::SparseMatrix<double>& g_uk_jacobian) override;
-
-        void compute_constraints_hessian(const Eigen::MatrixXd& Uk,
-            std::vector<Eigen::SparseMatrix<double>>& g_uk_hessian) override;
+            const Eigen::MatrixXd& Uk, Eigen::SparseMatrix<double>& jac_uk);
 
         void compute_constraints(const Eigen::MatrixXd& Uk,
-            Eigen::VectorXd& g_uk, Eigen::SparseMatrix<double>& g_uk_jacobian,
-            Eigen::VectorXi& g_uk_active) override;
+            Eigen::VectorXd& g_uk,
+            Eigen::SparseMatrix<double>& g_uk_jacobian,
+            Eigen::VectorXi& g_uk_active);
 
-        /// \brief compute_constraints sparsly including only active
-        void compute_active_constraints(const Eigen::MatrixXd& Uk,
-            Eigen::VectorXd& g_uk, Eigen::MatrixXd& g_uk_jacobian);
-
-        int number_of_constraints() override;
-
-        template <typename T>
-        void compute_constraints_per_impact(
-            const Eigen::MatrixXd& displacements, std::vector<T>& constraints);
+        int number_of_constraints();
 
         // Settings
         // ----------
         double volume_epsilon;
+        int num_constraints;
 
         void dense_indices(Eigen::VectorXi& dense_indices);
-        void assemble_constraints_all(const std::vector<double>& impact_volumes,
-            Eigen::VectorXd& dense_volumes);
-        void assemble_constraints_all(
-            const std::vector<DScalar>& impact_volumes,
-            Eigen::VectorXd& dense_volumes);
-        void assemble_jacobian_all(const std::vector<DScalar>& impact_volumes,
-            Eigen::MatrixXd& volumes_jac);
-        void assemble_sparse_jacobian_all(
-            const std::vector<DScalar>& impact_volumes,
-            Eigen::SparseMatrix<double>& volumes_jac);
+
+        /// @brief All edge-edge contact
+        EdgeEdgeImpacts m_ee_impacts;
+
+        /// @brief #E,1 indices of the edges' first impact
+        Eigen::VectorXi m_edge_impact_map;
     };
 
     long get_constraint_index(

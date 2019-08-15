@@ -12,15 +12,8 @@ UISimState::UISimState()
     , m_bkp_has_collision(true)
     , m_log_level(spdlog::level::info)
     , m_interval_time(0.0)
-    , m_show_as_delta(true)
-    , m_show_next_step(true)
 {
-    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    console_sink->set_level(spdlog::level::debug);
 
-    logger_ = std::make_shared<spdlog::logger>("Sim", console_sink);
-    logger_->set_level(static_cast<spdlog::level::level_enum>(m_log_level));
-    spdlog::set_default_logger(logger_);
 }
 
 void UISimState::launch()
@@ -46,13 +39,6 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
     edges_data = std::make_unique<igl::opengl::GraphData>(_viewer,
         Eigen::RowVector3d(231.0, 76, 60) / 255.0); // #e74c3c - ALIZARIN RED    
     datas_.emplace("edges", edges_data);
-
-//    datas_.emplace("gradient", gradient_data);
-//    datas_.emplace("next displ.", next_displacement_data);
-//    datas_.emplace("initial displ.", initial_displacement_data);
-//    datas_.emplace("final displ.", final_displacement_data);
-//    datas_.emplace("velocity", velocity_data);
-//    datas_.emplace("F_c", collision_force_data);
 
     for (auto it = datas_.begin(); it != datas_.end(); ++it) {
         data_names_.push_back(it->first);

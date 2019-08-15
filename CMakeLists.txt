@@ -63,13 +63,11 @@ add_library(${PROJECT_NAME}
 
 
     src/opt/barrier.cpp
-    src/opt/time_barrier_constraint.cpp
     src/opt/distance_barrier_constraint.cpp
     src/opt/collision_constraint.cpp
     src/opt/optimization_problem.cpp
     src/opt/optimization_results.cpp
     src/opt/volume_constraint.cpp
-    src/opt/constraint_factory.cpp
 
     src/solvers/barrier_solver.cpp
     src/solvers/ipopt_solver.cpp
@@ -85,14 +83,15 @@ add_library(${PROJECT_NAME}
     src/solvers/solver_factory.cpp
 
     src/problems/distance_barrier_rb_problem.cpp
+    src/problems/distance_barrier_particles_problem.cpp
     src/problems/volume_rb_problem.cpp
+    src/problems/volume_particles_problem.cpp
     src/problems/problem_factory.cpp
 
     src/utils/eigen_ext.cpp
     src/utils/tensor.cpp
     src/utils/regular_2d_grid.cpp
 
-#    src/state.cpp
     src/SimState.cpp
     src/logger.cpp
     src/profiler.cpp

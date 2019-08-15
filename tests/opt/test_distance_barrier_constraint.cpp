@@ -1,9 +1,10 @@
 #include <catch2/catch.hpp>
 
-#include <autodiff/finitediff.hpp>
 #include <iostream>
 #include <opt/barrier.hpp>
 #include <opt/distance_barrier_constraint.hpp>
+
+#include <autodiff/finitediff.hpp>
 #include <utils/flatten.hpp>
 
 TEST_CASE("Distance Barrier Constraint",

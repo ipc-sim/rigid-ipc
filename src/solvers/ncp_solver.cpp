@@ -135,6 +135,7 @@ namespace opt {
         // 1. Solve assumming constraints are not violated
         xi = Ainv(b);
         problem_ptr_->eval_g(xi, g_xi, jac_g_xi, g_active);
+
         zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
 
         lambda_i.resize(g_xi.rows());
@@ -218,6 +219,7 @@ namespace opt {
 
         xi = xi + delta_i * alpha;
         problem_ptr_->eval_g(xi, g_xi, jac_g_xi, g_active);
+
         zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
         result.finished = false;
         result.success = false;

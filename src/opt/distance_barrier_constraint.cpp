@@ -19,8 +19,8 @@ namespace opt {
         : CollisionConstraint(name)
         , custom_inital_epsilon(1.0)
         , active_constraint_scale(1.5)
-        , m_barrier_epsilon(0.0)
         , m_num_constraints(0)
+        , m_barrier_epsilon(0.0)
 
     {
     }
@@ -51,10 +51,6 @@ namespace opt {
         update_active_set(Uk);
     }
 
-    int DistanceBarrierConstraint::number_of_constraints()
-    {
-        return m_num_constraints;
-    }
 
     void DistanceBarrierConstraint::update_collision_set(
         const Eigen::MatrixXd& Uk)
@@ -77,7 +73,7 @@ namespace opt {
         m_ev_distance_active.clear();
         m_ev_distance_active_map.clear();
 
-        ev_impacts.clear();
+        m_ev_impacts.clear();
         m_ev_impact_active_map.clear();
         m_ev_inactive_map.clear();
 
@@ -96,7 +92,7 @@ namespace opt {
 
             if (active_impact) {
                 // NOTE: ev_impacts are used during post-process of velocities
-                ev_impacts.push_back(EdgeVertexImpact(toi,
+                m_ev_impacts.push_back(EdgeVertexImpact(toi,
                     ev_candidate.edge_index, alpha, ev_candidate.vertex_index));
                 m_ev_impact_active_map.push_back(i);
                 continue;
@@ -250,40 +246,6 @@ namespace opt {
         assert(int(barriers_hessian.size()) == m_num_constraints);
     }
 
-    void DistanceBarrierConstraint::compute_constraints_and_derivatives(
-        const Eigen::MatrixXd& Uk,
-        Eigen::VectorXd& barriers,
-        Eigen::MatrixXd& barriers_jacobian,
-        std::vector<Eigen::SparseMatrix<double>>& barriers_hessian)
-    {
-        compute_constraints(Uk, barriers);
-        compute_constraints_jacobian(Uk, barriers_jacobian);
-        compute_constraints_hessian(Uk, barriers_hessian);
-    }
-
-    template <typename T>
-    T DistanceBarrierConstraint::distance_barrier(
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& c)
-    {
-        T distance = sqrt(point_to_edge_sq_distance<T>(a, b, c));
-        return opt::spline_barrier<T>(distance, m_barrier_epsilon);
-    }
-
-    template ccd::DistanceBarrierDiff::DDouble2
-    DistanceBarrierConstraint::distance_barrier<
-        ccd::DistanceBarrierDiff::DDouble2>(
-        const ccd::DistanceBarrierDiff::D2VectorXd& a,
-        const ccd::DistanceBarrierDiff::D2VectorXd& b,
-        const ccd::DistanceBarrierDiff::D2VectorXd& c);
-
-    template ccd::DistanceBarrierDiff::DDouble1
-    DistanceBarrierConstraint::distance_barrier<
-        ccd::DistanceBarrierDiff::DDouble1>(
-        const ccd::DistanceBarrierDiff::D1VectorXd& a,
-        const ccd::DistanceBarrierDiff::D1VectorXd& b,
-        const ccd::DistanceBarrierDiff::D1VectorXd& c);
 
     Eigen::VectorXd DistanceBarrierConstraint::distance_barrier_grad(
         const Eigen::VectorXd& a,
@@ -333,7 +295,7 @@ namespace opt {
         }
 
         // Handle cases where c projects onto ab
-        T g  = ac.dot(ac);
+        T g = ac.dot(ac);
         return g - e * e / f;
     }
 

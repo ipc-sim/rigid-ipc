@@ -10,8 +10,6 @@
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
 
-#include <opt/constraint_factory.hpp>
-
 #include <logger.hpp>
 #include <profiler.hpp>
 
@@ -155,7 +153,7 @@ namespace physics {
         constraint().initialize(vertices_t0, m_assembler.m_edges,
             m_assembler.m_vertex_to_body_map, vertices_q1 - vertices_t0);
 
-        original_ev_impacts = constraint().ev_impacts;
+        original_ev_impacts = constraint().ev_impacts();
         std::sort(original_ev_impacts.begin(), original_ev_impacts.end(),
             ccd::compare_impacts_by_time<ccd::EdgeVertexImpact>);
     }
@@ -179,27 +177,9 @@ namespace physics {
         m_assembler.set_rb_positions(rb_positions);
         Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
 
-        //        // [DEBUG!] update collision forces
-        //        // -------------------------------------
-        //        const Eigen::MatrixXd& q1_0 = vertices_q1;
-        //        Eigen::MatrixXd delta_c = (q1 - q1_0);
-        //        flatten(delta_c);
-        //        Fcollision
-        //            = m_assembler.m_mass_matrix * delta_c / (time_step *
-        //            time_step);
-        //        ccd::unflatten(Fcollision, 2);
-
         // update velocities
         // -------------------------------------
         solve_velocities();
-        // TODO: check this two are the same !!!
-        // if (coefficient_restitution > 0) {
-        //     solve_velocities();
-        // } else {
-        //     for (auto& rb : m_assembler.m_rbs) {
-        //         rb.velocity = (rb.position - rb.position_prev) / time_step;
-        //     }
-        // }
 
         return detect_collisions(vertices_t0, q1, CollisionCheck::EXACT);
     }
@@ -457,22 +437,20 @@ namespace physics {
 //#endif
 //        return jac;
 //    }
-//=======
+
 //    void RigidBodyProblem::eval_g(const Eigen::VectorXd& sigma,
 //        Eigen::VectorXd& g_uk,
 //        Eigen::SparseMatrix<double>& g_uk_jacobian,
 //        Eigen::VectorXi& g_uk_active)
 //    {
 //        Eigen::MatrixXd uk = update_g(sigma);
-//>>>>>>> f3a617e... adding rigid body distance barrier specialization
-//=======
+
     //    void RigidBodyProblem::eval_g(const Eigen::VectorXd& sigma,
     //        Eigen::VectorXd& g_uk,
     //        Eigen::SparseMatrix<double>& g_uk_jacobian,
     //        Eigen::VectorXi& g_uk_active)
     //    {
     //        Eigen::MatrixXd uk = update_g(sigma);
-//>>>>>>> 530295a... Fix bugs on distance barrier rb problem
 
     //        Eigen::SparseMatrix<double> jac_xk_sigma;
     //        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
@@ -613,7 +591,6 @@ namespace physics {
     /// Constraints
     ////////////////////////////////////////////////////////////////////////////
     ///
-//=======
-//>>>>>>> 89da06f... Remove some unnecesary things from UI
+
 } // namespace physics
 } // namespace ccd

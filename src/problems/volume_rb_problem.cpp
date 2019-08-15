@@ -58,8 +58,8 @@ namespace opt {
         typedef Eigen::Triplet<double> M;
         std::vector<M> triplets;
 
-        for (size_t i = 0; i < constraint_.ee_impacts.size(); ++i) {
-            auto& ee_impact = constraint_.ee_impacts[i];
+        for (size_t i = 0; i < constraint_.m_ee_impacts.size(); ++i) {
+            auto& ee_impact = constraint_.m_ee_impacts[i];
 
             Eigen::Vector2i e_ij
                 = m_assembler.m_edges.row(ee_impact.impacted_edge_index);
@@ -90,28 +90,28 @@ namespace opt {
                 position_kl, local_l_id);
 
             // initial positions
-            Eigen::Vector2d v0i, v0j, v0k, v0l;
-            v0i = vertices_t0.row(e_ij(0));
-            v0j = vertices_t0.row(e_ij(1));
-            v0k = vertices_t0.row(e_kl(0));
-            v0l = vertices_t0.row(e_kl(1));
+            Eigen::Vector2d v_i, v_j, v_k, v_l;
+            v_i = vertices_t0.row(e_ij(0));
+            v_j = vertices_t0.row(e_ij(1));
+            v_k = vertices_t0.row(e_kl(0));
+            v_l = vertices_t0.row(e_kl(1));
 
             // displacements
-            Diff::D1Vector2d ui, uj, uk, ul;
-            ui = v1i - v0i.cast<Diff::DDouble1>();
-            uj = v1j - v0j.cast<Diff::DDouble1>();
-            uk = v1k - v0k.cast<Diff::DDouble1>();
-            ul = v1l - v0l.cast<Diff::DDouble1>();
+            Diff::D1Vector2d u_i, u_j, u_k, u_l;
+            u_i = v1i - v_i.cast<Diff::DDouble1>();
+            u_j = v1j - v_j.cast<Diff::DDouble1>();
+            u_k = v1k - v_k.cast<Diff::DDouble1>();
+            u_l = v1l - v_l.cast<Diff::DDouble1>();
 
             // impacting vertice
-            Eigen::Vector2d v0;
-            Diff::D1Vector2d u;
+            Eigen::Vector2d v_c;
+            Diff::D1Vector2d u_c;
             if (ee_impact.impacting_node() == 0) {
-                v0 = v0k;
-                u = uk;
+                v_c = v_k;
+                u_c = u_k;
             } else {
-                v0 = v0l;
-                u = ul;
+                v_c = v_l;
+                u_c = u_l;
             }
             Diff::DDouble1 toi, alpha_ij, alpha_kl;
             alpha_kl = Diff::DDouble1(ee_impact.impacting_node());
@@ -119,19 +119,19 @@ namespace opt {
             // get toi and alpha
             bool success;
             success = ccd::autodiff::compute_edge_vertex_time_of_impact<
-                Diff::DDouble1>(v0i, v0j, v0, ui, uj, u, toi);
+                Diff::DDouble1>(v_i, v_j, v_c, u_i, u_j, u_c, toi);
             success = success
                 && ccd::autodiff::temporal_parameterization_to_spatial<
-                       Diff::DDouble1>(v0i, v0j, v0, ui, uj, u, toi, alpha_ij);
-            Diff::DDouble1 v_ij(0), v_kl(0);
+                       Diff::DDouble1>(v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
+            Diff::DDouble1 vol_ij(0), vol_kl(0);
             if (success) {
-                v_ij
+                vol_ij
                     = ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
-                        v0i, v0j, ui, uj, toi, alpha_ij,
+                        v_i, v_j, u_i, u_j, toi, alpha_ij,
                         constraint_.volume_epsilon);
-                v_kl
+                vol_kl
                     = ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
-                        v0k, v0l, uk, ul, toi, alpha_kl,
+                        v_k, v_l, u_k, u_l, toi, alpha_kl,
                         constraint_.volume_epsilon);
             }
             long c_ij
@@ -139,8 +139,8 @@ namespace opt {
             long c_kl = get_constraint_index(
                 ee_impact, /*impacted=*/false, num_edges);
 
-            Eigen::VectorXd gradient_ij = v_ij.getGradient();
-            Eigen::VectorXd gradient_kl = v_kl.getGradient();
+            Eigen::VectorXd gradient_ij = vol_ij.getGradient();
+            Eigen::VectorXd gradient_kl = vol_kl.getGradient();
 
             // 3 * rbc.vertex_body_id + dim
             for (size_t dim = 0; dim < 3; dim++) {

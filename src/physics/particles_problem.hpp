@@ -25,15 +25,22 @@ namespace physics {
     typedef std::function<bool(const Eigen::VectorXd&, const Eigen::MatrixX2d&)>
         intermediate_callback_func;
 
-    class ParticlesDisplProblem : public virtual ISimulationProblem,
-                                  public virtual opt::IConstraintedProblem {
+    class ParticlesProblem : public virtual ISimulationProblem,
+                             public virtual opt::IUnconstraintedProblem {
     public:
-        ParticlesDisplProblem();
-        ParticlesDisplProblem(const std::string& name);
-        ~ParticlesDisplProblem() override {}
+        ParticlesProblem();
+        ParticlesProblem(const std::string& name);
+        ~ParticlesProblem() override {}
 
         ////////////////////////////////////////////////////////////////////////
         /// I-SIMULATION
+        ////////////////////////////////////////////////////////////////////////
+
+        // virtual functions to implement by child classes
+        // ----------------------------------------------------
+        // virtual opt::CollisionConstraint& constraint() = 0;
+        // virtual opt::IStateOptimizationSolver& solver() = 0;
+
         std::string name() override { return name_; }
         void settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
@@ -48,8 +55,12 @@ namespace physics {
         bool take_step(
             const Eigen::VectorXd& positions, const double time_step) override;
 
-        /// \brief update optimization problem using current status.
+        /// \brief update problem using current status of bodies.
         void update_constraint() override;
+        opt::OptimizationResults solve_constraints() override;
+        void init_solve() override;
+        opt::OptimizationResults step_solve() override;
+
 
         Eigen::MatrixXd vertices() const override { return vertices_; }
 
@@ -61,7 +72,7 @@ namespace physics {
         }
 
         ////////////////////////////////////////////////////////////////////////
-        /// IConstraintedProblem
+        /// IUnconstraintedProblem
 
         /// @brief eval_f evaluates functional at point x
         virtual double eval_f(const Eigen::VectorXd& x) override;
@@ -73,18 +84,7 @@ namespace physics {
         virtual Eigen::SparseMatrix<double> eval_hessian_f(
             const Eigen::VectorXd& x) override;
 
-        /// @brief eval_g evaluates constraints at point x
-        virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
-
-        /// @brief eval_jac_g evaluates constraints jacobian at point x
-        virtual Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
-
-        // @brief eval_hessian_g evaluates constraints hessian at point x
-        virtual std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
-            const Eigen::VectorXd& x) override;
-
         const int& num_vars() override { return num_vars_; }
-        const int& num_constraints() override { return num_constraints_; }
         const Eigen::VectorXd& starting_point() override { return x0; }
 
         // ------------------------------------------------------------------------
@@ -93,7 +93,6 @@ namespace physics {
         Eigen::MatrixXi edges_;
         Eigen::VectorXi group_ids_;
         Eigen::SparseMatrix<double> mass_matrix;
-        Eigen::SparseMatrix<double> inv_mass_matrix;
         Eigen::MatrixXb is_particle_dof_fixed;
         Eigen::VectorXb is_dof_fixed_; ///> flattened version of above
         Eigen::VectorXd gravity_;
@@ -104,13 +103,11 @@ namespace physics {
         Eigen::MatrixXd vertices_prev_; ///> vertices position at tau=0
         Eigen::MatrixXd vertices_;      ///> vertices position at tau=1
         Eigen::MatrixXd velocities_;    ///> velocities at tau=1
-        Eigen::MatrixXd Fcollision;     ///> forced applied to solve collisions
+
         // ------------------------------------------------------------------------
         // Collision
         // ------------------------------------------------------------------------
-        std::shared_ptr<opt::CollisionConstraint> constraint_ptr;
-        intermediate_callback_func intermediate_callback;
-        bool use_mass_matrix;
+
         double collision_eps;
 
         ////////////////////////////////////////////////////////////////////////
@@ -118,10 +115,9 @@ namespace physics {
     protected:
         Eigen::MatrixXd vertices_next(const double time_step) const;
 
-        Eigen::MatrixXd update_g(const Eigen::VectorXd& x);
         bool detect_collisions(const Eigen::MatrixXd& q0,
             const Eigen::MatrixXd& q1,
-            const CollisionCheck check_type) const;
+            const CollisionCheck check_type);
 
         int num_vars_;
         int num_constraints_;
@@ -136,8 +132,6 @@ namespace physics {
         ///< flatten vertices positions at end of interval
         Eigen::MatrixXd vec_vertices_t1;
 
-        bool update_constraint_set;
-        bool is_linesearch_active;
         std::string name_;
         ////////////////////////////////////////////////////////////////////////
     };

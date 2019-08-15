@@ -9,9 +9,7 @@
 #include <io/serialize_json.hpp>
 #include <logger.hpp>
 
-#include <opt/constraint_factory.hpp>
 #include <problems/problem_factory.hpp>
-#include <solvers/solver_factory.hpp>
 
 #include <profiler.hpp>
 #include <utils/regular_2d_grid.hpp>
@@ -92,7 +90,6 @@ bool SimState::init(const nlohmann::json& args_in)
             "velocities":[],
             "x_fixed":[],
             "y_fixed":[],
-            "use_mass_matrix": true,
             "gravity":[0.0,0.0],
             "collision_eps": 0.0
          },
@@ -219,6 +216,7 @@ void SimState::run_simulation(const std::string& fout)
     m_solve_collisions = true;
     for (int i = 0; i < m_max_simulation_steps; ++i) {
         simulation_step();
+        spdlog::info("finished step {}", i);
     }
     save_simulation(fout);
     spdlog::info("simulation results saved to {}", fout);

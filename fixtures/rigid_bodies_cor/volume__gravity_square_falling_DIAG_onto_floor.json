@@ -5,7 +5,7 @@
     "ncp_solver": {
         "max_iterations": 1000,
         "do_line_search": false,
-        "solve_for_active_cstr": true,
+        "solve_for_active_cstr": false,
         "convergence_tolerance": -1,
         "update_type": "linearized",
         "lcp_solver": "lcp_gauss_seidel"

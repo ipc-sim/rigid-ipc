@@ -1,0 +1,39 @@
+{
+    "scene_type": "volume_particles_problem",
+    "max_iterations": 300,
+    "timestep_size": 0.01,
+    "ncp_solver": {
+        "max_iterations": 1000,
+        "do_line_search": false,
+        "solve_for_active_cstr": false,
+        "convergence_tolerance": -1,
+        "update_type": "linearized",
+        "lcp_solver": "lcp_gauss_seidel"
+    },
+    "volume_constraint": {
+        "detection_method": "hash_grid",
+        "volume_epsilon": 1e-10,
+        "custom_hashgrid_cellsize": -1
+    },
+    "particles_problem": {
+        "gravity": [0, -10],
+        "x_fixed": [2, 3],
+        "y_fixed": [2, 3],
+        "vertices": [
+            [0, 1],
+            [0, 6],
+            [-10, 0],
+            [10, 0]
+        ],
+        "velocities": [
+            [-1.0, 0.0],
+            [-1.0, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.0]
+        ],
+        "edges": [
+            [0, 1],
+            [2, 3]
+        ]
+    }
+}
