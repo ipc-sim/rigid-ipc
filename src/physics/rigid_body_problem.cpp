@@ -178,13 +178,11 @@ namespace physics {
 
         // update velocities
         // -------------------------------------
-        if (coefficient_restitution > -1){
+        if (coefficient_restitution > -1) {
             solve_velocities();
-        }
-        else{
+        } else {
             for (auto& rb : m_assembler.m_rbs) {
-                rb.velocity = (rb.position - rb.position_prev) /
-                time_step;
+                rb.velocity = (rb.position - rb.position_prev) / time_step;
             }
         }
         return detect_collisions(vertices_t0, q1, CollisionCheck::EXACT);
@@ -218,10 +216,9 @@ namespace physics {
             n_toi << -e_toi(1), e_toi(0);              // 90deg ccw rotation
             n_toi.normalize();
 
-            if (is_oriented){
-                n_toi = - n_toi;
-            }
-            else {
+            if (is_oriented) {
+                n_toi = -n_toi;
+            } else {
                 // check normal points towards A
                 Eigen::Vector2d va = vertices_t0.row(a_id);
                 Eigen::Vector2d vb = vertices_t0.row(b0_id);
@@ -230,7 +227,7 @@ namespace physics {
                 }
             }
             normals.row(i) = n_toi.transpose();
-            spdlog::trace("a={} b0={}  b1={} normal {}", a_id, b0_id, b1_id,
+            spdlog::debug("a={} b0={}  b1={} normal {}", a_id, b0_id, b1_id,
                 ccd::log::fmt_eigen(n_toi));
         }
 
@@ -315,6 +312,11 @@ namespace physics {
             const Eigen::Vector2d v_Aprev = V_Aprev + w_Aprev * r_Aperp_toi;
             const Eigen::Vector2d v_Bprev = V_Bprev + w_Bprev * r_Bperp_toi;
 
+            spdlog::debug("before V_A={} V_B={}", ccd::log::fmt_eigen(body_A.velocity),
+                ccd::log::fmt_eigen(body_B.velocity));
+            spdlog::debug("before v_A={} v_B={}", ccd::log::fmt_eigen(v_Aprev),
+                ccd::log::fmt_eigen(v_Bprev));
+
             // The relative veolicity magnitud BEFORE collision
             const Eigen::Vector2d& n_toi = normals.row(i);
 
@@ -341,6 +343,8 @@ namespace physics {
 
             body_A.velocity(2) += w_A_delta;
             body_B.velocity(2) += w_B_delta;
+            spdlog::debug("after V_A={} V_B={}", ccd::log::fmt_eigen(body_A.velocity),
+                ccd::log::fmt_eigen(body_B.velocity));
         }
     }
 

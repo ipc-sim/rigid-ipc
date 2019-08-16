@@ -191,7 +191,7 @@ namespace opt {
 
             Eigen::VectorXd xi = x + step_length * dir;
             double fxi = problem.eval_f_set(xi, set_flag);
-            set_flag = CstrSetFlag::KEEP_CSTR_SET;
+            // set_flag = CstrSetFlag::KEEP_CSTR_SET;
 
             bool min_rule = fxi < fx;
             bool cstr = !std::isinf(fxi);

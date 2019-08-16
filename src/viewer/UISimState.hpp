@@ -102,10 +102,11 @@ protected:
 
 private:
     std::shared_ptr<igl::opengl::GraphData> edges_data;
+    std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
 //    std::shared_ptr<igl::opengl::VectorFieldData> next_displacement_data;
 //    std::shared_ptr<igl::opengl::VectorFieldData> initial_displacement_data;
 //    std::shared_ptr<igl::opengl::VectorFieldData> final_displacement_data;
-//    std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
+
 //    std::shared_ptr<igl::opengl::VectorFieldData> collision_force_data;
 //    std::shared_ptr<igl::opengl::VectorFieldData> gradient_data;
 //    std::shared_ptr<igl::opengl::ScalarFieldData> grid_data;

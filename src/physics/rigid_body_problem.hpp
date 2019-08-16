@@ -52,6 +52,9 @@ namespace physics {
             return m_assembler.world_vertices_t1();
         }
 
+        Eigen::MatrixXd velocities() const override {
+            return  m_assembler.world_velocities();
+        }
         const Eigen::MatrixXi& edges() const override
         {
             return m_assembler.m_edges;

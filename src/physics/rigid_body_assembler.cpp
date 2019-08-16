@@ -131,5 +131,16 @@ namespace physics {
         return V;
     }
 
+    Eigen::MatrixXd RigidBodyAssembler::world_velocities() const
+    {
+        Eigen::MatrixXd V(num_vertices(), 2);
+        for (size_t i = 0; i < m_rbs.size(); ++i) {
+            auto& rb = m_rbs[i];
+            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), 2)
+                = rb.world_velocities();
+        }
+        return V;
+    }
+
 } // namespace physics
 } // namespace ccd

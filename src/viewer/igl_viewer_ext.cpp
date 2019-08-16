@@ -151,14 +151,14 @@ namespace opengl {
         const Eigen::MatrixXd& V, const Eigen::MatrixXd& F)
     {
         Eigen::MatrixXd f = F;
-        if (f.size() == 0){
+        if (f.size() == 0) {
             f.resizeLike(V);
             f.setZero();
         }
-        if (m_normalized){
+        if (m_normalized) {
             f.rowwise().normalize();
-            f *= m_scaling;
         }
+        f *= m_scaling;
 
         data().lines.resize(0, 9);
         data().add_edges(V, V + f, m_color);
