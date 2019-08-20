@@ -107,6 +107,7 @@ data/**/*.vtk
 data/**/*.pdf
 data/**/*.xlsx
 data/**/*.vtk
+data/**/*.png
 data/local/
 logs/*.csv
 logs/**/*.csv
