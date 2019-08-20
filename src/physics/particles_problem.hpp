@@ -61,8 +61,8 @@ namespace physics {
         void init_solve() override;
         opt::OptimizationResults step_solve() override;
 
-
         Eigen::MatrixXd vertices() const override { return vertices_; }
+        Eigen::MatrixXd velocities() const override { return velocities_; }
 
         const Eigen::MatrixXi& edges() const override { return edges_; }
 

@@ -13,7 +13,6 @@ UISimState::UISimState()
     , m_log_level(spdlog::level::info)
     , m_interval_time(0.0)
 {
-
 }
 
 void UISimState::launch()
@@ -37,8 +36,14 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
 
     viewer->append_mesh();
     edges_data = std::make_unique<igl::opengl::GraphData>(_viewer,
-        Eigen::RowVector3d(231.0, 76, 60) / 255.0); // #e74c3c - ALIZARIN RED    
+        Eigen::RowVector3d(231.0, 76, 60) / 255.0); // #e74c3c - ALIZARIN RED
+    viewer->append_mesh();
+    velocity_data = std::make_unique<igl::opengl::VectorFieldData>(_viewer,
+        Eigen::RowVector3d(241, 196, 15) / 255.0); // #f1c40f SUN FLOWER
+    velocity_data->data().show_overlay = false;
+
     datas_.emplace("edges", edges_data);
+    datas_.emplace("velocity", velocity_data);
 
     for (auto it = datas_.begin(); it != datas_.end(); ++it) {
         data_names_.push_back(it->first);
@@ -57,11 +62,14 @@ void UISimState::load_scene()
 {
 
     auto q = m_state.problem_ptr->vertices();
+    auto v = m_state.problem_ptr->velocities() * m_state.m_timestep_size;
 
     edges_data->data().show_vertid = false;
     edges_data->set_graph(q, m_state.problem_ptr->edges());
     edges_data->set_vertex_data(m_state.problem_ptr->particle_dof_fixed());
     edges_data->data().point_size = 10 * pixel_ratio();
+
+    velocity_data->set_vector_field(q, v);
 
     viewer->core().align_camera_center(edges_data->mV, edges_data->mE);
     m_has_scene = true;
@@ -72,7 +80,10 @@ void UISimState::load_scene()
 void UISimState::redraw_scene()
 {
     auto q1 = m_state.problem_ptr->vertices();
+    auto v1 = m_state.problem_ptr->velocities() * m_state.m_timestep_size;
+
     edges_data->update_graph(q1);
+    velocity_data->update_vector_field(q1, v1);
 }
 
 bool UISimState::pre_draw_loop()

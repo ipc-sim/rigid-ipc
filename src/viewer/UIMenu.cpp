@@ -222,8 +222,8 @@ void UISimState::draw_legends()
             {
                 float aux = float(ptr->m_scaling);
                 if (ImGui::SliderFloat(("##UI-scaling" + label).c_str(), &aux,
-                        0.00f, 10.0f, "%1.f")) {
-                    ptr->m_scaling = double(aux);
+                        0.00f, 1000.0f, "%1.f")) {
+                    ptr->m_scaling = double(aux) / 100.0;
                     ptr->recolor();
                 }
             }

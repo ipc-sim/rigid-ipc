@@ -36,6 +36,8 @@ namespace physics {
             return world_vertices(RigidBody::CURRENT_STEP);
         }
 
+        Eigen::MatrixXd world_velocities() const;
+
         void global_to_local(const int global_vertex_id,
             int& rigid_body_id,
             int& local_vertex_id);
