@@ -23,6 +23,7 @@ public:
     void collision_resolution_step();
 
     void save_simulation(const std::string& filename);
+    void save_simulation_step();
 
     void run_simulation(const std::string& fout);
 

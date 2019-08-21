@@ -326,7 +326,9 @@ namespace physics {
 
             const double vrel_prev_toi
                 = (v_Aprev - v_Bprev).transpose() * n_toi;
-
+            if (vrel_prev_toi >= 0.0){
+                continue;
+            }
             // solve for the impulses
             const double nr_A_toi = n_toi.transpose() * r_Aperp_toi;
             const double nr_B_toi = n_toi.transpose() * r_Bperp_toi;

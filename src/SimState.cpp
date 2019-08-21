@@ -216,6 +216,7 @@ void SimState::run_simulation(const std::string& fout)
     m_solve_collisions = true;
     for (int i = 0; i < m_max_simulation_steps; ++i) {
         simulation_step();
+        save_simulation_step();
         spdlog::info("finished step {}", i);
     }
     save_simulation(fout);
@@ -239,6 +240,11 @@ void SimState::simulation_step()
     if (m_solve_collisions && m_step_had_collision) {
         solve_collision();
     }
+
+}
+
+void SimState::save_simulation_step()
+{
     vertices_sequence.push_back(problem_ptr->vertices());
     state_sequence.push_back(problem_ptr->state());
 }
@@ -290,6 +296,7 @@ void SimState::collision_resolution_step()
     spdlog::debug(
         "sim_state action=collision_resolution_step status=collisions_{}",
         m_step_has_collision ? "unsolved" : "solved");
+
 }
 
 void SimState::save_simulation(const std::string& filename)
@@ -309,7 +316,6 @@ void SimState::save_simulation(const std::string& filename)
     std::ofstream o(filename);
     o << std::setw(4) << results << std::endl;
 }
-
 
 void SimState::init_background_grid(const nlohmann::json& args_)
 {

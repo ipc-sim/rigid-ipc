@@ -65,6 +65,7 @@ public:
 //        PROFILE_MAIN_POINT("simulation_step")
 //        PROFILE_START()
         m_state.simulation_step();
+        m_state.save_simulation_step();
 //        PROFILE_END()
 //        LOG_PROFILER(m_state.scene_file);
         redraw_scene();
@@ -73,11 +74,13 @@ public:
     inline void solve_collisions()
     {
         m_state.solve_collision();
+        m_state.save_simulation_step();
         redraw_scene();
     }
     inline void step_solve_collisions()
     {
         m_state.collision_resolution_step();
+        m_state.save_simulation_step();
         redraw_scene();
     }
 
