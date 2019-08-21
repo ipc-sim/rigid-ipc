@@ -11,3 +11,5 @@ template <typename T>
 SparseMatrix<T> SparseDiagonal(const Matrix<T, Dynamic, 1>& x);
 
 } // namespace Eigen
+
+#include "eigen_ext.tpp"

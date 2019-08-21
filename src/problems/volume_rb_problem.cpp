@@ -23,8 +23,8 @@ namespace opt {
 
     Eigen::VectorXd VolumeRBProblem::eval_g(const Eigen::VectorXd& sigma)
     {
-        Eigen::MatrixXd xk = m_assembler.world_vertices(sigma);
-        Eigen::MatrixXd uk = xk - vertices_t0;
+        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         constraint_.update_collision_set(uk);
 
         Eigen::VectorXd g_uk;
@@ -37,14 +37,13 @@ namespace opt {
         Eigen::SparseMatrix<double>& g_uk_jacobian,
         Eigen::VectorXi& g_uk_active)
     {
-        Eigen::MatrixXd xk = m_assembler.world_vertices(sigma);
-        Eigen::MatrixXd uk = xk - vertices_t0;
+        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         constraint_.update_collision_set(uk);
 
         constraint_.compute_constraints(uk, g_uk);
         constraint_.dense_indices(g_uk_active);
         eval_jac_g_core(sigma, g_uk_jacobian);
-
     }
 
     void VolumeRBProblem::eval_jac_g_core(
@@ -73,9 +72,23 @@ namespace opt {
             m_assembler.global_to_local(e_kl(0), body_kl_id, local_k_id);
             m_assembler.global_to_local(e_kl(1), body_kl_id, local_l_id);
 
+            Diff::D1Vector3d sigma_ij, sigma_kl;
+            sigma_ij = Diff::d1vars(0, sigma.segment(3 * body_ij_id, 3));
+            sigma_kl = Diff::d1vars(3, sigma.segment(3 * body_kl_id, 3));
+
             Diff::D1Vector3d position_ij, position_kl;
-            position_ij = Diff::d1vars(0, sigma.segment(3 * body_ij_id, 3));
-            position_kl = Diff::d1vars(3, sigma.segment(3 * body_kl_id, 3));
+
+            position_ij = sigma_ij.array()
+                * m_assembler.m_dof_to_position.diagonal()
+                      .segment(3 * body_ij_id, 3)
+                      .cast<Diff::DDouble1>()
+                      .array();
+
+            position_kl = sigma_kl.array()
+                * m_assembler.m_dof_to_position.diagonal()
+                      .segment(3 * body_kl_id, 3)
+                      .cast<Diff::DDouble1>()
+                      .array();
 
             const auto& rbs = m_assembler.m_rbs;
             // _differentiable_ final positions
@@ -122,7 +135,8 @@ namespace opt {
                 Diff::DDouble1>(v_i, v_j, v_c, u_i, u_j, u_c, toi);
             success = success
                 && ccd::autodiff::temporal_parameterization_to_spatial<
-                       Diff::DDouble1>(v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
+                       Diff::DDouble1>(
+                       v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
             Diff::DDouble1 vol_ij(0), vol_kl(0);
             if (success) {
                 vol_ij
@@ -146,13 +160,13 @@ namespace opt {
             for (size_t dim = 0; dim < 3; dim++) {
                 triplets.push_back(
                     M(int(c_ij), 3 * body_ij_id + dim, gradient_ij(dim)));
-                triplets.push_back(M(
-                    int(c_ij), 3 * body_kl_id + dim, gradient_ij(3 + dim)));
+                triplets.push_back(
+                    M(int(c_ij), 3 * body_kl_id + dim, gradient_ij(3 + dim)));
 
                 triplets.push_back(
                     M(int(c_kl), 3 * body_ij_id + dim, gradient_kl(dim)));
-                triplets.push_back(M(
-                    int(c_kl), 3 * body_kl_id + dim, gradient_kl(3 + dim)));
+                triplets.push_back(
+                    M(int(c_kl), 3 * body_kl_id + dim, gradient_kl(3 + dim)));
             }
         }
         const long num_constr = get_constraints_size(num_edges);

@@ -60,8 +60,8 @@ namespace opt {
     Eigen::VectorXd DistanceBarrierRBProblem::eval_g_set(
         const Eigen::VectorXd& sigma, const CstrSetFlag flag)
     {
-        Eigen::MatrixXd xk = m_assembler.world_vertices(sigma);
-        Eigen::MatrixXd uk = xk - vertices_t0;
+        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         update_constraints(uk, flag);
 
         Eigen::VectorXd g_uk;
@@ -76,8 +76,9 @@ namespace opt {
         NAMED_PROFILE_POINT("eval_jac_g__eval_jac", EVAL)
 
         PROFILE_START(UPDATE)
-        Eigen::MatrixXd xk = m_assembler.world_vertices(sigma);
-        Eigen::MatrixXd uk = xk - vertices_t0;
+
+        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         update_constraints(uk, CstrSetFlag::UPDATE_CSTR_SET);
         PROFILE_END(UPDATE)
 
@@ -95,8 +96,8 @@ namespace opt {
         NAMED_PROFILE_POINT("eval_hess_g__eval", EVAL)
 
         PROFILE_START(UPDATE)
-        Eigen::MatrixXd xk = m_assembler.world_vertices(sigma);
-        Eigen::MatrixXd uk = xk - vertices_t0;
+        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         update_constraints(uk, CstrSetFlag::UPDATE_CSTR_SET);
         PROFILE_END(UPDATE)
 
@@ -119,8 +120,8 @@ namespace opt {
         NAMED_PROFILE_POINT("eval_hess_g__eval_hess", EVAL_HESS)
 
         PROFILE_START(UPDATE)
-        Eigen::MatrixXd xk = m_assembler.world_vertices(sigma);
-        Eigen::MatrixXd uk = xk - vertices_t0;
+        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         update_constraints(uk, CstrSetFlag::UPDATE_CSTR_SET);
         PROFILE_END(UPDATE)
 
@@ -239,13 +240,22 @@ namespace opt {
         typedef Eigen::Matrix<T, 3, 1> DTVector3d;
         typedef Eigen::Matrix<T, 2, 1> DTVector2d;
 
-        DTVector3d position_E;
-        DTVector3d position_V;
+        DTVector3d sigma_E, sigma_V, position_E, position_V;
 
-        position_V = Diff::dTvars<T>(
-            0, sigma.segment(3 * rbc.vertex_body_id, 3));
-        position_E = Diff::dTvars<T>(
-            3, sigma.segment(3 * rbc.edge_body_id, 3));
+        sigma_V = Diff::dTvars<T>(0, sigma.segment(3 * rbc.vertex_body_id, 3));
+        sigma_E = Diff::dTvars<T>(3, sigma.segment(3 * rbc.edge_body_id, 3));
+
+        position_V = sigma_V.array()
+            * m_assembler.m_dof_to_position.diagonal()
+                  .segment(3 * rbc.vertex_body_id, 3)
+                  .cast<T>()
+                  .array();
+
+        position_E = sigma_E.array()
+            * m_assembler.m_dof_to_position.diagonal()
+                  .segment(3 * rbc.edge_body_id, 3)
+                  .cast<T>()
+                  .array();
 
         const auto& rbs = m_assembler.m_rbs;
         DTVector2d da = rbs[size_t(rbc.edge_body_id)].world_vertex<T>(

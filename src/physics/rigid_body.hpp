@@ -93,6 +93,8 @@ namespace physics {
 
         double mass;              ///< total mass (M) of the rigid body
         double moment_of_inertia; ///< moment of intertia (I) of the rigid body
+        double r_max;             ///< maximum distance from CM to a vertex
+
         Eigen::Vector3b
             is_dof_fixed; ///< flag to indicate if dof is fixed (doesnt' change)
         Eigen::Matrix3d mass_matrix;

@@ -88,7 +88,6 @@ add_library(${PROJECT_NAME}
     src/problems/volume_particles_problem.cpp
     src/problems/problem_factory.cpp
 
-    src/utils/eigen_ext.cpp
     src/utils/tensor.cpp
     src/utils/regular_2d_grid.cpp
 

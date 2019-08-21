@@ -72,6 +72,8 @@ namespace physics {
         mass_matrix << mass, 0, 0, 0, mass, 0, 0, 0, moment_of_inertia;
         inv_mass_matrix << 1.0 / mass, 0, 0, 0, 1.0 / mass, 0, 0, 0,
             1.0 / moment_of_inertia;
+
+        r_max = vertices.rowwise().squaredNorm().maxCoeff();
     }
 
     Eigen::MatrixXd RigidBody::world_vertices(const Step step) const

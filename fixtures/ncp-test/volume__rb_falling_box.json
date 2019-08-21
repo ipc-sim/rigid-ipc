@@ -1,26 +1,22 @@
 {
-    "scene_type": "rigid_body_problem",
-    "collision_solver": "ncp_solver",
-    "volume_constraint": {
-        "detection_method": "hash_grid",
-        "extend_collision_set": true,
-        "volume_epsilon": 1e-16
-    },
+    "max_iterations": 600,
+    "timestep_size": 0.1,
+    "scene_type": "volume_rb_problem",
     "ncp_solver": {
-        "max_iterations": 300,
+        "max_iterations": 1000,
         "do_line_search": false,
-        "solve_for_active_cstr": true,
-        "convergence_tolerance": 1e-6,
+        "solve_for_active_cstr": false,
+        "convergence_tolerance": -1,
         "update_type": "linearized",
         "lcp_solver": "lcp_gauss_seidel"
     },
+    "volume_constraint": {
+        "detection_method": "hash_grid",
+        "volume_epsilon": 1e-10,
+        "custom_hashgrid_cellsize": -1
+    },
     "rigid_body_problem": {
-        "x_fixed": [0, 1],
-        "y_fixed": [0, 1],
-        "use_mass_matrix": true,
-        "constraint": "volume_constraint",
-        "update_constraint_set": true,
-        "gravity": [0.0, -0.0, 0.0],
+        "gravity": [0.0, 0.0, 0.0],
         "collision_eps": 0.0,
         "rigid_bodies": [{
             "vertices": [
@@ -35,14 +31,14 @@
                 [2, 3],
                 [3, 0]
             ],
-            "velocity": [0.0, -1.0, 0.05],
+            "velocity": [0.0, -0.5, 0.00],
             "is_dof_fixed": [false, false, false]
         }, {
             "vertices": [
-                [-100, 1],
-                [-100, 12],
-                [100, 12],
-                [100, 1]
+                [-10, 11],
+                [-10, 12],
+                [10, 12],
+                [10, 11]
             ],
             "edges": [
                 [0, 1],
@@ -51,7 +47,7 @@
                 [3, 0]
             ],
             "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [true, true, true]
+            "is_dof_fixed": [false, false, false]
         }]
     }
 }

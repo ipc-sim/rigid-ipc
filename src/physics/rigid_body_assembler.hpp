@@ -68,8 +68,14 @@ namespace physics {
         /// @brief  re-indexed edges of the whole system
         Eigen::MatrixXi m_edges;
 
-        /// @brief  mass_matrix of the rigid bodies
+        /// @brief  mass_matrix of the rigid bodies dof
         Eigen::SparseMatrix<double> m_rb_mass_matrix;
+
+        /// @brief transforms dof to positions
+        Eigen::SparseMatrix<double> m_dof_to_position;
+
+        /// @brief transforms positions to dof
+        Eigen::SparseMatrix<double> m_position_to_dof;
 
         /// @brief  mass_matrix of the vertices
         Eigen::SparseMatrix<double> m_mass_matrix;

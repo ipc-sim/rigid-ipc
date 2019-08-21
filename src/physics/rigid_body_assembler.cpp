@@ -46,13 +46,21 @@ namespace physics {
 
         // rigid body mass-matrix
         Eigen::VectorXd mass_vector(int(num_bodies) * 3);
+        Eigen::VectorXd scaling_vector(int(num_bodies) * 3);
         for (int i = 0; i < int(num_bodies); ++i) {
             auto& rb = rigid_bodies[size_t(i)];
             mass_vector[3 * i + 0] = rb.mass;
             mass_vector[3 * i + 1] = rb.mass;
             mass_vector[3 * i + 2] = rb.moment_of_inertia;
+
+            // scale rigid body position to dof
+            scaling_vector[3 * i + 0] = 1.0;
+            scaling_vector[3 * i + 1] = 1.0;
+            scaling_vector[3 * i + 2] = rb.r_max;
         }
         m_rb_mass_matrix = Eigen::SparseDiagonal<double>(mass_vector);
+        m_position_to_dof = Eigen::SparseDiagonal<double>(scaling_vector);
+        m_dof_to_position =  m_position_to_dof.cwiseInverse();
 
         // particles mass-matrix
         Eigen::VectorXd vertex_masses;

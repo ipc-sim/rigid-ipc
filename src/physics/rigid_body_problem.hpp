@@ -111,7 +111,7 @@ namespace physics {
         ///< vertices positions at end of interval
         Eigen::MatrixXd vertices_q1;
         ///< rigid body positions at end of interval
-        Eigen::VectorXd rb_positions_t1;
+        Eigen::VectorXd sigma_t1;
 
         /// Used for velocity restoration
         EdgeVertexImpacts original_ev_impacts;

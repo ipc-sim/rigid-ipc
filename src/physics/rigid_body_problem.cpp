@@ -143,10 +143,12 @@ namespace physics {
         vertices_t0 = m_assembler.world_vertices_t0();
         vertices_q1 = m_assembler.world_vertices_t1();
 
-        rb_positions_t1 = m_assembler.rb_positions_t1();
+        const Eigen::SparseMatrix<double>& S = m_assembler.m_position_to_dof;
+        sigma_t1 = S * m_assembler.rb_positions_t1();
 
         // base problem initial solution
-        x0 = m_assembler.rb_positions_t0(); // start from collision free state
+        // start from collision free state
+        x0 = S * m_assembler.rb_positions_t0();
         num_vars_ = int(x0.size());
 
         constraint().initialize(vertices_t0, m_assembler.m_edges,
@@ -169,10 +171,11 @@ namespace physics {
     }
 
     bool RigidBodyProblem::take_step(
-        const Eigen::VectorXd& rb_positions, const double time_step)
+        const Eigen::VectorXd& sigma, const double time_step)
     {
         // update final position
         // -------------------------------------
+        Eigen::VectorXd rb_positions = m_assembler.m_dof_to_position * sigma;
         m_assembler.set_rb_positions(rb_positions);
         Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
 
@@ -312,7 +315,8 @@ namespace physics {
             const Eigen::Vector2d v_Aprev = V_Aprev + w_Aprev * r_Aperp_toi;
             const Eigen::Vector2d v_Bprev = V_Bprev + w_Bprev * r_Bperp_toi;
 
-            spdlog::debug("before V_A={} V_B={}", ccd::log::fmt_eigen(body_A.velocity),
+            spdlog::debug("before V_A={} V_B={}",
+                ccd::log::fmt_eigen(body_A.velocity),
                 ccd::log::fmt_eigen(body_B.velocity));
             spdlog::debug("before v_A={} v_B={}", ccd::log::fmt_eigen(v_Aprev),
                 ccd::log::fmt_eigen(v_Bprev));
@@ -343,7 +347,8 @@ namespace physics {
 
             body_A.velocity(2) += w_A_delta;
             body_B.velocity(2) += w_B_delta;
-            spdlog::debug("after V_A={} V_B={}", ccd::log::fmt_eigen(body_A.velocity),
+            spdlog::debug("after V_A={} V_B={}",
+                ccd::log::fmt_eigen(body_A.velocity),
                 ccd::log::fmt_eigen(body_B.velocity));
         }
     }
@@ -380,15 +385,21 @@ namespace physics {
     ////////////////////////////////////////////////////////////////////////////
     double RigidBodyProblem::eval_f(const Eigen::VectorXd& sigma)
     {
-        Eigen::VectorXd diff = sigma - rb_positions_t1;
-        return 0.5 * diff.transpose() * m_assembler.m_rb_mass_matrix * diff;
+        Eigen::VectorXd diff = (sigma - sigma_t1);
+        const Eigen::SparseMatrix<double>& invS = m_assembler.m_dof_to_position;
+        const Eigen::SparseMatrix<double>& M = m_assembler.m_rb_mass_matrix;
+        return 0.5 * diff.transpose() * invS.transpose() * M * invS * diff;
     }
 
     Eigen::VectorXd RigidBodyProblem::eval_grad_f(const Eigen::VectorXd& sigma)
     {
         Eigen::VectorXd grad_f;
-        Eigen::VectorXd diff = sigma - rb_positions_t1;
-        grad_f = m_assembler.m_rb_mass_matrix * diff;
+        Eigen::VectorXd diff = (sigma - sigma_t1);
+
+        const Eigen::SparseMatrix<double>& invS = m_assembler.m_dof_to_position;
+        const Eigen::SparseMatrix<double>& M = m_assembler.m_rb_mass_matrix;
+
+        grad_f = invS.transpose() * M * invS * diff;
 
 #ifdef WITH_DERIVATIVE_CHECK
         Eigen::VectorXd grad_f_approx = eval_grad_f_approx(*this, sigma);
@@ -398,10 +409,13 @@ namespace physics {
     }
 
     Eigen::SparseMatrix<double> RigidBodyProblem::eval_hessian_f(
-        const Eigen::VectorXd& sigma)
+        const Eigen::VectorXd& /*sigma*/)
     {
+        const Eigen::SparseMatrix<double>& invS = m_assembler.m_dof_to_position;
+        const Eigen::SparseMatrix<double>& M = m_assembler.m_rb_mass_matrix;
+
         Eigen::SparseMatrix<double> hessian_f;
-        hessian_f = m_assembler.m_rb_mass_matrix;
+        hessian_f = invS.transpose() * M * invS.transpose();
 
 #ifdef WITH_DERIVATIVE_CHECK
         Eigen::MatrixXd hessian_f_approx = eval_hess_f_approx(*this, sigma);
