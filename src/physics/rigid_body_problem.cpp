@@ -411,7 +411,7 @@ namespace physics {
     }
 
     Eigen::SparseMatrix<double> RigidBodyProblem::eval_hessian_f(
-        const Eigen::VectorXd& /*sigma*/)
+        const Eigen::VectorXd& sigma)
     {
         const Eigen::SparseMatrix<double>& invS = m_assembler.m_dof_to_position;
         const Eigen::SparseMatrix<double>& M = m_assembler.m_rb_mass_matrix;

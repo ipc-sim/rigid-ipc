@@ -1,9 +1,9 @@
 {
-    "max_iterations": 300,
+    "max_iterations": 50,
     "timestep_size": 0.01,
     "scene_type": "distance_barrier_rb_problem",
     "distance_barrier_constraint": {
-        "custom_initial_epsilon": 1e-4,
+        "custom_initial_epsilon": 1e-3,
         "detection_method": "hash_grid",
         "use_distance_hashgrid": true,
         "active_constraint_scale": 1.01,
@@ -46,6 +46,8 @@
                 [2, 3],
                 [3, 0]
             ],
+            "theta": 45,
+            "position": [0.0, 0.2],
             "velocity": [0.0, 0.0, 0.0],
             "is_dof_fixed": [false, false, false]
         }, {
@@ -62,6 +64,7 @@
                 [2, 3],
                 [3, 0]
             ],
+            "position": [0.0, 0.4],
             "velocity": [0.0, 0.0, 0.0],
             "is_dof_fixed": [false, false, false]
         }, {
@@ -77,6 +80,8 @@
                 [2, 3],
                 [3, 0]
             ],
+            "theta": 45,
+            "position": [0.0, 0.6],
             "velocity": [0.0, 0.0, 0.0],
             "is_dof_fixed": [false, false, false]
         }]
