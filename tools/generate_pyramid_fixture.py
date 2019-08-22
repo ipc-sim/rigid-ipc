@@ -16,16 +16,16 @@ def generate_fixture():
     fixture["barrier_solver"]["min_barrier_epsilon"] = 1e-4
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
-    box_vertices = numpy.array([[0, 0], [1, 0], [1, 1], [0, 1]])
-    box_edges = [[0, 1], [1, 2], [2, 3], [3, 0]]
-
     # Add the ground
     rigid_bodies.append({
-        "vertices": [[-10, -1], [10, -1], [10, 0], [-10, 0]],
-        "edges": box_edges,
-        "velocity": [0.0, 0.0, 0.0],
+        "vertices": [[-10, 0], [10, 0]],
+        "edges": [[0, 1]],
+        "oriented": False,
         "is_dof_fixed": [True, True, True]
     })
+
+    box_vertices = numpy.array([[0, 0], [1, 0], [1, 1], [0, 1]])
+    box_edges = [[0, 1], [1, 2], [2, 3], [3, 0]]
 
     # Add the pyramid
     nrows = 5
@@ -41,6 +41,7 @@ def generate_fixture():
             })
 
     fixture["rigid_body_problem"]["gravity"] = [0, -9.81, 0]
+    fixture["rigid_body_problem"]["coefficient_restitution"] = -1
 
     return fixture
 
@@ -54,9 +55,9 @@ def main():
         out_path.parent.mkdir(parents=True, exist_ok=True)
     else:
         directory = (pathlib.Path(__file__).resolve().parents[1] /
-                     "fixtures" / "rigid_bodies")
+                     "fixtures" / "stacking")
         directory.mkdir(parents=True, exist_ok=True)
-        out_path = directory / "stacking_pyramid.json"
+        out_path = directory / "pyramid.json"
     with open(out_path, 'w') as outfile:
         json.dump(fixture, outfile)
 
