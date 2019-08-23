@@ -10,7 +10,7 @@
 
 namespace ccd {
 namespace log {
-    static const Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "", "");
+    static const Eigen::IOFormat CleanFmt(Eigen::FullPrecision, 0, ", ", "\n", "", "");
     std::string fmt_eigen(const Eigen::MatrixXd& x, const int precision)
     {
         std::stringstream ssx;

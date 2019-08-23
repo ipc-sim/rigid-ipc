@@ -46,6 +46,6 @@ int main(int argc, char* argv[])
     spdlog::info("Running {} iterations", sim.m_max_simulation_steps);
     sim.run_simulation(fout);
     spdlog::info(
-        "To postprocess run:\n `python python/process_results/to_vtk_files.py {} {}`",
+        "To postprocess run:\n `python tools/results_to_vtk_files.py {} {}`",
         fout, args.output_dir);
 }

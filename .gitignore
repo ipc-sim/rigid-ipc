@@ -100,15 +100,7 @@ src/autogen/*.ipp
 #src/autogen/*.hpp
 fixtures/auto_*.json
 figures/*.data
-data/**/*.data
-data/**/*.csv
-data/**/*.json
-data/**/*.vtk
-data/**/*.pdf
-data/**/*.xlsx
-data/**/*.vtk
-data/**/*.png
-data/local/
+data/*.local/
 logs/*.csv
 logs/**/*.csv
 logs/*.log
