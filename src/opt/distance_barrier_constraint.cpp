@@ -94,9 +94,8 @@ namespace opt {
                 ev_barriers.push_back(ev_candidate);
             }
         }
-
-        return DistanceBarrierConstraint::NO_COLLISIONS;
         PROFILE_END(NARROW_PHASE)
+        return DistanceBarrierConstraint::NO_COLLISIONS;
     }
 
     void DistanceBarrierConstraint::compute_constraints(
