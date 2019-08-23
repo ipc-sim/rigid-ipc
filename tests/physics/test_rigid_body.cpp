@@ -61,6 +61,6 @@ TEST_CASE("Rigid Body Transform", "[RB][RB-transform]")
 
     auto rb = simple(vertices_t0, edges, velocity);
     Eigen::VectorXd gamma_t1 = rb.position + rb_step;
-    Eigen::MatrixXd actual = rb.world_vertices(gamma_t1);
+    Eigen::MatrixXd actual = rb.world_vertices<double>(gamma_t1);
     CHECK((expected - actual).squaredNorm() < 1E-6);
 }

@@ -24,13 +24,12 @@ namespace opt {
 
         inline const std::string& name() const { return name_; }
 
-        virtual void initialize(const Eigen::MatrixX2d& vertices,
+        virtual EdgeVertexImpacts initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
             const Eigen::VectorXi& group_ids,
             const Eigen::MatrixXd& Uk);
 
-        virtual void update_collision_set(const Eigen::MatrixXd& Uk);
-        const EdgeVertexImpacts& ev_impacts() {return m_ev_impacts; }
+        EdgeVertexImpacts get_collision_set(const Eigen::MatrixXd& Uk);
 
         // Settings
         // ----------
@@ -43,8 +42,7 @@ namespace opt {
         Eigen::VectorXi group_ids;
 
     protected:
-        /// @brief All edge-vertex contact
-        EdgeVertexImpacts m_ev_impacts;
+
         std::string name_;
     };
 

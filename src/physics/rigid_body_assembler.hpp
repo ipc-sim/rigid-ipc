@@ -24,7 +24,12 @@ namespace physics {
         // World Vertices Functions
         // ----------------------------------------------------------------------
 
-        Eigen::MatrixXd world_vertices(const Eigen::VectorXd& positions) const;
+        template <typename T>
+        const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_vertices(
+            const Eigen::Matrix<T, Eigen::Dynamic, 1>& positions) const;
+
+        //        Eigen::MatrixXd world_vertices(const Eigen::VectorXd&
+        //        positions) const;
         Eigen::MatrixXd world_vertices(
             const RigidBody::Step step = RigidBody::CURRENT_STEP) const;
         Eigen::MatrixXd world_vertices_t0() const
@@ -92,3 +97,5 @@ namespace physics {
 
 } // namespace physics
 } // namespace ccd
+
+#include "rigid_body_assembler.tpp"

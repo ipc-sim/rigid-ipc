@@ -32,15 +32,12 @@ namespace opt {
 
         const int& num_constraints() override
         {
-            return constraint_.number_of_constraints();
+            throw NotImplementedError(
+                "DistanceBarrierParticleProblem non-const num_constraints");
         }
-
         ////////////////////////////////////////////////////////////
         /// IBarrierProblem
         ////////////////////////////////////////////////////////////////
-
-        Eigen::VectorXd eval_g_set(
-            const Eigen::VectorXd& x, const CstrSetFlag flag) override;
 
         void eval_f_and_fdiff(const Eigen::VectorXd& x,
             double& f_uk,
@@ -72,10 +69,6 @@ namespace opt {
         opt::IStateOptimizationSolver& solver() override { return opt_solver_; }
 
     protected:
-        void update_constraints(
-            const Eigen::MatrixXd& uk, const CstrSetFlag flag);
-        void compare_jac_g_approx(
-            const Eigen::MatrixXd& xk, const Eigen::MatrixXd& jac_g_uk);
         opt::DistanceBarrierConstraint constraint_;
         opt::BarrierSolver opt_solver_;
     };

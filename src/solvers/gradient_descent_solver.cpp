@@ -102,12 +102,11 @@ namespace opt {
         bool success = false;
 
         int num_it = 0;
-        auto cstr_flag = CstrSetFlag::UPDATE_CSTR_SET;
+
         while (step_norm >= min_step_length) {
 
             Eigen::VectorXd xi = x + step_length * dir;
-            double fxi = problem.eval_f_set(xi, cstr_flag);
-            cstr_flag = CstrSetFlag::KEEP_CSTR_SET;
+            double fxi = problem.eval_f(xi);
 
             bool min_rule = fxi < fx;
             bool cstr = !std::isinf(fxi);

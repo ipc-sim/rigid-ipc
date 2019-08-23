@@ -126,18 +126,7 @@ namespace physics {
         return V;
     }
 
-    Eigen::MatrixXd RigidBodyAssembler::world_vertices(
-        const Eigen::VectorXd& positions) const
-    {
-        Eigen::MatrixXd V(num_vertices(), 2);
-        for (size_t i = 0; i < m_rbs.size(); ++i) {
-            auto& rb = m_rbs[i];
-            Eigen::Vector3d p_i = positions.segment(3 * int(i), 3);
-            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), 2)
-                = rb.world_vertices(p_i);
-        }
-        return V;
-    }
+
 
     Eigen::MatrixXd RigidBodyAssembler::world_velocities() const
     {

@@ -81,15 +81,6 @@ namespace physics {
         return world_vertices(step == PREVIOUS_STEP ? position_prev : position);
     }
 
-    Eigen::MatrixXd RigidBody::world_vertices(
-        const Eigen::Vector3d& _position) const
-    {
-        // compute X[i] = R(theta) * r_i + X
-        Eigen::Matrix2d R
-            = Eigen::Rotation2D<double>(_position.z()).toRotationMatrix();
-        return (vertices * R.transpose()).rowwise()
-            + _position.head(2).transpose();
-    }
 
     Eigen::MatrixXd RigidBody::world_velocities() const
     {

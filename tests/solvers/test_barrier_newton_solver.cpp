@@ -59,11 +59,7 @@ TEST_CASE(
             gx.setConstant(eval_f(x));
             return gx;
         }
-        Eigen::VectorXd eval_g_set(
-            const Eigen::VectorXd& x, const CstrSetFlag /*flag*/) override
-        {
-            return eval_g(x);
-        }
+
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override
         {
             return eval_grad_f(x).transpose();

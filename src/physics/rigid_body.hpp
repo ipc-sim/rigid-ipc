@@ -73,7 +73,9 @@ namespace physics {
         /// \brief: computes vertices position for given state
         /// returns the positions of all vertices in 'world space',
         /// taking into account the given body's position
-        Eigen::MatrixXd world_vertices(const Eigen::Vector3d& v) const;
+        template <typename T>
+        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_vertices(
+            const Eigen::Matrix<T, 3, 1>& position) const;
 
         template <typename T>
         Eigen::Matrix<T, 2, 1> world_vertex(

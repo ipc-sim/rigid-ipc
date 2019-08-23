@@ -42,28 +42,11 @@ namespace opt {
         f_uk_grad = eval_grad_f(sigma);
     }
 
-    void DistanceBarrierParticleProblem::update_constraints(
-        const Eigen::MatrixXd& uk, const CstrSetFlag flag)
-    {
-        if (CstrSetFlag::UPDATE_CSTR_SET == flag) {
-            constraint_.update_collision_set(uk);
-        }
-        constraint_.update_active_set(uk);
-    }
-
     Eigen::VectorXd DistanceBarrierParticleProblem::eval_g(
-        const Eigen::VectorXd& sigma)
-    {
-        return eval_g_set(sigma, CstrSetFlag::UPDATE_CSTR_SET);
-    }
-
-    Eigen::VectorXd DistanceBarrierParticleProblem::eval_g_set(
-        const Eigen::VectorXd& xk, const CstrSetFlag flag)
+        const Eigen::VectorXd& xk)
     {
         Eigen::MatrixXd uk = xk - vec_vertices_t0;
         ccd::unflatten(uk, 2);
-
-        update_constraints(uk, flag);
 
         Eigen::VectorXd g_uk;
         constraint_.compute_constraints(uk, g_uk);
@@ -76,14 +59,9 @@ namespace opt {
         Eigen::MatrixXd uk = xk - vec_vertices_t0;
         ccd::unflatten(uk, 2);
 
-        update_constraints(uk, CstrSetFlag::UPDATE_CSTR_SET);
-
         Eigen::MatrixXd g_uk_jacobian;
         constraint_.compute_constraints_jacobian(uk, g_uk_jacobian);
 
-#ifdef WITH_DERIVATIVE_CHECK
-        compare_jac_g_approx(xk, g_uk_jacobian);
-#endif
         return g_uk_jacobian;
     }
 
@@ -92,8 +70,6 @@ namespace opt {
     {
         Eigen::MatrixXd uk = xk - vec_vertices_t0;
         ccd::unflatten(uk, 2);
-
-        update_constraints(uk, CstrSetFlag::UPDATE_CSTR_SET);
 
         std::vector<Eigen::SparseMatrix<double>> g_uk_hessian;
         constraint_.compute_constraints_hessian(uk, g_uk_hessian);
@@ -109,28 +85,18 @@ namespace opt {
         Eigen::MatrixXd uk = xk - vec_vertices_t0;
         ccd::unflatten(uk, 2);
 
-        update_constraints(uk, CstrSetFlag::UPDATE_CSTR_SET);
+        EdgeVertexCandidates ev_candidates;
+        auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
+        assert(check == DistanceBarrierConstraint::NO_COLLISIONS);
 
-        constraint_.compute_constraints(uk, g_uk);
-        constraint_.compute_constraints_jacobian(uk, g_uk_jacobian);
-        constraint_.compute_constraints_hessian(uk, g_uk_hessian);
+        constraint_.compute_candidates_constraints(uk, ev_candidates, g_uk);
+        constraint_.compute_candidates_constraints_jacobian(
+            uk, ev_candidates, g_uk_jacobian);
+        constraint_.compute_candidates_constraints_hessian(
+            uk, ev_candidates, g_uk_hessian);
 
-#ifdef WITH_DERIVATIVE_CHECK
-        compare_jac_g_approx(xk, g_uk_jacobian);
-#endif
     }
 
-    void DistanceBarrierParticleProblem::compare_jac_g_approx(
-        const Eigen::MatrixXd& xk, const Eigen::MatrixXd& g_uk_jacobian)
-    {
-
-        Eigen::MatrixXd jac_g_approx = eval_jac_g_approx(*this, xk);
-        if (!compare_jacobian(g_uk_jacobian, jac_g_approx)) {
-            spdlog::error(
-                "barrier_particles status=fail "
-                "message='constraint jacobian finite-differences failed'");
-        }
-    }
 
 } // namespace opt
 } // namespace ccd

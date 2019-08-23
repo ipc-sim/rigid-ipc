@@ -20,7 +20,6 @@ namespace opt {
     void CollisionConstraint::settings(const nlohmann::json& json)
     {
         detection_method = json["detection_method"].get<DetectionMethod>();
-
     }
 
     nlohmann::json CollisionConstraint::settings() const
@@ -30,7 +29,7 @@ namespace opt {
         return json;
     }
 
-    void CollisionConstraint::initialize(const Eigen::MatrixX2d& V,
+    EdgeVertexImpacts CollisionConstraint::initialize(const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2i& E,
         const Eigen::VectorXi& Gid,
         const Eigen::MatrixXd& Uk)
@@ -39,14 +38,16 @@ namespace opt {
         edges = E;
         group_ids = Gid;
 
-        m_ev_impacts.clear();
-        update_collision_set(Uk);
+        return get_collision_set(Uk);
     }
 
-    void CollisionConstraint::update_collision_set(const Eigen::MatrixXd& Uk)
+    EdgeVertexImpacts CollisionConstraint::get_collision_set(
+        const Eigen::MatrixXd& Uk)
     {
-        ccd::detect_edge_vertex_collisions(vertices, Uk, edges, group_ids,
-            m_ev_impacts, detection_method);
+        EdgeVertexImpacts ev_impacts;
+        ccd::detect_edge_vertex_collisions(
+            vertices, Uk, edges, group_ids, ev_impacts, detection_method);
+        return ev_impacts;
     }
 
 } // namespace opt

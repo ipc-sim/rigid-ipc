@@ -42,27 +42,11 @@ namespace opt {
         f_uk_grad = eval_grad_f(sigma);
     }
 
-    void DistanceBarrierRBProblem::update_constraints(
-        const Eigen::MatrixXd& uk, const CstrSetFlag flag)
-    {
-        if (CstrSetFlag::UPDATE_CSTR_SET == flag) {
-            constraint_.update_collision_set(uk);
-        }
-        constraint_.update_active_set(uk);
-    }
-
     Eigen::VectorXd DistanceBarrierRBProblem::eval_g(
         const Eigen::VectorXd& sigma)
     {
-        return eval_g_set(sigma, CstrSetFlag::UPDATE_CSTR_SET);
-    }
-
-    Eigen::VectorXd DistanceBarrierRBProblem::eval_g_set(
-        const Eigen::VectorXd& sigma, const CstrSetFlag flag)
-    {
         Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-        update_constraints(uk, flag);
 
         Eigen::VectorXd g_uk;
         constraint_.compute_constraints(uk, g_uk);
@@ -79,14 +63,54 @@ namespace opt {
 
         Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-        update_constraints(uk, CstrSetFlag::UPDATE_CSTR_SET);
+
+        EdgeVertexCandidates ev_candidates;
+        auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
+        assert(check == DistanceBarrierConstraint::NO_COLLISIONS);
         PROFILE_END(UPDATE)
 
         PROFILE_START(EVAL)
-        Eigen::MatrixXd gx_jacobian = eval_jac_g_core(sigma);
+        Eigen::MatrixXd gx_jacobian = eval_jac_g_core(sigma, ev_candidates);
         PROFILE_END(EVAL)
 
+        bool derivative_check = true;
+        if (derivative_check) {
+            compare_jac_g(sigma, ev_candidates, gx_jacobian);
+        }
         return gx_jacobian;
+    }
+    Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_full(
+        const Eigen::VectorXd& sigma, const EdgeVertexCandidates& ev_candidates)
+    {
+
+        DiffScalarBase::setVariableCount(size_t(num_vars_));
+
+        // create the variables
+        typedef DScalar1<double, Eigen::VectorXd> DDouble1;
+        typedef Eigen::Matrix<DDouble1, Eigen::Dynamic, 1> D1VectorXd;
+        typedef Eigen::Matrix<DDouble1, Eigen::Dynamic, Eigen::Dynamic>
+            D1MatrixXd;
+        D1VectorXd d_sigma;
+        d_sigma.resize(sigma.rows());
+        for (int r = 0; r < sigma.rows(); r++) {
+            d_sigma[r] = DDouble1(size_t(r), sigma[r]);
+        }
+
+        D1VectorXd d_qk
+            = m_assembler.m_dof_to_position.cast<DDouble1>() * d_sigma;
+        D1MatrixXd d_uk = m_assembler.world_vertices<DDouble1>(d_qk)
+            - vertices_t0.cast<DDouble1>();
+        D1VectorXd d_g_uk;
+        constraint_.compute_candidates_constraints<DDouble1>(
+            d_uk, ev_candidates, d_g_uk);
+
+        Eigen::MatrixXd jac_g;
+        jac_g.resize(ev_candidates.size(), num_vars_);
+        for (int i = 0; i < d_g_uk.rows(); i++) {
+            jac_g.row(i) = d_g_uk(i).getGradient();
+        }
+
+        return jac_g;
     }
 
     std::vector<Eigen::SparseMatrix<double>>
@@ -98,12 +122,16 @@ namespace opt {
         PROFILE_START(UPDATE)
         Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-        update_constraints(uk, CstrSetFlag::UPDATE_CSTR_SET);
+
+        EdgeVertexCandidates ev_candidates;
+        auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
+        assert(check == DistanceBarrierConstraint::NO_COLLISIONS);
+
         PROFILE_END(UPDATE)
 
         std::vector<Eigen::SparseMatrix<double>> gx_hessian;
         PROFILE_START(EVAL)
-        gx_hessian = eval_hessian_g_core(sigma);
+        gx_hessian = eval_hessian_g_core(sigma, ev_candidates);
         PROFILE_END(EVAL)
 
         return gx_hessian;
@@ -122,30 +150,38 @@ namespace opt {
         PROFILE_START(UPDATE)
         Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-        update_constraints(uk, CstrSetFlag::UPDATE_CSTR_SET);
+
+        EdgeVertexCandidates ev_candidates;
+        auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
+        assert(check == DistanceBarrierConstraint::NO_COLLISIONS);
         PROFILE_END(UPDATE)
 
-        constraint_.compute_constraints(uk, gx);
+        constraint_.compute_candidates_constraints(uk, ev_candidates, gx);
 
         PROFILE_START(EVAL_GRAD)
-        gx_jacobian = eval_jac_g_core(sigma);
+        gx_jacobian = eval_jac_g_core(sigma, ev_candidates);
         PROFILE_END(EVAL_GRAD)
 
         PROFILE_START(EVAL_HESS)
-        gx_hessian = eval_hessian_g_core(sigma);
+        gx_hessian = eval_hessian_g_core(sigma, ev_candidates);
         PROFILE_END(EVAL_HESS)
+
+        bool derivative_check = true;
+        if (derivative_check) {
+            assert(compare_jac_g(sigma, ev_candidates, gx_jacobian));
+        }
     }
 
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_core(
-        const Eigen::VectorXd& sigma)
+        const Eigen::VectorXd& sigma,
+        const EdgeVertexCandidates& distance_candidates)
     {
         Eigen::MatrixXd jac_g;
-        jac_g.resize(constraint_.number_of_constraints(), num_vars_);
+        jac_g.resize(distance_candidates.size(), num_vars_);
         jac_g.setZero();
 
         typedef AutodiffType<6> Diff;
 
-        const auto& distance_candidates = constraint_.ev_distance_active();
         for (size_t i = 0; i < distance_candidates.size(); ++i) {
             const auto& ev_candidate = distance_candidates[i];
 
@@ -155,35 +191,27 @@ namespace opt {
             Eigen::VectorXd gradient
                 = distance_barrier<Diff::DDouble1>(sigma, rbc).getGradient();
 
-            size_t cstr_id = constraint_.ev_distance_active_map(i);
+            size_t cstr_id = i;
             jac_g.block(int(cstr_id), 3 * rbc.vertex_body_id, 1, 3)
                 = gradient.segment(0, 3).transpose();
             jac_g.block(int(cstr_id), 3 * rbc.edge_body_id, 1, 3)
                 = gradient.segment(3, 3).transpose();
         }
 
-#ifdef WITH_DERIVATIVE_CHECK
-        Eigen::MatrixXd jac_g_approx = eval_jac_g_approx(*this, sigma);
-        if (!compare_jacobian(jac_g, jac_g_approx)) {
-            spdlog::error(
-                "barrier_rigid_body status=fail "
-                "message='constraint jacobian finite-differences failed'");
-        }
-#endif
         return jac_g;
     }
 
     std::vector<Eigen::SparseMatrix<double>>
-    DistanceBarrierRBProblem::eval_hessian_g_core(const Eigen::VectorXd& sigma)
+    DistanceBarrierRBProblem::eval_hessian_g_core(const Eigen::VectorXd& sigma,
+        const EdgeVertexCandidates& distance_candidates)
     {
         std::vector<Eigen::SparseMatrix<double>> gx_hessian;
-        gx_hessian.resize(size_t(constraint_.number_of_constraints()));
+        gx_hessian.resize(distance_candidates.size());
 
         typedef AutodiffType<6> Diff;
         typedef Eigen::Triplet<double> M;
         std::vector<M> triplets;
 
-        const auto& distance_candidates = constraint_.ev_distance_active();
         for (size_t i = 0; i < distance_candidates.size(); ++i) {
             const auto& ev_candidate = distance_candidates[i];
 
@@ -214,17 +242,8 @@ namespace opt {
             Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
             global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
 
-            size_t cstr_id = constraint_.ev_distance_active_map(i);
+            size_t cstr_id = i;
             gx_hessian[cstr_id] = global_el_hessian;
-        }
-
-        /// fill in for collisions
-        Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
-        for (size_t i : constraint_.ev_impact_active_map()) {
-            gx_hessian[i] = global_el_hessian;
-        }
-        for (size_t i : constraint_.ev_inactive_map()) {
-            gx_hessian[i] = global_el_hessian;
         }
 
         return gx_hessian;
@@ -285,6 +304,67 @@ namespace opt {
         rbc.vertex_local_id = lv_id;
         rbc.edge0_local_id = le0_id;
         rbc.edge1_local_id = le1_id;
+    }
+
+    bool DistanceBarrierRBProblem::compare_jac_g(const Eigen::VectorXd& sigma,
+        const EdgeVertexCandidates& ev_candidates,
+        const Eigen::MatrixXd& jac_g)
+    {
+        auto fx = eval_g(sigma);
+        auto jac_full = eval_jac_g_full(sigma, ev_candidates);
+        double norm = (jac_full - jac_g).norm();
+        if (norm >= 1e-16) {
+            spdlog::error("gradients dont match norm={:10e}", norm);
+        }
+        auto jac_approx = eval_jac_g_approx(sigma, ev_candidates);
+        double norm_approx = (jac_full - jac_approx).norm();
+        if (norm_approx >= 1e-6) {
+            spdlog::warn("finite differences gradients dont match jac_diff_norm={:10e} gx.norm()={:.10e}", norm_approx, fx.norm());
+        }
+        return norm < 1e-16;
+
+    }
+
+    Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_approx(
+        const Eigen::VectorXd& sigma, const EdgeVertexCandidates& ev_candidates)
+    {
+
+        auto func_g = [&](const Eigen::VectorXd& sigma_k) -> Eigen::VectorXd {
+            Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma_k;
+            Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
+
+            EdgeVertexCandidates local_ev_candidates;
+            auto check
+                = constraint_.get_active_barrier_set(uk, local_ev_candidates);
+            if (check != DistanceBarrierConstraint::NO_COLLISIONS) {
+                throw std::logic_error("finite diff causes collision");
+            }
+            if (local_ev_candidates.size() != ev_candidates.size()) {
+                throw std::logic_error("finite diff changes condidates set");
+            }
+            Eigen::VectorXd g_uk;
+            constraint_.compute_candidates_constraints(uk, ev_candidates, g_uk);
+            return g_uk;
+        };
+
+        Eigen::MatrixXd jac;
+        bool success = false;
+        double eps = 1e-8;
+        while (!success && eps > 0.0) {
+            try {
+                ccd::finite_jacobian(
+                    sigma, func_g, jac, AccuracyOrder::SECOND, eps);
+                success = true;
+                spdlog::warn("finite differences computed with eps={:.18e} epsilon={:.18e}", eps, this->get_barrier_epsilon());
+            } catch (std::logic_error e) {
+                spdlog::warn(e.what());
+                eps = eps / 2.0;
+            }
+        }
+        if (!success){
+            spdlog::warn("failed to compute finite differences");
+        }
+        return jac;
     }
 
 } // namespace opt

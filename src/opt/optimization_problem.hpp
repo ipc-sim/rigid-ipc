@@ -42,21 +42,12 @@ namespace opt {
     ///           g(x) >= 0
     ///
 
-    enum class CstrSetFlag { UPDATE_CSTR_SET = 0, KEEP_CSTR_SET };
-
     class IConstraintedProblem : public virtual IUnconstraintedProblem {
     public:
         virtual ~IConstraintedProblem() = default;
 
         /// @brief eval_g evaluates constraints at point x
         virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) = 0;
-
-        /// \brief eval_g_set: evals the constraints with option of updating or
-        /// freezing constraint set
-        ///
-        virtual Eigen::VectorXd eval_g_set(
-            const Eigen::VectorXd& x, const CstrSetFlag flag)
-            = 0;
 
         /// @brief eval_jac_g evaluates constraints jacobian at point x
         virtual Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) = 0;
@@ -115,10 +106,6 @@ namespace opt {
     public:
         virtual ~IBarrierProblem() = default;
 
-        virtual double eval_f_set(
-            const Eigen::VectorXd& x, const CstrSetFlag flag)
-            = 0;
-
         virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
             double& f_uk,
             Eigen::VectorXd& f_uk_jacobian)
@@ -141,8 +128,6 @@ namespace opt {
     Eigen::MatrixXd eval_hess_f_approx(
         IUnconstraintedProblem& problem, const Eigen::VectorXd& x);
 
-    Eigen::MatrixXd eval_jac_g_approx(
-        IConstraintedProblem& problem, const Eigen::VectorXd& x);
 
 } // namespace opt
 } // namespace ccd

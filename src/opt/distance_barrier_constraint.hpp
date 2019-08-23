@@ -14,8 +14,8 @@ namespace opt {
 
     class DistanceBarrierConstraint : public CollisionConstraint {
     public:
-
         typedef AutodiffType<6> Diff;
+        enum CollisionCheck { HAS_COLLISION = 0, NO_COLLISIONS };
 
         DistanceBarrierConstraint();
         DistanceBarrierConstraint(const std::string& name);
@@ -23,16 +23,16 @@ namespace opt {
         void settings(const nlohmann::json& json) override;
         nlohmann::json settings() const override;
 
-        double get_barrier_epsilon () { return m_barrier_epsilon; }
+        double get_barrier_epsilon() { return m_barrier_epsilon; }
         void set_barrier_epsilon(const double eps) { m_barrier_epsilon = eps; }
 
-        void initialize(const Eigen::MatrixX2d& vertices,
+        EdgeVertexImpacts initialize(const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
             const Eigen::VectorXi& group_ids,
             const Eigen::MatrixXd& Uk) override;
 
-        void update_collision_set(const Eigen::MatrixXd& Uk) override;
-        void update_active_set(const Eigen::MatrixXd& Uk);
+        CollisionCheck get_active_barrier_set(
+            const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers);
 
         void compute_constraints(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers);
@@ -41,6 +41,20 @@ namespace opt {
             const Eigen::MatrixXd& Uk, Eigen::MatrixXd& barriers_jacobian);
 
         void compute_constraints_hessian(const Eigen::MatrixXd& Uk,
+            std::vector<Eigen::SparseMatrix<double>>& barriers_hessian);
+
+        template <typename T>
+        void compute_candidates_constraints(
+            const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& Uk,
+            const EdgeVertexCandidates& ev_candidates,
+            Eigen::Matrix<T, Eigen::Dynamic, 1>& barriers);
+
+        void compute_candidates_constraints_jacobian(const Eigen::MatrixXd& Uk,
+            const EdgeVertexCandidates& ev_candidates,
+            Eigen::MatrixXd& barriers_jacobian);
+
+        void compute_candidates_constraints_hessian(const Eigen::MatrixXd& Uk,
+            const EdgeVertexCandidates& ev_candidates,
             std::vector<Eigen::SparseMatrix<double>>& barriers_hessian);
 
         template <typename T>
@@ -56,24 +70,6 @@ namespace opt {
             const Eigen::VectorXd& b,
             const Eigen::VectorXd& c);
 
-        const int& number_of_constraints() { return m_num_constraints; }
-
-        const EdgeVertexCandidates& ev_distance_active()
-        {
-            return m_ev_distance_active;
-        }
-        size_t ev_distance_active_map(const size_t i)
-        {
-            return m_ev_distance_active_map[i];
-        }
-        const std::vector<size_t>& ev_impact_active_map()
-        {
-            return m_ev_impact_active_map;
-        }
-        const std::vector<size_t>& ev_inactive_map()
-        {
-            return m_ev_inactive_map;
-        }
         // Settings
         // ----------
         /// @brief initial epsilon to use in barrier function
@@ -82,26 +78,7 @@ namespace opt {
         double active_constraint_scale;
 
     protected:
-        /// @brief current number of constraints (includes innactive ones)
-        int m_num_constraints;
-        /// @brief current barrier epsilon
         double m_barrier_epsilon;
-
-        /// @brief edge-vertex candidates for Impact and Distance evaluations
-        EdgeVertexCandidates m_ev_candidates;
-
-        /// @brief edge-vertex candidates with an active barrier
-        ///  distance < m_barrier_epsilon * active_cstr_scale
-        EdgeVertexCandidates m_ev_distance_active;
-
-        /// @brief map from m_ev_distance_active to m_ev_candidate
-        std::vector<size_t> m_ev_distance_active_map;
-
-        /// @brief map from ev_impacts to m_ev_candidate
-        std::vector<size_t> m_ev_impact_active_map;
-
-        /// @brief list of inactive constraints
-        std::vector<size_t> m_ev_inactive_map;
     };
 
     template <typename T>

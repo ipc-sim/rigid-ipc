@@ -151,10 +151,9 @@ namespace physics {
         x0 = S * m_assembler.rb_positions_t0();
         num_vars_ = int(x0.size());
 
-        constraint().initialize(vertices_t0, m_assembler.m_edges,
+        original_ev_impacts = constraint().initialize(vertices_t0, m_assembler.m_edges,
             m_assembler.m_vertex_to_body_map, vertices_q1 - vertices_t0);
 
-        original_ev_impacts = constraint().ev_impacts();
         std::sort(original_ev_impacts.begin(), original_ev_impacts.end(),
             ccd::compare_impacts_by_time<ccd::EdgeVertexImpact>);
     }

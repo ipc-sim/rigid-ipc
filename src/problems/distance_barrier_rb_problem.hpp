@@ -41,14 +41,12 @@ namespace opt {
 
         const int& num_constraints() override
         {
-            return constraint_.number_of_constraints();
+            throw NotImplementedError(
+                "DistanceBarrierRBProblemnon-const num_constraints");
         }
 
         ////////////////////////////////////////////////////////////
         /// IBarrierProblem
-
-        Eigen::VectorXd eval_g_set(
-            const Eigen::VectorXd& x, const CstrSetFlag flag) override;
 
         void eval_f_and_fdiff(const Eigen::VectorXd& x,
             double& f_uk,
@@ -82,10 +80,16 @@ namespace opt {
         opt::CollisionConstraint& constraint() override { return constraint_; }
         opt::IStateOptimizationSolver& solver() override { return opt_solver_; }
 
-    protected:
-        void update_constraints(
-            const Eigen::MatrixXd& xk, const CstrSetFlag flag);
+        Eigen::MatrixXd eval_jac_g_full(const Eigen::VectorXd& sigma,
+            const EdgeVertexCandidates& ev_candidates);
+        Eigen::MatrixXd eval_jac_g_approx(const Eigen::VectorXd& sigma,
+            const EdgeVertexCandidates& ev_candidates);
 
+        bool compare_jac_g(const Eigen::VectorXd& x,
+            const EdgeVertexCandidates& ev_candidates,
+            const Eigen::MatrixXd& jac_g);
+
+    protected:
         void extract_local_system(
             const EdgeVertexCandidate& c, RB2Candidate& rbc);
 
@@ -93,9 +97,10 @@ namespace opt {
         T distance_barrier(
             const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
 
-        Eigen::MatrixXd eval_jac_g_core(const Eigen::VectorXd& sigma);
+        Eigen::MatrixXd eval_jac_g_core(
+            const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g_core(
-            const Eigen::VectorXd& sigma);
+            const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
 
         opt::DistanceBarrierConstraint constraint_;
         opt::BarrierSolver opt_solver_;

@@ -29,17 +29,6 @@ namespace opt {
         return hess;
     }
 
-    Eigen::MatrixXd eval_jac_g_approx(
-        IConstraintedProblem& problem, const Eigen::VectorXd& x)
-    {
-
-        Eigen::MatrixXd jac;
-        auto func_g = [&](const Eigen::VectorXd& xk) -> Eigen::VectorXd {
-            return problem.eval_g_set(xk, CstrSetFlag::KEEP_CSTR_SET);
-        };
-        ccd::finite_jacobian(x, func_g, jac, AccuracyOrder::SECOND);
-        return jac;
-    }
 
 } // namespace opt
 } // namespace ccd

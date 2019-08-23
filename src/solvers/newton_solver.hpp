@@ -74,7 +74,7 @@ namespace opt {
             const Eigen::VectorXd& x,
             const Eigen::VectorXd& dir,
             const double fx,
-            double& step_length);
+            double& step_length, bool log_failure=false);
 
         Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
         int iteration_number;     ///< @brief The current iteration number.

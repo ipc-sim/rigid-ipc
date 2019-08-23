@@ -29,11 +29,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
         {
             return x.squaredNorm() / 2.0;
         }
-        double eval_f_set(
-            const Eigen::VectorXd& x, const CstrSetFlag flag) override
-        {
-            return eval_f(x);
-        }
+
 
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override
         {

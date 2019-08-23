@@ -26,8 +26,9 @@ namespace opt {
             Eigen::SparseMatrix<double>& gx_jacobian,
             Eigen::VectorXi& gx_active) override;
 
-        void eval_jac_g_core(
-            const Eigen::VectorXd& x, Eigen::SparseMatrix<double>& jac_gx);
+        void eval_jac_g_core(const Eigen::VectorXd& x,
+            const EdgeEdgeImpacts&,
+            Eigen::SparseMatrix<double>& jac_gx);
 
         const Eigen::VectorXb& is_dof_fixed() override
         {

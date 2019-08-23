@@ -86,18 +86,16 @@ TEST_CASE("Distance Barrier Constraint",
 
         // clang-format on
     }
-    SECTION("Down displacements, Touchin")
+    SECTION("Down displacements, Touching")
     {
         displacements.row(2) << 0.0, -0.5;
         displacements.row(3) << 0.0, -0.5;
 
         // clang-format off
         // loop over edges then vertices
+        expected_barrier.resize(1);
         expected_barrier <<
-            std::numeric_limits<double>::infinity(),
-            spline_barrier<double>(0.5, barrier_epsilon),
-            spline_barrier<double>(0.5, barrier_epsilon),
-            spline_barrier<double>(0.5, barrier_epsilon);
+            std::numeric_limits<double>::infinity();
 
         // clang-format on
     }

@@ -35,25 +35,29 @@ namespace opt {
         return json;
     }
 
-    void VolumeConstraint::initialize(const Eigen::MatrixX2d& vertices,
+    EdgeVertexImpacts VolumeConstraint::initialize(
+        const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges,
         const Eigen::VectorXi& group_ids,
         const Eigen::MatrixXd& Uk)
     {
-        m_ee_impacts.clear();
         m_edge_impact_map.resize(edges.rows());
         m_edge_impact_map.setZero();
 
-        CollisionConstraint::initialize(vertices, edges, group_ids, Uk);
         num_constraints = get_constraints_size(edges.rows());
+        return CollisionConstraint::initialize(vertices, edges, group_ids, Uk);
     }
 
-    void VolumeConstraint::update_collision_set(const Eigen::MatrixXd& Uk)
+    EdgeEdgeImpacts VolumeConstraint::get_ee_collision_set(
+        const Eigen::MatrixXd& Uk)
     {
-        CollisionConstraint::update_collision_set(Uk);
+        auto ev_impacts = get_collision_set(Uk);
+
+        EdgeEdgeImpacts ee_impacts;
         ccd::convert_edge_vertex_to_edge_edge_impacts(
-            edges, m_ev_impacts, m_ee_impacts);
-        prune_impacts(m_ee_impacts, m_edge_impact_map);
+            edges, ev_impacts, ee_impacts);
+        prune_impacts(ee_impacts, m_edge_impact_map);
+        return ee_impacts;
     }
 
     int VolumeConstraint::number_of_constraints() { return num_constraints; }
@@ -61,11 +65,35 @@ namespace opt {
     void VolumeConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk)
     {
+        EdgeEdgeImpacts ee_impacts = get_ee_collision_set(Uk);
+        compute_constraints(Uk, ee_impacts, g_uk);
+    }
+
+    void VolumeConstraint::compute_constraints_jacobian(
+        const Eigen::MatrixXd& Uk, Eigen::SparseMatrix<double>& jac_uk)
+    {
+        EdgeEdgeImpacts ee_impacts = get_ee_collision_set(Uk);
+        compute_constraints_jacobian(Uk, ee_impacts, jac_uk);
+    }
+
+    void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
+        Eigen::VectorXd& g_uk,
+        Eigen::SparseMatrix<double>& g_uk_jacobian,
+        Eigen::VectorXi& g_uk_active)
+    {
+        EdgeEdgeImpacts ee_impacts = get_ee_collision_set(Uk);
+        compute_constraints(Uk, ee_impacts, g_uk, g_uk_jacobian, g_uk_active);
+    }
+
+    void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
+        const EdgeEdgeImpacts& ee_impacts,
+        Eigen::VectorXd& g_uk)
+    {
         g_uk.resize(num_constraints);
         g_uk.setZero();
 
-        for (size_t i = 0; i < m_ee_impacts.size(); ++i) {
-            auto& ee_impact = m_ee_impacts[i];
+        for (size_t i = 0; i < ee_impacts.size(); ++i) {
+            auto& ee_impact = ee_impacts[i];
 
             Eigen::Vector2i e_ij = edges.row(ee_impact.impacted_edge_index);
             Eigen::Vector2i e_kl = edges.row(ee_impact.impacting_edge_index);
@@ -75,7 +103,6 @@ namespace opt {
             node_j = e_ij(1);
             node_k = e_kl(0);
             node_l = e_kl(1);
-
 
             Eigen::VectorXd v_i, v_j, v_k, v_l;
             v_i = vertices.row(node_i);
@@ -126,7 +153,9 @@ namespace opt {
     }
 
     void VolumeConstraint::compute_constraints_jacobian(
-        const Eigen::MatrixXd& Uk, Eigen::SparseMatrix<double>& jac_uk)
+        const Eigen::MatrixXd& Uk,
+        const EdgeEdgeImpacts& ee_impacts,
+        Eigen::SparseMatrix<double>& jac_uk)
     {
 
         typedef Eigen::Triplet<double> M;
@@ -135,8 +164,8 @@ namespace opt {
         typedef AutodiffType<8> Diff;
         Diff::activate();
 
-        for (size_t i = 0; i < m_ee_impacts.size(); ++i) {
-            auto& ee_impact = m_ee_impacts[i];
+        for (size_t i = 0; i < ee_impacts.size(); ++i) {
+            auto& ee_impact = ee_impacts[i];
 
             Eigen::Vector2i e_ij = edges.row(ee_impact.impacted_edge_index);
             Eigen::Vector2i e_kl = edges.row(ee_impact.impacting_edge_index);
@@ -220,23 +249,25 @@ namespace opt {
     }
 
     void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
+        const EdgeEdgeImpacts& ee_impacts,
         Eigen::VectorXd& g_uk,
         Eigen::SparseMatrix<double>& g_uk_jacobian,
         Eigen::VectorXi& g_uk_active)
     {
-        compute_constraints(Uk, g_uk);
-        compute_constraints_jacobian(Uk, g_uk_jacobian);
-        dense_indices(g_uk_active);
+        compute_constraints(Uk, ee_impacts, g_uk);
+        compute_constraints_jacobian(Uk, ee_impacts, g_uk_jacobian);
+        dense_indices(ee_impacts, g_uk_active);
     }
 
-    void VolumeConstraint::dense_indices(Eigen::VectorXi& dense_indices)
+    void VolumeConstraint::dense_indices(
+        const EdgeEdgeImpacts& ee_impacts, Eigen::VectorXi& dense_indices)
     {
-        dense_indices.resize(int(m_ee_impacts.size()) * 2);
+        dense_indices.resize(int(ee_impacts.size()) * 2);
 
         const int num_edges = int(edges.rows());
 
-        for (size_t ee = 0; ee < m_ee_impacts.size(); ++ee) {
-            auto& ee_impact = m_ee_impacts[ee];
+        for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
+            auto& ee_impact = ee_impacts[ee];
 
             long c_ij
                 = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);

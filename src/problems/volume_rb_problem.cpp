@@ -25,10 +25,9 @@ namespace opt {
     {
         Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-        constraint_.update_collision_set(uk);
 
         Eigen::VectorXd g_uk;
-        constraint_.compute_constraints(uk, g_uk);
+        constraint_.compute_constraints(uk,  g_uk);
         return g_uk;
     }
 
@@ -39,15 +38,16 @@ namespace opt {
     {
         Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-        constraint_.update_collision_set(uk);
+        auto ee_impacts = constraint_.get_ee_collision_set(uk);
 
-        constraint_.compute_constraints(uk, g_uk);
-        constraint_.dense_indices(g_uk_active);
-        eval_jac_g_core(sigma, g_uk_jacobian);
+        constraint_.compute_constraints(uk, ee_impacts, g_uk);
+        constraint_.dense_indices(ee_impacts, g_uk_active);
+        eval_jac_g_core(sigma, ee_impacts, g_uk_jacobian);
     }
 
-    void VolumeRBProblem::eval_jac_g_core(
-        const Eigen::VectorXd& sigma, Eigen::SparseMatrix<double>& jac_gx)
+    void VolumeRBProblem::eval_jac_g_core(const Eigen::VectorXd& sigma,
+        const EdgeEdgeImpacts& ee_impacts,
+        Eigen::SparseMatrix<double>& jac_gx)
     {
         typedef AutodiffType<6> Diff;
         Diff::activate();
@@ -57,8 +57,8 @@ namespace opt {
         typedef Eigen::Triplet<double> M;
         std::vector<M> triplets;
 
-        for (size_t i = 0; i < constraint_.m_ee_impacts.size(); ++i) {
-            auto& ee_impact = constraint_.m_ee_impacts[i];
+        for (size_t i = 0; i < ee_impacts.size(); ++i) {
+            auto& ee_impact = ee_impacts[i];
 
             Eigen::Vector2i e_ij
                 = m_assembler.m_edges.row(ee_impact.impacted_edge_index);

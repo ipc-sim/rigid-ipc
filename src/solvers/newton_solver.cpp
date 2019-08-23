@@ -133,7 +133,7 @@ namespace opt {
 
                 PROFILE_START(GRADIENT_LINE_SEARCH)
                 bool found_step_length2
-                    = line_search(problem, x, direction, fx, step_length);
+                    = line_search(problem, x, direction, fx, step_length, true);
                 PROFILE_END(GRADIENT_LINE_SEARCH)
 
                 if (!found_step_length2) {
@@ -141,6 +141,7 @@ namespace opt {
                     exit_reason = "line-search failed";
                     PROFILE_END(SOLVER_STEP);
                     break;
+
                 }
             }
 
@@ -176,7 +177,8 @@ namespace opt {
         const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const double fx,
-        double& step_length)
+        double& step_length,
+        bool log_failure)
     {
 
         PROFILE_POINT("line_search");
@@ -185,16 +187,21 @@ namespace opt {
         double step_norm = (step_length * dir).norm();
         bool success = false;
 
+        std::stringstream debug;
+        debug << "it,step_length,step_norm,obj,fx\n";
         int num_it = 0;
-        auto set_flag = CstrSetFlag::UPDATE_CSTR_SET;
-        while (step_norm >= min_step_length) {
+        //        auto set_flag = CstrSetFlag::UPDATE_CSTR_SET;
+
+        while (step_norm > 0) {
 
             Eigen::VectorXd xi = x + step_length * dir;
-            double fxi = problem.eval_f_set(xi, set_flag);
-            // set_flag = CstrSetFlag::KEEP_CSTR_SET;
+            double fxi = problem.eval_f(xi);
 
             bool min_rule = fxi < fx;
             bool cstr = !std::isinf(fxi);
+
+            debug << fmt::format("{},{:.18e},{:.18e},{:.18e},{:.18e}\n", num_it,
+                step_length, step_norm, fxi, fx);
 
             num_it += 1;
             if (min_rule && cstr) {
@@ -205,6 +212,16 @@ namespace opt {
 
             step_length /= 2.0;
             step_norm = (step_length * dir).norm();
+        }
+
+        if (log_failure && !success) {
+            std::string fout = fmt::format(
+                "{}/linesearch_{}.csv", DATA_OUTPUT_DIR, ccd::log::now());
+            std::ofstream myfile;
+            myfile.open(fout);
+            myfile << debug.str();
+            myfile.close();
+            spdlog::debug("saved failure to `{}`", fout);
         }
 
         PROFILE_MESSAGE(,
