@@ -3,38 +3,63 @@
 #include <array>
 #include <vector>
 
+#include <logger.hpp>
+
 // Based on the functions on https://github.com/PatWie/CppNumericalSolvers
 // and rewritten to use Eigen
 
 namespace ccd {
 
 // Compare if two gradients are close enough.
-bool compare_gradient(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
+bool compare_gradient(const Eigen::VectorXd& x,
+    const Eigen::VectorXd& y,
+    const double test_eps,
+    const std::string& msg)
 {
     assert(x.rows() == y.rows());
 
+    bool same = true;
     for (long d = 0; d < x.rows(); ++d) {
         double scale = std::max(std::max(fabs(x[d]), fabs(y[d])), double(1.0));
-        if (fabs(x[d] - y[d]) > 1e-4 * scale)
-            return false;
+        double abs_diff = fabs(x[d] - y[d]);
+
+        if (abs_diff > test_eps * scale) {
+            spdlog::warn(
+                "{} eps={:.3e} r={} x={:.3e} y={:.3e} |x-y|={:.3e} |x-y|/|x|={:.3e} |x-y|/|y={:3e}",
+                msg, test_eps, d, x(d), y(d), abs_diff, abs_diff / fabs(x(d)),
+                abs_diff / fabs(y(d)));
+            same = false;
+        }
     }
-    return true;
+    return same;
 }
 
-bool compare_jacobian(const Eigen::MatrixXd& x, const Eigen::MatrixXd& y)
+bool compare_jacobian(const Eigen::MatrixXd& x,
+    const Eigen::MatrixXd& y,
+    const double test_eps,
+    const std::string& msg)
 {
     assert(x.rows() == y.rows());
     assert(x.cols() == y.cols());
 
+    bool same = true;
     for (long d = 0; d < x.rows(); ++d) {
         for (long c = 0; c < x.cols(); ++c) {
             double scale
                 = std::max(std::max(fabs(x(d, c)), fabs(y(d, c))), double(1.0));
-            if (fabs(x(d, c) - y(d, c)) > 1e-4 * scale)
-                return false;
+
+            double abs_diff = fabs(x(d, c) - y(d, c));
+
+            if (abs_diff > test_eps * scale) {
+                spdlog::warn(
+                    "{} eps={:.3e} r={} c={} x={:.3e} y={:.3e} |x-y|={:.3e} |x-y|/|x|={:.3e} |x-y|/|y={:3e}",
+                    msg, test_eps, d, c, x(d, c), y(d, c), abs_diff,
+                    abs_diff / fabs(x(d, c)), abs_diff / fabs(y(d, c)));
+                same = false;
+            }
         }
     }
-    return true;
+    return same;
 }
 
 // Compute the gradient of a function at a point using finite differences.

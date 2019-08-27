@@ -82,8 +82,6 @@ namespace opt {
 
         Eigen::MatrixXd eval_jac_g_full(const Eigen::VectorXd& sigma,
             const EdgeVertexCandidates& ev_candidates);
-        Eigen::MatrixXd eval_jac_g_approx(const Eigen::VectorXd& sigma,
-            const EdgeVertexCandidates& ev_candidates);
 
         bool compare_jac_g(const Eigen::VectorXd& x,
             const EdgeVertexCandidates& ev_candidates,
@@ -97,10 +95,17 @@ namespace opt {
         T distance_barrier(
             const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
 
+        template <typename T>
+        T distance(
+            const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
+
         Eigen::MatrixXd eval_jac_g_core(
             const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
+
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g_core(
             const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
+
+        Eigen::VectorXd compute_fd(const Eigen::VectorXd& sigma, const EdgeVertexCandidate&, const double h);
 
         opt::DistanceBarrierConstraint constraint_;
         opt::BarrierSolver opt_solver_;

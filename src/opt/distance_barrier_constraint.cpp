@@ -274,6 +274,13 @@ namespace opt {
         Diff::DDouble2 barrier = distance_barrier<Diff::DDouble2>(da, db, dc);
         return barrier.getHessian();
     }
+<<<<<<< HEAD
+=======
+    double DistanceBarrierConstraint::distance_barrier_grad(const double distance){
+        return opt::spline_barrier_gradient(distance, m_barrier_epsilon);
+    }
+
+>>>>>>> 04f56b29f109d37fe166a0ec4e45e0faf95f3a0a
 
 } // namespace opt
 } // namespace ccd
