@@ -21,11 +21,14 @@ if [ ! -f "$BOX2D_DIR/Testbed/Framework/Main.cpp.bak" ]; then
        $BOX2D_DIR/Testbed/Framework/Main.cpp.bak
 fi
 ln -sf $THIS_DIR/TestEntries.cpp $BOX2D_DIR/Testbed/Tests/TestEntries.cpp
+ln -sf $THIS_DIR/json.hpp $BOX2D_DIR/Testbed/Tests/json.hpp
+ln -sf $THIS_DIR/JSONExample.h $BOX2D_DIR/Testbed/Tests/JSONExample.h
 ln -sf $THIS_DIR/ChainLinks.h $BOX2D_DIR/Testbed/Tests/ChainLinks.h
 ln -sf $THIS_DIR/LineStack.h $BOX2D_DIR/Testbed/Tests/LineStack.h
 ln -sf $THIS_DIR/GroundPlane.h $BOX2D_DIR/Testbed/Tests/GroundPlane.h
 ln -sf $THIS_DIR/Saw.h $BOX2D_DIR/Testbed/Tests/Saw.h
 ln -sf $THIS_DIR/Main.cpp $BOX2D_DIR/Testbed/Framework/Main.cpp
 make -C Build
-cd Testbed
-../Build/bin/x86_64/Debug/Testbed
+if [ $? -eq 0 ]; then
+    cd Testbed; ../Build/bin/x86_64/Debug/Testbed
+fi

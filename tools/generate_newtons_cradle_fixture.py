@@ -9,7 +9,11 @@ import argparse
 from default_fixture import generate_default_fixture
 
 
-def generate_fixture(num_balls: int, num_points: int, walled: bool, rotated: bool):
+def generate_fixture(num_balls: int,
+                     num_points: int,
+                     walled: bool,
+                     rotated: bool,
+                     cor: float) -> dict:
     """Generate a fixture of a N boxes stacked on top of each other."""
     fixture = generate_default_fixture()
     fixture["distance_barrier_constraint"]["custom_initial_epsilon"] = 1e-2
@@ -52,7 +56,7 @@ def generate_fixture(num_balls: int, num_points: int, walled: bool, rotated: boo
         })
 
     fixture["rigid_body_problem"]["gravity"] = [0, 0, 0]
-    fixture["rigid_body_problem"]["coefficient_restitution"] = 1
+    fixture["rigid_body_problem"]["coefficient_restitution"] = cor
 
     return fixture
 
@@ -69,6 +73,8 @@ def main():
                         help="do not put walls on both sides")
     parser.add_argument("--not-rotated", action="store_false", dest="rotated",
                         help="do not rotate alternating balls")
+    parser.add_argument("--cor", type=float, default=-1,
+                        help="coefficient of restitution")
     parser.add_argument("--out-path", metavar="path/to/output.json",
                         type=pathlib.Path, default=None,
                         help="path to save the fixture")
@@ -79,16 +85,16 @@ def main():
                      "fixtures" / "newtons-cradle")
         directory.mkdir(parents=True, exist_ok=True)
         args.out_path = (directory /
-                         "newtons-cradle-num_balls={}-num_points={}{}{}.json".format(
+                         "newtons-cradle-num_balls={:d}-num_points={:d}{}{}-cor={:g}.json".format(
                              args.num_balls, args.num_points,
                              "" if args.walled else "-not-walled",
-                             "" if args.rotated else "-not-rotated"))
+                             "" if args.rotated else "-not-rotated", args.cor))
     args.out_path.parent.mkdir(parents=True, exist_ok=True)
 
     print(args)
 
     fixture = generate_fixture(
-        args.num_balls, args.num_points, args.walled, args.rotated)
+        args.num_balls, args.num_points, args.walled, args.rotated, args.cor)
 
     with open(args.out_path, 'w') as outfile:
         json.dump(fixture, outfile)

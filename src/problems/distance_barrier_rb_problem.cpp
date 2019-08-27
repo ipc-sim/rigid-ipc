@@ -317,12 +317,15 @@ namespace opt {
             spdlog::error("gradients dont match norm={:10e}", norm);
         }
         auto jac_approx = eval_jac_g_approx(sigma, ev_candidates);
+
         double norm_approx = (jac_full - jac_approx).norm();
-        if (norm_approx >= 1e-6) {
-            spdlog::warn("finite differences gradients dont match jac_diff_norm={:10e} gx.norm()={:.10e}", norm_approx, fx.norm());
+        if (jac_full.size() != 0 && compare_jacobian(jac_approx, jac_full)) {
+            spdlog::warn(
+                "finite differences gradients dont match jac_diff_norm={:10e} gx.norm()={:.10e}",
+                norm_approx, fx.norm());
+            std::cout << sigma << std::endl;
         }
         return norm < 1e-16;
-
     }
 
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_approx(
@@ -349,19 +352,21 @@ namespace opt {
 
         Eigen::MatrixXd jac;
         bool success = false;
-        double eps = 1e-8;
+        double eps = 1e-6;
         while (!success && eps > 0.0) {
             try {
                 ccd::finite_jacobian(
                     sigma, func_g, jac, AccuracyOrder::SECOND, eps);
                 success = true;
-                spdlog::warn("finite differences computed with eps={:.18e} epsilon={:.18e}", eps, this->get_barrier_epsilon());
+                spdlog::warn(
+                    "finite differences computed with eps={:.18e} epsilon={:.18e}",
+                    eps, this->get_barrier_epsilon());
             } catch (std::logic_error e) {
                 spdlog::warn(e.what());
                 eps = eps / 2.0;
             }
         }
-        if (!success){
+        if (!success) {
             spdlog::warn("failed to compute finite differences");
         }
         return jac;
