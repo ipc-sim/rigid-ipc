@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include "distance_barrier_constraint.hpp"
 #include <opt/barrier.hpp>
 
@@ -28,7 +30,8 @@ namespace opt {
 
         // Handle cases where c projects onto ab
         T g = ac.dot(ac);
-        return g - e * e / f;
+        T d = g - e * e / f;
+        return d;
     }
 
     template <typename T>
@@ -38,6 +41,11 @@ namespace opt {
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& c)
     {
         T distance = sqrt(point_to_edge_sq_distance<T>(a, b, c));
+        return opt::spline_barrier<T>(distance, m_barrier_epsilon);
+    }
+    template <typename T>
+    T DistanceBarrierConstraint::distance_barrier(const T distance)
+    {
         return opt::spline_barrier<T>(distance, m_barrier_epsilon);
     }
 

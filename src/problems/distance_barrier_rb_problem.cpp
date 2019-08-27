@@ -7,6 +7,9 @@
 #include <logger.hpp>
 #include <profiler.hpp>
 
+#include <complex.h>
+#include <tgmath.h>
+
 namespace ccd {
 
 namespace opt {
@@ -168,6 +171,7 @@ namespace opt {
 
         bool derivative_check = true;
         if (derivative_check) {
+
             assert(compare_jac_g(sigma, ev_candidates, gx_jacobian));
         }
     }
@@ -253,6 +257,15 @@ namespace opt {
     T DistanceBarrierRBProblem::distance_barrier(
         const Eigen::VectorXd& sigma, const RB2Candidate& rbc)
     {
+        T d = distance<T>(sigma, rbc);
+        T barrier = constraint_.distance_barrier<T>(d);
+        return barrier;
+    }
+
+    template <typename T>
+    T DistanceBarrierRBProblem::distance(
+        const Eigen::VectorXd& sigma, const RB2Candidate& rbc)
+    {
         typedef AutodiffType<6> Diff;
 
         Diff::activate();
@@ -284,8 +297,42 @@ namespace opt {
         DTVector2d dc = rbs[size_t(rbc.vertex_body_id)].world_vertex<T>(
             position_V, rbc.vertex_local_id);
 
-        T barrier = constraint_.distance_barrier<T>(da, db, dc);
-        return barrier;
+        T distance = sqrt(point_to_edge_sq_distance<T>(da, db, dc));
+        return distance;
+    }
+
+    template <>
+    double DistanceBarrierRBProblem::distance<double>(
+        const Eigen::VectorXd& sigma, const RB2Candidate& rbc)
+    {
+        typedef Eigen::Matrix<double, 3, 1> DTVector3d;
+        typedef Eigen::Matrix<double, 2, 1> DTVector2d;
+
+        DTVector3d sigma_E, sigma_V, position_E, position_V;
+
+        sigma_V = sigma.segment(3 * rbc.vertex_body_id, 3);
+        sigma_E = sigma.segment(3 * rbc.edge_body_id, 3);
+
+        position_V = sigma_V.array()
+            * m_assembler.m_dof_to_position.diagonal()
+                  .segment(3 * rbc.vertex_body_id, 3)
+                  .array();
+
+        position_E = sigma_E.array()
+            * m_assembler.m_dof_to_position.diagonal()
+                  .segment(3 * rbc.edge_body_id, 3)
+                  .array();
+
+        const auto& rbs = m_assembler.m_rbs;
+        DTVector2d da = rbs[size_t(rbc.edge_body_id)].world_vertex<double>(
+            position_E, rbc.edge0_local_id);
+        DTVector2d db = rbs[size_t(rbc.edge_body_id)].world_vertex<double>(
+            position_E, rbc.edge1_local_id);
+        DTVector2d dc = rbs[size_t(rbc.vertex_body_id)].world_vertex<double>(
+            position_V, rbc.vertex_local_id);
+
+        double distance = sqrt(point_to_edge_sq_distance<double>(da, db, dc));
+        return distance;
     }
 
     void DistanceBarrierRBProblem::extract_local_system(
@@ -306,6 +353,34 @@ namespace opt {
         rbc.edge1_local_id = le1_id;
     }
 
+    Eigen::VectorXd DistanceBarrierRBProblem::compute_fd(
+        const Eigen::VectorXd& sigma,
+        const EdgeVertexCandidate& ev_candidate,
+        const double h)
+    {
+        typedef AutodiffType<6> Diff;
+        typedef Diff::DDouble1 T;
+        Diff::activate();
+
+        RB2Candidate rbc;
+        extract_local_system(ev_candidate, rbc);
+        T d = distance<T>(sigma, rbc);
+
+        // distance finite diff
+        auto f = [&](const Eigen::VectorXd& sigma_k) -> double {
+            double dk = distance<double>(sigma_k, rbc);
+            return dk;
+        };
+
+        Eigen::VectorXd approx_grad;
+        finite_gradient(sigma, f, approx_grad, AccuracyOrder::SECOND, h);
+
+        // chain rule
+        double distance_grad = constraint_.distance_barrier_grad(d.getValue());
+        approx_grad = approx_grad * distance_grad;
+        return approx_grad;
+    }
+
     bool DistanceBarrierRBProblem::compare_jac_g(const Eigen::VectorXd& sigma,
         const EdgeVertexCandidates& ev_candidates,
         const Eigen::MatrixXd& jac_g)
@@ -314,57 +389,22 @@ namespace opt {
         auto jac_full = eval_jac_g_full(sigma, ev_candidates);
         double norm = (jac_full - jac_g).norm();
         if (norm >= 1e-16) {
-            spdlog::error("gradients dont match norm={:10e}", norm);
+            spdlog::error("autodiff_gradients_dont_match norm={:10e}", norm);
         }
-        auto jac_approx = eval_jac_g_approx(sigma, ev_candidates);
-        double norm_approx = (jac_full - jac_approx).norm();
-        if (norm_approx >= 1e-6) {
-            spdlog::warn("finite differences gradients dont match jac_diff_norm={:10e} gx.norm()={:.10e}", norm_approx, fx.norm());
+
+        Eigen::MatrixXd jac_approx(jac_g.rows(), jac_g.cols());
+        assert(jac_approx.rows() == int(ev_candidates.size()));
+        for (size_t i = 0; i < ev_candidates.size(); ++i) {
+            const auto& ev = ev_candidates[i];
+            jac_approx.row(int(i)) = compute_fd(sigma, ev, 1E-7);
         }
+        spdlog::trace("rb_problem chec_finite_diff BEGIN");
+        compare_jacobian(jac_approx, jac_full, 1e-4,
+            fmt::format(
+                "check_finite_diff h=1E-7 barrier_eps={:3e} x=approx y=autodiff",
+                constraint_.get_barrier_epsilon()));
+        spdlog::trace("rb_problem chec_finite_diff END");
         return norm < 1e-16;
-
-    }
-
-    Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_approx(
-        const Eigen::VectorXd& sigma, const EdgeVertexCandidates& ev_candidates)
-    {
-
-        auto func_g = [&](const Eigen::VectorXd& sigma_k) -> Eigen::VectorXd {
-            Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma_k;
-            Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-
-            EdgeVertexCandidates local_ev_candidates;
-            auto check
-                = constraint_.get_active_barrier_set(uk, local_ev_candidates);
-            if (check != DistanceBarrierConstraint::NO_COLLISIONS) {
-                throw std::logic_error("finite diff causes collision");
-            }
-            if (local_ev_candidates.size() != ev_candidates.size()) {
-                throw std::logic_error("finite diff changes condidates set");
-            }
-            Eigen::VectorXd g_uk;
-            constraint_.compute_candidates_constraints(uk, ev_candidates, g_uk);
-            return g_uk;
-        };
-
-        Eigen::MatrixXd jac;
-        bool success = false;
-        double eps = 1e-8;
-        while (!success && eps > 0.0) {
-            try {
-                ccd::finite_jacobian(
-                    sigma, func_g, jac, AccuracyOrder::SECOND, eps);
-                success = true;
-                spdlog::warn("finite differences computed with eps={:.18e} epsilon={:.18e}", eps, this->get_barrier_epsilon());
-            } catch (std::logic_error e) {
-                spdlog::warn(e.what());
-                eps = eps / 2.0;
-            }
-        }
-        if (!success){
-            spdlog::warn("failed to compute finite differences");
-        }
-        return jac;
     }
 
 } // namespace opt

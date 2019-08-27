@@ -62,6 +62,11 @@ namespace opt {
             const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
             const Eigen::Matrix<T, Eigen::Dynamic, 1>& c);
 
+        template <typename T>
+        T distance_barrier(const T distance);
+
+        double distance_barrier_grad(const double distance);
+
         Eigen::VectorXd distance_barrier_grad(const Eigen::VectorXd& a,
             const Eigen::VectorXd& b,
             const Eigen::VectorXd& c);

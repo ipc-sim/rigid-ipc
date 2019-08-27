@@ -27,8 +27,14 @@ Compare if two gradients are close enough.
 @param y The second gradient to compare against.
 @return A boolean for if x and y are close to the same value.
 */
-bool compare_gradient(const Eigen::VectorXd& x, const Eigen::VectorXd& y);
-bool compare_jacobian(const Eigen::MatrixXd& x, const Eigen::MatrixXd& y);
+bool compare_gradient(const Eigen::VectorXd& x,
+    const Eigen::VectorXd& y,
+    const double test_eps = 1e-4,
+    const std::string& msg = "compare_gradient ");
+bool compare_jacobian(const Eigen::MatrixXd& x,
+    const Eigen::MatrixXd& y,
+    const double test_eps = 1e-4,
+    const std::string& msg = "compare_jacobian ");
 /**
 Compute the gradient of a function at a point using finite differences.
 

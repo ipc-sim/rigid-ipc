@@ -8,7 +8,7 @@ namespace opt {
     // Function that grows to infinity as x approaches 0 from the right.
     template <typename T> T spline_barrier(T x, double s)
     {
-        if (x <= 0)
+        if (x <= T(0))
             return T(std::numeric_limits<double>::infinity());
         if (x >= s)
             return T(0);
