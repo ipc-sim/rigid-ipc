@@ -55,8 +55,29 @@ GENERATION_ARGS=""
 OUTPUT_DIR="$RESULTS_DIR/static/stacking/pyramid"
 generate_result_cor_on_off
 
+## Jamming
+
+# Chain
+GENERATION_SCRIPT="generate_chainmail_fixture.py"
+GENERATION_ARGS="10"
+OUTPUT_DIR="$RESULTS_DIR/static/chain"
+generate_result_cor_on_off
+
+### Dynamics
+
+# Newton's Cradle
+GENERATION_SCRIPT="generate_newtons_cradle_fixture.py"
+GENERATION_ARGS="--num-balls 5 --num-points 50"
+OUTPUT_DIR="$RESULTS_DIR/dynamic/newtons-cradle"
+generate_result_cor_on_off
+
+# Saw
+GENERATION_SCRIPT="generate_saw_fixture.py"
+GENERATION_ARGS=""
+OUTPUT_DIR="$RESULTS_DIR/dynamic/saw"
+generate_result_cor_on_off
 
 ### Compress the results and upload them to google drive
 TAR_FNAME=$RESULTS_DIR/../paper-results-$(date +%s).tar.gz
 tar -czvf $TAR_FNAME $RESULTS_DIR
-rclone copy $TAR_FNAME google-drive:
+rclone copy $TAR_FNAME google-drive:fixing-collisions

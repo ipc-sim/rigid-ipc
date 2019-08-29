@@ -254,7 +254,9 @@ public:
 
     static Test* Create()
     {
-        return new JSONExample("../../../comparisons/Box2D/example.box2d.json");
+        // return new
+        // JSONExample("../../../comparisons/Box2D/example.box2d.json");
+        return new JSONExample("../../../fixtures/saw/saw-cor=-1.json");
     }
 
     virtual ~JSONExample()

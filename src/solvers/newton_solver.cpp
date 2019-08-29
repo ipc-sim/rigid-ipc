@@ -142,7 +142,9 @@ namespace opt {
                     PROFILE_END(SOLVER_STEP);
 
                     // Remove this line one we are confident this doesn't happen
-                    throw std::logic_error("gradient line-search failed");
+                    // Keep this line commented until we know the affect of
+                    // failing
+                    // throw std::logic_error("gradient line-search failed");
                 }
             }
 
@@ -195,11 +197,11 @@ namespace opt {
         int num_it = 0;
 
         global_it += 1;
-        //Multiprecision fx = problem.eval_mp_f(x);
+        // Multiprecision fx = problem.eval_mp_f(x);
         while (step_norm > Constants::LINESEARCH_MIN_STEP_NORM) {
 
             Eigen::VectorXd xi = x + step_length * dir;
-            //Multiprecision fxi = problem.eval_mp_f(xi);
+            // Multiprecision fxi = problem.eval_mp_f(xi);
             double fxi = problem.eval_f(xi);
 
             bool min_rule = fxi < fx;

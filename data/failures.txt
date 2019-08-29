@@ -1,0 +1,8 @@
+Namespace(cor=1.0, falling=False, num_blocks=4, out_path=PosixPath('/home/zjf214/fixing-collisions/tools/../results/paper-results/static/stacking/boxes/cor=1/fixture.json'), rotated=False, x_offset=0)
+data/linesearch_2019_08_29_14:54:51.csv
+
+Namespace(cor=1.0, falling=False, num_blocks=4, out_path=PosixPath('/home/zjf214/fixing-collisions/tools/../results/paper-results/static/stacking/off-center/cor=1/fixture.json'), rotated=False, x_offset=0.4)
+data/linesearch_2019_08_29_14:55:38.csv
+
+Namespace(cor=1.0, out_path=PosixPath('/home/zjf214/fixing-collisions/tools/../results/paper-results/static/stacking/pyramid/cor=1/fixture.json'))
+data/linesearch_2019_08_29_15:01:44.csv

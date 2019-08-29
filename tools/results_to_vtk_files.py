@@ -2,21 +2,24 @@ import argparse
 import json
 from pathlib import Path
 
-import numpy as np
 import meshio
+import numpy as np
 
 
 def main(args=[]):
     parser = argparse.ArgumentParser(
         description='Make one vtk file with the sequence')
     parser.add_argument('results_file', metavar='input.json',
-                        type=str,  help='result file to process')
-    parser.add_argument('output_folder', metavar='output/', type=str,
-                        default=".", help='folder where to save output(s)')
+                        type=Path,  help='result file to process')
+    parser.add_argument('output_folder', metavar='output/', type=Path, nargs='?',
+                        default=None, help='folder where to save output(s)')
     args = parser.parse_args()
 
-    fin = Path(args.results_file)
-    dout = Path(args.output_folder)
+    fin = args.results_file
+    if args.output_folder is None:
+        args.output_folder = fin.resolve().parent
+    dout = args.output_folder
+    print(f"Saving to: {dout}")
     dout.mkdir(parents=True, exist_ok=True)
 
     base_name = fin.stem
@@ -109,7 +112,8 @@ def main(args=[]):
             point_data={"time": vertex_time, "velocity": vertex_vel}
         )
         total_E = total_T + total_G
-        total_E_rel = [0] + [ total_E[i+1] - total_E[i] for i in range(0, len(total_E) - 1)]
+        total_E_rel = [0] + [total_E[i + 1] - total_E[i]
+                             for i in range(0, len(total_E) - 1)]
         data = np.column_stack(
             [total_T, total_G, total_E, total_L, total_p, total_E_rel])
         np.savetxt(dout.joinpath("%s_energy.csv" % (base_name)), data, delimiter=',',
