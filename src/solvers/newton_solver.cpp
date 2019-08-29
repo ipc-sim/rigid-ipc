@@ -6,6 +6,7 @@
 
 #include <logger.hpp>
 #include <profiler.hpp>
+#include <constants.hpp>
 
 namespace ccd {
 namespace opt {
@@ -15,7 +16,7 @@ namespace opt {
     {
     }
     NewtonSolver::NewtonSolver(const std::string& name)
-        : absolute_tolerance(1e-5)
+        : absolute_tolerance(Constants::NEWTON_ABSOLUTE_TOLERANCE)
         , min_step_length(1e-12)
         , max_iterations(1000)
         , iteration_number(0)
@@ -70,8 +71,6 @@ namespace opt {
         Eigen::SparseMatrix<double> hessian, hessian_free;
 
         double step_length = 1.0;
-
-        double eps = problem.get_barrier_epsilon();
 
         spdlog::trace(NEWTON_BEGIND_LOG);
         iteration_number = 0;
@@ -195,7 +194,7 @@ namespace opt {
         int num_it = 0;
 
         global_it+=1;
-        while (step_norm > 0) {
+        while (step_norm > Constants::LINESEARCH_MIN_STEP_NORM) {
 
 
             Eigen::VectorXd xi = x + step_length * dir;

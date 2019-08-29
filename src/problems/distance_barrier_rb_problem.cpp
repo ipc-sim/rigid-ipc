@@ -7,8 +7,7 @@
 #include <logger.hpp>
 #include <profiler.hpp>
 
-#include <complex.h>
-#include <tgmath.h>
+#include <constants.hpp>
 
 namespace ccd {
 
@@ -380,8 +379,8 @@ namespace opt {
         exact_grad.segment(3*rbc.vertex_body_id, 3) = local_exact_grad.segment(0,3);
         exact_grad.segment(3*rbc.edge_body_id, 3) = local_exact_grad.segment(3,3);
 
-        finite_gradient(sigma, f, approx_grad, AccuracyOrder::SECOND, 1e-7);
-        if (!compare_gradient(approx_grad, exact_grad, 1e-4,
+        finite_gradient(sigma, f, approx_grad, AccuracyOrder::SECOND, Constants::FINITE_DIFF_H);
+        if (!compare_gradient(approx_grad, exact_grad, Constants::FINITE_DIFF_TEST,
             fmt::format(
                 "check_finite_diff DISTANCE barrier_eps={:3e} d={:3e}",
                                   constraint_.get_barrier_epsilon(), d.getValue()))){
@@ -391,7 +390,7 @@ namespace opt {
         double distance_grad = constraint_.distance_barrier_grad(d.getValue());
         approx_grad = approx_grad * distance_grad;
 
-        compare_gradient(approx_grad, grad, 1e-4,
+        compare_gradient(approx_grad, grad, Constants::FINITE_DIFF_TEST,
             fmt::format(
                 "check_finite_diff BARRIER barrier_eps={:3e} d={:3e}",
                 constraint_.get_barrier_epsilon(), d.getValue()));
@@ -415,7 +414,7 @@ namespace opt {
             compare_fd(sigma, ev, jac_full.row(int(i)));
         }
 
-        return norm < 1e-16;
+        return norm < Constants::FULL_GRADIENT_TEST;
     }
 
 } // namespace opt
