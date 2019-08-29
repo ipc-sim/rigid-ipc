@@ -189,7 +189,7 @@ namespace opt {
         bool success = false;
 
         std::stringstream debug;
-        debug << "it,step_length,step_norm,f(x),fx0,x\n";
+        debug << "global_it,it,step_length,step_norm,f(x),fx0,x\n";
 
         int num_it = 0;
 
