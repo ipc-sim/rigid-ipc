@@ -12,6 +12,13 @@ namespace Constants {
     /// \brief NEWTON_MIN_STEP_NORM used to break linesearch
     static const double LINESEARCH_MIN_STEP_NORM = 0;
 
+    /// \brief TOI_COEFF_EPSILON used to decide when a coeff (a,b,c) is zero.
+    static const double TOI_COEFF_EPSILON = 1E-8;
+
+    /// \brief ALPHA_DIVISION_EPSILON when solving for alpha given a toi,
+    /// to avoid division by zero
+    static const double ALPHA_DIVISION_EPSILON = 1E-8;
+
     // Used for debugging
     // --------------------------------------------------------
     /// \brief FINITE_DIFF_H spacing h of finite differences

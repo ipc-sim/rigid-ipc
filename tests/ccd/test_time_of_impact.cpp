@@ -103,7 +103,7 @@ TEST_CASE("TimeOfImpactRandom", "[collision_detection][toi][random]")
 
 }
 
-TEST_CASE("TimeOfImpact-TODO", "[collision_detection][toi][!shouldfail]")
+TEST_CASE("TimeOfImpactBadCases", "[collision_detection][toi]")
 {
     Eigen::Vector2d Vi, Vj, Vk; // positions
     Eigen::Vector2d Ui, Uj, Uk; // velocities
