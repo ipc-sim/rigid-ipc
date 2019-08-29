@@ -23,7 +23,7 @@ generate_result () {
     # Parameters: GENERATION_SCRIPT, GENERATION_ARGS, OUTPUT_DIR
     python $TOOLS_DIR/$1 $2 --out-path $3/fixture.json
     $BUILD_DIR/FixingCollisions_ngui --scene-path $3/fixture.json \
-        --output-path $3 --num-iterations 1
+        --output-path $3 --num-iterations 1000
     python $TOOLS_DIR/results_to_vtk_files.py $3/sim.json $3
     echo
 }
