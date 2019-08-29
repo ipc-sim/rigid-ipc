@@ -104,10 +104,12 @@ namespace opt {
         Eigen::MatrixXd gx_jacobian = eval_jac_g_core(sigma, ev_candidates);
         PROFILE_END(EVAL)
 
+#ifdef WITH_DERIVATIVE_CHECK
         bool derivative_check = true;
         if (derivative_check) {
             compare_jac_g(sigma, ev_candidates, gx_jacobian);
         }
+#endif
         return gx_jacobian;
     }
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_full(
