@@ -212,7 +212,7 @@ protected:
         // clang-format on
 
         args.merge_patch(args_in);
-        iterations = args["max_iterations"].get<int>();
+        iterations = 10000;
         timestep = args["timestep_size"].get<double>();
 
         friction_coeff
@@ -285,9 +285,9 @@ public:
             settings->pause = true;
             firstCall = false;
         }
-        if (counter > 1000) {
-            settings->pause = true;
-        }
+        // if (counter >= 1000) {
+        //     settings->pause = true;
+        // }
 
         Test::Step(settings);
 

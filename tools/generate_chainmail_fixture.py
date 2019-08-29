@@ -15,15 +15,54 @@ from shapely.ops import cascaded_union
 from default_fixture import generate_default_fixture
 
 
+def create_rotation_matrix(theta: float) -> numpy.ndarray:
+    c, s = numpy.cos(theta), numpy.sin(theta)
+    return numpy.array(((c, -s), (s, c)))
+
+
+def create_rectangle(hx: float, hy: float, center: numpy.ndarray, angle: float) -> Polygon:
+    points = numpy.array([[hx, hy], [-hx, hy], [-hx, -hy], [hx, -hy]])
+    points = points @ create_rotation_matrix(angle).T
+    points += center
+    return Polygon(points)
+
+
 def create_link_polygons():
+    half_thickness = 1e-2
+    width = 6
+    height = 5
+
+    head_hx = width / 2 - 4 * half_thickness - 0.5
+    foot_hx = width / 4 - 4 * half_thickness
+    leg_hy = 2 * height / 7 - half_thickness
+    leg_cy = leg_hy + half_thickness
+    torso_hx = width / 2
+    torso_cy = 2 * leg_cy - half_thickness
+    neck_hy = (height - torso_cy - half_thickness) / 2
+    neck_cy = height - neck_hy - half_thickness
+
     return [
-        Polygon([(1.5, 6), (4.5, 6), (4.5, 7), (1.5, 7)]),
-        Polygon([(2.5, 3.5), (3.5, 3.5), (3.5, 6.5), (2.5, 6.5)]),
-        Polygon([(0, 3), (6, 3), (6, 4), (0, 4)]),
-        Polygon([(0, 0.5), (1, 0.5), (1, 3.5), (0, 3.5)]),
-        Polygon([(0, 0), (2, 0), (2, 1), (0, 1)]),
-        Polygon([(5, 0.5), (6, 0.5), (6, 3.5), (5, 3.5)]),
-        Polygon([(4, 0), (6, 0), (6, 1), (4, 1)]),
+        # Head
+        create_rectangle(head_hx, half_thickness,
+                         numpy.array([width / 2, height - half_thickness]), 0),
+        # Neck
+        create_rectangle(half_thickness, neck_hy,
+                         numpy.array([width / 2, neck_cy]), 0),
+        # # Torso
+        create_rectangle(torso_hx, half_thickness,
+                         numpy.array([torso_hx, torso_cy]), 0),
+        # # Left leg
+        create_rectangle(half_thickness, leg_hy,
+                         numpy.array([half_thickness, leg_cy]), 0),
+        # # Left foot
+        create_rectangle(foot_hx, half_thickness,
+                         numpy.array([foot_hx, half_thickness]), 0),
+        # # Right leg
+        create_rectangle(half_thickness, leg_hy,
+                         numpy.array([width - half_thickness, leg_cy]), 0),
+        # # Right foot
+        create_rectangle(foot_hx, half_thickness,
+                         numpy.array([width - foot_hx, half_thickness]), 0),
     ]
 
 
@@ -37,8 +76,7 @@ def generate_fixture(n_links: int) -> dict:
 
     angle = 90 + 45
     theta = numpy.radians(angle)
-    c, s = numpy.cos(theta), numpy.sin(theta)
-    R = numpy.array(((c, -s), (s, c)))
+    R = create_rotation_matrix(theta)
 
     num_points = vertices.shape[0]
     edges = numpy.hstack([
@@ -46,13 +84,16 @@ def generate_fixture(n_links: int) -> dict:
         numpy.roll(numpy.arange(num_points).reshape(-1, 1), -1)]).tolist()
 
     fixture = generate_default_fixture()
+    fixture["timestep_size"] = 1e-2
+    fixture["distance_barrier_constraint"]["custom_initial_epsilon"] = 1e-3
+    fixture["barrier_solver"]["min_barrier_epsilon"] = 1e-4
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
     for i in range(n_links):
         rigid_bodies.append({
             "vertices": vertices.tolist(),
             "edges": edges,
             "polygons": link_polygons,
-            "position": (R @ numpy.array([0, 6 * n_links - 4.5 * i])).tolist(),
+            "position": (R @ numpy.array([0, -3.5 * i])).tolist(),
             "theta": angle,
             "velocity": [0.0, 0.0, 0.0],
             "is_dof_fixed": numpy.full((3,), i == 0, dtype=bool).tolist()

@@ -120,3 +120,5 @@ results
 distance_AABB.cpp.bak
 
 logs
+
+comparisons/Box2D/example.box2d.json
