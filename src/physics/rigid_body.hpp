@@ -110,6 +110,7 @@ namespace physics {
         /// \brief current timestep velocity (v_x, v_y, v_theta)
         /// current timestep velocity of the center of mass
         Eigen::Vector3d velocity;
+        Eigen::Vector3d velocity_prev; ///> position of previous timestep
 
         /// \brief current timestep position (q_x, q_y, q_theta)
         /// position and orientation of the center of mass

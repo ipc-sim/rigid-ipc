@@ -74,6 +74,8 @@ namespace physics {
             1.0 / moment_of_inertia;
 
         r_max = vertices.rowwise().squaredNorm().maxCoeff();
+
+        velocity_prev = velocity;
     }
 
     Eigen::MatrixXd RigidBody::world_vertices(const Step step) const

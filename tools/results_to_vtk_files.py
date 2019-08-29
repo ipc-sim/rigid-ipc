@@ -108,11 +108,13 @@ def main(args=[]):
             cells={"vertex": vertex_cells},
             point_data={"time": vertex_time, "velocity": vertex_vel}
         )
+        total_E = total_T + total_G
+        total_E_rel = [0] + [ total_E[i+1] - total_E[i] for i in range(0, len(total_E) - 1)]
         data = np.column_stack(
-            [total_T, total_G, total_T + total_G, total_L, total_p])
+            [total_T, total_G, total_E, total_L, total_p, total_E_rel])
         np.savetxt(dout.joinpath("%s_energy.csv" % (base_name)), data, delimiter=',',
                    header=",".join(["kinetic_energy", "potential_energy", "total_energy",
-                                    "angular_momentum", "linear_momentum_x", "linear_momentum_y"]))
+                                    "angular_momentum", "linear_momentum_x", "linear_momentum_y", "total_energy_rel"]))
 
 
 if __name__ == "__main__":

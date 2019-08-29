@@ -124,6 +124,7 @@ namespace physics {
 
         for (auto& rb : m_assembler.m_rbs) {
             rb.position_prev = rb.position;
+            rb.velocity_prev = rb.velocity;
             rb.position = rb_position_next(rb, time_step);
             rb.velocity = (rb.position - rb.position_prev) / time_step;
         }
@@ -151,8 +152,9 @@ namespace physics {
         x0 = S * m_assembler.rb_positions_t0();
         num_vars_ = int(x0.size());
 
-        original_ev_impacts = constraint().initialize(vertices_t0, m_assembler.m_edges,
-            m_assembler.m_vertex_to_body_map, vertices_q1 - vertices_t0);
+        original_ev_impacts
+            = constraint().initialize(vertices_t0, m_assembler.m_edges,
+                m_assembler.m_vertex_to_body_map, vertices_q1 - vertices_t0);
 
         std::sort(original_ev_impacts.begin(), original_ev_impacts.end(),
             ccd::compare_impacts_by_time<ccd::EdgeVertexImpact>);
@@ -268,11 +270,17 @@ namespace physics {
             auto& body_B = m_assembler.m_rbs[body_B_id];
 
             // The velocities of the center of mass
-            const Eigen::Vector2d& V_Aprev = body_A.velocity.head(2);
-            const Eigen::Vector2d& V_Bprev = body_B.velocity.head(2);
+            // at the time of collision!!
+            const Eigen::Vector3d vel_A_prev = body_A.velocity_prev
+                + toi * (body_A.velocity - body_A.velocity_prev);
+            const Eigen::Vector3d vel_B_prev = body_B.velocity_prev
+                + toi * (body_B.velocity - body_B.velocity_prev);
+
+            const Eigen::Vector2d& V_Aprev = vel_A_prev.head(2);
+            const Eigen::Vector2d& V_Bprev = vel_B_prev.head(2);
             // The angular velocities
-            const double& w_Aprev = body_A.velocity(2);
-            const double& w_Bprev = body_B.velocity(2);
+            const double& w_Aprev = vel_A_prev(2);
+            const double& w_Bprev = vel_B_prev(2);
             // The masss
             const double inv_m_A
                 = body_A.is_dof_fixed[0] || body_A.is_dof_fixed[1]
@@ -314,18 +322,12 @@ namespace physics {
             const Eigen::Vector2d v_Aprev = V_Aprev + w_Aprev * r_Aperp_toi;
             const Eigen::Vector2d v_Bprev = V_Bprev + w_Bprev * r_Bperp_toi;
 
-            spdlog::debug("before V_A={} V_B={}",
-                ccd::log::fmt_eigen(body_A.velocity),
-                ccd::log::fmt_eigen(body_B.velocity));
-            spdlog::debug("before v_A={} v_B={}", ccd::log::fmt_eigen(v_Aprev),
-                ccd::log::fmt_eigen(v_Bprev));
-
             // The relative veolicity magnitud BEFORE collision
             const Eigen::Vector2d& n_toi = normals.row(i);
 
             const double vrel_prev_toi
                 = (v_Aprev - v_Bprev).transpose() * n_toi;
-            if (vrel_prev_toi >= 0.0){
+            if (vrel_prev_toi >= 0.0) {
                 continue;
             }
             // solve for the impulses
@@ -343,14 +345,11 @@ namespace physics {
             Eigen::Vector2d V_B_delta = -inv_m_B * j * n_toi;
             double w_A_delta = inv_I_A * j * nr_A_toi;
             double w_B_delta = -inv_I_B * j * nr_B_toi;
-            body_A.velocity.head(2) += V_A_delta;
-            body_B.velocity.head(2) += V_B_delta;
+            body_A.velocity.head(2) = V_Aprev + V_A_delta;
+            body_B.velocity.head(2) = V_Bprev + V_B_delta;
 
-            body_A.velocity(2) += w_A_delta;
-            body_B.velocity(2) += w_B_delta;
-            spdlog::debug("after V_A={} V_B={}",
-                ccd::log::fmt_eigen(body_A.velocity),
-                ccd::log::fmt_eigen(body_B.velocity));
+            body_A.velocity(2) = w_Aprev + w_A_delta;
+            body_B.velocity(2) = w_Bprev + w_B_delta;
         }
     }
 
