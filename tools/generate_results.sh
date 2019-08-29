@@ -1,4 +1,15 @@
 #!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=2:00:00
+#SBATCH --mem=16GB
+#SBATCH --job-name=generate_results
+#SBATCH --mail-type=END
+#SBATCH --mail-user=zfergus@nyu.edu
+#SBATCH --output=results/logs/simulation-%j.out
+#SBATCH --error=results/logs/simulation-%j.err
+
 # Script to generate the results for the paper.
 
 # Save the directory of this file
