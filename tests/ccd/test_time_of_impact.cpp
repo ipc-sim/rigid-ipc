@@ -152,16 +152,10 @@ void check_toi(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
     const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk,
     const double toi_expected)
 {
-    // check original code
-    double toi_actual, alpha;
-    bool has_collision = ccd::compute_edge_vertex_time_of_impact(
-        Vi, Vj, Vk, Ui, Uj, Uk, toi_actual, alpha);
-    CHECK(has_collision);
-    CHECK(toi_expected == Approx(toi_actual));
-
+    double toi_actual;
     // check autodiff code
     toi_actual = -1.0;
-    has_collision = ccd::autodiff::compute_edge_vertex_time_of_impact(
+    bool has_collision = ccd::autodiff::compute_edge_vertex_time_of_impact(
         Vi, Vj, Vk, Ui, Uj, Uk, toi_actual);
     CHECK(has_collision);
     CHECK(toi_expected == Approx(toi_actual));
