@@ -188,6 +188,15 @@ target_link_libraries(${PROJECT_NAME} PUBLIC nlopt::nlopt)
 # Logger
 target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog)
 
+#### GMP
+#find_package(GMP)
+#if(NOT ${GMP_FOUND})
+#        MESSAGE(FATAL_ERROR "Cannot find GMP")
+#endif()
+#target_include_directories(${PROJECT_NAME} PUBLIC ${GMP_INCLUDE_DIRS})
+#target_link_libraries(${PROJECT_NAME} PUBLIC ${GMP_LIBRARIES})
+####
+
 # Ipopt
 if(ENABLE_IPOPT)
     find_package(IPOPT)

@@ -41,6 +41,8 @@ namespace opt {
         const int& num_vars() override { return num_vars_; }
         const Eigen::VectorXb& is_dof_fixed() override;
 
+        Multiprecision eval_mp_f(const Eigen::VectorXd& x) override;
+
         IBarrierGeneralProblem* general_problem;
         Eigen::VectorXd x0;
 

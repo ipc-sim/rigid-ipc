@@ -8,6 +8,7 @@
 #include <profiler.hpp>
 
 #include <constants.hpp>
+#include <multiprecision.hpp>
 
 namespace ccd {
 
@@ -55,6 +56,33 @@ namespace opt {
         return g_uk;
     }
 
+    Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> DistanceBarrierRBProblem::eval_mp_g(
+        const Eigen::VectorXd& sigma)
+    {
+//        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+//        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
+
+        Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> g_uk;
+//        EdgeVertexCandidates ev_candidates;
+//        auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
+
+//        if (check == DistanceBarrierConstraint::HAS_COLLISION) {
+            g_uk.resize(1);
+            g_uk(0) = Multiprecision(std::numeric_limits<double>::infinity(), 256);
+
+//        } else {
+//            Eigen::Matrix<Multiprecision, Eigen::Dynamic, Eigen::Dynamic> uk_mp;
+
+//            uk_mp.resizeLike(uk);
+//            for (int i = 0; i < uk.size(); ++i) {
+//                uk_mp(i) = Multiprecision(uk(i), 256);
+//            }
+//            constraint_.compute_candidates_constraints<Multiprecision>(
+//                uk_mp, ev_candidates, g_uk);
+//        }
+        return g_uk;
+
+    }
 
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g(
         const Eigen::VectorXd& sigma)
@@ -376,14 +404,18 @@ namespace opt {
         Eigen::VectorXd exact_grad(sigma.rows());
         Eigen::VectorXd local_exact_grad = d.getGradient();
         exact_grad.setZero();
-        exact_grad.segment(3*rbc.vertex_body_id, 3) = local_exact_grad.segment(0,3);
-        exact_grad.segment(3*rbc.edge_body_id, 3) = local_exact_grad.segment(3,3);
+        exact_grad.segment(3 * rbc.vertex_body_id, 3)
+            = local_exact_grad.segment(0, 3);
+        exact_grad.segment(3 * rbc.edge_body_id, 3)
+            = local_exact_grad.segment(3, 3);
 
-        finite_gradient(sigma, f, approx_grad, AccuracyOrder::SECOND, Constants::FINITE_DIFF_H);
-        if (!compare_gradient(approx_grad, exact_grad, Constants::FINITE_DIFF_TEST,
-            fmt::format(
-                "check_finite_diff DISTANCE barrier_eps={:3e} d={:3e}",
-                                  constraint_.get_barrier_epsilon(), d.getValue()))){
+        finite_gradient(sigma, f, approx_grad, AccuracyOrder::SECOND,
+            Constants::FINITE_DIFF_H);
+        if (!compare_gradient(approx_grad, exact_grad,
+                Constants::FINITE_DIFF_TEST,
+                fmt::format(
+                    "check_finite_diff DISTANCE barrier_eps={:3e} d={:3e}",
+                    constraint_.get_barrier_epsilon(), d.getValue()))) {
         }
 
         // barrier finite diff - chain rule
@@ -391,8 +423,7 @@ namespace opt {
         approx_grad = approx_grad * distance_grad;
 
         compare_gradient(approx_grad, grad, Constants::FINITE_DIFF_TEST,
-            fmt::format(
-                "check_finite_diff BARRIER barrier_eps={:3e} d={:3e}",
+            fmt::format("check_finite_diff BARRIER barrier_eps={:3e} d={:3e}",
                 constraint_.get_barrier_epsilon(), d.getValue()));
     }
 

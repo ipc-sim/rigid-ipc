@@ -7,6 +7,8 @@
 #include <utils/eigen_ext.hpp>
 #include <utils/not_implemented_error.hpp>
 
+#include <multiprecision.hpp>
+
 namespace ccd {
 namespace opt {
 
@@ -24,6 +26,12 @@ namespace opt {
 
         /// @brief Evaulate the objective function.
         virtual double eval_f(const Eigen::VectorXd& x) = 0;
+
+        /// @brief Evaulate the objective function.
+        virtual Multiprecision eval_mp_f(const Eigen::VectorXd& x)
+        {
+            throw NotImplementedError("eval_mp_f");
+        }
 
         /// @brief Evaulate the gradient of the objective function.
         virtual Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) = 0;
@@ -74,7 +82,6 @@ namespace opt {
             = 0;
 
         virtual const Eigen::VectorXb& is_dof_fixed() = 0;
-
     };
 
     class IBarrierGeneralProblem : public virtual IConstraintedProblem {
@@ -100,6 +107,12 @@ namespace opt {
         virtual double get_barrier_epsilon() = 0;
         virtual void set_barrier_epsilon(const double eps) = 0;
         virtual const Eigen::VectorXb& is_dof_fixed() = 0;
+
+        virtual Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> eval_mp_g(
+            const Eigen::VectorXd& x)
+        {
+            throw NotImplementedError("eval_mp_g");
+        };
     };
 
     class IBarrierProblem : public virtual IUnconstraintedProblem {
@@ -127,7 +140,6 @@ namespace opt {
         IUnconstraintedProblem& problem, const Eigen::VectorXd& x);
     Eigen::MatrixXd eval_hess_f_approx(
         IUnconstraintedProblem& problem, const Eigen::VectorXd& x);
-
 
 } // namespace opt
 } // namespace ccd

@@ -161,6 +161,16 @@ namespace opt {
         return f_uk + gx;
     }
 
+    Multiprecision BarrierProblem::eval_mp_f(const Eigen::VectorXd& /*x*/) {
+
+//        double f_uk = general_problem->eval_f(x);
+//        auto gx_ = general_problem->eval_mp_g(x);
+//        Multiprecision gx = gx_.sum();
+
+//        return f_uk + gx;
+        return 0;
+    }
+
     Eigen::VectorXd BarrierProblem::eval_grad_f(const Eigen::VectorXd& x)
     {
 

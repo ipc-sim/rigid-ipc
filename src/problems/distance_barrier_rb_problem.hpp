@@ -5,6 +5,7 @@
 #include <opt/optimization_problem.hpp>
 #include <physics/rigid_body_problem.hpp>
 #include <solvers/barrier_solver.hpp>
+#include <multiprecision.hpp>
 
 namespace ccd {
 
@@ -86,6 +87,8 @@ namespace opt {
         bool compare_jac_g(const Eigen::VectorXd& x,
             const EdgeVertexCandidates& ev_candidates,
             const Eigen::MatrixXd& jac_g);
+
+        Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> eval_mp_g(const Eigen::VectorXd& x) override;
 
     protected:
         void extract_local_system(

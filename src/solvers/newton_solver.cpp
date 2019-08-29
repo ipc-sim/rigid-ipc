@@ -4,9 +4,9 @@
 #include <igl/slice.h>
 #include <igl/slice_into.h>
 
+#include <constants.hpp>
 #include <logger.hpp>
 #include <profiler.hpp>
-#include <constants.hpp>
 
 namespace ccd {
 namespace opt {
@@ -112,9 +112,10 @@ namespace opt {
                 break;
             }
 
-            step_length = 1; //std::min(1.0, 2.0 * step_length);
-//            double step_length_aux
-//                = step_length; // to restore when line-search fails
+            step_length = 1; // std::min(1.0, 2.0 * step_length);
+            //            double step_length_aux
+            //                = step_length; // to restore when line-search
+            //                fails
 
             PROFILE_START(NEWTON_LINE_SEARCH)
             bool found_step_length
@@ -123,7 +124,7 @@ namespace opt {
 
             // Revert to gradient descent if the newton direction fails
             if (!found_step_length) {
-                step_length = 1; //step_length_aux;
+                step_length = 1; // step_length_aux;
 
                 spdlog::warn(NEWTON_DIRECTION_LOG, iteration_number + 1);
 
@@ -181,7 +182,7 @@ namespace opt {
         bool log_failure)
     {
 
-        static int global_it=0;
+        static int global_it = 0;
         PROFILE_POINT("line_search");
         PROFILE_START();
 
@@ -189,23 +190,29 @@ namespace opt {
         bool success = false;
 
         std::stringstream debug;
-        debug << "global_it,it,step_length,step_norm,f(x),fx0,x\n";
+        debug << "global_it,it,step_length,step_norm,f(x),fx0\n";
 
         int num_it = 0;
 
-        global_it+=1;
+        global_it += 1;
+        //Multiprecision fx = problem.eval_mp_f(x);
         while (step_norm > Constants::LINESEARCH_MIN_STEP_NORM) {
 
-
             Eigen::VectorXd xi = x + step_length * dir;
+            //Multiprecision fxi = problem.eval_mp_f(xi);
             double fxi = problem.eval_f(xi);
 
             bool min_rule = fxi < fx;
             bool cstr = !std::isinf(fxi);
+            // bool cstr = !std::isinf(fxi.to_double());
 
-            debug << fmt::format("{},{},{:.18e},{:.18e},{:.18e},{:.18e},{}\n", global_it, num_it,
-                step_length, step_norm, fxi, fx, ccd::log::fmt_eigen(xi));
-
+            // debug <<
+            // fmt::format("{},{},{:.18e},{:.18e},{:.18e},{:.18e}\n",
+            // global_it, num_it,
+            //     step_length, step_norm, fxi.to_double(),
+            //     fx.to_double());
+            debug << fmt::format("{},{},{:.18e},{:.18e},{:.18e},{:.18e}\n",
+                global_it, num_it, step_length, step_norm, fxi, fx);
 
             num_it += 1;
             if (min_rule && cstr) {
