@@ -86,7 +86,7 @@ namespace opt {
 
         // Steepen the barrier
         double eps = barrier_epsilon();
-        general_problem_ptr->set_barrier_epsilon(eps / 2);
+        general_problem_ptr->set_barrier_epsilon(eps / 2.0);
 
         // Start next iteration from the ending optimal position
         barrier_problem_ptr->x0 = results.x;
@@ -185,6 +185,7 @@ namespace opt {
         }
         return f_uk_hessian;
     }
+
 
     void BarrierProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
         double& f_uk,

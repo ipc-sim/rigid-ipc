@@ -113,9 +113,9 @@ namespace opt {
                 break;
             }
 
-            step_length = std::min(1.0, 2.0 * step_length);
-            double step_length_aux
-                = step_length; // to restore when line-search fails
+            step_length = 1; //std::min(1.0, 2.0 * step_length);
+//            double step_length_aux
+//                = step_length; // to restore when line-search fails
 
             PROFILE_START(NEWTON_LINE_SEARCH)
             bool found_step_length
@@ -124,7 +124,7 @@ namespace opt {
 
             // Revert to gradient descent if the newton direction fails
             if (!found_step_length) {
-                step_length = step_length_aux;
+                step_length = 1; //step_length_aux;
 
                 spdlog::warn(NEWTON_DIRECTION_LOG, iteration_number + 1);
 
@@ -140,8 +140,9 @@ namespace opt {
                     spdlog::error(NEWTON_GRADIENT_LOG, iteration_number + 1);
                     exit_reason = "line-search failed";
                     PROFILE_END(SOLVER_STEP);
-                    break;
 
+                    // Remove this line one we are confident this doesn't happen
+                    throw std::logic_error("gradient line-search failed");
                 }
             }
 
@@ -181,6 +182,7 @@ namespace opt {
         bool log_failure)
     {
 
+        static int global_it=0;
         PROFILE_POINT("line_search");
         PROFILE_START();
 
@@ -188,11 +190,13 @@ namespace opt {
         bool success = false;
 
         std::stringstream debug;
-        debug << "it,step_length,step_norm,obj,fx\n";
-        int num_it = 0;
-        //        auto set_flag = CstrSetFlag::UPDATE_CSTR_SET;
+        debug << "it,step_length,step_norm,f(x),fx0,x\n";
 
+        int num_it = 0;
+
+        global_it+=1;
         while (step_norm > 0) {
+
 
             Eigen::VectorXd xi = x + step_length * dir;
             double fxi = problem.eval_f(xi);
@@ -200,8 +204,9 @@ namespace opt {
             bool min_rule = fxi < fx;
             bool cstr = !std::isinf(fxi);
 
-            debug << fmt::format("{},{:.18e},{:.18e},{:.18e},{:.18e}\n", num_it,
-                step_length, step_norm, fxi, fx);
+            debug << fmt::format("{},{},{:.18e},{:.18e},{:.18e},{:.18e},{}\n", global_it, num_it,
+                step_length, step_norm, fxi, fx, ccd::log::fmt_eigen(xi));
+
 
             num_it += 1;
             if (min_rule && cstr) {

@@ -56,6 +56,7 @@ namespace opt {
         return g_uk;
     }
 
+
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g(
         const Eigen::VectorXd& sigma)
     {
@@ -353,10 +354,9 @@ namespace opt {
         rbc.edge1_local_id = le1_id;
     }
 
-    Eigen::VectorXd DistanceBarrierRBProblem::compute_fd(
-        const Eigen::VectorXd& sigma,
+    void DistanceBarrierRBProblem::compare_fd(const Eigen::VectorXd& sigma,
         const EdgeVertexCandidate& ev_candidate,
-        const double h)
+        const Eigen::VectorXd& grad)
     {
         typedef AutodiffType<6> Diff;
         typedef Diff::DDouble1 T;
@@ -372,20 +372,36 @@ namespace opt {
             return dk;
         };
 
+        // distance finite diff
         Eigen::VectorXd approx_grad;
-        finite_gradient(sigma, f, approx_grad, AccuracyOrder::SECOND, h);
+        Eigen::VectorXd exact_grad(sigma.rows());
+        Eigen::VectorXd local_exact_grad = d.getGradient();
+        exact_grad.setZero();
+        exact_grad.segment(3*rbc.vertex_body_id, 3) = local_exact_grad.segment(0,3);
+        exact_grad.segment(3*rbc.edge_body_id, 3) = local_exact_grad.segment(3,3);
 
-        // chain rule
+        finite_gradient(sigma, f, approx_grad, AccuracyOrder::SECOND, 1e-7);
+        if (!compare_gradient(approx_grad, exact_grad, 1e-4,
+            fmt::format(
+                "check_finite_diff DISTANCE barrier_eps={:3e} d={:3e}",
+                                  constraint_.get_barrier_epsilon(), d.getValue()))){
+        }
+
+        // barrier finite diff - chain rule
         double distance_grad = constraint_.distance_barrier_grad(d.getValue());
         approx_grad = approx_grad * distance_grad;
-        return approx_grad;
+
+        compare_gradient(approx_grad, grad, 1e-4,
+            fmt::format(
+                "check_finite_diff BARRIER barrier_eps={:3e} d={:3e}",
+                constraint_.get_barrier_epsilon(), d.getValue()));
     }
 
     bool DistanceBarrierRBProblem::compare_jac_g(const Eigen::VectorXd& sigma,
         const EdgeVertexCandidates& ev_candidates,
         const Eigen::MatrixXd& jac_g)
     {
-        auto fx = eval_g(sigma);
+
         auto jac_full = eval_jac_g_full(sigma, ev_candidates);
         double norm = (jac_full - jac_g).norm();
         if (norm >= 1e-16) {
@@ -396,14 +412,9 @@ namespace opt {
         assert(jac_approx.rows() == int(ev_candidates.size()));
         for (size_t i = 0; i < ev_candidates.size(); ++i) {
             const auto& ev = ev_candidates[i];
-            jac_approx.row(int(i)) = compute_fd(sigma, ev, 1E-7);
+            compare_fd(sigma, ev, jac_full.row(int(i)));
         }
-        spdlog::trace("rb_problem chec_finite_diff BEGIN");
-        compare_jacobian(jac_approx, jac_full, 1e-4,
-            fmt::format(
-                "check_finite_diff h=1E-7 barrier_eps={:3e} x=approx y=autodiff",
-                constraint_.get_barrier_epsilon()));
-        spdlog::trace("rb_problem chec_finite_diff END");
+
         return norm < 1e-16;
     }
 

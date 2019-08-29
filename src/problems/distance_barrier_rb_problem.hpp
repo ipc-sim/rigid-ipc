@@ -105,7 +105,7 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g_core(
             const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
 
-        Eigen::VectorXd compute_fd(const Eigen::VectorXd& sigma, const EdgeVertexCandidate&, const double h);
+        void compare_fd(const Eigen::VectorXd& sigma, const EdgeVertexCandidate&, const Eigen::VectorXd&);
 
         opt::DistanceBarrierConstraint constraint_;
         opt::BarrierSolver opt_solver_;

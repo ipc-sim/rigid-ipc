@@ -4,8 +4,8 @@
 
 namespace ccd {
 namespace autodiff {
-template <typename T>
 
+template <typename T>
 bool temporal_parameterization_to_spatial(const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
     const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,
@@ -39,7 +39,16 @@ template <typename T>
 bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
     const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,
-    T& toi)
+                                        T& toi){
+    T alpha;
+    return compute_edge_vertex_time_of_impact(Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha);
+}
+
+template <typename T>
+bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
+    const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
+    const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,
+    T& toi, T& alpha)
 {
     static const double kEPSILON = 1E-8;
 
@@ -71,7 +80,6 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
         }
     }
     // now check which of the solutions are valid
-    T alpha;
     auto check_solution = [&](T t) {
         return t >= 0 && t <= 1
             && temporal_parameterization_to_spatial(

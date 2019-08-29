@@ -50,6 +50,12 @@ namespace autodiff {
     bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
         const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,
+        T& toi, T& alpha);
+
+    template <typename T>
+    bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
+        const Eigen::Vector2d& Vj, const Eigen::Vector2d& Vk,
+        const Vector2T<T>& Ui, const Vector2T<T>& Uj, const Vector2T<T>& Uk,
         T& toi);
 
 } // namespace autodiff

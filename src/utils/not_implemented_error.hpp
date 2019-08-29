@@ -17,4 +17,16 @@ public:
         : std::logic_error(error_message) {};
 };
 
+class DeprecatedError : public std::logic_error {
+public:
+    /**
+     * Create a not implemented error.
+     *
+     * @param error_message Message describing what has not been implmented.
+     */
+    DeprecatedError(
+        const char* error_message = "Functionality deprecated. Do not use this function!")
+        : std::logic_error(error_message) {};
+};
+
 } // namespace ccd

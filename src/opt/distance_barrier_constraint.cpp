@@ -1,10 +1,13 @@
 #include "distance_barrier_constraint.hpp"
 
 #include <ccd/collision_detection.hpp>
+#include <ccd/time_of_impact.hpp>
 #include <igl/slice_mask.h>
 
 #include <opt/barrier.hpp>
 #include <profiler.hpp>
+
+#include <logger.hpp>
 
 namespace ccd {
 namespace opt {
@@ -52,7 +55,7 @@ namespace opt {
 
     DistanceBarrierConstraint::CollisionCheck
     DistanceBarrierConstraint::get_active_barrier_set(
-        const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers)
+        const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers) const
     {
         NAMED_PROFILE_POINT(
             "distance_barrier__update_collision_set", BROAD_PHASE)
@@ -71,13 +74,15 @@ namespace opt {
         for (size_t i = 0; i < ev_candidates.size(); i++) {
             const EdgeVertexCandidate& ev_candidate = ev_candidates[i];
             double toi, alpha;
-            bool active_impact = compute_edge_vertex_time_of_impact(
+
+            bool active_impact = ccd::autodiff::compute_edge_vertex_time_of_impact<double>(
                 vertices.row(edges(ev_candidate.edge_index, 0)),
                 vertices.row(edges(ev_candidate.edge_index, 1)),
                 vertices.row(ev_candidate.vertex_index),
                 Uk.row(edges(ev_candidate.edge_index, 0)),
                 Uk.row(edges(ev_candidate.edge_index, 1)),
-                Uk.row(ev_candidate.vertex_index), toi, alpha);
+                Uk.row(ev_candidate.vertex_index), toi);
+
 
             if (active_impact) {
                 return DistanceBarrierConstraint::HAS_COLLISION;
@@ -112,6 +117,45 @@ namespace opt {
             compute_candidates_constraints(Uk, ev_candidates, barriers);
         }
     }
+
+    void DistanceBarrierConstraint::compute_distances(
+        const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers) const
+    {
+        EdgeVertexCandidates ev_candidates;
+        auto check = get_active_barrier_set(Uk, ev_candidates);
+
+        Eigen::MatrixXd vertices_t1 = vertices + Uk;
+
+        barriers.resize(ev_candidates.size());
+        barriers.setZero();
+        for (size_t i = 0; i < ev_candidates.size(); ++i) {
+            const auto& ev_candidate = ev_candidates[i];
+            // a and b are the endpoints of the edge; c is the vertex
+            long edge_id = ev_candidate.edge_index;
+            int a_id = edges.coeff(edge_id, 0);
+            int b_id = edges.coeff(edge_id, 1);
+            long c_id = ev_candidate.vertex_index;
+            assert(a_id != c_id && b_id != c_id);
+            Eigen::VectorXd a = vertices_t1.row(a_id);
+            Eigen::VectorXd b = vertices_t1.row(b_id);
+            Eigen::VectorXd c = vertices_t1.row(c_id);
+
+            double toi;
+            bool active_impact = ccd::autodiff::compute_edge_vertex_time_of_impact<double>(
+                vertices.row(edges(ev_candidate.edge_index, 0)),
+                vertices.row(edges(ev_candidate.edge_index, 1)),
+                vertices.row(ev_candidate.vertex_index),
+                Uk.row(edges(ev_candidate.edge_index, 0)),
+                Uk.row(edges(ev_candidate.edge_index, 1)),
+                Uk.row(ev_candidate.vertex_index), toi);
+
+            barriers(int(i)) = sqrt(point_to_edge_sq_distance<double>(a, b, c));
+            if (active_impact) {
+                barriers(int(i)) *= -1;
+            }
+        }
+    }
+
     void DistanceBarrierConstraint::compute_constraints_jacobian(
         const Eigen::MatrixXd& Uk, Eigen::MatrixXd& barriers_jacobian)
     {
@@ -132,32 +176,6 @@ namespace opt {
         compute_candidates_constraints_hessian(
             Uk, ev_candidates, barriers_hessian);
     }
-
-//    void DistanceBarrierConstraint::compute_candidates_constraints(
-//        const Eigen::MatrixXd& Uk,
-//        const EdgeVertexCandidates& ev_candidates,
-//        Eigen::VectorXd& barriers)
-//    {
-//        // distance barrier is evaluated at end-positions
-//        Eigen::MatrixXd vertices_t1 = vertices + Uk;
-
-//        barriers.resize(ev_candidates.size());
-//        barriers.setZero();
-//        for (size_t i = 0; i < ev_candidates.size(); ++i) {
-//            const auto& ev_candidate = ev_candidates[i];
-//            // a and b are the endpoints of the edge; c is the vertex
-//            long edge_id = ev_candidate.edge_index;
-//            int a_id = edges.coeff(edge_id, 0);
-//            int b_id = edges.coeff(edge_id, 1);
-//            long c_id = ev_candidate.vertex_index;
-//            assert(a_id != c_id && b_id != c_id);
-//            Eigen::VectorXd a = vertices_t1.row(a_id);
-//            Eigen::VectorXd b = vertices_t1.row(b_id);
-//            Eigen::VectorXd c = vertices_t1.row(c_id);
-
-//            barriers(int(i)) = distance_barrier<double>(a, b, c);
-//        }
-//    }
 
     void DistanceBarrierConstraint::compute_candidates_constraints_jacobian(
         const Eigen::MatrixXd& Uk,
@@ -274,10 +292,11 @@ namespace opt {
         Diff::DDouble2 barrier = distance_barrier<Diff::DDouble2>(da, db, dc);
         return barrier.getHessian();
     }
-    double DistanceBarrierConstraint::distance_barrier_grad(const double distance){
+    double DistanceBarrierConstraint::distance_barrier_grad(
+        const double distance)
+    {
         return opt::spline_barrier_gradient(distance, m_barrier_epsilon);
     }
-
 
 } // namespace opt
 } // namespace ccd

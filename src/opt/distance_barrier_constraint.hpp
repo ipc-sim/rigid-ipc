@@ -32,7 +32,7 @@ namespace opt {
             const Eigen::MatrixXd& Uk) override;
 
         CollisionCheck get_active_barrier_set(
-            const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers);
+            const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers) const;
 
         void compute_constraints(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers);
@@ -74,6 +74,10 @@ namespace opt {
         Eigen::MatrixXd distance_barrier_hess(const Eigen::VectorXd& a,
             const Eigen::VectorXd& b,
             const Eigen::VectorXd& c);
+
+        // DEBUG !!!
+        void compute_distances(
+            const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers) const;
 
         // Settings
         // ----------
