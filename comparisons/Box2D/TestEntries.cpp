@@ -46,6 +46,7 @@
 #include "GroundPlane.h"
 #include "HeavyOnLight.h"
 #include "HeavyOnLightTwo.h"
+#include "JSONExample.h"
 #include "LineStack.h"
 #include "Mobile.h"
 #include "MobileBalanced.h"
@@ -80,9 +81,10 @@
 
 // clang-format off
 TestEntry g_testEntries[] = {
+    { "JSON",  JSONExample::Create },
     { "Chain Links",  ChainLinks::Create },
-    { "Simple Chain Links", SimpleChainLinks::Create },
-    // { "Simple Chain Links", ChainLinks::CreateThin },
+    // { "Simple Chain Links", SimpleChainLinks::Create },
+    { "Simple Chain Links", ChainLinks::CreateThin },
     { "Saw", Saw::Create },
     { "Ground Plane", GroundPlane::Create },
     { "Line Stack", LineStack::Create },

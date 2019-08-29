@@ -60,7 +60,7 @@ namespace physics {
         }
         m_rb_mass_matrix = Eigen::SparseDiagonal<double>(mass_vector);
         m_position_to_dof = Eigen::SparseDiagonal<double>(scaling_vector);
-        m_dof_to_position =  m_position_to_dof.cwiseInverse();
+        m_dof_to_position = m_position_to_dof.cwiseInverse();
 
         // particles mass-matrix
         Eigen::VectorXd vertex_masses;
@@ -125,8 +125,6 @@ namespace physics {
         }
         return V;
     }
-
-
 
     Eigen::MatrixXd RigidBodyAssembler::world_velocities() const
     {

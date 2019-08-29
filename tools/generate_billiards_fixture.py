@@ -38,9 +38,11 @@ def generate_fixture(num_points: int):
     y = numpy.sin(numpy.arange(num_points, dtype=float) /
                   num_points * 2 * numpy.pi) * radius
     ball = {
-        "vertices": numpy.hstack([x.reshape(-1, 1), y.reshape(-1, 1)]).tolist(),
-        "edges": numpy.hstack([numpy.arange(num_points).reshape(-1, 1),
-                               numpy.roll(numpy.arange(num_points).reshape(-1, 1), -1)]).tolist(),
+        "vertices": numpy.hstack(
+            [x.reshape(-1, 1), y.reshape(-1, 1)]).tolist(),
+        "edges": numpy.hstack([
+            numpy.arange(num_points).reshape(-1, 1),
+            numpy.roll(numpy.arange(num_points).reshape(-1, 1), -1)]).tolist(),
         "oriented": True,
         "velocity": [0.0, 0.0, 0.0],
         "is_dof_fixed": [False, False, False]

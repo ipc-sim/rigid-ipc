@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3
 """Script to generate a fixture of a box falling on a saw."""
 
-import sys
+import argparse
 import json
 import numpy
 import pathlib
@@ -9,7 +9,7 @@ import pathlib
 from default_fixture import generate_default_fixture
 
 
-def generate_fixture():
+def generate_fixture(cor):
     """Generate a fixture of a chain with N simple links."""
     fixture = generate_default_fixture()
     fixture["distance_barrier_constraint"]["custom_initial_epsilon"] = 1e-2
@@ -41,24 +41,33 @@ def generate_fixture():
             })
 
     fixture["rigid_body_problem"]["gravity"] = [0, -9.81, 0]
-    fixture["rigid_body_problem"]["coefficient_restitution"] = -1
+    fixture["rigid_body_problem"]["coefficient_restitution"] = cor
 
     return fixture
 
 
 def main():
     """Parse command-line arguments to generate the desired fixture."""
-    fixture = generate_fixture()
+    parser = argparse.ArgumentParser(
+        description="generate a pyramid of blocks")
+    parser.add_argument("--cor", type=float, default=-1,
+                        help="coefficient of restitution")
+    parser.add_argument("--out-path", metavar="path/to/output.json",
+                        type=pathlib.Path, default=None,
+                        help="path to save the fixture")
+    args = parser.parse_args()
 
-    if(len(sys.argv) > 1):
-        out_path = pathlib.Path(sys.argv[2])
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-    else:
+    if args.out_path is None:
         directory = (pathlib.Path(__file__).resolve().parents[1] /
                      "fixtures" / "stacking")
-        directory.mkdir(parents=True, exist_ok=True)
-        out_path = directory / "pyramid.json"
-    with open(out_path, 'w') as outfile:
+        args.out_path = directory / "pramid-cor={:g}.json".format(args.cor)
+    args.out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    print(args)
+
+    fixture = generate_fixture(args.cor)
+
+    with open(args.out_path, 'w') as outfile:
         json.dump(fixture, outfile)
 
 

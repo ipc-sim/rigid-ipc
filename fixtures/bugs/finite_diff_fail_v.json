@@ -1,0 +1,763 @@
+{
+    "active_args": {
+        "barrier_solver": {
+            "inner_solver": "newton_solver",
+            "max_iterations": 0,
+            "min_barrier_epsilon": 0.0001
+        },
+        "distance_barrier_constraint": {
+            "active_constraint_scale": 1.01,
+            "custom_inital_epsilon": 0.1,
+            "detection_method": "brute_force"
+        },
+        "distance_barrier_rb_problem": {
+            "coefficient_restitution": 0.0,
+            "collision_eps": 0.0,
+            "gravity": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        "newton_solver": {
+            "absolute_tolerance": 1e-05,
+            "max_iterations": 1000,
+            "min_step_length": 1e-12
+        },
+        "scene_type": "distance_barrier_rb_problem",
+        "timestep_size": 0.01
+    },
+    "animation": {
+        "edges": [
+            [
+                0,
+                1
+            ],
+            [
+                2,
+                3
+            ],
+            [
+                2,
+                4
+            ]
+        ],
+        "state_sequence": [
+            {
+                "angular_momentum": 0.0,
+                "kinetic_energy": 1.4866068747318506,
+                "linear_momentum": [
+                    0.0,
+                    -2.973213749463701
+                ],
+                "potential_energy": 0.0,
+                "rigid_bodies": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.8,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            -1.0,
+                            0.0
+                        ]
+                    }
+                ]
+            },
+            {
+                "angular_momentum": 0.0,
+                "kinetic_energy": 1.4866068747318533,
+                "linear_momentum": [
+                    0.0,
+                    -2.973213749463704
+                ],
+                "potential_energy": 0.0,
+                "rigid_bodies": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.79,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            -1.0000000000000009,
+                            0.0
+                        ]
+                    }
+                ]
+            },
+            {
+                "angular_momentum": 0.0,
+                "kinetic_energy": 1.4866068747318533,
+                "linear_momentum": [
+                    0.0,
+                    -2.973213749463704
+                ],
+                "potential_energy": 0.0,
+                "rigid_bodies": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.78,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            -1.0000000000000009,
+                            0.0
+                        ]
+                    }
+                ]
+            },
+            {
+                "angular_momentum": 0.0,
+                "kinetic_energy": 1.4866068747318533,
+                "linear_momentum": [
+                    0.0,
+                    -2.973213749463704
+                ],
+                "potential_energy": 0.0,
+                "rigid_bodies": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.77,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            -1.0000000000000009,
+                            0.0
+                        ]
+                    }
+                ]
+            },
+            {
+                "angular_momentum": 0.0,
+                "kinetic_energy": 1.4866068747318533,
+                "linear_momentum": [
+                    0.0,
+                    -2.973213749463704
+                ],
+                "potential_energy": 0.0,
+                "rigid_bodies": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.76,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            -1.0000000000000009,
+                            0.0
+                        ]
+                    }
+                ]
+            },
+            {
+                "angular_momentum": 0.0,
+                "kinetic_energy": 1.4866068747318533,
+                "linear_momentum": [
+                    0.0,
+                    -2.973213749463704
+                ],
+                "potential_energy": 0.0,
+                "rigid_bodies": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.75,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            -1.0000000000000009,
+                            0.0
+                        ]
+                    }
+                ]
+            },
+            {
+                "angular_momentum": 0.0,
+                "kinetic_energy": 1.4866068747318533,
+                "linear_momentum": [
+                    0.0,
+                    -2.973213749463704
+                ],
+                "potential_energy": 0.0,
+                "rigid_bodies": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.74,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            -1.0000000000000009,
+                            0.0
+                        ]
+                    }
+                ]
+            },
+            {
+                "angular_momentum": 0.0,
+                "kinetic_energy": 1.4866068747318533,
+                "linear_momentum": [
+                    0.0,
+                    -2.973213749463704
+                ],
+                "potential_energy": 0.0,
+                "rigid_bodies": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.73,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            -1.0000000000000009,
+                            0.0
+                        ]
+                    }
+                ]
+            },
+            {
+                "angular_momentum": 0.0,
+                "kinetic_energy": 1.4866068747318533,
+                "linear_momentum": [
+                    0.0,
+                    -2.973213749463704
+                ],
+                "potential_energy": 0.0,
+                "rigid_bodies": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.72,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            -1.0000000000000009,
+                            0.0
+                        ]
+                    }
+                ]
+            },
+            {
+                "angular_momentum": 0.0,
+                "kinetic_energy": 1.4866068747318533,
+                "linear_momentum": [
+                    0.0,
+                    -2.973213749463704
+                ],
+                "potential_energy": 0.0,
+                "rigid_bodies": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.71,
+                            0.0
+                        ],
+                        "velocity": [
+                            0.0,
+                            -1.0000000000000009,
+                            0.0
+                        ]
+                    }
+                ]
+            }
+        ],
+        "vertices_sequence": [
+            [
+                [
+                    -10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.09999999999999998
+                ],
+                [
+                    0.5,
+                    1.5
+                ],
+                [
+                    -0.5,
+                    1.5
+                ]
+            ],
+            [
+                [
+                    -10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.08999999999999997
+                ],
+                [
+                    0.5,
+                    1.49
+                ],
+                [
+                    -0.5,
+                    1.49
+                ]
+            ],
+            [
+                [
+                    -10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.07999999999999996
+                ],
+                [
+                    0.5,
+                    1.48
+                ],
+                [
+                    -0.5,
+                    1.48
+                ]
+            ],
+            [
+                [
+                    -10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.06999999999999995
+                ],
+                [
+                    0.5,
+                    1.47
+                ],
+                [
+                    -0.5,
+                    1.47
+                ]
+            ],
+            [
+                [
+                    -10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.05999999999999994
+                ],
+                [
+                    0.5,
+                    1.46
+                ],
+                [
+                    -0.5,
+                    1.46
+                ]
+            ],
+            [
+                [
+                    -10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.04999999999999993
+                ],
+                [
+                    0.5,
+                    1.45
+                ],
+                [
+                    -0.5,
+                    1.45
+                ]
+            ],
+            [
+                [
+                    -10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.039999999999999925
+                ],
+                [
+                    0.5,
+                    1.44
+                ],
+                [
+                    -0.5,
+                    1.44
+                ]
+            ],
+            [
+                [
+                    -10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.029999999999999916
+                ],
+                [
+                    0.5,
+                    1.43
+                ],
+                [
+                    -0.5,
+                    1.43
+                ]
+            ],
+            [
+                [
+                    -10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.019999999999999907
+                ],
+                [
+                    0.5,
+                    1.42
+                ],
+                [
+                    -0.5,
+                    1.42
+                ]
+            ],
+            [
+                [
+                    -10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.009999999999999898
+                ],
+                [
+                    0.5,
+                    1.41
+                ],
+                [
+                    -0.5,
+                    1.41
+                ]
+            ]
+        ]
+    },
+    "args": {
+        "barrier_solver": {
+            "inner_solver": "newton_solver",
+            "max_iterations": 0,
+            "min_barrier_epsilon": 0.0001
+        },
+        "bfgs_solver": {
+            "absolute_tolerance": 1e-05,
+            "max_iterations": 3000,
+            "min_step_length": 1e-12
+        },
+        "distance_barrier_constraint": {
+            "active_constraint_scale": 1.01,
+            "custom_hashgrid_cellsize": -1,
+            "custom_initial_epsilon": 0.1,
+            "detection_method": "brute_force",
+            "use_distance_hashgrid": true
+        },
+        "gradient_descent_solver": {
+            "absolute_tolerance": 1e-05,
+            "max_iterations": 3000,
+            "min_step_length": 1e-12
+        },
+        "max_iterations": -1,
+        "ncp_solver": {
+            "convergence_tolerance": 1e-06,
+            "do_line_search": false,
+            "lcp_solver": "lcp_gauss_seidel",
+            "max_iterations": 1000,
+            "solve_for_active_cstr": true,
+            "update_type": "linearized"
+        },
+        "newton_solver": {
+            "absolute_tolerance": 1e-05,
+            "max_iterations": 3000,
+            "min_step_length": 1e-10
+        },
+        "particles_problem": {
+            "collision_eps": 0.0,
+            "edges": [],
+            "gravity": [
+                0.0,
+                0.0
+            ],
+            "velocities": [],
+            "vertices": [],
+            "x_fixed": [],
+            "y_fixed": []
+        },
+        "rigid_body_problem": {
+            "coefficient_restitution": 0.0,
+            "collision_eps": 0.0,
+            "gravity": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rigid_bodies": [
+                {
+                    "edges": [
+                        [
+                            0,
+                            1
+                        ]
+                    ],
+                    "is_dof_fixed": [
+                        true,
+                        true,
+                        true
+                    ],
+                    "vertices": [
+                        [
+                            -10,
+                            0
+                        ],
+                        [
+                            10,
+                            0
+                        ]
+                    ]
+                },
+                {
+                    "edges": [
+                        [
+                            0,
+                            1
+                        ],
+                        [
+                            0,
+                            2
+                        ]
+                    ],
+                    "is_dof_fixed": [
+                        false,
+                        false,
+                        false
+                    ],
+                    "velocity": [
+                        0.0,
+                        -1.0,
+                        0.0
+                    ],
+                    "vertices": [
+                        [
+                            0,
+                            0.1
+                        ],
+                        [
+                            0.5,
+                            1.5
+                        ],
+                        [
+                            -0.5,
+                            1.5
+                        ]
+                    ]
+                }
+            ]
+        },
+        "scene_type": "distance_barrier_rb_problem",
+        "time_barrier_constraint": {
+            "custom_hashgrid_cellsize": -1,
+            "custom_initial_epsilon": 1.0,
+            "detection_method": "hash_grid",
+            "initial_epsilon": "min_toi"
+        },
+        "timestep_size": 0.01,
+        "viewport_bbox": {
+            "max": [
+                0,
+                0
+            ],
+            "min": [
+                0,
+                0
+            ]
+        },
+        "volume_constraint": {
+            "custom_hashgrid_cellsize": -1,
+            "detection_method": "hash_grid",
+            "volume_epsilon": 1e-06
+        }
+    }
+}

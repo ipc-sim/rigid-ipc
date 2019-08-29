@@ -22,7 +22,7 @@ namespace physics {
         const Eigen::Vector3d& position,
         const Eigen::Vector3d& velocity)
     {
-        // move vertices so they center of mass is at 0,0
+        // move vertices so their center of mass is at (0, 0)
         Eigen::MatrixXd vertices_ = vertices;
         vertices_.rowwise() += position.head(2).transpose();
 
@@ -80,7 +80,6 @@ namespace physics {
     {
         return world_vertices(step == PREVIOUS_STEP ? position_prev : position);
     }
-
 
     Eigen::MatrixXd RigidBody::world_velocities() const
     {

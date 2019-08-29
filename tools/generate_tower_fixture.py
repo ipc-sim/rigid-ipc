@@ -72,7 +72,6 @@ def main():
     if args.out_path is None:
         directory = (pathlib.Path(__file__).resolve().parents[1] /
                      "fixtures" / "stacking")
-        directory.mkdir(parents=True, exist_ok=True)
         args.out_path = (
             directory / "tower-num_blocks={:d}-cor={:g}-x_offset={:g}{}{}.json".format(
                 args.num_blocks, args.cor, args.x_offset,
