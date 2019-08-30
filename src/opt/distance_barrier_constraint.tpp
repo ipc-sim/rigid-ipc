@@ -1,8 +1,8 @@
 #pragma once
+#include "distance_barrier_constraint.hpp"
 
 #include <iostream>
-
-#include "distance_barrier_constraint.hpp"
+#include <logger.hpp>
 #include <opt/barrier.hpp>
 
 namespace ccd {
@@ -31,6 +31,20 @@ namespace opt {
         // Handle cases where c projects onto ab
         T g = ac.dot(ac);
         T d = g - e * e / f;
+
+#ifdef NDEBUG
+        if (d <= -1E-10) {
+            std::stringstream data;
+            data << d;
+            spdlog::error("negative square distance d={}", data.str());
+        }
+#else
+        assert(d > -1E-10);
+#endif
+        if (d < 0) {
+            d = -d;
+        }
+        assert(d >= 0);
         return d;
     }
 
