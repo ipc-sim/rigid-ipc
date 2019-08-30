@@ -145,6 +145,7 @@ namespace opt {
                     // Keep this line commented until we know the affect of
                     // failing
                     // throw std::logic_error("gradient line-search failed");
+                    break;
                 }
             }
 

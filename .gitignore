@@ -101,6 +101,7 @@ src/autogen/*.ipp
 fixtures/auto_*.json
 figures/*.data
 data/*.local/
+data/linesearch_*.csv
 logs/*.csv
 logs/**/*.csv
 logs/*.log
