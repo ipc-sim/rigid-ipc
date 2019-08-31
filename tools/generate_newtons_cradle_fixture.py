@@ -1,10 +1,11 @@
 #!/usr/local/bin/python3
 """Script to generate a fixture of a box falling on a saw."""
 
-import json
-import numpy
-import pathlib
 import argparse
+import json
+import pathlib
+
+import numpy
 
 from default_fixture import generate_default_fixture
 

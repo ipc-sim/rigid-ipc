@@ -9,11 +9,27 @@
 
 #include "json.hpp"
 
+typedef std::array<double, 2> array2d;
+typedef std::array<double, 3> array3d;
+typedef std::array<size_t, 2> array2i;
+typedef std::array<bool, 3> array3b;
+
+// const static char* INPUT_FILENAME =
+// "../../../comparisons/Box2D/example.box2d.json";
+// const static char* INPUT_FILENAME = "../../../fixtures/saw/saw-cor=-1.json";
+// const static char* INPUT_FILENAME
+//     = "../../../fixtures/stacking/pyramid-cor=-1.json";
+// const static char* INPUT_FILENAME
+//     =
+//     "../../../fixtures/stacking/tower-num_blocks=4-cor=-1-x_offset=0-falling.json";
+const static char* INPUT_FILENAME
+    = "../../../fixtures/stacking/tower-num_blocks=4-cor=0-x_offset=0-rotated.json";
+
 class JSONExample : public Test {
 protected:
     nlohmann::json args;
-    std::vector<std::array<size_t, 2>> edges;
-    std::vector<std::vector<std::array<double, 2>>> vertices_sequence;
+    std::vector<array2i> edges;
+    std::vector<std::vector<array2d>> vertices_sequence;
     std::vector<nlohmann::json> state_sequence;
 
     double timestep;
@@ -67,16 +83,16 @@ protected:
         return MatrixMultiplication(R, v) + t;
     }
 
-    static inline std::array<double, 2> b2Vec2ToArray(const b2Vec2& v)
+    static inline array2d b2Vec2ToArray(const b2Vec2& v)
     {
         return { { v.x, v.y } };
     }
 
     void SaveStep()
     {
-        std::vector<std::array<double, 2>> vertices;
+        std::vector<array2d> vertices;
         double angular_momentum = 0;
-        std::array<double, 2> linear_momentum = { { 0, 0 } };
+        array2d linear_momentum = { { 0, 0 } };
         double kinetic_energy = 0;
         double potential_energy = 0;
         std::vector<nlohmann::json> body_states;
@@ -150,29 +166,35 @@ protected:
 
             // Define the ground
             b2BodyDef bodyDef;
-            std::array<bool, 3> is_dof_fixed
-                = args["is_dof_fixed"].get<std::array<bool, 3>>();
-            bool is_fixed
-                = is_dof_fixed[0] || is_dof_fixed[1] || is_dof_fixed[2];
+
+            // Is the body fixed?
+            array3b is_dof_fixed = args["is_dof_fixed"].get<array3b>();
+            bool is_fixed = is_dof_fixed[0] || is_dof_fixed[1];
             bodyDef.type = is_fixed ? b2_staticBody : b2_dynamicBody;
-            bodyDef.position.Set(
-                args["position"].get<std::array<double, 2>>()[0],
-                args["position"].get<std::array<double, 2>>()[1]);
+            bodyDef.fixedRotation = is_dof_fixed[2];
+
+            bodyDef.bullet = bodyDef.type == b2_dynamicBody;
+            bodyDef.allowSleep = false;
+            bodyDef.awake = true;
+
+            // Set the position and rotation
+            array2d position = args["position"].get<array2d>();
+            bodyDef.position.Set(position[0], position[1]);
             bodyDef.angle = args["theta"].get<double>() * M_PI / 180.0;
-            bodyDef.linearVelocity.Set(
-                args["velocity"].get<std::array<double, 3>>()[0],
-                args["velocity"].get<std::array<double, 3>>()[1]);
-            bodyDef.angularVelocity
-                = args["velocity"].get<std::array<double, 3>>()[2];
+            // Set the linear and angular velocity
+            array3d velocity = args["velocity"].get<array3d>(); // vx, vy, vω
+            bodyDef.linearVelocity.Set(velocity[0], velocity[1]);
+            bodyDef.angularVelocity = velocity[2];
+            bodyDef.linearDamping = 0;
+            bodyDef.angularDamping = 0;
 
             // Create the ground
             b2Body* body = m_world->CreateBody(&bodyDef);
 
             double density = args["density"].get<double>();
 
-            std::vector<std::vector<std::array<double, 2>>> polygons
-                = args["polygons"]
-                      .get<std::vector<std::vector<std::array<double, 2>>>>();
+            std::vector<std::vector<array2d>> polygons
+                = args["polygons"].get<std::vector<std::vector<array2d>>>();
             for (const auto& polygon : polygons) {
                 // Define the ground shape
                 b2PolygonShape shape;
@@ -221,9 +243,8 @@ protected:
             args["rigid_body_problem"]["coefficient_restitution"].get<double>(),
             0.0);
 
-        std::array<double, 3> gravity_array
-            = args["rigid_body_problem"]["gravity"]
-                  .get<std::array<double, 3>>();
+        array3d gravity_array
+            = args["rigid_body_problem"]["gravity"].get<array3d>();
         m_world->SetGravity(b2Vec2(gravity_array[0], gravity_array[1]));
 
         LoadRigidBodies(args["rigid_body_problem"]["rigid_bodies"]);
@@ -252,12 +273,7 @@ public:
         SaveStep();
     }
 
-    static Test* Create()
-    {
-        // return new
-        // JSONExample("../../../comparisons/Box2D/example.box2d.json");
-        return new JSONExample("../../../fixtures/saw/saw-cor=-1.json");
-    }
+    static Test* Create() { return new JSONExample(INPUT_FILENAME); }
 
     virtual ~JSONExample()
     {

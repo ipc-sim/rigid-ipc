@@ -5,10 +5,11 @@ Script to generate a fixture of a chain with N complex links.
 Usage: python generate_complex_chainmail_fixture.py N
 """
 
-import sys
 import json
-import numpy
 import pathlib
+import sys
+
+import numpy
 
 from default_fixture import generate_default_fixture
 

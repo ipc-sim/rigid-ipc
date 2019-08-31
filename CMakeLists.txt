@@ -17,6 +17,7 @@ option(ENABLE_PROFILING         "Profile Functions"    ON)
 option(ENABLE_IPOPT             "Enable Ipopt Library" OFF)
 option(ENABLE_OSQP              "Enable OSQP Library"  ON)
 option(ENABLE_MOSEK             "Enable Mosek Library" OFF)
+option(BUILD_COMPARISONS        "Build comparisons"    ON)
 option(CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
 
 ################################################################################
@@ -255,4 +256,11 @@ endif()
 
 if(BUILD_SCRIPTS)
 #    add_subdirectory(scripts)
+endif()
+
+################################################################################
+# Comparisons to other methods
+################################################################################
+if(BUILD_COMPARISONS)
+    add_subdirectory(comparisons)
 endif()

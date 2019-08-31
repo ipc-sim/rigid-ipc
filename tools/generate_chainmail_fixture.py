@@ -5,10 +5,11 @@ Script to generate a fixture of a chain with N complex links.
 Usage: python generate_complex_chainmail_fixture.py N
 """
 
-import sys
 import json
-import numpy
 import pathlib
+import sys
+
+import numpy
 from shapely.geometry import Polygon
 from shapely.ops import cascaded_union
 

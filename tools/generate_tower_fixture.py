@@ -3,8 +3,9 @@
 
 import argparse
 import json
-import numpy
 import pathlib
+
+import numpy
 
 from default_fixture import generate_default_fixture
 
@@ -16,17 +17,20 @@ def generate_fixture(num_blocks, cor, x_offset, rotated, falling):
     fixture["barrier_solver"]["min_barrier_epsilon"] = 1e-4
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
+    box_edges = [[0, 1], [1, 2], [2, 3], [3, 0]]
+
     # Add the ground
+    ground_box_vertices = [[10, 0], [-10, 0], [-10, -1], [10, -1]]
     rigid_bodies.append({
-        "vertices": [[-10, 0], [10, 0]],
-        "edges": [[0, 1]],
+        "vertices": ground_box_vertices,
+        "polygons": [ground_box_vertices],
+        "edges": box_edges,
         "oriented": False,
         "is_dof_fixed": [True, True, True]
     })
 
     radius = 1 / numpy.sqrt(2)
     box_vertices = [[0.5, -0.5], [0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5]]
-    box_edges = [[0, 1], [1, 2], [2, 3], [3, 0]]
 
     # Add the pyramid
     for i in range(num_blocks):
@@ -36,6 +40,7 @@ def generate_fixture(num_blocks, cor, x_offset, rotated, falling):
         theta = 0 if not rotated or i % 2 else 45
         rigid_bodies.append({
             "vertices": box_vertices,
+            "polygons": [box_vertices],
             "edges": box_edges,
             "oriented": True,
             "position": [x, y],

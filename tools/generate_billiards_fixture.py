@@ -1,12 +1,21 @@
 #!/usr/local/bin/python3
 """Script to generate a fixture of a box falling on a saw."""
 
-import json
-import numpy
-import pathlib
 import argparse
+import json
+import pathlib
+
+import numpy
+from shapely.geometry import Polygon
+from shapely.ops import cascaded_union
 
 from default_fixture import generate_default_fixture
+
+
+def create_polygon_edges(num_points):
+    return numpy.hstack([
+        numpy.arange(num_points).reshape(-1, 1),
+        numpy.roll(numpy.arange(num_points).reshape(-1, 1), -1)]).tolist()
 
 
 def generate_fixture(num_points: int):
@@ -21,11 +30,26 @@ def generate_fixture(num_points: int):
 
     width = 198  # cm
     height = 99  # cm
-    # Walls of the pool table
+    # Walls of the pool table as four boxes
+    wall_vertices = numpy.array([
+        [-width / 2, -height / 2], [width / 2, -height / 2],
+        [width / 2, height / 2], [-width / 2, height / 2]])
+    wall_polygons = [
+        Polygon([1.1 * wall_vertices[i], 1.1 * wall_vertices[(i + 1) % 4],
+                 wall_vertices[(i + 1) % 4], wall_vertices[i]])
+        for i in range(4)
+    ]
+    thick_wall = cascaded_union(wall_polygons)
+    wall_vertices = (list(thick_wall.exterior.coords)[:-1] +
+                     list(thick_wall.interiors[0].coords)[:-1])
+    wall_polygons = [list(polygon.exterior.coords)
+                     for polygon in wall_polygons]
+    wall_edges = numpy.array(create_polygon_edges(4))
+    wall_edges = numpy.append(wall_edges, wall_edges + 4, axis=0).tolist()
     rigid_bodies.append({
-        "vertices": [[-width / 2, -height / 2], [width / 2, -height / 2],
-                     [width / 2, height / 2], [-width / 2, height / 2]],
-        "edges": [[0, 1], [1, 2], [2, 3], [3, 0]],
+        "vertices": wall_vertices,
+        "polygons": wall_polygons,
+        "edges": wall_edges,
         "oriented": False,
         "velocity": [0.0, 0.0, 0.0],
         "is_dof_fixed": [True, True, True]
@@ -37,12 +61,11 @@ def generate_fixture(num_points: int):
                   num_points * 2 * numpy.pi) * radius
     y = numpy.sin(numpy.arange(num_points, dtype=float) /
                   num_points * 2 * numpy.pi) * radius
+    ball_vertices = numpy.hstack([x.reshape(-1, 1), y.reshape(-1, 1)]).tolist()
     ball = {
-        "vertices": numpy.hstack(
-            [x.reshape(-1, 1), y.reshape(-1, 1)]).tolist(),
-        "edges": numpy.hstack([
-            numpy.arange(num_points).reshape(-1, 1),
-            numpy.roll(numpy.arange(num_points).reshape(-1, 1), -1)]).tolist(),
+        "vertices": ball_vertices,
+        "polygons": [ball_vertices],
+        "edges": create_polygon_edges(num_points),
         "oriented": True,
         "velocity": [0.0, 0.0, 0.0],
         "is_dof_fixed": [False, False, False]

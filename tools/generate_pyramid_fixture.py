@@ -3,8 +3,9 @@
 
 import argparse
 import json
-import numpy
 import pathlib
+
+import numpy
 
 from default_fixture import generate_default_fixture
 
@@ -16,26 +17,31 @@ def generate_fixture(cor):
     fixture["barrier_solver"]["min_barrier_epsilon"] = 1e-4
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
+    box_edges = [[0, 1], [1, 2], [2, 3], [3, 0]]
+
     # Add the ground
+    ground_box_vertices = [[10, 0], [-10, 0], [-10, -1], [10, -1]]
     rigid_bodies.append({
-        "vertices": [[-10, 0], [10, 0]],
-        "edges": [[0, 1]],
+        "vertices": ground_box_vertices,
+        "polygons": [ground_box_vertices],
+        "edges": box_edges,
         "oriented": False,
         "is_dof_fixed": [True, True, True]
     })
 
-    box_vertices = numpy.array([[0, 0], [1, 0], [1, 1], [0, 1]])
-    box_edges = [[0, 1], [1, 2], [2, 3], [3, 0]]
+    box_vertices = [[0, 0], [1, 0], [1, 1], [0, 1]]
 
     # Add the pyramid
     nrows = 5
     for i in range(nrows):
-        y_offset = (1 + 1e-1) * i + 1e-1
+        y = (1 + 1e-1) * i + 1e-1
         for j in range(nrows - i):
-            x_offset = (1 + 1e-1) * j - (1 + 1e-1) * (nrows - i) / 2
+            x = (1 + 1e-1) * j - (1 + 1e-1) * (nrows - i) / 2
             rigid_bodies.append({
-                "vertices": (box_vertices + [x_offset, y_offset]).tolist(),
+                "vertices": box_vertices,
+                "polygons": [box_vertices],
                 "edges": box_edges,
+                "position": [x, y],
                 "velocity": [0.0, 0.0, 0.0],
                 "is_dof_fixed": [False, False, False]
             })
@@ -60,7 +66,7 @@ def main():
     if args.out_path is None:
         directory = (pathlib.Path(__file__).resolve().parents[1] /
                      "fixtures" / "stacking")
-        args.out_path = directory / "pramid-cor={:g}.json".format(args.cor)
+        args.out_path = directory / "pyramid-cor={:g}.json".format(args.cor)
     args.out_path.parent.mkdir(parents=True, exist_ok=True)
 
     print(args)

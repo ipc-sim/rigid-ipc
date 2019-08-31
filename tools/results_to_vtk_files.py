@@ -1,3 +1,6 @@
+#!/usr/local/bin/python3
+"""Convert our JSON simulation results to VTK files."""
+
 import argparse
 import json
 from pathlib import Path
