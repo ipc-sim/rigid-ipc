@@ -43,6 +43,18 @@ namespace opt {
 
         Multiprecision eval_mp_f(const Eigen::VectorXd& x) override;
 
+#ifdef DEBUG_LINESEARCH
+        Eigen::MatrixXi debug_edges() const override{
+            return general_problem->debug_edges();
+        }
+        Eigen::MatrixXd debug_vertices(const Eigen::VectorXd& sigma) const override {
+            return general_problem->debug_vertices(sigma);
+        }
+        Eigen::MatrixXd debug_vertices_t0() const override
+        {
+            return general_problem->debug_vertices_t0();
+        }
+#endif
         IBarrierGeneralProblem* general_problem;
         Eigen::VectorXd x0;
 

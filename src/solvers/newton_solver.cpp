@@ -8,6 +8,11 @@
 #include <logger.hpp>
 #include <profiler.hpp>
 
+#ifdef DEBUG_LINESEARCH
+#include <nlohmann/json.hpp>
+#include <io/serialize_json.hpp>
+#endif
+
 namespace ccd {
 namespace opt {
 
@@ -17,7 +22,6 @@ namespace opt {
     }
     NewtonSolver::NewtonSolver(const std::string& name)
         : absolute_tolerance(Constants::NEWTON_ABSOLUTE_TOLERANCE)
-        , min_step_length(1e-12)
         , max_iterations(1000)
         , iteration_number(0)
         , name_(name)
@@ -31,7 +35,6 @@ namespace opt {
     {
         max_iterations = json["max_iterations"].get<int>();
         absolute_tolerance = json["absolute_tolerance"].get<double>();
-        min_step_length = json["min_step_length"].get<double>();
     }
 
     nlohmann::json NewtonSolver::settings() const
@@ -39,7 +42,6 @@ namespace opt {
         nlohmann::json json;
         json["max_iterations"] = max_iterations;
         json["absolute_tolerance"] = absolute_tolerance;
-        json["min_step_length"] = min_step_length;
         return json;
     }
 
@@ -97,8 +99,8 @@ namespace opt {
 
             PROFILE_START(COMPUTE_DIRECTION)
 
-            Eigen::VectorXd direction
-                = Eigen::VectorXd::Zero(problem.num_vars());
+            Eigen::VectorXd direction = Eigen::VectorXd::Zero(problem.num_vars());
+
             Eigen::VectorXd direction_free(free_dof.size());
             bool found_direction = compute_direction(
                 gradient_free, hessian_free, direction_free, /*make_psd=*/true);
@@ -113,13 +115,13 @@ namespace opt {
             }
 
             step_length = 1; // std::min(1.0, 2.0 * step_length);
-            //            double step_length_aux
-            //                = step_length; // to restore when line-search
-            //                fails
+
+            Eigen::VectorXd grad_direction = Eigen::VectorXd::Zero(problem.num_vars());
+            igl::slice_into(gradient_free, free_dof, grad_direction);
 
             PROFILE_START(NEWTON_LINE_SEARCH)
             bool found_step_length
-                = line_search(problem, x, direction, fx, step_length);
+                = line_search(problem, x, direction, fx, grad_direction, step_length);
             PROFILE_END(NEWTON_LINE_SEARCH)
 
             // Revert to gradient descent if the newton direction fails
@@ -133,7 +135,7 @@ namespace opt {
 
                 PROFILE_START(GRADIENT_LINE_SEARCH)
                 bool found_step_length2
-                    = line_search(problem, x, direction, fx, step_length, true);
+                    = line_search(problem, x, direction, fx, grad_direction, step_length, true);
                 PROFILE_END(GRADIENT_LINE_SEARCH)
 
                 if (!found_step_length2) {
@@ -181,7 +183,8 @@ namespace opt {
         const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const double fx,
-        double& step_length,
+        const Eigen::VectorXd& grad_fx,
+        double& alpha,
         bool log_failure)
     {
 
@@ -189,33 +192,42 @@ namespace opt {
         PROFILE_POINT("line_search");
         PROFILE_START();
 
-        double step_norm = (step_length * dir).norm();
         bool success = false;
 
         std::stringstream debug;
-        debug << "global_it,it,step_length,step_norm,f(x),fx0\n";
+        debug << "global_it,it,step_length,f(x),fx0,E*step,>lb\n";
 
         int num_it = 0;
 
         global_it += 1;
         // Multiprecision fx = problem.eval_mp_f(x);
-        while (step_norm > Constants::LINESEARCH_MIN_STEP_NORM) {
 
-            Eigen::VectorXd xi = x + step_length * dir;
+#ifdef DEBUG_LINESEARCH
+        std::vector<Eigen::MatrixXd> vertices_sequence;
+        Eigen::MatrixXi edges = problem.debug_edges();
+        Eigen::MatrixXd v_t0 = problem.debug_vertices_t0();
+        std::cout << "begin line search" << std::endl;
+#endif
+        double lower_bound = std::max(1E-12, 1E-12 * fx);
+
+        while (-grad_fx.dot(dir) * alpha > lower_bound) {
+            Eigen::VectorXd xi = x + alpha * dir;
             // Multiprecision fxi = problem.eval_mp_f(xi);
+#ifdef DEBUG_LINESEARCH
+            std::cout << "num_it=" << num_it << std::endl;
+#endif
             double fxi = problem.eval_f(xi);
+
+#ifdef DEBUG_LINESEARCH
+            vertices_sequence.push_back(problem.debug_vertices(xi));
+#endif
 
             bool min_rule = fxi < fx;
             bool cstr = !std::isinf(fxi);
             // bool cstr = !std::isinf(fxi.to_double());
 
-            // debug <<
-            // fmt::format("{},{},{:.18e},{:.18e},{:.18e},{:.18e}\n",
-            // global_it, num_it,
-            //     step_length, step_norm, fxi.to_double(),
-            //     fx.to_double());
-            debug << fmt::format("{},{},{:.18e},{:.18e},{:.18e},{:.18e}\n",
-                global_it, num_it, step_length, step_norm, fxi, fx);
+            debug << fmt::format("{},{},{:.18e},{:.18e},{:.18e},{:.18e},{:.18e}\n",
+                global_it, num_it, alpha, fxi, fx, -grad_fx.dot(dir) * alpha, lower_bound);
 
             num_it += 1;
             if (min_rule && cstr) {
@@ -224,18 +236,33 @@ namespace opt {
                 break; // while loop
             }
 
-            step_length /= 2.0;
-            step_norm = (step_length * dir).norm();
+            alpha /= 2.0;
         }
 
         if (log_failure && !success) {
             std::string fout = fmt::format(
-                "{}/linesearch_{}.csv", DATA_OUTPUT_DIR, ccd::log::now());
+                "{}/linesearch_{}.csv", DATA_OUTPUT_DIR, ccd::logger::now());
             std::ofstream myfile;
             myfile.open(fout);
             myfile << debug.str();
             myfile.close();
             spdlog::debug("saved failure to `{}`", fout);
+
+#ifdef DEBUG_LINESEARCH
+            nlohmann::json steps;
+            steps["edges"] = io::to_json(edges);
+            std::vector<nlohmann::json> vs;
+            for (auto& v : vertices_sequence) {
+                vs.push_back(io::to_json(v));
+            }
+            steps["vertices_sequence"] = vs;
+            steps["vertices_t0"] = io::to_json(v_t0);
+            fout = fmt::format(
+                "{}/linesearch_{}.json", DATA_OUTPUT_DIR, ccd::logger::now());
+            std::ofstream o(fout);
+            o << std::setw(4) << steps << std::endl;
+            assert(false);
+#endif
         }
 
         PROFILE_MESSAGE(,

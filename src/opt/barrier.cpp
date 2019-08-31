@@ -11,7 +11,18 @@ namespace ccd {
 
 namespace opt {
 
+    double poly_log_barrier_gradient(double x, double s)
+    {
+        // (6*x/s**2 - 6*x**2/s**3)*log(x/s) + (-1 + 3*x**2/s**2 -
+        // 2*x**3/s**3)/x
+        if (x <= 0)
+            return 0;
+        double x2 = x * x, s2 = s * s;
+        double x3 = x2 * x, s3 = s2 * s;
 
+        return (6 * x / s2 - 6 * x2 / s3) * log(x / s)
+            + (-1 + 3 * x2 / s2 - 2 * x3 / s3) / x;
+    }
     // Derivative of the spline_barrier function with respect to x.
     double spline_barrier_gradient(double x, double s)
     {
@@ -74,7 +85,8 @@ namespace opt {
     double hookean_barrier(double x, double s)
     {
         // ϕ(x) = log(x / s) ^ 2
-        return x > 0 ? pow(log(x / s), 2) : std::numeric_limits<double>::infinity();
+        return x > 0 ? pow(log(x / s), 2)
+                     : std::numeric_limits<double>::infinity();
     }
 
     // Derivative of the hookean_barrier function with respect to x.

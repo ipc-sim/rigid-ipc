@@ -71,7 +71,7 @@ namespace opt {
         ev_barriers.clear();
         Eigen::MatrixXd vertices_t1 = vertices + Uk;
 
-        // CollisionCheck has_collision = CollisionCheck::NO_COLLISIONS;
+        CollisionCheck has_collision = CollisionCheck::NO_COLLISIONS;
         for (size_t i = 0; i < ev_candidates.size(); i++) {
             const EdgeVertexCandidate& ev_candidate = ev_candidates[i];
             double toi;
@@ -86,15 +86,44 @@ namespace opt {
                     Uk.row(ev_candidate.vertex_index), toi);
 
             if (active_impact) {
+#ifdef NDEBUG
                 return CollisionCheck::HAS_COLLISION;
-                // for debugging
-                // has_collision = CollisionCheck::HAS_COLLISION;
+#else
+                has_collision = CollisionCheck::HAS_COLLISION;
+#endif
             }
 
             double distance = sqrt(point_to_edge_sq_distance<double>(
                 vertices_t1.row(edges(ev_candidate.edge_index, 0)),
                 vertices_t1.row(edges(ev_candidate.edge_index, 1)),
                 vertices_t1.row(ev_candidate.vertex_index)));
+#ifdef DEBUG_LINESEARCH
+            if (active_impact) {
+                auto vi = vertices.row(edges(ev_candidate.edge_index, 0));
+                auto vj = vertices.row(edges(ev_candidate.edge_index, 1));
+                auto vk = vertices.row(ev_candidate.vertex_index);
+                auto ui = Uk.row(edges(ev_candidate.edge_index, 0));
+                auto uj = Uk.row(edges(ev_candidate.edge_index, 1));
+                auto uk = Uk.row(ev_candidate.vertex_index);
+                std::cout << fmt::format(
+                                 "e={} v={} e0={} e1={} distance={:.10e}",
+                                 ev_candidate.edge_index,
+                                 ev_candidate.vertex_index,
+                                 edges(ev_candidate.edge_index, 0),
+                                 edges(ev_candidate.edge_index, 1), distance)
+                          << std::endl;
+                std::cout << fmt::format("vi={} vj={} vk={}",
+                                 ccd::logger::fmt_eigen(vi),
+                                 ccd::logger::fmt_eigen(vj),
+                                 ccd::logger::fmt_eigen(vk))
+                          << std::endl;
+                std::cout << fmt::format("vi1={} vj1={} vk1={}",
+                                 ccd::logger::fmt_eigen(vi + ui),
+                                 ccd::logger::fmt_eigen(vj + uj),
+                                 ccd::logger::fmt_eigen(vk + uk))
+                          << std::endl;
+            }
+#endif
 
             bool distance_active
                 = distance < active_constraint_scale * m_barrier_epsilon;
@@ -103,8 +132,7 @@ namespace opt {
             }
         }
         PROFILE_END(NARROW_PHASE)
-        // return has_collision;
-        return CollisionCheck::NO_COLLISIONS;
+        return has_collision;
     }
 
     void DistanceBarrierConstraint::compute_constraints(
@@ -300,10 +328,16 @@ namespace opt {
         Diff::DDouble2 barrier = distance_barrier<Diff::DDouble2>(da, db, dc);
         return barrier.getHessian();
     }
+
+
     double DistanceBarrierConstraint::distance_barrier_grad(
-        const double distance)
+        const double distance, const double eps)
     {
-        return opt::spline_barrier_gradient(distance, m_barrier_epsilon);
+        if (USE_LOG_BARRIER) {
+            return opt::poly_log_barrier_gradient(distance, eps);
+        } else {
+            return opt::spline_barrier_gradient(distance, eps);
+        }
     }
 
 } // namespace opt

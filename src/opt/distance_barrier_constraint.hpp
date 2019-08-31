@@ -63,9 +63,18 @@ namespace opt {
             const Eigen::Matrix<T, Eigen::Dynamic, 1>& c);
 
         template <typename T>
-        T distance_barrier(const T distance);
+        T distance_barrier(const T distance, const double eps);
+        double distance_barrier_grad(const double distance, const double eps);
 
-        double distance_barrier_grad(const double distance);
+        template <typename T>
+        T distance_barrier(const T distance){
+            return distance_barrier(distance, m_barrier_epsilon);
+        }
+
+        double distance_barrier_grad(const double distance){
+            return distance_barrier_grad(distance, m_barrier_epsilon);
+        }
+
 
         Eigen::VectorXd distance_barrier_grad(const Eigen::VectorXd& a,
             const Eigen::VectorXd& b,
@@ -87,6 +96,7 @@ namespace opt {
         double active_constraint_scale;
 
     protected:
+        static const bool USE_LOG_BARRIER = false;
         double m_barrier_epsilon;
     };
 

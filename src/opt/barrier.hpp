@@ -23,6 +23,9 @@ namespace opt {
         HOOKEAN ///< @brief Log squared function
     };
 
+    template <typename T> T poly_log_barrier(T x, double s);
+    double poly_log_barrier_gradient(double x, double s);
+
     /**
      * @brief Function that grows to infinity as x approaches 0 from the right.
      *

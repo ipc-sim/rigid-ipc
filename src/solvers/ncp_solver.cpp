@@ -161,7 +161,7 @@ namespace opt {
             result.minf = problem_ptr_->eval_f(xi);
             spdlog::trace(
                 "solver=ncp_solver it={} step=collisions_solved xi={}",
-                num_outer_iterations_, log::fmt_eigen(xi));
+                num_outer_iterations_, ccd::logger::fmt_eigen(xi));
             return result;
         }
 
@@ -173,8 +173,8 @@ namespace opt {
 
         spdlog::trace(
             "solver=ncp_solver it={} action=solve_lcp status=END delta_x={} jac_g_xi={} lambda_i={}",
-            num_outer_iterations_, log::fmt_eigen(delta_i),
-            log::fmt_eigen(jac_g_xi), log::fmt_eigen(lambda_i));
+            num_outer_iterations_,  ccd::logger::fmt_eigen(delta_i),
+            ccd::logger::fmt_eigen(jac_g_xi), ccd::logger::fmt_eigen(lambda_i));
 
         double alpha = 1.0, alpha_prev = 1.0;
         double step_norm = (alpha * delta_i).norm();

@@ -66,6 +66,7 @@ bool SimState::load_simulation(const nlohmann::json& input_args)
     };
     state_sequence = input_args["animation"]["state_sequence"]
                          .get<std::vector<nlohmann::json>>();
+    m_num_simulation_steps = int(state_sequence.size());
     problem_ptr->state(state_sequence.back());
     return true;
 }
@@ -105,7 +106,7 @@ bool SimState::init(const nlohmann::json& args_in)
         },
         "newton_solver":{
            "absolute_tolerance": 1e-5,
-           "min_step_length": 1e-10,
+           "min_step_length": "DEPRECATED",
            "max_iterations": 3000
         },
         "bfgs_solver":{
@@ -212,15 +213,16 @@ void SimState::run_simulation(const std::string& fout)
     PROFILE_MAIN_POINT("run_simulation")
     PROFILE_START()
 
-    spdlog::info("starting simulation {}", scene_file);
+    spdlog::info("Starting simulation {}", scene_file);
+    spdlog::info("Running {} iterations", m_max_simulation_steps);
     m_solve_collisions = true;
     for (int i = 0; i < m_max_simulation_steps; ++i) {
         simulation_step();
         save_simulation_step();
-        spdlog::info("finished step {}", i);
+        spdlog::info("Finished it={} sim_step={}", i, m_num_simulation_steps);
     }
     save_simulation(fout);
-    spdlog::info("simulation results saved to {}", fout);
+    spdlog::info("Simulation results saved to {}", fout);
 
     PROFILE_END()
     LOG_PROFILER(scene_file);

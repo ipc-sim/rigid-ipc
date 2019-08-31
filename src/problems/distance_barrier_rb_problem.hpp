@@ -90,6 +90,17 @@ namespace opt {
 
         Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> eval_mp_g(const Eigen::VectorXd& x) override;
 
+#ifdef DEBUG_LINESEARCH
+        Eigen::MatrixXi debug_edges() const override{
+            return m_assembler.m_edges;
+        }
+
+        Eigen::MatrixXd debug_vertices(const Eigen::VectorXd& sigma) const override;
+        Eigen::MatrixXd debug_vertices_t0() const override {
+            return vertices_t0;
+        }
+#endif
+
     protected:
         void extract_local_system(
             const EdgeVertexCandidate& c, RB2Candidate& rbc);

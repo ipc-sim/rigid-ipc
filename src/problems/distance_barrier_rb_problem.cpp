@@ -45,6 +45,15 @@ namespace opt {
         f_uk_grad = eval_grad_f(sigma);
     }
 
+#ifdef DEBUG_LINESEARCH
+    Eigen::MatrixXd DistanceBarrierRBProblem::debug_vertices(
+        const Eigen::VectorXd& sigma) const
+    {
+        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        return m_assembler.world_vertices(qk);
+    }
+#endif
+
     Eigen::VectorXd DistanceBarrierRBProblem::eval_g(
         const Eigen::VectorXd& sigma)
     {

@@ -50,10 +50,10 @@ TEST_CASE("Distance Barrier Constraint",
         // clang-format off
         // loop over edges then vertices
         expected_barrier <<
-            spline_barrier<double>(0.5, barrier_epsilon),
-            spline_barrier<double>(1.0, barrier_epsilon),
-            spline_barrier<double>(0.5 * sqrt(2),barrier_epsilon),
-            spline_barrier<double>(0.5 * sqrt(2), barrier_epsilon);
+            barrier.distance_barrier<double>(0.5, barrier_epsilon),
+            barrier.distance_barrier<double>(1.0, barrier_epsilon),
+            barrier.distance_barrier<double>(0.5 * sqrt(2),barrier_epsilon),
+            barrier.distance_barrier<double>(0.5 * sqrt(2), barrier_epsilon);
         // clang-format on
     }
 
@@ -65,10 +65,10 @@ TEST_CASE("Distance Barrier Constraint",
         // clang-format off
         // loop over edges then vertices
         expected_barrier <<
-            spline_barrier<double>(0.5, barrier_epsilon),
-            spline_barrier<double>(1.0, barrier_epsilon),
-            spline_barrier<double>(0.5, barrier_epsilon),
-            spline_barrier<double>(sqrt(0.5 * 0.5 + 1), barrier_epsilon);
+            barrier.distance_barrier<double>(0.5, barrier_epsilon),
+            barrier.distance_barrier<double>(1.0, barrier_epsilon),
+            barrier.distance_barrier<double>(0.5, barrier_epsilon),
+            barrier.distance_barrier<double>(sqrt(0.5 * 0.5 + 1), barrier_epsilon);
         // clang-format on
     }
 
@@ -80,10 +80,10 @@ TEST_CASE("Distance Barrier Constraint",
         // clang-format off
         // loop over edges then vertices
         expected_barrier <<
-            spline_barrier<double>(0.5 * sqrt(2), barrier_epsilon),
-            spline_barrier<double>(sqrt(0.5*0.5 + 1.0), barrier_epsilon),
-            spline_barrier<double>(0.5 * sqrt(2), barrier_epsilon),
-            spline_barrier<double>(sqrt(0.5 * 0.5 + 1.5 * 1.5), barrier_epsilon);
+            barrier.distance_barrier<double>(0.5 * sqrt(2), barrier_epsilon),
+            barrier.distance_barrier<double>(sqrt(0.5*0.5 + 1.0), barrier_epsilon),
+            barrier.distance_barrier<double>(0.5 * sqrt(2), barrier_epsilon),
+            barrier.distance_barrier<double>(sqrt(0.5 * 0.5 + 1.5 * 1.5), barrier_epsilon);
 
         // clang-format on
     }

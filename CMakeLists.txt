@@ -20,6 +20,9 @@ option(ENABLE_MOSEK             "Enable Mosek Library" OFF)
 option(BUILD_COMPARISONS        "Build comparisons"    ON)
 option(CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
 
+# debug-options
+option(DEBUG_LINESEARCH         "Extra logs in linesearch" OFF)
+
 ################################################################################
 
 ### Configuration
@@ -132,6 +135,10 @@ if(ENABLE_DERIVATIVE_CHECK)
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DWITH_DERIVATIVE_CHECK)
 endif()
 
+if(DEBUG_LINESEARCH)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DDEBUG_LINESEARCH)
+endif()
+
 if(ENABLE_PROFILING)
     message("Profiling Enabled")
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DPROFILE_FUNCTIONS)
@@ -189,14 +196,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC nlopt::nlopt)
 # Logger
 target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog)
 
-#### GMP
+#  GMP
 #find_package(GMP)
 #if(NOT ${GMP_FOUND})
 #        MESSAGE(FATAL_ERROR "Cannot find GMP")
 #endif()
 #target_include_directories(${PROJECT_NAME} PUBLIC ${GMP_INCLUDE_DIRS})
 #target_link_libraries(${PROJECT_NAME} PUBLIC ${GMP_LIBRARIES})
-####
+#
 
 # Ipopt
 if(ENABLE_IPOPT)

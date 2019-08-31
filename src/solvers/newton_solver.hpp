@@ -37,8 +37,7 @@ namespace opt {
          * @return The results of the optimization including the minimizer,
          * minimum, and if the optimization was successful.
          */
-        virtual OptimizationResults solve(
-            IBarrierProblem& problem) override;
+        virtual OptimizationResults solve(IBarrierProblem& problem) override;
 
         // From IBarrierOptimizationSolver
         // -------------------------------------------------
@@ -66,7 +65,6 @@ namespace opt {
             bool make_psd = false);
 
         double absolute_tolerance; ///< @brief Convergence tolerance.
-        double min_step_length;    ///< @brief Minimum step length.
         int max_iterations;
 
     protected:
@@ -74,7 +72,9 @@ namespace opt {
             const Eigen::VectorXd& x,
             const Eigen::VectorXd& dir,
             const double fx,
-            double& step_length, bool log_failure=false);
+            const Eigen::VectorXd& grad_fx,
+            double& step_length,
+            bool log_failure = false);
 
         Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
         int iteration_number;     ///< @brief The current iteration number.

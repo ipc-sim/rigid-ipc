@@ -27,12 +27,6 @@ namespace opt {
         /// @brief Evaulate the objective function.
         virtual double eval_f(const Eigen::VectorXd& x) = 0;
 
-        /// @brief Evaulate the objective function.
-        virtual Multiprecision eval_mp_f(const Eigen::VectorXd& x)
-        {
-            throw NotImplementedError("eval_mp_f");
-        }
-
         /// @brief Evaulate the gradient of the objective function.
         virtual Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) = 0;
 
@@ -43,6 +37,26 @@ namespace opt {
 
         virtual const int& num_vars() = 0;
         virtual const Eigen::VectorXd& starting_point() = 0;
+
+        /// @brief Evaulate the objective function.
+        virtual Multiprecision eval_mp_f(const Eigen::VectorXd& x)
+        {
+            throw NotImplementedError("eval_mp_f");
+        }
+#ifdef DEBUG_LINESEARCH
+        virtual Eigen::MatrixXi debug_edges() const
+        {
+            throw NotImplementedError("debug_edges");
+        }
+        virtual Eigen::MatrixXd debug_vertices(const Eigen::VectorXd& sigma) const
+        {
+            throw NotImplementedError("debug_vertices");
+        }
+        virtual Eigen::MatrixXd debug_vertices_t0() const
+        {
+            throw NotImplementedError("debug_vertices_t0");
+        }
+#endif
     };
 
     /// Defines  optimization problems of the form
@@ -113,6 +127,20 @@ namespace opt {
         {
             throw NotImplementedError("eval_mp_g");
         };
+#ifdef DEBUG_LINESEARCH
+        virtual Eigen::MatrixXi debug_edges()  const
+        {
+            throw NotImplementedError("debug_edges");
+        }
+        virtual Eigen::MatrixXd debug_vertices(const Eigen::VectorXd& sigma)  const
+        {
+            throw NotImplementedError("debug_vertices");
+        }
+        virtual Eigen::MatrixXd debug_vertices_t0() const
+        {
+            throw NotImplementedError("debug_vertices_t0");
+        }
+#endif
     };
 
     class IBarrierProblem : public virtual IUnconstraintedProblem {

@@ -55,12 +55,18 @@ namespace opt {
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& c)
     {
         T distance = sqrt(point_to_edge_sq_distance<T>(a, b, c));
-        return opt::spline_barrier<T>(distance, m_barrier_epsilon);
+        return distance_barrier<T>(distance, m_barrier_epsilon);
     }
+
     template <typename T>
-    T DistanceBarrierConstraint::distance_barrier(const T distance)
+    T DistanceBarrierConstraint::distance_barrier(
+        const T distance, const double eps)
     {
-        return opt::spline_barrier<T>(distance, m_barrier_epsilon);
+        if (USE_LOG_BARRIER) {
+            return opt::poly_log_barrier<T>(distance, eps);
+        } else {
+            return opt::spline_barrier<T>(distance, eps);
+        }
     }
 
     template <typename T>

@@ -140,7 +140,7 @@ namespace physics {
         const Eigen::VectorXd& x, const double time_step)
     {
         spdlog::trace(
-            "particles_problem step=take_step xi={}", log::fmt_eigen(x));
+            "particles_problem step=take_step xi={}", logger::fmt_eigen(x));
 
         // update final position
         vertices_ = x;

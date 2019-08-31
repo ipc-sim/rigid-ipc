@@ -63,8 +63,8 @@ namespace opt {
         PROFILE_START();
 
         spdlog::trace("{} step_length={:e} f(x0)={:e} x0={} dir={}",
-            LS_BEGIN_LOG, step_length, fx, log::fmt_eigen(x),
-            log::fmt_eigen(dir));
+            LS_BEGIN_LOG, step_length, fx, logger::fmt_eigen(x),
+            logger::fmt_eigen(dir));
 
         int num_it = 1;
         std::function<bool()> minimization_rule;
@@ -78,7 +78,7 @@ namespace opt {
                 spdlog::trace(
                     "{} step_length={:e} f(xi)={:e} f_wolfe={:e} xi={}",
                     fmt::format(LS_ARMIJO_LOG, num_it), step_length, f_xi,
-                    f_wolfe, log::fmt_eigen(xi));
+                    f_wolfe, logger::fmt_eigen(xi));
                 return f_xi <= f_wolfe;
             };
         } else {
@@ -87,7 +87,7 @@ namespace opt {
                 auto fxi = f(xi);
                 spdlog::trace("{} step_length={:e} f(xi)={:e} f(x0)={:e} xi={}",
                     fmt::format(LS_MIN_LOG, num_it), step_length, fxi, fx,
-                    log::fmt_eigen(xi));
+                    logger::fmt_eigen(xi));
                 return fxi < fx;
             };
         }

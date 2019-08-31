@@ -9,7 +9,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace ccd {
-namespace log {
+namespace logger {
     static const Eigen::IOFormat CleanFmt(Eigen::FullPrecision, 0, ", ", "\n", "", "");
     std::string fmt_eigen(const Eigen::MatrixXd& x, const int precision)
     {
