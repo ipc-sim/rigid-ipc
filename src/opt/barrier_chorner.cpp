@@ -1,6 +1,11 @@
 #include <iomanip>
 #include <iostream>
+
+#include <cmath>
+#include <limits>
+
 #include <math.h>
+#include <assert.h>
 
 namespace ccd {
 namespace opt {
@@ -54,6 +59,7 @@ namespace opt {
     double barrier_horner_compensated(double x, double eps)
     {
         assert(eps > 0);
+
         if (x <= 0.0)
             return std::numeric_limits<double>::infinity();
 
