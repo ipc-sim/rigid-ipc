@@ -19,6 +19,14 @@ namespace Constants {
     /// to avoid division by zero
     static const double ALPHA_DIVISION_EPSILON = 1E-8;
 
+    /// \brief POINT_EDGE_SQ_DISTANCE_NEG_TOL distances smaller than this
+    /// are considered errors
+    static const double POINT_EDGE_SQ_DISTANCE_NEG_TOL = -1E-10;
+
+    /// \brief POINT_EDGE_SQ_DISTANCE_ZERO value to replace neg-zeros
+    /// with
+    static const double POINT_EDGE_SQ_DISTANCE_ZERO = 1E-20;
+
     // Used for debugging
     // --------------------------------------------------------
     /// \brief FINITE_DIFF_H spacing h of finite differences

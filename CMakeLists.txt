@@ -67,6 +67,7 @@ add_library(${PROJECT_NAME}
 
 
     src/opt/barrier.cpp
+    src/opt/barrier_chorner.cpp
     src/opt/distance_barrier_constraint.cpp
     src/opt/collision_constraint.cpp
     src/opt/optimization_problem.cpp

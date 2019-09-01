@@ -5,11 +5,21 @@
 
 #include <cmath>
 
+#include <iostream>
+
+#include <opt/barrier_chorner.hpp>
 #include <autodiff/autodiff_types.hpp>
 
 namespace ccd {
 
 namespace opt {
+
+
+    // template spetialization
+    template <> double spline_barrier<double>(double x, double s)
+    {
+        return barrier_horner_compensated(x, s);
+    }
 
     double poly_log_barrier_gradient(double x, double s)
     {

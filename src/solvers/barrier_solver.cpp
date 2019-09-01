@@ -38,9 +38,9 @@ namespace opt {
         min_barrier_epsilon = json["min_barrier_epsilon"].get<double>();
         inner_solver_ptr = SolverFactory::factory().get_barrier_inner_solver(
             json["inner_solver"].get<std::string>());
-
     }
-    void BarrierSolver::inner_solver_settings(const nlohmann::json& json){
+    void BarrierSolver::inner_solver_settings(const nlohmann::json& json)
+    {
         inner_solver_ptr->settings(json);
     }
 
@@ -187,9 +187,6 @@ namespace opt {
 
         Eigen::VectorXd f_uk_gradient = general_problem->eval_grad_f(x);
         Eigen::MatrixXd dgx = general_problem->eval_jac_g(x);
-
-        std::cout << "f_uk_gradient=" << ccd::logger::fmt_eigen(f_uk_gradient) << std::endl;
-        std::cout << "g_uk_gradient=" << ccd::logger::fmt_eigen(dgx.colwise().sum().transpose()) << std::endl;
 
         f_uk_gradient += dgx.colwise().sum().transpose();
         return f_uk_gradient;

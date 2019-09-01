@@ -2,7 +2,9 @@
 #include "distance_barrier_constraint.hpp"
 
 #include <iostream>
+
 #include <logger.hpp>
+#include <constants.hpp>
 #include <opt/barrier.hpp>
 
 namespace ccd {
@@ -33,16 +35,16 @@ namespace opt {
         T d = g - e * e / f;
 
 #ifdef NDEBUG
-        if (d <= -1E-10) {
+        if (d <= Constants::POINT_EDGE_SQ_DISTANCE_NEG_TOL) {
             std::stringstream data;
             data << d;
             spdlog::error("negative square distance d={}", data.str());
         }
 #else
-        assert(d > -1E-10);
+        assert(d > Constants::POINT_EDGE_SQ_DISTANCE_NEG_TOL);
 #endif
         if (d < 0) {
-            d = -d;
+            d = Constants::POINT_EDGE_SQ_DISTANCE_ZERO;
         }
         assert(d >= 0);
         return d;
