@@ -8,7 +8,7 @@ add_executable(Box2D-comparison
 # Download Box2D
 function(download_box2d)
     custom_download_project(Box2D-cmake
-        GIT_REPOSITORY git@github.com:tobanteGaming/Box2D-cmake.git
+        GIT_REPOSITORY https://github.com/tobanteGaming/Box2D-cmake.git
         GIT_TAG        6cf2fe06fbd7a5b6f37affcbe39a4f3a7063df85
     )
 endfunction()
