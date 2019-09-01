@@ -38,6 +38,10 @@ namespace opt {
         min_barrier_epsilon = json["min_barrier_epsilon"].get<double>();
         inner_solver_ptr = SolverFactory::factory().get_barrier_inner_solver(
             json["inner_solver"].get<std::string>());
+
+    }
+    void BarrierSolver::inner_solver_settings(const nlohmann::json& json){
+        inner_solver_ptr->settings(json);
     }
 
     nlohmann::json BarrierSolver::settings() const
@@ -161,13 +165,20 @@ namespace opt {
         return f_uk + gx;
     }
 
-    Multiprecision BarrierProblem::eval_mp_f(const Eigen::VectorXd& /*x*/) {
+    bool BarrierProblem::has_collisions(
+        const Eigen::VectorXd& sigma_i, const Eigen::VectorXd& sigma_j) const
+    {
+        return general_problem->has_collisions(sigma_i, sigma_j);
+    }
 
-//        double f_uk = general_problem->eval_f(x);
-//        auto gx_ = general_problem->eval_mp_g(x);
-//        Multiprecision gx = gx_.sum();
+    Multiprecision BarrierProblem::eval_mp_f(const Eigen::VectorXd& /*x*/)
+    {
 
-//        return f_uk + gx;
+        //        double f_uk = general_problem->eval_f(x);
+        //        auto gx_ = general_problem->eval_mp_g(x);
+        //        Multiprecision gx = gx_.sum();
+
+        //        return f_uk + gx;
         return 0;
     }
 
@@ -177,8 +188,10 @@ namespace opt {
         Eigen::VectorXd f_uk_gradient = general_problem->eval_grad_f(x);
         Eigen::MatrixXd dgx = general_problem->eval_jac_g(x);
 
-        f_uk_gradient += dgx.colwise().sum().transpose();
+        std::cout << "f_uk_gradient=" << ccd::logger::fmt_eigen(f_uk_gradient) << std::endl;
+        std::cout << "g_uk_gradient=" << ccd::logger::fmt_eigen(dgx.colwise().sum().transpose()) << std::endl;
 
+        f_uk_gradient += dgx.colwise().sum().transpose();
         return f_uk_gradient;
     }
 
@@ -195,7 +208,6 @@ namespace opt {
         }
         return f_uk_hessian;
     }
-
 
     void BarrierProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
         double& f_uk,

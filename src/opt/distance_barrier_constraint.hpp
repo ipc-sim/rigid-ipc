@@ -15,7 +15,6 @@ namespace opt {
     class DistanceBarrierConstraint : public CollisionConstraint {
     public:
         typedef AutodiffType<6> Diff;
-        enum CollisionCheck { HAS_COLLISION = 0, NO_COLLISIONS };
 
         DistanceBarrierConstraint();
         DistanceBarrierConstraint(const std::string& name);
@@ -31,8 +30,10 @@ namespace opt {
             const Eigen::VectorXi& group_ids,
             const Eigen::MatrixXd& Uk) override;
 
-        CollisionCheck get_active_barrier_set(
+        void get_active_barrier_set(
             const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers) const;
+
+        bool has_active_collisions(const Eigen::MatrixXd& Xi, const Eigen::MatrixXd& Xj) const;
 
         void compute_constraints(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers);
@@ -75,7 +76,6 @@ namespace opt {
             return distance_barrier_grad(distance, m_barrier_epsilon);
         }
 
-
         Eigen::VectorXd distance_barrier_grad(const Eigen::VectorXd& a,
             const Eigen::VectorXd& b,
             const Eigen::VectorXd& c);
@@ -84,9 +84,6 @@ namespace opt {
             const Eigen::VectorXd& b,
             const Eigen::VectorXd& c);
 
-        // DEBUG !!!
-        void compute_distances(
-            const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers) const;
 
         // Settings
         // ----------

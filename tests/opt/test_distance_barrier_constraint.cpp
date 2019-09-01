@@ -87,19 +87,7 @@ TEST_CASE("Distance Barrier Constraint",
 
         // clang-format on
     }
-    SECTION("Down displacements, Touching")
-    {
-        displacements.row(2) << 0.0, -0.5;
-        displacements.row(3) << 0.0, -0.5;
 
-        // clang-format off
-        // loop over edges then vertices
-        expected_barrier.resize(1);
-        expected_barrier <<
-            std::numeric_limits<double>::infinity();
-
-        // clang-format on
-    }
 
     Eigen::VectorXd actual_barrier;
     barrier.detection_method
@@ -109,13 +97,7 @@ TEST_CASE("Distance Barrier Constraint",
     barrier.compute_constraints(displacements, actual_barrier);
     REQUIRE(actual_barrier.rows() == expected_barrier.rows());
     for (int i = 0; i < expected_barrier.rows(); i++) {
-        if (std::isinf(expected_barrier[i]) || std::isinf(actual_barrier[i])) {
-            bool match_inf = std::isinf(expected_barrier[i])
-                && std::isinf(actual_barrier[i]);
-            CHECK(match_inf);
-        } else {
-            CHECK(actual_barrier[i] == Approx(expected_barrier[i]));
-        }
+        CHECK(actual_barrier[i] == Approx(expected_barrier[i]));
     }
 }
 

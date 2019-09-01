@@ -43,20 +43,7 @@ namespace opt {
         {
             throw NotImplementedError("eval_mp_f");
         }
-#ifdef DEBUG_LINESEARCH
-        virtual Eigen::MatrixXi debug_edges() const
-        {
-            throw NotImplementedError("debug_edges");
-        }
-        virtual Eigen::MatrixXd debug_vertices(const Eigen::VectorXd& sigma) const
-        {
-            throw NotImplementedError("debug_vertices");
-        }
-        virtual Eigen::MatrixXd debug_vertices_t0() const
-        {
-            throw NotImplementedError("debug_vertices_t0");
-        }
-#endif
+
     };
 
     /// Defines  optimization problems of the form
@@ -127,12 +114,17 @@ namespace opt {
         {
             throw NotImplementedError("eval_mp_g");
         };
+
+        virtual bool has_collisions(const Eigen::VectorXd& sigma_i,
+            const Eigen::VectorXd& sigma_j) const = 0;
+
 #ifdef DEBUG_LINESEARCH
-        virtual Eigen::MatrixXi debug_edges()  const
+        virtual Eigen::MatrixXi debug_edges() const
         {
             throw NotImplementedError("debug_edges");
         }
-        virtual Eigen::MatrixXd debug_vertices(const Eigen::VectorXd& sigma)  const
+        virtual Eigen::MatrixXd debug_vertices(
+            const Eigen::VectorXd& sigma) const
         {
             throw NotImplementedError("debug_vertices");
         }
@@ -160,6 +152,25 @@ namespace opt {
 
         virtual double get_barrier_epsilon() = 0;
         virtual const Eigen::VectorXb& is_dof_fixed() = 0;
+
+        virtual bool has_collisions(const Eigen::VectorXd& sigma_i,
+            const Eigen::VectorXd& sigma_j) const = 0;
+
+#ifdef DEBUG_LINESEARCH
+        virtual Eigen::MatrixXi debug_edges() const
+        {
+            throw NotImplementedError("debug_edges");
+        }
+        virtual Eigen::MatrixXd debug_vertices(
+            const Eigen::VectorXd& sigma) const
+        {
+            throw NotImplementedError("debug_vertices");
+        }
+        virtual Eigen::MatrixXd debug_vertices_t0() const
+        {
+            throw NotImplementedError("debug_vertices_t0");
+        }
+#endif
     };
 
     /// Helper Functions for checking finite differences

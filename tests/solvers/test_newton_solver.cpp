@@ -30,7 +30,6 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
             return x.squaredNorm() / 2.0;
         }
 
-
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override
         {
             return x;
@@ -55,6 +54,11 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
             f_uk = eval_f(x);
             f_uk_jacobian = eval_grad_f(x);
             f_uk_hessian = eval_hessian_f(x);
+        }
+        bool has_collisions(
+            const Eigen::VectorXd&, const Eigen::VectorXd&) const override
+        {
+            return false;
         }
         double get_barrier_epsilon() override { return 1.0; }
         const Eigen::VectorXd& starting_point() override { return x0; }

@@ -43,11 +43,17 @@ namespace opt {
 
         Multiprecision eval_mp_f(const Eigen::VectorXd& x) override;
 
+        bool has_collisions(const Eigen::VectorXd& sigma_i,
+            const Eigen::VectorXd& sigma_j) const override;
+
 #ifdef DEBUG_LINESEARCH
-        Eigen::MatrixXi debug_edges() const override{
+        Eigen::MatrixXi debug_edges() const override
+        {
             return general_problem->debug_edges();
         }
-        Eigen::MatrixXd debug_vertices(const Eigen::VectorXd& sigma) const override {
+        Eigen::MatrixXd debug_vertices(
+            const Eigen::VectorXd& sigma) const override
+        {
             return general_problem->debug_vertices(sigma);
         }
         Eigen::MatrixXd debug_vertices_t0() const override
@@ -82,6 +88,7 @@ namespace opt {
         {
             return *inner_solver_ptr;
         }
+        void inner_solver_settings(const nlohmann::json& json);
 
         Eigen::VectorXd get_grad_kkt() const override;
         int num_outer_iterations() const override

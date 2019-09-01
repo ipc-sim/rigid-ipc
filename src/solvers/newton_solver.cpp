@@ -9,8 +9,9 @@
 #include <profiler.hpp>
 
 #ifdef DEBUG_LINESEARCH
-#include <nlohmann/json.hpp>
 #include <io/serialize_json.hpp>
+#include <nlohmann/json.hpp>
+
 #endif
 
 namespace ccd {
@@ -99,7 +100,8 @@ namespace opt {
 
             PROFILE_START(COMPUTE_DIRECTION)
 
-            Eigen::VectorXd direction = Eigen::VectorXd::Zero(problem.num_vars());
+            Eigen::VectorXd direction
+                = Eigen::VectorXd::Zero(problem.num_vars());
 
             Eigen::VectorXd direction_free(free_dof.size());
             bool found_direction = compute_direction(
@@ -116,12 +118,13 @@ namespace opt {
 
             step_length = 1; // std::min(1.0, 2.0 * step_length);
 
-            Eigen::VectorXd grad_direction = Eigen::VectorXd::Zero(problem.num_vars());
+            Eigen::VectorXd grad_direction
+                = Eigen::VectorXd::Zero(problem.num_vars());
             igl::slice_into(gradient_free, free_dof, grad_direction);
 
             PROFILE_START(NEWTON_LINE_SEARCH)
-            bool found_step_length
-                = line_search(problem, x, direction, fx, grad_direction, step_length);
+            bool found_step_length = line_search(
+                problem, x, direction, fx, grad_direction, step_length);
             PROFILE_END(NEWTON_LINE_SEARCH)
 
             // Revert to gradient descent if the newton direction fails
@@ -134,8 +137,8 @@ namespace opt {
                 igl::slice_into(-gradient_free, free_dof, 1, direction);
 
                 PROFILE_START(GRADIENT_LINE_SEARCH)
-                bool found_step_length2
-                    = line_search(problem, x, direction, fx, grad_direction, step_length, true);
+                bool found_step_length2 = line_search(problem, x, direction, fx,
+                    grad_direction, step_length, true);
                 PROFILE_END(GRADIENT_LINE_SEARCH)
 
                 if (!found_step_length2) {
@@ -150,11 +153,9 @@ namespace opt {
                     break;
                 }
             }
-
-            x += step_length * direction;
-            PROFILE_START(ASSERT_CONSTRAINT)
-            assert(!std::isinf(problem.eval_f(x)));
-            PROFILE_END(ASSERT_CONSTRAINT)
+            auto xk = x + step_length * direction;
+            assert(!problem.has_collisions(x, xk));
+            x = xk;
 
             PROFILE_END(SOLVER_STEP);
 
@@ -195,44 +196,40 @@ namespace opt {
         bool success = false;
 
         std::stringstream debug;
-        debug << "global_it,it,step_length,f(x),fx0,E*step,>lb\n";
+        debug
+            << "global_it,it,step_length,collisions,f(x),fx0,E*step,>lb, barrier_eps, min_dist\n";
 
         int num_it = 0;
-
         global_it += 1;
-        // Multiprecision fx = problem.eval_mp_f(x);
 
 #ifdef DEBUG_LINESEARCH
         std::vector<Eigen::MatrixXd> vertices_sequence;
         Eigen::MatrixXi edges = problem.debug_edges();
-        Eigen::MatrixXd v_t0 = problem.debug_vertices_t0();
-        std::cout << "begin line search" << std::endl;
+        Eigen::MatrixXd v_x0 = problem.debug_vertices(x);
+        std::cout << "BEGIN line search global_it=" << global_it << std::endl;
 #endif
         double lower_bound = std::max(1E-12, 1E-12 * fx);
+        const double eps = problem.get_barrier_epsilon();
 
         while (-grad_fx.dot(dir) * alpha > lower_bound) {
             Eigen::VectorXd xi = x + alpha * dir;
-            // Multiprecision fxi = problem.eval_mp_f(xi);
-#ifdef DEBUG_LINESEARCH
-            std::cout << "num_it=" << num_it << std::endl;
-#endif
-            double fxi = problem.eval_f(xi);
 
 #ifdef DEBUG_LINESEARCH
             vertices_sequence.push_back(problem.debug_vertices(xi));
 #endif
+            bool no_collisions = !problem.has_collisions(x, xi);
+            double fxi = problem.eval_f(xi);
 
-            bool min_rule = fxi < fx;
-            bool cstr = !std::isinf(fxi);
-            // bool cstr = !std::isinf(fxi.to_double());
-
-            debug << fmt::format("{},{},{:.18e},{:.18e},{:.18e},{:.18e},{:.18e}\n",
-                global_it, num_it, alpha, fxi, fx, -grad_fx.dot(dir) * alpha, lower_bound);
+            debug << fmt::format(
+                "{},{},{:.18e},{},{:.18e},{:.18e},{:.18e},{:.18e}, {:.8e}\n",
+                global_it, num_it, alpha,
+                (no_collisions ? "no-collisions" : "has-collision"), fxi, fx,
+                -grad_fx.dot(dir) * alpha, lower_bound, eps);
 
             num_it += 1;
-            if (min_rule && cstr) {
+            if (fxi < fx && no_collisions) {
                 success = true;
-                assert(!std::isinf(problem.eval_f(xi)));
+                assert(!problem.has_collisions(x, xi));
                 break; // while loop
             }
 
@@ -256,12 +253,12 @@ namespace opt {
                 vs.push_back(io::to_json(v));
             }
             steps["vertices_sequence"] = vs;
-            steps["vertices_t0"] = io::to_json(v_t0);
+            steps["vertices_x0"] = io::to_json(v_x0);
             fout = fmt::format(
                 "{}/linesearch_{}.json", DATA_OUTPUT_DIR, ccd::logger::now());
             std::ofstream o(fout);
             o << std::setw(4) << steps << std::endl;
-            assert(false);
+            std::cout << std::flush;
 #endif
         }
 

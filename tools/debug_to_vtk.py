@@ -28,7 +28,7 @@ def main(args=[]):
         results = json.load(json_file)
         vertices_sequence = results["vertices_sequence"]
         edges = np.array(results["edges"], dtype=np.int32)
-        vertices_t0 = np.array(results["vertices_t0"])
+        vertices_t0 = np.array(results["vertices_x0"])
 
         total_xyz = np.empty((0, 3), dtype=np.float64)
         total_edges = np.empty((0, 2), dtype=np.int32)

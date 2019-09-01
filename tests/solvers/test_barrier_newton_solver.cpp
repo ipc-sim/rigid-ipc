@@ -88,6 +88,9 @@ TEST_CASE(
         {
             eps = epsilon;
         }
+        bool has_collisions(const Eigen::VectorXd&,const Eigen::VectorXd&) const override{
+            return false;
+        }
         const int& num_vars() override { return num_vars_; }
         const int& num_constraints() override { return num_constraints_; }
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }

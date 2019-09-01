@@ -38,6 +38,8 @@ namespace opt {
         ////////////////////////////////////////////////////////////
         /// IBarrierProblem
         ////////////////////////////////////////////////////////////////
+        bool has_collisions(const Eigen::VectorXd& sigma_i,
+            const Eigen::VectorXd& sigma_j) const override;
 
         void eval_f_and_fdiff(const Eigen::VectorXd& x,
             double& f_uk,

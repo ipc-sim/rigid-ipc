@@ -42,6 +42,12 @@ namespace opt {
         f_uk_grad = eval_grad_f(sigma);
     }
 
+    bool DistanceBarrierParticleProblem::has_collisions(
+        const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) const
+    {
+        return constraint_.has_active_collisions(xi, xj);
+    }
+
     Eigen::VectorXd DistanceBarrierParticleProblem::eval_g(
         const Eigen::VectorXd& xk)
     {
@@ -86,17 +92,14 @@ namespace opt {
         ccd::unflatten(uk, 2);
 
         EdgeVertexCandidates ev_candidates;
-        auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
-        assert(check == DistanceBarrierConstraint::NO_COLLISIONS);
+        constraint_.get_active_barrier_set(uk, ev_candidates);
 
         constraint_.compute_candidates_constraints(uk, ev_candidates, g_uk);
         constraint_.compute_candidates_constraints_jacobian(
             uk, ev_candidates, g_uk_jacobian);
         constraint_.compute_candidates_constraints_hessian(
             uk, ev_candidates, g_uk_hessian);
-
     }
-
 
 } // namespace opt
 } // namespace ccd

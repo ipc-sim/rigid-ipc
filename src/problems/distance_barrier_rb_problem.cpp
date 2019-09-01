@@ -24,6 +24,10 @@ namespace opt {
         constraint_.settings(params["distance_barrier_constraint"]);
         opt_solver_.settings(params["barrier_solver"]);
         opt_solver_.set_problem(*this);
+        nlohmann::json inner_solver_settings
+            = params[params["barrier_solver"]["inner_solver"]
+                         .get<std::string>()];
+        opt_solver_.inner_solver_settings(inner_solver_settings);
         RigidBodyProblem::settings(params["rigid_body_problem"]);
     }
 
@@ -65,32 +69,45 @@ namespace opt {
         return g_uk;
     }
 
-    Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> DistanceBarrierRBProblem::eval_mp_g(
-        const Eigen::VectorXd& sigma)
+    bool DistanceBarrierRBProblem::has_collisions(
+        const Eigen::VectorXd& sigma_i, const Eigen::VectorXd& sigma_j) const
     {
-//        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
-//        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
+        Eigen::VectorXd qi = m_assembler.m_dof_to_position * sigma_i;
+        Eigen::MatrixXd xi = m_assembler.world_vertices(qi);
+
+        Eigen::VectorXd qj = m_assembler.m_dof_to_position * sigma_j;
+        Eigen::MatrixXd xj = m_assembler.world_vertices(qj);
+        return constraint_.has_active_collisions(xi, xj);
+    }
+
+    Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1>
+    DistanceBarrierRBProblem::eval_mp_g(const Eigen::VectorXd& /*sigma*/)
+    {
+        //        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        //        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) -
+        //        vertices_t0;
 
         Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> g_uk;
-//        EdgeVertexCandidates ev_candidates;
-//        auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
+        //        EdgeVertexCandidates ev_candidates;
+        //        auto check = constraint_.get_active_barrier_set(uk,
+        //        ev_candidates);
 
-//        if (check == DistanceBarrierConstraint::HAS_COLLISION) {
-            g_uk.resize(1);
-            g_uk(0) = Multiprecision(std::numeric_limits<double>::infinity(), 256);
+        //        if (check == DistanceBarrierConstraint::HAS_COLLISION) {
+        g_uk.resize(1);
+        g_uk(0) = Multiprecision(std::numeric_limits<double>::infinity(), 256);
 
-//        } else {
-//            Eigen::Matrix<Multiprecision, Eigen::Dynamic, Eigen::Dynamic> uk_mp;
+        //        } else {
+        //            Eigen::Matrix<Multiprecision, Eigen::Dynamic,
+        //            Eigen::Dynamic> uk_mp;
 
-//            uk_mp.resizeLike(uk);
-//            for (int i = 0; i < uk.size(); ++i) {
-//                uk_mp(i) = Multiprecision(uk(i), 256);
-//            }
-//            constraint_.compute_candidates_constraints<Multiprecision>(
-//                uk_mp, ev_candidates, g_uk);
-//        }
+        //            uk_mp.resizeLike(uk);
+        //            for (int i = 0; i < uk.size(); ++i) {
+        //                uk_mp(i) = Multiprecision(uk(i), 256);
+        //            }
+        //            constraint_.compute_candidates_constraints<Multiprecision>(
+        //                uk_mp, ev_candidates, g_uk);
+        //        }
         return g_uk;
-
     }
 
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g(
@@ -105,8 +122,7 @@ namespace opt {
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
 
         EdgeVertexCandidates ev_candidates;
-        auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
-        assert(check == DistanceBarrierConstraint::NO_COLLISIONS);
+        constraint_.get_active_barrier_set(uk, ev_candidates);
         PROFILE_END(UPDATE)
 
         PROFILE_START(EVAL)
@@ -166,9 +182,7 @@ namespace opt {
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
 
         EdgeVertexCandidates ev_candidates;
-        auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
-        assert(check == DistanceBarrierConstraint::NO_COLLISIONS);
-
+        constraint_.get_active_barrier_set(uk, ev_candidates);
         PROFILE_END(UPDATE)
 
         std::vector<Eigen::SparseMatrix<double>> gx_hessian;
@@ -194,8 +208,7 @@ namespace opt {
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
 
         EdgeVertexCandidates ev_candidates;
-        auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
-        assert(check == DistanceBarrierConstraint::NO_COLLISIONS);
+        constraint_.get_active_barrier_set(uk, ev_candidates);
         PROFILE_END(UPDATE)
 
         constraint_.compute_candidates_constraints(uk, ev_candidates, gx);

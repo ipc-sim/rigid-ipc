@@ -53,151 +53,87 @@ namespace opt {
         return CollisionConstraint::initialize(vertices, edges, group_ids, Uk);
     }
 
-    DistanceBarrierConstraint::CollisionCheck
-    DistanceBarrierConstraint::get_active_barrier_set(
-        const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers) const
+    bool DistanceBarrierConstraint::has_active_collisions(
+        const Eigen::MatrixXd& Xi, const Eigen::MatrixXd& Xj) const
     {
-        NAMED_PROFILE_POINT(
-            "distance_barrier__update_collision_set", BROAD_PHASE)
-        PROFILE_START(BROAD_PHASE)
         EdgeVertexCandidates ev_candidates;
-        detect_edge_vertex_collision_candidates(vertices, Uk, edges, group_ids,
-            ev_candidates, detection_method, m_barrier_epsilon);
-        PROFILE_END(BROAD_PHASE)
+        Eigen::MatrixXd Uk = Xj - Xi; // displacements
+        detect_edge_vertex_collision_candidates(Xi, Uk, edges, group_ids,
+            ev_candidates, detection_method, /*inflation_radius=*/0);
 
-        NAMED_PROFILE_POINT("distance_barrier__update_active_set", NARROW_PHASE)
-        PROFILE_START(NARROW_PHASE)
-
-        ev_barriers.clear();
-        Eigen::MatrixXd vertices_t1 = vertices + Uk;
-
-        CollisionCheck has_collision = CollisionCheck::NO_COLLISIONS;
+        bool has_collisions = false;
         for (size_t i = 0; i < ev_candidates.size(); i++) {
             const EdgeVertexCandidate& ev_candidate = ev_candidates[i];
             double toi;
 
             bool active_impact
                 = ccd::autodiff::compute_edge_vertex_time_of_impact<double>(
-                    vertices.row(edges(ev_candidate.edge_index, 0)),
-                    vertices.row(edges(ev_candidate.edge_index, 1)),
-                    vertices.row(ev_candidate.vertex_index),
+                    Xi.row(edges(ev_candidate.edge_index, 0)),
+                    Xi.row(edges(ev_candidate.edge_index, 1)),
+                    Xi.row(ev_candidate.vertex_index),
                     Uk.row(edges(ev_candidate.edge_index, 0)),
                     Uk.row(edges(ev_candidate.edge_index, 1)),
                     Uk.row(ev_candidate.vertex_index), toi);
 
             if (active_impact) {
-#ifdef NDEBUG
-                return CollisionCheck::HAS_COLLISION;
-#else
-                has_collision = CollisionCheck::HAS_COLLISION;
-#endif
+                return true;
             }
+        }
+        return has_collisions;
+    }
+
+    void DistanceBarrierConstraint::get_active_barrier_set(
+        const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers) const
+    {
+        NAMED_PROFILE_POINT(
+            "distance_barrier__update_collision_set", BROAD_PHASE)
+        NAMED_PROFILE_POINT("distance_barrier__update_active_set", NARROW_PHASE)
+
+        PROFILE_START(BROAD_PHASE)
+
+        EdgeVertexCandidates ev_candidates;
+        detect_edge_vertex_collision_candidates(vertices, Uk, edges, group_ids,
+            ev_candidates, detection_method, m_barrier_epsilon);
+
+        PROFILE_END(BROAD_PHASE)
+
+        PROFILE_START(NARROW_PHASE)
+
+        ev_barriers.clear();
+        Eigen::MatrixXd vertices_t1 = vertices + Uk;
+
+        for (size_t i = 0; i < ev_candidates.size(); i++) {
+            const EdgeVertexCandidate& ev_candidate = ev_candidates[i];
 
             double distance = sqrt(point_to_edge_sq_distance<double>(
                 vertices_t1.row(edges(ev_candidate.edge_index, 0)),
                 vertices_t1.row(edges(ev_candidate.edge_index, 1)),
                 vertices_t1.row(ev_candidate.vertex_index)));
-#ifdef DEBUG_LINESEARCH
-            if (active_impact) {
-                auto vi = vertices.row(edges(ev_candidate.edge_index, 0));
-                auto vj = vertices.row(edges(ev_candidate.edge_index, 1));
-                auto vk = vertices.row(ev_candidate.vertex_index);
-                auto ui = Uk.row(edges(ev_candidate.edge_index, 0));
-                auto uj = Uk.row(edges(ev_candidate.edge_index, 1));
-                auto uk = Uk.row(ev_candidate.vertex_index);
-                std::cout << fmt::format(
-                                 "e={} v={} e0={} e1={} distance={:.10e}",
-                                 ev_candidate.edge_index,
-                                 ev_candidate.vertex_index,
-                                 edges(ev_candidate.edge_index, 0),
-                                 edges(ev_candidate.edge_index, 1), distance)
-                          << std::endl;
-                std::cout << fmt::format("vi={} vj={} vk={}",
-                                 ccd::logger::fmt_eigen(vi),
-                                 ccd::logger::fmt_eigen(vj),
-                                 ccd::logger::fmt_eigen(vk))
-                          << std::endl;
-                std::cout << fmt::format("vi1={} vj1={} vk1={}",
-                                 ccd::logger::fmt_eigen(vi + ui),
-                                 ccd::logger::fmt_eigen(vj + uj),
-                                 ccd::logger::fmt_eigen(vk + uk))
-                          << std::endl;
-            }
-#endif
 
             bool distance_active
                 = distance < active_constraint_scale * m_barrier_epsilon;
+
             if (distance_active) {
                 ev_barriers.push_back(ev_candidate);
             }
         }
+
         PROFILE_END(NARROW_PHASE)
-        return has_collision;
     }
 
     void DistanceBarrierConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers)
     {
         EdgeVertexCandidates ev_candidates;
-        auto check = get_active_barrier_set(Uk, ev_candidates);
-
-        if (check == DistanceBarrierConstraint::HAS_COLLISION) {
-            barriers.resize(1);
-            barriers.setConstant(1, 1, std::numeric_limits<double>::infinity());
-            return;
-        } else {
-            compute_candidates_constraints(Uk, ev_candidates, barriers);
-        }
-    }
-
-    void DistanceBarrierConstraint::compute_distances(
-        const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers) const
-    {
-        assert(false);
-
-        //        EdgeVertexCandidates ev_candidates;
-        //        auto check = get_active_barrier_set(Uk, ev_candidates);
-
-        //        Eigen::MatrixXd vertices_t1 = vertices + Uk;
-
-        //        barriers.resize(ev_candidates.size());
-        //        barriers.setZero();
-        //        for (size_t i = 0; i < ev_candidates.size(); ++i) {
-        //            const auto& ev_candidate = ev_candidates[i];
-        //            // a and b are the endpoints of the edge; c is the vertex
-        //            long edge_id = ev_candidate.edge_index;
-        //            int a_id = edges.coeff(edge_id, 0);
-        //            int b_id = edges.coeff(edge_id, 1);
-        //            long c_id = ev_candidate.vertex_index;
-        //            assert(a_id != c_id && b_id != c_id);
-        //            Eigen::VectorXd a = vertices_t1.row(a_id);
-        //            Eigen::VectorXd b = vertices_t1.row(b_id);
-        //            Eigen::VectorXd c = vertices_t1.row(c_id);
-
-        //            double toi;
-        //            bool active_impact =
-        //            ccd::autodiff::compute_edge_vertex_time_of_impact<double>(
-        //                vertices.row(edges(ev_candidate.edge_index, 0)),
-        //                vertices.row(edges(ev_candidate.edge_index, 1)),
-        //                vertices.row(ev_candidate.vertex_index),
-        //                Uk.row(edges(ev_candidate.edge_index, 0)),
-        //                Uk.row(edges(ev_candidate.edge_index, 1)),
-        //                Uk.row(ev_candidate.vertex_index), toi);
-
-        //            barriers(int(i)) =
-        //            sqrt(point_to_edge_sq_distance<double>(a, b, c)); if
-        //            (active_impact) {
-        //                barriers(int(i)) *= -1;
-        //            }
-        //        }
+        get_active_barrier_set(Uk, ev_candidates);
+        compute_candidates_constraints(Uk, ev_candidates, barriers);
     }
 
     void DistanceBarrierConstraint::compute_constraints_jacobian(
         const Eigen::MatrixXd& Uk, Eigen::MatrixXd& barriers_jacobian)
     {
         EdgeVertexCandidates ev_candidates;
-        auto check = get_active_barrier_set(Uk, ev_candidates);
-        assert(check == DistanceBarrierConstraint::NO_COLLISIONS);
+        get_active_barrier_set(Uk, ev_candidates);
         compute_candidates_constraints_jacobian(
             Uk, ev_candidates, barriers_jacobian);
     }
@@ -206,9 +142,7 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>>& barriers_hessian)
     {
         EdgeVertexCandidates ev_candidates;
-        auto check = get_active_barrier_set(Uk, ev_candidates);
-        assert(check == DistanceBarrierConstraint::NO_COLLISIONS);
-
+        get_active_barrier_set(Uk, ev_candidates);
         compute_candidates_constraints_hessian(
             Uk, ev_candidates, barriers_hessian);
     }
@@ -328,7 +262,6 @@ namespace opt {
         Diff::DDouble2 barrier = distance_barrier<Diff::DDouble2>(da, db, dc);
         return barrier.getHessian();
     }
-
 
     double DistanceBarrierConstraint::distance_barrier_grad(
         const double distance, const double eps)

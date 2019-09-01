@@ -90,6 +90,9 @@ namespace opt {
 
         Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> eval_mp_g(const Eigen::VectorXd& x) override;
 
+        bool has_collisions(const Eigen::VectorXd& sigma_i,
+            const Eigen::VectorXd& sigma_j) const override;
+
 #ifdef DEBUG_LINESEARCH
         Eigen::MatrixXi debug_edges() const override{
             return m_assembler.m_edges;
