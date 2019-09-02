@@ -349,7 +349,8 @@ namespace opt {
         DTVector2d dc = rbs[size_t(rbc.vertex_body_id)].world_vertex<T>(
             position_V, rbc.vertex_local_id);
 
-        T distance = sqrt(point_to_edge_sq_distance<T>(da, db, dc));
+        //        T distance = sqrt(point_to_edge_sq_distance<T>(da, db, dc));
+        T distance = point_to_edge_distance<T>(da, db, dc);
         return distance;
     }
 
@@ -383,7 +384,9 @@ namespace opt {
         DTVector2d dc = rbs[size_t(rbc.vertex_body_id)].world_vertex<double>(
             position_V, rbc.vertex_local_id);
 
-        double distance = sqrt(point_to_edge_sq_distance<double>(da, db, dc));
+        //        double distance = sqrt(point_to_edge_sq_distance<double>(da,
+        //        db, dc));
+        double distance = point_to_edge_distance<double>(da, db, dc);
         return distance;
     }
 

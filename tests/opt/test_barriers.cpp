@@ -9,7 +9,7 @@ using namespace opt;
 
 TEST_CASE("Test barriers and their derivatives", "[opt][barrier]")
 {
-    double s = Eigen::VectorXd::Random(1)[0];
+    double s = 1e-4;
 
     std::function<double(double)> phi;
     std::function<double(double)> phi_gradient;

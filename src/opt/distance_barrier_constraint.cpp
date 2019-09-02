@@ -105,11 +105,15 @@ namespace opt {
         for (size_t i = 0; i < ev_candidates.size(); i++) {
             const EdgeVertexCandidate& ev_candidate = ev_candidates[i];
 
-            double distance = sqrt(point_to_edge_sq_distance<double>(
+//            double distance = sqrt(point_to_edge_sq_distance<double>(
+//                vertices_t1.row(edges(ev_candidate.edge_index, 0)),
+//                vertices_t1.row(edges(ev_candidate.edge_index, 1)),
+//                vertices_t1.row(ev_candidate.vertex_index)));
+
+            double distance = point_to_edge_distance<double>(
                 vertices_t1.row(edges(ev_candidate.edge_index, 0)),
                 vertices_t1.row(edges(ev_candidate.edge_index, 1)),
-                vertices_t1.row(ev_candidate.vertex_index)));
-
+                vertices_t1.row(ev_candidate.vertex_index));
             bool distance_active
                 = distance < active_constraint_scale * m_barrier_epsilon;
 

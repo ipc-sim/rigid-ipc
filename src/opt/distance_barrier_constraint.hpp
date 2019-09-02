@@ -102,6 +102,11 @@ namespace opt {
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& c);
 
+    template <typename T>
+    T point_to_edge_distance(const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
+        const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
+        const Eigen::Matrix<T, Eigen::Dynamic, 1>& c);
+
 } // namespace opt
 } // namespace ccd
 
