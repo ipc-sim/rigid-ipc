@@ -82,6 +82,12 @@ OUTPUT_DIR="$RESULTS_DIR/dynamic/billiards"
 generate_result_cor_on_off
 
 ### Compress the results and upload them to google drive
-TAR_FNAME=$RESULTS_DIR/../paper-results-$(date +%s).tar.gz
-tar -czvf $TAR_FNAME $RESULTS_DIR
-rclone copy $TAR_FNAME google-drive:fixing-collisions
+if [ $SBATCH != "sbatch" ]; then
+    TAR_FNAME=$RESULTS_DIR/../paper-results-$(date +%s).tar.gz
+    tar -czvf $TAR_FNAME $RESULTS_DIR
+    rclone copy $TAR_FNAME google-drive:fixing-collisions
+else
+    echo "Running simulations as batch jobs."
+    echo "When done tar and upload the results using:"
+    echo "TAR_FNAME=$RESULTS_DIR/../paper-results-$(date +%s).tar.gz; tar -czvf $TAR_FNAME $RESULTS_DIR; rclone copy $TAR_FNAME google-drive:fixing-collisions"
+if

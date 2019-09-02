@@ -37,7 +37,7 @@ python $TOOLS_DIR/results_to_vtk_files.py $OUTPUT_DIR/ours/sim.json $OUTPUT_DIR
 # Make Box2D's results directory
 mkdir -p $OUTPUT_DIR/Box2D
 # Simulate using Box2D
-$BUILD_DIR/comparisons/Box2d/Box2d-comparison --scene-path \
+$BUILD_DIR/comparisons/Box2D/Box2D-comparison --scene-path \
     $OUTPUT_DIR/fixture.json --output-path $OUTPUT_DIR --num-steps 1000
 # Process Box2D's results
 python $TOOLS_DIR/results_to_vtk_files.py $OUTPUT_DIR/Box2D/sim.json $OUTPUT_DIR
