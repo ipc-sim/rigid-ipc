@@ -9,63 +9,27 @@ import numpy
 from shapely.geometry import Polygon
 from shapely.ops import cascaded_union
 
-from default_fixture import generate_default_fixture
+from fixture_utils import *
 
 
-def create_polygon_edges(num_points):
-    return numpy.hstack([
-        numpy.arange(num_points).reshape(-1, 1),
-        numpy.roll(numpy.arange(num_points).reshape(-1, 1), -1)]).tolist()
-
-
-def generate_fixture(num_points: int):
+def generate_fixture(args: argparse.Namespace) -> dict:
     """Generate a fixture of a N boxes stacked on top of each other."""
-    fixture = generate_default_fixture()
-    fixture["timestep_size"] = 1e-3
-    fixture["distance_barrier_constraint"]["custom_initial_epsilon"] = 1e-2
-    fixture["barrier_solver"]["min_barrier_epsilon"] = 1e-4
-    fixture["rigid_body_problem"]["gravity"] = [0, 0, 0]
-    fixture["rigid_body_problem"]["coefficient_restitution"] = 1
+    fixture = generate_custom_fixture(args)
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
     width = 198  # cm
     height = 99  # cm
-    # Walls of the pool table as four boxes
-    wall_vertices = numpy.array([
-        [-width / 2, -height / 2], [width / 2, -height / 2],
-        [width / 2, height / 2], [-width / 2, height / 2]])
-    wall_polygons = [
-        Polygon([1.1 * wall_vertices[i], 1.1 * wall_vertices[(i + 1) % 4],
-                 wall_vertices[(i + 1) % 4], wall_vertices[i]])
-        for i in range(4)
-    ]
-    thick_wall = cascaded_union(wall_polygons)
-    wall_vertices = (list(thick_wall.exterior.coords)[:-1] +
-                     list(thick_wall.interiors[0].coords)[:-1])
-    wall_polygons = [list(polygon.exterior.coords)
-                     for polygon in wall_polygons]
-    wall_edges = numpy.array(create_polygon_edges(4))
-    wall_edges = numpy.append(wall_edges, wall_edges + 4, axis=0).tolist()
-    rigid_bodies.append({
-        "vertices": wall_vertices,
-        "polygons": wall_polygons,
-        "edges": wall_edges,
-        "oriented": False,
-        "velocity": [0.0, 0.0, 0.0],
-        "is_dof_fixed": [True, True, True]
-    })
+    thickness = 19  # cm
+    rigid_bodies.append(
+        generate_walls(numpy.zeros(2), width / 2, height / 2, thickness))
 
     # Ball settings
     radius = 5.7 / 2  # cm
-    x = numpy.cos(numpy.arange(num_points, dtype=float) /
-                  num_points * 2 * numpy.pi) * radius
-    y = numpy.sin(numpy.arange(num_points, dtype=float) /
-                  num_points * 2 * numpy.pi) * radius
-    ball_vertices = numpy.hstack([x.reshape(-1, 1), y.reshape(-1, 1)]).tolist()
+    ball_vertices = generate_regular_ngon_vertices(args.num_points, radius)
     ball = {
-        "vertices": ball_vertices,
-        "polygons": [ball_vertices],
-        "edges": create_polygon_edges(num_points),
+        "vertices": ball_vertices.tolist(),
+        "polygons": [ball_vertices.tolist()],
+        "edges": generate_ngon_edges(args.num_points).tolist(),
         "oriented": True,
         "velocity": [0.0, 0.0, 0.0],
         "is_dof_fixed": [False, False, False]
@@ -77,7 +41,7 @@ def generate_fixture(num_points: int):
         y = -1.15 * radius * row
         for i in range(row + 1):
             ball["position"] = [x, y]
-            ball["theta"] = numpy.random.random() * (360 / num_points)
+            ball["theta"] = numpy.random.random() * (360 / args.num_points)
             rigid_bodies.append(ball.copy())
             y += 2.3 * radius
         x += 2 * radius
@@ -94,25 +58,26 @@ def generate_fixture(num_points: int):
 
 def main():
     """Parse command-line arguments to generate the desired fixture."""
-    parser = argparse.ArgumentParser(
-        description="generate a Newton's Cradle fixture")
-    parser.add_argument("--num-points", type=int, default=25,
-                        help="number of points/edges used to discritize the balls")
-    parser.add_argument("--out-path", metavar="path/to/output.json",
-                        type=pathlib.Path, default=None,
-                        help="path to save the fixture")
+    parser = create_argument_parser("generate a billiards fixture",
+                                    default_timestep=1e-3,
+                                    default_initial_epsilon=1e-2,
+                                    default_minimum_epsilon=1e-4,
+                                    default_restitution_coefficient=1)
+    parser.add_argument(
+        "--num-points",
+        type=int,
+        default=8,
+        help="number of points/edges used to discritize the balls")
     args = parser.parse_args()
 
     if args.out_path is None:
-        directory = (pathlib.Path(__file__).resolve().parents[1] /
-                     "fixtures")
-        directory.mkdir(parents=True, exist_ok=True)
+        directory = pathlib.Path(__file__).resolve().parents[1] / "fixtures"
         args.out_path = directory / "billiards.json"
     args.out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    print(args)
+    print_args(args)
 
-    fixture = generate_fixture(args.num_points)
+    fixture = generate_fixture(args)
 
     with open(args.out_path, 'w') as outfile:
         json.dump(fixture, outfile)

@@ -1,38 +1,24 @@
 #!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --time=2:00:00
-#SBATCH --mem=16GB
-#SBATCH --job-name=generate_results
-#SBATCH --mail-type=END
-#SBATCH --mail-user=zfergus@nyu.edu
-#SBATCH --output=results/logs/simulation-%j.out
-#SBATCH --error=results/logs/simulation-%j.err
-
 # Script to generate the results for the paper.
+
+if command -v sbatch &> /dev/null; then
+    SBATCH=sbatch
+else
+    SBATCH=source
+fi
 
 # Save the directory of this file
 TOOLS_DIR="$(cd "$(dirname "$0")" ; pwd -P )"
 RESULTS_DIR=$TOOLS_DIR/../results/paper-results
 mkdir -p "$RESULTS_DIR"
-BUILD_DIR=$TOOLS_DIR/../build/release
-
-# Function to generate the fixture; run the sim; process results.
-generate_result () {
-    # Parameters: GENERATION_SCRIPT, GENERATION_ARGS, OUTPUT_DIR
-    python $TOOLS_DIR/$1 $2 --out-path $3/fixture.json
-    $BUILD_DIR/FixingCollisions_ngui --scene-path $3/fixture.json \
-        --output-path $3 --num-iterations 1000
-    python $TOOLS_DIR/results_to_vtk_files.py $3/sim.json $3
-    echo
-}
 
 generate_result_cor_on_off () {
     # Generate without restitution
-    generate_result $GENERATION_SCRIPT "$GENERATION_ARGS --cor -1" $OUTPUT_DIR/cor=-1
+    $SBATCH $TOOLS_DIR/generate_result.sh $GENERATION_SCRIPT \
+        "$GENERATION_ARGS --cor -1" $OUTPUT_DIR/cor=-1
     # Generate with restitution
-    generate_result $GENERATION_SCRIPT "$GENERATION_ARGS --cor 1" $OUTPUT_DIR/cor=1
+    $SBATCH $TOOLS_DIR/generate_result.sh $GENERATION_SCRIPT \
+        "$GENERATION_ARGS --cor 1" $OUTPUT_DIR/cor=1
 }
 
 ### Static
@@ -78,7 +64,7 @@ generate_result_cor_on_off
 
 # Newton's Cradle
 GENERATION_SCRIPT="generate_newtons_cradle_fixture.py"
-GENERATION_ARGS="--num-balls 5 --num-points 50"
+GENERATION_ARGS="--num-balls 5 --num-points 8"
 OUTPUT_DIR="$RESULTS_DIR/dynamic/newtons-cradle"
 generate_result_cor_on_off
 
@@ -86,6 +72,12 @@ generate_result_cor_on_off
 GENERATION_SCRIPT="generate_saw_fixture.py"
 GENERATION_ARGS=""
 OUTPUT_DIR="$RESULTS_DIR/dynamic/saw"
+generate_result_cor_on_off
+
+# Billiards
+GENERATION_SCRIPT="generate_billiards_fixture.py"
+GENERATION_ARGS=""
+OUTPUT_DIR="$RESULTS_DIR/dynamic/billiards"
 generate_result_cor_on_off
 
 ### Compress the results and upload them to google drive

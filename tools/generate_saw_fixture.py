@@ -10,24 +10,20 @@ import numpy
 import shapely.geometry
 import shapely.ops
 
-from default_fixture import generate_default_fixture
+from fixture_utils import *
 
 
-def generate_fixture(cor):
+def generate_fixture(args):
     """Generate a saw and block."""
-    fixture = generate_default_fixture()
-    fixture["distance_barrier_constraint"]["custom_initial_epsilon"] = 1e-1
-    fixture["barrier_solver"]["min_barrier_epsilon"] = 1e-4
-    fixture["rigid_body_problem"]["coefficient_restitution"] = cor
-    fixture["rigid_body_problem"]["gravity"] = [0, 0, 0]
+    fixture = generate_custom_fixture(args)
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
     # Add the box
+    box_vertices = [[-1, 2], [0, 2], [0, 3], [-1, 3]]
     rigid_bodies.append({
-        "vertices": [[-1, 2], [0, 2], [0, 3], [-1, 3]],
-        "polygons": [[[-1, 2], [0, 2], [0, 3], [-1, 3]]],
-        "edges": numpy.vstack(
-            [numpy.arange(4), numpy.roll(numpy.arange(4), -1)]).T.tolist(),
+        "vertices": box_vertices,
+        "polygons": [box_vertices],
+        "edges": generate_ngon_edges(4).tolist(),
         "velocity": [1.0, -1.0, 0.0]
     })
 
@@ -35,23 +31,20 @@ def generate_fixture(cor):
     num_teeth = 100
     saw_length = 10
     tooth_length = saw_length / num_teeth
-    saw_polygons = [shapely.geometry.Polygon(numpy.array(
-        [[0.0, 0.0], [tooth_length, 0.0], [0.0, 1.0]]) +
-        [0.8 * tooth_length * i, 0])
-        for i in range(num_teeth)]
+    saw_polygons = [
+        shapely.geometry.Polygon(
+            numpy.array([[0.0, 0.0], [tooth_length, 0.0], [0.0, 1.0]]) +
+            [0.8 * tooth_length * i, 0]) for i in range(num_teeth)
+    ]
     saw = shapely.ops.cascaded_union(saw_polygons)
-    saw_polygons = [list(polygon.exterior.coords)
-                    for polygon in saw_polygons]
-    vertices = numpy.array(list(saw.exterior.coords)[:-1])
-    num_points = vertices.shape[0]
-    edges = numpy.hstack([
-        numpy.arange(num_points).reshape(-1, 1),
-        numpy.roll(numpy.arange(num_points).reshape(-1, 1), -1)])
+    saw_polygons = [list(polygon.exterior.coords) for polygon in saw_polygons]
+    saw_vertices = numpy.array(list(saw.exterior.coords)[:-1])
+    saw_edges = generate_ngon_edges(saw_vertices.shape[0])
 
     rigid_bodies.append({
-        "vertices": vertices.tolist(),
-        "edges": edges.tolist(),
+        "vertices": saw_vertices.tolist(),
         "polygons": saw_polygons,
+        "edges": saw_edges.tolist(),
         "velocity": [0.0, 0.0, 0.0],
         "is_dof_fixed": [True, True, True]
     })
@@ -61,24 +54,20 @@ def generate_fixture(cor):
 
 def main():
     """Parse command-line arguments to generate the desired fixture."""
-    parser = argparse.ArgumentParser(
-        description="generate a block falling onto a saw")
-    parser.add_argument("--cor", type=float, default=-1,
-                        help="coefficient of restitution")
-    parser.add_argument("--out-path", metavar="path/to/output.json",
-                        type=pathlib.Path, default=None,
-                        help="path to save the fixture")
+    parser = create_argument_parser("generate a block falling onto a saw",
+                                    default_minimum_epsilon=1e-4)
     args = parser.parse_args()
 
     if args.out_path is None:
-        directory = (pathlib.Path(__file__).resolve().parents[1] /
-                     "fixtures" / "saw")
-        args.out_path = directory / "saw-cor={:g}.json".format(args.cor)
+        directory = (pathlib.Path(__file__).resolve().parents[1] / "fixtures" /
+                     "saw")
+        args.out_path = (directory /
+                         "saw-cor={:g}.json".format(args.restitution_coeff))
     args.out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    print(args)
+    print_args(args)
 
-    fixture = generate_fixture(args.cor)
+    fixture = generate_fixture(args)
 
     with open(args.out_path, 'w') as outfile:
         json.dump(fixture, outfile)
