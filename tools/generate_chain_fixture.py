@@ -15,15 +15,6 @@ import shapely.ops
 from fixture_utils import *
 
 
-def generate_rectangle(hx: float, hy: float, center: numpy.ndarray,
-                       angle: float) -> shapely.geometry.Polygon:
-    """Generate a rectangle polygon."""
-    points = numpy.array([[hx, hy], [-hx, hy], [-hx, -hy], [hx, -hy]])
-    points = points @ create_2D_rotation_matrix(angle).T
-    points += center
-    return shapely.geometry.Polygon(points)
-
-
 def generate_link_polygons() -> list:
     """Generate a list of Polygons for the chain link."""
     half_thickness = 1e-2

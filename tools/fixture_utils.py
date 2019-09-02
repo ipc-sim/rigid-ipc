@@ -4,6 +4,7 @@ import argparse
 import pathlib
 
 import numpy
+import shapely.geometry
 
 DEFAULT_TIMESTEP = 1e-2
 DEFAULT_INITIAL_EPSILON = 1e-1
@@ -98,6 +99,15 @@ def generate_ngon_edges(n: int) -> numpy.ndarray:
     """Generate the edges of a N-gon."""
     indices = numpy.arange(n).reshape(-1, 1)
     return numpy.hstack([indices, numpy.roll(indices, -1)])
+
+
+def generate_rectangle(hx: float, hy: float, center: numpy.ndarray,
+                       angle: float) -> shapely.geometry.Polygon:
+    """Generate a rectangle polygon."""
+    points = numpy.array([[hx, hy], [-hx, hy], [-hx, -hy], [hx, -hy]])
+    points = points @ create_2D_rotation_matrix(angle).T
+    points += center
+    return shapely.geometry.Polygon(points)
 
 
 def create_2D_rotation_matrix(theta: float) -> numpy.ndarray:

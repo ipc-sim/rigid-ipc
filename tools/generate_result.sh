@@ -13,6 +13,9 @@
 #SBATCH --output=results/logs/simulation-%j.out
 #SBATCH --error=results/logs/simulation-%j.err
 
+GIT_SHA=git rev-parse HEAD
+echo "$GIT_SHA"
+
 FIXING_COLLISIONS_ROOT=$1
 GENERATION_SCRIPT=$2
 GENERATION_ARGS=$3
@@ -33,9 +36,11 @@ python $TOOLS_DIR/$GENERATION_SCRIPT $GENERATION_ARGS --out-path \
 OUR_OUTPUT_DIR=$OUTPUT_DIR/ours
 mkdir -p $OUR_OUTPUT_DIR/logs
 # Simulate using our simulation
+echo GIT_SHA > $OUR_OUTPUT_DIR/logs/log-$TIME.out
+echo GIT_SHA > $OUR_OUTPUT_DIR/logs/log-$TIME.err
 $BUILD_DIR/FixingCollisions_ngui --scene-path $OUTPUT_DIR/fixture.json \
     --output-path $OUR_OUTPUT_DIR --num-iterations 1000 \
-    > $OUR_OUTPUT_DIR/logs/log-$TIME.out 2> $OUR_OUTPUT_DIR/logs/log-$TIME.err
+    >> $OUR_OUTPUT_DIR/logs/log-$TIME.out 2>> $OUR_OUTPUT_DIR/logs/log-$TIME.err
 # Process our results
 python $TOOLS_DIR/results_to_vtk_files.py $OUR_OUTPUT_DIR/sim.json \
     $OUR_OUTPUT_DIR
@@ -45,7 +50,7 @@ mkdir -p $BOX2D_OUTPUT_DIR/logs
 # Simulate using Box2D
 $BUILD_DIR/comparisons/Box2D/Box2D-comparison --scene-path \
     $OUTPUT_DIR/fixture.json --output-path $BOX2D_OUTPUT_DIR --num-steps 1000 \
-    > $BOX2D_OUTPUT_DIR/logs/log-$TIME.out 2> $BOX2D_OUTPUT_DIR/logs/log-$TIME.err
+    >> $BOX2D_OUTPUT_DIR/logs/log-$TIME.out 2>> $BOX2D_OUTPUT_DIR/logs/log-$TIME.err
 # Process Box2D's results
 python $TOOLS_DIR/results_to_vtk_files.py $BOX2D_OUTPUT_DIR/sim.json \
     $BOX2D_OUTPUT_DIR
