@@ -4,21 +4,22 @@
 if command -v sbatch &> /dev/null; then
     SBATCH=sbatch
 else
-    SBATCH=source
+    SBATCH=.
 fi
 
 # Save the directory of this file
 TOOLS_DIR="$(cd "$(dirname "$0")" ; pwd -P )"
-RESULTS_DIR=$TOOLS_DIR/../results/paper-results
+FIXING_COLLISIONS_ROOT=$TOOLS_DIR/..
+RESULTS_DIR=$FIXING_COLLISIONS_ROOT/results/paper-results
 mkdir -p "$RESULTS_DIR"
 
 generate_result_cor_on_off () {
     # Generate without restitution
-    $SBATCH $TOOLS_DIR/generate_result.sh $GENERATION_SCRIPT \
-        "$GENERATION_ARGS --cor -1" $OUTPUT_DIR/cor=-1
+    $SBATCH $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
+        $GENERATION_SCRIPT "$GENERATION_ARGS --cor -1" $OUTPUT_DIR/cor=-1
     # Generate with restitution
-    $SBATCH $TOOLS_DIR/generate_result.sh $GENERATION_SCRIPT \
-        "$GENERATION_ARGS --cor 1" $OUTPUT_DIR/cor=1
+    $SBATCH $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
+        $GENERATION_SCRIPT "$GENERATION_ARGS --cor 1" $OUTPUT_DIR/cor=1
 }
 
 ### Static

@@ -1,5 +1,7 @@
 #!/bin/bash
 # Script to generate the fixture; run the sim; process results.
+# Parameters:
+#   fixing collisions root, generation script, generation args, output dir
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
@@ -11,25 +13,31 @@
 #SBATCH --output=results/logs/simulation-%j.out
 #SBATCH --error=results/logs/simulation-%j.err
 
-# $SLURM_JOB_ID=""
-# Save the directory of this file
-if [ -n "$SLURM_JOB_ID" ] ; then
-    THEPATH=$(scontrol show job $SLURM_JOBID | awk -F= '/Command=/{print $2}')
-else
-    THEPATH=$(realpath $0)
-fi
-TOOLS_DIR="$(cd "$(dirname "$THEPATH")" ; pwd -P )"
-RESULTS_DIR=$TOOLS_DIR/../results/paper-results
-mkdir -p "$RESULTS_DIR"
-BUILD_DIR=$TOOLS_DIR/../build/release
+FIXING_COLLISIONS_ROOT=$1
+GENERATION_SCRIPT=$2
+GENERATION_ARGS=$3
+OUTPUT_DIR=$4
 
-# Parameters: GENERATION_SCRIPT, GENERATION_ARGS, OUTPUT_DIR
-python $TOOLS_DIR/$1 $2 --out-path $3/fixture.json
-mkdir -p $3/ours
-$BUILD_DIR/FixingCollisions_ngui --scene-path $3/fixture.json \
-    --output-path $3/ours --num-iterations 1000
-python $TOOLS_DIR/results_to_vtk_files.py $3/ours/sim.json $3
-mkdir -p $3/Box2D
-$BUILD_DIR/comparisons/Box2d/Box2d-comparison --scene-path $3/fixture.json \
-    --output-path $3 --num-steps 1000
-python $TOOLS_DIR/results_to_vtk_files.py $3/Box2D/sim.json $3
+# Save the directories
+TOOLS_DIR="$FIXING_COLLISIONS_ROOT/tools"
+RESULTS_DIR="$FIXING_COLLISIONS_ROOT/results/paper-results"
+mkdir -p "$RESULTS_DIR"
+BUILD_DIR="$FIXING_COLLISIONS_ROOT/build/release"
+
+# Generate the fixture
+python $TOOLS_DIR/$GENERATION_SCRIPT $GENERATION_ARGS --out-path \
+    $OUTPUT_DIR/fixture.json
+# Make our results directory
+mkdir -p $OUTPUT_DIR/ours
+# Simulate using our simulation
+$BUILD_DIR/FixingCollisions_ngui --scene-path $OUTPUT_DIR/fixture.json \
+    --output-path $OUTPUT_DIR/ours --num-iterations 1000
+# Process our results
+python $TOOLS_DIR/results_to_vtk_files.py $OUTPUT_DIR/ours/sim.json $OUTPUT_DIR
+# Make Box2D's results directory
+mkdir -p $OUTPUT_DIR/Box2D
+# Simulate using Box2D
+$BUILD_DIR/comparisons/Box2d/Box2d-comparison --scene-path \
+    $OUTPUT_DIR/fixture.json --output-path $OUTPUT_DIR --num-steps 1000
+# Process Box2D's results
+python $TOOLS_DIR/results_to_vtk_files.py $OUTPUT_DIR/Box2D/sim.json $OUTPUT_DIR
