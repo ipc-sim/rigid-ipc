@@ -57,7 +57,7 @@ generate_result_cor_on_off
 
 # Chain
 GENERATION_SCRIPT="generate_chainmail_fixture.py"
-GENERATION_ARGS="10"
+GENERATION_ARGS="--num-links 10"
 OUTPUT_DIR="$RESULTS_DIR/static/chain"
 generate_result_cor_on_off
 

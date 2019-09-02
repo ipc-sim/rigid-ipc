@@ -7,7 +7,6 @@ Usage: python generate_complex_chainmail_fixture.py N
 
 import json
 import pathlib
-import sys
 
 import numpy
 import shapely.geometry
