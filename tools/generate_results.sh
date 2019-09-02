@@ -90,4 +90,4 @@ else
     echo "Running simulations as batch jobs."
     echo "When done tar and upload the results using:"
     echo "TAR_FNAME=$RESULTS_DIR/../paper-results-$(date +%s).tar.gz; tar -czvf $TAR_FNAME $RESULTS_DIR; rclone copy $TAR_FNAME google-drive:fixing-collisions"
-if
+fi
