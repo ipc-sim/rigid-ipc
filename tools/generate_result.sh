@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
-#SBATCH --time=1:00:00
+#SBATCH --time=0:30:00
 #SBATCH --mem=8GB
 #SBATCH --job-name=generate_results
 #SBATCH --mail-type=END
@@ -24,20 +24,28 @@ RESULTS_DIR="$FIXING_COLLISIONS_ROOT/results/paper-results"
 mkdir -p "$RESULTS_DIR"
 BUILD_DIR="$FIXING_COLLISIONS_ROOT/build/release"
 
+TIME=$(date "+%F-%T")
+
 # Generate the fixture
 python $TOOLS_DIR/$GENERATION_SCRIPT $GENERATION_ARGS --out-path \
     $OUTPUT_DIR/fixture.json
 # Make our results directory
-mkdir -p $OUTPUT_DIR/ours
+OUR_OUTPUT_DIR=$OUTPUT_DIR/ours
+mkdir -p $OUR_OUTPUT_DIR/logs
 # Simulate using our simulation
 $BUILD_DIR/FixingCollisions_ngui --scene-path $OUTPUT_DIR/fixture.json \
-    --output-path $OUTPUT_DIR/ours --num-iterations 1000
+    --output-path $OUR_OUTPUT_DIR --num-iterations 1000 \
+    > $OUR_OUTPUT_DIR/logs/log-$TIME.out 2> $OUR_OUTPUT_DIR/logs/log-$TIME.err
 # Process our results
-python $TOOLS_DIR/results_to_vtk_files.py $OUTPUT_DIR/ours/sim.json $OUTPUT_DIR
+python $TOOLS_DIR/results_to_vtk_files.py $OUR_OUTPUT_DIR/sim.json \
+    $OUR_OUTPUT_DIR
 # Make Box2D's results directory
-mkdir -p $OUTPUT_DIR/Box2D
+BOX2D_OUTPUT_DIR=$OUTPUT_DIR/Box2D
+mkdir -p $BOX2D_OUTPUT_DIR/logs
 # Simulate using Box2D
 $BUILD_DIR/comparisons/Box2D/Box2D-comparison --scene-path \
-    $OUTPUT_DIR/fixture.json --output-path $OUTPUT_DIR --num-steps 1000
+    $OUTPUT_DIR/fixture.json --output-path $BOX2D_OUTPUT_DIR --num-steps 1000 \
+    > $BOX2D_OUTPUT_DIR/logs/log-$TIME.out 2> $BOX2D_OUTPUT_DIR/logs/log-$TIME.err
 # Process Box2D's results
-python $TOOLS_DIR/results_to_vtk_files.py $OUTPUT_DIR/Box2D/sim.json $OUTPUT_DIR
+python $TOOLS_DIR/results_to_vtk_files.py $BOX2D_OUTPUT_DIR/sim.json \
+    $BOX2D_OUTPUT_DIR
