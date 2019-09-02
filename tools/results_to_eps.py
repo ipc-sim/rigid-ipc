@@ -18,6 +18,8 @@ def main(args=[]):
                         default=1.0, help='Scaling factor')
     parser.add_argument('--colormap',
                         default='Spectral', help='Colormap')
+    parser.add_argument('--step', type=int,
+                        default=1, help='Plot every step frames')
     args = parser.parse_args()
 
     fin = args.results_file
@@ -32,7 +34,8 @@ def main(args=[]):
 
     with fout.open("w") as eps_file:
         bbox = None
-        for vs in vertices_sequence:
+        for i in range(0, len(vertices_sequence), args.step):
+            vs = vertices_sequence[i]
             V = np.array(vs)*args.scaling
             cbox = np.min(V[:, 0]), np.max(V[:, 0]), np.min(V[:, 1]), np.max(V[:, 1])
             if bbox is None:
@@ -46,7 +49,8 @@ def main(args=[]):
         eps_file.write("%%Page: 1 1\n")
         eps_file.write("/show-ctr {\ndup stringwidth pop\n -2 div 0\n rmoveto show\n} def\n\n 2 setlinejoin\n\n")
 
-        for i, vs in enumerate(vertices_sequence):
+        for i in range(0, len(vertices_sequence), args.step):
+            vs = vertices_sequence[i]
             V = np.array(vs)*args.scaling
             t = float(i)/(len(vertices_sequence)-1)
             rgba = cmap(t)
