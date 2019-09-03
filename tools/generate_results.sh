@@ -88,12 +88,15 @@ OUTPUT_DIR="$RESULTS_DIR/dynamic/billiards"
 generate_result_cor_on_off
 
 ### Compress the results and upload them to google drive
+TIME=$(date "+%F-%T")
+TIME=$(echo "${TIME//:/-}")
+GIT_SHA=$(git rev-parse HEAD)
 if [ $SBATCH != "sbatch" ]; then
-    TAR_FNAME=$RESULTS_DIR/../paper-results-$(git rev-parse HEAD)-$(date "+%F-%T").tar.gz
+    TAR_FNAME=$RESULTS_DIR/../paper-results-$GIT_SHA-$TIME.tar.gz
     tar -czvf $TAR_FNAME $RESULTS_DIR
     rclone copy $TAR_FNAME google-drive:fixing-collisions
 else
     echo "Running simulations as batch jobs."
     echo "When done tar and upload the results using:"
-    echo "TAR_FNAME=$RESULTS_DIR/../paper-results-\$(git rev-parse HEAD)-\$(date +%s).tar.gz; tar -czvf \$TAR_FNAME $RESULTS_DIR; rclone copy \$TAR_FNAME google-drive:fixing-collisions"
+    echo "TAR_FNAME=$RESULTS_DIR/../paper-results-$GIT_SHA-$TIME.tar.gz; tar -czvf \$TAR_FNAME $RESULTS_DIR; rclone copy \$TAR_FNAME google-drive:fixing-collisions"
 fi

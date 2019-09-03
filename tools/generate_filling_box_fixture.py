@@ -67,11 +67,11 @@ def generate_fixture(args):
     height = 6 * hy
     for i in range(args.num_blocks):
         invalid_center = True
-        num_try = 0
+        num_tries = 0
         while invalid_center:
-            if num_try > 100:
+            if num_tries > 100:
                 height *= 2
-                num_try = 0
+                num_tries = 0
             center = (numpy.random.random(2) * [width, height] +
                       [-width / 2, 2 * half_thickness + radius])
             invalid_center = (numpy.linalg.norm(centers - center, axis=1) <
@@ -98,7 +98,8 @@ def main():
     parser = create_argument_parser(description="generate a tower of blocks",
                                     default_initial_epsilon=1e-2,
                                     default_minimum_epsilon=1e-4,
-                                    default_gravity=[0, -9.81, 0])
+                                    default_gravity=[0, -9.81, 0],
+                                    default_num_steps=10000)
     parser.add_argument("--num-blocks",
                         type=int,
                         default=100,

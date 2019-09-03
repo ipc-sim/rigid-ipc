@@ -39,7 +39,7 @@ mkdir -p $OUR_OUTPUT_DIR/logs
 echo "Git SHA: $GIT_SHA" > $OUR_OUTPUT_DIR/logs/log-$TIME.out
 echo "Git SHA: $GIT_SHA" > $OUR_OUTPUT_DIR/logs/log-$TIME.err
 $BUILD_DIR/FixingCollisions_ngui --scene-path $OUTPUT_DIR/fixture.json \
-    --output-path $OUR_OUTPUT_DIR --num-iterations 1000 --trace \
+    --output-path $OUR_OUTPUT_DIR --trace \
     >> $OUR_OUTPUT_DIR/logs/log-$TIME.out 2>> $OUR_OUTPUT_DIR/logs/log-$TIME.err
 # Process our results
 python $TOOLS_DIR/results_to_vtk_files.py $OUR_OUTPUT_DIR/sim.json \
@@ -51,7 +51,7 @@ mkdir -p $BOX2D_OUTPUT_DIR/logs
 echo "Git SHA: $GIT_SHA" > $BOX2D_OUTPUT_DIR/logs/log-$TIME.out
 echo "Git SHA: $GIT_SHA" > $BOX2D_OUTPUT_DIR/logs/log-$TIME.err
 $BUILD_DIR/comparisons/Box2D/Box2D-comparison --scene-path \
-    $OUTPUT_DIR/fixture.json --output-path $BOX2D_OUTPUT_DIR --num-steps 1000 --trace \
+    $OUTPUT_DIR/fixture.json --output-path $BOX2D_OUTPUT_DIR --trace \
     >> $BOX2D_OUTPUT_DIR/logs/log-$TIME.out 2>> $BOX2D_OUTPUT_DIR/logs/log-$TIME.err
 # Process Box2D's results
 python $TOOLS_DIR/results_to_vtk_files.py $BOX2D_OUTPUT_DIR/sim.json \

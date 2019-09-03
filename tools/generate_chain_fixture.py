@@ -98,7 +98,8 @@ def main() -> None:
     parser = create_argument_parser("generate a chain fixture",
                                     default_initial_epsilon=1e-3,
                                     default_minimum_epsilon=1e-4,
-                                    default_gravity=[0, -9.81, 0])
+                                    default_gravity=[0, -9.81, 0],
+                                    default_num_steps=10000)
     parser.add_argument("--num-links",
                         type=int,
                         default=10,
