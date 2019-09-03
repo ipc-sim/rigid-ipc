@@ -4,7 +4,7 @@
 # Save the directory of this file
 TOOLS_DIR="$(cd "$(dirname "$0")" ; pwd -P )"
 FIXING_COLLISIONS_ROOT=$TOOLS_DIR/..
-RESULTS_DIR=$FIXING_COLLISIONS_ROOT/results/paper-results
+RESULTS_DIR=$FIXING_COLLISIONS_ROOT/results/paper-results-termination
 mkdir -p "$RESULTS_DIR"
 
 generate_result_cor_on_off () {

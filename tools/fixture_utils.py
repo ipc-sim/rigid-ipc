@@ -28,7 +28,12 @@ def generate_default_fixture() -> dict:
             "custom_hashgrid_cellsize": -1
         },
         "barrier_solver": {
-            "min_barrier_epsilon": DEFAULT_MINIMUM_EPSILON
+            "e_b": 1e-8,
+            "m": 1,
+            "t_init": 100,
+            "t_inc": 100,
+            "c": 0.1,
+            "inner_solver": "newton_solver"
         },
         "rigid_body_problem": {
             "gravity": DEFAULT_GRAVITY,
