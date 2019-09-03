@@ -69,6 +69,12 @@ GENERATION_ARGS="--num-balls 5 --num-points 8"
 OUTPUT_DIR="$RESULTS_DIR/dynamic/newtons-cradle"
 generate_result_cor_on_off
 
+# Filling Box
+GENERATION_SCRIPT="generate_filling_box_fixture.py"
+GENERATION_ARGS="--num-blocks 100"
+OUTPUT_DIR="$RESULTS_DIR/dynamic/filling-box"
+generate_result_cor_on_off
+
 # Saw
 GENERATION_SCRIPT="generate_saw_fixture.py"
 GENERATION_ARGS=""

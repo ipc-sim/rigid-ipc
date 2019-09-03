@@ -56,23 +56,36 @@ def generate_fixture(args):
         "is_dof_fixed": [True, True, True],
     })
 
-    radius = 1 / numpy.sqrt(2)
-    block_vertices = [[0.5, -0.5], [0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5]]
+    radius = 0.5
+    block_vertices = generate_regular_ngon_vertices(4, radius).tolist()
+    block_edge = generate_ngon_edges(4).tolist()
 
     centers = numpy.zeros((args.num_blocks, 2))
 
     # Add the pyramid
+    width = 2 * (hx - 2 * half_thickness - radius) - 1e-1
+    height = 6 * hy
     for i in range(args.num_blocks):
-        while True:
-            center = numpy.random.random(2)
-            centers - center
+        invalid_center = True
+        num_try = 0
+        while invalid_center:
+            if num_try > 100:
+                height *= 2
+                num_try = 0
+            center = (numpy.random.random(2) * [width, height] +
+                      [-width / 2, 2 * half_thickness + radius])
+            invalid_center = (numpy.linalg.norm(centers - center, axis=1) <
+                              (2 * radius + 1e-4)).any()
+            num_tries += 1
+
+        centers[i] = center
         rigid_bodies.append({
-            "vertices": box_vertices,
-            "polygons": [box_vertices],
-            "edges": box_edges,
+            "vertices": block_vertices,
+            "polygons": [block_vertices],
+            "edges": block_edge,
             "oriented": True,
             "position": center.tolist(),
-            "theta": numpy.random.random() * numpy.pi / 4,
+            "theta": numpy.random.random() * 45,
             "velocity": [0.0, 0.0, 0.0],
             "is_dof_fixed": [False, False, False],
         })
@@ -88,7 +101,7 @@ def main():
                                     default_gravity=[0, -9.81, 0])
     parser.add_argument("--num-blocks",
                         type=int,
-                        default=2,
+                        default=100,
                         help="number of blocks in the tower")
     args = parser.parse_args()
 

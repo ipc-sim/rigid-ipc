@@ -15,7 +15,7 @@ typedef std::array<size_t, 2> array2i;
 typedef std::array<bool, 3> array3b;
 
 const static char* INPUT_FILENAME
-    = "../../../fixtures/filling-box-num_blocks=2.json";
+    = "../../../fixtures/filling-box-num_blocks=100.json";
 
 class JSONExample : public Test {
 protected:
