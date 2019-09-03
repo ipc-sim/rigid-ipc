@@ -226,7 +226,7 @@ namespace opt {
         Eigen::MatrixXd v_x0 = problem.debug_vertices(x);
         std::cout << "BEGIN line search global_it=" << global_it << std::endl;
 #endif
-        double lower_bound = std::max(1E-12, 1E-12 * fx);
+        double lower_bound = std::min(1E-12, c * e_b);
         const double eps = problem.get_barrier_epsilon();
 
         while (-grad_fx.dot(dir) * alpha > lower_bound) {

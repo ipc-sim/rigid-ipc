@@ -65,6 +65,7 @@ namespace opt {
             bool make_psd = false);
 
         double get_c() const override { return c; }
+        virtual void set_e_b(const double value) override { e_b = value;}
 
         double absolute_tolerance; ///< @brief Convergence tolerance.
         int max_iterations;
@@ -81,6 +82,7 @@ namespace opt {
         Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
         int iteration_number;     ///< @brief The current iteration number.
         double c;
+        double e_b;
         std::string name_;
 
     };

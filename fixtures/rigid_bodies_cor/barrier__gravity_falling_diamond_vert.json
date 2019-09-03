@@ -10,7 +10,7 @@
         "custom_hashgrid_cellsize": -1
     },
     "barrier_solver": {
-        "e_b": 1e-12,
+        "e_b": 1e-10,
         "m": 1,
         "t": 1,
         "t_inc": 10,
@@ -19,7 +19,7 @@
     },
     "newton_solver": {
         "max_iterations": 1000,
-        "c": 1e-6
+        "c": 0.01,
     },
     "rigid_body_problem": {
         "coefficient_restitution": 1.0,

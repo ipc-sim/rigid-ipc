@@ -66,8 +66,7 @@ namespace opt {
             return general_problem->debug_vertices_t0();
         }
 
-        double debug_min_distance(
-            const Eigen::VectorXd& sigma) const override
+        double debug_min_distance(const Eigen::VectorXd& sigma) const override
         {
             return general_problem->debug_min_distance(sigma);
         }

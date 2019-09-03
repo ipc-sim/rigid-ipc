@@ -36,6 +36,7 @@ namespace opt {
         virtual nlohmann::json settings() const = 0;
         virtual void init_free_dof(Eigen::VectorXb is_dof_fixed) = 0;
         virtual double get_c() const { return 0; }
+        virtual void set_e_b(const double value) {};
     };
 
     // Interface class for optimizatino solvers used by State

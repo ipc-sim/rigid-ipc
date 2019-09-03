@@ -150,6 +150,7 @@ namespace opt {
         barrier_problem_ptr->x0 = results.x;
         t *= t_inc;
         barrier_problem_ptr->t = t;
+        inner_solver_ptr->set_e_b(e_b);
 
         num_outer_iterations_ += 1;
         spdlog::debug("\tsolve_step END it={} epsilon={} m / t ={} e_b={}",

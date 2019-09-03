@@ -127,12 +127,11 @@
     },
     "args": {
         "barrier_solver": {
-            "e_b": 1e-12,
+            "e_b": 1e-10,
             "m": 1,
             "t": 1,
             "t_inc": 10,
             "inner_solver": "newton_solver",
-            "max_iterations": 0,
             "min_barrier_epsilon": 0.0001
         },
 
@@ -145,7 +144,7 @@
         },
         "newton_solver": {
             "absolute_tolerance": 1e-05,
-            "c": 1e-06,
+            "c": 0.01,
             "max_iterations": 1000,
             "min_step_length": "DEPRECATED"
         },
