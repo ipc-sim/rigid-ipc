@@ -96,12 +96,13 @@ bool SimState::init(const nlohmann::json& args_in)
          },
         "barrier_solver": {
             "inner_solver": "newton_solver",
-            "min_barrier_epsilon":1e-5,
-            "max_iterations": 0,
+            "min_barrier_epsilon":"DEPRECATED",
+            "max_iterations": "DEPRECATED",
             "e_b": 1e-5,
             "t_inc": 2,
             "t": 1,
-            "m": 1
+            "m": 1,
+            "c": 0.01
         },
         "gradient_descent_solver":{
             "absolute_tolerance": 1e-5,
@@ -111,8 +112,7 @@ bool SimState::init(const nlohmann::json& args_in)
         "newton_solver":{
            "absolute_tolerance": 1e-5,
            "min_step_length": "DEPRECATED",
-           "max_iterations": 3000,
-           "c":0.01
+           "max_iterations": 3000
         },
         "bfgs_solver":{
             "absolute_tolerance": 1e-5,

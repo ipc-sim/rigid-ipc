@@ -14,12 +14,11 @@
         "m": 1,
         "t": 1,
         "t_inc": 10,
-        "inner_solver": "newton_solver",
-        "min_barrier_epsilon": 0.01
+        "c": 0.01,
+        "inner_solver": "newton_solver"
     },
     "newton_solver": {
-        "max_iterations": 1000,
-        "c": 0.01
+        "max_iterations": 1000
     },
     "rigid_body_problem": {
         "coefficient_restitution": 1.0,

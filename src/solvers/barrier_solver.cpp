@@ -20,10 +20,9 @@ namespace opt {
     }
 
     BarrierSolver::BarrierSolver(const std::string& name)
-        : min_barrier_epsilon(1e-5)
-        , max_iterations(1000)
-        , t(1.0)
+        : t(1.0)
         , m(1.0)
+        , c(0.01)
         , e_b(1e-5)
         , t_inc(2)
         , num_outer_iterations_(0)
@@ -39,13 +38,12 @@ namespace opt {
 
     void BarrierSolver::settings(const nlohmann::json& json)
     {
-        max_iterations = json["max_iterations"].get<int>();
-        min_barrier_epsilon = json["min_barrier_epsilon"].get<double>();
-
+        // termination criteria variables
         e_b = json["e_b"].get<double>();
-        t_inc = json["t_inc"].get<double>();
         m = json["m"].get<double>();
         t = json["t"].get<double>();
+        c = json["c"].get<double>();
+        t_inc = json["t_inc"].get<double>();
 
         inner_solver_ptr = SolverFactory::factory().get_barrier_inner_solver(
             json["inner_solver"].get<std::string>());
@@ -58,12 +56,11 @@ namespace opt {
     nlohmann::json BarrierSolver::settings() const
     {
         nlohmann::json json;
-        json["max_iterations"] = max_iterations;
-        json["min_barrier_epsilon"] = min_barrier_epsilon;
         json["e_b"] = e_b;
         json["t_inc"] = t_inc;
         json["t"] = t;
         json["m"] = m;
+        json["c"] = c;
         json["inner_solver"] = get_inner_solver().name();
         return json;
     }
@@ -97,9 +94,9 @@ namespace opt {
             t = tinit = 1;
         }
 
-
-        spdlog::debug("solver_init eps_barrier={} m={} t={} e_b={} t_inc={}",
-            barrier_epsilon(), m, t, e_b, t_inc);
+        spdlog::debug(
+            "solver_init eps_barrier={} m={} t={} e_b={} c={} t_inc={}",
+            barrier_epsilon(), m, t, e_b, c, t_inc);
         barrier_problem_ptr->t = t;
 
         debug.str("");
@@ -114,16 +111,17 @@ namespace opt {
         IBarrierOptimizationSolver& inner_solver = get_inner_solver();
 
         spdlog::debug(
-            "\tsolve_step BEGIN it={} eps_barrier={} m={} t={} e_b={}",
-            num_outer_iterations_, barrier_epsilon(), m, t, e_b);
+            "\tsolve_step BEGIN it={} eps_barrier={} m={} t={} e_b={} c={}",
+            num_outer_iterations_, barrier_epsilon(), m, t, e_b, c);
 
-        barrier_problem_ptr->inner_solver_threshold = m / t;
+        // propagate variables
+        barrier_problem_ptr->t = t;
+        inner_solver_ptr->e_b(e_b);
+        inner_solver_ptr->c(c);
+        inner_solver_ptr->t(t);
+        inner_solver_ptr->m(m);
 
-        // Optimize for a fixed epsilon
         results = inner_solver.solve(*barrier_problem_ptr);
-
-        // Save the original problems objective
-        results.minf = general_problem_ptr->eval_f(results.x);
 
 #ifdef DEBUG_LINESEARCH
         Eigen::VectorXd xdiff = barrier_problem_ptr->x0 - results.x;
@@ -133,24 +131,27 @@ namespace opt {
 
         double min_dist = barrier_problem_ptr->debug_min_distance(results.x);
         double min_dist_diff;
-        if (min_dist > -1){
-            min_dist_diff = barrier_problem_ptr->debug_min_distance(barrier_problem_ptr->x0)
-            - min_dist;
-        }else {
+        if (min_dist > -1) {
+            min_dist_diff = barrier_problem_ptr->debug_min_distance(
+                                barrier_problem_ptr->x0)
+                - min_dist;
+        } else {
             min_dist_diff = -1;
         }
-        std::string min_dist_str = min_dist > -1 ? fmt::format("{:.10e}", min_dist) : "NA";
-        std::string min_dist_diff_str = min_dist_diff > -1 ? fmt::format("{:.10e}", min_dist_diff) : "NA";
+        std::string min_dist_str
+            = min_dist > -1 ? fmt::format("{:.10e}", min_dist) : "NA";
+        std::string min_dist_diff_str
+            = min_dist_diff > -1 ? fmt::format("{:.10e}", min_dist_diff) : "NA";
 
         debug << fmt::format("{},{},{:.10e},{:.10e},{},{}\n",
             num_outer_iterations_, t, xdiff.norm(), vdiff.norm(), min_dist_str,
             min_dist_diff_str);
 #endif
+
+        results.minf = general_problem_ptr->eval_f(results.x);
         // Start next iteration from the ending optimal position
         barrier_problem_ptr->x0 = results.x;
         t *= t_inc;
-        barrier_problem_ptr->t = t;
-        inner_solver_ptr->set_e_b(e_b);
 
         num_outer_iterations_ += 1;
         spdlog::debug("\tsolve_step END it={} epsilon={} m / t ={} e_b={}",
@@ -172,8 +173,7 @@ namespace opt {
         std::cout
             << fmt::format(
                    "tinit={} tend={} m={}  e_b={} c={} eps_barrier={} t_inc={}",
-                   tinit, t, m, e_b, inner_solver().get_c(), barrier_epsilon(),
-                   t_inc)
+                   tinit, t, m, e_b, c, barrier_epsilon(), t_inc)
             << std::endl;
         std::cout
             << "outer_it, t, var_diff_norm, vertex_diff_norm, min_distance, min_distance_diff"
@@ -329,7 +329,6 @@ namespace opt {
         return dgx.colwise().sum().transpose();
     }
 
-
     Multiprecision BarrierProblem::eval_mp_f(const Eigen::VectorXd& /*x*/)
     {
 
@@ -340,7 +339,6 @@ namespace opt {
         //        return t * f_uk + gx;
         return 0;
     }
-
 
 } // namespace opt
 } // namespace ccd

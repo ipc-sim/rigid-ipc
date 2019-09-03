@@ -22,10 +22,8 @@ namespace opt {
     {
     }
     NewtonSolver::NewtonSolver(const std::string& name)
-        : absolute_tolerance(Constants::NEWTON_ABSOLUTE_TOLERANCE)
-        , max_iterations(1000)
+        : max_iterations(1000)
         , iteration_number(0)
-        , c(0.01)
         , name_(name)
 
     {
@@ -36,16 +34,12 @@ namespace opt {
     void NewtonSolver::settings(const nlohmann::json& json)
     {
         max_iterations = json["max_iterations"].get<int>();
-        absolute_tolerance = json["absolute_tolerance"].get<double>();
-        c = json["c"].get<double>();
     }
 
     nlohmann::json NewtonSolver::settings() const
     {
         nlohmann::json json;
         json["max_iterations"] = max_iterations;
-        json["absolute_tolerance"] = absolute_tolerance;
-        json["c"] = c;
         return json;
     }
 
@@ -71,7 +65,7 @@ namespace opt {
 
         spdlog::debug(NEWTON_BEGIND_LOG);
 
-        double tolerance = problem.get_termination_threshold();
+        double tolerance = std::max(e_b_, c_ * m_ / t_);
         std::string exit_reason = "exceeded the maximum allowable iterations";
 
         Eigen::VectorXd direction(problem.num_vars());
@@ -80,6 +74,7 @@ namespace opt {
 
         std::stringstream debug;
 
+        bool success = false;
         for (iteration_number = 0; iteration_number < max_iterations;
              iteration_number++) {
 
@@ -106,8 +101,9 @@ namespace opt {
             igl::slice_into(direction_free, free_dof, direction);
 
             // check for newton termination
-            if (abs(direction_free.dot(gradient_free)) <= c * tolerance) {
+            if (abs(direction_free.dot(gradient_free)) <= tolerance) {
                 exit_reason = "found a local optimum with newton dir";
+                success = true;
                 break;
             }
             step_length = 1;
@@ -122,11 +118,13 @@ namespace opt {
                 ///>>>> LINE SEARCH 2
                 // replace delta_x by gradient direction
                 direction.setZero();
-                igl::slice_into(-gradient_free, free_dof, 1, direction);
+                direction_free = -gradient_free;
+                igl::slice_into(direction_free, free_dof, 1, direction);
 
                 // check for newton termination again
-                if (abs(direction_free.dot(gradient_free)) <= c * tolerance) {
+                if (abs(direction_free.dot(gradient_free)) <= tolerance) {
                     exit_reason = "found a local optimum with -grad dir";
+                    success = true;
                     break;
                 }
                 step_length = 1;
@@ -149,10 +147,12 @@ namespace opt {
             Eigen::VectorXd B_free, B = problem.eval_grad_B(x, num_barrier);
             igl::slice(B, free_dof, B_free);
 
-            debug << fmt::format("{},{:.10e},{:.10e},{},{:.10e},{:.10e},{},{:.10e}\n",
+            debug << fmt::format(
+                "{},{:.10e},{:.10e},{},{:.10e},{:.10e},{},{:.10e}\n",
                 iteration_number, gradient_free.norm(),
-                abs(direction_free.dot(gradient_free)), c * tolerance,
-                E_free.norm(), B_free.norm(), num_barrier, (E_free  + B_free).norm());
+                abs(direction_free.dot(gradient_free)), tolerance,
+                E_free.norm(), B_free.norm(), num_barrier,
+                (E_free + B_free).norm());
 #endif
 
             auto xk = x + step_length * direction;
@@ -169,13 +169,14 @@ namespace opt {
         Eigen::VectorXd B_free, B = problem.eval_grad_B(x, num_barrier);
         igl::slice(B, free_dof, B_free);
 
-        debug << fmt::format("{},{:.10e},{:.10e},{},{:.10e},{:.10e},{},{:.10e}\n",
+        debug << fmt::format(
+            "{},{:.10e},{:.10e},{},{:.10e},{:.10e},{},{:.10e}\n",
             iteration_number, gradient_free.norm(),
-            abs(direction_free.dot(gradient_free)), c * tolerance,
-            E_free.norm(), B_free.norm(), num_barrier, (E_free  + B_free).norm());
+            abs(direction_free.dot(gradient_free)), tolerance, E_free.norm(),
+            B_free.norm(), num_barrier, (E_free + B_free).norm());
 
         std::cout
-            << "newton_it, gradient_norm, termination, c * m / t, gradE.norm, gradB.norm, #B, (gradE+gradB).norm"
+            << "newton_it, gradient_norm, termination, tolerance, gradE.norm, gradB.norm, #B, (gradE+gradB).norm"
             << std::endl;
         std::cout << debug.str() << std::flush;
         std::cout << "newton_exit_reason=" << exit_reason << std::endl;
@@ -184,8 +185,7 @@ namespace opt {
         spdlog::debug("{} total_iter={:d} message='{}'", NEWTON_END_LOG,
             iteration_number, exit_reason);
 
-        return OptimizationResults(x, problem.eval_f(x),
-            gradient_free.squaredNorm() <= absolute_tolerance);
+        return OptimizationResults(x, problem.eval_f(x), success);
     }
 
     void NewtonSolver::init_free_dof(Eigen::VectorXb is_dof_fixed)
@@ -226,7 +226,8 @@ namespace opt {
         Eigen::MatrixXd v_x0 = problem.debug_vertices(x);
         std::cout << "BEGIN line search global_it=" << global_it << std::endl;
 #endif
-        double lower_bound = std::min(1E-12, c * e_b);
+
+        double lower_bound = std::max(1E-12, c_ * e_b_);
         const double eps = problem.get_barrier_epsilon();
 
         while (-grad_fx.dot(dir) * alpha > lower_bound) {
@@ -255,6 +256,12 @@ namespace opt {
         }
 
         if (log_failure && !success) {
+            std::cout
+                << fmt::format(
+                       "linesearch fail num_it={} `-grad_fx.dot(dir)`={:.18e} `-grad_fx.dot(dir) * alpha `={:.18e} lower_bound={:.8e} alpha={:.8e} fx={:.8e}",
+                       num_it, -grad_fx.dot(dir), -grad_fx.dot(dir) * alpha,
+                       lower_bound, alpha, fx)
+                << std::endl;
             std::string fout = fmt::format(
                 "{}/linesearch_{}.csv", DATA_OUTPUT_DIR, ccd::logger::now());
             std::ofstream myfile;

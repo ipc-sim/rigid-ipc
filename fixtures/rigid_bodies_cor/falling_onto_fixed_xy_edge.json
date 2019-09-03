@@ -13,13 +13,13 @@
         "e_b": 1e-10,
         "m": 1,
         "t": 1,
-        "t_inc": 5,
-        "inner_solver": "newton_solver",
-        "min_barrier_epsilon": 0.01
+        "c": 0.01,
+        "t_inc": 2,
+        "inner_solver": "newton_solver"
     },
+
     "newton_solver": {
-        "max_iterations": 1000,
-        "c": 0.01
+        "max_iterations": 1000
     },
 
 
