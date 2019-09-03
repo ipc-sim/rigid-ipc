@@ -56,7 +56,7 @@ generate_result_cor_on_off
 ## Jamming
 
 # Chain
-GENERATION_SCRIPT="generate_chainmail_fixture.py"
+GENERATION_SCRIPT="generate_chain_fixture.py"
 GENERATION_ARGS="--num-links 10"
 OUTPUT_DIR="$RESULTS_DIR/static/chain"
 generate_result_cor_on_off

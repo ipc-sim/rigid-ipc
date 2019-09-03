@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
-#SBATCH --time=0:30:00
+#SBATCH --time=1:00:00
 #SBATCH --mem=8GB
 #SBATCH --job-name=generate_results
 #SBATCH --mail-type=END
@@ -13,7 +13,7 @@
 #SBATCH --output=results/logs/simulation-%j.out
 #SBATCH --error=results/logs/simulation-%j.err
 
-GIT_SHA=git rev-parse HEAD
+GIT_SHA=$(git rev-parse HEAD)
 echo "Git SHA: $GIT_SHA"
 
 FIXING_COLLISIONS_ROOT=$1
@@ -39,7 +39,7 @@ mkdir -p $OUR_OUTPUT_DIR/logs
 echo "Git SHA: $GIT_SHA" > $OUR_OUTPUT_DIR/logs/log-$TIME.out
 echo "Git SHA: $GIT_SHA" > $OUR_OUTPUT_DIR/logs/log-$TIME.err
 $BUILD_DIR/FixingCollisions_ngui --scene-path $OUTPUT_DIR/fixture.json \
-    --output-path $OUR_OUTPUT_DIR --num-iterations 1000 \
+    --output-path $OUR_OUTPUT_DIR --num-iterations 1000 --trace \
     >> $OUR_OUTPUT_DIR/logs/log-$TIME.out 2>> $OUR_OUTPUT_DIR/logs/log-$TIME.err
 # Process our results
 python $TOOLS_DIR/results_to_vtk_files.py $OUR_OUTPUT_DIR/sim.json \
@@ -51,7 +51,7 @@ mkdir -p $BOX2D_OUTPUT_DIR/logs
 echo "Git SHA: $GIT_SHA" > $BOX2D_OUTPUT_DIR/logs/log-$TIME.out
 echo "Git SHA: $GIT_SHA" > $BOX2D_OUTPUT_DIR/logs/log-$TIME.err
 $BUILD_DIR/comparisons/Box2D/Box2D-comparison --scene-path \
-    $OUTPUT_DIR/fixture.json --output-path $BOX2D_OUTPUT_DIR --num-steps 1000 \
+    $OUTPUT_DIR/fixture.json --output-path $BOX2D_OUTPUT_DIR --num-steps 1000 --trace \
     >> $BOX2D_OUTPUT_DIR/logs/log-$TIME.out 2>> $BOX2D_OUTPUT_DIR/logs/log-$TIME.err
 # Process Box2D's results
 python $TOOLS_DIR/results_to_vtk_files.py $BOX2D_OUTPUT_DIR/sim.json \
