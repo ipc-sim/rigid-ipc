@@ -29,10 +29,10 @@ public:
             b2Body* ground = m_world->CreateBody(&groundBodyDef);
 
             // Define the ground shape
-            b2PolygonShape groundShape;
+            b2EdgeShape groundShape;
 
             // Add the shape fixtures to the line body
-            groundShape.SetAsBox(20, 1);
+            groundShape.Set(b2Vec2(-20, 0), b2Vec2(20, 0));
             b2Fixture* fixture = ground->CreateFixture(&groundShape, density);
             fixture->SetFriction(friction_coeff);
             fixture->SetRestitution(restitution_coeff);
@@ -50,12 +50,10 @@ public:
             b2Body* line = m_world->CreateBody(&lineBodyDef);
 
             // Define the line shape
-            b2ChainShape lineShape;
+            b2EdgeShape lineShape;
 
             // Add the shape fixtures to the line body
-            b2Vec2 vertices[4] = { b2Vec2(-5, 0.5), b2Vec2(5, 0.5),
-                b2Vec2(5, -0.5), b2Vec2(-5, -0.5) };
-            lineShape.CreateLoop(vertices, 4);
+            lineShape.Set(b2Vec2(-10, 0.5), b2Vec2(10, 1.0));
             b2Fixture* fixture = line->CreateFixture(&lineShape, density);
             fixture->SetFriction(friction_coeff);
             fixture->SetRestitution(restitution_coeff);

@@ -1,12 +1,6 @@
 #!/bin/bash
 # Script to generate the results for the paper.
 
-if command -v sbatch &> /dev/null; then
-    SBATCH=sbatch
-else
-    SBATCH=.
-fi
-
 # Save the directory of this file
 TOOLS_DIR="$(cd "$(dirname "$0")" ; pwd -P )"
 FIXING_COLLISIONS_ROOT=$TOOLS_DIR/..
@@ -14,12 +8,23 @@ RESULTS_DIR=$FIXING_COLLISIONS_ROOT/results/paper-results
 mkdir -p "$RESULTS_DIR"
 
 generate_result_cor_on_off () {
-    # Generate without restitution
-    $SBATCH $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
-        $GENERATION_SCRIPT "$GENERATION_ARGS --cor -1" $OUTPUT_DIR/cor=-1
-    # Generate with restitution
-    $SBATCH $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
-        $GENERATION_SCRIPT "$GENERATION_ARGS --cor 1" $OUTPUT_DIR/cor=1
+    # Generate with and without restitution
+    for COR in -1 0 1
+    do
+        echo $GENERATION_SCRIPT
+        $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
+            $GENERATION_SCRIPT "$GENERATION_ARGS --cor $COR" \
+            $OUTPUT_DIR/cor=$COR
+        if [ $? -ne 0 ]; then
+            echo "Failed to generate results for:"
+            echo "$GENERATION_SCRIPT"
+            echo "with arguments:"
+            echo "$GENERATION_ARGS --cor $COR"
+            echo "to:"
+            echo "$OUTPUT_DIR/cor=$COR"
+            exit 1
+        fi
+    done
 }
 
 ### Static
@@ -56,8 +61,8 @@ generate_result_cor_on_off
 ## Jamming
 
 # Chain
-GENERATION_SCRIPT="generate_chainmail_fixture.py"
-GENERATION_ARGS="10"
+GENERATION_SCRIPT="generate_chain_fixture.py"
+GENERATION_ARGS="--num-links 10"
 OUTPUT_DIR="$RESULTS_DIR/static/chain"
 generate_result_cor_on_off
 
@@ -67,6 +72,12 @@ generate_result_cor_on_off
 GENERATION_SCRIPT="generate_newtons_cradle_fixture.py"
 GENERATION_ARGS="--num-balls 5 --num-points 8"
 OUTPUT_DIR="$RESULTS_DIR/dynamic/newtons-cradle"
+generate_result_cor_on_off
+
+# Filling Box
+GENERATION_SCRIPT="generate_filling_box_fixture.py"
+GENERATION_ARGS="--num-blocks 100"
+OUTPUT_DIR="$RESULTS_DIR/dynamic/filling-box"
 generate_result_cor_on_off
 
 # Saw
@@ -82,12 +93,15 @@ OUTPUT_DIR="$RESULTS_DIR/dynamic/billiards"
 generate_result_cor_on_off
 
 ### Compress the results and upload them to google drive
-if [ $SBATCH != "sbatch" ]; then
-    TAR_FNAME=$RESULTS_DIR/../paper-results-$(date +%s).tar.gz
-    tar -czvf $TAR_FNAME $RESULTS_DIR
-    rclone copy $TAR_FNAME google-drive:fixing-collisions
-else
+TIME=$(date "+%F-%T")
+TIME=$(echo "${TIME//:/-}")
+GIT_SHA=$(git rev-parse HEAD)
+if command -v sbatch &> /dev/null; then
     echo "Running simulations as batch jobs."
     echo "When done tar and upload the results using:"
-    echo "TAR_FNAME=$RESULTS_DIR/../paper-results-$(date +%s).tar.gz; tar -czvf $TAR_FNAME $RESULTS_DIR; rclone copy $TAR_FNAME google-drive:fixing-collisions"
+    echo "TAR_FNAME=$RESULTS_DIR/../paper-results-$GIT_SHA-$TIME.tar.gz; tar -czvf \$TAR_FNAME $RESULTS_DIR; rclone copy \$TAR_FNAME google-drive:fixing-collisions"
+else
+    TAR_FNAME=$RESULTS_DIR/../paper-results-$GIT_SHA-$TIME.tar.gz
+    tar -czvf $TAR_FNAME $RESULTS_DIR
+    rclone copy $TAR_FNAME google-drive:fixing-collisions
 fi

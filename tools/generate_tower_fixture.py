@@ -30,7 +30,6 @@ def generate_fixture(args):
     radius = 1 / numpy.sqrt(2)
     box_vertices = [[0.5, -0.5], [0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5]]
 
-    # Add the pyramid
     for i in range(args.num_blocks):
         x = args.x_offset if i % 2 else 0
         y = (2 if i == args.num_blocks - 1 and args.falling else

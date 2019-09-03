@@ -4,18 +4,21 @@ import argparse
 import pathlib
 
 import numpy
+import shapely.geometry
 
 DEFAULT_TIMESTEP = 1e-2
 DEFAULT_INITIAL_EPSILON = 1e-1
 DEFAULT_MINIMUM_EPSILON = 1e-2
 DEFAULT_RESTITUTION_COEFFICIENT = -1
 DEFAULT_GRAVITY = [0.0, 0.0, 0.0]
+DEFAULT_NUM_STEPS = 1000
 
 
 def generate_default_fixture() -> dict:
     """Create the default fixture as a dictionary."""
     return {
         "scene_type": "distance_barrier_rb_problem",
+        "max_iterations": DEFAULT_NUM_STEPS,
         "timestep_size": DEFAULT_TIMESTEP,
         "distance_barrier_constraint": {
             "custom_initial_epsilon": DEFAULT_INITIAL_EPSILON,
@@ -38,6 +41,7 @@ def generate_default_fixture() -> dict:
 def generate_custom_fixture(args: argparse.Namespace) -> dict:
     fixture = generate_default_fixture()
     fixture["timestep_size"] = args.timestep
+    fixture["max_iterations"] = args.num_steps
     fixture["distance_barrier_constraint"]["custom_initial_epsilon"] = (
         args.init_epsilon)
     fixture["barrier_solver"]["min_barrier_epsilon"] = args.min_epsilon
@@ -54,13 +58,18 @@ def create_argument_parser(
         default_minimum_epsilon: float = DEFAULT_MINIMUM_EPSILON,
         default_restitution_coefficient:
         float = DEFAULT_RESTITUTION_COEFFICIENT,
-        default_gravity: list = DEFAULT_GRAVITY) -> argparse.ArgumentParser:
+        default_gravity: list = DEFAULT_GRAVITY,
+        default_num_steps: int = DEFAULT_NUM_STEPS) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--time-step",
                         type=float,
                         default=default_timestep,
                         dest="timestep",
                         help="length of the time-step (Δt)")
+    parser.add_argument("--num-steps",
+                        type=int,
+                        default=default_num_steps,
+                        help="number of time-steps to take")
     parser.add_argument("--init-epsilon",
                         type=float,
                         default=default_initial_epsilon,
@@ -98,6 +107,15 @@ def generate_ngon_edges(n: int) -> numpy.ndarray:
     """Generate the edges of a N-gon."""
     indices = numpy.arange(n).reshape(-1, 1)
     return numpy.hstack([indices, numpy.roll(indices, -1)])
+
+
+def generate_rectangle(hx: float, hy: float, center: numpy.ndarray,
+                       angle: float) -> shapely.geometry.Polygon:
+    """Generate a rectangle polygon."""
+    points = numpy.array([[hx, hy], [-hx, hy], [-hx, -hy], [hx, -hy]])
+    points = points @ create_2D_rotation_matrix(angle).T
+    points += center
+    return shapely.geometry.Polygon(points)
 
 
 def create_2D_rotation_matrix(theta: float) -> numpy.ndarray:

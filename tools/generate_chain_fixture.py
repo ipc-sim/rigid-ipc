@@ -7,22 +7,12 @@ Usage: python generate_complex_chainmail_fixture.py N
 
 import json
 import pathlib
-import sys
 
 import numpy
 import shapely.geometry
 import shapely.ops
 
 from fixture_utils import *
-
-
-def generate_rectangle(hx: float, hy: float, center: numpy.ndarray,
-                       angle: float) -> shapely.geometry.Polygon:
-    """Generate a rectangle polygon."""
-    points = numpy.array([[hx, hy], [-hx, hy], [-hx, -hy], [hx, -hy]])
-    points = points @ create_2D_rotation_matrix(angle).T
-    points += center
-    return shapely.geometry.Polygon(points)
 
 
 def generate_link_polygons() -> list:
@@ -108,7 +98,8 @@ def main() -> None:
     parser = create_argument_parser("generate a chain fixture",
                                     default_initial_epsilon=1e-3,
                                     default_minimum_epsilon=1e-4,
-                                    default_gravity=[0, -9.81, 0])
+                                    default_gravity=[0, -9.81, 0],
+                                    default_num_steps=10000)
     parser.add_argument("--num-links",
                         type=int,
                         default=10,

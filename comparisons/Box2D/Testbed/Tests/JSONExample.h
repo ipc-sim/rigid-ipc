@@ -14,16 +14,8 @@ typedef std::array<double, 3> array3d;
 typedef std::array<size_t, 2> array2i;
 typedef std::array<bool, 3> array3b;
 
-// const static char* INPUT_FILENAME =
-// "../../../comparisons/Box2D/example.box2d.json";
-// const static char* INPUT_FILENAME = "../../../fixtures/saw/saw-cor=-1.json";
-// const static char* INPUT_FILENAME
-//     = "../../../fixtures/stacking/pyramid-cor=-1.json";
-// const static char* INPUT_FILENAME
-//     =
-//     "../../../fixtures/stacking/tower-num_blocks=4-cor=-1-x_offset=0-falling.json";
 const static char* INPUT_FILENAME
-    = "../../../fixtures/stacking/tower-num_blocks=4-cor=0-x_offset=0-rotated.json";
+    = "../../../fixtures/filling-box-num_blocks=100.json";
 
 class JSONExample : public Test {
 protected:
