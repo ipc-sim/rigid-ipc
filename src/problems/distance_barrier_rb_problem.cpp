@@ -56,6 +56,19 @@ namespace opt {
         Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
         return m_assembler.world_vertices(qk);
     }
+
+    double DistanceBarrierRBProblem::debug_min_distance(
+            const Eigen::VectorXd& sigma) const {
+        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
+
+        Eigen::VectorXd d;
+        constraint_.debug_compute_distances(uk, d);
+        if (d.rows() > 0){
+            return d.minCoeff();
+        }
+        return -1;
+    }
 #endif
 
     Eigen::VectorXd DistanceBarrierRBProblem::eval_g(

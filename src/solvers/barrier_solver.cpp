@@ -22,7 +22,12 @@ namespace opt {
     BarrierSolver::BarrierSolver(const std::string& name)
         : min_barrier_epsilon(1e-5)
         , max_iterations(1000)
+        , t(1.0)
+        , m(1.0)
+        , e_b(1e-5)
+        , t_inc(2)
         , num_outer_iterations_(0)
+
         , name_(name)
 
     {
@@ -36,6 +41,12 @@ namespace opt {
     {
         max_iterations = json["max_iterations"].get<int>();
         min_barrier_epsilon = json["min_barrier_epsilon"].get<double>();
+
+        e_b = json["e_b"].get<double>();
+        t_inc = json["t_inc"].get<double>();
+        m = json["m"].get<double>();
+        t = json["t"].get<double>();
+
         inner_solver_ptr = SolverFactory::factory().get_barrier_inner_solver(
             json["inner_solver"].get<std::string>());
     }
@@ -49,6 +60,10 @@ namespace opt {
         nlohmann::json json;
         json["max_iterations"] = max_iterations;
         json["min_barrier_epsilon"] = min_barrier_epsilon;
+        json["e_b"] = e_b;
+        json["t_inc"] = t_inc;
+        json["t"] = t;
+        json["m"] = m;
         json["inner_solver"] = get_inner_solver().name();
         return json;
     }
@@ -68,6 +83,26 @@ namespace opt {
         inner_solver.init_free_dof(barrier_problem_ptr->is_dof_fixed());
 
         num_outer_iterations_ = 0;
+
+        // Find a good initial value for `t`
+        int num_active_barriers;
+        Eigen::VectorXd grad_B = barrier_problem_ptr->eval_grad_B(
+            barrier_problem_ptr->x0, num_active_barriers);
+        if (false /*num_active_barriers > 0*/) {
+            //            Eigen::VectorXd grad_E
+            //                =
+            //                barrier_problem_ptr->eval_grad_E(barrier_problem_ptr->x0);
+            //            t = tinit = -grad_B.dot(grad_E) / grad_E.dot(grad_E);
+        } else {
+            t = tinit = 1;
+        }
+
+
+        spdlog::debug("solver_init eps_barrier={} m={} t={} e_b={} t_inc={}",
+            barrier_epsilon(), m, t, e_b, t_inc);
+        barrier_problem_ptr->t = t;
+
+        debug.str("");
     }
 
     OptimizationResults BarrierSolver::step_solve()
@@ -78,31 +113,47 @@ namespace opt {
         OptimizationResults results;
         IBarrierOptimizationSolver& inner_solver = get_inner_solver();
 
-        // Log the epsilon and the newton method will log the number of
-        // iterations.
-        spdlog::trace("solver=barrier ϵ={:g}",
-            general_problem_ptr->get_barrier_epsilon());
+        spdlog::debug(
+            "\tsolve_step BEGIN it={} eps_barrier={} m={} t={} e_b={}",
+            num_outer_iterations_, barrier_epsilon(), m, t, e_b);
+
+        barrier_problem_ptr->inner_solver_threshold = m / t;
 
         // Optimize for a fixed epsilon
         results = inner_solver.solve(*barrier_problem_ptr);
+
         // Save the original problems objective
         results.minf = general_problem_ptr->eval_f(results.x);
 
-        // Steepen the barrier
-        double eps = barrier_epsilon();
-        general_problem_ptr->set_barrier_epsilon(eps / 2.0);
+#ifdef DEBUG_LINESEARCH
+        Eigen::VectorXd xdiff = barrier_problem_ptr->x0 - results.x;
+        Eigen::MatrixXd vdiff
+            = barrier_problem_ptr->debug_vertices(barrier_problem_ptr->x0)
+            - barrier_problem_ptr->debug_vertices(results.x);
 
+        double min_dist = barrier_problem_ptr->debug_min_distance(results.x);
+        double min_dist_diff;
+        if (min_dist > -1){
+            min_dist_diff = barrier_problem_ptr->debug_min_distance(barrier_problem_ptr->x0)
+            - min_dist;
+        }else {
+            min_dist_diff = -1;
+        }
+        std::string min_dist_str = min_dist > -1 ? fmt::format("{:.10e}", min_dist) : "NA";
+        std::string min_dist_diff_str = min_dist_diff > -1 ? fmt::format("{:.10e}", min_dist_diff) : "NA";
+
+        debug << fmt::format("{},{},{:.10e},{:.10e},{},{}\n",
+            num_outer_iterations_, t, xdiff.norm(), vdiff.norm(), min_dist_str,
+            min_dist_diff_str);
+#endif
         // Start next iteration from the ending optimal position
         barrier_problem_ptr->x0 = results.x;
-
-        // TODO: This should check if the barrier constraints are satisfied.
-        results.success = results.minf >= 0
-            && barrier_problem_ptr->eval_f(results.x)
-                < std::numeric_limits<double>::infinity();
-
-        results.finished = barrier_epsilon() <= min_barrier_epsilon;
+        t *= t_inc;
+        barrier_problem_ptr->t = t;
 
         num_outer_iterations_ += 1;
+        spdlog::debug("\tsolve_step END it={} epsilon={} m / t ={} e_b={}",
+            num_outer_iterations_, barrier_epsilon(), m / t, e_b);
         return results;
     }
 
@@ -112,14 +163,23 @@ namespace opt {
 
         OptimizationResults results;
         do {
-            auto msg = fmt::format(
-                "class=BarrierSolver function=solve.step epsilon={}",
-                barrier_epsilon());
-
             results = step_solve();
 
-        } while (barrier_epsilon() > min_barrier_epsilon);
+        } while (m / t > e_b); // barrier_epsilon() > min_barrier_epsilon
 
+#ifdef DEBUG_LINESEARCH
+        std::cout
+            << fmt::format(
+                   "tinit={} tend={} m={}  e_b={} c={} eps_barrier={} t_inc={}",
+                   tinit, t, m, e_b, inner_solver().get_c(), barrier_epsilon(),
+                   t_inc)
+            << std::endl;
+        std::cout
+            << "outer_it, t, var_diff_norm, vertex_diff_norm, min_distance, min_distance_diff"
+            << std::endl;
+        std::cout << debug.str() << std::flush;
+        std::cout << std::endl;
+#endif
         return results;
     }
 
@@ -137,6 +197,11 @@ namespace opt {
         num_vars_ = general_problem.num_vars();
 
         x0 = general_problem.starting_point();
+    }
+
+    double BarrierProblem::get_termination_threshold() const
+    {
+        return inner_solver_threshold;
     }
 
     const Eigen::VectorXb& BarrierProblem::is_dof_fixed()
@@ -162,7 +227,7 @@ namespace opt {
 
         PROFILE_END(EVAL_G)
 
-        return f_uk + gx;
+        return t * f_uk + gx;
     }
 
     bool BarrierProblem::has_collisions(
@@ -171,25 +236,15 @@ namespace opt {
         return general_problem->has_collisions(sigma_i, sigma_j);
     }
 
-    Multiprecision BarrierProblem::eval_mp_f(const Eigen::VectorXd& /*x*/)
-    {
-
-        //        double f_uk = general_problem->eval_f(x);
-        //        auto gx_ = general_problem->eval_mp_g(x);
-        //        Multiprecision gx = gx_.sum();
-
-        //        return f_uk + gx;
-        return 0;
-    }
-
     Eigen::VectorXd BarrierProblem::eval_grad_f(const Eigen::VectorXd& x)
     {
 
         Eigen::VectorXd f_uk_gradient = general_problem->eval_grad_f(x);
         Eigen::MatrixXd dgx = general_problem->eval_jac_g(x);
 
-        f_uk_gradient += dgx.colwise().sum().transpose();
-        return f_uk_gradient;
+        Eigen::MatrixXd g_uk_gradient;
+        g_uk_gradient = dgx.colwise().sum().transpose();
+        return t * f_uk_gradient + g_uk_gradient;
     }
 
     Eigen::SparseMatrix<double> BarrierProblem::eval_hessian_f(
@@ -200,10 +255,13 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> ddgx
             = general_problem->eval_hessian_g(x);
 
+        Eigen::SparseMatrix<double> g_uk_hessian;
+        g_uk_hessian.resize(f_uk_hessian.rows(), f_uk_hessian.cols());
+        g_uk_hessian.setZero();
         for (const auto& ddgx_i : ddgx) {
-            f_uk_hessian += ddgx_i;
+            g_uk_hessian += ddgx_i;
         }
-        return f_uk_hessian;
+        return t * f_uk_hessian + g_uk_hessian;
     }
 
     void BarrierProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
@@ -226,9 +284,10 @@ namespace opt {
         general_problem->eval_g_and_gdiff(x, gx, dgx, ddgx);
         PROFILE_END(EVAL_G)
 
-        f_uk += gx.sum();
-        f_uk_gradient += dgx.colwise().sum().transpose();
+        f_uk = t * f_uk + gx.sum();
+        f_uk_gradient = t * f_uk_gradient + dgx.colwise().sum().transpose();
 
+        f_uk_hessian = t * f_uk_hessian;
         for (const auto& ddgx_i : ddgx) {
             f_uk_hessian += ddgx_i;
         }
@@ -252,8 +311,35 @@ namespace opt {
         general_problem->eval_g_and_gdiff(x, gx, dgx, ddgx);
         PROFILE_END(EVAL_G)
 
-        f_uk += gx.sum();
+        f_uk = t * f_uk + gx.sum();
+        f_uk_gradient = t * f_uk_gradient + dgx.colwise().sum().transpose();
     }
+
+    Eigen::VectorXd BarrierProblem::eval_grad_E(const Eigen::VectorXd& xk)
+    {
+        return general_problem->eval_grad_f(xk);
+    }
+
+    Eigen::VectorXd BarrierProblem::eval_grad_B(
+        const Eigen::VectorXd& xk, int& num_active_b)
+    {
+        Eigen::MatrixXd dgx = general_problem->eval_jac_g(xk);
+        num_active_b = dgx.rows();
+        return dgx.colwise().sum().transpose();
+    }
+
+
+    Multiprecision BarrierProblem::eval_mp_f(const Eigen::VectorXd& /*x*/)
+    {
+
+        //        double f_uk = general_problem->eval_f(x);
+        //        auto gx_ = general_problem->eval_mp_g(x);
+        //        Multiprecision gx = gx_.sum();
+
+        //        return t * f_uk + gx;
+        return 0;
+    }
+
 
 } // namespace opt
 } // namespace ccd

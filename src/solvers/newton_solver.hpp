@@ -64,6 +64,8 @@ namespace opt {
             Eigen::VectorXd& delta_x,
             bool make_psd = false);
 
+        double get_c() const override { return c; }
+
         double absolute_tolerance; ///< @brief Convergence tolerance.
         int max_iterations;
 
@@ -78,7 +80,9 @@ namespace opt {
 
         Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
         int iteration_number;     ///< @brief The current iteration number.
+        double c;
         std::string name_;
+
     };
 
     /**

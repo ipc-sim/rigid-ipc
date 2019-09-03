@@ -102,6 +102,9 @@ namespace opt {
         Eigen::MatrixXd debug_vertices_t0() const override {
             return vertices_t0;
         }
+
+        double debug_min_distance(
+            const Eigen::VectorXd& sigma) const override;
 #endif
 
     protected:

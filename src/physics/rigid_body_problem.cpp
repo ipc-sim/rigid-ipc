@@ -231,8 +231,6 @@ namespace physics {
                 }
             }
             normals.row(i) = n_toi.transpose();
-            spdlog::debug("a={} b0={}  b1={} normal {}", a_id, b0_id, b1_id,
-                ccd::logger::fmt_eigen(n_toi));
         }
 
 #ifndef NDEBUG

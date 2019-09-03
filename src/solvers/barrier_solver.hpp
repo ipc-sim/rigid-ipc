@@ -46,6 +46,11 @@ namespace opt {
         bool has_collisions(const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) const override;
 
+        // new functions for termiantion criteria
+        double get_termination_threshold() const override;
+        Eigen::VectorXd eval_grad_E(const Eigen::VectorXd& xk) override;
+        Eigen::VectorXd eval_grad_B(const Eigen::VectorXd& xk, int&) override;
+
 #ifdef DEBUG_LINESEARCH
         Eigen::MatrixXi debug_edges() const override
         {
@@ -60,11 +65,22 @@ namespace opt {
         {
             return general_problem->debug_vertices_t0();
         }
+
+        double debug_min_distance(
+            const Eigen::VectorXd& sigma) const override
+        {
+            return general_problem->debug_min_distance(sigma);
+        }
 #endif
+
         IBarrierGeneralProblem* general_problem;
         Eigen::VectorXd x0;
 
         int num_vars_;
+        double inner_solver_threshold;
+
+        double t;
+
     };
 
     class BarrierSolver : public virtual IStateOptimizationSolver {
@@ -98,6 +114,11 @@ namespace opt {
 
         double min_barrier_epsilon;
         int max_iterations;
+        double tinit;
+        double t;
+        double m;
+        double e_b;
+        double t_inc;
 
     protected:
         IBarrierOptimizationSolver& get_inner_solver() const
@@ -115,6 +136,8 @@ namespace opt {
         IBarrierGeneralProblem* general_problem_ptr;
         int num_outer_iterations_;
         std::string name_;
+
+        std::stringstream debug;
     };
 
 } // namespace opt

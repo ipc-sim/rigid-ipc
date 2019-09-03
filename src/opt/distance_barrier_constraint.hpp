@@ -84,6 +84,11 @@ namespace opt {
             const Eigen::VectorXd& b,
             const Eigen::VectorXd& c);
 
+#ifdef DEBUG_LINESEARCH
+        void debug_compute_distances(
+            const Eigen::MatrixXd& Uk, Eigen::VectorXd& distances) const;
+#endif
+
 
         // Settings
         // ----------

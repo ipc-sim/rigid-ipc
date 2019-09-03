@@ -133,6 +133,38 @@ namespace opt {
         compute_candidates_constraints(Uk, ev_candidates, barriers);
     }
 
+
+#ifdef DEBUG_LINESEARCH
+    void DistanceBarrierConstraint::debug_compute_distances(
+            const Eigen::MatrixXd& Uk, Eigen::VectorXd& distances) const{
+        EdgeVertexCandidates ev_candidates;
+        get_active_barrier_set(Uk, ev_candidates);
+
+        typedef double T;
+        typedef const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
+        typedef const Eigen::Matrix<T, Eigen::Dynamic, 1> VectorXd;
+
+        MatrixXd vertices_t1 = vertices.cast<T>() + Uk;
+
+        distances.resize(ev_candidates.size(), 1);
+        distances.setConstant(T(0.0));
+        for (size_t i = 0; i < ev_candidates.size(); ++i) {
+            const auto& ev_candidate = ev_candidates[i];
+            // a and b are the endpoints of the edge; c is the vertex
+            long edge_id = ev_candidate.edge_index;
+            int a_id = edges.coeff(edge_id, 0);
+            int b_id = edges.coeff(edge_id, 1);
+            long c_id = ev_candidate.vertex_index;
+            assert(a_id != c_id && b_id != c_id);
+            VectorXd a = vertices_t1.row(a_id);
+            VectorXd b = vertices_t1.row(b_id);
+            VectorXd c = vertices_t1.row(c_id);
+
+            distances(int(i)) = point_to_edge_distance<T>(a,b,c);
+        }
+    }
+#endif
+
     void DistanceBarrierConstraint::compute_constraints_jacobian(
         const Eigen::MatrixXd& Uk, Eigen::MatrixXd& barriers_jacobian)
     {
