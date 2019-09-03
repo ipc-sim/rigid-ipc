@@ -14,23 +14,17 @@
 #SBATCH --error=results/logs/simulation-%j.err
 
 FIXING_COLLISIONS_ROOT=$1
-GENERATION_SCRIPT=$2
-GENERATION_ARGS=$3
-OUTPUT_DIR=$4
-OUTPUT_NAME=$5
+OUTPUT_DIR=$2
+OUTPUT_NAME=$3
 
 # Save the directories
 TOOLS_DIR="$FIXING_COLLISIONS_ROOT/tools"
-RESULTS_DIR="$FIXING_COLLISIONS_ROOT/results/paper-results"
-mkdir -p "$RESULTS_DIR"
 BUILD_DIR="$FIXING_COLLISIONS_ROOT/build/"
-
-python $GENERATION_SCRIPT $OUTPUT_DIR/$OUTPUT_NAME.json $GENERATION_ARGS
 
 mkdir -p $OUTPUT_DIR
 
-$BUILD_DIR/FixingCollisions_ngui --scene-path $OUTPUT_DIR/$OUTPUT_NAME.json \
+$BUILD_DIR/Release/FixingCollisions_ngui --scene-path $OUTPUT_DIR/$OUTPUT_NAME.json \
         --output-path $OUTPUT_DIR -f "$OUTPUT_NAME"_sim.json > $OUTPUT_DIR/"$OUTPUT_NAME"_sim.log
 
-python $TOOLS_DIR/results_to_vtk_files.py $OUTPUT_DIR/"$OUTPUT_NAME"_sim.json $OUTPUT_DIR
+# python $TOOLS_DIR/results_to_vtk_files.py $OUTPUT_DIR/"$OUTPUT_NAME"_sim.json $OUTPUT_DIR
 

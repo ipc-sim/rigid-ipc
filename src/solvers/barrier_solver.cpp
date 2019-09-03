@@ -144,9 +144,10 @@ namespace opt {
         std::string min_dist_diff_str
             = min_dist_diff > -1 ? fmt::format("{:.10e}", min_dist_diff) : "NA";
 
-        debug << fmt::format("{},{},{:.10e},{:.10e},{},{}\n",
+        double Ex = general_problem_ptr->eval_f(results.x);
+        debug << fmt::format("{},{},{:.10e},{:.10e},{},{},{:.10e}\n",
             num_outer_iterations_, t, xdiff.norm(), vdiff.norm(), min_dist_str,
-            min_dist_diff_str);
+            min_dist_diff_str, Ex);
 #endif
 
         results.minf = general_problem_ptr->eval_f(results.x);
@@ -170,14 +171,18 @@ namespace opt {
 
         } while (m / t > e_b); // barrier_epsilon() > min_barrier_epsilon
 
+        // make one last iteration with exactly eb
+        t = m / e_b;
+        results = step_solve();
+
 #ifdef DEBUG_LINESEARCH
         std::cout
             << fmt::format(
                    "tinit={} tend={} m={}  e_b={} c={} eps_barrier={} t_inc={}",
-                   tinit, t, m, e_b, c, barrier_epsilon(), t_inc)
+                   tinit, t/t_inc, m, e_b, c, barrier_epsilon(), t_inc)
             << std::endl;
         std::cout
-            << "outer_it, t, var_diff_norm, vertex_diff_norm, min_distance, min_distance_diff"
+            << "outer_it, t, var_diff_norm, vertex_diff_norm, min_distance, min_distance_diff, E(x)"
             << std::endl;
         std::cout << debug.str() << std::flush;
         inner_solver_ptr->debug_stats();

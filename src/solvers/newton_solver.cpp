@@ -205,10 +205,9 @@ namespace opt {
 #ifdef DEBUG_LINESEARCH
     void NewtonSolver::debug_stats()
     {
-        std::cout << fmt::format(
-                         "count_fx={} count_grad={} count_hess={} count_ccd={}",
-                         debug_num_fx, debug_num_grad_fx, debug_num_hessian_fx,
-                         debug_num_collision_check)
+        std::cout << "count_fx, count_grad, count_hess, count_ccd" << std::endl;
+        std::cout << fmt::format("{},{},{},{}", debug_num_fx, debug_num_grad_fx,
+                         debug_num_hessian_fx, debug_num_collision_check)
                   << std::endl;
     }
 #endif
