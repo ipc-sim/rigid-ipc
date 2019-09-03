@@ -10,9 +10,9 @@
         "custom_hashgrid_cellsize": -1
     },
     "barrier_solver": {
-        "e_b": 1e-10,
+        "e_b": 1e-8,
         "m": 1,
-        "t": 1,
+        "t_init": 2,
         "c": 0.01,
         "t_inc": 2,
         "inner_solver": "newton_solver"

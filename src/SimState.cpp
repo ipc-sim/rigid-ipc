@@ -100,7 +100,7 @@ bool SimState::init(const nlohmann::json& args_in)
             "max_iterations": "DEPRECATED",
             "e_b": 1e-5,
             "t_inc": 2,
-            "t": 1,
+            "t_init": 1,
             "m": 1,
             "c": 0.01
         },

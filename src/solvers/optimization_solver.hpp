@@ -37,6 +37,10 @@ namespace opt {
         virtual void e_b(const double) {}
         virtual void t(const double) {}
         virtual void m(const double) {}
+
+#ifdef DEBUG_LINESEARCH
+        virtual void debug_stats(){}
+#endif
     };
 
     // Interface class for optimizatino solvers used by State

@@ -80,6 +80,11 @@ namespace opt {
 
             double fx;
             problem.eval_f_and_fdiff(x, fx, gradient, hessian);
+#ifdef DEBUG_LINESEARCH
+            debug_num_fx += 1;
+            debug_num_grad_fx += 1;
+            debug_num_hessian_fx += 1;
+#endif
 
             // Remove rows and cols of fixed dof
             igl::slice(gradient, free_dof, gradient_free);
@@ -197,7 +202,16 @@ namespace opt {
             }
         }
     }
-
+#ifdef DEBUG_LINESEARCH
+    void NewtonSolver::debug_stats()
+    {
+        std::cout << fmt::format(
+                         "count_fx={} count_grad={} count_hess={} count_ccd={}",
+                         debug_num_fx, debug_num_grad_fx, debug_num_hessian_fx,
+                         debug_num_collision_check)
+                  << std::endl;
+    }
+#endif
     bool NewtonSolver::line_search(IBarrierProblem& problem,
         const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
@@ -238,6 +252,11 @@ namespace opt {
 #endif
             bool no_collisions = !problem.has_collisions(x, xi);
             double fxi = problem.eval_f(xi);
+
+#ifdef DEBUG_LINESEARCH
+            debug_num_collision_check += 1;
+            debug_num_fx += 1;
+#endif
 
             debug << fmt::format(
                 "{},{},{:.18e},{},{:.18e},{:.18e},{:.18e},{:.18e}, {:.8e}\n",

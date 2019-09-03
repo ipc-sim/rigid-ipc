@@ -20,7 +20,8 @@ namespace opt {
     }
 
     BarrierSolver::BarrierSolver(const std::string& name)
-        : t(1.0)
+        : tinit(1.0)
+        , t(1.0)
         , m(1.0)
         , c(0.01)
         , e_b(1e-5)
@@ -41,7 +42,7 @@ namespace opt {
         // termination criteria variables
         e_b = json["e_b"].get<double>();
         m = json["m"].get<double>();
-        t = json["t"].get<double>();
+        tinit = json["t_init"].get<double>();
         c = json["c"].get<double>();
         t_inc = json["t_inc"].get<double>();
 
@@ -58,7 +59,7 @@ namespace opt {
         nlohmann::json json;
         json["e_b"] = e_b;
         json["t_inc"] = t_inc;
-        json["t"] = t;
+        json["t_init"] = tinit;
         json["m"] = m;
         json["c"] = c;
         json["inner_solver"] = get_inner_solver().name();
@@ -91,7 +92,7 @@ namespace opt {
             //                barrier_problem_ptr->eval_grad_E(barrier_problem_ptr->x0);
             //            t = tinit = -grad_B.dot(grad_E) / grad_E.dot(grad_E);
         } else {
-            t = tinit = 1;
+            t = tinit;
         }
 
         spdlog::debug(
@@ -179,6 +180,7 @@ namespace opt {
             << "outer_it, t, var_diff_norm, vertex_diff_norm, min_distance, min_distance_diff"
             << std::endl;
         std::cout << debug.str() << std::flush;
+        inner_solver_ptr->debug_stats();
         std::cout << std::endl;
 #endif
         return results;
