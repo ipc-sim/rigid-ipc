@@ -1,11 +1,11 @@
 #pragma once
 
 #include <autodiff/autodiff_types.hpp>
+#include <multiprecision.hpp>
 #include <opt/distance_barrier_constraint.hpp>
 #include <opt/optimization_problem.hpp>
 #include <physics/rigid_body_problem.hpp>
 #include <solvers/barrier_solver.hpp>
-#include <multiprecision.hpp>
 
 namespace ccd {
 
@@ -26,6 +26,11 @@ namespace opt {
         DistanceBarrierRBProblem(const std::string& name);
 
         void settings(const nlohmann::json& params) override;
+        nlohmann::json state() const override;
+
+        bool simulation_step(const double time_step) override;
+        bool take_step(
+            const Eigen::VectorXd& sigma, const double time_step) override;
 
         ////////////////////////////////////////////////////////////////
         /// IConstrainedProblem
@@ -88,24 +93,26 @@ namespace opt {
             const EdgeVertexCandidates& ev_candidates,
             const Eigen::MatrixXd& jac_g);
 
-        Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> eval_mp_g(const Eigen::VectorXd& x) override;
+        Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> eval_mp_g(
+            const Eigen::VectorXd& x) override;
 
         bool has_collisions(const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) const override;
 
 #ifdef DEBUG_LINESEARCH
-        Eigen::MatrixXi debug_edges() const override{
+        Eigen::MatrixXi debug_edges() const override
+        {
             return m_assembler.m_edges;
         }
 
-        Eigen::MatrixXd debug_vertices(const Eigen::VectorXd& sigma) const override;
-        Eigen::MatrixXd debug_vertices_t0() const override {
+        Eigen::MatrixXd debug_vertices(
+            const Eigen::VectorXd& sigma) const override;
+        Eigen::MatrixXd debug_vertices_t0() const override
+        {
             return vertices_t0;
         }
-
-        double debug_min_distance(
-            const Eigen::VectorXd& sigma) const override;
 #endif
+        double debug_min_distance(const Eigen::VectorXd& sigma) const override;
 
     protected:
         void extract_local_system(
@@ -116,8 +123,7 @@ namespace opt {
             const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
 
         template <typename T>
-        T distance(
-            const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
+        T distance(const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
 
         Eigen::MatrixXd eval_jac_g_core(
             const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
@@ -125,8 +131,11 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g_core(
             const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
 
-        void compare_fd(const Eigen::VectorXd& sigma, const EdgeVertexCandidate&, const Eigen::VectorXd&);
+        void compare_fd(const Eigen::VectorXd& sigma,
+            const EdgeVertexCandidate&,
+            const Eigen::VectorXd&);
 
+        double debug_min_distance_ = -1;
         opt::DistanceBarrierConstraint constraint_;
         opt::BarrierSolver opt_solver_;
     };

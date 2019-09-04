@@ -113,7 +113,7 @@ namespace opt {
             }
             step_length = 1;
             bool found_newton_step = line_search(
-                problem, x, direction, fx, grad_direction, step_length);
+                problem, x, direction, fx, grad_direction, step_length, true);
             ///<<<< end line search 1
 
             // When newton direction fails, revert to gradient descent
@@ -156,8 +156,8 @@ namespace opt {
                 "{},{:.10e},{:.10e},{},{:.10e},{:.10e},{},{:.10e}\n",
                 iteration_number, gradient_free.norm(),
                 abs(direction_free.dot(gradient_free)), tolerance,
-                E_free.norm(), B_free.norm(), num_barrier,
-                (E_free + B_free).norm());
+                t_ * E_free.norm(), B_free.norm(), num_barrier,
+                (t_ * E_free + B_free).norm());
 #endif
 
             auto xk = x + step_length * direction;
@@ -177,11 +177,12 @@ namespace opt {
         debug << fmt::format(
             "{},{:.10e},{:.10e},{},{:.10e},{:.10e},{},{:.10e}\n",
             iteration_number, gradient_free.norm(),
-            abs(direction_free.dot(gradient_free)), tolerance, E_free.norm(),
-            B_free.norm(), num_barrier, (E_free + B_free).norm());
+            abs(direction_free.dot(gradient_free)), tolerance,
+            t_ * E_free.norm(), B_free.norm(), num_barrier,
+            (t_ * E_free + B_free).norm());
 
         std::cout
-            << "newton_it, gradient_norm, termination, tolerance, gradE.norm, gradB.norm, #B, (gradE+gradB).norm"
+            << "newton_it, gradient_norm, termination, tolerance, t * gradE.norm, gradB.norm, #B, (t * gradE+gradB).norm"
             << std::endl;
         std::cout << debug.str() << std::flush;
         std::cout << "newton_exit_reason=" << exit_reason << std::endl;
@@ -228,7 +229,7 @@ namespace opt {
 
         std::stringstream debug;
         debug
-            << "global_it,it,step_length,collisions,f(x),fx0,E*step,>lb, barrier_eps, min_dist\n";
+            << "global_it,it,step_length,collisions,f(x),fx0,f'*step,>lb, barrier_eps\n";
 
         int num_it = 0;
         global_it += 1;
@@ -240,7 +241,7 @@ namespace opt {
         std::cout << "BEGIN line search global_it=" << global_it << std::endl;
 #endif
 
-        double lower_bound = std::min(1E-12, c_ * e_b_/ 10.0);
+        double lower_bound = std::min(1E-12, c_ * e_b_ / 10.0);
         const double eps = problem.get_barrier_epsilon();
 
         while (-grad_fx.dot(dir) * alpha > lower_bound) {
@@ -276,9 +277,10 @@ namespace opt {
         if (log_failure && !success) {
             std::cout
                 << fmt::format(
-                       "linesearch fail num_it={} `-grad_fx.dot(dir)`={:.18e} `-grad_fx.dot(dir) * alpha `={:.18e} lower_bound={:.8e} alpha={:.8e} fx={:.8e}",
+                       "linesearch fail num_it={} `-grad_fx.dot(dir)`={:.18e} `-grad_fx.dot(dir) * alpha `={:.18e} "
+                       "lower_bound={:.8e} alpha={:.8e} fx={:.8e} t={:.8e}",
                        num_it, -grad_fx.dot(dir), -grad_fx.dot(dir) * alpha,
-                       lower_bound, alpha, fx)
+                       lower_bound, alpha, fx, t_)
                 << std::endl;
             std::string fout = fmt::format(
                 "{}/linesearch_{}.csv", DATA_OUTPUT_DIR, ccd::logger::now());

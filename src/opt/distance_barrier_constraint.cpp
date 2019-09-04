@@ -134,7 +134,7 @@ namespace opt {
     }
 
 
-#ifdef DEBUG_LINESEARCH
+//#ifdef DEBUG_LINESEARCH
     void DistanceBarrierConstraint::debug_compute_distances(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& distances) const{
         EdgeVertexCandidates ev_candidates;
@@ -163,7 +163,7 @@ namespace opt {
             distances(int(i)) = point_to_edge_distance<T>(a,b,c);
         }
     }
-#endif
+//#endif
 
     void DistanceBarrierConstraint::compute_constraints_jacobian(
         const Eigen::MatrixXd& Uk, Eigen::MatrixXd& barriers_jacobian)

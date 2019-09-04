@@ -31,6 +31,45 @@ namespace opt {
         RigidBodyProblem::settings(params["rigid_body_problem"]);
     }
 
+    nlohmann::json DistanceBarrierRBProblem::state() const
+    {
+        nlohmann::json json = RigidBodyProblem::state();
+        if (debug_min_distance_ < 0) {
+            json["min_distance"] = nullptr;
+        } else {
+            json["min_distance"] = debug_min_distance_;
+        }
+        return json;
+    }
+
+    bool DistanceBarrierRBProblem::simulation_step(const double time_step)
+    {
+        bool status = RigidBodyProblem::simulation_step(time_step);
+
+        Eigen::VectorXd sigma
+            = m_assembler.m_position_to_dof * m_assembler.rb_positions_t0();
+        debug_min_distance_ = debug_min_distance(sigma);
+        if (debug_min_distance_ >= 0) {
+            spdlog::info(
+                "candidate_step min_distance={:.8e}", debug_min_distance_);
+        }
+
+        return status;
+    }
+
+    bool DistanceBarrierRBProblem::take_step(
+        const Eigen::VectorXd& sigma, const double time_step)
+    {
+        debug_min_distance_ = debug_min_distance(sigma);
+        if (debug_min_distance_ < 0) {
+            spdlog::info("final_step min_distance=N/A");
+        } else {
+            spdlog::info("final_step min_distance={:.8e}", debug_min_distance_);
+        }
+
+        return RigidBodyProblem::take_step(sigma, time_step);
+    }
+
     void DistanceBarrierRBProblem::eval_f_and_fdiff(
         const Eigen::VectorXd& sigma,
         double& f_uk,
@@ -56,20 +95,20 @@ namespace opt {
         Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
         return m_assembler.world_vertices(qk);
     }
-
+#endif
     double DistanceBarrierRBProblem::debug_min_distance(
-            const Eigen::VectorXd& sigma) const {
+        const Eigen::VectorXd& sigma) const
+    {
         Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
 
         Eigen::VectorXd d;
         constraint_.debug_compute_distances(uk, d);
-        if (d.rows() > 0){
+        if (d.rows() > 0) {
             return d.minCoeff();
         }
         return -1;
     }
-#endif
 
     Eigen::VectorXd DistanceBarrierRBProblem::eval_g(
         const Eigen::VectorXd& sigma)
@@ -476,7 +515,8 @@ namespace opt {
 
         auto jac_full = eval_jac_g_full(sigma, ev_candidates);
 
-        bool pass = compare_jacobian(jac_full, jac_g, /*test_eps=*/Constants::FULL_GRADIENT_TEST);
+        bool pass = compare_jacobian(
+            jac_full, jac_g, /*test_eps=*/Constants::FULL_GRADIENT_TEST);
         if (!pass) {
             spdlog::error("autodiff_gradients_dont_match");
         }

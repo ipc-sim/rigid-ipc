@@ -276,8 +276,8 @@ bool SimState::solve_collision()
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 
     if (m_step_has_collision) {
-        spdlog::error(
-            "sim_state action=solve_collisions sim_it={} status=collisions_unsolved",
+        spdlog::warn(
+            "sim_state action=solve_collisions sim_it={} status=linearized_collisions_unsolved",
             m_num_simulation_steps);
     } else {
         spdlog::debug(

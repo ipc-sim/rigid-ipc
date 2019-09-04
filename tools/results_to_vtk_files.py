@@ -40,6 +40,7 @@ def main(args=[]):
         total_L = np.empty((0,), dtype=np.float64)
         total_T = np.empty((0,), dtype=np.float64)
         total_G = np.empty((0,), dtype=np.float64)
+        total_D = np.empty((0,), dtype=np.float64)
 
         total_rb_q = []
         total_rb_v = []
@@ -61,6 +62,7 @@ def main(args=[]):
             L = state["angular_momentum"]
             T = state["kinetic_energy"]
             G = state["potential_energy"]
+            D = state["min_distance"]
 
             rb_q = []
             rb_v = []
@@ -89,6 +91,7 @@ def main(args=[]):
             total_L = np.append(total_L, [L], axis=0)
             total_T = np.append(total_T, [T], axis=0)
             total_G = np.append(total_G, [G], axis=0)
+            total_D = np.append(total_D, [D], axis=0)
             total_rb_q = total_rb_q + rb_q
             total_rb_v = total_rb_v + rb_v
             total_rb_time = total_rb_time + [i] * len(rb_q)
@@ -114,14 +117,17 @@ def main(args=[]):
             cells={"vertex": vertex_cells},
             point_data={"time": vertex_time, "velocity": vertex_vel}
         )
+        total_D[total_D==None] = np.nan
         total_E = total_T + total_G
         total_E_rel = [0] + [total_E[i + 1] - total_E[i]
                              for i in range(0, len(total_E) - 1)]
         data = np.column_stack(
-            [total_T, total_G, total_E, total_L, total_p, total_E_rel])
+            [total_T, total_G, total_E, total_L, total_p, total_E_rel, total_D])
+
         np.savetxt(dout.joinpath("%s_energy.csv" % (base_name)), data, delimiter=',',
                    header=",".join(["kinetic_energy", "potential_energy", "total_energy",
-                                    "angular_momentum", "linear_momentum_x", "linear_momentum_y", "total_energy_rel"]))
+                                    "angular_momentum", "linear_momentum_x", "linear_momentum_y", 
+                                    "total_energy_rel", "min_distance"]))
 
 
 if __name__ == "__main__":

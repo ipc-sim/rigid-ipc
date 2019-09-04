@@ -117,7 +117,7 @@ def main() -> None:
     fixture = generate_fixture(args)
 
     with open(args.out_path, 'w') as outfile:
-        json.dump(fixture, outfile)
+        json.dump(fixture, outfile, indent=4, separators=(',', ':'))
 
 
 if __name__ == "__main__":

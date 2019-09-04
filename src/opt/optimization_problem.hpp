@@ -132,12 +132,12 @@ namespace opt {
         {
             throw NotImplementedError("debug_vertices_t0");
         }
+#endif
         virtual double debug_min_distance(
             const Eigen::VectorXd& sigma) const
         {
             throw NotImplementedError("debug_min_distance");
         }
-#endif
     };
 
     class IBarrierProblem : public virtual IUnconstraintedProblem {
