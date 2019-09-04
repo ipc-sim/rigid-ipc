@@ -11,7 +11,7 @@ import sys
 
 import numpy
 
-from default_fixture import generate_default_fixture
+from fixture_utils import *
 
 vertices = numpy.array(
     [
@@ -63,8 +63,7 @@ def main() -> None:
             __file__).resolve().parents[1] / "fixtures" / "chain"
         directory.mkdir(parents=True, exist_ok=True)
         out_path = directory / f"simple_{n_links:d}_link_chain.json"
-    with open(out_path, "w") as outfile:
-        json.dump(fixture, outfile)
+    save_fixture(fixture, out_path)
 
 
 if __name__ == "__main__":

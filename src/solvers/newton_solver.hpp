@@ -64,9 +64,26 @@ namespace opt {
             Eigen::VectorXd& delta_x,
             bool make_psd = false);
 
-        double absolute_tolerance; ///< @brief Convergence tolerance.
+        void c(const double value) override { c_ = value; }
+        void e_b(const double value) override { e_b_ = value; }
+        void t(const double value) override { t_ = value; }
+        void m(const double value) override { m_ = value; }
+
         int max_iterations;
 
+        double c_;
+        double e_b_;
+        double t_;
+        double m_;
+
+#ifdef DEBUG_LINESEARCH
+        void debug_stats() override;
+        int debug_num_fx = 0;
+        int debug_num_grad_fx = 0;
+        int debug_num_hessian_fx = 0;
+        int debug_num_collision_check = 0;
+
+#endif
     protected:
         bool line_search(IBarrierProblem& problem,
             const Eigen::VectorXd& x,
@@ -78,6 +95,7 @@ namespace opt {
 
         Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
         int iteration_number;     ///< @brief The current iteration number.
+
         std::string name_;
     };
 

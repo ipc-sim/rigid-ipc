@@ -96,8 +96,13 @@ bool SimState::init(const nlohmann::json& args_in)
          },
         "barrier_solver": {
             "inner_solver": "newton_solver",
-            "min_barrier_epsilon":1e-5,
-            "max_iterations": 0
+            "min_barrier_epsilon":"DEPRECATED",
+            "max_iterations": "DEPRECATED",
+            "e_b": 1e-5,
+            "t_inc": 2,
+            "t_init": 1,
+            "m": 1,
+            "c": 0.01
         },
         "gradient_descent_solver":{
             "absolute_tolerance": 1e-5,
@@ -130,10 +135,9 @@ bool SimState::init(const nlohmann::json& args_in)
         },
        "distance_barrier_constraint":{
            "custom_initial_epsilon":0.5,
-           "detection_method": "hash_grid",
-           "use_distance_hashgrid": true,
+           "min_distance":1e-10,
            "active_constraint_scale" : 1.5,
-           "custom_hashgrid_cellsize":-1
+           "detection_method": "hash_grid"
        },
        "volume_constraint":{
            "detection_method": "hash_grid",
@@ -271,8 +275,8 @@ bool SimState::solve_collision()
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 
     if (m_step_has_collision) {
-        spdlog::error(
-            "sim_state action=solve_collisions sim_it={} status=collisions_unsolved",
+        spdlog::warn(
+            "sim_state action=solve_collisions sim_it={} status=linearized_collisions_unsolved",
             m_num_simulation_steps);
     } else {
         spdlog::debug(

@@ -1,0 +1,282 @@
+{
+    "active_args": {
+        "barrier_solver": {
+            "e_b": 1e-12,
+            "inner_solver": "newton_solver",
+            "max_iterations": 0,
+            "min_barrier_epsilon": 0.0001
+        },
+        "distance_barrier_constraint": {
+            "active_constraint_scale": 1.01,
+            "custom_inital_epsilon": 0.1,
+            "detection_method": "hash_grid"
+        },
+        "distance_barrier_rb_problem": {
+            "coefficient_restitution": 1.0,
+            "collision_eps": 0.0,
+            "gravity": [
+                0.0, -3.0,
+                0.0
+            ]
+        },
+        "newton_solver": {
+            "absolute_tolerance": 1e-05,
+            "c": 1e-06,
+            "max_iterations": 1000
+        },
+        "scene_type": "distance_barrier_rb_problem",
+        "timestep_size": 0.05
+    },
+    "animation": {
+        "edges": [
+            [
+                0,
+                1
+            ],
+            [
+                1,
+                2
+            ],
+            [
+                2,
+                3
+            ],
+            [
+                3,
+                0
+            ],
+            [
+                4,
+                5
+            ],
+            [
+                5,
+                6
+            ],
+            [
+                6,
+                7
+            ],
+            [
+                7,
+                4
+            ]
+        ],
+        "state_sequence": [{
+            "angular_momentum": 0.0,
+            "kinetic_energy": 174.24000000001087,
+            "linear_momentum": [
+                0.0, -52.800000000001646
+            ],
+            "potential_energy": 124.7999999999934,
+            "rigid_bodies": [{
+                "position": [
+                    0.0,
+                    2.5749999999997253,
+                    0.7853981633974483
+                ],
+                "velocity": [
+                    0.0, -6.600000000000206,
+                    0.0
+                ]
+            }, {
+                "position": [
+                    0.0,
+                    0.5,
+                    0.0
+                ],
+                "velocity": [
+                    0.0,
+                    0.0,
+                    0.0
+                ]
+            }]
+        }],
+        "vertices_sequence": [
+            [
+                [-1.1102230246251565e-16,
+                    1.1607864376266304
+                ],
+                [
+                    1.414213562373095,
+                    2.5749999999997253
+                ],
+                [
+                    1.1102230246251565e-16,
+                    3.98921356237282
+                ],
+                [-1.414213562373095,
+                    2.5749999999997253
+                ],
+                [-10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    0.0
+                ],
+                [
+                    10.0,
+                    1.0
+                ],
+                [-10.0,
+                    1.0
+                ]
+            ]
+        ]
+    },
+    "args": {
+        "barrier_solver": {
+            "e_b": 1e-10,
+            "m": 1,
+            "t": 1,
+            "t_inc": 10,
+            "inner_solver": "newton_solver",
+            "min_barrier_epsilon": 0.0001
+        },
+
+        "distance_barrier_constraint": {
+            "active_constraint_scale": 1.01,
+            "custom_hashgrid_cellsize": -1,
+            "custom_initial_epsilon": 0.1,
+            "detection_method": "hash_grid",
+            "use_distance_hashgrid": true
+        },
+        "newton_solver": {
+            "absolute_tolerance": 1e-05,
+            "c": 0.01,
+            "max_iterations": 1000,
+            "min_step_length": "DEPRECATED"
+        },
+        "rigid_body_problem": {
+            "coefficient_restitution": 1.0,
+            "collision_eps": 0.0,
+            "gravity": [
+                0.0, -3.0,
+                0.0
+            ],
+            "rigid_bodies": [{
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
+                "oriented": true,
+                "position": [
+                    0.0,
+                    10
+                ],
+                "theta": 45,
+                "velocity": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "vertices": [
+                    [-1, -1],
+                    [
+                        1, -1
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [-1,
+                        1
+                    ]
+                ]
+            }, {
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
+                ],
+                "oriented": true,
+                "position": [
+                    0,
+                    0
+                ],
+                "velocity": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "vertices": [
+                    [-10,
+                        0
+                    ],
+                    [
+                        10,
+                        0
+                    ],
+                    [
+                        10,
+                        1
+                    ],
+                    [-10,
+                        1
+                    ]
+                ]
+            }]
+        },
+        "scene_type": "distance_barrier_rb_problem",
+        "time_barrier_constraint": {
+            "custom_hashgrid_cellsize": -1,
+            "custom_initial_epsilon": 1.0,
+            "detection_method": "hash_grid",
+            "initial_epsilon": "min_toi"
+        },
+        "timestep_size": 0.05,
+        "viewport_bbox": {
+            "max": [
+                0,
+                0
+            ],
+            "min": [
+                0,
+                0
+            ]
+        },
+        "volume_constraint": {
+            "custom_hashgrid_cellsize": -1,
+            "detection_method": "hash_grid",
+            "volume_epsilon": 1e-06
+        }
+    }
+}

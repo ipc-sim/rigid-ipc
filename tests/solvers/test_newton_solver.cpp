@@ -60,6 +60,14 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
         {
             return false;
         }
+        Eigen::VectorXd eval_grad_E(const Eigen::VectorXd& x) override{
+            return eval_grad_f(x);
+        }
+        Eigen::VectorXd eval_grad_B(const Eigen::VectorXd& /*x*/, int& i) override{
+            i = 0;
+            return Eigen::VectorXd::Zero(num_vars());
+        }
+        double get_termination_threshold() const override {return 1.0;}
         double get_barrier_epsilon() override { return 1.0; }
         const Eigen::VectorXd& starting_point() override { return x0; }
         const int& num_vars() override { return num_vars_; }

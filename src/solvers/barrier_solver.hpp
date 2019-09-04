@@ -46,6 +46,11 @@ namespace opt {
         bool has_collisions(const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) const override;
 
+        // new functions for termiantion criteria
+        double get_termination_threshold() const override;
+        Eigen::VectorXd eval_grad_E(const Eigen::VectorXd& xk) override;
+        Eigen::VectorXd eval_grad_B(const Eigen::VectorXd& xk, int&) override;
+
 #ifdef DEBUG_LINESEARCH
         Eigen::MatrixXi debug_edges() const override
         {
@@ -60,11 +65,20 @@ namespace opt {
         {
             return general_problem->debug_vertices_t0();
         }
+
+        double debug_min_distance(const Eigen::VectorXd& sigma) const override
+        {
+            return general_problem->debug_min_distance(sigma);
+        }
 #endif
+
         IBarrierGeneralProblem* general_problem;
         Eigen::VectorXd x0;
 
         int num_vars_;
+        double inner_solver_threshold;
+
+        double t;
     };
 
     class BarrierSolver : public virtual IStateOptimizationSolver {
@@ -96,8 +110,29 @@ namespace opt {
             return num_outer_iterations_;
         }
 
-        double min_barrier_epsilon;
-        int max_iterations;
+        ///
+        /// "For a given outer iteration (i.e. fixed t) the precision of the result will be ~ m/t
+        /// (in terms of how close it is to the solution of the original
+        /// inequality constrained problem).  It is possible to run Newton solve
+        /// to a fixed high precision (say 1e-12) to get this approximate
+        /// solution, but this si wasteful.  On the other hand, running it at
+        /// the same precision as the current error due to finite t is somewhat
+        /// risky, especially for low values of t -- this may lead to a
+        /// substantial deviation from the true solution.    So a possible
+        /// approach is to use a faction c of the current outer iteration
+        /// precision.  This however is excessive for high values of t,
+        /// especially hitting the limits of double accuracy.  It is reasonable
+        /// to limit how high we set Newton accuracy. We can try either  max(
+        /// c*m/t,  e_b)  or max( c*m/t, e_max)  with e_max being the max
+        /// accuracy we hope to achieve with doubles in the Neuton solve (say
+        /// 1e-12 or 1e-11)."
+        ///
+        double tinit;
+        double t;
+        double m;
+        double c;
+        double e_b;
+        double t_inc;
 
     protected:
         IBarrierOptimizationSolver& get_inner_solver() const
@@ -115,6 +150,8 @@ namespace opt {
         IBarrierGeneralProblem* general_problem_ptr;
         int num_outer_iterations_;
         std::string name_;
+
+        std::stringstream debug;
     };
 
 } // namespace opt

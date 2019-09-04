@@ -37,7 +37,7 @@ namespace Constants {
 
     /// \brief FULL_GRADIENT_TEST used for checking if full gradient
     /// and assembly of local gradients match (both computed with autodiff)
-    static const double FULL_GRADIENT_TEST = 1E-16;
+    static const double FULL_GRADIENT_TEST = 1E-10;
 
 }
 

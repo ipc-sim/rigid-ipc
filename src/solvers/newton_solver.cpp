@@ -22,8 +22,7 @@ namespace opt {
     {
     }
     NewtonSolver::NewtonSolver(const std::string& name)
-        : absolute_tolerance(Constants::NEWTON_ABSOLUTE_TOLERANCE)
-        , max_iterations(1000)
+        : max_iterations(1000)
         , iteration_number(0)
         , name_(name)
 
@@ -35,38 +34,27 @@ namespace opt {
     void NewtonSolver::settings(const nlohmann::json& json)
     {
         max_iterations = json["max_iterations"].get<int>();
-        absolute_tolerance = json["absolute_tolerance"].get<double>();
     }
 
     nlohmann::json NewtonSolver::settings() const
     {
         nlohmann::json json;
         json["max_iterations"] = max_iterations;
-        json["absolute_tolerance"] = absolute_tolerance;
         return json;
     }
 
     const static char* NEWTON_DIRECTION_LOG
-        = "solver=newton_solver iter={:d} action=newton_line_search "
+        = "\t\tsolver=newton_solver iter={:d} action=newton_line_search "
           "status=failure message=\"reverting to gradient descent\"";
     const static char* NEWTON_GRADIENT_LOG
-        = "solver=newton_solver iter={:d} action=gradient_line_search "
+        = "\t\tsolver=newton_solver iter={:d} action=gradient_line_search "
           "status=failure message=\"no failsafe - break!\"";
-    const static char* NEWTON_END_LOG = "solver=newton_solver action=END";
-    const static char* NEWTON_BEGIND_LOG = "solver=newton_solver action=BEGIN";
+    const static char* NEWTON_END_LOG = "\tsolver=newton_solver action=END";
+    const static char* NEWTON_BEGIND_LOG
+        = "\tsolver=newton_solver action=BEGIN";
 
     OptimizationResults NewtonSolver::solve(IBarrierProblem& problem)
     {
-        NAMED_PROFILE_POINT("newton_solver", SOLVER_STEP);
-        NAMED_PROFILE_POINT("newton_solver__eval_f_and_fdiff", EVAL_F);
-        NAMED_PROFILE_POINT(
-            "newton_solver__compute_newton_direction", COMPUTE_DIRECTION);
-        NAMED_PROFILE_POINT(
-            "newton_solver__newton_line_search", NEWTON_LINE_SEARCH);
-        NAMED_PROFILE_POINT(
-            "newton_solver__gradient_line_search", GRADIENT_LINE_SEARCH);
-        NAMED_PROFILE_POINT(
-            "newton_solver__assert_constraint", ASSERT_CONSTRAINT);
 
         // Initalize the working variables
         Eigen::VectorXd x = problem.starting_point();
@@ -75,99 +63,135 @@ namespace opt {
 
         double step_length = 1.0;
 
-        spdlog::trace(NEWTON_BEGIND_LOG);
-        iteration_number = 0;
-        std::string exit_reason = "exceeded the maximum allowable iterations";
-        do {
-            PROFILE_START(SOLVER_STEP);
+        spdlog::debug(NEWTON_BEGIND_LOG);
 
-            PROFILE_START(EVAL_F) // Compute the gradient and hessian
+        double tolerance = std::max(e_b_, c_ * m_ / t_);
+        std::string exit_reason = "exceeded the maximum allowable iterations";
+
+        Eigen::VectorXd direction(problem.num_vars());
+        Eigen::VectorXd grad_direction(problem.num_vars());
+        Eigen::VectorXd direction_free(free_dof.size());
+
+        std::stringstream debug;
+
+        bool success = false;
+        for (iteration_number = 0; iteration_number < max_iterations;
+             iteration_number++) {
+
             double fx;
             problem.eval_f_and_fdiff(x, fx, gradient, hessian);
-            PROFILE_END(EVAL_F)
+#ifdef DEBUG_LINESEARCH
+            debug_num_fx += 1;
+            debug_num_grad_fx += 1;
+            debug_num_hessian_fx += 1;
+#endif
 
-            // Remove rows of fixed dof
+            // Remove rows and cols of fixed dof
             igl::slice(gradient, free_dof, gradient_free);
-
-            if (gradient_free.squaredNorm() <= absolute_tolerance) {
-                exit_reason = "found a local optimum";
-                PROFILE_END(SOLVER_STEP);
-                break;
-            }
-
-            // Remove rows and columns of fixed dof of the hessian
             igl::slice(hessian, free_dof, free_dof, hessian_free);
-
-            PROFILE_START(COMPUTE_DIRECTION)
-
-            Eigen::VectorXd direction
-                = Eigen::VectorXd::Zero(problem.num_vars());
-
-            Eigen::VectorXd direction_free(free_dof.size());
             bool found_direction = compute_direction(
                 gradient_free, hessian_free, direction_free, /*make_psd=*/true);
-            igl::slice_into(direction_free, free_dof, direction);
-
-            PROFILE_END(COMPUTE_DIRECTION)
 
             if (!found_direction) {
                 exit_reason = "newton direction solve failed";
-                PROFILE_END(SOLVER_STEP);
                 break;
             }
 
-            step_length = 1; // std::min(1.0, 2.0 * step_length);
-
-            Eigen::VectorXd grad_direction
-                = Eigen::VectorXd::Zero(problem.num_vars());
+            // get grad direction for lineseach
+            grad_direction.setZero();
             igl::slice_into(gradient_free, free_dof, grad_direction);
 
-            PROFILE_START(NEWTON_LINE_SEARCH)
-            bool found_step_length = line_search(
-                problem, x, direction, fx, grad_direction, step_length);
-            PROFILE_END(NEWTON_LINE_SEARCH)
+            ///>>>> LINE SEARCH 1
+            direction.setZero();
+            igl::slice_into(direction_free, free_dof, direction);
 
-            // Revert to gradient descent if the newton direction fails
-            if (!found_step_length) {
-                step_length = 1; // step_length_aux;
+            // check for newton termination
+            if (abs(direction_free.dot(gradient_free)) <= tolerance) {
+                exit_reason = "found a local optimum with newton dir";
+                success = true;
+                break;
+            }
+            step_length = 1;
+            bool found_newton_step = line_search(
+                problem, x, direction, fx, grad_direction, step_length, true);
+            ///<<<< end line search 1
 
+            // When newton direction fails, revert to gradient descent
+            if (!found_newton_step) {
                 spdlog::warn(NEWTON_DIRECTION_LOG, iteration_number + 1);
 
+                ///>>>> LINE SEARCH 2
                 // replace delta_x by gradient direction
-                igl::slice_into(-gradient_free, free_dof, 1, direction);
+                direction.setZero();
+                direction_free = -gradient_free;
+                igl::slice_into(direction_free, free_dof, 1, direction);
 
-                PROFILE_START(GRADIENT_LINE_SEARCH)
-                bool found_step_length2 = line_search(problem, x, direction, fx,
-                    grad_direction, step_length, true);
-                PROFILE_END(GRADIENT_LINE_SEARCH)
+                // check for newton termination again
+                if (abs(direction_free.dot(gradient_free)) <= tolerance) {
+                    exit_reason = "found a local optimum with -grad dir";
+                    success = true;
+                    break;
+                }
+                step_length = 1;
+                bool found_gradient_step = line_search(problem, x, direction,
+                    fx, grad_direction, step_length, true);
+                ///<<<< end line search 2
 
-                if (!found_step_length2) {
+                // When gradient direction fails, exit
+                if (!found_gradient_step) {
                     spdlog::error(NEWTON_GRADIENT_LOG, iteration_number + 1);
                     exit_reason = "line-search failed";
-                    PROFILE_END(SOLVER_STEP);
-
-                    // Remove this line one we are confident this doesn't happen
-                    // Keep this line commented until we know the affect of
-                    // failing
-                    // throw std::logic_error("gradient line-search failed");
                     break;
                 }
             }
+#ifdef DEBUG_LINESEARCH
+            // "it, gradient_norm, termination, c * m / t\n";
+            int num_barrier;
+            Eigen::VectorXd E_free, E = problem.eval_grad_E(x);
+            igl::slice(E, free_dof, E_free);
+            Eigen::VectorXd B_free, B = problem.eval_grad_B(x, num_barrier);
+            igl::slice(B, free_dof, B_free);
+
+            debug << fmt::format(
+                "{},{:.10e},{:.10e},{},{:.10e},{:.10e},{},{:.10e}\n",
+                iteration_number, gradient_free.norm(),
+                abs(direction_free.dot(gradient_free)), tolerance,
+                t_ * E_free.norm(), B_free.norm(), num_barrier,
+                (t_ * E_free + B_free).norm());
+#endif
+
             auto xk = x + step_length * direction;
             assert(!problem.has_collisions(x, xk));
             x = xk;
 
-            PROFILE_END(SOLVER_STEP);
+        } // end for loop
 
-        } while (++iteration_number <= max_iterations);
+#ifdef DEBUG_LINESEARCH
+        // "it, gradient_norm, termination, c * m / t\n";
+        int num_barrier;
+        Eigen::VectorXd E_free, E = problem.eval_grad_E(x);
+        igl::slice(E, free_dof, E_free);
+        Eigen::VectorXd B_free, B = problem.eval_grad_B(x, num_barrier);
+        igl::slice(B, free_dof, B_free);
 
-        spdlog::trace(
-            "{} total_iter={:d} gradient_free_eq_norm={:e} message='{}'",
-            NEWTON_END_LOG, iteration_number, gradient_free.squaredNorm(),
-            exit_reason);
+        debug << fmt::format(
+            "{},{:.10e},{:.10e},{},{:.10e},{:.10e},{},{:.10e}\n",
+            iteration_number, gradient_free.norm(),
+            abs(direction_free.dot(gradient_free)), tolerance,
+            t_ * E_free.norm(), B_free.norm(), num_barrier,
+            (t_ * E_free + B_free).norm());
 
-        return OptimizationResults(x, problem.eval_f(x),
-            gradient_free.squaredNorm() <= absolute_tolerance);
+        std::cout
+            << "newton_it, gradient_norm, termination, tolerance, t * gradE.norm, gradB.norm, #B, (t * gradE+gradB).norm"
+            << std::endl;
+        std::cout << debug.str() << std::flush;
+        std::cout << "newton_exit_reason=" << exit_reason << std::endl;
+        std::cout << std::endl;
+#endif
+        spdlog::debug("{} total_iter={:d} message='{}'", NEWTON_END_LOG,
+            iteration_number, exit_reason);
+
+        return OptimizationResults(x, problem.eval_f(x), success);
     }
 
     void NewtonSolver::init_free_dof(Eigen::VectorXb is_dof_fixed)
@@ -179,7 +203,15 @@ namespace opt {
             }
         }
     }
-
+#ifdef DEBUG_LINESEARCH
+    void NewtonSolver::debug_stats()
+    {
+        std::cout << "count_fx, count_grad, count_hess, count_ccd" << std::endl;
+        std::cout << fmt::format("{},{},{},{}", debug_num_fx, debug_num_grad_fx,
+                         debug_num_hessian_fx, debug_num_collision_check)
+                  << std::endl;
+    }
+#endif
     bool NewtonSolver::line_search(IBarrierProblem& problem,
         const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
@@ -197,28 +229,34 @@ namespace opt {
 
         std::stringstream debug;
         debug
-            << "global_it,it,step_length,collisions,f(x),fx0,E*step,>lb, barrier_eps, min_dist\n";
+            << "global_it,it,step_length,collisions,f(x),fx0,f'*step,>lb, barrier_eps\n";
 
         int num_it = 0;
         global_it += 1;
 
-#ifdef DEBUG_LINESEARCH
+#if 0
         std::vector<Eigen::MatrixXd> vertices_sequence;
         Eigen::MatrixXi edges = problem.debug_edges();
         Eigen::MatrixXd v_x0 = problem.debug_vertices(x);
         std::cout << "BEGIN line search global_it=" << global_it << std::endl;
 #endif
-        double lower_bound = std::max(1E-12, 1E-12 * fx);
+
+        double lower_bound = std::min(1E-12, c_ * e_b_ / 10.0);
         const double eps = problem.get_barrier_epsilon();
 
         while (-grad_fx.dot(dir) * alpha > lower_bound) {
             Eigen::VectorXd xi = x + alpha * dir;
 
-#ifdef DEBUG_LINESEARCH
+#if 0
             vertices_sequence.push_back(problem.debug_vertices(xi));
 #endif
             bool no_collisions = !problem.has_collisions(x, xi);
             double fxi = problem.eval_f(xi);
+
+#ifdef DEBUG_LINESEARCH
+            debug_num_collision_check += 1;
+            debug_num_fx += 1;
+#endif
 
             debug << fmt::format(
                 "{},{},{:.18e},{},{:.18e},{:.18e},{:.18e},{:.18e}, {:.8e}\n",
@@ -237,6 +275,13 @@ namespace opt {
         }
 
         if (log_failure && !success) {
+            std::cout
+                << fmt::format(
+                       "linesearch fail num_it={} `-grad_fx.dot(dir)`={:.18e} `-grad_fx.dot(dir) * alpha `={:.18e} "
+                       "lower_bound={:.8e} alpha={:.8e} fx={:.8e} t={:.8e}",
+                       num_it, -grad_fx.dot(dir), -grad_fx.dot(dir) * alpha,
+                       lower_bound, alpha, fx, t_)
+                << std::endl;
             std::string fout = fmt::format(
                 "{}/linesearch_{}.csv", DATA_OUTPUT_DIR, ccd::logger::now());
             std::ofstream myfile;
@@ -245,7 +290,7 @@ namespace opt {
             myfile.close();
             spdlog::debug("saved failure to `{}`", fout);
 
-#ifdef DEBUG_LINESEARCH
+#if 0
             nlohmann::json steps;
             steps["edges"] = io::to_json(edges);
             std::vector<nlohmann::json> vs;

@@ -13,6 +13,7 @@ dependencies:
   - jinja2=2.10.1
   - plotly=4.0.0
   - pandas=0.24.2
+  - shapely=1.6.4
   - pip
   - pip:
       - meshio

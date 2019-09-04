@@ -133,6 +133,11 @@ namespace opt {
             throw NotImplementedError("debug_vertices_t0");
         }
 #endif
+        virtual double debug_min_distance(
+            const Eigen::VectorXd& sigma) const
+        {
+            throw NotImplementedError("debug_min_distance");
+        }
     };
 
     class IBarrierProblem : public virtual IUnconstraintedProblem {
@@ -170,7 +175,15 @@ namespace opt {
         {
             throw NotImplementedError("debug_vertices_t0");
         }
+        virtual double debug_min_distance(
+            const Eigen::VectorXd& sigma) const
+        {
+            throw NotImplementedError("debug_min_distance");
+        }
 #endif
+        virtual double get_termination_threshold() const = 0;
+        virtual Eigen::VectorXd eval_grad_E(const Eigen::VectorXd& xk) = 0;
+        virtual Eigen::VectorXd eval_grad_B(const Eigen::VectorXd& xk, int&) = 0;
     };
 
     /// Helper Functions for checking finite differences

@@ -5,6 +5,7 @@ import pathlib
 
 import numpy
 import shapely.geometry
+import json
 
 DEFAULT_TIMESTEP = 1e-2
 DEFAULT_INITIAL_EPSILON = 1e-1
@@ -28,7 +29,12 @@ def generate_default_fixture() -> dict:
             "custom_hashgrid_cellsize": -1
         },
         "barrier_solver": {
-            "min_barrier_epsilon": DEFAULT_MINIMUM_EPSILON
+            "e_b": 1e-8,
+            "m": 1,
+            "t_init": 100,
+            "t_inc": 100,
+            "c": 0.1,
+            "inner_solver": "newton_solver"
         },
         "rigid_body_problem": {
             "gravity": DEFAULT_GRAVITY,
@@ -164,3 +170,8 @@ def print_args(args: argparse.Namespace) -> None:
     """ Print the arguments."""
     for k, v in args.__dict__.items():
         print(f"{k}: {v}")
+
+
+def save_fixture(fixture, fname):
+    with open(fname, "w") as outfile:
+        json.dump(fixture, outfile, indent=4, separators=(',', ':'))

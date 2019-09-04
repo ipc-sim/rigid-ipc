@@ -29,15 +29,15 @@ namespace physics {
         std::string name() override { return name_; }
         virtual void settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
-        nlohmann::json state() const override;
+        virtual nlohmann::json state() const override;
         void state(const nlohmann::json& s) override;
 
         /// \brief does a single simulation step. Returns true if there is a
         /// collision
         bool simulation_step(const double time_step) override;
 
-        /// @brief moves status to given positions
-        bool take_step(const Eigen::VectorXd& rb_positions,
+        /// @brief moves status to given configuration vector
+        virtual bool take_step(const Eigen::VectorXd& sigma,
             const double time_step) override;
 
         /// \brief update problem using current status of bodies.
