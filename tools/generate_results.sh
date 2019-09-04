@@ -23,9 +23,9 @@ generate_result_varying_timestep(){
             echo "Failed to generate results for:"
             echo "$GENERATION_SCRIPT"
             echo "with arguments:"
-            echo "$GENERATION_ARGS --cor $COR"
+            echo "$GENERATION_ARGS --time-step $TIMESTEP"
             echo "to:"
-            echo "$OUTPUT_DIR/cor=$COR"
+            echo "$OUTPUT_DIR/time_step=$TIMESTEP"
             exit 1
         fi
     done
@@ -35,18 +35,9 @@ generate_result_cor_on_off () {
     # Generate with and without restitution
     for COR in -1 0 1e-6 1
     do
-        generate_result_varying_timestep $FIXING_COLLISIONS_ROOT \
-            $GENERATION_SCRIPT "$GENERATION_ARGS --cor $COR" \
-            $OUTPUT_DIR/cor=$COR
-        if [ $? -ne 0 ]; then
-            echo "Failed to generate results for:"
-            echo "$GENERATION_SCRIPT"
-            echo "with arguments:"
-            echo "$GENERATION_ARGS --cor $COR"
-            echo "to:"
-            echo "$OUTPUT_DIR/cor=$COR"
-            exit 1
-        fi
+        GENERATION_ARGS="$GENERATION_ARGS --cor $COR"
+        OUTPUT_DIR=$OUTPUT_DIR/cor=$COR
+        generate_result_varying_timestep
     done
 }
 
