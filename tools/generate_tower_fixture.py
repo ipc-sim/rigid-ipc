@@ -15,21 +15,10 @@ def generate_fixture(args):
     fixture = generate_custom_fixture(args)
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
-    box_edges = [[0, 1], [1, 2], [2, 3], [3, 0]]
-
-    # Add the ground
-    ground_box_vertices = [[10, 0], [-10, 0], [-10, -1], [10, -1]]
-    rigid_bodies.append({
-        "vertices": ground_box_vertices,
-        "polygons": [ground_box_vertices],
-        "edges": box_edges,
-        "oriented": False,
-        "is_dof_fixed": [True, True, True],
-    })
-
+    # Generate tower
     radius = 1 / numpy.sqrt(2)
     box_vertices = [[0.5, -0.5], [0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5]]
-
+    box_edges = [[0, 1], [1, 2], [2, 3], [3, 0]]
     for i in range(args.num_blocks):
         x = args.x_offset if i % 2 else 0
         y = (2 if i == args.num_blocks - 1 and args.falling else
@@ -45,6 +34,10 @@ def generate_fixture(args):
             "velocity": [0.0, 0.0, 0.0],
             "is_dof_fixed": [False, False, False],
         })
+
+    # Add the walls around tower
+    y += 2
+    rigid_bodies.append(generate_walls(numpy.array([0, y / 2]), 5, y / 2, 0.1))
 
     return fixture
 
@@ -77,12 +70,9 @@ def main():
         args.out_path = (
             directory /
             "tower-num_blocks={:d}-cor={:g}-x_offset={:g}{}{}.json".format(
-                args.num_blocks,
-                args.restitution_coeff,
-                args.x_offset,
+                args.num_blocks, args.restitution_coeff, args.x_offset,
                 "-rotated" if args.rotated else "",
-                "-falling" if args.falling else "",
-            ))
+                "-falling" if args.falling else ""))
     args.out_path.parent.mkdir(parents=True, exist_ok=True)
 
     print_args(args)

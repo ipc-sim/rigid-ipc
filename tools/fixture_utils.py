@@ -24,9 +24,7 @@ def generate_default_fixture() -> dict:
         "distance_barrier_constraint": {
             "custom_initial_epsilon": DEFAULT_INITIAL_EPSILON,
             "detection_method": "hash_grid",
-            "use_distance_hashgrid": True,
-            "active_constraint_scale": 1.01,
-            "custom_hashgrid_cellsize": -1
+            "active_constraint_scale": 1.01
         },
         "barrier_solver": {
             "e_b": 1e-8,
@@ -115,13 +113,20 @@ def generate_ngon_edges(n: int) -> numpy.ndarray:
     return numpy.hstack([indices, numpy.roll(indices, -1)])
 
 
-def generate_rectangle(hx: float, hy: float, center: numpy.ndarray,
-                       angle: float) -> shapely.geometry.Polygon:
+def generate_rectangle_vertices(hx: float, hy: float, center: numpy.ndarray,
+                                angle: float) -> numpy.ndarray:
     """Generate a rectangle polygon."""
     points = numpy.array([[hx, hy], [-hx, hy], [-hx, -hy], [hx, -hy]])
     points = points @ create_2D_rotation_matrix(angle).T
     points += center
-    return shapely.geometry.Polygon(points)
+    return points
+
+
+def generate_rectangle(hx: float, hy: float, center: numpy.ndarray,
+                       angle: float) -> shapely.geometry.Polygon:
+    """Generate a rectangle polygon."""
+    return shapely.geometry.Polygon(
+        generate_rectangle_vertices(hx, hy, center, angle))
 
 
 def create_2D_rotation_matrix(theta: float) -> numpy.ndarray:

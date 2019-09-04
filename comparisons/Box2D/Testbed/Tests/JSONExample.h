@@ -14,8 +14,7 @@ typedef std::array<double, 3> array3d;
 typedef std::array<size_t, 2> array2i;
 typedef std::array<bool, 3> array3b;
 
-const static char* INPUT_FILENAME
-    = "../../../fixtures/filling-box-num_blocks=100.json";
+const static char* INPUT_FILENAME = "../../../fixtures/axle.json";
 
 class JSONExample : public Test {
 protected:
@@ -139,6 +138,7 @@ protected:
         state["kinetic_energy"] = kinetic_energy;
         state["potential_energy"] = potential_energy;
         state["rigid_bodies"] = body_states;
+        state["min_distance"] = nullptr;
         vertices_sequence.push_back(vertices);
         state_sequence.push_back(state);
     }

@@ -116,6 +116,7 @@ void save_step(const b2World& world,
     state["kinetic_energy"] = kinetic_energy;
     state["potential_energy"] = potential_energy;
     state["rigid_bodies"] = body_states;
+    state["min_distance"] = nullptr;
     vertices_sequence.push_back(vertices);
     state_sequence.push_back(state);
 }
