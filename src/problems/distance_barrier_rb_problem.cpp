@@ -234,11 +234,13 @@ namespace opt {
         gx_hessian = eval_hessian_g_core(sigma, ev_candidates);
         PROFILE_END(EVAL_HESS)
 
+#ifdef WITH_DERIVATIVE_CHECK
         bool derivative_check = true;
         if (derivative_check) {
 
             assert(compare_jac_g(sigma, ev_candidates, gx_jacobian));
         }
+#endif
     }
 
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_core(
