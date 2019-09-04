@@ -33,11 +33,15 @@ generate_result_varying_timestep(){
 
 generate_result_cor_on_off () {
     # Generate with and without restitution
+    ORIGINAL_GENERATION_ARGS=$GENERATION_ARGS
+    ORIGINAL_OUTPUT_DIR=$OUTPUT_DIR
     for COR in -1 0 1e-6 1
     do
         GENERATION_ARGS="$GENERATION_ARGS --cor $COR"
         OUTPUT_DIR=$OUTPUT_DIR/cor=$COR
         generate_result_varying_timestep
+        GENERATION_ARGS=$ORIGINAL_GENERATION_ARGS
+        OUTPUT_DIR=$ORIGINAL_OUTPUT_DIR
     done
 }
 
