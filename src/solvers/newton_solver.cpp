@@ -240,7 +240,7 @@ namespace opt {
         std::cout << "BEGIN line search global_it=" << global_it << std::endl;
 #endif
 
-        double lower_bound = std::max(1E-12, c_ * e_b_);
+        double lower_bound = std::min(1E-12, c_ * e_b_/ 10.0);
         const double eps = problem.get_barrier_epsilon();
 
         while (-grad_fx.dot(dir) * alpha > lower_bound) {
