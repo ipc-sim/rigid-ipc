@@ -7,12 +7,31 @@ FIXING_COLLISIONS_ROOT=$TOOLS_DIR/..
 RESULTS_DIR=$FIXING_COLLISIONS_ROOT/results/paper-results-termination
 mkdir -p "$RESULTS_DIR"
 
-generate_result_cor_on_off () {
-    # Generate with and without restitution
-    for COR in -1 0 1
+generate_result_varying_timestep(){
+    # Generate with various time steps.
+    for TIMESTEP in 1e-1 1e-2 1e-3
     do
         echo $GENERATION_SCRIPT
         $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
+            $GENERATION_SCRIPT "$GENERATION_ARGS --time-step $TIMESTEP" \
+            $OUTPUT_DIR/time_step=$TIMESTEP
+        if [ $? -ne 0 ]; then
+            echo "Failed to generate results for:"
+            echo "$GENERATION_SCRIPT"
+            echo "with arguments:"
+            echo "$GENERATION_ARGS --cor $COR"
+            echo "to:"
+            echo "$OUTPUT_DIR/cor=$COR"
+            exit 1
+        fi
+    done
+}
+
+generate_result_cor_on_off () {
+    # Generate with and without restitution
+    for COR in -1 0 1e-6 1
+    do
+        generate_result_varying_timestep $FIXING_COLLISIONS_ROOT \
             $GENERATION_SCRIPT "$GENERATION_ARGS --cor $COR" \
             $OUTPUT_DIR/cor=$COR
         if [ $? -ne 0 ]; then

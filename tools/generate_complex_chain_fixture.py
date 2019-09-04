@@ -11,7 +11,7 @@ import sys
 
 import numpy
 
-from default_fixture import generate_default_fixture
+from fixture_utils import *
 
 
 def generate_fixture(n_links: int) -> dict:
@@ -51,8 +51,8 @@ def main() -> None:
                      "chain")
         directory.mkdir(parents=True, exist_ok=True)
         out_path = directory / f"complex_{n_links:d}_link_chain.json"
-    with open(out_path, 'w') as outfile:
-        json.dump(fixture, outfile)
+
+    save_fixture(fixture, out_path)
 
 
 if __name__ == "__main__":

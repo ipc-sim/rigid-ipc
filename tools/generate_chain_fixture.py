@@ -116,8 +116,12 @@ def main() -> None:
 
     fixture = generate_fixture(args)
 
+<<<<<<< Updated upstream
     with open(args.out_path, 'w') as outfile:
         json.dump(fixture, outfile, indent=4, separators=(',', ':'))
+=======
+    save_fixture(fixture, args.out_path)
+>>>>>>> Stashed changes
 
 
 if __name__ == "__main__":

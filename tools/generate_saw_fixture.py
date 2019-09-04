@@ -69,8 +69,7 @@ def main():
 
     fixture = generate_fixture(args)
 
-    with open(args.out_path, 'w') as outfile:
-        json.dump(fixture, outfile)
+    save_fixture(fixture, args.out_path)
 
 
 if __name__ == "__main__":

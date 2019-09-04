@@ -14,6 +14,8 @@ from fixture_utils import *
 
 def generate_fixture(args):
     """Generate a fixture of a N boxes stacked on top of each other."""
+    numpy.random.seed(seed=0)  # Deterministic random results
+
     fixture = generate_custom_fixture(args)
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
@@ -116,8 +118,7 @@ def main():
 
     fixture = generate_fixture(args)
 
-    with open(args.out_path, "w") as outfile:
-        json.dump(fixture, outfile)
+    save_fixture(fixture, args.out_path)
 
 
 if __name__ == "__main__":

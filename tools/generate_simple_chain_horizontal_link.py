@@ -8,24 +8,24 @@ import numpy as np
 import meshio
 import json
 
+from fixture_utils import *
+
+
 def link(a, b, c, d, e):
     #           e
-    #         _____ 
-    #       b|     |c 
+    #         _____
+    #       b|     |c
     # a|_____|  |__'__
     #  |  d  |  |  ,
     #        |_____|
     #            f
 
-    V = np.array([
-        [0.0, -a], [0.0,0.0], [0.0, a],
-        [d, -b], [d,0.0], [d, b],
-        [d+e, -b], [d+e,-b+c], [d+e,+b-c], [d+e,+b]], dtype=np.float64)
-    E = np.array([
-        [0, 1], [1, 2], 
-        [3, 4], [4, 5],
-        [6, 7], [8, 9],
-        [1,4],  [3,6], [5,9]], dtype=np.int32)
+    V = np.array([[0.0, -a], [0.0, 0.0], [0.0, a], [d, -b], [d, 0.0], [d, b],
+                  [d + e, -b], [d + e, -b + c], [d + e, +b - c], [d + e, +b]],
+                 dtype=np.float64)
+    E = np.array([[0, 1], [1, 2], [3, 4], [4, 5], [6, 7], [8, 9], [1, 4],
+                  [3, 6], [5, 9]],
+                 dtype=np.int32)
 
     return V, E
 
@@ -33,8 +33,8 @@ def link(a, b, c, d, e):
 def main(args=None):
     parser = argparse.ArgumentParser(args)
     parser.add_argument("output", type=str, help="path to the output folder")
-    parser.add_argument("--num-links","-n", type=int, default=2)
-    parser.add_argument("--iterations","-m", type=int, default=20)
+    parser.add_argument("--num-links", "-n", type=int, default=2)
+    parser.add_argument("--iterations", "-m", type=int, default=20)
     args = parser.parse_args()
 
     output = args.output
@@ -52,12 +52,10 @@ def main(args=None):
         dof_fixed = [False, False, False] if i != 0 else [True, True, True]
 
         rigid_bodies.append(
-            dict(
-                vertices= (V + dx * i).tolist(),
-                edges= E.tolist(),
-                velocity=[0.0,0.0,0.0],
-                is_dof_fixed= dof_fixed)
-            )
+            dict(vertices=(V + dx * i).tolist(),
+                 edges=E.tolist(),
+                 velocity=[0.0, 0.0, 0.0],
+                 is_dof_fixed=dof_fixed))
     data = {
         "max_iterations": args.iterations,
         "timestep_size": 0.1,
@@ -73,16 +71,15 @@ def main(args=None):
             "inner_solver": "newton_solver",
             "min_barrier_epsilon": 1e-2
         },
-
-        "rigid_body_problem": { 
+        "rigid_body_problem": {
             "coefficient_restitution": 1.0,
             "gravity": [0.0, -0.5, 0.0],
-            "rigid_bodies" : rigid_bodies
+            "rigid_bodies": rigid_bodies
         }
     }
 
-    with open(output, 'w') as outfile:
-        json.dump(data, outfile, indent=4, separators=(',', ':'))
+    save_fixture(fixture, args.output)
+
 
 if __name__ == "__main__":
     main()

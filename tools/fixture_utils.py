@@ -169,3 +169,8 @@ def print_args(args: argparse.Namespace) -> None:
     """ Print the arguments."""
     for k, v in args.__dict__.items():
         print(f"{k}: {v}")
+
+
+def save_fixture(fixture, fname):
+    with open(fname, "w") as outfile:
+        json.dump(fixture, outfile, indent=4, separators=(',', ':'))
