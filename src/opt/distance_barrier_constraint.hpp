@@ -94,6 +94,10 @@ namespace opt {
         // ----------
         /// @brief initial epsilon to use in barrier function
         double custom_inital_epsilon;
+
+        /// @brief displace barrier evaluation by this value
+        double min_distance;
+
         /// @brief active constraints have distances < scale * barrier_epsilon
         double active_constraint_scale;
 

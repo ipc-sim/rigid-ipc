@@ -21,6 +21,7 @@ namespace opt {
         const std::string& name)
         : CollisionConstraint(name)
         , custom_inital_epsilon(1.0)
+        , min_distance(1E-10)
         , active_constraint_scale(1.5)
         , m_barrier_epsilon(0.0)
 
@@ -32,6 +33,7 @@ namespace opt {
         CollisionConstraint::settings(json);
         custom_inital_epsilon = json["custom_initial_epsilon"].get<double>();
         active_constraint_scale = json["active_constraint_scale"].get<double>();
+        min_distance = json["min_distance"].get<double>();
     }
 
     nlohmann::json DistanceBarrierConstraint::settings() const
@@ -39,6 +41,7 @@ namespace opt {
         nlohmann::json json = CollisionConstraint::settings();
         json["custom_inital_epsilon"] = custom_inital_epsilon;
         json["active_constraint_scale"] = active_constraint_scale;
+        json["min_distance"] = min_distance;
 
         return json;
     }

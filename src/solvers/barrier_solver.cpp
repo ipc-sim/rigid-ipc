@@ -236,7 +236,8 @@ namespace opt {
 
         PROFILE_END(EVAL_G)
 
-        return t * f_uk + gx;
+//        return t * f_uk + gx;
+         return f_uk + gx / t;
     }
 
     bool BarrierProblem::has_collisions(
@@ -253,7 +254,8 @@ namespace opt {
 
         Eigen::MatrixXd g_uk_gradient;
         g_uk_gradient = dgx.colwise().sum().transpose();
-        return t * f_uk_gradient + g_uk_gradient;
+        //return t * f_uk_gradient + g_uk_gradient;
+        return f_uk_gradient + g_uk_gradient / t;
     }
 
     Eigen::SparseMatrix<double> BarrierProblem::eval_hessian_f(
@@ -270,7 +272,8 @@ namespace opt {
         for (const auto& ddgx_i : ddgx) {
             g_uk_hessian += ddgx_i;
         }
-        return t * f_uk_hessian + g_uk_hessian;
+        //return t * f_uk_hessian + g_uk_hessian;
+        return f_uk_hessian + g_uk_hessian / t;
     }
 
     void BarrierProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
@@ -293,12 +296,19 @@ namespace opt {
         general_problem->eval_g_and_gdiff(x, gx, dgx, ddgx);
         PROFILE_END(EVAL_G)
 
-        f_uk = t * f_uk + gx.sum();
-        f_uk_gradient = t * f_uk_gradient + dgx.colwise().sum().transpose();
+//        f_uk = t * f_uk + gx.sum();
+//        f_uk_gradient = t * f_uk_gradient + dgx.colwise().sum().transpose();
 
-        f_uk_hessian = t * f_uk_hessian;
+//        f_uk_hessian = t * f_uk_hessian;
+//        for (const auto& ddgx_i : ddgx) {
+//            f_uk_hessian += ddgx_i;
+//        }
+
+        f_uk = f_uk + gx.sum() / t;
+        f_uk_gradient = f_uk_gradient + dgx.colwise().sum().transpose() / t;
+
         for (const auto& ddgx_i : ddgx) {
-            f_uk_hessian += ddgx_i;
+            f_uk_hessian += ddgx_i / t;
         }
     }
 
@@ -320,8 +330,10 @@ namespace opt {
         general_problem->eval_g_and_gdiff(x, gx, dgx, ddgx);
         PROFILE_END(EVAL_G)
 
-        f_uk = t * f_uk + gx.sum();
-        f_uk_gradient = t * f_uk_gradient + dgx.colwise().sum().transpose();
+//        f_uk = t * f_uk + gx.sum();
+//        f_uk_gradient = t * f_uk_gradient + dgx.colwise().sum().transpose();
+        f_uk = f_uk + gx.sum() / t;
+        f_uk_gradient = f_uk_gradient + dgx.colwise().sum().transpose() / t;
     }
 
     Eigen::VectorXd BarrierProblem::eval_grad_E(const Eigen::VectorXd& xk)

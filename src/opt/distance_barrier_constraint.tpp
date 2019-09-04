@@ -106,9 +106,9 @@ namespace opt {
         const T distance, const double eps)
     {
         if (USE_LOG_BARRIER) {
-            return opt::poly_log_barrier<T>(distance, eps);
+            return opt::poly_log_barrier<T>(distance - min_distance, eps);
         } else {
-            return opt::spline_barrier<T>(distance, eps);
+            return opt::spline_barrier<T>(distance - min_distance, eps);
         }
     }
 

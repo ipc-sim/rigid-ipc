@@ -44,7 +44,7 @@ namespace opt {
 
     bool DistanceBarrierRBProblem::simulation_step(const double time_step)
     {
-        bool status = RigidBodyProblem::simulation_step(time_step);
+        bool has_collision = RigidBodyProblem::simulation_step(time_step);
 
         Eigen::VectorXd sigma
             = m_assembler.m_position_to_dof * m_assembler.rb_positions_t0();
@@ -52,9 +52,16 @@ namespace opt {
         if (debug_min_distance_ >= 0) {
             spdlog::info(
                 "candidate_step min_distance={:.8e}", debug_min_distance_);
+
+            // our constraint is really d > min_d, we want to run
+            // the optimization when we end the step with small
+            // distances
+            if (debug_min_distance_ <= constraint_.min_distance) {
+                has_collision = true;
+            }
         }
 
-        return status;
+        return has_collision;
     }
 
     bool DistanceBarrierRBProblem::take_step(
