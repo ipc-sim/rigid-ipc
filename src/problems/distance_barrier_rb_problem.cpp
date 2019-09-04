@@ -475,9 +475,10 @@ namespace opt {
     {
 
         auto jac_full = eval_jac_g_full(sigma, ev_candidates);
-        double norm = (jac_full - jac_g).norm();
-        if (norm >= 1e-16) {
-            spdlog::error("autodiff_gradients_dont_match norm={:10e}", norm);
+
+        bool pass = compare_jacobian(jac_full, jac_g, /*test_eps=*/Constants::FULL_GRADIENT_TEST);
+        if (!pass) {
+            spdlog::error("autodiff_gradients_dont_match");
         }
 
         Eigen::MatrixXd jac_approx(jac_g.rows(), jac_g.cols());
@@ -487,7 +488,7 @@ namespace opt {
             compare_fd(sigma, ev, jac_full.row(int(i)));
         }
 
-        return norm < Constants::FULL_GRADIENT_TEST;
+        return pass;
     }
 
 } // namespace opt
