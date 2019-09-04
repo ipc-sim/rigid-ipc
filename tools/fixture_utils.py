@@ -5,6 +5,7 @@ import pathlib
 
 import numpy
 import shapely.geometry
+import json
 
 DEFAULT_TIMESTEP = 1e-2
 DEFAULT_INITIAL_EPSILON = 1e-1

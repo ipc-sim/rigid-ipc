@@ -4,7 +4,11 @@
 # Save the directory of this file
 TOOLS_DIR="$(cd "$(dirname "$0")" ; pwd -P )"
 FIXING_COLLISIONS_ROOT=$TOOLS_DIR/..
-RESULTS_DIR=$FIXING_COLLISIONS_ROOT/results/paper-results-termination
+GIT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2)
+GIT_SHA=$(git rev-parse HEAD)
+TIME=$(date "+%F-%T")
+TIME=$(echo "${TIME//:/-}")
+RESULTS_DIR=$FIXING_COLLISIONS_ROOT/results/paper-results/$GIT_BRANCH/$GIT_SHA/$TIME
 mkdir -p "$RESULTS_DIR"
 
 generate_result_varying_timestep(){
@@ -112,15 +116,12 @@ OUTPUT_DIR="$RESULTS_DIR/dynamic/billiards"
 generate_result_cor_on_off
 
 ### Compress the results and upload them to google drive
-TIME=$(date "+%F-%T")
-TIME=$(echo "${TIME//:/-}")
-GIT_SHA=$(git rev-parse HEAD)
 if command -v sbatch &> /dev/null; then
     echo "Running simulations as batch jobs."
     echo "When done tar and upload the results using:"
-    echo "TAR_FNAME=$RESULTS_DIR/../paper-results-$GIT_SHA-$TIME.tar.gz; tar -czvf \$TAR_FNAME $RESULTS_DIR; rclone copy \$TAR_FNAME google-drive:fixing-collisions"
+    echo "TAR_FNAME=$RESULTS_DIR/../paper-results-$GIT_BRANCH-$GIT_SHA-$TIME.tar.gz; tar -czvf \$TAR_FNAME $RESULTS_DIR; rclone copy \$TAR_FNAME google-drive:fixing-collisions"
 else
-    TAR_FNAME=$RESULTS_DIR/../paper-results-$GIT_SHA-$TIME.tar.gz
+    TAR_FNAME=$RESULTS_DIR/../paper-results-$GIT_BRANCH-$GIT_SHA-$TIME.tar.gz
     tar -czvf $TAR_FNAME $RESULTS_DIR
     rclone copy $TAR_FNAME google-drive:fixing-collisions
 fi
