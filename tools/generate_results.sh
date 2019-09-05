@@ -104,6 +104,15 @@ generation_args=""
 output_dir="$RESULTS_DIR/dynamic/axle"
 generate_multiple_results
 
+
+### Bypass
+for scene in 0 1 2; do
+    $TOOLS_DIR/generate_comparative_results.sh $FIXING_COLLISIONS_ROOT \
+        "generate_bypass_fixture.py" "--scene $scene" \
+        "$RESULTS_DIR/bypass/scene=$scene"
+done
+
+
 ### Compress the results and upload them to google drive
 if command -v sbatch &> /dev/null; then
     echo "Running simulations as batch jobs."

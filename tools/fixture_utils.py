@@ -26,7 +26,7 @@ def generate_default_fixture() -> dict:
             "active_constraint_scale": 1.01
         },
         "barrier_solver": {
-            "e_b": 1e-8,
+            "e_b": 1e-6,
             "m": 1,
             "t_init": 100,
             "t_inc": 100,
