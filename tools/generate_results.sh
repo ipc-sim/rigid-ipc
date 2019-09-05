@@ -21,7 +21,7 @@ generate_multiple_results () {
             echo $generation_script "$generation_args --cor $cor --time-step $timestep"
             $TOOLS_DIR/generate_comparative_results.sh $FIXING_COLLISIONS_ROOT \
                 $generation_script \
-                "$generation_args --cor $cor --time-step $timestep --num-steps 1" \
+                "$generation_args --cor $cor --time-step $timestep" \
                 "$output_dir/cor=$cor/time_step=$timestep"
         done
     done

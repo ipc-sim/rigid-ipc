@@ -4,8 +4,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
-#SBATCH --time=5:00:00
-#SBATCH --mem=16GB
+#SBATCH --time=0:30:00
+#SBATCH --mem=8GB
 #SBATCH --job-name=generate_results
 #SBATCH --mail-type=FAIL,TIME_LIMIT
 #SBATCH --mail-user=zfergus@nyu.edu
