@@ -57,6 +57,8 @@ namespace opt {
         double volume_epsilon;
         int num_constraints;
 
+        double time_epsilon;
+
         void dense_indices(
             const EdgeEdgeImpacts& ee_impacts, Eigen::VectorXi& dense_indices);
 

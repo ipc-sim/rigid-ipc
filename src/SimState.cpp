@@ -142,7 +142,8 @@ bool SimState::init(const nlohmann::json& args_in)
        "volume_constraint":{
            "detection_method": "hash_grid",
            "volume_epsilon": 1e-6,
-           "custom_hashgrid_cellsize":-1
+           "custom_hashgrid_cellsize":-1,
+           "time_epsilon":1e-16
        },
         "timestep_size": 0.1,
         "viewport_bbox": {"min":[0,0],"max":[0,0]}

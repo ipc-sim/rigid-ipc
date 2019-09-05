@@ -137,6 +137,10 @@ namespace opt {
                 && ccd::autodiff::temporal_parameterization_to_spatial<
                        Diff::DDouble1>(
                        v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
+
+            toi =  toi - Diff::DDouble1(constraint_.time_epsilon);
+            if (toi < 0) toi = Diff::DDouble1(0);
+
             Diff::DDouble1 vol_ij(0), vol_kl(0);
             if (success) {
                 vol_ij

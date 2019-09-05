@@ -16,7 +16,7 @@ namespace opt {
     // !important: this needs to be define in the enum namespace
     NLOHMANN_JSON_SERIALIZE_ENUM(NcpUpdate,
         { { NcpUpdate::LINEARIZED, "linearized" },
-            { NcpUpdate::G_GRADIENT, "g_gradients" } })
+            { NcpUpdate::G_GRADIENT, "g_gradient" } })
 
     NLOHMANN_JSON_SERIALIZE_ENUM(LCPSolver,
         { { LCPSolver::LCP_MOSEK, "lcp_mosek" },
@@ -98,6 +98,7 @@ namespace opt {
     OptimizationResults NCPSolver::solve()
     {
         init_solve();
+        debug.str("");
 
         OptimizationResults result;
         for (int i = 0; i < max_iterations; ++i) {
@@ -109,8 +110,13 @@ namespace opt {
         if (result.finished) {
             spdlog::debug("solver=ncp_solver action=solve status=success");
         } else {
-            spdlog::warn(
-                "solver=ncp_solver action=solve status=failed message='max_iterations reached'");
+            spdlog::error(
+                "solver=ncp_solver action=solve status=failed message='max_iterations reached' it={}",
+                num_outer_iterations_);
+//            std::cout << "DATA_START" << std::endl;
+//            std::cout << "it,gx.sum(),#g" << std::endl;
+//            std::cout << debug.str() << std::endl;
+//            std::cout << "DATA_END" << std::endl;
         }
 
         return result;
@@ -159,30 +165,23 @@ namespace opt {
             result.success = true;
             result.x = xi;
             result.minf = problem_ptr_->eval_f(xi);
-            spdlog::trace(
-                "solver=ncp_solver it={} step=collisions_solved xi={}",
-                num_outer_iterations_, ccd::logger::fmt_eigen(xi));
+            spdlog::trace("solver=ncp_solver it={} step=collisions_solved}",
+                num_outer_iterations_);
             return result;
         }
 
         Eigen::VectorXd delta_i;
-        spdlog::trace("solver=ncp_solver it={} action=solve_lcp status=BEGIN",
-            num_outer_iterations_);
+
+//        debug << fmt::format("{},{:.18e},{}\n", num_outer_iterations_,
+//            g_xi.sum(), g_active.rows());
 
         solve_lcp(xi, g_xi, jac_g_xi, g_active, delta_i, lambda_i);
-
-        spdlog::trace(
-            "solver=ncp_solver it={} action=solve_lcp status=END delta_x={} jac_g_xi={} lambda_i={}",
-            num_outer_iterations_,  ccd::logger::fmt_eigen(delta_i),
-            ccd::logger::fmt_eigen(jac_g_xi), ccd::logger::fmt_eigen(lambda_i));
 
         double alpha = 1.0, alpha_prev = 1.0;
         double step_norm = (alpha * delta_i).norm();
         double total_vol = g_xi.sum();
 
         bool line_search_success = false;
-        spdlog::trace("solver=ncp_solver it={} action=line_search status=BEGIN",
-            num_outer_iterations_);
 
         if (do_line_search) {
             while (step_norm >= convergence_tolerance) {
@@ -201,9 +200,6 @@ namespace opt {
                     step_norm = (alpha * delta_i).norm();
                     if (step_norm < convergence_tolerance) {
                         alpha = alpha_prev;
-                        spdlog::trace(
-                            "solver=ncp_solver it={} action=line_search status=SUCCESS converged=YES",
-                            num_outer_iterations_);
                     }
                     break;
                 }

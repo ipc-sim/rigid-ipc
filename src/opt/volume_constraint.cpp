@@ -19,6 +19,7 @@ namespace opt {
     VolumeConstraint::VolumeConstraint(const std::string& name)
         : CollisionConstraint(name)
         , volume_epsilon(1E-3)
+        , time_epsilon(1e-16)
     {
     }
 
@@ -26,12 +27,14 @@ namespace opt {
     {
         CollisionConstraint::settings(json);
         volume_epsilon = json["volume_epsilon"].get<double>();
+        time_epsilon = json["time_epsilon"].get<double>();
     }
 
     nlohmann::json VolumeConstraint::settings() const
     {
         nlohmann::json json = CollisionConstraint::settings();
         json["volume_epsilon"] = volume_epsilon;
+        json["time_epsilon"] = time_epsilon;
         return json;
     }
 
@@ -135,6 +138,8 @@ namespace opt {
                 && ccd::autodiff::temporal_parameterization_to_spatial<double>(
                        v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
 
+            toi = std::max(0.0, toi - time_epsilon);
+
             double vol_ij(0), vol_kl(0);
             if (success) {
                 vol_ij = ccd::autogen::space_time_collision_volume<double>(
@@ -208,6 +213,9 @@ namespace opt {
                 && ccd::autodiff::temporal_parameterization_to_spatial<
                        Diff::DDouble1>(
                        v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
+
+            toi =  toi - Diff::DDouble1(time_epsilon);
+            if (toi < 0) toi = Diff::DDouble1(0);
 
             Diff::DDouble1 vol_ij(0), vol_kl(0);
             if (success) {

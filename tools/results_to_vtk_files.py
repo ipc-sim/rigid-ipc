@@ -45,6 +45,7 @@ def main(args=[]):
         total_rb_q = []
         total_rb_v = []
         total_rb_time = []
+        
         for i in range(0, len(vertices_sequence)):
             vertices = np.array(vertices_sequence[i])
             fout = dout.joinpath("%s_%s.vtk" % (base_name, i))
@@ -62,7 +63,10 @@ def main(args=[]):
             L = state["angular_momentum"]
             T = state["kinetic_energy"]
             G = state["potential_energy"]
-            D = state["min_distance"]
+            if "min_distance" in state:
+                D = state["min_distance"]
+            else:
+                D = None
 
             rb_q = []
             rb_v = []

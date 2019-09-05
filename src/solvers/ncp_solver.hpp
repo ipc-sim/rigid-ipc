@@ -115,6 +115,8 @@ namespace opt {
 
         int num_outer_iterations_;
         std::string name_;
+
+        std::stringstream debug;
     };
     void zero_out_fixed_dof(
         const Eigen::VectorXb& is_fixed, Eigen::SparseMatrix<double>& m);

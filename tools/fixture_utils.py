@@ -14,6 +14,36 @@ DEFAULT_RESTITUTION_COEFFICIENT = -1
 DEFAULT_GRAVITY = [0.0, 0.0, 0.0]
 DEFAULT_NUM_STEPS = 1000
 
+DEFAULT_NCP_TIME_EPSILON = 1e-16        # or 0
+DEFAULT_NCP_UPDATE_TYPE = "linearize"   #linearize or g_gradient
+
+NCP_UPDATE_TYPES = ["linearize", "g_gradient"]
+
+def generate_npc_fixture() -> dict:
+    return {   
+        "scene_type": "volume_rb_problem",
+        "max_iterations": DEFAULT_NUM_STEPS,
+        "timestep_size": DEFAULT_TIMESTEP,
+        "ncp_solver": {
+            "max_iterations": 1000,
+            "do_line_search": False,
+            "solve_for_active_cstr": True,
+            "convergence_tolerance": -1,
+            "update_type": DEFAULT_NCP_UPDATE_TYPE,
+            "lcp_solver": "lcp_gauss_seidel"
+        },
+        "volume_constraint": {
+            "detection_method": "hash_grid",
+            "volume_epsilon": 1e-10,
+            "custom_hashgrid_cellsize": -1,
+            "time_epsilon": DEFAULT_NCP_TIME_EPSILON
+        },
+        "rigid_body_problem": {
+            "gravity": DEFAULT_GRAVITY,
+            "coefficient_restitution": DEFAULT_RESTITUTION_COEFFICIENT,
+            "rigid_bodies": []
+        }
+    }
 
 def generate_default_fixture() -> dict:
     """Create the default fixture as a dictionary."""
