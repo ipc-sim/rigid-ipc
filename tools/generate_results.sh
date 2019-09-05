@@ -11,104 +11,98 @@ TIME=$(echo "${TIME//:/-}")
 RESULTS_DIR=$FIXING_COLLISIONS_ROOT/results/paper-results/$GIT_BRANCH/$GIT_SHA/$TIME
 mkdir -p "$RESULTS_DIR"
 
-generate_result_varying_timestep(){
-    # Generate with various time steps.
-    for TIMESTEP in 1e-1 1e-2 1e-3
-    do
-        echo $GENERATION_SCRIPT
-        $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
-            $GENERATION_SCRIPT "$GENERATION_ARGS --time-step $TIMESTEP" \
-            $OUTPUT_DIR/time_step=$TIMESTEP
-        if [ $? -ne 0 ]; then
-            echo "Failed to generate results for:"
-            echo "$GENERATION_SCRIPT"
-            echo "with arguments:"
-            echo "$GENERATION_ARGS --time-step $TIMESTEP"
-            echo "to:"
-            echo "$OUTPUT_DIR/time_step=$TIMESTEP"
-            exit 1
-        fi
-    done
-}
-
-generate_result_cor_on_off () {
+generate_multiple_results () {
     # Generate with and without restitution
-    ORIGINAL_GENERATION_ARGS=$GENERATION_ARGS
-    ORIGINAL_OUTPUT_DIR=$OUTPUT_DIR
-    for COR in -1 0 1e-6 1
+    for cor in -1 0 1e-6 1
     do
-        GENERATION_ARGS="$GENERATION_ARGS --cor $COR"
-        OUTPUT_DIR=$OUTPUT_DIR/cor=$COR
-        generate_result_varying_timestep
-        GENERATION_ARGS=$ORIGINAL_GENERATION_ARGS
-        OUTPUT_DIR=$ORIGINAL_OUTPUT_DIR
+        # Generate with various time steps.
+        for timestep in 1e-1 1e-2 1e-3
+        do
+            echo $generation_script "$generation_args --cor $cor --time-step $timestep"
+            $TOOLS_DIR/generate_comparative_results.sh $FIXING_COLLISIONS_ROOT \
+                $generation_script \
+                "$generation_args --cor $cor --time-step $timestep --num-steps 1" \
+                "$output_dir/cor=$cor/time_step=$timestep"
+        done
     done
 }
 
 ### Static
 
 ## Stacking
-GENERATION_SCRIPT="generate_tower_fixture.py"
+generation_script="generate_tower_fixture.py"
 
 # Diamond Stacking
-GENERATION_ARGS="--num-blocks 4 --rotated"
-OUTPUT_DIR="$RESULTS_DIR/static/stacking/diamonds"
-generate_result_cor_on_off
+generation_args="--num-blocks 4 --rotated"
+output_dir="$RESULTS_DIR/static/stacking/diamonds"
+generate_multiple_results
 
 # Box Stacking
-GENERATION_ARGS="--num-blocks 4"
-OUTPUT_DIR="$RESULTS_DIR/static/stacking/boxes"
-generate_result_cor_on_off
+generation_args="--num-blocks 4"
+output_dir="$RESULTS_DIR/static/stacking/boxes"
+generate_multiple_results
 
 # Off-center
-GENERATION_ARGS="--num-blocks 4 --x-offset 0.4"
-OUTPUT_DIR="$RESULTS_DIR/static/stacking/off-center"
-generate_result_cor_on_off
+generation_args="--num-blocks 4 --x-offset 0.4"
+output_dir="$RESULTS_DIR/static/stacking/off-center"
+generate_multiple_results
 
 # Box falling
-GENERATION_ARGS="--num-blocks 4 --falling"
-OUTPUT_DIR="$RESULTS_DIR/static/stacking/falling"
-generate_result_cor_on_off
+generation_args="--num-blocks 4 --falling"
+output_dir="$RESULTS_DIR/static/stacking/falling"
+generate_multiple_results
 
 # Pyramid
-GENERATION_SCRIPT="generate_pyramid_fixture.py"
-GENERATION_ARGS=""
-OUTPUT_DIR="$RESULTS_DIR/static/stacking/pyramid"
-generate_result_cor_on_off
+generation_script="generate_pyramid_fixture.py"
+generation_args=""
+output_dir="$RESULTS_DIR/static/stacking/pyramid"
+generate_multiple_results
+
+# Line Stack
+generation_script="generate_line_stack.py"
+generation_args=""
+output_dir="$RESULTS_DIR/static/line-stack"
+generate_multiple_results
 
 ## Jamming
 
 # Chain
-GENERATION_SCRIPT="generate_chain_fixture.py"
-GENERATION_ARGS="--num-links 10"
-OUTPUT_DIR="$RESULTS_DIR/static/chain"
-generate_result_cor_on_off
+generation_script="generate_chain_fixture.py"
+generation_args="--num-links 10"
+output_dir="$RESULTS_DIR/static/chain"
+generate_multiple_results
 
 ### Dynamics
 
 # Newton's Cradle
-GENERATION_SCRIPT="generate_newtons_cradle_fixture.py"
-GENERATION_ARGS="--num-balls 5 --num-points 8"
-OUTPUT_DIR="$RESULTS_DIR/dynamic/newtons-cradle"
-generate_result_cor_on_off
+generation_script="generate_newtons_cradle_fixture.py"
+generation_args="--num-balls 5 --num-points 8"
+output_dir="$RESULTS_DIR/dynamic/newtons-cradle"
+generate_multiple_results
 
 # Filling Box
-GENERATION_SCRIPT="generate_filling_box_fixture.py"
-GENERATION_ARGS="--num-blocks 100"
-OUTPUT_DIR="$RESULTS_DIR/dynamic/filling-box"
-generate_result_cor_on_off
+generation_script="generate_filling_box_fixture.py"
+generation_args="--num-blocks 25"
+output_dir="$RESULTS_DIR/dynamic/filling-box"
+generate_multiple_results
 
 # Saw
-GENERATION_SCRIPT="generate_saw_fixture.py"
-GENERATION_ARGS=""
-OUTPUT_DIR="$RESULTS_DIR/dynamic/saw"
-generate_result_cor_on_off
+generation_script="generate_saw_fixture.py"
+generation_args=""
+output_dir="$RESULTS_DIR/dynamic/saw"
+generate_multiple_results
 
 # Billiards
-GENERATION_SCRIPT="generate_billiards_fixture.py"
-GENERATION_ARGS=""
-OUTPUT_DIR="$RESULTS_DIR/dynamic/billiards"
-generate_result_cor_on_off
+generation_script="generate_billiards_fixture.py"
+generation_args=""
+output_dir="$RESULTS_DIR/dynamic/billiards"
+generate_multiple_results
+
+# Axle
+generation_script="generate_axle_fixture.py"
+generation_args=""
+output_dir="$RESULTS_DIR/dynamic/axle"
+generate_multiple_results
 
 ### Compress the results and upload them to google drive
 if command -v sbatch &> /dev/null; then

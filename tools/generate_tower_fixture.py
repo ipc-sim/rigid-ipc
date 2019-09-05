@@ -5,6 +5,8 @@ import argparse
 import json
 import pathlib
 
+import sys
+
 import numpy
 
 from fixture_utils import *
@@ -44,9 +46,9 @@ def generate_fixture(args):
 
 def main():
     """Parse command-line arguments to generate the desired fixture."""
+    print(sys.argv)
     parser = create_argument_parser(description="generate a tower of blocks",
                                     default_initial_epsilon=1e-2,
-                                    default_minimum_epsilon=1e-4,
                                     default_gravity=[0, -9.81, 0])
     parser.add_argument("--num-blocks",
                         type=int,

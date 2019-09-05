@@ -68,8 +68,7 @@ def main(args=None):
             "custom_hashgrid_cellsize": -1
         },
         "barrier_solver": {
-            "inner_solver": "newton_solver",
-            "min_barrier_epsilon": 1e-2
+            "inner_solver": "newton_solver"
         },
         "rigid_body_problem": {
             "coefficient_restitution": 1.0,

@@ -54,8 +54,7 @@ def generate_fixture(args):
 
 def main():
     """Parse command-line arguments to generate the desired fixture."""
-    parser = create_argument_parser("generate a block falling onto a saw",
-                                    default_minimum_epsilon=1e-4)
+    parser = create_argument_parser("generate a block falling onto a saw")
     args = parser.parse_args()
 
     if args.out_path is None:

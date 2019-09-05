@@ -20,16 +20,19 @@ typedef Translation<double, 2> Translation2Dd;
 }
 
 /// @brief Convert a b2Vec2 to an Eigen::Vector2d.
-inline Eigen::Vector2d b2Vec2_to_Vector2d(b2Vec2 v)
+inline Eigen::Vector2d b2Vec2_to_Vector2d(const b2Vec2& v)
 {
     return Eigen::Vector2d(v.x, v.y);
 }
 
 /// @brief Convert an Eigen::Vector2d to a std::array<double, 2>.
-inline array2d Vector2d_to_array2d(Eigen::Vector2d v)
+inline array2d Vector2d_to_array2d(const Eigen::Vector2d& v)
 {
     return { { v.x(), v.y() } };
 }
+
+/// @brief Convert a b2Vec2 to a std::array<double, 2>.
+inline array2d b2Vec2_to_array2d(const b2Vec2& v) { return { { v.x, v.y } }; }
 
 /// @brief Save the edges of the bodies.
 void save_edges(const b2World& world, std::vector<array2i>& edges)
@@ -56,10 +59,35 @@ void save_edges(const b2World& world, std::vector<array2i>& edges)
     }
 }
 
+/// @brief Save the group_id of the vertices.
+void save_group_id(const b2World& world, std::vector<size_t>& group_ids)
+{
+    int group_id = 0;
+    for (const b2Body* body = world.GetBodyList(); body != nullptr;
+         body = body->GetNext()) {
+        // Save the group_id per vertex
+        for (const b2Fixture* fixture = body->GetFixtureList();
+             fixture != nullptr; fixture = fixture->GetNext()) {
+            // Assume all shapes are polygons
+            const b2Shape* shape = fixture->GetShape();
+            assert(shape->GetType() == b2Shape::Type::e_polygon);
+            const b2PolygonShape* polygon
+                = dynamic_cast<const b2PolygonShape*>(shape);
+
+            for (size_t i = 0; i < polygon->m_count; i++) {
+                group_ids.push_back(group_id);
+            }
+        }
+        group_id++;
+    }
+}
+
+/// @brief Save the state of the simulation at the current step.
 void save_step(const b2World& world,
     std::vector<std::vector<array2d>>& vertices_sequence,
     std::vector<nlohmann::json>& state_sequence)
 {
+    // State variables
     std::vector<array2d> vertices;
     double angular_momentum = 0;
     b2Vec2 linear_momentum(0, 0);
@@ -67,6 +95,7 @@ void save_step(const b2World& world,
     double potential_energy = 0;
     std::vector<nlohmann::json> body_states;
 
+    // Save gravity to compute potential_energy
     const Eigen::Vector2d gravity = b2Vec2_to_Vector2d(world.GetGravity());
 
     for (const b2Body* body = world.GetBodyList(); body != nullptr;
@@ -111,8 +140,7 @@ void save_step(const b2World& world,
 
     nlohmann::json state;
     state["angular_momentum"] = angular_momentum;
-    state["linear_momentum"]
-        = Vector2d_to_array2d(b2Vec2_to_Vector2d(linear_momentum));
+    state["linear_momentum"] = b2Vec2_to_array2d(linear_momentum);
     state["kinetic_energy"] = kinetic_energy;
     state["potential_energy"] = potential_energy;
     state["rigid_bodies"] = body_states;
@@ -197,6 +225,9 @@ void load_rigid_bodies(const nlohmann::json& body_args,
 
             points.clear();
         }
+
+        spdlog::info(
+            "mass={:g} inertia={:g}", body->GetMass(), body->GetInertia());
     }
 }
 
@@ -261,6 +292,7 @@ nlohmann::json load_simulation_args(const std::string& filename)
 void save_simulation_results(const std::string& filename,
     const nlohmann::json& args,
     const std::vector<array2i>& edges,
+    const std::vector<size_t>& group_id,
     const std::vector<std::vector<array2d>>& vertices_sequence,
     const std::vector<nlohmann::json>& state_sequence)
 {
@@ -268,43 +300,56 @@ void save_simulation_results(const std::string& filename,
     results["args"] = args;
     results["active_args"] = nlohmann::json();
     results["animation"] = nlohmann::json();
+    results["animation"]["edges"] = edges;
+    results["animation"]["group_id"] = group_id;
     results["animation"]["vertices_sequence"] = vertices_sequence;
     results["animation"]["state_sequence"] = state_sequence;
-    results["animation"]["edges"] = edges;
 
     std::ofstream o(filename);
     o << std::setw(4) << results << std::endl;
     spdlog::info("simulation results saved to {}", filename);
 }
 
-int main(int argc, char** argv)
+struct CLIArgs {
+    std::string scene_path = "";
+    std::string output_dir = "";
+    int num_steps = -1;
+    bool is_log_trace;
+};
+
+int parse_command_line_args(int argc, char** argv, CLIArgs& cli_args)
 {
-    spdlog::set_level(spdlog::level::info);
-
-    struct {
-        std::string scene_path = "";
-        std::string output_dir = "";
-        int num_steps = -1;
-        bool is_log_trace;
-    } args;
-
     CLI::App app { "run headless comparison" };
-    app.add_option("scene_path,-s,--scene-path", args.scene_path,
+    app.add_option("scene_path,-s,--scene-path", cli_args.scene_path,
            "JSON file with input scene")
         ->required();
-    app.add_option("output_dir,-o,--output-path", args.output_dir,
+    app.add_option("output_dir,-o,--output-path", cli_args.output_dir,
            "directory for results")
         ->required();
 
-    app.add_option("--num-steps", args.num_steps, "number of time-steps");
-    app.add_flag("--trace", args.is_log_trace, "log everything");
+    app.add_option("--num-steps", cli_args.num_steps, "number of time-steps");
+    app.add_flag("--trace", cli_args.is_log_trace, "log everything");
 
     try {
         app.parse(argc, argv);
     } catch (const CLI::ParseError& e) {
         return app.exit(e);
     }
-    if (args.is_log_trace) {
+    return 0;
+}
+
+int main(int argc, char** argv)
+{
+    spdlog::set_level(spdlog::level::info);
+
+    // Parse the command line arguments
+    CLIArgs cli_args;
+    int error_code = parse_command_line_args(argc, argv, cli_args);
+    if (error_code) {
+        return error_code;
+    }
+
+    if (cli_args.is_log_trace) {
         spdlog::set_level(spdlog::level::trace);
     }
 
@@ -313,29 +358,33 @@ int main(int argc, char** argv)
     double timestep;
     int num_steps;
     int num_iterations;
-    nlohmann::json json_args;
-    std::vector<array2i> edges;
-    std::vector<std::vector<array2d>> vertices_sequence;
-    std::vector<nlohmann::json> state_sequence;
 
+    nlohmann::json json_args;
     try {
-        json_args = load_simulation_args(args.scene_path);
+        json_args = load_simulation_args(cli_args.scene_path);
     } catch (const std::string& err) {
         spdlog::error(err);
         exit(1);
     }
 
+    if (cli_args.num_steps >= 0) {
+        num_steps = cli_args.num_steps;
+    }
+
+    // Results
+    std::vector<array2i> edges;
+    std::vector<size_t> group_id;
+    std::vector<std::vector<array2d>> vertices_sequence;
+    std::vector<nlohmann::json> state_sequence;
+
     load_scene(json_args, world, timestep, num_steps, num_iterations);
 
     save_edges(world, edges);
+    save_group_id(world, group_id);
     save_step(world, vertices_sequence, state_sequence);
 
-    if (args.num_steps >= 0) {
-        num_steps = args.num_steps;
-    }
-
     spdlog::info("Running {} steps", num_steps);
-    spdlog::info("Starting simulation {}", args.scene_path);
+    spdlog::info("Starting simulation {}", cli_args.scene_path);
 
     // Main simulation loop
     for (int i = 0; i < num_steps; i++) {
@@ -344,12 +393,12 @@ int main(int argc, char** argv)
         spdlog::info("finished step {}", i);
     }
 
-    std::string fout = fmt::format("{}/sim.json", args.output_dir);
+    std::string fout = fmt::format("{}/sim.json", cli_args.output_dir);
     save_simulation_results(
-        fout, json_args, edges, vertices_sequence, state_sequence);
+        fout, json_args, edges, group_id, vertices_sequence, state_sequence);
 
     spdlog::info(
         "To postprocess run:\n `python tools/results_to_vtk_files.py {} {}`",
-        fout, args.output_dir);
+        fout, cli_args.output_dir);
     return 0;
 }

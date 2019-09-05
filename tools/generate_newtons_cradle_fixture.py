@@ -49,7 +49,6 @@ def main():
     parser = create_argument_parser(
         description="generate a Newton's Cradle fixture",
         default_initial_epsilon=1e-2,
-        default_minimum_epsilon=1e-4,
         default_restitution_coefficient=1)
     parser.add_argument("--num-balls",
                         type=int,

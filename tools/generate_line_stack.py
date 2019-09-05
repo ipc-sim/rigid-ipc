@@ -1,8 +1,6 @@
 #!/usr/local/bin/python3
 """Script to generate a fixture of a box falling on a saw."""
 
-import argparse
-import json
 import pathlib
 
 import numpy
@@ -39,7 +37,7 @@ def generate_fixture(args):
     line["vertices"] = (line_vertices * [0.1, 1 / args.thickness]).tolist()
     line["polygons"] = [line["vertices"]]
     line["position"] = [0, y]
-    line["theta"] = 10  #°
+    line["theta"] = 10  # °
     line["velocity"] = [0, args.impact_velocity, 0]
     rigid_bodies.append(line.copy())
 
@@ -54,7 +52,6 @@ def generate_fixture(args):
 def main():
     """Parse command-line arguments to generate the desired fixture."""
     parser = create_argument_parser(description="generate a stack of lines",
-                                    default_minimum_epsilon=1e-4,
                                     default_gravity=[0, 0, 0])
     parser.add_argument("--num-lines",
                         type=int,

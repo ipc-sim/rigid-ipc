@@ -28,13 +28,23 @@ def generate_fixture(args: argparse.Namespace) -> dict:
     # Ball settings
     radius = 5.7 / 2  # cm
     ball_vertices = generate_regular_ngon_vertices(args.num_points, radius)
+
+    mass = 170  # g
+    side_length = numpy.linalg.norm(ball_vertices[1] - ball_vertices[0])
+    area = args.num_points * side_length**2 / (
+        4 * numpy.tan(numpy.pi / args.num_points))  # cm²
+    density = mass / area  # g / cm²
+
     ball = {
         "vertices": ball_vertices.tolist(),
         "polygons": [ball_vertices.tolist()],
         "edges": generate_ngon_edges(args.num_points).tolist(),
         "oriented": True,
         "velocity": [0.0, 0.0, 0.0],
-        "is_dof_fixed": [False, False, False]
+        "is_dof_fixed": [False, False, False],
+        "masses": numpy.full((args.num_points, ),
+                             mass / args.num_points).tolist(),
+        "density": density
     }
 
     # Add the triangle of balls
@@ -63,7 +73,6 @@ def main():
     parser = create_argument_parser("generate a billiards fixture",
                                     default_timestep=1e-3,
                                     default_initial_epsilon=1e-2,
-                                    default_minimum_epsilon=1e-4,
                                     default_restitution_coefficient=1)
     parser.add_argument(
         "--num-points",

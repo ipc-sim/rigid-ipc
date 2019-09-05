@@ -21,7 +21,7 @@
             -9.81,
             0
         ],
-        "coefficient_restitution": -1,
+        "coefficient_restitution": 1.0,
         "rigid_bodies": [
             {
                 "vertices": [

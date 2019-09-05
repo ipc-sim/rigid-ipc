@@ -65,7 +65,6 @@ def main():
     """Parse command-line arguments to generate the desired fixture."""
     parser = create_argument_parser(
         "generate a wheel spinning loose on an axle",
-        default_minimum_epsilon=1e-4,
         default_gravity=[0, -9.8, 0])
     args = parser.parse_args()
 

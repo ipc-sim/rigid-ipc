@@ -9,41 +9,10 @@ import json
 
 DEFAULT_TIMESTEP = 1e-2
 DEFAULT_INITIAL_EPSILON = 1e-1
-DEFAULT_MINIMUM_EPSILON = 1e-2
 DEFAULT_RESTITUTION_COEFFICIENT = -1
 DEFAULT_GRAVITY = [0.0, 0.0, 0.0]
 DEFAULT_NUM_STEPS = 1000
 
-DEFAULT_NCP_TIME_EPSILON = 1e-16        # or 0
-DEFAULT_NCP_UPDATE_TYPE = "linearize"   #linearize or g_gradient
-
-NCP_UPDATE_TYPES = ["linearize", "g_gradient"]
-
-def generate_npc_fixture() -> dict:
-    return {   
-        "scene_type": "volume_rb_problem",
-        "max_iterations": DEFAULT_NUM_STEPS,
-        "timestep_size": DEFAULT_TIMESTEP,
-        "ncp_solver": {
-            "max_iterations": 1000,
-            "do_line_search": False,
-            "solve_for_active_cstr": True,
-            "convergence_tolerance": -1,
-            "update_type": DEFAULT_NCP_UPDATE_TYPE,
-            "lcp_solver": "lcp_gauss_seidel"
-        },
-        "volume_constraint": {
-            "detection_method": "hash_grid",
-            "volume_epsilon": 1e-10,
-            "custom_hashgrid_cellsize": -1,
-            "time_epsilon": DEFAULT_NCP_TIME_EPSILON
-        },
-        "rigid_body_problem": {
-            "gravity": DEFAULT_GRAVITY,
-            "coefficient_restitution": DEFAULT_RESTITUTION_COEFFICIENT,
-            "rigid_bodies": []
-        }
-    }
 
 def generate_default_fixture() -> dict:
     """Create the default fixture as a dictionary."""
@@ -78,7 +47,6 @@ def generate_custom_fixture(args: argparse.Namespace) -> dict:
     fixture["max_iterations"] = args.num_steps
     fixture["distance_barrier_constraint"]["custom_initial_epsilon"] = (
         args.init_epsilon)
-    fixture["barrier_solver"]["min_barrier_epsilon"] = args.min_epsilon
     fixture["rigid_body_problem"]["gravity"] = (args.gravity + 3 * [0])[:3]
     fixture["rigid_body_problem"]["coefficient_restitution"] = (
         args.restitution_coeff)
@@ -89,7 +57,6 @@ def create_argument_parser(
         description: str,
         default_timestep: float = DEFAULT_TIMESTEP,
         default_initial_epsilon: float = DEFAULT_INITIAL_EPSILON,
-        default_minimum_epsilon: float = DEFAULT_MINIMUM_EPSILON,
         default_restitution_coefficient:
         float = DEFAULT_RESTITUTION_COEFFICIENT,
         default_gravity: list = DEFAULT_GRAVITY,
@@ -108,10 +75,6 @@ def create_argument_parser(
                         type=float,
                         default=default_initial_epsilon,
                         help="inital ϵ for the barrier")
-    parser.add_argument("--min-epsilon",
-                        type=float,
-                        default=default_minimum_epsilon,
-                        help="minimum ϵ for the barrier")
     parser.add_argument("--gravity",
                         type=float,
                         nargs=2,
@@ -209,4 +172,4 @@ def print_args(args: argparse.Namespace) -> None:
 
 def save_fixture(fixture, fname):
     with open(fname, "w") as outfile:
-        json.dump(fixture, outfile, indent=4, separators=(',', ':'))
+        json.dump(fixture, outfile, indent=4)
