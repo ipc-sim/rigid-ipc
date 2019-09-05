@@ -23,7 +23,9 @@ namespace opt {
         , custom_inital_epsilon(1.0)
         , min_distance(1E-10)
         , active_constraint_scale(1.5)
+        , use_log_barrier(false)
         , m_barrier_epsilon(0.0)
+
 
     {
     }
@@ -34,6 +36,7 @@ namespace opt {
         custom_inital_epsilon = json["custom_initial_epsilon"].get<double>();
         active_constraint_scale = json["active_constraint_scale"].get<double>();
         min_distance = json["min_distance"].get<double>();
+        use_log_barrier = json["use_log_barrier"].get<bool>();
     }
 
     nlohmann::json DistanceBarrierConstraint::settings() const
@@ -42,6 +45,7 @@ namespace opt {
         json["custom_inital_epsilon"] = custom_inital_epsilon;
         json["active_constraint_scale"] = active_constraint_scale;
         json["min_distance"] = min_distance;
+        json["use_log_barrier"] = use_log_barrier;
 
         return json;
     }
@@ -305,7 +309,7 @@ namespace opt {
     double DistanceBarrierConstraint::distance_barrier_grad(
         const double distance, const double eps)
     {
-        if (USE_LOG_BARRIER) {
+        if (use_log_barrier) {
             return opt::poly_log_barrier_gradient(distance, eps);
         } else {
             return opt::spline_barrier_gradient(distance, eps);

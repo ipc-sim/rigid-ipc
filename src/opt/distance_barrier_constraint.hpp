@@ -102,7 +102,7 @@ namespace opt {
         double active_constraint_scale;
 
     protected:
-        static const bool USE_LOG_BARRIER = false;
+        bool use_log_barrier;
         double m_barrier_epsilon;
     };
 

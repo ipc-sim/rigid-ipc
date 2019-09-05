@@ -5,12 +5,10 @@
     "distance_barrier_constraint": {
         "custom_initial_epsilon": 0.1,
         "detection_method": "hash_grid",
-        "use_distance_hashgrid": true,
         "active_constraint_scale": 1.01,
-        "custom_hashgrid_cellsize": -1
     },
     "barrier_solver": {
-        "e_b": 1e-10,
+        "e_b": 1E-10,
         "m": 1,
         "t_init": 1,
         "t_inc": 20,

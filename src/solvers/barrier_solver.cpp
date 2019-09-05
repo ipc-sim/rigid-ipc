@@ -165,6 +165,7 @@ namespace opt {
     OptimizationResults BarrierSolver::solve()
     {
         init_solve();
+        inner_solver_ptr->debug_reset_stats();
 
         OptimizationResults results;
         do {
