@@ -23,9 +23,12 @@ namespace opt {
     {
         if (x <= T(0))
             return T(std::numeric_limits<double>::infinity());
+        if (x >= s)
+            return T(0);
 
+        // y:= x/eps;  -log(y)*(2*y^3-3*y^2+1)
         T y = x / s;
-        T g = -log(y) * ((2 * y - 3 * y) * y * y + 1);
+        T g = -log(y) * ((2 * y - 3) * y * y + 1);
         return g;
     }
 

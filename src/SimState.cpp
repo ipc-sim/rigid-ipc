@@ -138,7 +138,7 @@ bool SimState::init(const nlohmann::json& args_in)
            "min_distance":1e-10,
            "active_constraint_scale" : 1.5,
            "detection_method": "hash_grid",
-           "use_log_barrier": false
+           "use_log_barrier": true
        },
        "volume_constraint":{
            "detection_method": "hash_grid",

@@ -1,61 +1,65 @@
 {
-    "max_iterations": 80,
-    "timestep_size": 0.05,
-    "scene_type": "distance_barrier_rb_problem",
-    "distance_barrier_constraint": {
-        "custom_initial_epsilon": 0.1,
-        "detection_method": "hash_grid",
-        "active_constraint_scale": 1.01,
-    },
-    "barrier_solver": {
-        "e_b": 1E-10,
-        "m": 1,
-        "t_init": 1,
-        "t_inc": 20,
-        "c": 0.01,
-        "inner_solver": "newton_solver"
-    },
-    "newton_solver": {
-        "max_iterations": 1000
-    },
-    "rigid_body_problem": {
-        "coefficient_restitution": 1.0,
-        "gravity": [0.0, -3.0, 0.0],
-        "rigid_bodies": [{
-            "oriented": true,
-            "vertices": [
-                [-1, -1],
-                [1, -1],
-                [1, 1],
-                [-1, 1]
-            ],
-            "edges": [
-                [0, 1],
-                [1, 2],
-                [2, 3],
-                [3, 0]
-            ],
-            "position": [0.0, 10],
-            "theta": 45,
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [false, false, false]
-        }, {
-            "oriented": true,
-            "vertices": [
-                [-10, 0],
-                [10, 0],
-                [10, 1],
-                [-10, 1]
-            ],
-            "edges": [
-                [0, 1],
-                [1, 2],
-                [2, 3],
-                [3, 0]
-            ],
-            "position": [0, 0],
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [true, true, true]
-        }]
-    }
+  "max_iterations": 80,
+  "timestep_size": 0.05,
+  "scene_type": "distance_barrier_rb_problem",
+  "distance_barrier_constraint": {
+    "custom_initial_epsilon": 0.1,
+    "detection_method": "hash_grid",
+    "active_constraint_scale": 1.01,
+    "use_log_barrier": true
+  },
+  "barrier_solver": {
+    "e_b": 0.00001,
+    "m": 1,
+    "t_init": 1,
+    "t_inc": 20,
+    "c": 0.01,
+    "inner_solver": "newton_solver"
+  },
+  "newton_solver": {
+    "max_iterations": 1000
+  },
+  "rigid_body_problem": {
+    "coefficient_restitution": 1.0,
+    "gravity": [0.0, -3.0, 0.0],
+    "rigid_bodies": [
+      {
+        "oriented": true,
+        "vertices": [
+          [-1, -1],
+          [1, -1],
+          [1, 1],
+          [-1, 1]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 3],
+          [3, 0]
+        ],
+        "position": [0.0, 10],
+        "theta": 45,
+        "velocity": [0.0, 0.0, 0.0],
+        "is_dof_fixed": [false, false, false]
+      },
+      {
+        "oriented": true,
+        "vertices": [
+          [-10, 0],
+          [10, 0],
+          [10, 1],
+          [-10, 1]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 3],
+          [3, 0]
+        ],
+        "position": [0, 0],
+        "velocity": [0.0, 0.0, 0.0],
+        "is_dof_fixed": [true, true, true]
+      }
+    ]
+  }
 }

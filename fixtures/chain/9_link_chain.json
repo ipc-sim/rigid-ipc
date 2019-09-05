@@ -9,7 +9,7 @@
     "use_log_barrier": true
   },
   "barrier_solver": {
-    "e_b": 1E-8,
+    "e_b": 0.000001,
     "m": 1,
     "t_init": 100,
     "t_inc": 100,

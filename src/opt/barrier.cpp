@@ -27,12 +27,17 @@ namespace opt {
         // 2*x**3/s**3)/x
         if (x <= 0)
             return 0;
+
+        if (x >= s)
+            return 0.0;
+
         double x2 = x * x, s2 = s * s;
         double x3 = x2 * x, s3 = s2 * s;
 
         return (6 * x / s2 - 6 * x2 / s3) * log(x / s)
             + (-1 + 3 * x2 / s2 - 2 * x3 / s3) / x;
     }
+
     // Derivative of the spline_barrier function with respect to x.
     double spline_barrier_gradient(double x, double s)
     {
