@@ -186,9 +186,9 @@ namespace opt {
             << "outer_it, t, var_diff_norm, vertex_diff_norm, min_distance, min_distance_diff, E(x), B(x)"
             << std::endl;
         std::cout << debug.str() << std::flush;
-        inner_solver_ptr->debug_stats();
-        std::cout << std::endl;
 #endif
+        spdlog::info("BARRIER_STATS num_outer_iterations={} {}",num_outer_iterations_, inner_solver_ptr->debug_stats());
+
         return results;
     }
 

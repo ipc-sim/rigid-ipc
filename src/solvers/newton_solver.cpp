@@ -75,16 +75,17 @@ namespace opt {
         std::stringstream debug;
 
         bool success = false;
+
         for (iteration_number = 0; iteration_number < max_iterations;
              iteration_number++) {
 
             double fx;
             problem.eval_f_and_fdiff(x, fx, gradient, hessian);
-#ifdef DEBUG_LINESEARCH
+
+            debug_newton_iterations+=1;
             debug_num_fx += 1;
             debug_num_grad_fx += 1;
             debug_num_hessian_fx += 1;
-#endif
 
             // Remove rows and cols of fixed dof
             igl::slice(gradient, free_dof, gradient_free);
@@ -203,15 +204,24 @@ namespace opt {
             }
         }
     }
-#ifdef DEBUG_LINESEARCH
-    void NewtonSolver::debug_stats()
+
+    std::string NewtonSolver::debug_stats()
     {
-        std::cout << "count_fx, count_grad, count_hess, count_ccd" << std::endl;
-        std::cout << fmt::format("{},{},{},{}", debug_num_fx, debug_num_grad_fx,
-                         debug_num_hessian_fx, debug_num_collision_check)
-                  << std::endl;
+        return fmt::format(
+            "total_newton_steps={} total_ls_steps={} count_fx={} count_grad={} count_hess={} count_ccd={}",
+            debug_newton_iterations, debug_ls_iterations, debug_num_fx,
+            debug_num_grad_fx, debug_num_hessian_fx, debug_num_collision_check);
     }
-#endif
+
+    void NewtonSolver::debug_reset_stats(){
+        debug_num_fx = 0;
+        debug_num_grad_fx = 0;
+        debug_num_hessian_fx = 0;
+        debug_num_collision_check = 0;
+        debug_ls_iterations = 0;
+        debug_newton_iterations = 0;
+    }
+
     bool NewtonSolver::line_search(IBarrierProblem& problem,
         const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
@@ -245,6 +255,7 @@ namespace opt {
         const double eps = problem.get_barrier_epsilon();
 
         while (-grad_fx.dot(dir) * alpha > lower_bound) {
+            debug_ls_iterations += 1;
             Eigen::VectorXd xi = x + alpha * dir;
 
 #if 0
@@ -253,10 +264,8 @@ namespace opt {
             bool no_collisions = !problem.has_collisions(x, xi);
             double fxi = problem.eval_f(xi);
 
-#ifdef DEBUG_LINESEARCH
             debug_num_collision_check += 1;
             debug_num_fx += 1;
-#endif
 
             debug << fmt::format(
                 "{},{},{:.18e},{},{:.18e},{:.18e},{:.18e},{:.18e}, {:.8e}\n",

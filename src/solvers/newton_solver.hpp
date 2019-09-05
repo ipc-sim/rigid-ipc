@@ -76,14 +76,16 @@ namespace opt {
         double t_;
         double m_;
 
-#ifdef DEBUG_LINESEARCH
-        void debug_stats() override;
+        std::string debug_stats() override;
+        void debug_reset_stats() override;
+
         int debug_num_fx = 0;
         int debug_num_grad_fx = 0;
         int debug_num_hessian_fx = 0;
         int debug_num_collision_check = 0;
+        int debug_ls_iterations = 0;
+        int debug_newton_iterations = 0;
 
-#endif
     protected:
         bool line_search(IBarrierProblem& problem,
             const Eigen::VectorXd& x,
