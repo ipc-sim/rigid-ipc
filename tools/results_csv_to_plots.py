@@ -40,7 +40,9 @@ def plot_data(x, ys, labels, fout, with_labels):
         ax.legend(prop={'weight': 'normal'},
                   loc='upper left',
                   bbox_to_anchor=(1, 1))
+
     plt.savefig(fout)
+    plt.close()
 
 
 def main(args=[]):
@@ -48,12 +50,16 @@ def main(args=[]):
     parser.add_argument('energy_file',
                         metavar='energy.csv',
                         type=str,
-                        help='configuration for the plots')
+                        help='csv file with energy')
     parser.add_argument('output_file',
                         metavar='output.pdf',
                         type=str,
                         default=".",
                         help='fname and format ouf the image')
+    parser.add_argument('--mindist',
+                        type=Path,
+                        default=None,
+                        help='mindist.csv')
     parser.add_argument('--max-step',
                         type=int,
                         default=-1,
@@ -80,6 +86,13 @@ def main(args=[]):
               ["kinetic energy", "potential energy", "total energy"], fout,
               args.with_labels)
 
+
+    if args.mindist is not None:
+        fout = fout.parent.joinpath("%s_mindist%s" % (fout.stem, fout.suffix))
+        data = np.loadtxt(str(args.mindist), delimiter=',', skiprows=1)
+        min_distance = data[0:max_steps, 1]
+        plot_data(x, [min_distance],["min_distance"], fout, args.with_labels)
+        
 
 if __name__ == "__main__":
     main()
