@@ -319,6 +319,7 @@ void SimState::save_simulation(const std::string& filename)
     results["animation"]["vertices_sequence"] = vs;
     results["animation"]["state_sequence"] = state_sequence;
     results["animation"]["edges"] = io::to_json(problem_ptr->edges());
+    results["animation"]["group_id"] = io::to_json(problem_ptr->group_id());
 
     std::ofstream o(filename);
     o << std::setw(4) << results << std::endl;

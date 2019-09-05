@@ -71,6 +71,8 @@ namespace physics {
             return is_particle_dof_fixed;
         }
 
+        Eigen::VectorXi group_id() const override { return group_ids_; }
+
         ////////////////////////////////////////////////////////////////////////
         /// IUnconstraintedProblem
 

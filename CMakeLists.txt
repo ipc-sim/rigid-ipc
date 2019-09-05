@@ -179,6 +179,17 @@ target_link_libraries(${PROJECT_NAME}_ngui PUBLIC ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME}_ngui PUBLIC CLI11::CLI11)
 
 ################################################################################
+# MinDistance Executable
+################################################################################
+add_executable(cli_mindistance
+     src/cli_min_distance.cpp
+)
+
+target_include_directories(cli_mindistance PRIVATE src)
+target_link_libraries(cli_mindistance PUBLIC ${PROJECT_NAME})
+target_link_libraries(cli_mindistance PUBLIC CLI11::CLI11)
+
+################################################################################
 # Required Libraries
 ################################################################################
 

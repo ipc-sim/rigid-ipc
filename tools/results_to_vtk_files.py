@@ -32,10 +32,13 @@ def main(args=[]):
         vertices_sequence = results["vertices_sequence"]
         state_sequence = results["state_sequence"]
         edges = np.array(results["edges"], dtype=np.int32)
+        g_id = np.array(results["group_id"], dtype=np.int32)
 
         total_xyz = np.empty((0, 3), dtype=np.float64)
         total_edges = np.empty((0, 2), dtype=np.int32)
+        total_gid = np.empty((0,), dtype=np.int32)
         total_time_data = np.empty(0, dtype=np.float64)
+        total_vtx_data = np.empty(0, dtype=np.float64)
         total_p = np.empty((0, 2), dtype=np.float64)
         total_L = np.empty((0,), dtype=np.float64)
         total_T = np.empty((0,), dtype=np.float64)
@@ -88,6 +91,8 @@ def main(args=[]):
             # for single file
             total_edges = np.append(
                 total_edges, edges + total_xyz.shape[0], axis=0)
+            total_vtx_data = np.append(total_vtx_data, np.arange(0, xyz.shape[0]), axis=0)
+            total_gid = np.append(total_gid, g_id, axis=0)
             total_xyz = np.append(total_xyz, xyz, axis=0)
             total_time_data = np.append(
                 total_time_data, np.ones(edges.shape[0]) * i)
@@ -105,7 +110,8 @@ def main(args=[]):
             str(fout),
             points=total_xyz,
             cells={'line': total_edges},
-            cell_data={'line': {'time': total_time_data}}
+            cell_data={'line': {'time': total_time_data}},
+            point_data={'vtx':total_vtx_data, 'g_id':total_gid}
         )
 
         fout = dout.joinpath("%s_all2.vtk" % (base_name))

@@ -5,6 +5,7 @@ source = active_objects.get_source()
 displ = GetDisplayProperties()
 
 threshold1 = Threshold(Input=source)
+threshold1.Scalars = ['POINTS', 'time']
 
 cell_time = source.CellData.GetArray("time")
 if cell_time is None:

@@ -37,8 +37,8 @@ namespace physics {
         bool simulation_step(const double time_step) override;
 
         /// @brief moves status to given configuration vector
-        virtual bool take_step(const Eigen::VectorXd& sigma,
-            const double time_step) override;
+        virtual bool take_step(
+            const Eigen::VectorXd& sigma, const double time_step) override;
 
         /// \brief update problem using current status of bodies.
         void update_constraint() override;
@@ -52,12 +52,18 @@ namespace physics {
             return m_assembler.world_vertices_t1();
         }
 
-        Eigen::MatrixXd velocities() const override {
-            return  m_assembler.world_velocities();
+        Eigen::MatrixXd velocities() const override
+        {
+            return m_assembler.world_velocities();
         }
         const Eigen::MatrixXi& edges() const override
         {
             return m_assembler.m_edges;
+        }
+
+        Eigen::VectorXi group_id() const override
+        {
+            return m_assembler.m_vertex_to_body_map;
         }
 
         const Eigen::MatrixXb& particle_dof_fixed() const override
