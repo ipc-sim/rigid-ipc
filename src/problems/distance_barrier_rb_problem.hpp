@@ -99,7 +99,7 @@ namespace opt {
         bool has_collisions(const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) const override;
 
-#ifdef DEBUG_LINESEARCH
+#if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
         Eigen::MatrixXi debug_edges() const override
         {
             return m_assembler.m_edges;

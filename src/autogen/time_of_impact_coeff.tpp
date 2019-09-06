@@ -1,3 +1,5 @@
+#pragma once
+
 #include "time_of_impact_coeff.hpp"
 
 #include <iostream>

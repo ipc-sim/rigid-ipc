@@ -51,7 +51,7 @@ namespace opt {
         Eigen::VectorXd eval_grad_E(const Eigen::VectorXd& xk) override;
         Eigen::VectorXd eval_grad_B(const Eigen::VectorXd& xk, int&) override;
 
-#ifdef DEBUG_LINESEARCH
+#if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
         Eigen::MatrixXi debug_edges() const override
         {
             return general_problem->debug_edges();

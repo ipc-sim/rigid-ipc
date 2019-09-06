@@ -95,7 +95,7 @@ namespace opt {
         f_uk_grad = eval_grad_f(sigma);
     }
 
-#ifdef DEBUG_LINESEARCH
+#if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
     Eigen::MatrixXd DistanceBarrierRBProblem::debug_vertices(
         const Eigen::VectorXd& sigma) const
     {

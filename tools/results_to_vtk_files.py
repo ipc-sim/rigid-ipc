@@ -28,7 +28,8 @@ def main(args=[]):
     base_name = fin.stem
 
     with fin.open("r") as json_file:
-        results = json.load(json_file)["animation"]
+        j = json.load(json_file)
+        results = j["animation"]
         vertices_sequence = results["vertices_sequence"]
         state_sequence = results["state_sequence"]
         edges = np.array(results["edges"], dtype=np.int32)

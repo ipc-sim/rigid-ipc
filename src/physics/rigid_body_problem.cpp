@@ -80,6 +80,7 @@ namespace physics {
         double L = 0;
         double T = 0;
         double G = 0;
+
         for (auto& rb : m_assembler.m_rbs) {
             nlohmann::json jrb;
             jrb["position"] = io::to_json(Eigen::VectorXd(rb.position));
@@ -92,6 +93,7 @@ namespace physics {
             T += 1.0 / 2.0 * rb.moment_of_inertia * rb.velocity(2)
                 * rb.velocity(2);
             G += -rb.mass * gravity_.transpose() * rb.position;
+
         }
         json["rigid_bodies"] = rbs;
         json["linear_momentum"] = io::to_json(Eigen::VectorXd(p));
@@ -281,11 +283,11 @@ namespace physics {
             const double& w_Bprev = vel_B_prev(2);
             // The masss
             const double inv_m_A
-                = body_A.is_dof_fixed[0] || body_A.is_dof_fixed[1]
+                = (body_A.is_dof_fixed[0] || body_A.is_dof_fixed[1])
                 ? 0.0
                 : 1.0 / body_A.mass;
             const double inv_m_B
-                = body_B.is_dof_fixed[0] || body_B.is_dof_fixed[1]
+                = (body_B.is_dof_fixed[0] || body_B.is_dof_fixed[1])
                 ? 0.0
                 : 1.0 / body_B.mass;
             // The moment of inertia
@@ -314,7 +316,7 @@ namespace physics {
             const Eigen::Vector2d r_Aperp_toi
                 = body_A.grad_theta(theta_Atoi) * r0_A;
             const Eigen::Vector2d r_Bperp_toi
-                = body_A.grad_theta(theta_Btoi) * r0_B;
+                = body_B.grad_theta(theta_Btoi) * r0_B;
 
             // The collision point velocities BEFORE collision
             const Eigen::Vector2d v_Aprev = V_Aprev + w_Aprev * r_Aperp_toi;
@@ -343,11 +345,18 @@ namespace physics {
             Eigen::Vector2d V_B_delta = -inv_m_B * j * n_toi;
             double w_A_delta = inv_I_A * j * nr_A_toi;
             double w_B_delta = -inv_I_B * j * nr_B_toi;
-            body_A.velocity.head(2) = V_Aprev + V_A_delta;
-            body_B.velocity.head(2) = V_Bprev + V_B_delta;
 
-            body_A.velocity(2) = w_Aprev + w_A_delta;
-            body_B.velocity(2) = w_Bprev + w_B_delta;
+            if (!(body_A.is_dof_fixed[0] || body_A.is_dof_fixed[1]))
+                body_A.velocity.head(2) = V_Aprev + V_A_delta;
+
+            if (!(body_B.is_dof_fixed[0] || body_B.is_dof_fixed[1]))
+                body_B.velocity.head(2) = V_Bprev + V_B_delta;
+
+            if (!body_A.is_dof_fixed[2])
+                body_A.velocity(2) = w_Aprev + w_A_delta;
+
+            if (!body_B.is_dof_fixed[2])
+                body_B.velocity(2) = w_Bprev + w_B_delta;
         }
     }
 

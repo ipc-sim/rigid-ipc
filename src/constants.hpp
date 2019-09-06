@@ -13,7 +13,7 @@ namespace Constants {
     static const double LINESEARCH_MIN_STEP_NORM = 0;
 
     /// \brief TOI_COEFF_EPSILON used to decide when a coeff (a,b,c) is zero.
-    static const double TOI_COEFF_EPSILON = 1E-8;
+    static const double TOI_COEFF_EPSILON = 1E-12;
 
     /// \brief ALPHA_DIVISION_EPSILON when solving for alpha given a toi,
     /// to avoid division by zero

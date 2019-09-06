@@ -89,14 +89,14 @@ namespace autodiff {
             T sqrt_rad = sqrt(radicand);
             if (b > 0) {
                 x1 = -2 * c / (b + sqrt_rad);
-                if (a_not_zero) {
+                //if (a_not_zero) {
                     x2 = (-b - sqrt_rad) / (2 * a);
-                }
+                //}
             } else { // note x1 and x2 switched
                 x2 = 2 * c / (-b + sqrt_rad);
-                if (a_not_zero) {
+                //if (a_not_zero) {
                     x1 = (-b + sqrt_rad) / (2 * a);
-                }
+                //}
             }
         } else if (radicand == 0 && a_not_zero) {
             x1 = (-b) / (2 * a);

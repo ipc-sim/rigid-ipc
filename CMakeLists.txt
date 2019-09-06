@@ -21,7 +21,9 @@ option(BUILD_COMPARISONS        "Build comparisons"    ON)
 option(CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
 
 # debug-options
+option(DEBUG_COLLISIONS         "Extra logs in newton" OFF)
 option(DEBUG_LINESEARCH         "Extra logs in linesearch" OFF)
+option(DEBUG_COR                "Extra logs in restitution" OFF)
 
 ################################################################################
 
@@ -138,6 +140,12 @@ endif()
 
 if(DEBUG_LINESEARCH)
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DDEBUG_LINESEARCH)
+endif()
+if(DEBUG_COR)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DDEBUG_COR)
+endif()
+if(DEBUG_COLLISIONS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DDEBUG_COLLISIONS)
 endif()
 
 if(ENABLE_PROFILING)

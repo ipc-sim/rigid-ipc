@@ -8,7 +8,7 @@
 #include <logger.hpp>
 #include <profiler.hpp>
 
-#ifdef DEBUG_LINESEARCH
+#if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
 #include <io/serialize_json.hpp>
 #include <nlohmann/json.hpp>
 
@@ -55,7 +55,7 @@ namespace opt {
 
     OptimizationResults NewtonSolver::solve(IBarrierProblem& problem)
     {
-
+        static int global_it = 0;
         // Initalize the working variables
         Eigen::VectorXd x = problem.starting_point();
         Eigen::VectorXd gradient, gradient_free;
@@ -76,8 +76,16 @@ namespace opt {
 
         bool success = false;
 
+
+#ifdef DEBUG_COLLISIONS
+        global_it+=1;
+        std::vector<Eigen::MatrixXd> vertices_sequence;
+        Eigen::MatrixXi edges = problem.debug_edges();
+        Eigen::MatrixXd v_x0 = problem.debug_vertices(x);
+#endif
         for (iteration_number = 0; iteration_number < max_iterations;
              iteration_number++) {
+
 
             double fx;
             problem.eval_f_and_fdiff(x, fx, gradient, hessian);
@@ -162,10 +170,34 @@ namespace opt {
 #endif
 
             auto xk = x + step_length * direction;
+
+            if (global_it == 3 && iteration_number == 39){
+                std::cout << "debug!" << std::endl;
+            }
             assert(!problem.has_collisions(x, xk));
             x = xk;
+#ifdef DEBUG_COLLISIONS
+            vertices_sequence.push_back(problem.debug_vertices(x));
+#endif
 
         } // end for loop
+
+#ifdef DEBUG_COLLISIONS
+            nlohmann::json steps;
+            steps["global_it"] = global_it;
+            steps["edges"] = io::to_json(edges);
+            std::vector<nlohmann::json> vs;
+            for (auto& v : vertices_sequence) {
+                vs.push_back(io::to_json(v));
+            }
+            steps["vertices_sequence"] = vs;
+            steps["vertices_x0"] = io::to_json(v_x0);
+            std::string fout = fmt::format(
+                "{}/newton_{}.json", DATA_OUTPUT_DIR, ccd::logger::now());
+            std::ofstream o(fout);
+            o << std::setw(4) << steps << std::endl;
+            std::cout << std::flush;
+#endif
 
 #ifdef DEBUG_LINESEARCH
         // "it, gradient_norm, termination, c * m / t\n";
@@ -244,12 +276,6 @@ namespace opt {
         int num_it = 0;
         global_it += 1;
 
-#if 0
-        std::vector<Eigen::MatrixXd> vertices_sequence;
-        Eigen::MatrixXi edges = problem.debug_edges();
-        Eigen::MatrixXd v_x0 = problem.debug_vertices(x);
-        std::cout << "BEGIN line search global_it=" << global_it << std::endl;
-#endif
 
         double lower_bound = std::min(1E-12, c_ * e_b_ / 10.0);
         const double eps = problem.get_barrier_epsilon();
@@ -258,9 +284,7 @@ namespace opt {
             debug_ls_iterations += 1;
             Eigen::VectorXd xi = x + alpha * dir;
 
-#if 0
-            vertices_sequence.push_back(problem.debug_vertices(xi));
-#endif
+
             bool no_collisions = !problem.has_collisions(x, xi);
             double fxi = problem.eval_f(xi);
 
@@ -299,21 +323,7 @@ namespace opt {
             myfile.close();
             spdlog::debug("saved failure to `{}`", fout);
 
-#if 0
-            nlohmann::json steps;
-            steps["edges"] = io::to_json(edges);
-            std::vector<nlohmann::json> vs;
-            for (auto& v : vertices_sequence) {
-                vs.push_back(io::to_json(v));
-            }
-            steps["vertices_sequence"] = vs;
-            steps["vertices_x0"] = io::to_json(v_x0);
-            fout = fmt::format(
-                "{}/linesearch_{}.json", DATA_OUTPUT_DIR, ccd::logger::now());
-            std::ofstream o(fout);
-            o << std::setw(4) << steps << std::endl;
-            std::cout << std::flush;
-#endif
+
         }
 
         PROFILE_MESSAGE(,

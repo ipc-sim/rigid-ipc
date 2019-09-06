@@ -118,7 +118,7 @@ namespace opt {
         virtual bool has_collisions(const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) const = 0;
 
-#ifdef DEBUG_LINESEARCH
+#if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
         virtual Eigen::MatrixXi debug_edges() const
         {
             throw NotImplementedError("debug_edges");
@@ -161,7 +161,7 @@ namespace opt {
         virtual bool has_collisions(const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) const = 0;
 
-#ifdef DEBUG_LINESEARCH
+#if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
         virtual Eigen::MatrixXi debug_edges() const
         {
             throw NotImplementedError("debug_edges");
