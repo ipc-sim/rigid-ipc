@@ -20,7 +20,8 @@ def generate_fixture(args: argparse.Namespace) -> dict:
     if (args.walled):
         hx = (args.num_balls * (2 * radius + 0.1) + 4.1) / 2
         cx = hx - 4.1
-        rigid_bodies.append(generate_walls(numpy.array([cx, 0]), hx, hx, 0.1))
+        rigid_bodies.append(
+            generate_walls_body(hx, hx, numpy.array([cx, 0]), 0.1))
 
     ball_vertices = generate_regular_ngon_vertices(args.num_points, radius)
     ball_edges = generate_ngon_edges(args.num_points)

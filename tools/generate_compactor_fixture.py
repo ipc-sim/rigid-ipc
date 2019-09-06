@@ -19,36 +19,24 @@ def generate_fixture(args):
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
     # Add the walls around the scene
-    rigid_bodies.append(generate_walls(numpy.array([0, 0]), 5, 2.5, 0.1))
+    rigid_bodies.append(generate_walls_body(5, 2.5, numpy.zeros(2), 0.1))
 
     # Compactor Box
     hx = hy = 2.49
-    compactor_vertices = generate_rectangle_vertices(hx, hy, [0, 0], 0)
-    compactor_edges = generate_ngon_edges(4)
     compactor_mass = 1000  # kg
-    compactor_area = 4 * hx * hy  # m²
-    compactor_density = compactor_mass / compactor_area  # kg / m²
-    rigid_bodies.append({
-        "vertices": compactor_vertices.tolist(),
-        "polygons": [compactor_vertices.tolist()],
-        "edges": compactor_edges.tolist(),
-        "oriented": True,
-        "position": [-hx, 0],
-        "velocity": [100.0, 0.0, 0.0],
-        "masses": numpy.full(4, compactor_mass / 4).tolist(),
-        "density": compactor_density,
-        "is_dof_fixed": [False, False, False]
-    })
+    compactor = generate_box_body(hx, hy, [0, 0], 0, compactor_mass)
+    compactor["velocity"][0] = 100
+    rigid_bodies.append(compactor)
 
     # Trash Boxes
-    radius = 0.25
-    trash_vertices = generate_regular_ngon_vertices(4, radius).tolist()
-    trash_edges = generate_ngon_edges(4).tolist()
+    hx = hy = 0.25
+    radius = numpy.sqrt(hx**2 + hy**2) + 5e-2  # inflate the radius slightly
+    trash = generate_box_body(hx, hy, [0, 0], 0, 1)
 
     num_trash = 10
     centers = numpy.zeros((num_trash, 2))
 
-    width = 5 - 2 * radius - 1e-1
+    width = 5 - 2 * radius
     height = width
     for i in range(num_trash):
         invalid_center = True
@@ -59,22 +47,15 @@ def generate_fixture(args):
                 print(f"Quiting with a maximum of {i:d} trash blocks.")
                 return fixture
             center = (numpy.random.random(2) * [width, height] +
-                      [radius + 5e-2, -height / 2])
+                      [radius, -height / 2])
             invalid_center = (numpy.linalg.norm(centers - center, axis=1) <
-                              (2 * radius + 1e-4)).any()
+                              (2 * radius)).any()
             num_tries += 1
 
         centers[i] = center
-        rigid_bodies.append({
-            "vertices": trash_vertices,
-            "polygons": [trash_vertices],
-            "edges": trash_edges,
-            "oriented": True,
-            "position": center.tolist(),
-            "theta": numpy.random.random() * 45,
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [False, False, False],
-        })
+        trash["center"] = center.tolist()
+        trash["theta"] = numpy.random.random() * 45
+        rigid_bodies.append(trash.copy())
 
     return fixture
 

@@ -23,7 +23,7 @@ def generate_fixture(args: argparse.Namespace) -> dict:
     height = 99  # cm
     thickness = 19  # cm
     rigid_bodies.append(
-        generate_walls(numpy.zeros(2), width / 2, height / 2, thickness))
+        generate_walls_body(width / 2, height / 2, numpy.zeros(2), thickness))
 
     # Ball settings
     radius = 5.7 / 2  # cm

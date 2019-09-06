@@ -42,19 +42,22 @@ def generate_fixture(args):
             -numpy.pi / 4)
     ]
 
-    box_vertices = list(
-        shapely.ops.cascaded_union(box_polygons).exterior.coords)[:-1]
-    box_polygons = [
-        list(polygon.exterior.coords)[:-1] for polygon in box_polygons
-    ]
-    box_edges = generate_ngon_edges(len(box_vertices)).tolist()
+    box = shapely.ops.cascaded_union(box_polygons)
+    box = shapely.geometry.polygon.orient(box, 1)
+    box_vertices = numpy.array(box.exterior.coords)[:-1]
+    assert is_polygon_ccw(box_vertices)
+    box_polygons = numpy.array(
+        [polygon.exterior.coords for polygon in box_polygons])[:, :-1]
+    for polygon in box_polygons:
+        assert is_polygon_ccw(polygon)
+    box_edges = generate_ngon_edges(box_vertices.shape[0])
 
     # Add the box
     rigid_bodies.append({
-        "vertices": box_vertices,
-        "polygons": box_polygons,
-        "edges": box_edges,
-        "oriented": False,
+        "vertices": box_vertices.tolist(),
+        "polygons": box_polygons.tolist(),
+        "edges": box_edges.tolist(),
+        "oriented": True,
         "is_dof_fixed": [True, True, True],
     })
 

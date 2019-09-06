@@ -39,7 +39,8 @@ def generate_fixture(args):
 
     # Add the walls around tower
     y += 2
-    rigid_bodies.append(generate_walls(numpy.array([0, y / 2]), 5, y / 2, 0.1))
+    rigid_bodies.append(
+        generate_walls_body(5, y / 2, numpy.array([0, y / 2]), 0.1))
 
     return fixture
 

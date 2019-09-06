@@ -127,13 +127,11 @@ def create_2D_rotation_matrix(theta: float) -> numpy.ndarray:
     return numpy.array([[c, -s], [s, c]])
 
 
-def generate_walls(center: numpy.ndarray, hx: float, hy: float,
-                   thickness: float) -> dict:
+def generate_walls_body(hx: float, hy: float, center: numpy.ndarray,
+                        thickness: float) -> dict:
     """Generate a rigid body dictionary for walls."""
     # Inner vertices of the wall
-    inner_vertices = generate_regular_ngon_vertices(4, radius=numpy.sqrt(2))
-    inner_vertices = inner_vertices @ create_2D_rotation_matrix(numpy.pi / 4).T
-    inner_vertices *= [hx, hy]
+    inner_vertices = generate_rectangle_vertices(hx, hy, center, 0)
 
     # Outer vertices of the wall
     diag_thickness = thickness / numpy.sin(numpy.pi / 4)
@@ -141,14 +139,17 @@ def generate_walls(center: numpy.ndarray, hx: float, hy: float,
     outer_vertices = inner_vertices + thickness * numpy.array(
         [[1, 1], [-1, 1], [-1, -1], [1, -1]])
 
-    # Combined vertices
-    vertices = numpy.append(inner_vertices, outer_vertices, axis=0)
+    # Combined vertices (inner vertices should be CW)
+    vertices = numpy.append(inner_vertices[::-1], outer_vertices, axis=0)
 
     # Polygons of the wall
     polygons = numpy.array([[
         outer_vertices[i], outer_vertices[(i + 1) % 4],
         inner_vertices[(i + 1) % 4], inner_vertices[i]
     ] for i in range(4)])
+    # Check that the polygons are all oriented counter-clockwise
+    for polygon in polygons:
+        assert is_polygon_ccw(polygon)
 
     quad_edges = generate_ngon_edges(4)
     edges = numpy.append(quad_edges, quad_edges + 4, axis=0)
@@ -156,9 +157,7 @@ def generate_walls(center: numpy.ndarray, hx: float, hy: float,
         "vertices": vertices.tolist(),
         "polygons": polygons.tolist(),
         "edges": edges.tolist(),
-        "oriented": False,
-        "position": center.tolist(),
-        "theta": 0,
+        "oriented": True,
         "velocity": [0.0, 0.0, 0.0],
         "is_dof_fixed": [True, True, True]
     }
@@ -196,3 +195,23 @@ def compute_regular_ngon_area(vertices):
     assert n > 3
     side_length = numpy.linalg.norm(vertices[1] - vertices[0])
     return n * side_length**2 / (4 * numpy.tan(numpy.pi / n))  # cm²
+
+
+def generate_box_body(hx: float, hy: float, center: list, angle: float,
+                      mass: float) -> dict:
+    vertices = generate_rectangle_vertices(hx, hy, [0, 0], 0)
+    edges = generate_ngon_edges(4)
+    area = 4 * hx * hy  # m^2
+    density = mass / area  # m^2
+    return {
+        "vertices": vertices.tolist(),
+        "polygons": [vertices.tolist()],
+        "edges": edges.tolist(),
+        "masses": numpy.full(4, mass / 4).tolist(),
+        "density": density,
+        "is_dof_fixed": numpy.zeros(3, dtype=bool).tolist(),
+        "oriented": True,
+        "velocity": numpy.zeros(3).tolist(),
+        "position": center,
+        "theta": angle
+    }
