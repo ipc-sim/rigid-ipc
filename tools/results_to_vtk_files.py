@@ -16,6 +16,7 @@ def main(args=[]):
                         type=Path,  help='result file to process')
     parser.add_argument('output_folder', metavar='output/', type=Path, nargs='?',
                         default=None, help='folder where to save output(s)')
+    parser.add_argument("--max-iterations", type=int, default=None)
     args = parser.parse_args()
 
     fin = args.results_file
@@ -26,6 +27,7 @@ def main(args=[]):
     dout.mkdir(parents=True, exist_ok=True)
 
     base_name = fin.stem
+    max_iter = args.max_iterations
 
     with fin.open("r") as json_file:
         j = json.load(json_file)
@@ -60,7 +62,9 @@ def main(args=[]):
         total_rb_v = []
         total_rb_time = []
 
-        for i in range(0, len(vertices_sequence)):
+        if max_iter is None:
+            max_iter = len(vertices_sequence)
+        for i in range(0, max_iter):
             vertices = np.array(vertices_sequence[i])
             fout = dout.joinpath("%s_%s.vtk" % (base_name, i))
 

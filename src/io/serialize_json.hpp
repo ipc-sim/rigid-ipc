@@ -17,6 +17,9 @@ namespace io {
     nlohmann::json to_json(
         const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& matrix);
 
+    nlohmann::json to_json_string(
+        const Eigen::MatrixXd& matrix, const std::string& format =".16e");
+
     template <typename type>
     void from_json(const nlohmann::json&,
         Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic>& matrix);

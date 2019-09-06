@@ -6,6 +6,7 @@ displ = GetDisplayProperties()
 
 threshold1 = Threshold(Input=source)
 threshold1.Scalars = ['POINTS', 'time']
+threshold1.Scalars = ['CELLS', 'time']
 
 cell_time = source.CellData.GetArray("time")
 if cell_time is None:

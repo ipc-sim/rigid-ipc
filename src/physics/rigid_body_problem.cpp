@@ -95,6 +95,12 @@ namespace physics {
             G += -rb.mass * gravity_.transpose() * rb.position;
 
         }
+// Another way of compting total energy
+//        Eigen::MatrixXd vel = m_assembler.world_velocities();
+//        ccd::flatten(vel);
+//        Eigen::VectorXd vel_ = vel;
+//        double kinetic = 1.0 / 2.0  * (vel_.transpose() * m_assembler.m_mass_matrix * vel_)[0];
+
         json["rigid_bodies"] = rbs;
         json["linear_momentum"] = io::to_json(Eigen::VectorXd(p));
         json["angular_momentum"] = L;
@@ -176,13 +182,8 @@ namespace physics {
     bool RigidBodyProblem::take_step(
         const Eigen::VectorXd& sigma, const double time_step)
     {
-        // update final position
-        // -------------------------------------
-        Eigen::VectorXd rb_positions = m_assembler.m_dof_to_position * sigma;
-        m_assembler.set_rb_positions(rb_positions);
-        Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
 
-        // update velocities
+        // update velocities : uses old t1 positions
         // -------------------------------------
         if (coefficient_restitution > -1) {
             solve_velocities();
@@ -191,6 +192,12 @@ namespace physics {
                 rb.velocity = (rb.position - rb.position_prev) / time_step;
             }
         }
+
+        // update final position
+        // -------------------------------------
+        Eigen::VectorXd rb_positions = m_assembler.m_dof_to_position * sigma;
+        m_assembler.set_rb_positions(rb_positions);
+        Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
         return detect_collisions(vertices_t0, q1, CollisionCheck::EXACT);
     }
 
