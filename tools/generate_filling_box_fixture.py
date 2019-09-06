@@ -64,7 +64,6 @@ def generate_fixture(args):
 
     centers = numpy.zeros((args.num_blocks, 2))
 
-    # Add the pyramid
     width = 2 * (hx - 2 * half_thickness - radius) - 1e-1
     height = 6 * hy
     for i in range(args.num_blocks):
@@ -100,7 +99,7 @@ def main():
     parser = create_argument_parser(description="generate a tower of blocks",
                                     default_initial_epsilon=1e-2,
                                     default_gravity=[0, -9.81, 0],
-                                    default_num_steps=10000)
+                                    default_num_steps=1000)
     parser.add_argument("--num-blocks",
                         type=int,
                         default=100,

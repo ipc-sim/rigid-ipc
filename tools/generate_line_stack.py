@@ -41,7 +41,7 @@ def generate_fixture(args):
     line["velocity"] = [0, args.impact_velocity, 0]
     rigid_bodies.append(line.copy())
 
-    # Add the walls around tower
+    # Add the walls around line stack
     y += 2
     rigid_bodies.append(
         generate_walls(numpy.array([0, y / 2]), 5.5, y / 2, 0.1))

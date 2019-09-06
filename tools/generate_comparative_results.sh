@@ -27,11 +27,11 @@ printf "Generated input fixture.\n\n"
 # Simulate using our simulation
 my_sbatch $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
     $BUILD_DIR/FixingCollisions_ngui $OUTPUT_DIR/fixture.json \
-    $OUTPUT_DIR/ours
+    $OUTPUT_DIR/ours || exit 1
 # Simulate using Box2D
 my_sbatch $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
     $BUILD_DIR/comparisons/Box2D/Box2D-comparison $OUTPUT_DIR/fixture.json \
-    $OUTPUT_DIR/Box2D
+    $OUTPUT_DIR/Box2D || exit 1
 # Convert the fixture to use NCP
 for time_epsilon in 1e-16 0e0; do
     for update_type in "linearize" "g_gradient"; do
@@ -39,9 +39,9 @@ for time_epsilon in 1e-16 0e0; do
         mkdir -p "$ncp_output_dir"
         python $TOOLS_DIR/convert_fixture_to_ncp.py $OUTPUT_DIR/fixture.json \
             --time-epsilon $time_epsilon --update-type $update_type \
-            --out-path $ncp_output_dir/fixture.json
+            --out-path $ncp_output_dir/fixture.json || exit 1
         my_sbatch $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
             $BUILD_DIR/FixingCollisions_ngui $ncp_output_dir/fixture.json \
-            $ncp_output_dir
+            $ncp_output_dir || exit 1
     done
 done

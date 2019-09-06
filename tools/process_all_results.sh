@@ -14,4 +14,6 @@ do
         printf "Failed to process results; breaking\n"
         break
     fi
+    echo
 done
+echo "Done"

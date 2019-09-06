@@ -15,6 +15,10 @@ import shapely.ops
 from fixture_utils import *
 
 
+def foo():
+    return foo()
+
+
 def generate_link_polygons() -> list:
     """Generate a list of Polygons for the chain link."""
     half_thickness = 1e-2
@@ -63,6 +67,7 @@ def generate_fixture(args: argparse.Namespace) -> dict:
 
     link_polygons = generate_link_polygons()
     link = shapely.ops.cascaded_union(link_polygons)
+    link = shapely.geometry.polygon.orient(link, 1)
     link_polygons = [
         list(polygon.exterior.coords) for polygon in link_polygons
     ]
@@ -87,7 +92,9 @@ def generate_fixture(args: argparse.Namespace) -> dict:
             angle,
             "velocity": [0.0, 0.0, 0.0],
             "is_dof_fixed":
-            numpy.full((3, ), i == 0, dtype=bool).tolist()
+            numpy.full((3, ), i == 0, dtype=bool).tolist(),
+            "oriented":
+            True
         })
 
     return fixture
