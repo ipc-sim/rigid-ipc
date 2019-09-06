@@ -173,3 +173,26 @@ def print_args(args: argparse.Namespace) -> None:
 def save_fixture(fixture, fname):
     with open(fname, "w") as outfile:
         json.dump(fixture, outfile, indent=4)
+
+
+def is_polygon_ccw(vertices):
+    """
+    Check if a polygon's vertices are in counter-clockwise order.
+
+    Uses the Shoelace Formula:
+    https://bit.ly/2t78ytv
+    https://en.wikipedia.org/wiki/Shoelace_formula
+    """
+    winding_number = 0
+    for i in range(vertices.shape[0]):
+        x2_m_x1 = vertices[(i + 1) % vertices.shape[0], 0] - vertices[i, 0]
+        y2_p_y1 = vertices[(i + 1) % vertices.shape[0], 1] + vertices[i, 1]
+        winding_number += x2_m_x1 * y2_p_y1
+    return winding_number < 0
+
+
+def compute_regular_ngon_area(vertices):
+    n = vertices.shape[0]
+    assert n > 3
+    side_length = numpy.linalg.norm(vertices[1] - vertices[0])
+    return n * side_length**2 / (4 * numpy.tan(numpy.pi / n))  # cm²

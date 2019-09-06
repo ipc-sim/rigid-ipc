@@ -8,13 +8,12 @@
         "active_constraint_scale": 1.01
     },
     "barrier_solver": {
-        "e_b": 1e-08,
+        "e_b": 1e-06,
         "m": 1,
         "t_init": 100,
         "t_inc": 100,
         "c": 0.1,
-        "inner_solver": "newton_solver",
-        "min_barrier_epsilon": 0.0001
+        "inner_solver": "newton_solver"
     },
     "rigid_body_problem": {
         "gravity": [

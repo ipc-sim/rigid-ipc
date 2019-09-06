@@ -92,7 +92,7 @@ def generate_fixture(args: argparse.Namespace) -> dict:
             angle,
             "velocity": [0.0, 0.0, 0.0],
             "is_dof_fixed":
-            numpy.full((3, ), i == 0, dtype=bool).tolist(),
+            numpy.full(3, i == 0, dtype=bool).tolist(),
             "oriented":
             True
         })

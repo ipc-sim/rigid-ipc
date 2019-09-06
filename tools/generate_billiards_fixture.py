@@ -30,9 +30,7 @@ def generate_fixture(args: argparse.Namespace) -> dict:
     ball_vertices = generate_regular_ngon_vertices(args.num_points, radius)
 
     mass = 170  # g
-    side_length = numpy.linalg.norm(ball_vertices[1] - ball_vertices[0])
-    area = args.num_points * side_length**2 / (
-        4 * numpy.tan(numpy.pi / args.num_points))  # cm²
+    area = compute_regular_ngon_area(ball_vertices)  # cm²
     density = mass / area  # g / cm²
 
     ball = {
@@ -42,8 +40,7 @@ def generate_fixture(args: argparse.Namespace) -> dict:
         "oriented": True,
         "velocity": [0.0, 0.0, 0.0],
         "is_dof_fixed": [False, False, False],
-        "masses": numpy.full((args.num_points, ),
-                             mass / args.num_points).tolist(),
+        "masses": numpy.full(args.num_points, mass / args.num_points).tolist(),
         "density": density
     }
 

@@ -29,19 +29,14 @@ def generate_fixture(args):
     compactor_area = 4 * hx * hy  # m²
     compactor_density = compactor_mass / compactor_area  # kg / m²
     rigid_bodies.append({
-        "vertices":
-        compactor_vertices.tolist(),
+        "vertices": compactor_vertices.tolist(),
         "polygons": [compactor_vertices.tolist()],
-        "edges":
-        compactor_edges.tolist(),
-        "oriented":
-        True,
+        "edges": compactor_edges.tolist(),
+        "oriented": True,
         "position": [-hx, 0],
         "velocity": [100.0, 0.0, 0.0],
-        "masses":
-        numpy.full((4, ), compactor_mass / 4).tolist(),
-        "density":
-        compactor_density,
+        "masses": numpy.full(4, compactor_mass / 4).tolist(),
+        "density": compactor_density,
         "is_dof_fixed": [False, False, False]
     })
 

@@ -14,7 +14,7 @@ BUILD_DIR="$FIXING_COLLISIONS_ROOT/build/release"
 echo "Generating VTK and energy CSV files:"
 python "$TOOLS_DIR/results_to_vtk_files.py" "$SIM_RESULTS" "$OUTPUT_DIR" || exit 1
 echo "Generating EPS file:"
-python "$TOOLS_DIR/results_to_eps.py" "$SIM_RESULTS" --output "$OUTPUT_DIR/sim_all.eps" --step 25 || exit 1
+python "$TOOLS_DIR/results_to_eps.py" "$SIM_RESULTS" --output "$OUTPUT_DIR/sim_all.eps" --step 25 --scaling 100 || exit 1
 echo "Generating minimum distance CSV file:"
 $BUILD_DIR/cli_mindistance "$SIM_RESULTS" "$OUTPUT_DIR/min-distance.csv" || exit 1
 echo "Generating plots of energy and minimum distance:"

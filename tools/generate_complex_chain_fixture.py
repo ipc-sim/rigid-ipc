@@ -31,7 +31,7 @@ def generate_fixture(n_links: int) -> dict:
             edges.tolist(),
             "velocity": [0.0, -1.0 if i else 0.0, 0.0],
             "is_dof_fixed":
-            numpy.full((3, ), i == 0, dtype=bool).tolist()
+            numpy.full(3, i == 0, dtype=bool).tolist()
         })
     return fixture
 

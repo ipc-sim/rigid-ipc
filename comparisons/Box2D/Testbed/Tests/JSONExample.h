@@ -14,7 +14,7 @@ typedef std::array<double, 3> array3d;
 typedef std::array<size_t, 2> array2i;
 typedef std::array<bool, 3> array3b;
 
-const static char* INPUT_FILENAME = "../../../fixtures/compactor.json";
+const static char* INPUT_FILENAME = "../../../fixtures/axle.json";
 
 class JSONExample : public Test {
 protected:
