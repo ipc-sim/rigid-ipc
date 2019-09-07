@@ -113,7 +113,7 @@ generate_multiple_results
 # Compactor
 generation_script="generate_compactor_fixture.py"
 for num_blocks in 10 30 60; do
-    generation_args="--num_blocks $num_blocks"
+    generation_args="--num-blocks $num_blocks"
     output_dir="$RESULTS_DIR/compactor/num-blocks=$num_blocks"
     generate_multiple_results
 done
