@@ -24,16 +24,17 @@ def generate_fixture(args):
     # Compactor Box
     hx = hy = 2.49
     compactor_mass = 1000  # kg
-    compactor = generate_box_body(hx, hy, [0, 0], 0, compactor_mass)
+    compactor = generate_box_body(hx, hy, [-hx, 0], 0, compactor_mass)
     compactor["velocity"][0] = 100
     rigid_bodies.append(compactor)
 
     # Trash Boxes
-    hx = hy = 0.25
-    radius = numpy.sqrt(hx**2 + hy**2) + 5e-2  # inflate the radius slightly
+    radius = 0.25
+    hx = hy = numpy.sqrt(radius**2 / 2)
+    radius += 5e-2  # inflate the radius slightly
     trash = generate_box_body(hx, hy, [0, 0], 0, 1)
 
-    num_trash = 10
+    num_trash = args.num_blocks
     centers = numpy.zeros((num_trash, 2))
 
     width = 5 - 2 * radius
@@ -53,7 +54,7 @@ def generate_fixture(args):
             num_tries += 1
 
         centers[i] = center
-        trash["center"] = center.tolist()
+        trash["position"] = center.tolist()
         trash["theta"] = numpy.random.random() * 45
         rigid_bodies.append(trash.copy())
 
@@ -65,6 +66,10 @@ def main():
     print(sys.argv)
     parser = create_argument_parser(description="generate a tower of blocks",
                                     default_restitution_coefficient=0)
+    parser.add_argument("--num-blocks",
+                        type=int,
+                        default=10,
+                        help="maximum number of blocks in the compactor")
     args = parser.parse_args()
 
     if args.out_path is None:
