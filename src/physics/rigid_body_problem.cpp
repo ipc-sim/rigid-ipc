@@ -446,7 +446,9 @@ namespace physics {
 
 #ifdef WITH_DERIVATIVE_CHECK
         Eigen::VectorXd grad_f_approx = eval_grad_f_approx(*this, sigma);
-        assert(compare_gradient(grad_f, grad_f_approx));
+        if(!compare_gradient(grad_f, grad_f_approx)){
+            spdlog::trace("finite gradient check failed for f");
+        }
 #endif
         return grad_f;
     }
@@ -462,7 +464,9 @@ namespace physics {
 
 #ifdef WITH_DERIVATIVE_CHECK
         Eigen::MatrixXd hessian_f_approx = eval_hess_f_approx(*this, sigma);
-        assert(compare_jacobian(hessian_f, hessian_f_approx));
+        if(!compare_jacobian(hessian_f, hessian_f_approx)){
+            spdlog::trace("finite hessian check failed for f");
+        }
 #endif
         return hessian_f;
     }

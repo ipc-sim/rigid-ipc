@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include <logger.hpp>
-
+#include <utils/not_implemented_error.hpp>
 namespace ccd {
 namespace opt {
 
@@ -33,10 +33,13 @@ namespace opt {
             success = lcp_mosek(
                 jac_gxi * tilde_jac_gxi, jac_gxi * tilde_b + gxi, alpha);
             break;
+#else
+            throw NotImplementedError("Mosek is not loaded");
 #endif
         }
 
-        Eigen::VectorXd s = jac_gxi * tilde_jac_gxi * alpha + (jac_gxi* tilde_b + gxi);
+        Eigen::VectorXd s
+            = jac_gxi * tilde_jac_gxi * alpha + (jac_gxi * tilde_b + gxi);
         double err = alpha.transpose() * s;
         spdlog::trace("solver=lcp_solver lcp_solver={} x^Ts={}",
             LCPSolverNames[solver], err);
@@ -88,24 +91,32 @@ namespace opt {
         double FB = -1.0;
         for (uint jj = 0; jj < num_gs_steps; ++jj) {
             // update each alpha
-            for (uint ci = 0; ci < num_constraints; ++ci) {
+            for (uint ci = 0; ci < uint(num_constraints); ++ci) {
                 dk = tilde_b;
-                for (uint cj = 0; cj < num_constraints; ++cj) {
+                for (uint cj = 0; cj < uint(num_constraints); ++cj) {
                     if (cj == ci) {
                         continue;
                     }
-                    dk += tilde_jac_gxi.col(cj) * alpha(cj);
+                    dk += tilde_jac_gxi.col(int(cj)) * alpha(int(cj));
                 }
-                double ndk = gxi[ci] + jac_gxi.row(int(ci)).dot(dk);
+                double ndk = gxi[int(ci)] + jac_gxi.row(int(ci)).dot(dk);
+
                 // WARN: I'm not sure this is supposed to be >=0
                 if (ndk >= 0) { // no contact impulse.
-                    alpha(ci) = 0.0;
+                    alpha(int(ci)) = 0.0;
                     continue;
                 }
                 // TODO: the expression  N.col(ci).dot(Ntilde.col(ci)); is
                 // constant in the GS iteration
-                alpha(ci)
-                    = -ndk / jac_gxi.row(int(ci)).dot(tilde_jac_gxi.col(ci));
+                double dividend
+                    = jac_gxi.row(int(ci)).dot(tilde_jac_gxi.col(int(ci)));
+                double thr = std::abs(dividend)/std::max(std::abs(dividend), std::abs(ndk));
+                if (thr > 1e-12) {
+                    alpha(int(ci)) = -ndk / dividend;
+                } else {
+                    alpha(int(ci)) = 0.0;
+                }
+
             }
             Eigen::VectorXd s
                 = jac_gxi * (tilde_jac_gxi * alpha + tilde_b) + gxi;
@@ -115,6 +126,7 @@ namespace opt {
                 break;
             }
         }
+
         spdlog::trace("solver=GaussSeidel gs_convergence={} num_constraints={}",
             FB, num_constraints);
         if (FB >= 1e-10) {

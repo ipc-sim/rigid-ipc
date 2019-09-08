@@ -128,7 +128,7 @@ namespace opt {
                 u_c = u_l;
             }
 
-            double toi, alpha_ij, alpha_kl;
+            double toi, alpha_ij, alpha_kl = ee_impact.impacting_node();
             alpha_kl = ee_impact.impacting_node();
             // get toi and alpha
             bool success;
@@ -147,6 +147,7 @@ namespace opt {
                 vol_kl = ccd::autogen::space_time_collision_volume<double>(
                     v_k, v_l, u_k, u_l, toi, alpha_kl, volume_epsilon);
             }
+
             long c_ij = get_constraint_index(
                 ee_impact, /*impacted=*/true, edges.rows());
             long c_kl = get_constraint_index(

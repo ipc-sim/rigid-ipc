@@ -157,6 +157,7 @@ namespace opt {
 
     OptimizationResults NCPSolver::step_solve()
     {
+
         OptimizationResults result;
         num_outer_iterations_ += 1;
 
@@ -171,9 +172,6 @@ namespace opt {
         }
 
         Eigen::VectorXd delta_i;
-
-//        debug << fmt::format("{},{:.18e},{}\n", num_outer_iterations_,
-//            g_xi.sum(), g_active.rows());
 
         solve_lcp(xi, g_xi, jac_g_xi, g_active, delta_i, lambda_i);
 
@@ -284,6 +282,7 @@ namespace opt {
             }
 
             Eigen::VectorXd alpha_i_active(num_active_constraints);
+            alpha_i_active.setZero();
             lcp_solve(g_xi_active, jac_g_xi_active, M_active, p, lcp_solver,
                 alpha_i_active);
 
