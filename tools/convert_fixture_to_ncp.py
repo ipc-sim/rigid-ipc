@@ -6,7 +6,7 @@ import pathlib
 from fixture_utils import *
 
 DEFAULT_NCP_TIME_EPSILON = 1e-16  # or 0
-DEFAULT_NCP_UPDATE_TYPE = "linearize"  #linearize or g_gradient
+DEFAULT_NCP_UPDATE_TYPE = "linearize"  # linearize or g_gradient
 
 NCP_UPDATE_TYPES = ["linearize", "g_gradient"]
 

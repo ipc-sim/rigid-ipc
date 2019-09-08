@@ -118,6 +118,12 @@ for num_blocks in 10 30 60; do
     generate_multiple_results
 done
 
+generation_script="generate_cog_fixture.py"
+for scene in line loop large; do
+    generation_args="--scene $scene"
+    output_dir="$RESULTS_DIR/cog/scene=$scene"
+    generate_multiple_results
+done
 
 ### Bypass
 for scene in 0 1 2; do

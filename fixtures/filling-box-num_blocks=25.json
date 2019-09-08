@@ -237,7 +237,8 @@
                     true,
                     true,
                     true
-                ]
+                ],
+                "density": 1000
             },
             {
                 "vertices": [

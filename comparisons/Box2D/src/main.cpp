@@ -65,6 +65,9 @@ void save_group_id(const b2World& world, std::vector<size_t>& group_ids)
     int group_id = 0;
     for (const b2Body* body = world.GetBodyList(); body != nullptr;
          body = body->GetNext()) {
+        if (!(body->GetFixtureList())) {
+            continue;
+        }
         // Save the group_id per vertex
         for (const b2Fixture* fixture = body->GetFixtureList();
              fixture != nullptr; fixture = fixture->GetNext()) {
@@ -101,6 +104,10 @@ void save_step(const b2World& world,
     for (const b2Body* body = world.GetBodyList(); body != nullptr;
          body = body->GetNext()) {
 
+        if (!(body->GetFixtureList())) {
+            continue;
+        }
+
         Eigen::Vector2d position = b2Vec2_to_Vector2d(body->GetPosition());
         double theta = body->GetAngle();
         Eigen::Transform<double, 2, Eigen::Affine> T
@@ -123,14 +130,16 @@ void save_step(const b2World& world,
         }
 
         // Save the state
-        linear_momentum += body->GetMass() * body->GetLinearVelocity();
-        angular_momentum += body->GetInertia() * body->GetAngularVelocity();
-        kinetic_energy
-            += 0.5 * body->GetMass() * body->GetLinearVelocity().LengthSquared()
-            + 0.5 * body->GetInertia() * body->GetAngularVelocity()
-                * body->GetAngularVelocity();
-        potential_energy += -body->GetMass() * gravity.dot(position);
-
+        // Skip fixed bodys from the energy computation
+        if (body->GetType() == b2_dynamicBody) {
+            linear_momentum += body->GetMass() * body->GetLinearVelocity();
+            angular_momentum += body->GetInertia() * body->GetAngularVelocity();
+            kinetic_energy += 0.5 * body->GetMass()
+                    * body->GetLinearVelocity().LengthSquared()
+                + 0.5 * body->GetInertia() * body->GetAngularVelocity()
+                    * body->GetAngularVelocity();
+            potential_energy += -body->GetMass() * gravity.dot(position);
+        }
         nlohmann::json body_state;
         body_state["position"] = { position.x(), position.y(), theta };
         body_state["velocity"] = { body->GetLinearVelocity().x,
@@ -170,7 +179,7 @@ void load_rigid_bodies(const nlohmann::json& body_args,
 
         // Is the body fixed?
         array3b is_dof_fixed = args["is_dof_fixed"].get<array3b>();
-        bool is_fixed = is_dof_fixed[0] || is_dof_fixed[1];
+        bool is_fixed = (is_dof_fixed[0] || is_dof_fixed[1]) && is_dof_fixed[2];
         body_def.type = is_fixed ? b2_staticBody : b2_dynamicBody;
         body_def.fixedRotation = is_dof_fixed[2];
 
@@ -191,6 +200,17 @@ void load_rigid_bodies(const nlohmann::json& body_args,
 
         // Create the ground
         b2Body* body = world.CreateBody(&body_def);
+
+        // Add revolute join to constrain position but not rotation
+        if ((is_dof_fixed[0] || is_dof_fixed[1]) && !is_dof_fixed[2]) {
+            b2BodyDef empty_body_def;
+            empty_body_def.position.Set(position[0], position[1]);
+            empty_body_def.type = b2_staticBody;
+            b2Body* empty_body = world.CreateBody(&empty_body_def);
+            b2RevoluteJointDef jointDef;
+            jointDef.Initialize(empty_body, body, empty_body->GetWorldCenter());
+            world.CreateJoint(&jointDef);
+        }
 
         double density = args["density"].get<double>();
 
@@ -367,10 +387,6 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    if (cli_args.num_steps >= 0) {
-        num_steps = cli_args.num_steps;
-    }
-
     // Results
     std::vector<array2i> edges;
     std::vector<size_t> group_id;
@@ -378,6 +394,10 @@ int main(int argc, char** argv)
     std::vector<nlohmann::json> state_sequence;
 
     load_scene(json_args, world, timestep, num_steps, num_iterations);
+
+    if (cli_args.num_steps >= 0) {
+        num_steps = cli_args.num_steps;
+    }
 
     save_edges(world, edges);
     save_group_id(world, group_id);

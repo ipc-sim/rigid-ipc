@@ -58,7 +58,7 @@ def generate_fixture(args):
         "polygons": box_polygons.tolist(),
         "edges": box_edges.tolist(),
         "oriented": True,
-        "is_dof_fixed": [True, True, True],
+        "is_dof_fixed": [True, True, True]
     })
 
     radius = 0.5

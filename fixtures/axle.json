@@ -18,10 +18,10 @@
     "rigid_body_problem": {
         "gravity": [
             0,
-            -9.8,
+            -9.81,
             0
         ],
-        "coefficient_restitution": 1.0,
+        "coefficient_restitution": -1,
         "rigid_bodies": [
             {
                 "vertices": [
