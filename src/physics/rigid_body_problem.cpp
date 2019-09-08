@@ -70,6 +70,12 @@ namespace physics {
         Fcollision.resize(m_assembler.num_vertices(), 2);
         Fcollision.setZero();
         update_constraint();
+
+        for (size_t i = 0; i < m_assembler.m_rbs.size(); ++i) {
+            auto& rb = m_assembler.m_rbs[i];
+            spdlog::info(
+                "rb={} mass={} innertia={}", i, rb.mass, rb.moment_of_inertia);
+        }
     }
 
     nlohmann::json RigidBodyProblem::state() const
@@ -77,29 +83,47 @@ namespace physics {
         nlohmann::json json;
         std::vector<nlohmann::json> rbs;
         Eigen::Vector2d p = Eigen::Vector2d::Zero();
-        double L = 0;
-        double T = 0;
-        double G = 0;
+        double L = 0.0;
+        double T = 0.0;
+        double G = 0.0;
 
         for (auto& rb : m_assembler.m_rbs) {
             nlohmann::json jrb;
             jrb["position"] = io::to_json(Eigen::VectorXd(rb.position));
             jrb["velocity"] = io::to_json(Eigen::VectorXd(rb.velocity));
             rbs.push_back(jrb);
+
             p += rb.mass * rb.velocity.head(2);
+
             L += rb.moment_of_inertia * rb.velocity(2);
+
             T += 1.0 / 2.0 * rb.mass * rb.velocity.head(2).transpose()
                 * rb.velocity.head(2);
             T += 1.0 / 2.0 * rb.moment_of_inertia * rb.velocity(2)
                 * rb.velocity(2);
-            G += -rb.mass * gravity_.transpose() * rb.position;
 
+            if (rb.is_dof_fixed[0] && rb.velocity[0] != 0.0) {
+                spdlog::error(
+                    "fixed body has nonzero vel x {}", rb.velocity[0]);
+            }
+            if (rb.is_dof_fixed[1] && rb.velocity[1] != 0.0) {
+                spdlog::error(
+                    "fixed body has nonzero vel y {}", rb.velocity[1]);
+            }
+            if (rb.is_dof_fixed[2] && rb.velocity[2] != 0.0) {
+                spdlog::error(
+                    "fixed body has nonzero angular vel {}", rb.velocity[2]);
+            }
+            if (!rb.is_dof_fixed[0] && !rb.is_dof_fixed[1]) {
+                G += -rb.mass * gravity_.transpose() * rb.position;
+            }
         }
-// Another way of compting total energy
-//        Eigen::MatrixXd vel = m_assembler.world_velocities();
-//        ccd::flatten(vel);
-//        Eigen::VectorXd vel_ = vel;
-//        double kinetic = 1.0 / 2.0  * (vel_.transpose() * m_assembler.m_mass_matrix * vel_)[0];
+        // Another way of compting total energy
+        //        Eigen::MatrixXd vel = m_assembler.world_velocities();
+        //        ccd::flatten(vel);
+        //        Eigen::VectorXd vel_ = vel;
+        //        double kinetic = 1.0 / 2.0  * (vel_.transpose() *
+        //        m_assembler.m_mass_matrix * vel_)[0];
 
         json["rigid_bodies"] = rbs;
         json["linear_momentum"] = io::to_json(Eigen::VectorXd(p));
@@ -183,14 +207,10 @@ namespace physics {
         const Eigen::VectorXd& sigma, const double time_step)
     {
 
-        // update velocities : uses old t1 positions
+        // This need to be done BEFORE updating positions
         // -------------------------------------
         if (coefficient_restitution > -1) {
             solve_velocities();
-        } else {
-            for (auto& rb : m_assembler.m_rbs) {
-                rb.velocity = (rb.position - rb.position_prev) / time_step;
-            }
         }
 
         // update final position
@@ -198,6 +218,14 @@ namespace physics {
         Eigen::VectorXd rb_positions = m_assembler.m_dof_to_position * sigma;
         m_assembler.set_rb_positions(rb_positions);
         Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
+
+        // This need to be done AFTER updating positions
+        if (coefficient_restitution < 0) {
+            for (auto& rb : m_assembler.m_rbs) {
+                rb.velocity = (rb.position - rb.position_prev) / time_step;
+            }
+        }
+
         return detect_collisions(vertices_t0, q1, CollisionCheck::EXACT);
     }
 
