@@ -128,7 +128,7 @@ done
 generation_script="generate_interlocking_saw_fixture.py"
 for num_teeth in 10 100 1000; do
     generation_args="--num-teeth $num_teeth"
-    output_dir="$RESULTS_DIR/cog/num-teeth=$num_teeth"
+    output_dir="$RESULTS_DIR/teeth/num-teeth=$num_teeth"
     generate_multiple_results
 done
 

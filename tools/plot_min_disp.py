@@ -1,35 +1,36 @@
-import os
-import glob
+import pathlib
+import time
+
 import numpy as np
 
 import plotly.graph_objs as go
 import plotly.offline as plotly
 
-
 # root = "/beegfs/work/panozzo/fixing_collisions/paper-results/"
-root = "/Users/teseo/hpc/fixing_collisions/paper-results"
+root = pathlib.Path(
+    "/Users/zachary/research/fixing-collisions/hpc-results/paper-results")
 
 missing_file_dis = float('nan')
 
-
-compactor_num_blocks="10"
+compactor_num_blocks = "10"
 cog_scene = "large"
+interlocking_saws_num_teeth = "10"
 bypass_scene = "0"
 ncp_time_epsilon = "0e0"
-ncp_update_type = "g_gradient"
 ncp_lcp_solver = "lcp_gauss_seidel"
 
-
 methods = {
-    "ours": ["2019-09-08-11-54-11", "2019-09-08-12-34-12"],
-    "Box2D": ["2019-09-08-11-54-11", "2019-09-08-12-34-12"],
-    "NCP": ["2019-09-08-19-10-30"]
+    "ours": ["all-results"],
+    "Box2D": ["all-results"],
+    "NCP-linearize": ["all-results", "ncp-results"],
+    "NCP-g-gradient": ["all-results", "ncp-results"]
 }
 
 colors = {
     "ours": "#d63031",
     "Box2D": "#6c5ce7",
-    "NCP": "#00b894"
+    "NCP-linearize": "#00b894",
+    "NCP-g-gradient": "#007854"
 }
 
 
@@ -37,7 +38,7 @@ def run(cor, time_step):
     res = {}
     for method in methods:
         for f in methods[method]:
-            folder = os.path.join(root, f, "*")
+            folder = root / f
 
             if method in res:
                 data = res[method]
@@ -45,36 +46,46 @@ def run(cor, time_step):
                 data = {}
                 res[method] = data
 
-            for folder in glob.glob(folder):
-                if not os.path.isdir(folder):
+            for folder in folder.glob("*"):
+                if not folder.is_dir():
                     continue
 
-                p_name = os.path.basename(folder)
+                p_name = folder.name
 
                 csv_file = folder
                 if p_name == "compactor":
-                    csv_file = os.path.join(csv_file, "num-blocks={}".format(compactor_num_blocks))
+                    csv_file /= f"num-blocks={compactor_num_blocks}"
                 elif p_name == "cog":
-                    csv_file = os.path.join(csv_file, "scene={}".format(cog_scene))
+                    csv_file /= f"scene={cog_scene}"
+                elif p_name == "interlocking-saws":
+                    csv_file /= f"num-teeth={interlocking_saws_num_teeth}"
 
-                csv_file = os.path.join(csv_file, "cor={}".format(cor), "time_step={}".format(time_step))
+                csv_file /= f"cor={cor}/time_step={time_step}"
 
                 if p_name == "bypass":
-                    csv_file = os.path.join(folder, "scene={}".format(bypass_scene))
+                    csv_file = folder / f"scene={bypass_scene}"
                     continue
 
-                csv_file = os.path.join(csv_file, method)
+                if method == "NCP-linearize" or method == "NCP-g-gradient":
+                    csv_file /= "NCP"
+                else:
+                    csv_file /= method
 
-                if method == "NCP":
-                    csv_file = os.path.join(csv_file,
-                    "time_epsilon={}".format(ncp_time_epsilon),
-                    "update_type={}".format(ncp_update_type),
-                    "lcp_solver={}".format(ncp_lcp_solver))
+                if method == "NCP-linearize":
+                    csv_file /= (
+                        f"time_epsilon={ncp_time_epsilon}/"
+                        f"update_type={'linearize'}/lcp_solver={ncp_lcp_solver}"
+                    )
+                elif method == "NCP-g-gradient":
+                    csv_file /= (f"time_epsilon={ncp_time_epsilon}/"
+                                 f"update_type={'g_gradient'}/"
+                                 f"lcp_solver={ncp_lcp_solver}")
 
-                csv_file = os.path.join(csv_file, "min-distance.csv")
+                csv_file /= "min-distance.csv"
 
-                if not os.path.isfile(csv_file):
-                    if p_name in data.keys() and data[p_name] != missing_file_dis:
+                if not csv_file.is_file():
+                    if (p_name in data.keys()
+                            and data[p_name] != missing_file_dis):
                         continue
                     print(method, p_name)
                     print("missing file:", csv_file, "\n\n")
@@ -84,8 +95,8 @@ def run(cor, time_step):
 
                 data[p_name] = np.nanmin(file_data[:, 1])
 
-
     return res
+
 
 def plot(data, output=None):
     fig_data = []
@@ -98,32 +109,27 @@ def plot(data, output=None):
             vals.append(data[method][example])
 
         fig_data.append(
-            go.Bar(
-                name=method,
-                x=examples,
-                y=vals,
-                marker = dict(color=colors[method]))
-        )
+            go.Bar(name=method,
+                   x=examples,
+                   y=vals,
+                   marker=dict(color=colors[method])))
 
-    layout = go.Layout(
-        title = "COR = {}, time step={}".format(cor, time_step),
-        yaxis=dict(
-            title="Min distance",
-            exponentformat='power',
-            type="log"
-        ),
-        legend=dict(y=1.1, orientation="h")
-    )
+    layout = go.Layout(title="COR = {}, time step={}".format(cor, time_step),
+                       yaxis=dict(title="Min distance",
+                                  exponentformat='power',
+                                  type="log"),
+                       legend=dict(y=1.1, orientation="h"))
     fig = go.Figure(data=fig_data, layout=layout)
 
     if output is not None:
-        plotly.plot(fig, image="svg", image_filename=output)
+        plotly.plot(fig, image="png", image_filename=output)
+        time.sleep(1)
     else:
         plotly.plot(fig)
 
 
 if __name__ == "__main__":
-    cors = ["-1", "0", "1"]
+    cors = ["0", "1"]
     time_steps = ["1e-1", "1e-2", "1e-3"]
 
     for cor in cors:

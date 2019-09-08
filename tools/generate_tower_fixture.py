@@ -35,7 +35,7 @@ def generate_fixture(args):
             "theta": theta,
             "velocity": [0.0, 0.0, 0.0],
             "is_dof_fixed": [False, False, False],
-            "masses": numpy.full(4, 0.25),
+            "masses": numpy.full(4, 0.25).tolist(),
             "density": 1
         })
 

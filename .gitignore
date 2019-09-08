@@ -124,3 +124,5 @@ logs
 core*
 tmp
 hpc-results
+paper
+temp-plot.html
