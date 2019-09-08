@@ -14,7 +14,7 @@ typedef std::array<double, 3> array3d;
 typedef std::array<size_t, 2> array2i;
 typedef std::array<bool, 3> array3b;
 
-const static char* INPUT_FILENAME = "../../../fixtures/cog-loop.json";
+const static char* INPUT_FILENAME = "../../../fixtures/billiards.json";
 
 class JSONExample : public Test {
 protected:
@@ -161,8 +161,9 @@ protected:
 
             // Is the body fixed?
             array3b is_dof_fixed = args["is_dof_fixed"].get<array3b>();
-            bool is_fixed = is_dof_fixed[0] || is_dof_fixed[1];
-            bodyDef.type = is_fixed ? b2_dynamicBody : b2_dynamicBody;
+            bool is_fixed
+                = (is_dof_fixed[0] || is_dof_fixed[1]) && is_dof_fixed[2];
+            bodyDef.type = is_fixed ? b2_staticBody : b2_dynamicBody;
             bodyDef.fixedRotation = is_dof_fixed[2];
 
             bodyDef.bullet = bodyDef.type == b2_dynamicBody;
@@ -183,13 +184,14 @@ protected:
             // Create the ground
             b2Body* body = m_world->CreateBody(&bodyDef);
 
-            if (is_fixed && !is_dof_fixed[2]) {
-                b2BodyDef bodyDef2;
-                bodyDef2.position.Set(position[0], position[1]);
-                bodyDef2.type = b2_staticBody;
-                b2Body* body2 = m_world->CreateBody(&bodyDef2);
+            if ((is_dof_fixed[0] || is_dof_fixed[1]) && !is_dof_fixed[2]) {
+                b2BodyDef empty_body_def;
+                empty_body_def.position.Set(position[0], position[1]);
+                empty_body_def.type = b2_staticBody;
+                b2Body* empty_body = m_world->CreateBody(&empty_body_def);
                 b2RevoluteJointDef jointDef;
-                jointDef.Initialize(body2, body, body2->GetWorldCenter());
+                jointDef.Initialize(
+                    empty_body, body, empty_body->GetWorldCenter());
                 m_world->CreateJoint(&jointDef);
             }
 

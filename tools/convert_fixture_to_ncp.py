@@ -7,8 +7,10 @@ from fixture_utils import *
 
 DEFAULT_NCP_TIME_EPSILON = 1e-16  # or 0
 DEFAULT_NCP_UPDATE_TYPE = "linearize"  # linearize or g_gradient
+DEFAULT_LCP_SOLVER = "lcp_mosek"  # linearize or g_gradient
 
 NCP_UPDATE_TYPES = ["linearize", "g_gradient"]
+LCP_SOLVERS = ["lcp_gauss_seidel", "lcp_mosek"]
 
 
 def main():
@@ -26,6 +28,10 @@ def main():
                         choices=NCP_UPDATE_TYPES,
                         default=DEFAULT_NCP_UPDATE_TYPE,
                         help="updated type of the NCP")
+    parser.add_argument("--lcp-solver",
+                        choices=LCP_SOLVERS,
+                        default=DEFAULT_LCP_SOLVER,
+                        help="solver for LCP")
     parser.add_argument("--out-path",
                         metavar="path/to/output.json",
                         type=pathlib.Path,
@@ -48,7 +54,7 @@ def main():
         "solve_for_active_cstr": True,
         "convergence_tolerance": -1,
         "update_type": args.update_type,
-        "lcp_solver": "lcp_gauss_seidel"
+        "lcp_solver": args.lcp_solver
     }
     fixture["volume_constraint"] = {
         "detection_method": "hash_grid",
