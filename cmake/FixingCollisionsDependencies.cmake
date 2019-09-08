@@ -49,7 +49,7 @@ endif()
 if(ENABLE_MOSEK)
     if(NOT TARGET mosek)
         # download_mosek()
-        find_package(mosek QUIET)
+        find_package(MOSEK QUIET)
         if(MOSEK_FOUND)
             message(STATUS "Including MOSEK")
             # Make sure libigl uses mosek
