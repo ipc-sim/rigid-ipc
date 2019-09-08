@@ -198,6 +198,17 @@ target_link_libraries(cli_mindistance PUBLIC ${PROJECT_NAME})
 target_link_libraries(cli_mindistance PUBLIC CLI11::CLI11)
 
 ################################################################################
+# CCD Check
+################################################################################
+add_executable(cli_ccd
+     src/cli_ccd.cpp
+)
+
+target_include_directories(cli_ccd PRIVATE src)
+target_link_libraries(cli_ccd PUBLIC ${PROJECT_NAME})
+target_link_libraries(cli_ccd PUBLIC CLI11::CLI11)
+
+################################################################################
 # Required Libraries
 ################################################################################
 

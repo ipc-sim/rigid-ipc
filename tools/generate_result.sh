@@ -7,7 +7,7 @@
 #SBATCH --time=10:00:00
 #SBATCH --mem=16GB
 #SBATCH --job-name=generate_results
-#SBATCH --mail-type=FAIL,TIME_LIMIT
+#SBATCH --mail-type=FAIL
 #SBATCH --mail-user=zfergus@nyu.edu
 #SBATCH --output=results/logs/simulation-%j.out
 #SBATCH --error=results/logs/simulation-%j.err

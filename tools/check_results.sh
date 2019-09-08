@@ -2,7 +2,7 @@
 # Script to check the logs of our simulation to see if the simulation had
 # errors, warnings, or passed.
 
-LOGS=$(find $1 -name "*.out" -type f | grep ours)
+LOGS=$(find -L $1 -name "*.out" -type f | grep ours)
 # LOGS=$(find $1 -name "*.err" -type f | grep ours)
 
 for f in $LOGS

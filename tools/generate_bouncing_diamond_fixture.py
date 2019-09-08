@@ -15,7 +15,7 @@ def generate_fixture(args):
     """Generate a saw and block."""
     fixture = generate_custom_fixture(args)
     mass = 1
-    area = 2
+    area = 4
     density = mass / area
     fixture["rigid_body_problem"]["rigid_bodies"] = [{
         "vertices": [[-1, -1], [1, -1], [1, 1], [-1, 1]],
