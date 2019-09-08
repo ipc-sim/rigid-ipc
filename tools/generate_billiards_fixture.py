@@ -19,19 +19,21 @@ def generate_fixture(args: argparse.Namespace) -> dict:
     fixture = generate_custom_fixture(args)
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
-    width = 198  # cm
-    height = 99  # cm
-    thickness = 19  # cm
+    # Dimensions of the table:
+    # https://www.dimensions.guide/element/7-foot-billiards-pool-table
+    width = 1.98  # m
+    height = .99  # m
+    thickness = .19  # cm
     rigid_bodies.append(
         generate_walls_body(width / 2, height / 2, numpy.zeros(2), thickness))
 
     # Ball settings
-    radius = 5.7 / 2  # cm
+    radius = 0.057 / 2  # m
     ball_vertices = generate_regular_ngon_vertices(args.num_points, radius)
 
-    mass = 170  # g
-    area = compute_regular_ngon_area(ball_vertices)  # cm²
-    density = mass / area  # g / cm²
+    mass = 0.170  # Kg
+    area = compute_regular_ngon_area(ball_vertices)  # m²
+    density = mass / area  # Kg / m²
 
     ball = {
         "vertices": ball_vertices.tolist(),
@@ -58,7 +60,9 @@ def generate_fixture(args: argparse.Namespace) -> dict:
     # Add the cue ball
     ball["position"] = [-width / 4, 0]
     ball["theta"] = 0
-    break_speed = 1072.9  # cm / s
+    # Typical Pool Ball Speeds: Powerful Break
+    # https://billiards.colostate.edu/faq/speed/typical/
+    break_speed = 10.729  # m / s
     ball["velocity"] = [break_speed, 0.0, 0.0]
     rigid_bodies.append(ball.copy())
 

@@ -31,6 +31,12 @@ inline array2d Vector2d_to_array2d(const Eigen::Vector2d& v)
     return { { v.x(), v.y() } };
 }
 
+/// @brief Convert an Eigen::Vector2d to a std::array<double, 2>.
+inline b2Vec2 Vector2d_to_b2Vec2(const Eigen::Vector2d& v)
+{
+    return b2Vec2(v.x(), v.y());
+}
+
 /// @brief Convert a b2Vec2 to a std::array<double, 2>.
 inline array2d b2Vec2_to_array2d(const b2Vec2& v) { return { { v.x, v.y } }; }
 
@@ -138,7 +144,9 @@ void save_step(const b2World& world,
                     * body->GetLinearVelocity().LengthSquared()
                 + 0.5 * body->GetInertia() * body->GetAngularVelocity()
                     * body->GetAngularVelocity();
-            potential_energy += -body->GetMass() * gravity.dot(position);
+            Eigen::Vector2d world_com
+                = b2Vec2_to_Vector2d(body->GetWorldCenter());
+            potential_energy += -body->GetMass() * gravity.dot(world_com);
         }
         nlohmann::json body_state;
         body_state["position"] = { position.x(), position.y(), theta };
@@ -245,6 +253,30 @@ void load_rigid_bodies(const nlohmann::json& body_args,
 
             points.clear();
         }
+
+        // Compute the mass, center of mass, and moment of intertia
+        // {
+        //     Eigen::MatrixXd vertices;
+        //     from_json<double>(args["vertices"], vertices);
+        //     Eigen::MatrixXi edges;
+        //     from_json<int>(args["edges"], edges);
+        //
+        //     Eigen::Vector2d com = center_of_mass(vertices, edges);
+        //     vertices.rowwise() -= com.transpose();
+        //
+        //     b2MassData mass_data;
+        //     body->GetMassData(&mass_data);
+        //     // mass_data.center = Vector2d_to_b2Vec2(com);
+        //
+        //     Eigen::VectorXd masses;
+        //     from_json<double>(args["masses"], masses);
+        //     if (masses.size() != vertices.rows()) {
+        //         mass_vector(vertices, edges, masses);
+        //     }
+        //     mass_data.mass = masses.sum();
+        //     mass_data.I = moment_of_inertia(vertices, masses);
+        //     body->SetMassData(&mass_data);
+        // }
 
         spdlog::info(
             "mass={:g} inertia={:g}", body->GetMass(), body->GetInertia());

@@ -33,6 +33,7 @@ def generate_fixture(args):
             [0.8 * tooth_length * i, 0]) for i in range(num_teeth)
     ]
     saw = shapely.ops.cascaded_union(saw_polygons)
+    saw = shapely.geometry.polygon.orient(saw, 1)
     saw_polygons = [list(polygon.exterior.coords) for polygon in saw_polygons]
     saw_vertices = numpy.array(list(saw.exterior.coords)[:-1])
     saw_edges = generate_ngon_edges(saw_vertices.shape[0])
@@ -41,6 +42,7 @@ def generate_fixture(args):
         "vertices": saw_vertices.tolist(),
         "polygons": saw_polygons,
         "edges": saw_edges.tolist(),
+        "oriented": True,
         "velocity": [0.0, 0.0, 0.0],
         "is_dof_fixed": [True, True, True]
     })
