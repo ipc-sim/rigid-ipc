@@ -23,7 +23,7 @@ def generate_fixture(args: argparse.Namespace) -> dict:
     # https://www.dimensions.guide/element/7-foot-billiards-pool-table
     width = 1.98  # m
     height = .99  # m
-    thickness = .19  # cm
+    thickness = .0019  # m
     rigid_bodies.append(
         generate_walls_body(width / 2, height / 2, numpy.zeros(2), thickness))
 

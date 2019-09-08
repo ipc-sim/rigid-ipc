@@ -292,7 +292,7 @@ void load_scene(nlohmann::json& args,
     {
         nlohmann::json full_args = R"({
             "timestep_size": 1e-2,
-            "max_iterations":300,
+            "max_iterations":1000,
             "rigid_body_problem":{
                 "coefficient_restitution":0.0,
                 "coefficient_friction":0.0,

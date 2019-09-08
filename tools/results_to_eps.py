@@ -21,15 +21,21 @@ def main(args=[]):
                         type=float,
                         default=1.0,
                         help='Scaling factor')
+    parser.add_argument('--linewidth',
+                        type=float,
+                        default=1.0,
+                        help='line thickness')
     parser.add_argument('--colormap', default='Spectral', help='Colormap')
     parser.add_argument('--step',
                         type=int,
                         default=1,
                         help='Plot every step frames')
+    parser.add_argument('--start', type=int, default=0, help='Starting frame')
     args = parser.parse_args()
 
     if args.output_file is None:
         args.output_file = args.results_file.resolve().parent / "sim_all.eps"
+    args.output_file.parent.mkdir(parents=True, exist_ok=True)
 
     fin = args.results_file
     fout = args.output_file
@@ -43,7 +49,7 @@ def main(args=[]):
 
     with fout.open("w") as eps_file:
         bbox = None
-        for i in range(0, len(vertices_sequence), args.step):
+        for i in range(args.start, len(vertices_sequence), args.step):
             vs = vertices_sequence[i]
             V = np.array(vs) * args.scaling
             cbox = np.min(V[:, 0]), np.max(V[:, 0]), np.min(V[:, 1]), np.max(
@@ -60,8 +66,8 @@ def main(args=[]):
         eps_file.write("%%Pages: 1\n")
         eps_file.write("%%Page: 1 1\n")
         eps_file.write(
-            "/show-ctr {\ndup stringwidth pop\n -2 div 0\n rmoveto show\n} def\n\n 0 setlinejoin\n\n"
-        )
+            "/show-ctr {{\ndup stringwidth pop\n -2 div 0\n rmoveto show\n}} def\n\n 0 setlinejoin\n\n {} setlinewidth\n\n"
+            .format(args.linewidth))
 
         for i in range(0, len(vertices_sequence), args.step):
             vs = vertices_sequence[i]

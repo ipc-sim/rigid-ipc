@@ -125,6 +125,13 @@ for scene in line loop large; do
     generate_multiple_results
 done
 
+generation_script="generate_interlocking_saw_fixture.py"
+for num_teeth in 10 100 1000; do
+    generation_args="--num-teeth $num_teeth"
+    output_dir="$RESULTS_DIR/cog/num-teeth=$num_teeth"
+    generate_multiple_results
+done
+
 ### Bypass
 for scene in 0 1 2; do
     $TOOLS_DIR/generate_comparative_results.sh $FIXING_COLLISIONS_ROOT \

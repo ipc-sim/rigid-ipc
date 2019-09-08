@@ -19,7 +19,7 @@ def generate_fixture(args):
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
     #  Add the saw
-    num_teeth = 10
+    num_teeth = args.num_teeth
     saw_length = 10
     tooth_length = saw_length / num_teeth
 
@@ -82,12 +82,18 @@ def main():
     """Parse command-line arguments to generate the desired fixture."""
     parser = create_argument_parser("generate a block falling onto a saw",
                                     default_gravity=[0, -9.81, 0])
+    parser.add_argument("--num-teeth",
+                        type=int,
+                        default=10,
+                        help="number of teeth over a fixed length")
     args = parser.parse_args()
 
     if args.out_path is None:
         directory = (pathlib.Path(__file__).resolve().parents[1] / "fixtures" /
                      "saw")
-        args.out_path = (directory / "interlocking-saws.json")
+        args.out_path = (
+            directory /
+            "interlocking-saws-num-teeth={:d}.json".format(args.num_teeth))
     args.out_path.parent.mkdir(parents=True, exist_ok=True)
 
     print_args(args)
