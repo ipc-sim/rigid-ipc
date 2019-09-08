@@ -53,13 +53,13 @@ def main(args=[]):
                         default=1.0,
                         help='line thickness')
     parser.add_argument('--colormap', default='tab20', help='Colormap')
-    parser.add_argument('--frames', type=int, nargs="*")
+    parser.add_argument('--frames', type=int, nargs="*", default=None)
     parser.add_argument('--bbox',
                         type=float,
                         nargs=4,
                         default=None,
                         help='BoundingBox')
-    parser.add_argument("--reverse",
+    parser.add_argument("--reverse-colors",
                         action="store_true",
                         help="reverse colormap")
     args = parser.parse_args()
@@ -74,7 +74,7 @@ def main(args=[]):
     else:
         cmap = plt.cm.get_cmap(args.colormap)
 
-    if args.reverse:
+    if args.reverse_colors:
         cmap = cmap.reversed()
 
     with fin.open("r") as json_file:
@@ -91,16 +91,26 @@ def main(args=[]):
         imagedir = imagedir.parent
     imagedir.mkdir(parents=True, exist_ok=True)
 
+    if args.frames is None:
+        args.frames = range(0, len(vertices_sequence), 10)
+        if args.bbox is None:
+            VS = np.array(vertices_sequence)
+            mins = VS.min(axis=1).min(axis=0) - args.linewidth / args.scaling
+            maxes = VS.max(axis=1).max(axis=0) + args.linewidth / args.scaling
+            args.bbox = (mins[0], maxes[0], mins[1], maxes[1])
+
     for i, s in enumerate(args.frames):
         vs = vertices_sequence[s]
 
         V = np.array(vs) * args.scaling
         if args.bbox is None:
-            bbox = np.min(V[:, 0]), np.max(V[:, 0]), np.min(V[:, 1]), np.max(
-                V[:, 1])
+            bbox = (V[:, 0].min() - 2 * args.linewidth,
+                    V[:, 0].max() + 2 * args.linewidth,
+                    V[:, 1].min() - 2 * args.linewidth,
+                    V[:, 1].max() + 2 * args.linewidth)
         else:
             bbox = np.array(args.bbox) * args.scaling
-        print(bbox)
+        print(f"{s}: {bbox}")
         if len(args.frames) == 1:
             render_eps_image(imagedir.joinpath('%s.eps' % (name)), V, edges,
                              bbox, cmap, group_ids, args.linewidth)

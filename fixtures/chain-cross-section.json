@@ -1,7 +1,7 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "max_iterations": 1000,
-    "timestep_size": 0.01,
+    "timestep_size": 0.001,
     "distance_barrier_constraint": {
         "custom_initial_epsilon": 0.1,
         "detection_method": "hash_grid",
@@ -22,8 +22,7 @@
             0
         ],
         "coefficient_restitution": -1,
-        "rigid_bodies": [
-            {
+        "rigid_bodies": [{
                 "vertices": [
                     [
                         0.38743326445145243,

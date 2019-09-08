@@ -118,6 +118,7 @@ for num_blocks in 10 30 60; do
     generate_multiple_results
 done
 
+# Cogs
 generation_script="generate_cog_fixture.py"
 for scene in line loop large; do
     generation_args="--scene $scene"
@@ -125,12 +126,19 @@ for scene in line loop large; do
     generate_multiple_results
 done
 
+# Interlocking Saws
 generation_script="generate_interlocking_saw_fixture.py"
-for num_teeth in 10 100 1000; do
+for num_teeth in 10 100; do
     generation_args="--num-teeth $num_teeth"
     output_dir="$RESULTS_DIR/teeth/num-teeth=$num_teeth"
     generate_multiple_results
 done
+
+# Chain Cross Section
+generation_script="generate_chain_cross_section_fixture.py"
+generation_args=""
+output_dir="$RESULTS_DIR/chain-net"
+generate_multiple_results
 
 ### Bypass
 for scene in 0 1 2; do

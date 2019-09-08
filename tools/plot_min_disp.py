@@ -22,8 +22,8 @@ ncp_lcp_solver = "lcp_gauss_seidel"
 methods = {
     "ours": ["all-results"],
     "Box2D": ["all-results"],
-    "NCP-linearize": ["all-results", "ncp-results"],
-    "NCP-g-gradient": ["all-results", "ncp-results"]
+    "NCP-linearize": ["all-results"],
+    "NCP-g-gradient": ["all-results"]
 }
 
 colors = {
