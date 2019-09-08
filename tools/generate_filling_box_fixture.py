@@ -62,12 +62,13 @@ def generate_fixture(args):
     })
 
     radius = 0.5
-    block_vertices = generate_regular_ngon_vertices(4, radius).tolist()
-    block_edge = generate_ngon_edges(4).tolist()
+    block_hx = block_hy = numpy.sqrt(radius**2 / 2)
+    radius += 5e-2  # inflate the radius slightly
+    block = generate_box_body(block_hx, block_hy, [0, 0], 0, 1)
 
     centers = numpy.zeros((args.num_blocks, 2))
 
-    width = 2 * (hx - 2 * half_thickness - radius) - 1e-1
+    width = 2 * (hx - 2 * half_thickness - radius)
     height = 6 * hy
     for i in range(args.num_blocks):
         invalid_center = True
@@ -79,20 +80,13 @@ def generate_fixture(args):
             center = (numpy.random.random(2) * [width, height] +
                       [-width / 2, 2 * half_thickness + radius])
             invalid_center = (numpy.linalg.norm(centers - center, axis=1) <
-                              (2 * radius + 1e-4)).any()
+                              2 * radius).any()
             num_tries += 1
 
         centers[i] = center
-        rigid_bodies.append({
-            "vertices": block_vertices,
-            "polygons": [block_vertices],
-            "edges": block_edge,
-            "oriented": True,
-            "position": center.tolist(),
-            "theta": numpy.random.random() * 45,
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [False, False, False],
-        })
+        block["position"] = center.tolist()
+        block["theta"] = numpy.random.random() * 45
+        rigid_bodies.append(block.copy())
 
     return fixture
 

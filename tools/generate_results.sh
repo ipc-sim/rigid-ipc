@@ -10,7 +10,7 @@ RESULTS_DIR="$FIXING_COLLISIONS_ROOT/results/paper-results/$TIME"
 mkdir -p "$RESULTS_DIR"
 GIT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2)
 GIT_SHA=$(git rev-parse HEAD)
-printf "Git branch: $GIT_BRANCH\nGit SHA: $GIT_SHA\nTime: $TIME" \
+printf "Git branch: $GIT_BRANCH\nGit SHA: $GIT_SHA\nTime: $TIME\n" \
     > "$RESULTS_DIR/$GIT_BRANCH-$GIT_SHA.txt"
 
 generate_multiple_results () {

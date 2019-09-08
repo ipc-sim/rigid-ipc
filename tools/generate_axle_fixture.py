@@ -54,10 +54,10 @@ def generate_fixture(args):
     for polygon in wheel_polygons:
         assert is_polygon_ccw(polygon)
 
-    mass = 100  # kg
+    mass = 100  # Kg
     area = (compute_regular_ngon_area(wheel_outer_vertices) -
-            compute_regular_ngon_area(wheel_inner_vertices))  # cm²
-    density = mass / area  # g / cm²
+            compute_regular_ngon_area(wheel_inner_vertices))  # m²
+    density = mass / area  # Kg / m²
 
     rigid_bodies.append({
         "vertices":
@@ -84,7 +84,7 @@ def main():
     """Parse command-line arguments to generate the desired fixture."""
     parser = create_argument_parser(
         "generate a wheel spinning loose on an axle",
-        default_gravity=[0, -9.8, 0])
+        default_gravity=[0, -9.81, 0])
     args = parser.parse_args()
 
     if args.out_path is None:

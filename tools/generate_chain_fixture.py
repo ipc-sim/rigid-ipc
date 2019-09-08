@@ -15,10 +15,6 @@ import shapely.ops
 from fixture_utils import *
 
 
-def foo():
-    return foo()
-
-
 def generate_link_polygons() -> list:
     """Generate a list of Polygons for the chain link."""
     half_thickness = 1e-2
@@ -33,6 +29,9 @@ def generate_link_polygons() -> list:
     torso_cy = 2 * leg_cy - half_thickness
     neck_hy = (height - torso_cy - half_thickness) / 2
     neck_cy = height - neck_hy - half_thickness
+
+    area = half_thickness * (head_hx + neck_hy + torso_hx + leg_hy + foot_hx +
+                             leg_hy + foot_hx) - 6 * half_thickness
 
     return [
         # Head
@@ -57,7 +56,7 @@ def generate_link_polygons() -> list:
         # Right foot
         generate_rectangle(foot_hx, half_thickness,
                            numpy.array([width - foot_hx, half_thickness]), 0),
-    ]
+    ], area
 
 
 def generate_fixture(args: argparse.Namespace) -> dict:
@@ -65,7 +64,7 @@ def generate_fixture(args: argparse.Namespace) -> dict:
     fixture = generate_custom_fixture(args)
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
-    link_polygons = generate_link_polygons()
+    link_polygons, link_area = generate_link_polygons()
     link = shapely.ops.cascaded_union(link_polygons)
     link = shapely.geometry.polygon.orient(link, 1)
     link_polygons = [
@@ -78,6 +77,9 @@ def generate_fixture(args: argparse.Namespace) -> dict:
     R = create_2D_rotation_matrix(theta)
 
     edges = generate_ngon_edges(vertices.shape[0])
+
+    link_mass = 0.1  # Kg
+    link_density = link_mass / link_area
 
     for i in range(args.num_links):
         rigid_bodies.append({
@@ -94,7 +96,12 @@ def generate_fixture(args: argparse.Namespace) -> dict:
             "is_dof_fixed":
             numpy.full(3, i == 0, dtype=bool).tolist(),
             "oriented":
-            True
+            True,
+            "masses":
+            numpy.full(vertices.shape[0],
+                       link_mass / vertices.shape[0]).tolist(),
+            "density":
+            link_density
         })
 
     return fixture

@@ -14,17 +14,7 @@ def generate_fixture(args):
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
     # Generate lines
-    line_vertices = generate_rectangle_vertices(5, args.thickness / 2, [0, 0],
-                                                0)
-    line_edges = generate_ngon_edges(4)
-    line = {
-        "vertices": line_vertices.tolist(),
-        "polygons": [line_vertices.tolist()],
-        "edges": line_edges.tolist(),
-        "oriented": True,
-        "velocity": [0.0, 0.0, 0.0],
-        "is_dof_fixed": [False, False, False]
-    }
+    line = generate_box_body(5, args.thickness, [0, 0], 0, 1)
     delta_y = 0.5 + args.thickness
     y = -args.thickness / 2
     for i in range(args.num_lines):
@@ -34,12 +24,11 @@ def generate_fixture(args):
 
     # Add box falling
     y += 10
-    line["vertices"] = (line_vertices * [0.1, 1 / args.thickness]).tolist()
-    line["polygons"] = [line["vertices"]]
-    line["position"] = [0, y]
-    line["theta"] = 10  # °
-    line["velocity"] = [0, args.impact_velocity, 0]
-    rigid_bodies.append(line.copy())
+    box = generate_box_body(0.5, 0.5, [0, 0], 0, 100)
+    box["position"] = [0, y]
+    box["theta"] = 10  # °
+    box["velocity"] = [0, args.impact_velocity, 0]
+    rigid_bodies.append(box)
 
     # Add the walls around line stack
     y += 2

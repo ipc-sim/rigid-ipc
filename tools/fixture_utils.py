@@ -130,12 +130,12 @@ def create_2D_rotation_matrix(theta: float) -> numpy.ndarray:
 def generate_walls_body(hx: float, hy: float, center: numpy.ndarray,
                         thickness: float) -> dict:
     """Generate a rigid body dictionary for walls."""
+    assert (thickness > 0)
     # Inner vertices of the wall
     inner_vertices = generate_rectangle_vertices(hx, hy, center, 0)
 
     # Outer vertices of the wall
     diag_thickness = thickness / numpy.sin(numpy.pi / 4)
-    assert (abs(diag_thickness**2 - 2 * thickness**2) <= 1e-8)
     outer_vertices = inner_vertices + thickness * numpy.array(
         [[1, 1], [-1, 1], [-1, -1], [1, -1]])
 

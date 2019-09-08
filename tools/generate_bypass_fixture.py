@@ -33,54 +33,36 @@ def generate_scene(yvel, xpos) -> dict:
             "max_iterations": 1000
         },
         "rigid_body_problem": {
-            "coefficient_restitution": 1.0,
+            "coefficient_restitution":
+            1.0,
             "gravity": [0.0, DEFAULT_GRAVITY, 0.0],
-            "rigid_bodies": [
-                {
-                    "oriented": True,
-                    "vertices": [
-                        [-1, -1],
-                        [1, -1],
-                        [1, 1],
-                        [-1, 1]
-                    ],
-                    "edges": [
-                        [0, 1],
-                        [1, 2],
-                        [2, 3],
-                        [3, 0]
-                    ],
-                    "position": [xpos, 10],
-                    "theta": 0,
-                    "velocity": [0.0, yvel, 0.0],
-                    "is_dof_fixed": [False, False, False]
-                },
-                {
-                    "oriented": True,
-                    "vertices": [
-                        [-10, 0],
-                        [10, 0],
-                        [10, 0.1],
-                        [-10, 0.1]
-                    ],
-                    "edges": [
-                        [0, 1],
-                        [1, 2],
-                        [2, 3],
-                        [3, 0]
-                    ],
-                    "position": [0, 0],
-                    "velocity": [0.0, 0.0, 0.0],
-                    "is_dof_fixed": [True, True, True]
-                }
-            ]
+            "rigid_bodies": [{
+                "oriented": True,
+                "vertices": [[-1, -1], [1, -1], [1, 1], [-1, 1]],
+                "edges": [[0, 1], [1, 2], [2, 3], [3, 0]],
+                "position": [xpos, 10],
+                "theta": 0,
+                "velocity": [0.0, yvel, 0.0],
+                "is_dof_fixed": [False, False, False]
+            }, {
+                "oriented":
+                True,
+                "vertices": [[-10, 0], [10, 0], [10, 0.1], [-10, 0.1]],
+                "edges": [[0, 1], [1, 2], [2, 3], [3, 0]],
+                "position": [0, 0],
+                "velocity": [0.0, 0.0, 0.0],
+                "is_dof_fixed": [True, True, True]
+            }]
         }
     }
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--scene", type=int, required=True, help="0:pass 1:left 2:slower")
+    parser.add_argument("--scene",
+                        type=int,
+                        required=True,
+                        help="0:pass 1:left 2:slower")
     parser.add_argument("--out-path",
                         metavar="path/to/output.json",
                         type=pathlib.Path,
@@ -91,9 +73,8 @@ def main():
     if args.out_path is None:
         directory = (pathlib.Path(__file__).resolve().parents[1] / "fixtures" /
                      "bypass")
-        args.out_path = (
-            directory /
-            "bypass_case={:d}.json".format(args.scene))
+        args.out_path = (directory /
+                         "bypass_case={:d}.json".format(args.scene))
     args.out_path.parent.mkdir(parents=True, exist_ok=True)
 
     print_args(args)

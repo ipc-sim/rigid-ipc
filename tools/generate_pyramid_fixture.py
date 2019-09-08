@@ -15,34 +15,18 @@ def generate_fixture(args):
     fixture = generate_custom_fixture(args)
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
-    box_edges = generate_ngon_edges(4).tolist()
-
     # Add the ground
-    ground_box_vertices = [[10, 0], [-10, 0], [-10, -1], [10, -1]]
-    rigid_bodies.append({
-        "vertices": ground_box_vertices,
-        "polygons": [ground_box_vertices],
-        "edges": box_edges,
-        "oriented": False,
-        "is_dof_fixed": [True, True, True]
-    })
-
-    box_vertices = [[0, 0], [1, 0], [1, 1], [0, 1]]
+    rigid_bodies.append(generate_walls_body(10, 4, [0, 4], 0.1))
 
     # Add the pyramid
+    box = generate_box_body(0.5, 0.5, [0, 0], 0, 10)
     nrows = 5
     for i in range(nrows):
-        y = (1 + 1e-1) * i + 1e-1
+        y = (1 + 1e-1) * i + 0.6
         for j in range(nrows - i):
             x = (1 + 1e-1) * j - (1 + 1e-1) * (nrows - i) / 2
-            rigid_bodies.append({
-                "vertices": box_vertices,
-                "polygons": [box_vertices],
-                "edges": box_edges,
-                "position": [x, y],
-                "velocity": [0.0, 0.0, 0.0],
-                "is_dof_fixed": [False, False, False]
-            })
+            box["position"] = [x, y]
+            rigid_bodies.append(box.copy())
 
     return fixture
 

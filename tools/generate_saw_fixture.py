@@ -19,13 +19,9 @@ def generate_fixture(args):
     rigid_bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
     # Add the box
-    box_vertices = [[-1, 2], [0, 2], [0, 3], [-1, 3]]
-    rigid_bodies.append({
-        "vertices": box_vertices,
-        "polygons": [box_vertices],
-        "edges": generate_ngon_edges(4).tolist(),
-        "velocity": [1.0, -1.0, 0.0]
-    })
+    box = generate_box_body(0.5, 0.5, [-0.5, 2.5], 0, 10)
+    box["velocity"] = [1, -1, 0]
+    rigid_bodies.append(box)
 
     #  Add the saw
     num_teeth = 100
