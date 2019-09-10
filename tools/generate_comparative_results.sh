@@ -35,13 +35,15 @@ my_sbatch $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
 # Convert the fixture to use NCP
 for time_epsilon in 1e-16 0e0; do
     for update_type in "linearize" "g_gradient"; do
-        ncp_output_dir="$OUTPUT_DIR/NCP/time_epsilon=$time_epsilon/update_type=$update_type"
-        mkdir -p "$ncp_output_dir"
-        python $TOOLS_DIR/convert_fixture_to_ncp.py $OUTPUT_DIR/fixture.json \
-            --time-epsilon $time_epsilon --update-type $update_type \
-            --out-path $ncp_output_dir/fixture.json || exit 1
-        my_sbatch $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
-            $BUILD_DIR/FixingCollisions_ngui $ncp_output_dir/fixture.json \
-            $ncp_output_dir || exit 1
+        for lcp_solver in "lcp_gauss_seidel"; do
+            ncp_output_dir="$OUTPUT_DIR/NCP/time_epsilon=$time_epsilon/update_type=$update_type/lcp_solver=$lcp_solver"
+            mkdir -p "$ncp_output_dir"
+            python $TOOLS_DIR/convert_fixture_to_ncp.py $OUTPUT_DIR/fixture.json \
+                --time-epsilon $time_epsilon --update-type $update_type \
+                --lcp-solver $lcp_solver --out-path $ncp_output_dir/fixture.json || exit 1
+            my_sbatch $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
+                $BUILD_DIR/FixingCollisions_ngui $ncp_output_dir/fixture.json \
+                $ncp_output_dir || exit 1
+        done
     done
 done

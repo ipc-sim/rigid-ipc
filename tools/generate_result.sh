@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
-#SBATCH --time=5:00:00
+#SBATCH --time=10:00:00
 #SBATCH --mem=16GB
 #SBATCH --job-name=generate_results
 #SBATCH --mail-type=FAIL,TIME_LIMIT
