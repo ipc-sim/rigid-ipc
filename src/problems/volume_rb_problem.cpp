@@ -138,7 +138,11 @@ namespace opt {
                        Diff::DDouble1>(
                        v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
 
-            toi =  toi - Diff::DDouble1(constraint_.time_epsilon);
+            Diff::D1Vector2d avg_u = (u_i + alpha_ij * (u_j - u_i) - u_k);
+            Diff::DDouble1 avg_d = (avg_u).norm();
+
+            // toi =  toi - Diff::DDouble1(constraint_.time_epsilon);
+            toi = toi * (1.0 - constraint_.time_epsilon/avg_d);
             if (toi < 0) toi = Diff::DDouble1(0);
 
             Diff::DDouble1 vol_ij(0), vol_kl(0);
