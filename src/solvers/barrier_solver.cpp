@@ -101,6 +101,7 @@ namespace opt {
         barrier_problem_ptr->t = t;
 
         debug.str("");
+        debug_max_constraints = 0;
     }
 
     OptimizationResults BarrierSolver::step_solve()
@@ -122,7 +123,14 @@ namespace opt {
         inner_solver_ptr->t(t);
         inner_solver_ptr->m(m);
 
+        int num_constraints=0;
+        barrier_problem_ptr->eval_grad_B(barrier_problem_ptr->x0, num_constraints);
+        debug_max_constraints = std::max(debug_max_constraints, num_constraints);
+
         results = inner_solver.solve(*barrier_problem_ptr);
+
+//        double min_dist = barrier_problem_ptr->debug_min_distance(results.x);
+//        std::cout << fmt::format("GREP_ME,t,{},min_dist,{},num_constraints,{}", min_dist,num_constraints) << std::endl;
 
 #ifdef DEBUG_LINESEARCH
         Eigen::VectorXd xdiff = barrier_problem_ptr->x0 - results.x;
@@ -173,9 +181,19 @@ namespace opt {
 
         } while (m / t > e_b); // barrier_epsilon() > min_barrier_epsilon
 
+        int num_constraints = 0;
+        barrier_problem_ptr->eval_grad_B(barrier_problem_ptr->x0, num_constraints);
+        debug_max_constraints = std::max(debug_max_constraints, num_constraints);
+
         // make one last iteration with exactly eb
         t = m / e_b;
+        const double t_used = t;
         results = step_solve();
+        //
+
+        double min_dist = barrier_problem_ptr->debug_min_distance(results.x);
+        std::cout << fmt::format("GREP_ME,t,{},min_dist,{},num_constraints,{}", t_used , min_dist,debug_max_constraints) << std::endl;
+
 
 #ifdef DEBUG_LINESEARCH
         std::cout
@@ -188,7 +206,8 @@ namespace opt {
             << std::endl;
         std::cout << debug.str() << std::flush;
 #endif
-        spdlog::info("BARRIER_STATS num_outer_iterations={} {}",num_outer_iterations_, inner_solver_ptr->debug_stats());
+        spdlog::info("BARRIER_STATS,c,{},tinit,{},tinc,{},num_outer_iterations,{},{}",
+                     c, tinit, t_inc, num_outer_iterations_, inner_solver_ptr->debug_stats());
 
         return results;
     }
@@ -349,6 +368,7 @@ namespace opt {
         num_active_b = dgx.rows();
         return dgx.colwise().sum().transpose();
     }
+
 
     Multiprecision BarrierProblem::eval_mp_f(const Eigen::VectorXd& /*x*/)
     {

@@ -15,6 +15,7 @@ int main(int argc, char* argv[])
     struct {
         std::string input_json = "";
         std::string output_csv = "";
+        std::string header ="min_distance";
     } args;
 
     CLI::App app { "run headless simulation" };
@@ -26,6 +27,8 @@ int main(int argc, char* argv[])
     app.add_option("output_csv,-o,--outputh", args.output_csv,
            "CSV file for output.")
         ->required();
+    app.add_option("--header", args.header,
+           "use as name for header.");
 
     try {
         app.parse(argc, argv);
@@ -49,7 +52,7 @@ int main(int argc, char* argv[])
     auto& vtx_sequence = scene["animation"]["vertices_sequence"];
 
     std::stringstream csv;
-    csv << "it, min_distance\n";
+    csv << fmt::format("it, {}\n", args.header );
     for (size_t i = 0; i < vtx_sequence.size(); ++i) {
         auto& jv = vtx_sequence[i];
         Eigen::MatrixXd vertices, displacements;

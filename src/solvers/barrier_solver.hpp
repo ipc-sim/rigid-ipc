@@ -65,12 +65,11 @@ namespace opt {
         {
             return general_problem->debug_vertices_t0();
         }
-
+#endif
         double debug_min_distance(const Eigen::VectorXd& sigma) const override
         {
             return general_problem->debug_min_distance(sigma);
         }
-#endif
 
         IBarrierGeneralProblem* general_problem;
         Eigen::VectorXd x0;
@@ -79,6 +78,7 @@ namespace opt {
         double inner_solver_threshold;
 
         double t;
+
     };
 
     class BarrierSolver : public virtual IStateOptimizationSolver {
@@ -134,6 +134,7 @@ namespace opt {
         double e_b;
         double t_inc;
 
+         int debug_max_constraints;
     protected:
         IBarrierOptimizationSolver& get_inner_solver() const
         {

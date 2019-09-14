@@ -240,7 +240,7 @@ namespace opt {
     std::string NewtonSolver::debug_stats()
     {
         return fmt::format(
-            "total_newton_steps={} total_ls_steps={} count_fx={} count_grad={} count_hess={} count_ccd={}",
+            "total_newton_steps,{},total_ls_steps,{},count_fx,{},count_grad,{},count_hess,{},count_ccd,{}",
             debug_newton_iterations, debug_ls_iterations, debug_num_fx,
             debug_num_grad_fx, debug_num_hessian_fx, debug_num_collision_check);
     }

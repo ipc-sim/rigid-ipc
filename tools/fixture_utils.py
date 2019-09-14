@@ -12,6 +12,10 @@ DEFAULT_INITIAL_EPSILON = 1e-1
 DEFAULT_RESTITUTION_COEFFICIENT = -1
 DEFAULT_GRAVITY = [0.0, 0.0, 0.0]
 DEFAULT_NUM_STEPS = 1000
+DEFAULT_BARRIER_SOLVER_EB = 1e-6
+DEFAULT_BARRIER_SOLVER_C = 0.1
+DEFAULT_BARRIER_SOLVER_TINIT = 100
+DEFAULT_BARRIER_SOLVER_TINC = 100
 
 
 def generate_default_fixture() -> dict:
@@ -26,11 +30,11 @@ def generate_default_fixture() -> dict:
             "active_constraint_scale": 1.01
         },
         "barrier_solver": {
-            "e_b": 1e-6,
+            "e_b": DEFAULT_BARRIER_SOLVER_EB,
             "m": 1,
-            "t_init": 100,
-            "t_inc": 100,
-            "c": 0.1,
+            "t_init": DEFAULT_BARRIER_SOLVER_TINIT,
+            "t_inc": DEFAULT_BARRIER_SOLVER_TINC,
+            "c": DEFAULT_BARRIER_SOLVER_C,
             "inner_solver": "newton_solver"
         },
         "rigid_body_problem": {
@@ -50,6 +54,10 @@ def generate_custom_fixture(args: argparse.Namespace) -> dict:
     fixture["rigid_body_problem"]["gravity"] = (args.gravity + 3 * [0])[:3]
     fixture["rigid_body_problem"]["coefficient_restitution"] = (
         args.restitution_coeff)
+    fixture["barrier_solver"]["e_b"] = args.eb
+    fixture["barrier_solver"]["c"] = args.c
+    fixture["barrier_solver"]["t_init"] = args.tinit
+    fixture["barrier_solver"]["t_inc"] = args.tinc
     return fixture
 
 
@@ -60,7 +68,12 @@ def create_argument_parser(
         default_restitution_coefficient:
         float = DEFAULT_RESTITUTION_COEFFICIENT,
         default_gravity: list = DEFAULT_GRAVITY,
-        default_num_steps: int = DEFAULT_NUM_STEPS) -> argparse.ArgumentParser:
+        default_num_steps: int = DEFAULT_NUM_STEPS, 
+        default_barrier_solver_eb: float= DEFAULT_BARRIER_SOLVER_EB,
+        default_barrier_solver_c: float= DEFAULT_BARRIER_SOLVER_C,
+        default_barrier_solver_tinit: float= DEFAULT_BARRIER_SOLVER_TINIT,
+        default_barrier_solver_tinc: float= DEFAULT_BARRIER_SOLVER_TINC,
+        ) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--time-step",
                         type=float,
@@ -91,6 +104,14 @@ def create_argument_parser(
                         type=pathlib.Path,
                         default=None,
                         help="path to save the fixture")
+    parser.add_argument("--eb", type=float,
+                        default=default_barrier_solver_eb)
+    parser.add_argument("--c", type=float,
+                        default=default_barrier_solver_c)
+    parser.add_argument("--tinit", type=float,
+                        default=default_barrier_solver_tinit)
+    parser.add_argument("--tinc", type=float,
+                        default=default_barrier_solver_tinc)
     return parser
 
 

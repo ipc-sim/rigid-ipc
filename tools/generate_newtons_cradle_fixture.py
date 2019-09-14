@@ -69,6 +69,7 @@ def main():
                         action="store_false",
                         dest="rotated",
                         help="do not rotate alternating balls")
+   
     args = parser.parse_args()
 
     if args.out_path is None:
