@@ -92,7 +92,7 @@ def main(args=[]):
     imagedir.mkdir(parents=True, exist_ok=True)
 
     if args.frames is None:
-        args.frames = range(0, len(vertices_sequence), 10)
+        args.frames = range(0, len(vertices_sequence))
         if args.bbox is None:
             VS = np.array(vertices_sequence)
             mins = VS.min(axis=1).min(axis=0) - args.linewidth / args.scaling
