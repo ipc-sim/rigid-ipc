@@ -14,7 +14,7 @@ namespace opt {
     static const char* LCPSolverNames[] = { "LCP_GAUSS_SEIDEL", "LCP_MOSEK" };
 
     bool lcp_solve(const Eigen::VectorXd& gxi,
-        const Eigen::SparseMatrix<double>& jac_gxi,
+        const Eigen::MatrixXd& jac_gxi,
         const Eigen::MatrixXd& tilde_jac_gxi,
         const Eigen::VectorXd& tilde_b,
         const LCPSolver solver,
@@ -60,7 +60,7 @@ namespace opt {
     }
 
     bool lcp_gauss_seidel(const Eigen::VectorXd& gxi,
-        const Eigen::SparseMatrix<double>& jac_gxi,
+        const Eigen::MatrixXd& jac_gxi,
         const Eigen::MatrixXd& tilde_jac_gxi,
         const Eigen::VectorXd& tilde_b,
         Eigen::VectorXd& alpha)
@@ -172,7 +172,7 @@ namespace opt {
         igl::mosek::MosekData mosek_data;
         bool success = igl::mosek::mosek_quadprog(
             A, q, /*cf=*/0.0, A, lc, uc, lx, ux, mosek_data, x);
-
+        std::cout << "mosek_success=" << success << std::endl;
         return success;
     }
 #endif

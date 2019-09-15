@@ -23,12 +23,16 @@ namespace opt {
 
         virtual void eval_g(const Eigen::VectorXd& x,
             Eigen::VectorXd& gx,
-            Eigen::SparseMatrix<double>& gx_jacobian,
-            Eigen::VectorXi& gx_active) override;
+            Eigen::MatrixXd& gx_jacobian) override;
+
+        virtual void eval_g_normal(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
+            Eigen::MatrixXd& gx_jacobian) override;
+
 
         void eval_jac_g_core(const Eigen::VectorXd& x,
             const EdgeEdgeImpacts&,
-            Eigen::SparseMatrix<double>& jac_gx);
+            Eigen::MatrixXd& jac_gx);
 
         const Eigen::VectorXb& is_dof_fixed() override
         {

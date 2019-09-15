@@ -22,7 +22,7 @@ namespace opt {
     };
 
     bool lcp_solve(const Eigen::VectorXd& gxi,
-        const Eigen::SparseMatrix<double>& jac_gxi,
+        const Eigen::MatrixXd& jac_gxi,
         const Eigen::MatrixXd& tilde_jac_gxi, const Eigen::VectorXd& ci,
         const LCPSolver solver, Eigen::VectorXd& alpha);
 
@@ -34,7 +34,7 @@ namespace opt {
      *      s = q + N*(M * x + p)
      * */
     bool lcp_gauss_seidel(const Eigen::VectorXd& gxi,
-        const Eigen::SparseMatrix<double>& jac_gxi,
+        const Eigen::MatrixXd& jac_gxi,
         const Eigen::MatrixXd& tilde_jac_gxi, const Eigen::VectorXd& ci,
         Eigen::VectorXd& alpha);
 

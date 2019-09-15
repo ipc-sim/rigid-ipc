@@ -30,7 +30,7 @@ TEST_CASE("Volume Constraint", "[opt][ccd][Volume]")
     displacements.row(0) << 0.0, 0.0;
     displacements.row(1) << 0.0, 0.0;
 
-    Eigen::VectorXd v_actual, v_expected(16);
+    Eigen::VectorXd v_actual, v_expected;
 
     SECTION("Vertical Displ Small")
     {
@@ -38,8 +38,8 @@ TEST_CASE("Volume Constraint", "[opt][ccd][Volume]")
         vertices.row(3) << 0.0, 1.0;
         displacements.row(2) << 0.0, -0.6;
         displacements.row(3) << 0.0, -0.6;
-        v_expected << 0, 0, 0, 0, -0.000166667, -8.33333e-05, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0;
+        v_expected.resize(2);
+        v_expected <<  -0.000166667, -8.33333e-05;
     }
 
     SECTION("Vertical Displ Long")
@@ -49,8 +49,8 @@ TEST_CASE("Volume Constraint", "[opt][ccd][Volume]")
         displacements.row(2) << 0.0, -1.0;
         displacements.row(3) << 0.0, -1.0;
 
-        v_expected << 0, 0, 0, 0, -0.0005, -0.00025, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0;
+        v_expected.resize(4);
+        v_expected << -0.0005, -0.00025, 0.0, 0.0;
     }
 
     SECTION("Horizontal Displ Small")
@@ -59,8 +59,9 @@ TEST_CASE("Volume Constraint", "[opt][ccd][Volume]")
         vertices.row(3) << 0.3, 0.5;
         displacements.row(2) << 0.0, -0.6;
         displacements.row(3) << 0.0, -0.6;
-        v_expected << 0, 0, 0, 0, -0.000166667, -0.0600001, -0.000166667,
-            -0.0600001, 0, 0, 0, 0, 0, 0, 0, 0;
+        v_expected.resize(4);
+        v_expected <<  -0.000166667, -0.0600001, -0.000166667,
+            -0.0600001;
     }
 
     SECTION("Horizontal Displ Long")
@@ -69,22 +70,21 @@ TEST_CASE("Volume Constraint", "[opt][ccd][Volume]")
         vertices.row(3) << 0.3, 0.5;
         displacements.row(2) << 0.0, -1.0;
         displacements.row(3) << 0.0, -1.0;
-        v_expected << 0, 0, 0, 0, -0.0005, -0.3, -0.0005, -0.3, 0, 0, 0, 0, 0,
-            0, 0, 0;
+        v_expected.resize(4);
+        v_expected << -0.0005, -0.3, -0.0005, -0.3;
     }
 
     volume.initialize(vertices, edges, Eigen::VectorXi(), displacements);
     volume.compute_constraints(displacements, v_actual);
     CHECK((v_actual - v_expected).squaredNorm() < 1e-10);
 
-    Eigen::SparseMatrix<double> jac_actual_sparse;
-    Eigen::VectorXi active;
+    Eigen::MatrixXd jac_actual;
     volume.compute_constraints(
-        displacements, v_actual, jac_actual_sparse, active);
+        displacements, v_actual, jac_actual);
     CHECK((v_actual - v_expected).squaredNorm() < 1e-6);
 }
 
-TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
+TEST_CASE("Volume Constraint Gradient", "[opt][ccd][Volume][Gradient]")
 {
     ccd::opt::VolumeConstraint volume;
     volume.volume_epsilon = 1e-3;
@@ -143,11 +143,10 @@ TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
     volume.initialize(vertices, edges, Eigen::VectorXi(), displacements);
 
     using namespace ccd::opt;
-    Eigen::SparseMatrix<double> jac_actual_sparse;
+    Eigen::MatrixXd jac_actual;
     Eigen::VectorXd v_actual;
-    Eigen::VectorXi active;
     volume.compute_constraints(
-        displacements, v_actual, jac_actual_sparse, active);
+        displacements, v_actual, jac_actual);
 
 
     Eigen::MatrixXd approx_jac;
@@ -163,6 +162,6 @@ TEST_CASE("Volume Constraint Gradient Sparse", "[opt][ccd][Volume][Gradient]")
     ccd::flatten(x);
     ccd::finite_jacobian(x, f, approx_jac);
 
-    REQUIRE(approx_jac.rows() == jac_actual_sparse.rows());
-    CHECK((approx_jac - jac_actual_sparse.toDense()).norm() / approx_jac.norm() < 1e-6);
+    REQUIRE(approx_jac.rows() == jac_actual.rows());
+    CHECK((approx_jac - jac_actual).norm() / approx_jac.norm() < 1e-6);
 }

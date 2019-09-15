@@ -8,6 +8,7 @@
 #include <solvers/lcp_solver.hpp>
 #include <solvers/line_search.hpp>
 
+#include <constants.hpp>
 #include <logger.hpp>
 
 namespace ccd {
@@ -97,6 +98,18 @@ namespace opt {
 
     OptimizationResults NCPSolver::solve()
     {
+        auto results = solve(/*use_grad=*/false);
+        bool valid = true ; // !std::isnan(results.x.maxCoeff()) && !std::isinf(results.x.maxCoeff());
+        if (results.finished && valid) {
+            return results;
+        }
+        spdlog::info("fallback to use normals");
+        return solve(/*use_grad=*/false);
+    }
+
+    OptimizationResults NCPSolver::solve(const bool use_grad)
+    {
+        m_use_gradient = use_grad;
         init_solve();
         debug.str("");
 
@@ -107,16 +120,13 @@ namespace opt {
                 break;
             }
         }
+
         if (result.finished) {
             spdlog::debug("solver=ncp_solver action=solve status=success");
         } else {
             spdlog::error(
                 "solver=ncp_solver action=solve status=failed message='max_iterations reached' it={}",
                 num_outer_iterations_);
-//            std::cout << "DATA_START" << std::endl;
-//            std::cout << "it,gx.sum(),#g" << std::endl;
-//            std::cout << debug.str() << std::endl;
-//            std::cout << "DATA_END" << std::endl;
         }
 
         return result;
@@ -140,7 +150,11 @@ namespace opt {
 
         // 1. Solve assumming constraints are not violated
         xi = Ainv(b);
-        problem_ptr_->eval_g(xi, g_xi, jac_g_xi, g_active);
+        if (m_use_gradient) {
+            problem_ptr_->eval_g(xi, g_xi, jac_g_xi);
+        } else {
+            problem_ptr_->eval_g_normal(xi, g_xi, jac_g_xi);
+        }
 
         zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
 
@@ -172,8 +186,7 @@ namespace opt {
         }
 
         Eigen::VectorXd delta_i;
-
-        solve_lcp(xi, g_xi, jac_g_xi, g_active, delta_i, lambda_i);
+        solve_lcp(xi, g_xi, jac_g_xi, delta_i, lambda_i);
 
         double alpha = 1.0, alpha_prev = 1.0;
         double step_norm = (alpha * delta_i).norm();
@@ -212,7 +225,13 @@ namespace opt {
         }
 
         xi = xi + delta_i * alpha;
-        problem_ptr_->eval_g(xi, g_xi, jac_g_xi, g_active);
+
+        if (!m_use_gradient
+            || num_outer_iterations_ > Constants::NCP_FALLBACK_ITERATIONS) {
+            problem_ptr_->eval_g_normal(xi, g_xi, jac_g_xi);
+        } else {
+            problem_ptr_->eval_g(xi, g_xi, jac_g_xi);
+        }
 
         zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
         result.finished = false;
@@ -224,8 +243,7 @@ namespace opt {
 
     void NCPSolver::solve_lcp(const Eigen::VectorXd& xi,
         const Eigen::VectorXd& g_xi,
-        const Eigen::SparseMatrix<double>& jac_g_xi,
-        const Eigen::VectorXi& g_active,
+        const Eigen::MatrixXd& jac_g_xi,
         Eigen::VectorXd& delta_x,
         Eigen::VectorXd& lambda_i) const
     {
@@ -258,49 +276,14 @@ namespace opt {
         lambda_i.setZero();
 
         uint num_constraints = uint(g_xi.rows());
-        if (solve_for_active_cstr) {
-            uint num_active_constraints = uint(g_active.rows());
-            spdlog::trace(
-                "solver=ncp_solver it={} action=solve_ncp active_cstr={}/{}",
-                num_outer_iterations_, num_active_constraints, num_constraints);
-
-            // create lcp problem for ACTIVE constraints only
-            // ----------------------------------------------
-            Eigen::VectorXd g_xi_active;
-            igl::slice(g_xi, g_active, g_xi_active);
-            assert(g_xi_active.rows() == num_active_constraints);
-
-            Eigen::SparseMatrix<double> jac_g_xi_active;
-            igl::slice(jac_g_xi, g_active,
-                Eigen::VectorXi::LinSpaced(dof, 0, int(dof)), jac_g_xi_active);
-            assert(jac_g_xi_active.rows() == int(num_active_constraints));
-            assert(jac_g_xi_active.cols() == int(dof));
-
-            Eigen::MatrixXd M_active(dof, num_active_constraints);
-            for (uint ci = 0; ci < num_active_constraints; ++ci) {
-                M_active.col(ci) = Ainv(jac_g_xi_active.row(int(ci)));
-            }
-
-            Eigen::VectorXd alpha_i_active(num_active_constraints);
-            alpha_i_active.setZero();
-            lcp_solve(g_xi_active, jac_g_xi_active, M_active, p, lcp_solver,
-                alpha_i_active);
-
-            delta_x = M_active * alpha_i_active + p;
-
-            lambda_i.setZero();
-            igl::slice_into(alpha_i_active, g_active, lambda_i);
-
-        } else {
-            Eigen::MatrixXd M(dof, num_constraints);
-            for (uint ci = 0; ci < num_constraints; ++ci) {
-                assert(M.cols() > ci);
-                assert(uint(jac_g_xi.rows()) > ci);
-                M.col(ci) = Ainv(jac_g_xi.row(int(ci)));
-            }
-            lcp_solve(g_xi, jac_g_xi, M, p, lcp_solver, lambda_i);
-            delta_x = M * lambda_i + p;
+        Eigen::MatrixXd M(dof, num_constraints);
+        for (uint ci = 0; ci < num_constraints; ++ci) {
+            assert(M.cols() > ci);
+            assert(uint(jac_g_xi.rows()) > ci);
+            M.col(ci) = Ainv(jac_g_xi.row(int(ci)));
         }
+        lcp_solve(g_xi, jac_g_xi, M, p, lcp_solver, lambda_i);
+        delta_x = M * lambda_i + p;
     }
 
     Eigen::VectorXd NCPSolver::Ainv(const Eigen::VectorXd& x) const
@@ -319,25 +302,13 @@ namespace opt {
         return A * xi - (b + jac_g_xi.transpose() * lambda_i);
     }
 
-    //    void NCPSolver::eval_f(
-    //        const Eigen::MatrixXd& /*points*/, Eigen::VectorXd& /*fx*/)
-    //    {
-    //        // TODO!!!!
-    //    }
-
     void zero_out_fixed_dof(
-        const Eigen::VectorXb& is_fixed, Eigen::SparseMatrix<double>& jac)
+        const Eigen::VectorXb& is_fixed, Eigen::MatrixXd& jac)
     {
         assert(jac.cols() == is_fixed.rows());
-        int r, c;
-        for (int k = 0; k < jac.outerSize(); ++k) {
-            for (Eigen::SparseMatrix<double>::InnerIterator it(jac, k); it;
-                 ++it) {
-                r = it.row(); // row index
-                c = it.col(); // col index
-                if (is_fixed(c)) {
-                    jac.coeffRef(r, c) = 0.0;
-                }
+        for (int i = 0; i < is_fixed.rows(); ++i) {
+            if (is_fixed(i)) {
+                jac.col(i).setZero();
             }
         }
     }

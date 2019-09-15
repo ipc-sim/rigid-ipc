@@ -28,27 +28,47 @@ namespace opt {
             const EdgeEdgeImpacts& ee_impacts,
             Eigen::VectorXd& g_uk);
 
+//        void compute_constraints_jacobian(const Eigen::MatrixXd& Uk,
+//            const EdgeEdgeImpacts& ee_impacts,
+//            Eigen::SparseMatrix<double>& jac_uk);
+
         void compute_constraints_jacobian(const Eigen::MatrixXd& Uk,
             const EdgeEdgeImpacts& ee_impacts,
-            Eigen::SparseMatrix<double>& jac_uk);
+            Eigen::MatrixXd& jac_uk);
+
+        void compute_constraints_normals(const Eigen::MatrixXd& Uk,
+            const EdgeEdgeImpacts& ee_impacts,
+            Eigen::MatrixXd& jac_uk);
+
+
 
         void compute_constraints(const Eigen::MatrixXd& Uk,
             const EdgeEdgeImpacts& ee_impacts,
             Eigen::VectorXd& g_uk,
-            Eigen::SparseMatrix<double>& g_uk_jacobian,
-            Eigen::VectorXi& g_uk_active);
+            Eigen::MatrixXd& g_uk_jacobian);
+
+//        void compute_constraints(const Eigen::MatrixXd& Uk,
+//            const EdgeEdgeImpacts& ee_impacts,
+//            Eigen::VectorXd& g_uk,
+//            Eigen::SparseMatrix<double>& g_uk_jacobian,
+//            Eigen::VectorXi& g_uk_active);
+
 
         // This versions of the functions get their own ee_impacts;
         void compute_constraints(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk);
 
-        void compute_constraints_jacobian(
-            const Eigen::MatrixXd& Uk, Eigen::SparseMatrix<double>& jac_uk);
+//        void compute_constraints_jacobian(
+//            const Eigen::MatrixXd& Uk, Eigen::SparseMatrix<double>& jac_uk);
+
+//        void compute_constraints(const Eigen::MatrixXd& Uk,
+//            Eigen::VectorXd& g_uk,
+//            Eigen::SparseMatrix<double>& g_uk_jacobian,
+//            Eigen::VectorXi& g_uk_active);
 
         void compute_constraints(const Eigen::MatrixXd& Uk,
             Eigen::VectorXd& g_uk,
-            Eigen::SparseMatrix<double>& g_uk_jacobian,
-            Eigen::VectorXi& g_uk_active);
+            Eigen::MatrixXd& g_uk_jacobian);
 
         int number_of_constraints();
 

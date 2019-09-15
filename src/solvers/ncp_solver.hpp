@@ -41,10 +41,9 @@ namespace opt {
         void set_problem(INCPProblem& problem) ;
 
         OptimizationResults solve() override;
-        void init_solve() override;
+        OptimizationResults solve(const bool use_grad);
 
-//        OptimizationResults solve(IVolumeProblem& problem) ;
-//        void init(IVolumeProblem& problem);
+        void init_solve() override;
 
         void settings(const nlohmann::json& json) override;
         nlohmann::json settings() const override;
@@ -87,8 +86,9 @@ namespace opt {
         // -----------------------
         std::shared_ptr<Eigen::SparseLU<Eigen::SparseMatrix<double>>> Asolver;
         Eigen::VectorXd g_xi;
-        Eigen::VectorXi g_active;
-        Eigen::SparseMatrix<double> jac_g_xi;
+//        Eigen::VectorXi g_active;
+        Eigen::MatrixXd jac_g_xi;
+//        Eigen::SparseMatrix<double> jac_g_xi;
 
         // ----------------------
         // Optimization results
@@ -102,8 +102,7 @@ namespace opt {
 
         void solve_lcp(const Eigen::VectorXd& xi,
             const Eigen::VectorXd& gxi,
-            const Eigen::SparseMatrix<double>& jac_gxi,
-            const Eigen::VectorXi& gactive,
+            const Eigen::MatrixXd& jac_gxi,
             Eigen::VectorXd& delta_x,
             Eigen::VectorXd& lambda_i) const;
 
@@ -115,10 +114,11 @@ namespace opt {
 
         int num_outer_iterations_;
         std::string name_;
-
+        bool m_use_gradient=true;
         std::stringstream debug;
     };
+
     void zero_out_fixed_dof(
-        const Eigen::VectorXb& is_fixed, Eigen::SparseMatrix<double>& m);
+        const Eigen::VectorXb& is_fixed, Eigen::MatrixXd& jac);
 } // namespace opt
 } // namespace ccd

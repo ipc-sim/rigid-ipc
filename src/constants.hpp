@@ -27,6 +27,8 @@ namespace Constants {
     /// with
     static const double POINT_EDGE_SQ_DISTANCE_ZERO = 1E-20;
 
+    static const int NCP_FALLBACK_ITERATIONS = 20;
+
     // Used for debugging
     // --------------------------------------------------------
     /// \brief FINITE_DIFF_H spacing h of finite differences

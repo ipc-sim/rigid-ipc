@@ -137,5 +137,42 @@ namespace physics {
         return V;
     }
 
+    void RigidBodyAssembler::world_vertices_gradient(
+        const Eigen::VectorXd& sigmas,
+        Eigen::SparseMatrix<double>& grad_u) const
+    {
+        typedef Eigen::Triplet<double> M;
+        std::vector<M> triplets;
+
+        long num_vertices = m_body_vertex_id.back();
+        triplets.reserve(size_t(num_vertices) * 2);
+
+        grad_u.resize(int(num_vertices * 2), int(m_rbs.size()) * 3);
+        for (size_t i = 0; i < m_rbs.size(); ++i) {
+            auto& rb = m_rbs[i];
+            Eigen::Vector3d p_i = sigmas.segment(3 * int(i), 3);
+            Eigen::MatrixXd el_grad = rb.world_vertices_gradient(p_i);
+
+            long d = el_grad.rows() / 2;
+            // x-axis entries
+            for (int j = 0; j < d; ++j) {
+                for (int k = 0; k < el_grad.cols(); ++k) {
+                    triplets.push_back(M(int(m_body_vertex_id[i]) + j,
+                        int(3 * i) + k, el_grad(j, k)));
+                }
+            }
+            // y-axis entries
+            for (int j = 0; j < d; ++j) {
+                for (int k = 0; k < el_grad.cols(); ++k) {
+                    triplets.push_back(
+                        M(int(m_body_vertex_id[i] + num_vertices) + j,
+                            int(3 * i) + k, el_grad(d + j, k)));
+                }
+            }
+        }
+
+        grad_u.setFromTriplets(triplets.begin(), triplets.end());
+    }
+
 } // namespace physics
 } // namespace ccd

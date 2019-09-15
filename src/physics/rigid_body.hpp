@@ -81,6 +81,9 @@ namespace physics {
         Eigen::Matrix<T, 2, 1> world_vertex(
             const Eigen::Matrix<T, 3, 1>& position, const int vertex_idx) const;
 
+        Eigen::MatrixXd world_vertices_gradient(
+                    const Eigen::Vector3d& velocity) const;
+
         Eigen::MatrixXd world_vertices_gradient_exact(
             const Eigen::Vector3d& position) const;
         std::vector<Eigen::Matrix3d> world_vertices_hessian_exact(

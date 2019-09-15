@@ -35,13 +35,12 @@ namespace opt {
 
     void VolumeParticlesProblem::eval_g(const Eigen::VectorXd& xk,
         Eigen::VectorXd& g_uk,
-        Eigen::SparseMatrix<double>& g_uk_jacobian,
-        Eigen::VectorXi& g_uk_active)
+        Eigen::MatrixXd& g_uk_jacobian)
     {
         Eigen::MatrixXd uk = xk - vec_vertices_t0;
         ccd::unflatten(uk, 2);
 
-        constraint_.compute_constraints(uk, g_uk, g_uk_jacobian, g_uk_active);
+        constraint_.compute_constraints(uk, g_uk, g_uk_jacobian);
     }
 
 } // namespace opt

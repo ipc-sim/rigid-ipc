@@ -146,14 +146,11 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
 
         void eval_g(const Eigen::VectorXd& x,
             Eigen::VectorXd& gx,
-            Eigen::SparseMatrix<double>& gx_jacobian,
-            Eigen::VectorXi& gx_active) override
+            Eigen::MatrixXd& gx_jacobian) override
         {
             gx = eval_g(x);
+            gx_jacobian = eval_jac_g(x);
 
-            gx_jacobian = eval_jac_g(x).sparseView();
-            gx_active
-                = Eigen::VectorXi::LinSpaced(gx.rows(), 0, int(gx.rows()));
         }
         const Eigen::VectorXd& starting_point() override {
             return b;

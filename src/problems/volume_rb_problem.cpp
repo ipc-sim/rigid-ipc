@@ -27,35 +27,52 @@ namespace opt {
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
 
         Eigen::VectorXd g_uk;
-        constraint_.compute_constraints(uk,  g_uk);
+        constraint_.compute_constraints(uk, g_uk);
         return g_uk;
     }
 
     void VolumeRBProblem::eval_g(const Eigen::VectorXd& sigma,
         Eigen::VectorXd& g_uk,
-        Eigen::SparseMatrix<double>& g_uk_jacobian,
-        Eigen::VectorXi& g_uk_active)
+        Eigen::MatrixXd& g_uk_jacobian)
     {
         Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         auto ee_impacts = constraint_.get_ee_collision_set(uk);
 
         constraint_.compute_constraints(uk, ee_impacts, g_uk);
-        constraint_.dense_indices(ee_impacts, g_uk_active);
         eval_jac_g_core(sigma, ee_impacts, g_uk_jacobian);
     }
 
+    void VolumeRBProblem::eval_g_normal(const Eigen::VectorXd& sigma,
+        Eigen::VectorXd& g_uk,
+        Eigen::MatrixXd& g_uk_jacobian)
+    {
+        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
+        auto ee_impacts = constraint_.get_ee_collision_set(uk);
+
+        constraint_.compute_constraints(uk, ee_impacts, g_uk);
+
+        Eigen::SparseMatrix<double> jac_xk_sigma;
+                m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+
+        Eigen::MatrixXd jac_g_uk;
+        constraint_.compute_constraints_normals(uk, ee_impacts, jac_g_uk);
+
+        g_uk_jacobian = jac_g_uk * jac_xk_sigma;
+    }
+
+
+
     void VolumeRBProblem::eval_jac_g_core(const Eigen::VectorXd& sigma,
         const EdgeEdgeImpacts& ee_impacts,
-        Eigen::SparseMatrix<double>& jac_gx)
+        Eigen::MatrixXd& jac_gx)
     {
         typedef AutodiffType<6> Diff;
         Diff::activate();
 
-        int num_edges = m_assembler.num_edges();
-
-        typedef Eigen::Triplet<double> M;
-        std::vector<M> triplets;
+        jac_gx.resize(int(ee_impacts.size()) * 2, int(sigma.size()));
+        jac_gx.setZero();
 
         for (size_t i = 0; i < ee_impacts.size(); ++i) {
             auto& ee_impact = ee_impacts[i];
@@ -142,8 +159,9 @@ namespace opt {
             Diff::DDouble1 avg_d = (avg_u).norm();
 
             // toi =  toi - Diff::DDouble1(constraint_.time_epsilon);
-            toi = toi * (1.0 - constraint_.time_epsilon/avg_d);
-            if (toi < 0) toi = Diff::DDouble1(0);
+            toi = toi * (1.0 - constraint_.time_epsilon / avg_d);
+            if (toi < 0)
+                toi = Diff::DDouble1(0);
 
             Diff::DDouble1 vol_ij(0), vol_kl(0);
             if (success) {
@@ -156,30 +174,21 @@ namespace opt {
                         v_k, v_l, u_k, u_l, toi, alpha_kl,
                         constraint_.volume_epsilon);
             }
-            long c_ij
-                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = get_constraint_index(
-                ee_impact, /*impacted=*/false, num_edges);
+            long c_ij = 2 * int(i) + 0;
+            long c_kl = 2 * int(i) + 1;
 
             Eigen::VectorXd gradient_ij = vol_ij.getGradient();
             Eigen::VectorXd gradient_kl = vol_kl.getGradient();
 
             // 3 * rbc.vertex_body_id + dim
-            for (size_t dim = 0; dim < 3; dim++) {
-                triplets.push_back(
-                    M(int(c_ij), 3 * body_ij_id + dim, gradient_ij(dim)));
-                triplets.push_back(
-                    M(int(c_ij), 3 * body_kl_id + dim, gradient_ij(3 + dim)));
+            for (int dim = 0; dim < 3; dim++) {
+                jac_gx(int(c_ij), 3 * body_ij_id + dim) = gradient_ij(dim);
+                jac_gx(int(c_ij), 3 * body_kl_id + dim) = gradient_ij(3 + dim);
 
-                triplets.push_back(
-                    M(int(c_kl), 3 * body_ij_id + dim, gradient_kl(dim)));
-                triplets.push_back(
-                    M(int(c_kl), 3 * body_kl_id + dim, gradient_kl(3 + dim)));
+                jac_gx(int(c_kl), 3 * body_ij_id + dim) = gradient_kl(dim);
+                jac_gx(int(c_kl), 3 * body_kl_id + dim) = gradient_kl(3 + dim);
             }
         }
-        const long num_constr = get_constraints_size(num_edges);
-        jac_gx.resize(int(num_constr), int(sigma.size()));
-        jac_gx.setFromTriplets(triplets.begin(), triplets.end());
     }
 
 } // namespace opt

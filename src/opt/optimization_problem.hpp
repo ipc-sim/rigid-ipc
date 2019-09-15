@@ -43,7 +43,6 @@ namespace opt {
         {
             throw NotImplementedError("eval_mp_f");
         }
-
     };
 
     /// Defines  optimization problems of the form
@@ -78,9 +77,21 @@ namespace opt {
         virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) = 0;
         virtual void eval_g(const Eigen::VectorXd& x,
             Eigen::VectorXd& gx,
-            Eigen::SparseMatrix<double>& gx_jacobian,
-            Eigen::VectorXi& gx_active)
+            Eigen::MatrixXd& gx_jacobian)
             = 0;
+
+        virtual void eval_g_normal(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
+            Eigen::MatrixXd& gx_jacobian)
+        {
+            throw NotImplementedError("eval_g_normal");
+        };
+
+        //        virtual void eval_g(const Eigen::VectorXd& x,
+        //            Eigen::VectorXd& gx,
+        //            Eigen::SparseMatrix<double>& gx_jacobian,
+        //            Eigen::VectorXi& gx_active)
+        //            = 0;
 
         virtual const Eigen::VectorXb& is_dof_fixed() = 0;
     };
@@ -133,8 +144,7 @@ namespace opt {
             throw NotImplementedError("debug_vertices_t0");
         }
 #endif
-        virtual double debug_min_distance(
-            const Eigen::VectorXd& sigma) const
+        virtual double debug_min_distance(const Eigen::VectorXd& sigma) const
         {
             throw NotImplementedError("debug_min_distance");
         }
@@ -177,15 +187,15 @@ namespace opt {
         }
 
 #endif
-        virtual double debug_min_distance(
-            const Eigen::VectorXd& sigma) const
+        virtual double debug_min_distance(const Eigen::VectorXd& sigma) const
         {
             throw NotImplementedError("debug_min_distance");
         }
 
         virtual double get_termination_threshold() const = 0;
         virtual Eigen::VectorXd eval_grad_E(const Eigen::VectorXd& xk) = 0;
-        virtual Eigen::VectorXd eval_grad_B(const Eigen::VectorXd& xk, int&) = 0;
+        virtual Eigen::VectorXd eval_grad_B(const Eigen::VectorXd& xk, int&)
+            = 0;
     };
 
     /// Helper Functions for checking finite differences

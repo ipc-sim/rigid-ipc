@@ -23,8 +23,7 @@ namespace opt {
 
         virtual void eval_g(const Eigen::VectorXd& x,
             Eigen::VectorXd& gx,
-            Eigen::SparseMatrix<double>& gx_jacobian,
-            Eigen::VectorXi& gx_active) override;
+            Eigen::MatrixXd& gx_jacobian) override;
 
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
 

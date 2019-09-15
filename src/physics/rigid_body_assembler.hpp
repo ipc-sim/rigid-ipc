@@ -43,6 +43,9 @@ namespace physics {
 
         Eigen::MatrixXd world_velocities() const;
 
+        void world_vertices_gradient(const Eigen::VectorXd& positions,
+                    Eigen::SparseMatrix<double>& grad) const;
+
         void global_to_local(const int global_vertex_id,
             int& rigid_body_id,
             int& local_vertex_id);

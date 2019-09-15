@@ -100,9 +100,26 @@ namespace physics {
         return gradtheta_R;
     }
 
+    Eigen::MatrixXd RigidBody::world_vertices_gradient(
+        const Eigen::Vector3d& sigma) const
+    {
+        typedef AutodiffType<3> Diff;
+        Diff::activate();
+
+        Diff::D1Vector3d dsigma = Diff::d1vars(0, sigma);
+        Diff::D1Vector3d dpos = dsigma;
+        dpos(2) /=r_max;
+
+        Diff::D1MatrixXd dx = world_vertices<Diff::DDouble1>(dpos);
+
+        flatten<Diff::DDouble1>(dx);
+        return Diff::get_gradient(dx);
+    }
+
     Eigen::MatrixXd RigidBody::world_vertices_gradient_exact(
         const Eigen::Vector3d& _position) const
     {
+
         /// For a single vertice ri, gradient is
         /// [[1,0,−ri_x * sin(\theta) − ri_v * cos(\theta)],
         ///  [0,1, ri_x * cos(\theta) − ri_v * sin(\theta)]]
