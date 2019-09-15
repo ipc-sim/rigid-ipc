@@ -98,8 +98,8 @@ namespace opt {
 
     OptimizationResults NCPSolver::solve()
     {
-        auto results = solve(/*use_grad=*/false);
-        bool valid = true ; // !std::isnan(results.x.maxCoeff()) && !std::isinf(results.x.maxCoeff());
+        auto results = solve(/*use_grad=*/true);
+        bool valid = !std::isnan(results.x.maxCoeff()) && !std::isinf(results.x.maxCoeff());
         if (results.finished && valid) {
             return results;
         }
@@ -226,6 +226,9 @@ namespace opt {
 
         xi = xi + delta_i * alpha;
 
+        if (num_outer_iterations_ == Constants::NCP_FALLBACK_ITERATIONS){
+            spdlog::warn("starting to use normal instead of gradients");
+        }
         if (!m_use_gradient
             || num_outer_iterations_ > Constants::NCP_FALLBACK_ITERATIONS) {
             problem_ptr_->eval_g_normal(xi, g_xi, jac_g_xi);
