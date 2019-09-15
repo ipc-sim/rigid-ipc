@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
     auto& vtx_sequence = scene["animation"]["vertices_sequence"];
 
     std::stringstream csv;
+    int collision_steps = 0;
     for (size_t i = 0; i < vtx_sequence.size() - 1; ++i) {
         auto& jv = vtx_sequence[i];
         auto& jv2 = vtx_sequence[i + 1];
@@ -60,8 +61,9 @@ int main(int argc, char* argv[])
         if (ev_impacts.size() != 0) {
             std::cout << args.input_json << ": step " << i << " failed"
                       << std::endl;
-            return 0;
+            collision_steps+=1;
         }
-        double min_distance = -1;
+
     }
+    std::cout << "collision_steps = " << collision_steps << std::endl;
 }
