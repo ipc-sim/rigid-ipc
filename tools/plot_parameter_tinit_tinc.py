@@ -38,7 +38,7 @@ def plot(data, output, metric, scale=1):
                             marker=dict(color=data[:, col[i]], cmin=Nmin, cmax=Nmax, colorbar=dict(thickness=20), colorscale='Viridis')
                             # textposition="bottom center"
                             ), row=1, col=i+1)
-        xaxis=dict(title="<b>Parameter t0</b>",
+        xaxis=dict(title="<b>Parameter <i>t</i><sub>0</sub></b>",
                    exponentformat='power', type="log", nticks=4)
         yaxis=dict(exponentformat='power', type="log", nticks=4)
         if i!=0:

@@ -7,8 +7,10 @@ import plotly.graph_objs as go
 import plotly.offline as plotly
 
 # root = "/beegfs/work/panozzo/fixing_collisions/paper-results/"
-root = pathlib.Path(
+root =  pathlib.Path(
     "/Users/zachary/research/fixing-collisions/hpc-results/paper-results")
+# root = pathlib.Path(
+#     "/Users/pancha/Development/hpc/paper-results/")
 
 missing_file_dis = float('nan')
 
@@ -34,7 +36,7 @@ scenes = {
 }
 assert len(scenes) == 18
 
-methods = {"Box2D": ["all"], "STIV-NCP": ["ncp-results"], "Ours": ["all"]}
+methods = {"Box2D": ["all",], "STIV-NCP": ["ncp-results",], "Ours": ["all",]}
 
 colors = {"Box2D": "#e67e22", "STIV-NCP": "#3498db", "Ours": "#2ecc71"}
 
@@ -78,7 +80,7 @@ def run(cor, time_step):
                     continue
                 file_data = np.genfromtxt(csv_file, delimiter=",")
                 data[p_name] = np.nanmin(file_data[:, 1])
-
+            
     return res
 
 

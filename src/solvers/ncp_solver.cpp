@@ -224,6 +224,15 @@ namespace opt {
             }
         }
 
+        while ((delta_i * alpha).norm() > 1e-10){
+            Eigen::VectorXd x_next = xi + delta_i * alpha;
+            Eigen::VectorXd g_next = problem_ptr_->eval_g(x_next);
+            if (g_next.sum() > g_xi.sum()){
+                break;
+            }
+            alpha = alpha / 2.0;
+        }
+
         xi = xi + delta_i * alpha;
 
         if (num_outer_iterations_ == Constants::NCP_FALLBACK_ITERATIONS){
