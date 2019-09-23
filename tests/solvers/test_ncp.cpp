@@ -150,11 +150,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         {
             gx = eval_g(x);
             gx_jacobian = eval_jac_g(x);
-
         }
-        const Eigen::VectorXd& starting_point() override {
-            return b;
-        }
+        const Eigen::VectorXd& starting_point() override { return b; }
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
 
         virtual const int& num_vars() override { return NUM_VARS; }
@@ -174,7 +171,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
     solver.do_line_search = false;
     solver.solve_for_active_cstr = false;
     solver.update_type = NcpUpdate::LINEARIZED;
-    solver.lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL;
+    // solver.lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL;
+    solver.lcp_solver = LCPSolver::LCP_NEWTON;
 
     bool success = solver.solve_ncp(A, b, problem, x, alpha);
 

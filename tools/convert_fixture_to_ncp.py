@@ -5,12 +5,12 @@ import pathlib
 
 from fixture_utils import *
 
-DEFAULT_NCP_TIME_EPSILON = 1e-16  # or 0
-DEFAULT_NCP_UPDATE_TYPE = "linearize"  # linearize or g_gradient
-DEFAULT_LCP_SOLVER = "lcp_mosek"  # linearize or g_gradient
+DEFAULT_NCP_TIME_EPSILON = 1e-4  # or 0
+DEFAULT_NCP_UPDATE_TYPE = "g_gradient"  # linearize or g_gradient
+DEFAULT_LCP_SOLVER = "lcp_newton"
 
 NCP_UPDATE_TYPES = ["linearize", "g_gradient"]
-LCP_SOLVERS = ["lcp_gauss_seidel", "lcp_mosek"]
+LCP_SOLVERS = ["lcp_gauss_seidel", "lcp_mosek", "lcp_newton"]
 
 
 def main():

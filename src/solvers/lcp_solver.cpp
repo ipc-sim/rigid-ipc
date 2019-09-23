@@ -11,7 +11,8 @@
 namespace ccd {
 namespace opt {
 
-    static const char* LCPSolverNames[] = { "LCP_GAUSS_SEIDEL", "LCP_MOSEK" };
+    static const char* LCPSolverNames[]
+        = { "LCP_GAUSS_SEIDEL", "LCP_MOSEK", "LCP_NEWTON" };
 
     bool lcp_solve(const Eigen::VectorXd& gxi,
         const Eigen::MatrixXd& jac_gxi,
@@ -26,16 +27,20 @@ namespace opt {
             success
                 = lcp_gauss_seidel(gxi, jac_gxi, tilde_jac_gxi, tilde_b, alpha);
             break;
-#if BUILD_WITH_MOSEK
         case LCP_MOSEK:
+#if BUILD_WITH_MOSEK
             //  s = jac_gxi * (tilde_jac_gxi * alpha + tilde_b) + gx
-            //  s = jac_gxi * tilde_jac_gxi * alpha + (jac_gxi* tilde_b + gxi)
+            //  s = jac_gxi * tilde_jac_gxi * alpha + jac_gxi * tilde_b + gxi
             success = lcp_mosek(
                 jac_gxi * tilde_jac_gxi, jac_gxi * tilde_b + gxi, alpha);
             break;
 #else
             throw NotImplementedError("Mosek is not loaded");
 #endif
+        case LCP_NEWTON:
+            success = lcp_newton(
+                jac_gxi * tilde_jac_gxi, jac_gxi * tilde_b + gxi, alpha);
+            break;
         }
 
         Eigen::VectorXd s
@@ -59,15 +64,20 @@ namespace opt {
         return sqrt(fb);
     }
 
-    bool lcp_gauss_seidel(const Eigen::VectorXd& gxi,
-        const Eigen::MatrixXd& jac_gxi,
-        const Eigen::MatrixXd& tilde_jac_gxi,
-        const Eigen::VectorXd& tilde_b,
+    bool lcp_gauss_seidel(const Eigen::VectorXd& gxi, // q
+        const Eigen::MatrixXd& jac_gxi,               // N
+        const Eigen::MatrixXd& tilde_jac_gxi,         // M
+        const Eigen::VectorXd& tilde_b,               // p
         Eigen::VectorXd& alpha)
     {
         // LCP Problem:
-        //      s = q + N*(M * x + p)
-        //      0 <= x \perp s >=0
+        //      s = q + N (Mx + p)
+        //      0 ≤ x ⟂ s ≥ 0
+        // where
+        //      q = g(xᵢ)
+        //      N = ∇g(xᵢ)
+        //      M = Ñ
+        //      q = b̃
 
         const long num_constraints = gxi.rows();
         const long dof = tilde_b.rows();
@@ -110,13 +120,13 @@ namespace opt {
                 // constant in the GS iteration
                 double dividend
                     = jac_gxi.row(int(ci)).dot(tilde_jac_gxi.col(int(ci)));
-                double thr = std::abs(dividend)/std::max(std::abs(dividend), std::abs(ndk));
+                double thr = std::abs(dividend)
+                    / std::max(std::abs(dividend), std::abs(ndk));
                 if (thr > 1e-12) {
                     alpha(int(ci)) = -ndk / dividend;
                 } else {
                     alpha(int(ci)) = 0.0;
                 }
-
             }
             Eigen::VectorXd s
                 = jac_gxi * (tilde_jac_gxi * alpha + tilde_b) + gxi;
@@ -143,18 +153,18 @@ namespace opt {
         const Eigen::MatrixXd& M, const Eigen::VectorXd& q, Eigen::VectorXd& x)
     {
         // LCP Problem:
-        //      s = (M * x + q)
-        //      0 <= x \perp s >=0
-        // Equivalent EQ porblem:
-        //      Min  x^T M x + x^T q
-        //      s.t  (Mx + q) >= 0 ----> -q <= Mx <= inf
-        //                  x >= 0 ----> 0 <= x <= inf
+        //      s = Mx + q
+        //      0 ≤ x ⟂ s ≥ 0
+        // Equivalent QP:
+        //      min   xᵀ M x + xᵀq
+        //      s.t.  (Mx + q) ≥ 0 → -q ≤ Mx
+        //                   x ≥ 0 →  0 ≤ x
+        //
 
-        //
-        // Minimize: 1/2 * x^T * Q * x + c^T * x + cf
-        //
-        // Subject to: lc ≤ Ax ≤ uc
-        //             lx ≤ x ≤ ux
+        // Standard QP formulation:
+        //      min   1/2 * x^T * Q * x + c^T * x + cf
+        //      s.t.  lc ≤ Ax ≤ uc
+        //            lx ≤  x ≤ ux
         const int x_dof = int(x.rows());
         const int q_dof = int(q.rows());
         assert(M.cols() == x_dof);
