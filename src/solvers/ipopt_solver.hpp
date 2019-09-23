@@ -242,6 +242,5 @@ namespace opt {
     };
 
 } // namespace opt
-
 } // namespace ccd
 #endif

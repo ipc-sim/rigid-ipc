@@ -1,3 +1,4 @@
+#ifdef BUILD_WITH_NLOPT
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -9,7 +10,8 @@
 /**
  * @brief \f$\min \frac{1}{2}x^Tx\f$
  */
-double test_func(const std::vector<double>& x, std::vector<double>& grad,
+double test_func(const std::vector<double>& x,
+    std::vector<double>& grad,
     void* /* my_func_data */)
 {
     Eigen::VectorXd X
@@ -40,3 +42,4 @@ TEST_CASE("Simple tests of NLOPT", "[opt][nlopt]")
     CHECK(x[0] == Approx(lb[0]).margin(1e-8));
     CHECK(minf == Approx(lb[0] * lb[0] / 2).margin(1e-8));
 }
+#endif

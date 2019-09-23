@@ -14,8 +14,9 @@ option(BUILD_UNIT_TESTS         "Build unit-tests"     ON)
 option(BUILD_SCRIPTS            "Build scripts"        ON)
 option(ENABLE_DERIVATIVE_CHECK  "Check Derivatives"    ON)
 option(ENABLE_PROFILING         "Profile Functions"    ON)
+option(ENABLE_NLOPT             "Enable NLopt Library" OFF)
 option(ENABLE_IPOPT             "Enable Ipopt Library" OFF)
-option(ENABLE_OSQP              "Enable OSQP Library"  ON)
+option(ENABLE_OSQP              "Enable OSQP Library"  OFF)
 option(ENABLE_MOSEK             "Enable Mosek Library" OFF)
 option(BUILD_COMPARISONS        "Build comparisons"    ON)
 option(CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
@@ -221,9 +222,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
 # Json Parser
 target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
 
-# NLopt
-target_link_libraries(${PROJECT_NAME} PUBLIC nlopt::nlopt)
-
 # Logger
 target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog)
 
@@ -235,6 +233,12 @@ target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog)
 #target_include_directories(${PROJECT_NAME} PUBLIC ${GMP_INCLUDE_DIRS})
 #target_link_libraries(${PROJECT_NAME} PUBLIC ${GMP_LIBRARIES})
 #
+
+# NLopt
+if(ENABLE_NLOPT)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DBUILD_WITH_NLOPT)
+    target_link_libraries(${PROJECT_NAME} PUBLIC nlopt::nlopt)
+endif()
 
 # Ipopt
 if(ENABLE_IPOPT)

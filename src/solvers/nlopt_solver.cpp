@@ -1,4 +1,5 @@
 // Solve a optimization problem with NLopt.
+#ifdef BUILD_WITH_NLOPT
 #include "nlopt_solver.hpp"
 
 #include <utils/not_implemented_error.hpp>
@@ -63,7 +64,8 @@ namespace opt {
         const std::vector<double>& x, std::vector<double>& grad, void* data)
     {
         assert(data != nullptr);
-        IConstraintedProblem* problem = static_cast<IConstraintedProblem*>(data);
+        IConstraintedProblem* problem
+            = static_cast<IConstraintedProblem*>(data);
 
         const Eigen::VectorXd X
             = Eigen::Map<const Eigen::VectorXd>(x.data(), problem->num_vars());
@@ -88,7 +90,8 @@ namespace opt {
         void* data)
     {
         assert(data); // Need data to compute volumes
-        IConstraintedProblem* problem = static_cast<IConstraintedProblem*>(data);
+        IConstraintedProblem* problem
+            = static_cast<IConstraintedProblem*>(data);
 
         const Eigen::MatrixXd X = Eigen::Map<const Eigen::VectorXd>(x, n);
         Eigen::VectorXd gx = problem->eval_g(X);
@@ -139,3 +142,4 @@ namespace opt {
 
 } // namespace opt
 } // namespace ccd
+#endif

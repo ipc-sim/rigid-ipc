@@ -1,4 +1,5 @@
 /// Solve a optimization problem with NLopt.
+#ifdef BUILD_WITH_NLOPT
 #pragma once
 
 #include <nlopt.hpp>
@@ -73,3 +74,4 @@ namespace opt {
 
 } // namespace opt
 } // namespace ccd
+#endif

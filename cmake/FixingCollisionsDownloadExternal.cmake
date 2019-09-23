@@ -73,10 +73,9 @@ function(download_json)
     )
 endfunction()
 
-
 function(download_cli11)
     custom_download_project(cli11
-        URL     https://github.com/CLIUtils/CLI11/archive/v1.6.1.tar.gz
-        URL_MD5 48ef97262adb0b47a2f0a7edbda6e2aa
+        GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+        GIT_TAG        8ecce8fd2c49f64c80e5757cb12d2fd1fa62f242
     )
 endfunction()
