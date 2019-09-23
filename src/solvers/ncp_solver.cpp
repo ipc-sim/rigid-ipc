@@ -20,7 +20,8 @@ namespace opt {
             { NcpUpdate::G_GRADIENT, "g_gradient" } })
 
     NLOHMANN_JSON_SERIALIZE_ENUM(LCPSolver,
-        { { LCPSolver::LCP_MOSEK, "lcp_mosek" },
+        { { LCPSolver::LCP_NEWTON, "lcp_newton" },
+            { LCPSolver::LCP_MOSEK, "lcp_mosek" },
             { LCPSolver::LCP_GAUSS_SEIDEL, "lcp_gauss_seidel" } })
 
     NCPSolver::~NCPSolver() {}
@@ -99,7 +100,7 @@ namespace opt {
     OptimizationResults NCPSolver::solve()
     {
         auto results = solve(/*use_grad=*/true);
-        bool valid = !std::isnan(results.x.maxCoeff()) && !std::isinf(results.x.maxCoeff());
+        bool valid = std::isfinite(results.x.maxCoeff());
         if (results.finished && valid) {
             return results;
         }
@@ -224,10 +225,10 @@ namespace opt {
             }
         }
 
-        while ((delta_i * alpha).norm() > 1e-10){
+        while ((delta_i * alpha).norm() > 1e-10) {
             Eigen::VectorXd x_next = xi + delta_i * alpha;
             Eigen::VectorXd g_next = problem_ptr_->eval_g(x_next);
-            if (g_next.sum() > g_xi.sum()){
+            if (g_next.sum() > g_xi.sum()) {
                 break;
             }
             alpha = alpha / 2.0;
@@ -235,7 +236,7 @@ namespace opt {
 
         xi = xi + delta_i * alpha;
 
-        if (num_outer_iterations_ == Constants::NCP_FALLBACK_ITERATIONS){
+        if (num_outer_iterations_ == Constants::NCP_FALLBACK_ITERATIONS) {
             spdlog::warn("starting to use normal instead of gradients");
         }
         if (!m_use_gradient
@@ -259,29 +260,31 @@ namespace opt {
         Eigen::VectorXd& delta_x,
         Eigen::VectorXd& lambda_i) const
     {
-        // 2.1 Linearize the problem and solve for \alpha
-        // Linearization:
-        //      A x_{i+1} = b + jac_g(x_i)^T \lambda
-        //      0 <= \alpha_i \perp g(x_i) + jac_g(x_i) delta_x >=0
+        // 2.1 Linearize the problem and solve for primal variables (xᵢ₊₁) and
+        // dual variables (λᵢ) Linearization:
+        //      A xᵢ₊₁ = b + ∇g(xᵢ)ᵀ λᵢ
+        //      0 ≤ λᵢ ⟂ g(xᵢ) + ∇g(xᵢ) Δx ≥ 0
         // Update:
-        //      x_{i+1} = x_{i} + delta_x
-        // Delta x:
-        //      a) delta_x = A^{-1} jac_x(x_i)^T \alpha_i
-        //      b) delta_x = A^{-1} jac_x(x_i)^T \alpha_i + A^{-1}b - x_i
+        //      xᵢ₊₁ = xᵢ + Δx
+        // Δx:
+        //      g_gradient update) Δx = A⁻¹ [∇g(xᵢ)]ᵀ λᵢ
+        //      linearized update) Δx = A⁻¹ [∇g(xᵢ)]ᵀ λᵢ + A⁻¹b - xᵢ
         //
         // We want to take our problem to the form
-        //      s = q + N [M alpha + p]
-        //      0 <= alpha \perp s >=0
-        // clang-format off
-        //      s = ...q...+ ....N......[...........M........ \alpha   + ......p......]
-        //      s = g(x_i) + jac_g(x_i) [ A^{-1} jac_x(x_i)^T \alpha_i + A^{-1}b - x_i]
-        // clang-format on
+        //      s = q + N (Mλᵢ + p)
+        //      0 ≤ λᵢ ⟂ s ≥ 0
+        // where
+        //      q = g(xᵢ)
+        //      N = ∇g(xᵢ)
+        //      M = A⁻¹ [∇g(xᵢ)]ᵀ
+        //      p = Δx - A⁻¹ [∇g(xᵢ)]ᵀ λᵢ
         uint dof = uint(xi.rows());
 
+        // p
         Eigen::VectorXd p(dof);
         if (update_type == NcpUpdate::G_GRADIENT) {
             p.setZero();
-        } else {
+        } else { // update_type == NcpUpdate::LINEARIZED
             p = Ainv(b) - xi;
         }
 
@@ -289,12 +292,16 @@ namespace opt {
 
         uint num_constraints = uint(g_xi.rows());
         Eigen::MatrixXd M(dof, num_constraints);
+        // Compute M = A⁻¹ [∇g(xᵢ)]ᵀ as a series of linear system solves
         for (uint ci = 0; ci < num_constraints; ++ci) {
             assert(M.cols() > ci);
             assert(uint(jac_g_xi.rows()) > ci);
             M.col(ci) = Ainv(jac_g_xi.row(int(ci)));
         }
+
+        // lcp_solve(q, N, M, p)
         lcp_solve(g_xi, jac_g_xi, M, p, lcp_solver, lambda_i);
+        // Δx = A⁻¹ [∇g(xᵢ)]ᵀ λᵢ + (A⁻¹b - xᵢ) * (update_type == LINEARIZED)
         delta_x = M * lambda_i + p;
     }
 

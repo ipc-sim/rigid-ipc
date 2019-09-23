@@ -76,9 +76,8 @@ namespace opt {
 
         bool success = false;
 
-
 #ifdef DEBUG_COLLISIONS
-        global_it+=1;
+        global_it += 1;
         std::vector<Eigen::MatrixXd> vertices_sequence;
         Eigen::MatrixXi edges = problem.debug_edges();
         Eigen::MatrixXd v_x0 = problem.debug_vertices(x);
@@ -86,11 +85,10 @@ namespace opt {
         for (iteration_number = 0; iteration_number < max_iterations;
              iteration_number++) {
 
-
             double fx;
             problem.eval_f_and_fdiff(x, fx, gradient, hessian);
 
-            debug_newton_iterations+=1;
+            debug_newton_iterations += 1;
             debug_num_fx += 1;
             debug_num_grad_fx += 1;
             debug_num_hessian_fx += 1;
@@ -171,7 +169,7 @@ namespace opt {
 
             auto xk = x + step_length * direction;
 
-            if (global_it == 3 && iteration_number == 39){
+            if (global_it == 3 && iteration_number == 39) {
                 std::cout << "debug!" << std::endl;
             }
             assert(!problem.has_collisions(x, xk));
@@ -183,20 +181,20 @@ namespace opt {
         } // end for loop
 
 #ifdef DEBUG_COLLISIONS
-            nlohmann::json steps;
-            steps["global_it"] = global_it;
-            steps["edges"] = io::to_json(edges);
-            std::vector<nlohmann::json> vs;
-            for (auto& v : vertices_sequence) {
-                vs.push_back(io::to_json(v));
-            }
-            steps["vertices_sequence"] = vs;
-            steps["vertices_x0"] = io::to_json(v_x0);
-            std::string fout = fmt::format(
-                "{}/newton_{}.json", DATA_OUTPUT_DIR, ccd::logger::now());
-            std::ofstream o(fout);
-            o << std::setw(4) << steps << std::endl;
-            std::cout << std::flush;
+        nlohmann::json steps;
+        steps["global_it"] = global_it;
+        steps["edges"] = io::to_json(edges);
+        std::vector<nlohmann::json> vs;
+        for (auto& v : vertices_sequence) {
+            vs.push_back(io::to_json(v));
+        }
+        steps["vertices_sequence"] = vs;
+        steps["vertices_x0"] = io::to_json(v_x0);
+        std::string fout = fmt::format(
+            "{}/newton_{}.json", DATA_OUTPUT_DIR, ccd::logger::now());
+        std::ofstream o(fout);
+        o << std::setw(4) << steps << std::endl;
+        std::cout << std::flush;
 #endif
 
 #ifdef DEBUG_LINESEARCH
@@ -245,7 +243,8 @@ namespace opt {
             debug_num_grad_fx, debug_num_hessian_fx, debug_num_collision_check);
     }
 
-    void NewtonSolver::debug_reset_stats(){
+    void NewtonSolver::debug_reset_stats()
+    {
         debug_num_fx = 0;
         debug_num_grad_fx = 0;
         debug_num_hessian_fx = 0;
@@ -276,14 +275,12 @@ namespace opt {
         int num_it = 0;
         global_it += 1;
 
-
         double lower_bound = std::min(1E-12, c_ * e_b_ / 10.0);
         const double eps = problem.get_barrier_epsilon();
 
         while (-grad_fx.dot(dir) * alpha > lower_bound) {
             debug_ls_iterations += 1;
             Eigen::VectorXd xi = x + alpha * dir;
-
 
             bool no_collisions = !problem.has_collisions(x, xi);
             double fxi = problem.eval_f(xi);
@@ -322,8 +319,6 @@ namespace opt {
             myfile << debug.str();
             myfile.close();
             spdlog::debug("saved failure to `{}`", fout);
-
-
         }
 
         PROFILE_MESSAGE(,
