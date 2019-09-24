@@ -84,7 +84,7 @@ namespace opt {
             Eigen::VectorXd& gx,
             Eigen::MatrixXd& gx_jacobian)
         {
-            throw NotImplementedError("eval_g_normal");
+            throw NotImplementedError("eval_g_normal not implemented");
         };
 
         //        virtual void eval_g(const Eigen::VectorXd& x,

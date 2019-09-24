@@ -171,11 +171,24 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
     solver.do_line_search = false;
     solver.solve_for_active_cstr = false;
     solver.update_type = NcpUpdate::LINEARIZED;
-    // solver.lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL;
-    solver.lcp_solver = LCPSolver::LCP_NEWTON;
 
+    // Solve using Guass-Seidel
+    solver.lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL;
     bool success = solver.solve_ncp(A, b, problem, x, alpha);
-
     CHECK(success);
     CHECK((expected - x).squaredNorm() < 1E-6);
+
+    // Solve using Fischer-Newton
+    solver.lcp_solver = LCPSolver::LCP_NEWTON;
+    success = solver.solve_ncp(A, b, problem, x, alpha);
+    CHECK(success);
+    CHECK((expected - x).squaredNorm() < 1E-6);
+
+#ifdef BUILD_WITH_MOSEK
+    // Solve using Mosek QP
+    solver.lcp_solver = LCPSolver::LCP_MOSEK;
+    success = solver.solve_ncp(A, b, problem, x, alpha);
+    CHECK(success);
+    CHECK((expected - x).squaredNorm() < 1E-6);
+#endif
 }
