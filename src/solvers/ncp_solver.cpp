@@ -214,8 +214,10 @@ namespace opt {
         }
 
         zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
-        spdlog::debug("solve=ncp_solver it={:d} abs_tol={:g} min(g(x))={:g}",
-            num_outer_iterations(), Constants::NCP_ABS_TOL, g_xi.minCoeff());
+        if(g_xi.size() != 0){
+            spdlog::debug("solve=ncp_solver it={:d} abs_tol={:g} min(g(x))={:g}",
+                num_outer_iterations(), Constants::NCP_ABS_TOL, g_xi.minCoeff());
+        }
         bool success = (g_xi.array() >= -Constants::NCP_ABS_TOL).all();
         return OptimizationResults(
             xi, problem_ptr_->eval_f(xi), success, success);
