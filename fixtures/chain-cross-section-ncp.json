@@ -19221,7 +19221,7 @@
         ]
     },
     "ncp_solver": {
-        "max_iterations": 1000,
+        "max_iterations": 10000,
         "do_line_search": false,
         "solve_for_active_cstr": true,
         "convergence_tolerance": -1,

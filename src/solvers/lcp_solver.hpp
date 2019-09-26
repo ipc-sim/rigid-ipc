@@ -3,16 +3,18 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+#include <opt/optimization_problem.hpp>
+
 namespace ccd {
 namespace opt {
 
     /**
      * We handle the LCP(A, b), which seeks vectors s and x which satisfy the
      * following constraints
-     * \begin{align*}
+     * \f{align*}
      *     s = A x + b \\
      *     0 \leq x \perp s \geq 0
-     * \end{align*}
+     * \f}
      */
     enum LCPSolver {
         /// Solve the LCP using the Guass-Seidel method

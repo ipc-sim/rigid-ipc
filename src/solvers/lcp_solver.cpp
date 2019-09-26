@@ -46,7 +46,7 @@ namespace opt {
         Eigen::VectorXd s
             = jac_gxi * tilde_jac_gxi * alpha + (jac_gxi * tilde_b + gxi);
         double err = alpha.transpose() * s;
-        spdlog::trace("solver=lcp_solver lcp_solver={} x^Ts={}",
+        spdlog::trace("solver=lcp_solver lcp_solver={} xᵀs={:.16g}",
             LCPSolverNames[solver], err);
 
         return success;
@@ -54,14 +54,10 @@ namespace opt {
 
     double get_fischer_burmeister(Eigen::VectorXd& x, Eigen::VectorXd& s)
     {
-        double fb = 0;
         assert(x.size() == s.size());
-
-        for (int i = 0; i < x.size(); ++i) {
-            double ent = x[i] + s[i] - sqrt(x[i] * x[i] + s[i] * s[i]);
-            fb += ent * ent;
-        }
-        return sqrt(fb);
+        Eigen::VectorXd e
+            = x + s - (x.array().pow(2) + s.array().pow(2)).sqrt().matrix();
+        return sqrt(e.sum());
     }
 
     bool lcp_gauss_seidel(const Eigen::VectorXd& gxi, // q
@@ -160,11 +156,11 @@ namespace opt {
         //      s.t.  (Mx + q) ≥ 0 → -q ≤ Mx
         //                   x ≥ 0 →  0 ≤ x
         //
-
         // Standard QP formulation:
         //      min   1/2 * x^T * Q * x + c^T * x + cf
         //      s.t.  lc ≤ Ax ≤ uc
         //            lx ≤  x ≤ ux
+
         const int x_dof = int(x.rows());
         const int q_dof = int(q.rows());
         assert(M.cols() == x_dof);

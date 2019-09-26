@@ -26,9 +26,9 @@ namespace opt {
      * Update: \f$ x_{i+1} = x_{i} + \Delta x \f$
      */
     enum class NcpUpdate {
-        /// \f$\Delta x = A^{-1} jac_x(x_i)^T \alpha_i\f$
+        /// \f$\Delta x = A^{-1} \nabla g(x_i)^T \lambda_i\f$
         G_GRADIENT,
-        /// \f$\Delta x = A^{-1} jac_x(x_i)^T \alpha_i + A^{-1}b - x_i\f$
+        /// \f$\Delta x = A^{-1} \nabla g(x_i)^T \lambda_i + A^{-1}b - x_i\f$
         LINEARIZED
     };
 
@@ -38,7 +38,7 @@ namespace opt {
         NCPSolver(const std::string& name);
         ~NCPSolver() override;
 
-        void set_problem(INCPProblem& problem) ;
+        void set_problem(INCPProblem& problem);
 
         OptimizationResults solve() override;
         OptimizationResults solve(const bool use_grad);
@@ -63,7 +63,7 @@ namespace opt {
         }
         Eigen::VectorXd get_grad_kkt() const override;
 
-        // -----------------------------------------s
+        // --------------------------------------------------------------------
 
         bool solve_ncp(const Eigen::SparseMatrix<double>& hessian,
             const Eigen::VectorXd& b,
@@ -71,9 +71,9 @@ namespace opt {
             Eigen::VectorXd& x_opt,
             Eigen::VectorXd& alpha_opt);
 
-        // ---------------------
+        // --------------------------------------------------------------------
         // Configuration
-        // ---------------------
+        // --------------------------------------------------------------------
         bool do_line_search;
         bool solve_for_active_cstr;
         double convergence_tolerance;
@@ -81,18 +81,18 @@ namespace opt {
         LCPSolver lcp_solver;
         int max_iterations;
 
-        // -----------------------
+        // --------------------------------------------------------------------
         // Optimization Status
-        // -----------------------
+        // --------------------------------------------------------------------
         std::shared_ptr<Eigen::SparseLU<Eigen::SparseMatrix<double>>> Asolver;
         Eigen::VectorXd g_xi;
-//        Eigen::VectorXi g_active;
+        // Eigen::VectorXi g_active;
         Eigen::MatrixXd jac_g_xi;
-//        Eigen::SparseMatrix<double> jac_g_xi;
+        // Eigen::SparseMatrix<double> jac_g_xi;
 
-        // ----------------------
+        // --------------------------------------------------------------------
         // Optimization results
-        // ----------------------
+        // --------------------------------------------------------------------
         Eigen::VectorXd xi;
         Eigen::VectorXd lambda_i;
 
@@ -100,6 +100,38 @@ namespace opt {
         void compute_linear_system(INCPProblem& problem_ptr_);
         void compute_initial_solution();
 
+        /**
+         * @brief Linearize the problem and solve for primal variables (xᵢ₊₁)
+         * and dual variables (λᵢ).
+         *
+         * Linearization:
+         * \f{aligned}{
+         *      A x_{i+1} = b + \nabla g(x_i)^T \lambda_i \\
+         *      0 \leq \lambda_i \perp g(x_i) + \nabla g(x_i) Δx \geq 0
+         * \f}
+         * Update:
+         * \f{aligned}{
+         *      x_{i+1} = x_i + \Delta x
+         * \f}
+         * \f$\Delta x\f$:
+         * * g_gradient update: \f$\Delta x = A^{-1} [\nabla g(x_i)]^T \lambda_i
+         *      \f$
+         * * linearized update: \f$\Delta x = A^{-1} [\nabla g(x_i)]^T \lambda_i
+         *      + A^{-1}b - x_i\f$
+         *
+         * We want to take our problem to the form
+         * \f{aligned}{
+         *      s = q + N (M\lambda_i + p) \\
+         *      0 \leq \lambda_i \perp s \geq 0
+         * \f}
+         * where
+         * \f{aligned}{
+         *      q &= g(x_i) \\
+         *      N &= \nabla g(x_i) \\
+         *      M &= A^{-1} [\nabla g(x_i)]^{T} \\
+         *      p &= \Delta x - A^{-1} [\nabla g(x_i)]^{T} \lambda_i
+         * \f}
+         */
         void solve_lcp(const Eigen::VectorXd& xi,
             const Eigen::VectorXd& gxi,
             const Eigen::MatrixXd& jac_gxi,
@@ -114,7 +146,7 @@ namespace opt {
 
         int num_outer_iterations_;
         std::string name_;
-        bool m_use_gradient=true;
+        bool m_use_gradient = true;
         std::stringstream debug;
     };
 

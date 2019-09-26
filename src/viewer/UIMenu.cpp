@@ -128,7 +128,6 @@ void UISimState::draw_simulation_player()
     // --------------------------------------------------------------------
     ImGui::Text("Step %i", m_state.m_num_simulation_steps);
 
-
     ImGui::SameLine();
     ImGui::HelpMarker("yes - shows velocities and forces as position-delta\n "
                       "i.e scaling them by time.");
@@ -142,8 +141,8 @@ void UISimState::draw_collision_menu()
     if (ImGui::Button("Step Solve Col. ", ImVec2(-1, 0))) {
         step_solve_collisions();
     }
-
 }
+
 void UISimState::draw_settings()
 {
     auto config = m_state.get_active_config();
@@ -159,6 +158,7 @@ void UISimState::draw_settings()
 void UISimState::draw_legends()
 {
     static float second_col = 120;
+    static bool show_vertex_data = true;
     float slider_width = ImGui::GetWindowWidth() * 0.25f;
     for (auto& label : get_data_names()) {
         auto ptr = get_data(label);
@@ -179,9 +179,10 @@ void UISimState::draw_legends()
         if (ptr->is_graph()) {
             ImGui::SameLine(second_col);
             if (ImGui::Checkbox(
-                    ("data##UI-" + label).c_str(), &ptr->show_vertex_data)) {
-                ptr->update_vertex_data();
+                    ("data##UI-" + label).c_str(), &show_vertex_data)) {
             }
+            ptr->show_vertex_data = show_vertex_data;
+            ptr->update_vertex_data();
 
             ImGui::SameLine();
             ImGui::PushItemWidth(slider_width);

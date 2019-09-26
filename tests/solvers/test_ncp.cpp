@@ -6,6 +6,8 @@
 #include <autodiff/autodiff_types.hpp>
 #include <solvers/ncp_solver.hpp>
 
+#include <logger.hpp>
+
 // ---------------------------------------------------
 // SETUP
 // ---------------------------------------------------
@@ -82,9 +84,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         expected << -0.2, -0.3;
     }
 
-    SECTION("Ciecle Case")
+    SECTION("Circle Case")
     {
-
         g_diff = [](const Eigen::VectorXd& x) -> DVector {
             DVector gx(NUM_CONSTRAINTS);
             DScalar x0(0, x[0]);
@@ -134,6 +135,15 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
 
             return g;
         }
+
+        void eval_g_normal(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
+            Eigen::MatrixXd& gx_jacobian)
+        {
+            gx = eval_g(x);
+            gx_jacobian = eval_jac_g(x);
+        }
+
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x)
         {
             DVector gx = gdiff(x);
@@ -166,11 +176,11 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
     AdHocProblem problem(A, b, g_diff);
 
     NCPSolver solver;
-    solver.max_iterations = 300;
+    solver.max_iterations = 300000;
     solver.convergence_tolerance = 1E-8;
     solver.do_line_search = false;
     solver.solve_for_active_cstr = false;
-    solver.update_type = NcpUpdate::LINEARIZED;
+    solver.update_type = NcpUpdate::G_GRADIENT;
 
     // Solve using Guass-Seidel
     solver.lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL;

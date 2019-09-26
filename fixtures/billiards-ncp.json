@@ -1,7 +1,7 @@
 {
     "scene_type": "volume_rb_problem",
     "max_iterations": 1000,
-    "timestep_size": 0.1,
+    "timestep_size": 0.01,
     "distance_barrier_constraint": {
         "custom_initial_epsilon": 0.01,
         "detection_method": "hash_grid",

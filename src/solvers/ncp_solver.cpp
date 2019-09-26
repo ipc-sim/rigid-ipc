@@ -80,11 +80,8 @@ namespace opt {
         compute_initial_solution();
 
         OptimizationResults result;
-        for (int i = 0; i < max_iterations; ++i) {
+        for (int i = 0; i < max_iterations && !result.finished; ++i) {
             result = step_solve();
-            if (result.finished) {
-                break;
-            }
         }
 
         x_opt = xi;
@@ -115,11 +112,8 @@ namespace opt {
         debug.str("");
 
         OptimizationResults result;
-        for (int i = 0; i < max_iterations; ++i) {
+        for (int i = 0; i < max_iterations && !result.finished; ++i) {
             result = step_solve();
-            if (result.finished) {
-                break;
-            }
         }
 
         if (result.finished) {
@@ -141,15 +135,23 @@ namespace opt {
         compute_initial_solution();
     }
 
+    void NCPSolver::compute_linear_system(INCPProblem& opt_problem)
+    {
+        Eigen::VectorXd x0 = Eigen::VectorXd::Zero(opt_problem.num_vars());
+        A = opt_problem.eval_hessian_f(x0);
+        b = -opt_problem.eval_grad_f(x0);
+    }
+
     void NCPSolver::compute_initial_solution()
     {
         Asolver->compute(A);
         if (Asolver->info() != Eigen::Success) {
-            std::cerr << "LU failed - ncp_solver.cpp" << std::endl;
+            spdlog::error(
+                "solver=ncp_solver failure=\"LU decomposition of A failed\"");
             assert(0);
         }
 
-        // 1. Solve assumming constraints are not violated
+        // Solve assumming constraints are not violated
         xi = Ainv(b);
         if (m_use_gradient) {
             problem_ptr_->eval_g(xi, g_xi, jac_g_xi);
@@ -159,20 +161,13 @@ namespace opt {
 
         zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
 
+        // Initialize slack variables to zero to satisfy complementarity
         lambda_i.resize(g_xi.rows());
         lambda_i.setZero();
     }
 
-    void NCPSolver::compute_linear_system(INCPProblem& opt_problem)
-    {
-        Eigen::VectorXd x0 = Eigen::VectorXd::Zero(opt_problem.num_vars());
-        A = opt_problem.eval_hessian_f(x0);
-        b = -opt_problem.eval_grad_f(x0);
-    }
-
     OptimizationResults NCPSolver::step_solve()
     {
-
         OptimizationResults result;
         num_outer_iterations_ += 1;
 
@@ -186,30 +181,30 @@ namespace opt {
             return result;
         }
 
-        Eigen::VectorXd delta_i;
-        solve_lcp(xi, g_xi, jac_g_xi, delta_i, lambda_i);
+        Eigen::VectorXd delta_xi;
+        solve_lcp(xi, g_xi, jac_g_xi, delta_xi, lambda_i);
 
         double alpha = 1.0, alpha_prev = 1.0;
-        double step_norm = (alpha * delta_i).norm();
+        double step_norm = (alpha * delta_xi).norm();
         double total_vol = g_xi.sum();
 
         bool line_search_success = false;
 
         if (do_line_search) {
             while (step_norm >= convergence_tolerance) {
-                Eigen::VectorXd x_next = xi + delta_i * alpha;
+                Eigen::VectorXd x_next = xi + alpha * delta_xi;
                 Eigen::VectorXd g_next = problem_ptr_->eval_g(x_next);
 
-                bool in_unfeasible = (g_next.array() < 0.0).any();
+                bool in_infeasible = (g_next.array() < 0.0).any();
                 double total_vol_next = g_next.sum();
                 spdlog::trace(
                     "solver=ncp_solver it={} action=line_search gamma={} step_norm={} unfeasible={} vol={:.10e} vol_0={:10e}",
-                    num_outer_iterations_, alpha, step_norm, in_unfeasible,
+                    num_outer_iterations_, alpha, step_norm, in_infeasible,
                     total_vol_next, total_vol);
 
-                if (in_unfeasible && total_vol_next > total_vol) {
+                if (in_infeasible && total_vol_next > total_vol) {
                     line_search_success = true;
-                    step_norm = (alpha * delta_i).norm();
+                    step_norm = (alpha * delta_xi).norm();
                     if (step_norm < convergence_tolerance) {
                         alpha = alpha_prev;
                     }
@@ -217,16 +212,16 @@ namespace opt {
                 }
                 alpha_prev = alpha;
                 alpha = alpha / 2.0;
-                step_norm = (alpha * delta_i).norm();
-            } /// end of line search
+                step_norm = (alpha * delta_xi).norm();
+            } // end of line search
 
             if (!line_search_success) {
                 alpha = alpha_prev;
             }
         }
 
-        while ((delta_i * alpha).norm() > 1e-10) {
-            Eigen::VectorXd x_next = xi + delta_i * alpha;
+        while ((alpha * delta_xi).norm() > 1e-10) {
+            Eigen::VectorXd x_next = xi + alpha * delta_xi;
             Eigen::VectorXd g_next = problem_ptr_->eval_g(x_next);
             if (g_next.sum() > g_xi.sum()) {
                 break;
@@ -234,10 +229,11 @@ namespace opt {
             alpha = alpha / 2.0;
         }
 
-        xi = xi + delta_i * alpha;
+        xi = xi + alpha * delta_xi;
 
         if (num_outer_iterations_ == Constants::NCP_FALLBACK_ITERATIONS) {
-            spdlog::warn("starting to use normal instead of gradients");
+            spdlog::warn("solver=ncp_solver "
+                         "msg=\"starting to use normal instead of gradients\"");
         }
         if (!m_use_gradient
             || num_outer_iterations_ > Constants::NCP_FALLBACK_ITERATIONS) {
@@ -260,8 +256,10 @@ namespace opt {
         Eigen::VectorXd& delta_x,
         Eigen::VectorXd& lambda_i) const
     {
-        // 2.1 Linearize the problem and solve for primal variables (xᵢ₊₁) and
-        // dual variables (λᵢ) Linearization:
+        // Linearize the problem and solve for primal variables (xᵢ₊₁) and dual
+        // variables (λᵢ)
+        //
+        // Linearization:
         //      A xᵢ₊₁ = b + ∇g(xᵢ)ᵀ λᵢ
         //      0 ≤ λᵢ ⟂ g(xᵢ) + ∇g(xᵢ) Δx ≥ 0
         // Update:
