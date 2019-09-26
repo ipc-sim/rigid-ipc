@@ -25,7 +25,7 @@ namespace opt {
      *
      * Update: \f$ x_{i+1} = x_{i} + \Delta x \f$
      */
-    enum class NcpUpdate {
+    enum class NCPUpdate {
         /// \f$\Delta x = A^{-1} \nabla g(x_i)^T \lambda_i\f$
         G_GRADIENT,
         /// \f$\Delta x = A^{-1} \nabla g(x_i)^T \lambda_i + A^{-1}b - x_i\f$
@@ -64,20 +64,12 @@ namespace opt {
         Eigen::VectorXd get_grad_kkt() const override;
 
         // --------------------------------------------------------------------
-
-        bool solve_ncp(const Eigen::SparseMatrix<double>& hessian,
-            const Eigen::VectorXd& b,
-            INCPProblem& problem_ptr_,
-            Eigen::VectorXd& x_opt,
-            Eigen::VectorXd& alpha_opt);
-
-        // --------------------------------------------------------------------
         // Configuration
         // --------------------------------------------------------------------
         bool do_line_search;
         bool solve_for_active_cstr;
         double convergence_tolerance;
-        NcpUpdate update_type;
+        NCPUpdate update_type;
         LCPSolver lcp_solver;
         int max_iterations;
 
@@ -132,22 +124,27 @@ namespace opt {
          *      p &= \Delta x - A^{-1} [\nabla g(x_i)]^{T} \lambda_i
          * \f}
          */
-        void solve_lcp(const Eigen::VectorXd& xi,
-            const Eigen::VectorXd& gxi,
-            const Eigen::MatrixXd& jac_gxi,
-            Eigen::VectorXd& delta_x,
-            Eigen::VectorXd& lambda_i) const;
+        Eigen::VectorXd solve_lcp();
 
+        /**
+         * @brief Compute \f$A^{-1}x\f$.
+         *
+         * Uses a precomputed decomposition of A to solve the system in
+         * \f$O(n^2)\f$.
+         */
         Eigen::VectorXd Ainv(const Eigen::VectorXd& x) const;
 
+        // --------------------------------------------------------------------
+        // Fields
+        // --------------------------------------------------------------------
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd b;
         INCPProblem* problem_ptr_;
 
+        /// @brief Current number of outer iterations completed.
         int num_outer_iterations_;
         std::string name_;
         bool m_use_gradient = true;
-        std::stringstream debug;
     };
 
     void zero_out_fixed_dof(

@@ -13,9 +13,7 @@ int main(int argc, char* argv[])
 {
     Catch::Session session; // There must be exactly one instance
 
-    int log_level
-        = spdlog::level::info; // Some user variable you want to be able to set
-    // from_str
+    int log_level = spdlog::level::off;
 
     // Build a new parser on top of Catch's
     using namespace Catch::clara;
@@ -30,7 +28,8 @@ int main(int argc, char* argv[])
                       return ParserResult::ok(ParseResultType::Matched);
                   }
               },
-              "log_level")["-g"]["--logger-level"]("logger verbosity level int (0-6)");
+              "log_level")["-g"]["--logger-level"](
+              "logger verbosity level int (0-6)");
     session.cli(cli);
 
     int returnCode = session.applyCommandLine(argc, argv);

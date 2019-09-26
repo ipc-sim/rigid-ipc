@@ -91,8 +91,6 @@ TEST_CASE(
     // displacement cases
     Eigen::VectorXd x(6);
     x << rbs[0].position_prev + displ_1, rbs[1].position_prev + displ_2;
-    std::cout << rbp.m_assembler.m_position_to_dof.rows() << std::endl;
-    std::cout << rbp.m_assembler.m_position_to_dof.cols() << std::endl;
     x = rbp.m_assembler.m_position_to_dof * x;
     double fx = rbp.eval_f(x);
     CHECK(fx == Approx(0.0));

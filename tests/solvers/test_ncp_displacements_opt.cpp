@@ -7,10 +7,10 @@
 //// Tests
 //// ---------------------------------------------------
 
-//const int NUM_EDGES = 2;
-//const int NUM_VERTICES = 4;
+// const int NUM_EDGES = 2;
+// const int NUM_VERTICES = 4;
 
-//TEST_CASE("NCP Displacements", "[opt][NCP][NCP-Displacements]")
+// TEST_CASE("NCP Displacements", "[opt][NCP][NCP-Displacements]")
 //{
 //    ccd::State state;
 
@@ -69,8 +69,5 @@
 //    Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols,
 //        ", ", ", ", "", "", " << ", ";");
 
-//    //    std::cout << "here" << std::endl;
-//    //    std::cout << u_.format(CommaInitFmt) << std::endl;
-//    //    std::cout << expected.format(CommaInitFmt) << std::endl;
 //    CHECK((u_ - expected).squaredNorm() < 1E-4);
 //}

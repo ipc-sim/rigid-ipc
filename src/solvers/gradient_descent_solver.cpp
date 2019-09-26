@@ -88,7 +88,7 @@ namespace opt {
             iter, exit_reason, gradient_free.squaredNorm());
 
         return OptimizationResults(x, problem.eval_f(x),
-            gradient_free.squaredNorm() <= absolute_tolerance);
+            gradient_free.squaredNorm() <= absolute_tolerance, true);
     }
 
     bool GradientDescentSolver::line_search(IBarrierProblem& problem,

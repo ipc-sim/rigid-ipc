@@ -212,9 +212,9 @@ namespace opt {
             t_ * E_free.norm(), B_free.norm(), num_barrier,
             (t_ * E_free + B_free).norm());
 
-        std::cout
-            << "newton_it, gradient_norm, termination, tolerance, t * gradE.norm, gradB.norm, #B, (t * gradE+gradB).norm"
-            << std::endl;
+        std::cout << "newton_it, gradient_norm, termination, tolerance, t * "
+                     "gradE.norm, gradB.norm, #B, (t * gradE+gradB).norm"
+                  << std::endl;
         std::cout << debug.str() << std::flush;
         std::cout << "newton_exit_reason=" << exit_reason << std::endl;
         std::cout << std::endl;
@@ -222,7 +222,7 @@ namespace opt {
         spdlog::debug("{} total_iter={:d} message='{}'", NEWTON_END_LOG,
             iteration_number, exit_reason);
 
-        return OptimizationResults(x, problem.eval_f(x), success);
+        return OptimizationResults(x, problem.eval_f(x), success, true);
     }
 
     void NewtonSolver::init_free_dof(Eigen::VectorXb is_dof_fixed)
@@ -237,8 +237,8 @@ namespace opt {
 
     std::string NewtonSolver::debug_stats()
     {
-        return fmt::format(
-            "total_newton_steps,{},total_ls_steps,{},count_fx,{},count_grad,{},count_hess,{},count_ccd,{}",
+        return fmt::format("total_newton_steps,{},total_ls_steps,{},count_fx,{}"
+                           ",count_grad,{},count_hess,{},count_ccd,{}",
             debug_newton_iterations, debug_ls_iterations, debug_num_fx,
             debug_num_grad_fx, debug_num_hessian_fx, debug_num_collision_check);
     }
@@ -269,8 +269,8 @@ namespace opt {
         bool success = false;
 
         std::stringstream debug;
-        debug
-            << "global_it,it,step_length,collisions,f(x),fx0,f'*step,>lb, barrier_eps\n";
+        debug << "global_it,it,step_length,collisions,f(x),fx0,f'*step,>lb, "
+                 "barrier_eps\n";
 
         int num_it = 0;
         global_it += 1;
@@ -307,7 +307,8 @@ namespace opt {
         if (log_failure && !success) {
             std::cout
                 << fmt::format(
-                       "linesearch fail num_it={} `-grad_fx.dot(dir)`={:.18e} `-grad_fx.dot(dir) * alpha `={:.18e} "
+                       "linesearch fail num_it={} `-grad_fx.dot(dir)`={:.18e} "
+                       "`-grad_fx.dot(dir) * alpha `={:.18e} "
                        "lower_bound={:.8e} alpha={:.8e} fx={:.8e} t={:.8e}",
                        num_it, -grad_fx.dot(dir), -grad_fx.dot(dir) * alpha,
                        lower_bound, alpha, fx, t_)
@@ -346,13 +347,13 @@ namespace opt {
             if (solver.info() == Eigen::Success) {
                 solve_success = true;
             } else {
-                spdlog::warn(
-                    "solver=newton iter={:d} failure=\"sparse solve for newton direction failed\" failsafe=none",
+                spdlog::warn("solver=newton iter={:d} failure=\"sparse solve "
+                             "for newton direction failed\" failsafe=none",
                     iteration_number);
             }
         } else {
-            spdlog::warn(
-                "solver=newton iter={:d} failure=\"sparse decomposition of the hessian failed\" failsafe=none",
+            spdlog::warn("solver=newton iter={:d} failure=\"sparse "
+                         "decomposition of the hessian failed\" failsafe=none",
                 iteration_number);
         }
 
@@ -364,14 +365,15 @@ namespace opt {
             // hessian. This can result in doing a step of gradient descent.
             Eigen::SparseMatrix<double> psd_hessian = hessian;
             double mu = make_matrix_positive_definite(psd_hessian);
-            spdlog::debug(
-                "solver=newton iter={:d} failure=\"newton direction not descent direction\" failsafe=\"H += μI\" μ={:g}",
+            spdlog::debug("solver=newton iter={:d} failure=\"newton direction "
+                          "not descent direction\" failsafe=\"H += μI\" μ={:g}",
                 iteration_number, mu);
             solve_success
                 = compute_direction(gradient, psd_hessian, direction, false);
             if (direction.transpose() * gradient >= 0) {
                 spdlog::warn(
-                    "solver=newton iter={:d} failure=\"newton direction not descent direction\" failsafe=none dir_dot_grad={:g}",
+                    "solver=newton iter={:d} failure=\"newton direction not "
+                    "descent direction\" failsafe=none dir_dot_grad={:g}",
                     iteration_number, direction.transpose() * gradient);
             }
         }

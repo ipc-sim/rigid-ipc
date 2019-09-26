@@ -6,8 +6,10 @@
 #endif
 #include <iostream>
 
+#include <constants.hpp>
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
+
 namespace ccd {
 namespace opt {
 
@@ -46,7 +48,7 @@ namespace opt {
         Eigen::VectorXd s
             = jac_gxi * tilde_jac_gxi * alpha + (jac_gxi * tilde_b + gxi);
         double err = alpha.transpose() * s;
-        spdlog::trace("solver=lcp_solver lcp_solver={} xᵀs={:.16g}",
+        spdlog::debug("solver=lcp_solver lcp_solver={} xᵀs={:g}",
             LCPSolverNames[solver], err);
 
         return success;
@@ -89,13 +91,12 @@ namespace opt {
         // Gauss-Seidel steps
         // ----------------------
 
-        const uint num_gs_steps = 10000;
         Eigen::VectorXd dk(dof);
         alpha.resize(num_constraints);
         alpha.setZero();
 
         double FB = -1.0;
-        for (uint jj = 0; jj < num_gs_steps; ++jj) {
+        for (uint jj = 0; jj < Constants::GUASS_SEIDEL_MAX_ITER; ++jj) {
             // update each alpha
             for (uint ci = 0; ci < uint(num_constraints); ++ci) {
                 dk = tilde_b;
@@ -178,7 +179,11 @@ namespace opt {
         igl::mosek::MosekData mosek_data;
         bool success = igl::mosek::mosek_quadprog(
             A, q, /*cf=*/0.0, A, lc, uc, lx, ux, mosek_data, x);
-        std::cout << "mosek_success=" << success << std::endl;
+        if (success) {
+            spdlog::debug("solver=mosek_lcp action=solve status=success");
+        } else {
+            spdlog::error("solver=mosek_lcp action=solve status=failed");
+        }
         return success;
     }
 #endif
