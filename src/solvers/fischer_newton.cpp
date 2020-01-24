@@ -17,7 +17,7 @@ namespace opt {
         const Eigen::SparseMatrix<double>& A);
     inline Eigen::VectorXd grad_fischer_error(
         const Eigen::VectorXd& phi, const Eigen::SparseMatrix<double>& J);
-    Eigen::VectorXd perturbe(
+    Eigen::VectorXd perturb(
         const Eigen::VectorXd& x, const Eigen::VectorXd& phi);
     bool is_converged(double old_err, double err, int iter);
     Eigen::VectorXd compute_search_direction(const Eigen::VectorXd& phi,
@@ -66,14 +66,14 @@ namespace opt {
                 return true;
             }
 
-            Eigen::VectorXd px = perturbe(x, phi);
+            Eigen::VectorXd px = perturb(x, phi);
             Eigen::SparseMatrix<double> J = jac_fischer(px, s, A);
             Eigen::VectorXd grad_psi = grad_fischer_error(phi, J);
 
             // Test if we have dropped into a local minimia if so we are stuck
             if (grad_psi.norm() < Constants::FISCHER_ABS_TOL) {
                 spdlog::warn("solver=ficher_newton_lcp iter={:d} "
-                             "failure='||∇ϕ|| < {:g}' ||∇ϕ||={:g} "
+                             "failure='||∇ψ|| < {:g}' ||∇ψ||={:g} "
                              "failsafe=none",
                     i, Constants::FISCHER_ABS_TOL, grad_psi.norm());
                 return false;
@@ -153,7 +153,7 @@ namespace opt {
     /// @brief Compute the sign of the input.
     inline double sign(double x) { return (0 < x) - (x < 0); }
 
-    Eigen::VectorXd perturbe(
+    Eigen::VectorXd perturb(
         const Eigen::VectorXd& x, const Eigen::VectorXd& phi)
     {
         // Bitmask for singular indices

@@ -7,7 +7,7 @@
 
 #define INF_D (std::numeric_limits<double>::infinity())
 
-TEST_CASE("Simple tests of MOSEK", "[opt][nlopt]")
+TEST_CASE("Simple tests of MOSEK", "[opt][mosek]")
 {
     // Load problem data
     const int N = 4;
