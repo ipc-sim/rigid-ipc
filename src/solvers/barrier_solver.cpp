@@ -123,14 +123,13 @@ namespace opt {
         inner_solver_ptr->t(t);
         inner_solver_ptr->m(m);
 
-        int num_constraints=0;
-        barrier_problem_ptr->eval_grad_B(barrier_problem_ptr->x0, num_constraints);
-        debug_max_constraints = std::max(debug_max_constraints, num_constraints);
+        int num_constraints = 0;
+        barrier_problem_ptr->eval_grad_B(
+            barrier_problem_ptr->x0, num_constraints);
+        debug_max_constraints
+            = std::max(debug_max_constraints, num_constraints);
 
         results = inner_solver.solve(*barrier_problem_ptr);
-
-//        double min_dist = barrier_problem_ptr->debug_min_distance(results.x);
-//        std::cout << fmt::format("GREP_ME,t,{},min_dist,{},num_constraints,{}", min_dist,num_constraints) << std::endl;
 
 #ifdef DEBUG_LINESEARCH
         Eigen::VectorXd xdiff = barrier_problem_ptr->x0 - results.x;
@@ -178,36 +177,39 @@ namespace opt {
         OptimizationResults results;
         do {
             results = step_solve();
-
         } while (m / t > e_b); // barrier_epsilon() > min_barrier_epsilon
 
         int num_constraints = 0;
-        barrier_problem_ptr->eval_grad_B(barrier_problem_ptr->x0, num_constraints);
-        debug_max_constraints = std::max(debug_max_constraints, num_constraints);
+        barrier_problem_ptr->eval_grad_B(
+            barrier_problem_ptr->x0, num_constraints);
+        debug_max_constraints
+            = std::max(debug_max_constraints, num_constraints);
 
         // make one last iteration with exactly eb
         t = m / e_b;
         const double t_used = t;
         results = step_solve();
-        //
 
         double min_dist = barrier_problem_ptr->debug_min_distance(results.x);
-        std::cout << fmt::format("GREP_ME,t,{},min_dist,{},num_constraints,{}", t_used , min_dist,debug_max_constraints) << std::endl;
-
+        std::cout << fmt::format("GREP_ME,t,{},min_dist,{},num_constraints,{}",
+                         t_used, min_dist, debug_max_constraints)
+                  << std::endl;
 
 #ifdef DEBUG_LINESEARCH
         std::cout
             << fmt::format(
                    "tinit={} tend={} m={}  e_b={} c={} eps_barrier={} t_inc={}",
-                   tinit, t/t_inc, m, e_b, c, barrier_epsilon(), t_inc)
+                   tinit, t / t_inc, m, e_b, c, barrier_epsilon(), t_inc)
             << std::endl;
-        std::cout
-            << "outer_it, t, var_diff_norm, vertex_diff_norm, min_distance, min_distance_diff, E(x), B(x)"
-            << std::endl;
+        std::cout << "outer_it, t, var_diff_norm, vertex_diff_norm, "
+                     "min_distance, min_distance_diff, E(x), B(x)"
+                  << std::endl;
         std::cout << debug.str() << std::flush;
 #endif
-        spdlog::info("BARRIER_STATS,c,{},tinit,{},tinc,{},num_outer_iterations,{},{}",
-                     c, tinit, t_inc, num_outer_iterations_, inner_solver_ptr->debug_stats());
+        spdlog::info(
+            "BARRIER_STATS,c,{},tinit,{},tinc,{},num_outer_iterations,{},{}", c,
+            tinit, t_inc, num_outer_iterations_,
+            inner_solver_ptr->debug_stats());
 
         return results;
     }
@@ -256,8 +258,8 @@ namespace opt {
 
         PROFILE_END(EVAL_G)
 
-//        return t * f_uk + gx;
-         return f_uk + gx / t;
+        //        return t * f_uk + gx;
+        return f_uk + gx / t;
     }
 
     bool BarrierProblem::has_collisions(
@@ -274,7 +276,7 @@ namespace opt {
 
         Eigen::MatrixXd g_uk_gradient;
         g_uk_gradient = dgx.colwise().sum().transpose();
-        //return t * f_uk_gradient + g_uk_gradient;
+        // return t * f_uk_gradient + g_uk_gradient;
         return f_uk_gradient + g_uk_gradient / t;
     }
 
@@ -292,7 +294,7 @@ namespace opt {
         for (const auto& ddgx_i : ddgx) {
             g_uk_hessian += ddgx_i;
         }
-        //return t * f_uk_hessian + g_uk_hessian;
+        // return t * f_uk_hessian + g_uk_hessian;
         return f_uk_hessian + g_uk_hessian / t;
     }
 
@@ -316,13 +318,14 @@ namespace opt {
         general_problem->eval_g_and_gdiff(x, gx, dgx, ddgx);
         PROFILE_END(EVAL_G)
 
-//        f_uk = t * f_uk + gx.sum();
-//        f_uk_gradient = t * f_uk_gradient + dgx.colwise().sum().transpose();
+        //        f_uk = t * f_uk + gx.sum();
+        //        f_uk_gradient = t * f_uk_gradient +
+        //        dgx.colwise().sum().transpose();
 
-//        f_uk_hessian = t * f_uk_hessian;
-//        for (const auto& ddgx_i : ddgx) {
-//            f_uk_hessian += ddgx_i;
-//        }
+        //        f_uk_hessian = t * f_uk_hessian;
+        //        for (const auto& ddgx_i : ddgx) {
+        //            f_uk_hessian += ddgx_i;
+        //        }
 
         f_uk = f_uk + gx.sum() / t;
         f_uk_gradient = f_uk_gradient + dgx.colwise().sum().transpose() / t;
@@ -350,8 +353,9 @@ namespace opt {
         general_problem->eval_g_and_gdiff(x, gx, dgx, ddgx);
         PROFILE_END(EVAL_G)
 
-//        f_uk = t * f_uk + gx.sum();
-//        f_uk_gradient = t * f_uk_gradient + dgx.colwise().sum().transpose();
+        //        f_uk = t * f_uk + gx.sum();
+        //        f_uk_gradient = t * f_uk_gradient +
+        //        dgx.colwise().sum().transpose();
         f_uk = f_uk + gx.sum() / t;
         f_uk_gradient = f_uk_gradient + dgx.colwise().sum().transpose() / t;
     }
@@ -368,7 +372,6 @@ namespace opt {
         num_active_b = dgx.rows();
         return dgx.colwise().sum().transpose();
     }
-
 
     Multiprecision BarrierProblem::eval_mp_f(const Eigen::VectorXd& /*x*/)
     {

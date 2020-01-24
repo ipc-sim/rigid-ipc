@@ -25,11 +25,11 @@ RigidBody simple_rigid_body(
         /*position=*/Eigen::Vector3d::Zero(), velocity);
 }
 
-}
+} // namespace test_utils
 
 TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
 {
-    using namespace  test_utils;
+    using namespace test_utils;
     Eigen::MatrixXd vertices(4, 2);
     Eigen::MatrixXi edges(4, 2);
     Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
@@ -77,12 +77,7 @@ TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
 
     /// compute displacements between current and given positions
     /// TODO: update test to not need displacements
-    Eigen::MatrixXd actual = assembler.world_vertices(pos) - assembler.world_vertices();
+    Eigen::MatrixXd actual
+        = assembler.world_vertices(pos) - assembler.world_vertices();
     CHECK((expected - actual).squaredNorm() < 1E-6);
-
-    //    Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision,
-    //    Eigen::DontAlignCols,
-    //        ", ", ", ", "", "", " << ", ";");
-    //    std::cout << expected.format(CommaInitFmt) << std::endl;
-    //    std::cout << actual.format(CommaInitFmt) << std::endl;
 }

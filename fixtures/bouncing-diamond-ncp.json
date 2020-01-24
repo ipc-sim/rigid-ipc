@@ -1,0 +1,196 @@
+{
+    "scene_type": "volume_rb_problem",
+    "max_iterations": 3000,
+    "timestep_size": 0.01,
+    "distance_barrier_constraint": {
+        "custom_initial_epsilon": 0.1,
+        "detection_method": "hash_grid",
+        "active_constraint_scale": 1.01
+    },
+    "barrier_solver": {
+        "e_b": 1e-06,
+        "m": 1,
+        "t_init": 100,
+        "t_inc": 100,
+        "c": 0.1,
+        "inner_solver": "newton_solver"
+    },
+    "rigid_body_problem": {
+        "gravity": [
+            0,
+            -3.0,
+            0
+        ],
+        "coefficient_restitution": 1,
+        "rigid_bodies": [
+            {
+                "vertices": [
+                    [
+                        -1,
+                        -1
+                    ],
+                    [
+                        1,
+                        -1
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        -1,
+                        1
+                    ]
+                ],
+                "polygons": [
+                    [
+                        [
+                            -1,
+                            -1
+                        ],
+                        [
+                            1,
+                            -1
+                        ],
+                        [
+                            1,
+                            1
+                        ],
+                        [
+                            -1,
+                            1
+                        ]
+                    ]
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "oriented": true,
+                "position": [
+                    -10,
+                    10
+                ],
+                "theta": 45,
+                "velocity": [
+                    1.0,
+                    0.0,
+                    0.0
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
+                "masses": [
+                    0.25,
+                    0.25,
+                    0.25,
+                    0.25
+                ],
+                "density": 0.5
+            },
+            {
+                "vertices": [
+                    [
+                        -10,
+                        0
+                    ],
+                    [
+                        10,
+                        0
+                    ],
+                    [
+                        10,
+                        1
+                    ],
+                    [
+                        -10,
+                        1
+                    ]
+                ],
+                "polygons": [
+                    [
+                        [
+                            -10,
+                            0
+                        ],
+                        [
+                            10,
+                            0
+                        ],
+                        [
+                            10,
+                            1
+                        ],
+                        [
+                            -10,
+                            1
+                        ]
+                    ]
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "oriented": true,
+                "position": [
+                    0,
+                    0
+                ],
+                "velocity": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
+                ]
+            }
+        ]
+    },
+    "ncp_solver": {
+        "max_iterations": 1000,
+        "do_line_search": false,
+        "solve_for_active_cstr": true,
+        "convergence_tolerance": -1,
+        "update_type": "g_gradient",
+        "lcp_solver": "lcp_newton"
+    },
+    "volume_constraint": {
+        "detection_method": "hash_grid",
+        "volume_epsilon": 1e-10,
+        "custom_hashgrid_cellsize": -1,
+        "time_epsilon": 0.0001
+    }
+}

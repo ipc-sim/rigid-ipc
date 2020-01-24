@@ -76,9 +76,8 @@ namespace opt {
 
         bool success = false;
 
-
 #ifdef DEBUG_COLLISIONS
-        global_it+=1;
+        global_it += 1;
         std::vector<Eigen::MatrixXd> vertices_sequence;
         Eigen::MatrixXi edges = problem.debug_edges();
         Eigen::MatrixXd v_x0 = problem.debug_vertices(x);
@@ -86,11 +85,10 @@ namespace opt {
         for (iteration_number = 0; iteration_number < max_iterations;
              iteration_number++) {
 
-
             double fx;
             problem.eval_f_and_fdiff(x, fx, gradient, hessian);
 
-            debug_newton_iterations+=1;
+            debug_newton_iterations += 1;
             debug_num_fx += 1;
             debug_num_grad_fx += 1;
             debug_num_hessian_fx += 1;
@@ -171,7 +169,7 @@ namespace opt {
 
             auto xk = x + step_length * direction;
 
-            if (global_it == 3 && iteration_number == 39){
+            if (global_it == 3 && iteration_number == 39) {
                 std::cout << "debug!" << std::endl;
             }
             assert(!problem.has_collisions(x, xk));
@@ -183,20 +181,20 @@ namespace opt {
         } // end for loop
 
 #ifdef DEBUG_COLLISIONS
-            nlohmann::json steps;
-            steps["global_it"] = global_it;
-            steps["edges"] = io::to_json(edges);
-            std::vector<nlohmann::json> vs;
-            for (auto& v : vertices_sequence) {
-                vs.push_back(io::to_json(v));
-            }
-            steps["vertices_sequence"] = vs;
-            steps["vertices_x0"] = io::to_json(v_x0);
-            std::string fout = fmt::format(
-                "{}/newton_{}.json", DATA_OUTPUT_DIR, ccd::logger::now());
-            std::ofstream o(fout);
-            o << std::setw(4) << steps << std::endl;
-            std::cout << std::flush;
+        nlohmann::json steps;
+        steps["global_it"] = global_it;
+        steps["edges"] = io::to_json(edges);
+        std::vector<nlohmann::json> vs;
+        for (auto& v : vertices_sequence) {
+            vs.push_back(io::to_json(v));
+        }
+        steps["vertices_sequence"] = vs;
+        steps["vertices_x0"] = io::to_json(v_x0);
+        std::string fout = fmt::format(
+            "{}/newton_{}.json", DATA_OUTPUT_DIR, ccd::logger::now());
+        std::ofstream o(fout);
+        o << std::setw(4) << steps << std::endl;
+        std::cout << std::flush;
 #endif
 
 #ifdef DEBUG_LINESEARCH
@@ -214,9 +212,9 @@ namespace opt {
             t_ * E_free.norm(), B_free.norm(), num_barrier,
             (t_ * E_free + B_free).norm());
 
-        std::cout
-            << "newton_it, gradient_norm, termination, tolerance, t * gradE.norm, gradB.norm, #B, (t * gradE+gradB).norm"
-            << std::endl;
+        std::cout << "newton_it, gradient_norm, termination, tolerance, t * "
+                     "gradE.norm, gradB.norm, #B, (t * gradE+gradB).norm"
+                  << std::endl;
         std::cout << debug.str() << std::flush;
         std::cout << "newton_exit_reason=" << exit_reason << std::endl;
         std::cout << std::endl;
@@ -224,7 +222,7 @@ namespace opt {
         spdlog::debug("{} total_iter={:d} message='{}'", NEWTON_END_LOG,
             iteration_number, exit_reason);
 
-        return OptimizationResults(x, problem.eval_f(x), success);
+        return OptimizationResults(x, problem.eval_f(x), success, true);
     }
 
     void NewtonSolver::init_free_dof(Eigen::VectorXb is_dof_fixed)
@@ -239,13 +237,14 @@ namespace opt {
 
     std::string NewtonSolver::debug_stats()
     {
-        return fmt::format(
-            "total_newton_steps,{},total_ls_steps,{},count_fx,{},count_grad,{},count_hess,{},count_ccd,{}",
+        return fmt::format("total_newton_steps,{},total_ls_steps,{},count_fx,{}"
+                           ",count_grad,{},count_hess,{},count_ccd,{}",
             debug_newton_iterations, debug_ls_iterations, debug_num_fx,
             debug_num_grad_fx, debug_num_hessian_fx, debug_num_collision_check);
     }
 
-    void NewtonSolver::debug_reset_stats(){
+    void NewtonSolver::debug_reset_stats()
+    {
         debug_num_fx = 0;
         debug_num_grad_fx = 0;
         debug_num_hessian_fx = 0;
@@ -270,12 +269,11 @@ namespace opt {
         bool success = false;
 
         std::stringstream debug;
-        debug
-            << "global_it,it,step_length,collisions,f(x),fx0,f'*step,>lb, barrier_eps\n";
+        debug << "global_it,it,step_length,collisions,f(x),fx0,f'*step,>lb, "
+                 "barrier_eps\n";
 
         int num_it = 0;
         global_it += 1;
-
 
         double lower_bound = std::min(1E-12, c_ * e_b_ / 10.0);
         const double eps = problem.get_barrier_epsilon();
@@ -283,7 +281,6 @@ namespace opt {
         while (-grad_fx.dot(dir) * alpha > lower_bound) {
             debug_ls_iterations += 1;
             Eigen::VectorXd xi = x + alpha * dir;
-
 
             bool no_collisions = !problem.has_collisions(x, xi);
             double fxi = problem.eval_f(xi);
@@ -310,7 +307,8 @@ namespace opt {
         if (log_failure && !success) {
             std::cout
                 << fmt::format(
-                       "linesearch fail num_it={} `-grad_fx.dot(dir)`={:.18e} `-grad_fx.dot(dir) * alpha `={:.18e} "
+                       "linesearch fail num_it={} `-grad_fx.dot(dir)`={:.18e} "
+                       "`-grad_fx.dot(dir) * alpha `={:.18e} "
                        "lower_bound={:.8e} alpha={:.8e} fx={:.8e} t={:.8e}",
                        num_it, -grad_fx.dot(dir), -grad_fx.dot(dir) * alpha,
                        lower_bound, alpha, fx, t_)
@@ -322,8 +320,6 @@ namespace opt {
             myfile << debug.str();
             myfile.close();
             spdlog::debug("saved failure to `{}`", fout);
-
-
         }
 
         PROFILE_MESSAGE(,
@@ -351,13 +347,13 @@ namespace opt {
             if (solver.info() == Eigen::Success) {
                 solve_success = true;
             } else {
-                spdlog::warn(
-                    "solver=newton iter={:d} failure=\"sparse solve for newton direction failed\" failsafe=none",
+                spdlog::warn("solver=newton iter={:d} failure=\"sparse solve "
+                             "for newton direction failed\" failsafe=none",
                     iteration_number);
             }
         } else {
-            spdlog::warn(
-                "solver=newton iter={:d} failure=\"sparse decomposition of the hessian failed\" failsafe=none",
+            spdlog::warn("solver=newton iter={:d} failure=\"sparse "
+                         "decomposition of the hessian failed\" failsafe=none",
                 iteration_number);
         }
 
@@ -369,14 +365,15 @@ namespace opt {
             // hessian. This can result in doing a step of gradient descent.
             Eigen::SparseMatrix<double> psd_hessian = hessian;
             double mu = make_matrix_positive_definite(psd_hessian);
-            spdlog::debug(
-                "solver=newton iter={:d} failure=\"newton direction not descent direction\" failsafe=\"H += μI\" μ={:g}",
+            spdlog::debug("solver=newton iter={:d} failure=\"newton direction "
+                          "not descent direction\" failsafe=\"H += μI\" μ={:g}",
                 iteration_number, mu);
             solve_success
                 = compute_direction(gradient, psd_hessian, direction, false);
             if (direction.transpose() * gradient >= 0) {
                 spdlog::warn(
-                    "solver=newton iter={:d} failure=\"newton direction not descent direction\" failsafe=none dir_dot_grad={:g}",
+                    "solver=newton iter={:d} failure=\"newton direction not "
+                    "descent direction\" failsafe=none dir_dot_grad={:g}",
                     iteration_number, direction.transpose() * gradient);
             }
         }

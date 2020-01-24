@@ -84,8 +84,8 @@ namespace opt {
             Eigen::VectorXd& gx,
             Eigen::MatrixXd& gx_jacobian)
         {
-            throw NotImplementedError("eval_g_normal");
-        };
+            throw NotImplementedError("eval_g_normal not implemented");
+        }
 
         //        virtual void eval_g(const Eigen::VectorXd& x,
         //            Eigen::VectorXd& gx,
@@ -124,7 +124,7 @@ namespace opt {
             const Eigen::VectorXd& x)
         {
             throw NotImplementedError("eval_mp_g");
-        };
+        }
 
         virtual bool has_collisions(const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) const = 0;

@@ -6,6 +6,8 @@
 #include <autodiff/autodiff_types.hpp>
 #include <solvers/ncp_solver.hpp>
 
+#include <logger.hpp>
+
 // ---------------------------------------------------
 // SETUP
 // ---------------------------------------------------
@@ -82,9 +84,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         expected << -0.2, -0.3;
     }
 
-    SECTION("Ciecle Case")
+    SECTION("Circle Case")
     {
-
         g_diff = [](const Eigen::VectorXd& x) -> DVector {
             DVector gx(NUM_CONSTRAINTS);
             DScalar x0(0, x[0]);
@@ -134,6 +135,15 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
 
             return g;
         }
+
+        void eval_g_normal(const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
+            Eigen::MatrixXd& gx_jacobian) override
+        {
+            gx = eval_g(x);
+            gx_jacobian = eval_jac_g(x);
+        }
+
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x)
         {
             DVector gx = gdiff(x);
@@ -150,11 +160,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         {
             gx = eval_g(x);
             gx_jacobian = eval_jac_g(x);
-
         }
-        const Eigen::VectorXd& starting_point() override {
-            return b;
-        }
+        const Eigen::VectorXd& starting_point() override { return b; }
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
 
         virtual const int& num_vars() override { return NUM_VARS; }
@@ -169,15 +176,35 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
     AdHocProblem problem(A, b, g_diff);
 
     NCPSolver solver;
-    solver.max_iterations = 300;
+    solver.set_problem(problem);
+    solver.max_iterations = 3000;
     solver.convergence_tolerance = 1E-8;
     solver.do_line_search = false;
     solver.solve_for_active_cstr = false;
-    solver.update_type = NcpUpdate::LINEARIZED;
+    solver.update_type = NCPUpdate::G_GRADIENT;
+
+    OptimizationResults results;
+
+    // Solve using Guass-Seidel
     solver.lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL;
+    results = solver.solve();
+    CHECK(results.finished);
+    CHECK(results.success);
+    CHECK((expected - results.x).squaredNorm() < 1E-6);
 
-    bool success = solver.solve_ncp(A, b, problem, x, alpha);
+    // Solve using Fischer-Newton
+    solver.lcp_solver = LCPSolver::LCP_NEWTON;
+    results = solver.solve();
+    CHECK(results.finished);
+    CHECK(results.success);
+    CHECK((expected - results.x).squaredNorm() < 1E-6);
 
-    CHECK(success);
-    CHECK((expected - x).squaredNorm() < 1E-6);
+#ifdef BUILD_WITH_MOSEK
+    // Solve using Mosek QP
+    solver.lcp_solver = LCPSolver::LCP_MOSEK;
+    results = solver.solve();
+    CHECK(results.finished);
+    CHECK(results.success);
+    CHECK((expected - results.x).squaredNorm() < 1E-6);
+#endif
 }

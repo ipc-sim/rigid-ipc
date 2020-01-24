@@ -61,9 +61,8 @@ int main(int argc, char* argv[])
         if (ev_impacts.size() != 0) {
             std::cout << args.input_json << ": step " << i << " failed"
                       << std::endl;
-            collision_steps+=1;
+            collision_steps += 1;
         }
-
     }
     std::cout << "collision_steps = " << collision_steps << std::endl;
 }

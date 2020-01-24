@@ -6,15 +6,17 @@ namespace opt {
     OptimizationResults::OptimizationResults()
         : x()
         , minf(std::numeric_limits<double>::infinity())
-        , success()
+        , success(false)
+        , finished(false)
     {
     }
 
     OptimizationResults::OptimizationResults(
-        Eigen::MatrixXd x, double minf, bool success)
+        Eigen::MatrixXd x, double minf, bool success, bool finished)
         : x(x)
         , minf(minf)
         , success(success)
+        , finished(finished)
     {
     }
 

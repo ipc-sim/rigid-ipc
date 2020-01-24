@@ -23,8 +23,7 @@ Fixing Collisions includes some optional and non-optional dependencies.
 
 #### NLopt
 
-**ToDo:** add a build option to enable/disable NLopt
-(**Build Option:** `-DENABLE_NLOPT=ON`)
+**Build Option:** `-DENABLE_NLOPT=ON`
 
 NLopt is **automatically downloaded** through CMake.
 

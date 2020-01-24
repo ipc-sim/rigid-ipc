@@ -79,6 +79,7 @@ add_library(${PROJECT_NAME}
 
     src/solvers/barrier_solver.cpp
     src/solvers/ipopt_solver.cpp
+    src/solvers/fischer_newton.cpp
     src/solvers/lcp_solver.cpp
     src/solvers/ncp_solver.cpp
     src/solvers/line_search.cpp
