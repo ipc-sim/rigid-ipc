@@ -18,8 +18,7 @@
     "rigid_body_problem": {
         "gravity": [
             0,
-            -9.81,
-            0
+            -9.81
         ],
         "coefficient_restitution": 1.0,
         "rigid_bodies": [
@@ -288,6 +287,12 @@
                         ]
                     ]
                 ],
+                "oriented": true,
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
+                ],
                 "edges": [
                     [
                         0,
@@ -410,16 +415,12 @@
                         27
                     ]
                 ],
-                "oriented": true,
-                "velocity": [
-                    0.0,
+                "linear_velocity": [
                     0.0,
                     0.0
                 ],
-                "is_dof_fixed": [
-                    true,
-                    true,
-                    true
+                "angular_velocity": [
+                    0.0
                 ]
             },
             {
@@ -687,6 +688,12 @@
                         ]
                     ]
                 ],
+                "oriented": true,
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
                 "edges": [
                     [
                         0,
@@ -809,16 +816,12 @@
                         27
                     ]
                 ],
-                "oriented": true,
-                "velocity": [
-                    0.0,
+                "linear_velocity": [
                     0.0,
                     0.0
                 ],
-                "is_dof_fixed": [
-                    false,
-                    false,
-                    false
+                "angular_velocity": [
+                    0.0
                 ]
             }
         ]

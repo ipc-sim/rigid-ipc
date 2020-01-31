@@ -151,8 +151,8 @@ bool SimState::init(const nlohmann::json& args_in)
     })"_json;
     // clang-format on
 
-    // check that incomming json doesn't have any unkown keys
-    // to avoid stupid bugs
+    // check that incomming json doesn't have any unkown keys to avoid stupid
+    // bugs
     auto patch = json::diff(args, args_in);
     bool valid = true;
     for (auto& op : patch) {
@@ -182,8 +182,6 @@ bool SimState::init(const nlohmann::json& args_in)
 
     m_num_simulation_steps = 0;
     m_dirty_constraints = true;
-
-    init_background_grid(args);
 
     vertices_sequence.clear();
     vertices_sequence.push_back(problem_ptr->vertices());
@@ -225,7 +223,8 @@ void SimState::run_simulation(const std::string& fout)
     for (int i = 0; i < m_max_simulation_steps; ++i) {
         simulation_step();
         save_simulation_step();
-        spdlog::info("Finished it={} sim_step={}", i+1, m_num_simulation_steps);
+        spdlog::info(
+            "Finished it={} sim_step={}", i + 1, m_num_simulation_steps);
     }
     save_simulation(fout);
     spdlog::info("Simulation results saved to {}", fout);
@@ -248,7 +247,6 @@ void SimState::simulation_step()
     if (m_solve_collisions && m_step_had_collision) {
         solve_collision();
     }
-
 }
 
 void SimState::save_simulation_step()
@@ -277,12 +275,12 @@ bool SimState::solve_collision()
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 
     if (m_step_has_collision) {
-        spdlog::warn(
-            "sim_state action=solve_collisions sim_it={} status=linearized_collisions_unsolved",
+        spdlog::warn("sim_state action=solve_collisions sim_it={} "
+                     "status=linearized_collisions_unsolved",
             m_num_simulation_steps);
     } else {
-        spdlog::debug(
-            "sim_state action=solve_collisions sim_it={} status=collisions_solved",
+        spdlog::debug("sim_state action=solve_collisions sim_it={} "
+                      "status=collisions_solved",
             m_num_simulation_steps);
     }
     return m_step_has_collision;
@@ -304,7 +302,6 @@ void SimState::collision_resolution_step()
     spdlog::debug(
         "sim_state action=collision_resolution_step status=collisions_{}",
         m_step_has_collision ? "unsolved" : "solved");
-
 }
 
 void SimState::save_simulation(const std::string& filename)
@@ -324,36 +321,5 @@ void SimState::save_simulation(const std::string& filename)
 
     std::ofstream o(filename);
     o << std::setw(4) << results << std::endl;
-}
-
-void SimState::init_background_grid(const nlohmann::json& args_)
-{
-
-    // scale background grid
-    Eigen::VectorXd vmin, vmax;
-    io::from_json(args_["viewport_bbox"]["min"], vmin);
-    io::from_json(args_["viewport_bbox"]["max"], vmax);
-    Eigen::VectorXd d = (vmax - vmin);
-    if (d.squaredNorm() == 0.0) {
-        // default size to fit data
-        vmin = problem_ptr->vertices().colwise().minCoeff();
-        vmax = problem_ptr->vertices().colwise().maxCoeff();
-        // add some padding
-        d = (vmax - vmin);
-        vmin -= d / 2.0;
-        vmax += d / 2.0;
-        d = (vmax - vmin);
-    }
-
-    double ratio = d[0] / d[1];
-    regular_2d_grid(int(std::ceil(50 * ratio)), 50, grid_V, grid_F);
-
-    // center at 0.0
-    grid_V.col(0).array() -= 0.5;
-    grid_V.col(1).array() -= 0.5;
-
-    grid_V.col(0) *= d[0];
-    grid_V.col(1) *= d[1];
-    grid_V.rowwise() += (vmax + vmin).transpose() / 2.0;
 }
 } // namespace ccd

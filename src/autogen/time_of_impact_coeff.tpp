@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include <autodiff/autodiff_types.hpp>
-#include <autodiff/finitediff.hpp>
+#include <finitediff.hpp>
 
 namespace ccd {
 namespace autogen {

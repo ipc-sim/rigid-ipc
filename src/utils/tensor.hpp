@@ -8,5 +8,6 @@ namespace tensor {
 
     Eigen::SparseMatrix<double> multiply(const Eigen::VectorXd& x,
         const std::vector<Eigen::SparseMatrix<double>>& y);
+
 } // namespace tensor
 } // namespace ccd

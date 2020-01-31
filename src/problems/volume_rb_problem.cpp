@@ -23,7 +23,7 @@ namespace opt {
 
     Eigen::VectorXd VolumeRBProblem::eval_g(const Eigen::VectorXd& sigma)
     {
-        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
 
         Eigen::VectorXd g_uk;
@@ -35,7 +35,7 @@ namespace opt {
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
-        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         auto ee_impacts = constraint_.get_ee_collision_set(uk);
 
@@ -47,22 +47,20 @@ namespace opt {
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
-        Eigen::VectorXd qk = m_assembler.m_dof_to_position * sigma;
+        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         auto ee_impacts = constraint_.get_ee_collision_set(uk);
 
         constraint_.compute_constraints(uk, ee_impacts, g_uk);
 
         Eigen::SparseMatrix<double> jac_xk_sigma;
-                m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
+        m_assembler.world_vertices_gradient(sigma, jac_xk_sigma);
 
         Eigen::MatrixXd jac_g_uk;
         constraint_.compute_constraints_normals(uk, ee_impacts, jac_g_uk);
 
         g_uk_jacobian = jac_g_uk * jac_xk_sigma;
     }
-
-
 
     void VolumeRBProblem::eval_jac_g_core(const Eigen::VectorXd& sigma,
         const EdgeEdgeImpacts& ee_impacts,
@@ -93,33 +91,33 @@ namespace opt {
             sigma_ij = Diff::d1vars(0, sigma.segment(3 * body_ij_id, 3));
             sigma_kl = Diff::d1vars(3, sigma.segment(3 * body_kl_id, 3));
 
-            Diff::D1Vector3d position_ij, position_kl;
+            Diff::D1Vector3d pose_ij, pose_kl;
 
-            position_ij = sigma_ij.array()
-                * m_assembler.m_dof_to_position.diagonal()
+            pose_ij = sigma_ij.array()
+                * m_assembler.m_dof_to_pose.diagonal()
                       .segment(3 * body_ij_id, 3)
                       .cast<Diff::DDouble1>()
                       .array();
 
-            position_kl = sigma_kl.array()
-                * m_assembler.m_dof_to_position.diagonal()
+            pose_kl = sigma_kl.array()
+                * m_assembler.m_dof_to_pose.diagonal()
                       .segment(3 * body_kl_id, 3)
                       .cast<Diff::DDouble1>()
                       .array();
 
             const auto& rbs = m_assembler.m_rbs;
-            // _differentiable_ final positions
+            // _differentiable_ final poses
             Diff::D1Vector2d v1i, v1j, v1k, v1l;
             v1i = rbs[size_t(body_ij_id)].world_vertex<Diff::DDouble1>(
-                position_ij, local_i_id);
+                pose_ij, local_i_id);
             v1j = rbs[size_t(body_ij_id)].world_vertex<Diff::DDouble1>(
-                position_ij, local_j_id);
+                pose_ij, local_j_id);
             v1k = rbs[size_t(body_kl_id)].world_vertex<Diff::DDouble1>(
-                position_kl, local_k_id);
+                pose_kl, local_k_id);
             v1l = rbs[size_t(body_kl_id)].world_vertex<Diff::DDouble1>(
-                position_kl, local_l_id);
+                pose_kl, local_l_id);
 
-            // initial positions
+            // initial poses
             Eigen::Vector2d v_i, v_j, v_k, v_l;
             v_i = vertices_t0.row(e_ij(0));
             v_j = vertices_t0.row(e_ij(1));

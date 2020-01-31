@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <autodiff/finitediff.hpp>
+#include <finitediff.hpp>
 #include <ccd/collision_detection.hpp>
 #include <ccd/time_of_impact.hpp>
 

@@ -7,8 +7,9 @@
 #include <nlohmann/json.hpp>
 
 #include <io/serialize_json.hpp>
-#include <physics/mass_matrix.hpp>
+#include <physics/mass.hpp>
 #include <utils/flatten.hpp>
+#include <utils/not_implemented_error.hpp>
 
 #include <logger.hpp>
 #include <profiler.hpp>
@@ -34,6 +35,10 @@ namespace physics {
         collision_eps = params["collision_eps"].get<double>();
 
         io::from_json(params["vertices"], vertices_);
+        int dim = vertices_.cols();
+        if (dim != 2) {
+            throw NotImplementedError("Particles are not implmented for 3D!");
+        }
         io::from_json(params["edges"], edges_);
         io::from_json(params["velocities"], velocities_);
         assert(vertices_.rows() == velocities_.rows());
@@ -56,11 +61,10 @@ namespace physics {
         // mass matrix
         // -------------------------------------------------
 
-        Eigen::VectorXd vertex_masses;
-        physics::mass_vector(vertices_, edges_, vertex_masses);
+        Eigen::SparseMatrix<double> M;
+        physics::construct_mass_matrix(vertices_, edges_, M);
         mass_matrix
-            = Eigen::SparseDiagonal<double>(vertex_masses.replicate(2, 1));
-
+            = Eigen::SparseDiagonal<double>(M.diagonal().replicate(dim, 1));
 
         // Collisions Groups
         // -------------------------------------------------

@@ -1,38 +1,110 @@
 {
     "scene_type": "rigid_body_problem",
     "rigid_body_problem": {
-        "gravity": [0.0, -10.0, 0.0],
-        "rigid_bodies": [{
+        "gravity": [
+            0.0,
+            -10.0
+        ],
+        "rigid_bodies": [
+            {
                 "vertices": [
-                    [-1, 20],
-                    [-1, 22],
-                    [1, 22],
-                    [1, 20]
+                    [
+                        -1,
+                        20
+                    ],
+                    [
+                        -1,
+                        22
+                    ],
+                    [
+                        1,
+                        22
+                    ],
+                    [
+                        1,
+                        20
+                    ]
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
                 ],
                 "edges": [
-                    [0, 1],
-                    [1, 2],
-                    [2, 3],
-                    [3, 0]
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
                 ],
-                "velocity": [0.0, 0.0, 0.0],
-                "is_dof_fixed": [false, false, false]
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
             },
             {
                 "vertices": [
-                    [-10, 11],
-                    [-10, 12],
-                    [10, 12],
-                    [10, 11]
+                    [
+                        -10,
+                        11
+                    ],
+                    [
+                        -10,
+                        12
+                    ],
+                    [
+                        10,
+                        12
+                    ],
+                    [
+                        10,
+                        11
+                    ]
+                ],
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
                 ],
                 "edges": [
-                    [0, 1],
-                    [1, 2],
-                    [2, 3],
-                    [3, 0]
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
                 ],
-                "velocity": [0.0, 0.0, 0.0],
-                "is_dof_fixed": [true, true, true]
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
             }
         ]
     }

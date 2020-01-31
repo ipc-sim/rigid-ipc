@@ -18,8 +18,7 @@
     "rigid_body_problem": {
         "gravity": [
             0,
-            -9.81,
-            0
+            -9.81
         ],
         "coefficient_restitution": -1,
         "rigid_bodies": [
@@ -62,6 +61,16 @@
                         ]
                     ]
                 ],
+                "oriented": true,
+                "position": [
+                    0,
+                    0.8838834764831843
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
                 "edges": [
                     [
                         0,
@@ -80,21 +89,15 @@
                         0
                     ]
                 ],
-                "oriented": true,
-                "position": [
-                    0,
-                    0.8838834764831843
+                "rotation": [
+                    0
                 ],
-                "theta": 0,
-                "velocity": [
-                    0.0,
+                "linear_velocity": [
                     0.0,
                     0.0
                 ],
-                "is_dof_fixed": [
-                    false,
-                    false,
-                    false
+                "angular_velocity": [
+                    0.0
                 ]
             },
             {
@@ -136,6 +139,16 @@
                         ]
                     ]
                 ],
+                "oriented": true,
+                "position": [
+                    0,
+                    2.2980970388562794
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
                 "edges": [
                     [
                         0,
@@ -154,21 +167,15 @@
                         0
                     ]
                 ],
-                "oriented": true,
-                "position": [
-                    0,
-                    2.2980970388562794
+                "rotation": [
+                    0
                 ],
-                "theta": 0,
-                "velocity": [
-                    0.0,
+                "linear_velocity": [
                     0.0,
                     0.0
                 ],
-                "is_dof_fixed": [
-                    false,
-                    false,
-                    false
+                "angular_velocity": [
+                    0.0
                 ]
             },
             {
@@ -280,6 +287,16 @@
                         ]
                     ]
                 ],
+                "oriented": false,
+                "position": [
+                    0.0,
+                    2.1490485194281397
+                ],
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
+                ],
                 "edges": [
                     [
                         0,
@@ -314,21 +331,15 @@
                         4
                     ]
                 ],
-                "oriented": false,
-                "position": [
-                    0.0,
-                    2.1490485194281397
+                "rotation": [
+                    0
                 ],
-                "theta": 0,
-                "velocity": [
-                    0.0,
+                "linear_velocity": [
                     0.0,
                     0.0
                 ],
-                "is_dof_fixed": [
-                    true,
-                    true,
-                    true
+                "angular_velocity": [
+                    0.0
                 ]
             }
         ]

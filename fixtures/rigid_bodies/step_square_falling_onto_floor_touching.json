@@ -2,47 +2,119 @@
     "scene_type": "rigid_body_problem",
     "timestep_size": 0.1,
     "distance_barrier_constraint": {
-        "custom_initial_epsilon": 1e-2,
+        "custom_initial_epsilon": 0.01,
         "detection_method": "hash_grid",
         "extend_collision_set": false
     },
     "barrier_solver": {
         "inner_solver": "newton_solver",
-        "min_barrier_epsilon": 1e-4
+        "min_barrier_epsilon": 0.0001
     },
     "rigid_body_problem": {
-        "gravity": [0.0, -1.0, 0.0],
-        "rigid_bodies": [{
+        "gravity": [
+            0.0,
+            -1.0
+        ],
+        "rigid_bodies": [
+            {
                 "vertices": [
-                    [-1, 0.000001],
-                    [-1, 2],
-                    [1, 2],
-                    [1, 0.000001]
+                    [
+                        -1,
+                        1e-06
+                    ],
+                    [
+                        -1,
+                        2
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        1,
+                        1e-06
+                    ]
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
                 ],
                 "edges": [
-                    [0, 1],
-                    [1, 2],
-                    [2, 3],
-                    [3, 0]
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
                 ],
-                "velocity": [0.0, -5.0, 0.0],
-                "is_dof_fixed": [false, false, false]
+                "linear_velocity": [
+                    0.0,
+                    -5.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
             },
             {
                 "vertices": [
-                    [-10, -1.0],
-                    [-10, 0.0],
-                    [10, 0.0],
-                    [10, -1.0]
+                    [
+                        -10,
+                        -1.0
+                    ],
+                    [
+                        -10,
+                        0.0
+                    ],
+                    [
+                        10,
+                        0.0
+                    ],
+                    [
+                        10,
+                        -1.0
+                    ]
+                ],
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
                 ],
                 "edges": [
-                    [0, 1],
-                    [1, 2],
-                    [2, 3],
-                    [3, 0]
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
                 ],
-                "velocity": [0.0, 0.0, 0.0],
-                "is_dof_fixed": [true, true, true]
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
             }
         ]
     }

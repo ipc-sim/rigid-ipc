@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 {
     Catch::Session session; // There must be exactly one instance
 
-    int log_level = spdlog::level::off;
+    int log_level = spdlog::level::warn;
 
     // Build a new parser on top of Catch's
     using namespace Catch::clara;

@@ -15,23 +15,21 @@
 // ---------------------------------------------------
 using namespace ccd::physics;
 RigidBody simple(
-    Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Eigen::MatrixXd velocity)
+    Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Pose<double> velocity)
 {
+    int ndof = Pose<double>::dim_to_ndof(vertices.cols());
     return RigidBody::from_points(vertices, edges,
-        /*mass=*/Eigen::VectorXd(),
-        /*dof=*/Eigen::Vector3b::Zero(),
-        /*oriented=*/false,
-        /*position=*/Eigen::Vector3d::Zero(), velocity);
+        Pose<double>(vertices.cols()), velocity, /*density=*/1.0,
+        /*is_dof_fixed=*/Eigen::VectorXb::Zero(ndof), /*oriented=*/false);
 }
 
-TEST_CASE("Rigid Body Transform", "[RB][RB-transform]")
+TEST_CASE("2D Rigid Body Transform", "[RB][RB-transform]")
 {
     // Test vertices positions for given rb position
-
     Eigen::MatrixXd vertices_t0(4, 2);
     Eigen::MatrixXi edges(4, 2);
-    Eigen::Vector3d velocity = Eigen::Vector3d::Zero();
-    Eigen::Vector3d rb_step;
+    Pose<double> velocity(vertices_t0.cols());
+    Pose<double> rb_step(vertices_t0.cols());
 
     Eigen::MatrixXd vertices_step(4, 2), expected(4, 2);
 
@@ -40,27 +38,32 @@ TEST_CASE("Rigid Body Transform", "[RB][RB-transform]")
 
     SECTION("Translation Case")
     {
-        rb_step << 0.5, 0.5, 0.0;
-        vertices_step = rb_step.segment(0, 2).transpose().replicate(4, 1);
+        rb_step.position << 0.5, 0.5;
+        rb_step.rotation << 0.0;
+        vertices_step = rb_step.position.transpose().replicate(4, 1);
     }
 
     SECTION("90 Deg Rotation Case")
     {
-        rb_step << 0.0, 0.0, 0.5 * M_PI;
+        rb_step.position << 0.0, 0.0;
+        rb_step.rotation << 0.5 * M_PI;
         vertices_step << 1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, -1.0;
     }
 
     SECTION("Translation and Rotation Case")
     {
-        rb_step << 0.5, 0.5, 0.5 * M_PI;
+        rb_step.position << 0.5, 0.5;
+        rb_step.rotation << 0.5 * M_PI;
         vertices_step << 1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, -1.0;
-        vertices_step += rb_step.segment(0, 2).transpose().replicate(4, 1);
+        vertices_step += rb_step.position.transpose().replicate(4, 1);
     }
-    using namespace ccd::physics;
     expected = vertices_t0 + vertices_step;
 
     auto rb = simple(vertices_t0, edges, velocity);
-    Eigen::VectorXd gamma_t1 = rb.position + rb_step;
+    Pose<double> gamma_t1(rb.pose.position + rb_step.position,
+        rb.pose.rotation + rb_step.rotation);
     Eigen::MatrixXd actual = rb.world_vertices<double>(gamma_t1);
     CHECK((expected - actual).squaredNorm() < 1E-6);
 }
+
+// TODO: Add 3D RB test

@@ -1,36 +1,101 @@
 {
     "scene_type": "rigid_body_problem",
     "rigid_body_problem": {
-        "rigid_bodies": [{
+        "rigid_bodies": [
+            {
                 "vertices": [
-                    [-1, -1],
-                    [-1, 1],
-                    [1, 1],
-                    [1, -1]
+                    [
+                        -1,
+                        -1
+                    ],
+                    [
+                        -1,
+                        1
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        1,
+                        -1
+                    ]
                 ],
                 "edges": [
-                    [0, 1],
-                    [1, 2],
-                    [2, 3],
-                    [3, 0]
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
                 ],
-                "velocity": [0.0, -1.0, 0.5]
+                "linear_velocity": [
+                    0.0,
+                    -1.0
+                ],
+                "angular_velocity": [
+                    0.5
+                ]
             },
             {
                 "vertices": [
-                    [-10, -10],
-                    [-10, -9],
-                    [10, -9],
-                    [10, -10]
+                    [
+                        -10,
+                        -10
+                    ],
+                    [
+                        -10,
+                        -9
+                    ],
+                    [
+                        10,
+                        -9
+                    ],
+                    [
+                        10,
+                        -10
+                    ]
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
                 ],
                 "edges": [
-                    [0, 1],
-                    [1, 2],
-                    [2, 3],
-                    [3, 0]
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
                 ],
-                "velocity": [0.0, 0.0, 0.0],
-                "is_dof_fixed": [false, false, false]
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
             }
         ]
     }

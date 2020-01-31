@@ -18,7 +18,6 @@
     "rigid_body_problem": {
         "gravity": [
             0.0,
-            0.0,
             0.0
         ],
         "coefficient_restitution": 1.0,
@@ -62,6 +61,17 @@
                         ]
                     ]
                 ],
+                "density": 10.0,
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
+                "oriented": true,
+                "position": [
+                    -0.5,
+                    2.5
+                ],
                 "edges": [
                     [
                         0,
@@ -80,29 +90,16 @@
                         0
                     ]
                 ],
-                "masses": [
-                    2.5,
-                    2.5,
-                    2.5,
-                    2.5
-                ],
-                "density": 10.0,
-                "is_dof_fixed": [
-                    false,
-                    false,
-                    false
-                ],
-                "oriented": true,
-                "velocity": [
-                    1,
-                    -1,
+                "rotation": [
                     0
                 ],
-                "position": [
-                    -0.5,
-                    2.5
+                "linear_velocity": [
+                    1,
+                    -1
                 ],
-                "theta": 0
+                "angular_velocity": [
+                    0
+                ]
             },
             {
                 "vertices": [
@@ -3505,6 +3502,11 @@
                         ]
                     ]
                 ],
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
+                ],
                 "edges": [
                     [
                         0,
@@ -5103,15 +5105,12 @@
                         0
                     ]
                 ],
-                "velocity": [
-                    0.0,
+                "linear_velocity": [
                     0.0,
                     0.0
                 ],
-                "is_dof_fixed": [
-                    true,
-                    true,
-                    true
+                "angular_velocity": [
+                    0.0
                 ]
             }
         ]

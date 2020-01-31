@@ -104,3 +104,10 @@ if(NOT TARGET CLI11::CLI11)
     download_cli11()
     add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/cli11)
 endif()
+
+# finite-diff
+if(NOT TARGET FiniteDiff::FiniteDiff)
+  download_finite_diff()
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/finite-diff EXCLUDE_FROM_ALL)
+  add_library(FiniteDiff::FiniteDiff ALIAS FiniteDiff)
+endif()

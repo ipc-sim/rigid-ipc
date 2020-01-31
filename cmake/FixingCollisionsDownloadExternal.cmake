@@ -21,7 +21,6 @@ endfunction()
 
 ################################################################################
 
-## Catch2
 function(download_catch2)
     custom_download_project(Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
@@ -29,7 +28,6 @@ function(download_catch2)
     )
 endfunction()
 
-## nlopt
 function(download_nlopt)
     custom_download_project(nlopt
         GIT_REPOSITORY https://github.com/stevengj/nlopt.git
@@ -37,7 +35,6 @@ function(download_nlopt)
     )
 endfunction()
 
-## OSQP
 function(download_osqp)
     custom_download_project(osqp
         GIT_REPOSITORY https://github.com/oxfordcontrol/osqp.git
@@ -77,5 +74,12 @@ function(download_cli11)
     custom_download_project(cli11
         GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
         GIT_TAG        8ecce8fd2c49f64c80e5757cb12d2fd1fa62f242
+    )
+endfunction()
+
+function(download_finite_diff)
+    custom_download_project(finite-diff
+        GIT_REPOSITORY https://github.com/zfergus/finite-diff.git
+        GIT_TAG        01e16fb39ecf6fe6367b932448028817becfb633
     )
 endfunction()

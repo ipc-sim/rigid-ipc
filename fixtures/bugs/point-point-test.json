@@ -17,32 +17,82 @@
         "min_barrier_epsilon": 0.0001
     },
     "rigid_body_problem": {
-        "gravity": [0, 0, 0],
+        "gravity": [
+            0,
+            0
+        ],
         "coefficient_restitution": 0,
-        "rigid_bodies": [{
-            "vertices": [
-                [-1, 1],
-                [0, 0],
-                [1, 1]
-            ],
-            "edges": [
-                [0, 1],
-                [1, 2]
-            ],
-            "oriented": false,
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [true, true, true]
-        }, {
-            "vertices": [
-                [0, 1.0],
-                [0, 0.5]
-            ],
-            "edges": [
-                [0, 1]
-            ],
-            "oriented": false,
-            "velocity": [0.0, -1, 0.0],
-            "is_dof_fixed": [false, false, false]
-        }]
+        "rigid_bodies": [
+            {
+                "vertices": [
+                    [
+                        -1,
+                        1
+                    ],
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "oriented": false,
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ]
+                ],
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
+            },
+            {
+                "vertices": [
+                    [
+                        0,
+                        1.0
+                    ],
+                    [
+                        0,
+                        0.5
+                    ]
+                ],
+                "oriented": false,
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ]
+                ],
+                "linear_velocity": [
+                    0.0,
+                    -1
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
+            }
+        ]
     }
 }

@@ -11,7 +11,6 @@
 #include "SimState.hpp"
 #include <profiler.hpp>
 
-
 namespace ccd {
 
 class UISimState : public igl::opengl::glfw::imgui::ImGuiMenu {
@@ -25,8 +24,8 @@ public:
 
     virtual void init(igl::opengl::glfw::Viewer* _viewer) override;
     virtual void draw_menu() override;
-    //    virtual bool mouse_down(int button, int modifier) override;
-    //    virtual bool key_pressed(unsigned int key, int modifiers) override;
+    // virtual bool mouse_down(int button, int modifier) override;
+    // virtual bool key_pressed(unsigned int key, int modifiers) override;
 
     inline const std::vector<std::string>& get_data_names() const
     {
@@ -62,12 +61,12 @@ public:
 
     inline void simulation_step()
     {
-//        PROFILE_MAIN_POINT("simulation_step")
-//        PROFILE_START()
+        // PROFILE_MAIN_POINT("simulation_step")
+        // PROFILE_START()
         m_state.simulation_step();
         m_state.save_simulation_step();
-//        PROFILE_END()
-//        LOG_PROFILER(m_state.scene_file);
+        // PROFILE_END()
+        // LOG_PROFILER(m_state.scene_file);
         redraw_scene();
     }
 
@@ -91,9 +90,8 @@ public:
     bool m_has_scene;
     bool m_bkp_had_collision;
     bool m_bkp_has_collision;
-    int m_log_level;        ///< brief setup log
-    double m_interval_time; ///< time within the interval
-
+    int m_log_level;        ///< @brief setup log
+    double m_interval_time; ///< @brief time within the interval
 
 protected:
     void draw_io();
@@ -102,17 +100,9 @@ protected:
     void draw_collision_menu();
     void draw_legends();
 
-
 private:
     std::shared_ptr<igl::opengl::GraphData> edges_data;
     std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
-//    std::shared_ptr<igl::opengl::VectorFieldData> next_displacement_data;
-//    std::shared_ptr<igl::opengl::VectorFieldData> initial_displacement_data;
-//    std::shared_ptr<igl::opengl::VectorFieldData> final_displacement_data;
-
-//    std::shared_ptr<igl::opengl::VectorFieldData> collision_force_data;
-//    std::shared_ptr<igl::opengl::VectorFieldData> gradient_data;
-//    std::shared_ptr<igl::opengl::ScalarFieldData> grid_data;
 
     std::map<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>> datas_;
     std::vector<std::string> data_names_;

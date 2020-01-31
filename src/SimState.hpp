@@ -27,7 +27,6 @@ public:
 
     void run_simulation(const std::string& fout);
 
-
     const nlohmann::json& get_config() { return args; }
     nlohmann::json get_active_config();
 
@@ -46,14 +45,8 @@ public:
 
     nlohmann::json args;
 
-    // for visualization
-    Eigen::MatrixXd grid_V;
-    Eigen::MatrixXi grid_F;
-
-
 protected:
     bool m_dirty_constraints;
-    void init_background_grid(const nlohmann::json& args);
     std::vector<Eigen::MatrixXd> vertices_sequence;
     std::vector<nlohmann::json> state_sequence;
 };

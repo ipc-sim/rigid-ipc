@@ -278,7 +278,6 @@ namespace opt {
         const Eigen::VectorXd& b,
         const Eigen::VectorXd& c)
     {
-
         Diff::activate();
         Diff::D1VectorXd da = Diff::d1vars(0, a);
         Diff::D1VectorXd db = Diff::d1vars(2, b);

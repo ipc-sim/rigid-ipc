@@ -1,6 +1,6 @@
 #include "distance_barrier_particles_problem.hpp"
 
-#include <autodiff/finitediff.hpp>
+#include <finitediff.hpp>
 #include <utils/flatten.hpp>
 
 #include <logger.hpp>

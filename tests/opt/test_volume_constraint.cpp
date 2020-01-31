@@ -3,7 +3,7 @@
 #include <iostream>
 #include <opt/volume_constraint.hpp>
 
-#include <autodiff/finitediff.hpp>
+#include <finitediff.hpp>
 #include <utils/flatten.hpp>
 
 
@@ -160,7 +160,7 @@ TEST_CASE("Volume Constraint Gradient", "[opt][ccd][Volume][Gradient]")
     Eigen::MatrixXd x = displacements;
 
     ccd::flatten(x);
-    ccd::finite_jacobian(x, f, approx_jac);
+    fd::finite_jacobian(x, f, approx_jac);
 
     REQUIRE(approx_jac.rows() == jac_actual.rows());
     CHECK((approx_jac - jac_actual).norm() / approx_jac.norm() < 1e-6);

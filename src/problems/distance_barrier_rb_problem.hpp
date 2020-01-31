@@ -131,7 +131,7 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g_core(
             const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
 
-        void compare_fd(const Eigen::VectorXd& sigma,
+        bool compare_fd(const Eigen::VectorXd& sigma,
             const EdgeVertexCandidate&,
             const Eigen::VectorXd&);
 

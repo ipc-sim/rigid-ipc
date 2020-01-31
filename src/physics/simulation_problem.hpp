@@ -2,9 +2,9 @@
 
 #include <nlohmann/json.hpp>
 
+#include <opt/collision_constraint.hpp>
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
-#include <opt/collision_constraint.hpp>
 
 #include <solvers/optimization_solver.hpp>
 
@@ -26,7 +26,6 @@ namespace physics {
         virtual nlohmann::json state() const = 0;
         virtual void state(const nlohmann::json& s) = 0;
 
-
         /// @brief  does a single simulation step. Returns true if there is
         /// a collision
         virtual bool simulation_step(const double time_step) = 0;
@@ -45,6 +44,7 @@ namespace physics {
         /// -----------------------------------------------------------------
         virtual Eigen::MatrixXd vertices() const = 0;
         virtual const Eigen::MatrixXi& edges() const = 0;
+        virtual const Eigen::MatrixXi& faces() const = 0;
         virtual Eigen::MatrixXd velocities() const = 0;
         virtual Eigen::VectorXi group_id() const = 0;
 

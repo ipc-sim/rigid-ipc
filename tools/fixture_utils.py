@@ -68,12 +68,12 @@ def create_argument_parser(
         default_restitution_coefficient:
         float = DEFAULT_RESTITUTION_COEFFICIENT,
         default_gravity: list = DEFAULT_GRAVITY,
-        default_num_steps: int = DEFAULT_NUM_STEPS, 
-        default_barrier_solver_eb: float= DEFAULT_BARRIER_SOLVER_EB,
-        default_barrier_solver_c: float= DEFAULT_BARRIER_SOLVER_C,
-        default_barrier_solver_tinit: float= DEFAULT_BARRIER_SOLVER_TINIT,
-        default_barrier_solver_tinc: float= DEFAULT_BARRIER_SOLVER_TINC,
-        ) -> argparse.ArgumentParser:
+        default_num_steps: int = DEFAULT_NUM_STEPS,
+        default_barrier_solver_eb: float = DEFAULT_BARRIER_SOLVER_EB,
+        default_barrier_solver_c: float = DEFAULT_BARRIER_SOLVER_C,
+        default_barrier_solver_tinit: float = DEFAULT_BARRIER_SOLVER_TINIT,
+        default_barrier_solver_tinc: float = DEFAULT_BARRIER_SOLVER_TINC,
+) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--time-step",
                         type=float,
@@ -228,11 +228,11 @@ def generate_box_body(hx: float, hy: float, center: list, angle: float,
         "vertices": vertices.tolist(),
         "polygons": [vertices.tolist()],
         "edges": edges.tolist(),
-        "masses": numpy.full(4, mass / 4).tolist(),
         "density": density,
         "is_dof_fixed": numpy.zeros(3, dtype=bool).tolist(),
         "oriented": True,
-        "velocity": numpy.zeros(3).tolist(),
+        "linear_velocity": numpy.zeros(2).tolist(),
+        "angular_velocity": numpy.zeros(1).tolist(),
         "position": center,
-        "theta": angle
+        "rotation": [angle]
     }

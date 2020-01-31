@@ -32,21 +32,28 @@ namespace physics {
         virtual nlohmann::json state() const override;
         void state(const nlohmann::json& s) override;
 
-        /// \brief does a single simulation step. Returns true if there is a
-        /// collision
+        /// @brief take a single simulation step
+        /// @returns true if there is a collision
         bool simulation_step(const double time_step) override;
 
         /// @brief moves status to given configuration vector
         virtual bool take_step(
-            const Eigen::VectorXd& sigma, const double time_step) override;
+            const std::vector<Pose<double>>& pose, const double time_step);
+        /// @brief moves status to given configuration vector
+        virtual bool take_step(
+            const Eigen::VectorXd& sigma, const double time_step) override
+        {
+            return take_step(
+                Pose<double>::dofs_to_poses(sigma, dim()), time_step);
+        }
 
-        /// \brief update problem using current status of bodies.
+        /// @brief update problem using current status of bodies.
         void update_constraint() override;
         opt::OptimizationResults solve_constraints() override;
         void init_solve() override;
         opt::OptimizationResults step_solve() override;
 
-        /// \brief returns world vertices at the END of step (current)
+        /// @brief returns world vertices at the END of step (current)
         Eigen::MatrixXd vertices() const override
         {
             return m_assembler.world_vertices_t1();
@@ -56,9 +63,15 @@ namespace physics {
         {
             return m_assembler.world_velocities();
         }
+
         const Eigen::MatrixXi& edges() const override
         {
             return m_assembler.m_edges;
+        }
+
+        const Eigen::MatrixXi& faces() const override
+        {
+            return m_assembler.m_faces;
         }
 
         Eigen::VectorXi group_id() const override
@@ -72,7 +85,7 @@ namespace physics {
         }
         void init(const std::vector<RigidBody> rbs);
 
-        Eigen::Vector3d rb_position_next(
+        Pose<double> rb_next_pose(
             const RigidBody& rb, const double time_step) const;
 
         ////////////////////////////////////////////////////////////////////////
@@ -91,6 +104,7 @@ namespace physics {
 
         const int& num_vars() override { return num_vars_; }
         const Eigen::VectorXd& starting_point() override { return x0; }
+        int dim() const { return m_assembler.dim(); }
 
         // ------------------------------------------------------------------------
         // Settings
@@ -116,8 +130,10 @@ namespace physics {
         Eigen::MatrixXd vertices_t0;
         ///< vertices positions at end of interval
         Eigen::MatrixXd vertices_q1;
-        ///< rigid body positions at end of interval
-        Eigen::VectorXd sigma_t1;
+        ///< rigid body poses at start of interval
+        std::vector<Pose<double>> poses_t0;
+        ///< rigid body poses at end of interval
+        std::vector<Pose<double>> poses_t1;
 
         /// Used for velocity restoration
         EdgeVertexImpacts original_ev_impacts;

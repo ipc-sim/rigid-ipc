@@ -78,7 +78,6 @@ namespace opt {
         double inner_solver_threshold;
 
         double t;
-
     };
 
     class BarrierSolver : public virtual IStateOptimizationSolver {
@@ -111,14 +110,14 @@ namespace opt {
         }
 
         ///
-        /// "For a given outer iteration (i.e. fixed t) the precision of the result will be ~ m/t
-        /// (in terms of how close it is to the solution of the original
-        /// inequality constrained problem).  It is possible to run Newton solve
-        /// to a fixed high precision (say 1e-12) to get this approximate
-        /// solution, but this si wasteful.  On the other hand, running it at
-        /// the same precision as the current error due to finite t is somewhat
-        /// risky, especially for low values of t -- this may lead to a
-        /// substantial deviation from the true solution.    So a possible
+        /// "For a given outer iteration (i.e. fixed t) the precision of the
+        /// result will be ~ m/t (in terms of how close it is to the solution of
+        /// the original inequality constrained problem).  It is possible to run
+        /// Newton solve to a fixed high precision (say 1e-12) to get this
+        /// approximate solution, but this si wasteful.  On the other hand,
+        /// running it at the same precision as the current error due to finite
+        /// t is somewhat risky, especially for low values of t -- this may lead
+        /// to a substantial deviation from the true solution.    So a possible
         /// approach is to use a faction c of the current outer iteration
         /// precision.  This however is excessive for high values of t,
         /// especially hitting the limits of double accuracy.  It is reasonable
@@ -134,7 +133,8 @@ namespace opt {
         double e_b;
         double t_inc;
 
-         int debug_max_constraints;
+        int debug_max_constraints;
+
     protected:
         IBarrierOptimizationSolver& get_inner_solver() const
         {

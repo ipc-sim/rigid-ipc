@@ -65,6 +65,7 @@ namespace physics {
         Eigen::MatrixXd velocities() const override { return velocities_; }
 
         const Eigen::MatrixXi& edges() const override { return edges_; }
+        const Eigen::MatrixXi& faces() const override { return faces_; }
 
         const Eigen::MatrixXb& particle_dof_fixed() const override
         {
@@ -93,6 +94,7 @@ namespace physics {
         // World
         // ------------------------------------------------------------------------
         Eigen::MatrixXi edges_;
+        Eigen::MatrixXi faces_;
         Eigen::VectorXi group_ids_;
         Eigen::SparseMatrix<double> mass_matrix;
         Eigen::MatrixXb is_particle_dof_fixed;

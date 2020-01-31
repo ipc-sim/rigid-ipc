@@ -30,7 +30,6 @@ void UISimState::launch()
 
 void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
 {
-
     Super::init(_viewer);
     viewer->data().clear();
 

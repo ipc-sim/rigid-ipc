@@ -18,8 +18,7 @@
     "rigid_body_problem": {
         "gravity": [
             0,
-            -9.81,
-            0
+            -9.81
         ],
         "coefficient_restitution": -1.0,
         "rigid_bodies": [
@@ -62,6 +61,16 @@
                         ]
                     ]
                 ],
+                "oriented": true,
+                "position": [
+                    0,
+                    0.8838834764831843
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
                 "edges": [
                     [
                         0,
@@ -80,21 +89,15 @@
                         0
                     ]
                 ],
-                "oriented": true,
-                "position": [
-                    0,
-                    0.8838834764831843
+                "rotation": [
+                    45
                 ],
-                "theta": 45,
-                "velocity": [
-                    0.0,
+                "linear_velocity": [
                     0.0,
                     0.0
                 ],
-                "is_dof_fixed": [
-                    false,
-                    false,
-                    false
+                "angular_velocity": [
+                    0.0
                 ]
             },
             {
@@ -134,24 +137,6 @@
                             -0.5,
                             -0.5
                         ]
-                    ]
-                ],
-                "edges": [
-                    [
-                        0,
-                        1
-                    ],
-                    [
-                        1,
-                        2
-                    ],
-                    [
-                        2,
-                        3
-                    ],
-                    [
-                        3,
-                        0
                     ]
                 ],
                 "oriented": true,
@@ -159,16 +144,38 @@
                     0,
                     2.2980970388562794
                 ],
-                "theta": 0,
-                "velocity": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
                 "is_dof_fixed": [
                     false,
                     false,
                     false
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "rotation": [
+                    0
+                ],
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
                 ]
             },
             {
@@ -208,24 +215,6 @@
                             -0.5,
                             -0.5
                         ]
-                    ]
-                ],
-                "edges": [
-                    [
-                        0,
-                        1
-                    ],
-                    [
-                        1,
-                        2
-                    ],
-                    [
-                        2,
-                        3
-                    ],
-                    [
-                        3,
-                        0
                     ]
                 ],
                 "oriented": true,
@@ -233,16 +222,38 @@
                     0,
                     3.7123106012293743
                 ],
-                "theta": 45,
-                "velocity": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
                 "is_dof_fixed": [
                     false,
                     false,
                     false
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "rotation": [
+                    45
+                ],
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
                 ]
             },
             {
@@ -284,6 +295,16 @@
                         ]
                     ]
                 ],
+                "oriented": true,
+                "position": [
+                    0,
+                    5.126524163602469
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
                 "edges": [
                     [
                         0,
@@ -302,21 +323,15 @@
                         0
                     ]
                 ],
-                "oriented": true,
-                "position": [
-                    0,
-                    5.126524163602469
+                "rotation": [
+                    0
                 ],
-                "theta": 0,
-                "velocity": [
-                    0.0,
+                "linear_velocity": [
                     0.0,
                     0.0
                 ],
-                "is_dof_fixed": [
-                    false,
-                    false,
-                    false
+                "angular_velocity": [
+                    0.0
                 ]
             },
             {
@@ -428,6 +443,16 @@
                         ]
                     ]
                 ],
+                "oriented": false,
+                "position": [
+                    0.0,
+                    3.5632620818012346
+                ],
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
+                ],
                 "edges": [
                     [
                         0,
@@ -462,21 +487,15 @@
                         4
                     ]
                 ],
-                "oriented": false,
-                "position": [
-                    0.0,
-                    3.5632620818012346
+                "rotation": [
+                    0
                 ],
-                "theta": 0,
-                "velocity": [
-                    0.0,
+                "linear_velocity": [
                     0.0,
                     0.0
                 ],
-                "is_dof_fixed": [
-                    true,
-                    true,
-                    true
+                "angular_velocity": [
+                    0.0
                 ]
             }
         ]

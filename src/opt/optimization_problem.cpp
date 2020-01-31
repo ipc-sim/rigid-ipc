@@ -1,6 +1,6 @@
 #include "optimization_problem.hpp"
 
-#include <autodiff/finitediff.hpp>
+#include <finitediff.hpp>
 #include <logger.hpp>
 
 namespace ccd {
@@ -13,7 +13,7 @@ namespace opt {
             return problem.eval_f(xk);
         };
         Eigen::VectorXd grad;
-        ccd::finite_gradient(x, f, grad);
+        fd::finite_gradient(x, f, grad);
         return grad;
     }
 
@@ -25,7 +25,7 @@ namespace opt {
             return problem.eval_grad_f(xk);
         };
 
-        ccd::finite_jacobian(x, func_grad_f, hess, AccuracyOrder::SECOND);
+        fd::finite_jacobian(x, func_grad_f, hess, fd::AccuracyOrder::SECOND);
         return hess;
     }
 

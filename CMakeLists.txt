@@ -42,7 +42,6 @@ include(${PROJECT_NAME}Dependencies)
 ################################################################################
 
 add_library(${PROJECT_NAME}
-    src/autodiff/finitediff.cpp
     src/autodiff/autodiff.cpp
 
     src/ccd/degenerate_edge_error.cpp
@@ -59,9 +58,7 @@ add_library(${PROJECT_NAME}
     src/io/serialize_json.cpp
     src/io/read_rb_scene.cpp
 
-    src/physics/mass_matrix.cpp
-    src/physics/center_of_mass.cpp
-    src/physics/moment_of_inertia.cpp
+    src/physics/mass.cpp
     src/physics/simulation_problem.cpp
     src/physics/particles_problem.cpp
     src/physics/rigid_body_problem.cpp
@@ -181,7 +178,7 @@ add_custom_command(TARGET ${PROJECT_NAME}_sim POST_BUILD
 # No UI Executable
 ################################################################################
 add_executable(${PROJECT_NAME}_ngui
-     src/main2.cpp
+     src/cli_main.cpp
 )
 
 target_include_directories(${PROJECT_NAME}_ngui PRIVATE src)
@@ -225,6 +222,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
 
 # Logger
 target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog)
+
+# Finite Differences
+target_link_libraries(${PROJECT_NAME} PUBLIC FiniteDiff::FiniteDiff)
 
 #  GMP
 #find_package(GMP)

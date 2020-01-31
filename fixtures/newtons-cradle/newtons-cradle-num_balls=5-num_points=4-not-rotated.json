@@ -12,124 +12,378 @@
         "min_barrier_epsilon": 0.0001
     },
     "rigid_body_problem": {
-        "gravity": [0, 0, 0],
+        "gravity": [
+            0,
+            0
+        ],
         "coefficient_restitution": 1,
-        "rigid_bodies": [{
-            "vertices": [
-                [0, -10],
-                [0, 10]
-            ],
-            "edges": [
-                [0, 1]
-            ],
-            "oriented": false,
-            "theta": 0,
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [true, true, true],
-            "position": [-4.1, 0.0]
-        }, {
-            "vertices": [
-                [0, -10],
-                [0, 10]
-            ],
-            "edges": [
-                [0, 1]
-            ],
-            "oriented": false,
-            "theta": 0,
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [true, true, true],
-            "position": [5.5, 0.0]
-        }, {
-            "vertices": [
-                [0.5, 0.0],
-                [3.061616997868383e-17, 0.5],
-                [-0.5, 6.123233995736766e-17],
-                [-9.184850993605148e-17, -0.5]
-            ],
-            "edges": [
-                [0, 1],
-                [1, 2],
-                [2, 3],
-                [3, 0]
-            ],
-            "oriented": true,
-            "position": [-3, 0.0],
-            "theta": 45.0,
-            "velocity": [10.0, 0.0, 0.0],
-            "is_dof_fixed": [false, false, false]
-        }, {
-            "vertices": [
-                [0.5, 0.0],
-                [3.061616997868383e-17, 0.5],
-                [-0.5, 6.123233995736766e-17],
-                [-9.184850993605148e-17, -0.5]
-            ],
-            "edges": [
-                [0, 1],
-                [1, 2],
-                [2, 3],
-                [3, 0]
-            ],
-            "oriented": true,
-            "position": [0.0, 0.0],
-            "theta": 45.0,
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [false, false, false]
-        }, {
-            "vertices": [
-                [0.5, 0.0],
-                [3.061616997868383e-17, 0.5],
-                [-0.5, 6.123233995736766e-17],
-                [-9.184850993605148e-17, -0.5]
-            ],
-            "edges": [
-                [0, 1],
-                [1, 2],
-                [2, 3],
-                [3, 0]
-            ],
-            "oriented": true,
-            "position": [1.1, 0.0],
-            "theta": 45.0,
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [false, false, false]
-        }, {
-            "vertices": [
-                [0.5, 0.0],
-                [3.061616997868383e-17, 0.5],
-                [-0.5, 6.123233995736766e-17],
-                [-9.184850993605148e-17, -0.5]
-            ],
-            "edges": [
-                [0, 1],
-                [1, 2],
-                [2, 3],
-                [3, 0]
-            ],
-            "oriented": true,
-            "position": [2.2, 0.0],
-            "theta": 45.0,
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [false, false, false]
-        }, {
-            "vertices": [
-                [0.5, 0.0],
-                [3.061616997868383e-17, 0.5],
-                [-0.5, 6.123233995736766e-17],
-                [-9.184850993605148e-17, -0.5]
-            ],
-            "edges": [
-                [0, 1],
-                [1, 2],
-                [2, 3],
-                [3, 0]
-            ],
-            "oriented": true,
-            "position": [3.3000000000000003, 0.0],
-            "theta": 45.0,
-            "velocity": [0.0, 0.0, 0.0],
-            "is_dof_fixed": [false, false, false]
-        }]
+        "rigid_bodies": [
+            {
+                "vertices": [
+                    [
+                        0,
+                        -10
+                    ],
+                    [
+                        0,
+                        10
+                    ]
+                ],
+                "oriented": false,
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
+                ],
+                "position": [
+                    -4.1,
+                    0.0
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ]
+                ],
+                "rotation": [
+                    0
+                ],
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
+            },
+            {
+                "vertices": [
+                    [
+                        0,
+                        -10
+                    ],
+                    [
+                        0,
+                        10
+                    ]
+                ],
+                "oriented": false,
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
+                ],
+                "position": [
+                    5.5,
+                    0.0
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ]
+                ],
+                "rotation": [
+                    0
+                ],
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
+            },
+            {
+                "vertices": [
+                    [
+                        0.5,
+                        0.0
+                    ],
+                    [
+                        3.061616997868383e-17,
+                        0.5
+                    ],
+                    [
+                        -0.5,
+                        6.123233995736766e-17
+                    ],
+                    [
+                        -9.184850993605148e-17,
+                        -0.5
+                    ]
+                ],
+                "oriented": true,
+                "position": [
+                    -3,
+                    0.0
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "rotation": [
+                    45.0
+                ],
+                "linear_velocity": [
+                    10.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
+            },
+            {
+                "vertices": [
+                    [
+                        0.5,
+                        0.0
+                    ],
+                    [
+                        3.061616997868383e-17,
+                        0.5
+                    ],
+                    [
+                        -0.5,
+                        6.123233995736766e-17
+                    ],
+                    [
+                        -9.184850993605148e-17,
+                        -0.5
+                    ]
+                ],
+                "oriented": true,
+                "position": [
+                    0.0,
+                    0.0
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "rotation": [
+                    45.0
+                ],
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
+            },
+            {
+                "vertices": [
+                    [
+                        0.5,
+                        0.0
+                    ],
+                    [
+                        3.061616997868383e-17,
+                        0.5
+                    ],
+                    [
+                        -0.5,
+                        6.123233995736766e-17
+                    ],
+                    [
+                        -9.184850993605148e-17,
+                        -0.5
+                    ]
+                ],
+                "oriented": true,
+                "position": [
+                    1.1,
+                    0.0
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "rotation": [
+                    45.0
+                ],
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
+            },
+            {
+                "vertices": [
+                    [
+                        0.5,
+                        0.0
+                    ],
+                    [
+                        3.061616997868383e-17,
+                        0.5
+                    ],
+                    [
+                        -0.5,
+                        6.123233995736766e-17
+                    ],
+                    [
+                        -9.184850993605148e-17,
+                        -0.5
+                    ]
+                ],
+                "oriented": true,
+                "position": [
+                    2.2,
+                    0.0
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "rotation": [
+                    45.0
+                ],
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
+            },
+            {
+                "vertices": [
+                    [
+                        0.5,
+                        0.0
+                    ],
+                    [
+                        3.061616997868383e-17,
+                        0.5
+                    ],
+                    [
+                        -0.5,
+                        6.123233995736766e-17
+                    ],
+                    [
+                        -9.184850993605148e-17,
+                        -0.5
+                    ]
+                ],
+                "oriented": true,
+                "position": [
+                    3.3000000000000003,
+                    0.0
+                ],
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
+                "edges": [
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        0
+                    ]
+                ],
+                "rotation": [
+                    45.0
+                ],
+                "linear_velocity": [
+                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
+                    0.0
+                ]
+            }
+        ]
     }
 }

@@ -18,8 +18,7 @@
     "rigid_body_problem": {
         "gravity": [
             0,
-            -9.81,
-            0
+            -9.81
         ],
         "coefficient_restitution": -1,
         "rigid_bodies": [
@@ -94,6 +93,12 @@
                         ]
                     ]
                 ],
+                "oriented": true,
+                "is_dof_fixed": [
+                    true,
+                    true,
+                    true
+                ],
                 "edges": [
                     [
                         0,
@@ -128,17 +133,15 @@
                         0
                     ]
                 ],
-                "oriented": true,
-                "velocity": [
-                    0.0,
+                "rotation": [
+                    22.5
+                ],
+                "linear_velocity": [
                     0.0,
                     0.0
                 ],
-                "theta": 22.5,
-                "is_dof_fixed": [
-                    true,
-                    true,
-                    true
+                "angular_velocity": [
+                    0.0
                 ]
             },
             {
@@ -796,6 +799,13 @@
                         ]
                     ]
                 ],
+                "oriented": true,
+                "density": 10.722859289002587,
+                "is_dof_fixed": [
+                    false,
+                    false,
+                    false
+                ],
                 "edges": [
                     [
                         0,
@@ -998,69 +1008,12 @@
                         25
                     ]
                 ],
-                "oriented": true,
-                "velocity": [
+                "linear_velocity": [
                     0.0,
-                    0.0,
+                    0.0
+                ],
+                "angular_velocity": [
                     31.41592653589793
-                ],
-                "density": 10.722859289002587,
-                "masses": [
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0
-                ],
-                "is_dof_fixed": [
-                    false,
-                    false,
-                    false
                 ]
             }
         ]

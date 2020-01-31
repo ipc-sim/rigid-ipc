@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include <autodiff/finitediff.hpp>
+#include <finitediff.hpp>
 #include <opt/barrier.hpp>
 #include <opt/distance_barrier_constraint.hpp>
 #include <physics/rigid_body_assembler.hpp>
@@ -167,7 +167,7 @@ TEST_CASE("Distance Barrier Constraint Gradient",
     Eigen::MatrixXd x = displacements;
 
     ccd::flatten(x);
-    ccd::finite_jacobian(x, f, approx_jac);
+    fd::finite_jacobian(x, f, approx_jac);
 
     REQUIRE(approx_jac.rows() == actual_jac.rows());
     CHECK((approx_jac - actual_jac).squaredNorm() < 1e-12);
@@ -254,7 +254,7 @@ TEST_CASE("Distance Barrier Constraint Hessian",
             barrier.compute_constraints_jacobian(x, actual_jac);
             return actual_jac.row(int(i));
         };
-        ccd::finite_jacobian(x, f, finite_hess_i);
+        fd::finite_jacobian(x, f, finite_hess_i);
         bool pass
             = (finite_hess_i - actual_hess[i].toDense()).squaredNorm() < 1e-12;
 

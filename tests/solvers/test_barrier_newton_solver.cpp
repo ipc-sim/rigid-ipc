@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 #include <cmath>
 
-#include <autodiff/finitediff.hpp>
+#include <finitediff.hpp>
 
 #include <solvers/barrier_solver.hpp>
 #include <solvers/newton_solver.hpp>
@@ -88,7 +88,9 @@ TEST_CASE(
         {
             eps = epsilon;
         }
-        bool has_collisions(const Eigen::VectorXd&,const Eigen::VectorXd&) const override{
+        bool has_collisions(
+            const Eigen::VectorXd&, const Eigen::VectorXd&) const override
+        {
             return false;
         }
         const int& num_vars() override { return num_vars_; }
@@ -123,14 +125,14 @@ TEST_CASE(
         Eigen::VectorXd finite_grad(barrier_problem.num_vars());
         finite_grad = ccd::opt::eval_grad_f_approx(barrier_problem, x);
         Eigen::VectorXd analytic_grad = barrier_problem.eval_grad_f(x);
-        CHECK(compare_gradient(finite_grad, analytic_grad));
+        CHECK(fd::compare_gradient(finite_grad, analytic_grad));
 
         // Test ∇²f
         Eigen::MatrixXd finite_hessian = eval_hess_f_approx(barrier_problem, x);
 
         Eigen::MatrixXd analytic_hessian
             = barrier_problem.eval_hessian_f(x).toDense();
-        CHECK(compare_jacobian(finite_hessian, analytic_hessian));
+        CHECK(fd::compare_jacobian(finite_hessian, analytic_hessian));
 
         CAPTURE(x, problem.eval_g(x), epsilon, barrier_problem.eval_f(x),
             finite_grad, analytic_grad, finite_hessian, analytic_hessian);

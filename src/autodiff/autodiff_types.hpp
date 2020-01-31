@@ -25,7 +25,15 @@ public:
     typedef Eigen::Matrix<DDouble1, 2, 1> D1Vector2d;
     typedef Eigen::Matrix<DDouble2, 2, 1> D2Vector2d;
 
-    inline static void activate() { DiffScalarBase::setVariableCount(N); }
+    inline static void activate()
+    {
+        assert(N >= 0);
+        DiffScalarBase::setVariableCount(N);
+    }
+    inline static void activate(size_t variableCount)
+    {
+        DiffScalarBase::setVariableCount(variableCount);
+    }
 
     template <typename T>
     inline static Eigen::Matrix<T, Eigen::Dynamic, 1> dTvars(
@@ -60,7 +68,7 @@ public:
     }
     inline static Eigen::MatrixXd get_gradient(const D1VectorXd& x)
     {
-        Eigen::MatrixXd grad(x.rows(), N);
+        Eigen::MatrixXd grad(x.rows(), DiffScalarBase::getVariableCount());
         for (int i = 0; i < x.rows(); ++i) {
             grad.row(i) = x(i).getGradient();
         }
