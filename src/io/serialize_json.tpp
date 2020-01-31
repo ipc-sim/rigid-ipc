@@ -28,7 +28,6 @@ namespace io {
         return nlohmann::json(vec);
     }
 
-
     template <typename T>
     void from_json(
         const nlohmann::json& json, Eigen::Matrix<T, Eigen::Dynamic, 1>& vector)
@@ -47,6 +46,9 @@ namespace io {
         L list = json.get<L>();
 
         size_t num_rows = list.size();
+        if (num_rows == 0) {
+            return;
+        }
         size_t num_cols = list[0].size();
         matrix.resize(long(num_rows), long(num_cols));
 

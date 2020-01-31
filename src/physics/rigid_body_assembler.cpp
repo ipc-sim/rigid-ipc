@@ -22,6 +22,7 @@ namespace physics {
         size_t num_bodies = rigid_bodies.size();
         m_body_vertex_id.resize(num_bodies + 1);
         m_body_face_id.resize(num_bodies + 1);
+        m_body_edge_id.resize(num_bodies + 1);
 
         // Store the starting position of each RB vertex in the global vertices
         for (size_t i = 0; i < num_bodies; ++i) {
@@ -38,10 +39,11 @@ namespace physics {
             auto& rb = rigid_bodies[i];
             m_edges.block(m_body_edge_id[i], 0, rb.edges.rows(), 2)
                 = (rb.edges.array() + int(m_body_vertex_id[i]));
-            m_faces.block(m_body_face_id[i], 0, rb.faces.rows(), 3)
-                = (rb.faces.array() + int(m_body_vertex_id[i]));
+            if (rb.faces.size() != 0) {
+                m_faces.block(m_body_face_id[i], 0, rb.faces.rows(), 3)
+                    = (rb.faces.array() + int(m_body_vertex_id[i]));
+            }
         }
-        // global faces
         // vertex to body map
         m_vertex_to_body_map.resize(m_body_vertex_id.back());
         for (size_t i = 0; i < num_bodies; ++i) {
