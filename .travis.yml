@@ -12,9 +12,11 @@ addons:
     - gcc-6
     - gcc-7
     - xorg-dev
+    - libboost-dev
   homebrew:
     packages:
     - ccache
+    - boost
 matrix:
   include:
   - os: linux
