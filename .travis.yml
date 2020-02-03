@@ -62,6 +62,3 @@ script:
 - make -j2
 - if [[ "$CONFIG" == "Release" ]]; then make test; fi
 - ccache --show-stats
-
-notifications:
-  slack: geometry-graphics-nyu:W6aKq3Uw2UJJqT0C0M7LkFWY
