@@ -108,23 +108,6 @@ namespace physics {
             return world_vertex<T>(Pose<T>(dof), vertex_idx);
         }
 
-        template <>
-        Eigen::VectorXd world_vertex(
-            const Eigen::VectorXd& dof, const int vertex_idx) const
-        {
-            Pose<double> p(dof);
-            Eigen::VectorXd v = world_vertex<double>(p, vertex_idx);
-            // std::cout << "Vᵢ:" << vertices.row(vertex_idx) << std::endl
-            //           << "p.position:" << p.position.transpose() << std::endl
-            //           << "p.rotation:" << p.rotation.transpose() << std::endl
-            //           << "wᵢ:" << v.transpose() << std::endl
-            //           << "W(i):" <<
-            //           world_vertices<double>(dof).row(vertex_idx)
-            //           << std::endl
-            //           << std::endl;
-            return v;
-        }
-
         Eigen::MatrixXd world_vertices_gradient(const Pose<double>& pose) const;
 
         Eigen::MatrixXd world_vertices_gradient_exact(
