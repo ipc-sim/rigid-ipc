@@ -67,7 +67,7 @@ namespace physics {
                     "Need to figure out rigid body assembly!");
             }
             mass_vector.segment(rb_ndof * i + rb.pos_ndof(), rb.rot_ndof())
-                = rb.moment_of_inertia;
+                = rb.moment_of_inertia.diagonal();
 
             // scale rigid body pose to dof
             // set postion scaling to 1

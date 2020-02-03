@@ -253,3 +253,5 @@ tmp
 hpc-results
 paper
 temp-plot.html
+
+**/*.bak

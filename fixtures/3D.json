@@ -18,7 +18,11 @@
     "rigid_body_problem": {
         "coefficient_restitution": 1,
         "rigid_bodies": [{
-            "mesh": "/Users/zachary/models/keenan-crane/spot/spot_triangulated.obj"
+            "mesh": "/Users/zachary/models/keenan-crane/spot/spot_triangulated.obj",
+            "position": [0, 0, 0],
+            "rotation": [0, 135, 0],
+            "linear_velocity": [1, 0, 0],
+            "angular_velocity": [0, 0, 0]
         }]
     }
 }

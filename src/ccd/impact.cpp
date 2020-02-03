@@ -16,13 +16,28 @@ EdgeVertexImpact::EdgeVertexImpact(
 
 EdgeEdgeImpact::EdgeEdgeImpact() {}
 
-EdgeEdgeImpact::EdgeEdgeImpact(double time, long impacted_edge_index,
-    double impacted_alpha, long impacting_edge_index, double impacting_alpha)
+EdgeEdgeImpact::EdgeEdgeImpact(double time,
+    long impacted_edge_index,
+    double impacted_alpha,
+    long impacting_edge_index,
+    double impacting_alpha)
     : time(time)
     , impacted_edge_index(impacted_edge_index)
     , impacted_alpha(impacted_alpha)
     , impacting_edge_index(impacting_edge_index)
     , impacting_alpha(impacting_alpha)
+{
+}
+
+FaceVertexImpact::FaceVertexImpact() {}
+
+FaceVertexImpact::FaceVertexImpact(
+    double time, long face_index, double u, double v, long vertex_index)
+    : time(time)
+    , face_index(face_index)
+    , u(u)
+    , v(v)
+    , vertex_index(vertex_index)
 {
 }
 
@@ -37,7 +52,8 @@ bool EdgeVertexImpact::operator==(const EdgeVertexImpact& other) const
 // be multiple edge-edge impacts per edge-vertex impact depending on the
 // connectivity.
 void convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
-    const EdgeVertexImpacts& ev_impacts, EdgeEdgeImpacts& ee_impacts)
+    const EdgeVertexImpacts& ev_impacts,
+    EdgeEdgeImpacts& ee_impacts)
 {
     ee_impacts.clear();
     for (EdgeVertexImpact ev_impact : ev_impacts) {
@@ -57,7 +73,8 @@ void convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
 // be multiple edge-vertex impacts per edge-edge impact depending on the
 // connectivity.
 void convert_edge_edge_to_edge_vertex_impacts(const Eigen::MatrixX2i& edges,
-    const EdgeEdgeImpacts& ee_impacts, EdgeVertexImpacts& ev_impacts)
+    const EdgeEdgeImpacts& ee_impacts,
+    EdgeVertexImpacts& ev_impacts)
 {
     ev_impacts.clear();
     for (EdgeEdgeImpact ee_impact : ee_impacts) {

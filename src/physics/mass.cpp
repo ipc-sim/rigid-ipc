@@ -127,6 +127,7 @@ namespace physics {
         center = Eigen::Vector3d(integral[1], integral[2], integral[3]) / mass;
 
         // inertia relative to world origin
+        inertia.resize(3, 3);
         inertia(0, 0) = integral[5] + integral[6];
         inertia(0, 1) = -integral[7];
         inertia(0, 2) = -integral[9];
@@ -196,6 +197,7 @@ namespace physics {
         construct_mass_matrix(vertices, facets, M);
         return compute_center_of_mass(vertices, M);
     }
+
     Eigen::VectorXd compute_center_of_mass(const Eigen::MatrixXd& vertices,
         const Eigen::SparseMatrix<double>& mass_matrix)
     {

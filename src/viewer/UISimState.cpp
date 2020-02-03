@@ -59,7 +59,6 @@ std::shared_ptr<igl::opengl::ViewerDataExt> UISimState::get_data(
 
 void UISimState::load_scene()
 {
-
     auto q = m_state.problem_ptr->vertices();
     auto v = m_state.problem_ptr->velocities() * m_state.m_timestep_size;
 
@@ -70,10 +69,30 @@ void UISimState::load_scene()
 
     velocity_data->set_vector_field(q, v);
 
+    int dim = q.cols();
+    m_viewer.core().trackball_angle = Eigen::Quaternionf::Identity();
+    m_viewer.core().set_rotation_type(dim == 2
+            ? igl::opengl::ViewerCore::ROTATION_TYPE_NO_ROTATION
+            : igl::opengl::ViewerCore::
+                  ROTATION_TYPE_TWO_AXIS_VALUATOR_FIXED_UP);
+    m_viewer.core().orthographic = dim == 2;
     viewer->core().align_camera_center(edges_data->mV, edges_data->mE);
     m_has_scene = true;
     m_player_state = PlayerState::Paused;
     m_interval_time = 0.0;
+
+    // Default colors
+    // background_color << 0.3f, 0.3f, 0.5f, 1.0f;
+
+    // Camera parameters
+    m_viewer.core().camera_base_zoom = 1.0f;
+    m_viewer.core().camera_zoom = 1.0f;
+    // m_viewer.core().camera_view_angle = 45.0;
+    m_viewer.core().camera_base_translation << 0, 0, 0;
+    m_viewer.core().camera_translation << 0, 0, 0;
+    m_viewer.core().camera_eye << 0, 0, 5;
+    m_viewer.core().camera_center << 0, 0, 0;
+    m_viewer.core().camera_up << 0, 1, 0;
 }
 
 void UISimState::redraw_scene()

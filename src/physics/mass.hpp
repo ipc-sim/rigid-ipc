@@ -49,7 +49,7 @@ namespace physics {
      * Assumes vertices are given in body space (i.e centered of mass at 0,0).
      */
     Eigen::MatrixXd compute_moment_of_inertia(
-        const Eigen::MatrixXd& vertices, const Eigen::VectorXi& facets);
+        const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& facets);
     Eigen::MatrixXd compute_moment_of_inertia(const Eigen::MatrixXd& vertices,
         const Eigen::SparseMatrix<double>& mass_matrix);
 

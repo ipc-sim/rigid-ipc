@@ -33,7 +33,7 @@ namespace io {
     {
         std::unordered_set<std::pair<int, int>, pair_hash> edge_set;
         for (size_t i = 0; i < faces.rows(); i++) {
-            for (size_t j = 0; i < faces.cols(); j++) {
+            for (size_t j = 0; j < faces.cols(); j++) {
                 // Do not put duplicate backwards edges
                 size_t next_j = (j + 1) % faces.cols();
                 if (edge_set.find(

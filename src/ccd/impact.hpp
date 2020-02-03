@@ -5,12 +5,12 @@
 
 namespace ccd {
 
-/// Data structure representing an impact of an edge and vertex.
+/// @brief Data structure representing an impact of an edge and vertex.
 struct EdgeVertexImpact {
-    double time;       ///< Time of impact
-    long edge_index;   ///< Impacted edge
-    double alpha;      ///< Parameter along the edge where the impact occured
-    long vertex_index; ///< Impacting vertex
+    double time;     ///< @brief Time of impact
+    long edge_index; ///< @brief Impacted edge
+    double alpha; ///< @brief Parameter along the edge where the impact occured
+    long vertex_index; ///< @brief Impacting vertex
 
     EdgeVertexImpact();
     EdgeVertexImpact(
@@ -19,10 +19,10 @@ struct EdgeVertexImpact {
     bool operator==(const EdgeVertexImpact& other) const;
 };
 
-/// A vector of edge-vertex impact pointers.
+/// @brief A vector of edge-vertex impact pointers.
 typedef std::vector<EdgeVertexImpact> EdgeVertexImpacts;
 
-/// Data structure representing an impact of an edge and edge.
+/// @brief Data structure representing an impact of an edge and edge.
 struct EdgeEdgeImpact {
     double time;              ///< @brief Time of impact
     long impacted_edge_index; ///< @brief Impacted edge
@@ -33,17 +33,38 @@ struct EdgeEdgeImpact {
                             ///< the impact occured.
 
     EdgeEdgeImpact();
-    EdgeEdgeImpact(double time, long impacted_edge_index, double impacted_alpha,
-        long impacting_edge_index, double impacting_alpha);
+    EdgeEdgeImpact(double time,
+        long impacted_edge_index,
+        double impacted_alpha,
+        long impacting_edge_index,
+        double impacting_alpha);
 
     size_t impacting_node() const { return (impacting_alpha < 0.5 ? 0 : 1); }
 };
 
-/// A vector of edge-edge impact pointers.
+/// @brief A vector of edge-edge impact pointers.
 typedef std::vector<EdgeEdgeImpact> EdgeEdgeImpacts;
 
+/// @brief Data structure representing an impact of an vertex and face.
+struct FaceVertexImpact {
+    double time;     ///< @brief Time of impact
+    long face_index; ///< @brief Impacted face
+    double u;        ///< @brief First barycentric coordinate of the face where
+                     ///< the impact occured
+    double v;        ///< @brief Second barycentric coordinate of the face where
+                     ///< the impact occured
+    long vertex_index; ///< @brief Impacting vertex
+
+    FaceVertexImpact();
+    FaceVertexImpact(
+        double time, long face_index, double u, double v, long vertex_index);
+};
+
+/// A vector of edge-edge impact pointers.
+typedef std::vector<FaceVertexImpact> FaceVertexImpacts;
+
 /**
- * Compare two impacts to determine if impact0 comes before impact1.
+ * @brief Compare two impacts to determine if impact0 comes before impact1.
  *
  * @param impact0 Impact to check if is came first.
  * @param impact1 Impact to check if is came second.
@@ -53,9 +74,10 @@ template <typename Impact>
 bool compare_impacts_by_time(Impact impact1, Impact impact2);
 
 /**
- * Convert all edge-vertex impacts to correspoding edge-edge impacts. There may
- * be multiple edge-edge impacts per edge-vertex impact depending on the
- * connectivity.
+ * @brief Convert all edge-vertex impacts to correspoding edge-edge impacts.
+ *
+ * There may be multiple edge-edge impacts per edge-vertex impact depending on
+ * the connectivity.
  *
  * @param edges The matrix of edges where each row is two indices for the
  *     endpoints in the vertices matrix (not a prameter).
@@ -66,12 +88,14 @@ bool compare_impacts_by_time(Impact impact1, Impact impact2);
  * @return Stores the converted edge-edge impacts in ee_impacts.
  */
 void convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
-    const EdgeVertexImpacts& ev_impacts, EdgeEdgeImpacts& ee_impacts);
+    const EdgeVertexImpacts& ev_impacts,
+    EdgeEdgeImpacts& ee_impacts);
 
 /**
- * Convert all edge-edge impacts to correspoding edge-vertex impacts. There may
- * be multiple edge-vertex impacts per edge-edge impact depending on the
- * connectivity.
+ * @brief Convert all edge-edge impacts to correspoding edge-vertex impacts.
+ *
+ * There may be multiple edge-vertex impacts per edge-edge impact depending on
+ * the connectivity.
  *
  * @param edges A matrix where rows are edges and columns are vertex indices.
  * @param ee_impact Edge-edge impacts to convert to an edge-vertex impacts.
@@ -80,7 +104,8 @@ void convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
  * @return Stores the converted edge-vertex impacts in ev_impacts.
  */
 void convert_edge_edge_to_edge_vertex_impacts(const Eigen::MatrixX2i& edges,
-    const EdgeEdgeImpacts& ee_impacts, EdgeVertexImpacts& ev_impacts);
+    const EdgeEdgeImpacts& ee_impacts,
+    EdgeVertexImpacts& ev_impacts);
 
 } // namespace ccd
 

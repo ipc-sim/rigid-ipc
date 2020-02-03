@@ -30,10 +30,13 @@ namespace physics {
         Eigen::MatrixXd vertices_ = vertices;
         vertices_.rowwise() += pose.position.transpose();
 
-        Eigen::RowVectorXd center_of_mass
-            = compute_center_of_mass(vertices_, dim == 2 ? edges : faces);
+        double m;
+        Eigen::VectorXd center_of_mass;
+        Eigen::MatrixXd I;
+        compute_mass_properties(
+            vertices_, dim == 2 ? edges : faces, m, center_of_mass, I);
         Eigen::MatrixXd centered_vertices
-            = vertices_.rowwise() - center_of_mass;
+            = vertices_.rowwise() - center_of_mass.transpose();
 
         // set position so current vertices match input
         Pose<double> adjusted_pose(center_of_mass, pose.rotation);
@@ -90,16 +93,20 @@ namespace physics {
 
     Eigen::MatrixXd RigidBody::world_velocities() const
     {
-        if (dim() != 2) {
-            throw NotImplementedError(
-                "RigidBody::world_velocities() not implemented for 3D yet!");
-        }
         // compute X[i] = dR(theta)/d\theta * r_i * d\theta/dt + dX/dt
-        Eigen::MatrixXd dR = pose.construct_rotation_matrix_gradient()[0];
-        Eigen::MatrixXd dR_r_i = vertices * dR.transpose();
-        // TODO: This should be
-        // dR_r_i.rowwise.array() * velocity.rotation.array()
-        return (dR_r_i * velocity.rotation(0)).rowwise()
+        std::vector<Eigen::MatrixXd> dR
+            = pose.construct_rotation_matrix_gradient();
+        Eigen::MatrixXd dR_dt;
+        if (dim() == 2) {
+            dR_dt = dR[0] * velocity.rotation(0);
+        } else {
+            assert(velocity.rotation.size() == dim());
+            dR_dt.resize(dim(), dim());
+            for (int i = 0; i < dR.size(); i++) {
+                dR_dt.row(i) = (dR[i] * velocity.rotation).transpose();
+            }
+        }
+        return (vertices * dR_dt.transpose()).rowwise()
             + velocity.position.transpose();
     }
 

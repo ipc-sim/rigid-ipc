@@ -51,6 +51,7 @@ add_library(${PROJECT_NAME}
     src/ccd/collision_detection_broad_phase.cpp
     src/ccd/prune_impacts.cpp
     src/ccd/time_of_impact.cpp
+    src/ccd/interval_root_finder.cpp
 
     src/io/read_scene.cpp
     src/io/write_scene.cpp
@@ -59,6 +60,7 @@ add_library(${PROJECT_NAME}
     src/io/read_rb_scene.cpp
 
     src/physics/mass.cpp
+    src/physics/pose.cpp
     src/physics/simulation_problem.cpp
     src/physics/particles_problem.cpp
     src/physics/rigid_body_problem.cpp
@@ -264,6 +266,10 @@ if(ENABLE_MOSEK)
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DBUILD_WITH_MOSEK)
     target_link_libraries(${PROJECT_NAME} PUBLIC mosek::mosek)
 endif()
+
+# Boost
+find_package(Boost REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost)
 
 ################################################################################
 # Tests

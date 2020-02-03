@@ -10,6 +10,7 @@ add_executable(unit_tests
     ccd/test_impact_pruning.cpp
     ccd/test_time_of_impact.cpp
     ccd/test_hash_grid.cpp
+    ccd/test_interval_root_finder.cpp
 
     # Test libarary integration
     integration/test_nlopt.cpp
@@ -28,6 +29,7 @@ add_executable(unit_tests
     opt/test_volume_constraint.cpp
     opt/test_distance_barrier_constraint.cpp
 
+    physics/test_mass.cpp
     physics/test_rigid_body.cpp
     physics/test_rigid_body_system.cpp
     physics/test_rigid_body_problem.cpp
@@ -38,7 +40,7 @@ add_executable(unit_tests
 )
 
 target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)
-target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} FiniteDiff::FiniteDiff)
+target_link_libraries(unit_tests PUBLIC FiniteDiff::FiniteDiff)
 
 if(CODE_COVERAGE)
     target_code_coverage(unit_tests AUTO ALL)
