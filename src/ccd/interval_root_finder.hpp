@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <boost/numeric/interval.hpp>
 
 namespace ccd {
