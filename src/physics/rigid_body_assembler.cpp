@@ -55,19 +55,27 @@ namespace physics {
 
         // rigid body mass-matrix
         int rb_ndof = num_bodies ? rigid_bodies[0].ndof() : 0;
-        Eigen::VectorXd mass_vector(int(num_bodies) * rb_ndof);
+        int rb_pos_ndof = num_bodies ? rigid_bodies[0].pos_ndof() : 0;
+        int rb_rot_ndof = num_bodies ? rigid_bodies[0].rot_ndof() : 0;
+        typedef Eigen::Triplet<double> Triplet;
+        std::vector<Triplet> mass_matrix_triplets;
+        mass_matrix_triplets.reserve(
+            int(num_bodies) * (rb_pos_ndof + rb_rot_ndof * rb_rot_ndof));
         Eigen::VectorXd scaling_vector(int(num_bodies) * rb_ndof);
         for (int i = 0; i < int(num_bodies); ++i) {
             auto& rb = rigid_bodies[size_t(i)];
-            mass_vector.segment(rb_ndof * i, rb.pos_ndof())
-                .setConstant(rb.mass);
-            // TODO: Update this line for 3D
-            if (rb.dim() != 2) {
-                throw NotImplementedError(
-                    "Need to figure out rigid body assembly!");
+            for (int pos_dofi = 0; pos_dofi < rb.pos_ndof(); pos_dofi++) {
+                mass_matrix_triplets.emplace_back(
+                    rb_ndof * i + pos_dofi, rb_ndof * i + pos_dofi, rb.mass);
             }
-            mass_vector.segment(rb_ndof * i + rb.pos_ndof(), rb.rot_ndof())
-                = rb.moment_of_inertia.diagonal();
+            for (int Ii = 0; Ii < rb.moment_of_inertia.rows(); Ii++) {
+                for (int Ij = 0; Ij < rb.moment_of_inertia.cols(); Ij++) {
+                    mass_matrix_triplets.emplace_back(
+                        rb_ndof * i + rb.pos_ndof() + Ii,
+                        rb_ndof * i + rb.pos_ndof() + Ij,
+                        rb.moment_of_inertia(Ii, Ij));
+                }
+            }
 
             // scale rigid body pose to dof
             // set postion scaling to 1
@@ -76,7 +84,9 @@ namespace physics {
             scaling_vector.segment(rb_ndof * i + rb.pos_ndof(), rb.rot_ndof())
                 .setConstant(rb.r_max);
         }
-        m_rb_mass_matrix = Eigen::SparseDiagonal<double>(mass_vector);
+        m_rb_mass_matrix.resize(num_bodies * rb_ndof, num_bodies * rb_ndof);
+        m_rb_mass_matrix.setFromTriplets(
+            mass_matrix_triplets.begin(), mass_matrix_triplets.end());
         m_pose_to_dof = Eigen::SparseDiagonal<double>(scaling_vector);
         m_dof_to_pose = m_pose_to_dof.cwiseInverse();
 
@@ -183,9 +193,9 @@ namespace physics {
                 for (int j = 0; j < d; ++j) {
                     // Loop over dof
                     for (int k = 0; k < el_grad.cols(); ++k) {
-                        triplets.push_back(Triplet(
+                        triplets.emplace_back(
                             int(m_body_vertex_id[i] + d_i * num_vertices()) + j,
-                            int(3 * i) + k, el_grad(d_i * d + j, k)));
+                            int(3 * i) + k, el_grad(d_i * d + j, k));
                     }
                 }
             }
