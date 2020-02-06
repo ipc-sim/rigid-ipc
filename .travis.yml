@@ -7,9 +7,7 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     packages:
-    - g++-6
     - g++-7
-    - gcc-6
     - gcc-7
     - xorg-dev
     - libboost-dev
@@ -30,13 +28,13 @@ matrix:
     - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Release"
 
   - os: osx
-    osx_image: xcode10.2
+    osx_image: xcode11.3
     compiler: clang
     env:
     - MATRIX_EVAL="export CONFIG=Debug"
 
   - os: osx
-    osx_image: xcode10.2
+    osx_image: xcode11.3
     compiler: clang
     env:
     - MATRIX_EVAL="export CONFIG=Release"

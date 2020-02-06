@@ -42,7 +42,7 @@ add_executable(unit_tests
 target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)
 target_link_libraries(unit_tests PUBLIC FiniteDiff::FiniteDiff)
 
-if(CODE_COVERAGE)
+if(FIXING_COLLISIONS_CODE_COVERAGE)
     target_code_coverage(unit_tests AUTO ALL)
 endif()
 

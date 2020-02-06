@@ -4,7 +4,7 @@
 #include <ccd/time_of_impact.hpp>
 #include <igl/slice_mask.h>
 
-#include <opt/barrier.hpp>
+#include <barrier/barrier.hpp>
 #include <profiler.hpp>
 
 #include <logger.hpp>
@@ -25,7 +25,6 @@ namespace opt {
         , active_constraint_scale(1.5)
         , use_log_barrier(false)
         , m_barrier_epsilon(0.0)
-
     {
     }
 
@@ -64,8 +63,9 @@ namespace opt {
     {
         EdgeVertexCandidates ev_candidates;
         Eigen::MatrixXd Uk = Xj - Xi; // displacements
-        detect_edge_vertex_collision_candidates(Xi, Uk, edges, group_ids,
-            ev_candidates, detection_method, /*inflation_radius=*/0);
+        detect_edge_vertex_collision_candidates(
+            Xi, Uk, edges, group_ids, ev_candidates, detection_method,
+            /*inflation_radius=*/0);
 
         bool has_collisions = false;
         for (size_t i = 0; i < ev_candidates.size(); i++) {
@@ -98,8 +98,9 @@ namespace opt {
         PROFILE_START(BROAD_PHASE)
 
         EdgeVertexCandidates ev_candidates;
-        detect_edge_vertex_collision_candidates(vertices, Uk, edges, group_ids,
-            ev_candidates, detection_method, m_barrier_epsilon);
+        detect_edge_vertex_collision_candidates(
+            vertices, Uk, edges, group_ids, ev_candidates, detection_method,
+            m_barrier_epsilon);
 
         PROFILE_END(BROAD_PHASE)
 
@@ -260,9 +261,10 @@ namespace opt {
                         for (int dim_j = 0; dim_j < 2; ++dim_j) {
                             triplets.push_back(
                                 M(nodes[nid_i] + num_vertices * dim_i,
-                                    nodes[nid_j] + num_vertices * dim_j,
-                                    hess(2 * int(nid_i) + dim_i,
-                                        2 * int(nid_j) + dim_j)));
+                                  nodes[nid_j] + num_vertices * dim_j,
+                                  hess(
+                                      2 * int(nid_i) + dim_i,
+                                      2 * int(nid_j) + dim_j)));
                         }
                     }
                 }

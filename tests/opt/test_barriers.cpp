@@ -2,7 +2,7 @@
 #include <catch2/catch.hpp>
 
 #include <finitediff.hpp>
-#include <opt/barrier.hpp>
+#include <barrier/barrier.hpp>
 
 using namespace ccd;
 using namespace opt;

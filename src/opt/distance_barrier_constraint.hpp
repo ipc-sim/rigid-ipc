@@ -25,7 +25,8 @@ namespace opt {
         double get_barrier_epsilon() { return m_barrier_epsilon; }
         void set_barrier_epsilon(const double eps) { m_barrier_epsilon = eps; }
 
-        EdgeVertexImpacts initialize(const Eigen::MatrixX2d& vertices,
+        EdgeVertexImpacts initialize(
+            const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
             const Eigen::VectorXi& group_ids,
             const Eigen::MatrixXd& Uk) override;
@@ -33,7 +34,8 @@ namespace opt {
         void get_active_barrier_set(
             const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers) const;
 
-        bool has_active_collisions(const Eigen::MatrixXd& Xi, const Eigen::MatrixXd& Xj) const;
+        bool has_active_collisions(
+            const Eigen::MatrixXd& Xi, const Eigen::MatrixXd& Xj) const;
 
         void compute_constraints(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers);
@@ -41,7 +43,8 @@ namespace opt {
         void compute_constraints_jacobian(
             const Eigen::MatrixXd& Uk, Eigen::MatrixXd& barriers_jacobian);
 
-        void compute_constraints_hessian(const Eigen::MatrixXd& Uk,
+        void compute_constraints_hessian(
+            const Eigen::MatrixXd& Uk,
             std::vector<Eigen::SparseMatrix<double>>& barriers_hessian);
 
         template <typename T>
@@ -50,16 +53,19 @@ namespace opt {
             const EdgeVertexCandidates& ev_candidates,
             Eigen::Matrix<T, Eigen::Dynamic, 1>& barriers);
 
-        void compute_candidates_constraints_jacobian(const Eigen::MatrixXd& Uk,
+        void compute_candidates_constraints_jacobian(
+            const Eigen::MatrixXd& Uk,
             const EdgeVertexCandidates& ev_candidates,
             Eigen::MatrixXd& barriers_jacobian);
 
-        void compute_candidates_constraints_hessian(const Eigen::MatrixXd& Uk,
+        void compute_candidates_constraints_hessian(
+            const Eigen::MatrixXd& Uk,
             const EdgeVertexCandidates& ev_candidates,
             std::vector<Eigen::SparseMatrix<double>>& barriers_hessian);
 
         template <typename T>
-        T distance_barrier(const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
+        T distance_barrier(
+            const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
             const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
             const Eigen::Matrix<T, Eigen::Dynamic, 1>& c);
 
@@ -67,28 +73,30 @@ namespace opt {
         T distance_barrier(const T distance, const double eps);
         double distance_barrier_grad(const double distance, const double eps);
 
-        template <typename T>
-        T distance_barrier(const T distance){
+        template <typename T> T distance_barrier(const T distance)
+        {
             return distance_barrier(distance, m_barrier_epsilon);
         }
 
-        double distance_barrier_grad(const double distance){
+        double distance_barrier_grad(const double distance)
+        {
             return distance_barrier_grad(distance, m_barrier_epsilon);
         }
 
-        Eigen::VectorXd distance_barrier_grad(const Eigen::VectorXd& a,
+        Eigen::VectorXd distance_barrier_grad(
+            const Eigen::VectorXd& a,
             const Eigen::VectorXd& b,
             const Eigen::VectorXd& c);
 
-        Eigen::MatrixXd distance_barrier_hess(const Eigen::VectorXd& a,
+        Eigen::MatrixXd distance_barrier_hess(
+            const Eigen::VectorXd& a,
             const Eigen::VectorXd& b,
             const Eigen::VectorXd& c);
 
-//#ifdef DEBUG_LINESEARCH
+        //#ifdef DEBUG_LINESEARCH
         void debug_compute_distances(
             const Eigen::MatrixXd& Uk, Eigen::VectorXd& distances) const;
-//#endif
-
+        //#endif
 
         // Settings
         // ----------
@@ -107,12 +115,14 @@ namespace opt {
     };
 
     template <typename T>
-    T point_to_edge_sq_distance(const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
+    T point_to_edge_sq_distance(
+        const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& c);
 
     template <typename T>
-    T point_to_edge_distance(const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
+    T point_to_edge_distance(
+        const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& c);
 

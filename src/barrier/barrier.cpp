@@ -1,13 +1,13 @@
 // Barrier functions that grow to infinity as x -> 0+. Includes gradient and
 // hessian functions, too. These barrier functions can be used to impose
 // inequlity constraints on a function.
-#include <opt/barrier.hpp>
+#include <barrier/barrier.hpp>
 
 #include <cmath>
 
 #include <iostream>
 
-#include <opt/barrier_chorner.hpp>
+#include <barrier/barrier_chorner.hpp>
 #include <autodiff/autodiff_types.hpp>
 
 namespace ccd {

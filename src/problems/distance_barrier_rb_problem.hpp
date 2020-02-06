@@ -42,8 +42,8 @@ namespace opt {
         Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
 
         // @brief eval_hessian_g evaluates constraints hessian at point x
-        std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
-            const Eigen::VectorXd& x) override;
+        std::vector<Eigen::SparseMatrix<double>>
+        eval_hessian_g(const Eigen::VectorXd& x) override;
 
         const int& num_constraints() override
         {
@@ -54,16 +54,19 @@ namespace opt {
         ////////////////////////////////////////////////////////////
         /// IBarrierProblem
 
-        void eval_f_and_fdiff(const Eigen::VectorXd& x,
+        void eval_f_and_fdiff(
+            const Eigen::VectorXd& x,
             double& f_uk,
             Eigen::VectorXd& f_uk_jacobian,
             Eigen::SparseMatrix<double>& f_uk_hessian) override;
 
-        void eval_f_and_fdiff(const Eigen::VectorXd& x,
+        void eval_f_and_fdiff(
+            const Eigen::VectorXd& x,
             double& f_uk,
             Eigen::VectorXd& f_uk_jacobian) override;
 
-        void eval_g_and_gdiff(const Eigen::VectorXd& x,
+        void eval_g_and_gdiff(
+            const Eigen::VectorXd& x,
             Eigen::VectorXd& gx,
             Eigen::MatrixXd& gx_jacobian,
             std::vector<Eigen::SparseMatrix<double>>& gx_hessian) override;
@@ -86,17 +89,20 @@ namespace opt {
         opt::CollisionConstraint& constraint() override { return constraint_; }
         opt::IStateOptimizationSolver& solver() override { return opt_solver_; }
 
-        Eigen::MatrixXd eval_jac_g_full(const Eigen::VectorXd& sigma,
+        Eigen::MatrixXd eval_jac_g_full(
+            const Eigen::VectorXd& sigma,
             const EdgeVertexCandidates& ev_candidates);
 
-        bool compare_jac_g(const Eigen::VectorXd& x,
+        bool compare_jac_g(
+            const Eigen::VectorXd& x,
             const EdgeVertexCandidates& ev_candidates,
             const Eigen::MatrixXd& jac_g);
 
-        Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> eval_mp_g(
-            const Eigen::VectorXd& x) override;
+        Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1>
+        eval_mp_g(const Eigen::VectorXd& x) override;
 
-        bool has_collisions(const Eigen::VectorXd& sigma_i,
+        bool has_collisions(
+            const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) const override;
 
 #if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
@@ -105,8 +111,8 @@ namespace opt {
             return m_assembler.m_edges;
         }
 
-        Eigen::MatrixXd debug_vertices(
-            const Eigen::VectorXd& sigma) const override;
+        Eigen::MatrixXd
+        debug_vertices(const Eigen::VectorXd& sigma) const override;
         Eigen::MatrixXd debug_vertices_t0() const override
         {
             return vertices_t0;
@@ -115,12 +121,12 @@ namespace opt {
         double debug_min_distance(const Eigen::VectorXd& sigma) const override;
 
     protected:
-        void extract_local_system(
-            const EdgeVertexCandidate& c, RB2Candidate& rbc);
+        void
+        extract_local_system(const EdgeVertexCandidate& c, RB2Candidate& rbc);
 
         template <typename T>
-        T distance_barrier(
-            const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
+        T
+        distance_barrier(const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
 
         template <typename T>
         T distance(const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
@@ -131,7 +137,8 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>> eval_hessian_g_core(
             const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
 
-        bool compare_fd(const Eigen::VectorXd& sigma,
+        bool compare_fd(
+            const Eigen::VectorXd& sigma,
             const EdgeVertexCandidate&,
             const Eigen::VectorXd&);
 

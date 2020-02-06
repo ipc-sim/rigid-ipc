@@ -42,7 +42,8 @@ static const char* DetectionMethodNames[] = { "BRUTE_FORCE", "HASH_GRID" };
  * @param[in] method         Which method should be used to detect the
  *                           collisions.
  */
-void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
+void detect_edge_vertex_collisions(
+    const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     const Eigen::VectorXi& group_ids,
@@ -50,7 +51,8 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
     DetectionMethod method = BRUTE_FORCE);
 
 /// @brief Backward compatibility with old definition.
-void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
+void detect_edge_vertex_collisions(
+    const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     EdgeVertexImpacts& ev_impacts,
@@ -61,7 +63,8 @@ void detect_edge_vertex_collisions(const Eigen::MatrixXd& vertices,
 ///////////////////////////////////////////////////////////////////////////////
 
 /// @brief Use broad-phase method to create a set of candidate collisions.
-void detect_edge_vertex_collision_candidates(const Eigen::MatrixXd& vertices,
+void detect_edge_vertex_collision_candidates(
+    const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixX2i& edges,
     const Eigen::VectorXi& group_ids,
@@ -147,7 +150,8 @@ void detect_edge_vertex_collisions_from_candidates(
  * @param[in] vertex_id    Index of the vertex.
  * @param[out] ev_impacts  List of impacts on to which new impacts are pushed.
  */
-void detect_edge_vertex_collisions_narrow_phase(const Eigen::Vector2d& Vi,
+void detect_edge_vertex_collisions_narrow_phase(
+    const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj,
     const Eigen::Vector2d& Vk,
     const Eigen::Vector2d& Ui,
@@ -179,7 +183,8 @@ void detect_edge_vertex_collisions_narrow_phase(const Eigen::Vector2d& Vi,
  *          collision the computed time of impact is stored in toi and the
  *          impact points spatial parameter along the edge is stored in alpha.
  */
-bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
+bool compute_edge_vertex_time_of_impact(
+    const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj,
     const Eigen::Vector2d& Vk,
     const Eigen::Vector2d& Ui,
@@ -212,7 +217,8 @@ bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
  * @return A boolean for if their is a valid spatial parameterization. Stores
  *         the valid spatial parameter in alpha.
  */
-bool temporal_parameterization_to_spatial(const Eigen::Vector2d& Vi,
+bool temporal_parameterization_to_spatial(
+    const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj,
     const Eigen::Vector2d& Vk,
     const Eigen::Vector2d& Ui,

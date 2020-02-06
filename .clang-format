@@ -6,4 +6,5 @@ FixNamespaceComments: true
 ReflowComments: true
 BinPackParameters: false
 AllowAllParametersOfDeclarationOnNextLine: true
+AlignAfterOpenBracket: AlwaysBreak
 # BreakStringLiterals: false

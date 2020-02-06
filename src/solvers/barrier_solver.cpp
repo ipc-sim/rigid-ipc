@@ -3,7 +3,7 @@
 
 #include "barrier_solver.hpp"
 
-#include <opt/barrier.hpp>
+#include <barrier/barrier.hpp>
 #include <utils/eigen_ext.hpp>
 
 #include <solvers/solver_factory.hpp>

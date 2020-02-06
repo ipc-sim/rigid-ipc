@@ -1,5 +1,5 @@
 {
-    "scene_type": "rigid_body_problem",
+    "scene_type": "distance_barrier_rb_problem",
     "timestep_size": 1.0,
     "viewport_bbox": {
         "min": [

@@ -20,13 +20,14 @@ namespace physics {
 
     protected:
         /**
-         * @brief Create rigid body with center of mass at 0,0.
+         * @brief Create rigid body with center of mass at \f$\vec{0}\f$.
          *
          * @param vertices  Vertices of the rigid body in body space
          * @param faces     Vertices pairs defining the topology of the rigid
          *                  body
          */
-        RigidBody(const Eigen::MatrixXd& vertices,
+        RigidBody(
+            const Eigen::MatrixXd& vertices,
             const Eigen::MatrixXi& faces,
             const Eigen::MatrixXi& edges,
             const Pose<double>& pose,
@@ -36,7 +37,8 @@ namespace physics {
             const bool oriented);
 
     public:
-        static RigidBody from_points(const Eigen::MatrixXd& vertices,
+        static RigidBody from_points(
+            const Eigen::MatrixXd& vertices,
             const Eigen::MatrixXi& faces,
             const Eigen::MatrixXi& edges,
             const Pose<double>& pose,
@@ -46,7 +48,8 @@ namespace physics {
             const bool oriented);
 
         // Faceless version for convienence (useful for 2D)
-        static RigidBody from_points(const Eigen::MatrixXd& vertices,
+        static RigidBody from_points(
+            const Eigen::MatrixXd& vertices,
             const Eigen::MatrixXi& edges,
             const Pose<double>& pose,
             const Pose<double>& velocity,
@@ -54,8 +57,9 @@ namespace physics {
             const Eigen::VectorXb& is_dof_fixed,
             const bool oriented)
         {
-            return from_points(vertices, Eigen::MatrixXi(), edges, pose,
-                velocity, density, is_dof_fixed, oriented);
+            return from_points(
+                vertices, Eigen::MatrixXi(), edges, pose, velocity, density,
+                is_dof_fixed, oriented);
         }
 
         enum Step { PREVIOUS_STEP = 0, CURRENT_STEP };
@@ -84,22 +88,22 @@ namespace physics {
         // CCD Functions
         // --------------------------------------------------------------------
 
-        /// @brief: computes vertices position for given state
-        /// returns the positions of all vertices in 'world space',
-        /// taking into account the given body's position
+        /// @brief Computes vertices position for given state.
+        /// @return The positions of all vertices in 'world space',
+        ///         taking into account the given body's position.
         template <typename T>
-        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_vertices(
-            const Pose<T>& pose) const;
+        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
+        world_vertices(const Pose<T>& pose) const;
         template <typename T>
-        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_vertices(
-            const Eigen::Matrix<T, Eigen::Dynamic, 1>& dof) const
+        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
+        world_vertices(const Eigen::Matrix<T, Eigen::Dynamic, 1>& dof) const
         {
             return world_vertices(Pose<T>(dof));
         }
 
         template <typename T>
-        Eigen::Matrix<T, Eigen::Dynamic, 1> world_vertex(
-            const Pose<T>& pose, const int vertex_idx) const;
+        Eigen::Matrix<T, Eigen::Dynamic, 1>
+        world_vertex(const Pose<T>& pose, const int vertex_idx) const;
         template <typename T>
         Eigen::Matrix<T, Eigen::Dynamic, 1> world_vertex(
             const Eigen::Matrix<T, Eigen::Dynamic, 1>& dof,
@@ -110,10 +114,10 @@ namespace physics {
 
         Eigen::MatrixXd world_vertices_gradient(const Pose<double>& pose) const;
 
-        Eigen::MatrixXd world_vertices_gradient_exact(
-            const Pose<double>& pose) const;
-        std::vector<Eigen::MatrixXd> world_vertices_hessian_exact(
-            const Pose<double>& velocity) const;
+        Eigen::MatrixXd
+        world_vertices_gradient_exact(const Pose<double>& pose) const;
+        std::vector<Eigen::MatrixXd>
+        world_vertices_hessian_exact(const Pose<double>& velocity) const;
 
         int dim() const { return vertices.cols(); }
         int ndof() const { return pose.ndof(); }
@@ -123,9 +127,9 @@ namespace physics {
         // --------------------------------------------------------------------
         // Geometry
         // --------------------------------------------------------------------
-        Eigen::MatrixXd vertices; ///< vertices positions in body space
-        Eigen::MatrixXi faces;    ///< vertices connectivity
-        Eigen::MatrixXi edges;    ///< vertices connectivity
+        Eigen::MatrixXd vertices; ///< Vertices positions in body space
+        Eigen::MatrixXi faces;    ///< Vertices connectivity
+        Eigen::MatrixXi edges;    ///< Vertices connectivity
 
         /// @brief total mass (M) of the rigid body
         double mass;

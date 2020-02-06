@@ -1,5 +1,5 @@
 {
-    "scene_type": "rigid_body_problem",
+    "scene_type": "distance_barrier_rb_problem",
     "rigid_body_problem": {
         "gravity": [
             0.0,

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <Eigen/Core>
+#include <vector>
 
 namespace ccd {
 namespace physics {
@@ -17,8 +17,8 @@ namespace physics {
         Pose(const VectorXT& position, const VectorXT& rotation);
         Pose(const VectorXT& dof);
 
-        static std::vector<Pose<T>> dofs_to_poses(
-            const VectorXT& dofs, int dim);
+        static std::vector<Pose<T>>
+        dofs_to_poses(const VectorXT& dofs, int dim);
         static VectorXT poses_to_dofs(const std::vector<Pose<T>>& poses);
 
         static int dim_to_ndof(const int dim) { return dim == 2 ? 3 : 6; }
@@ -43,9 +43,15 @@ namespace physics {
         inline Pose<T>& operator+=(Pose<T> other);
         Pose<T> operator-(Pose<T> other) const;
         inline Pose<T>& operator-=(Pose<T> other);
-        Pose<T> operator/(double x) const;
-        Pose<T> operator*(double x) const;
-        static Pose<T> lerp_poses(Pose<T> pose0, Pose<T> pose1, double t);
+        Pose<T> operator/(T x) const;
+        Pose<T> operator*(T x) const;
+        static Pose<T> lerp_poses(Pose<T> pose0, Pose<T> pose1, T t);
+
+        template <typename T1> Pose<T1> cast() const
+        {
+            return Pose<T1>(
+                position.template cast<T1>(), rotation.template cast<T1>());
+        }
 
         VectorXT position;
         // TODO: Use Quaternions

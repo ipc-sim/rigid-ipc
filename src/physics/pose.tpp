@@ -22,7 +22,8 @@ namespace physics {
     }
 
     template <typename T>
-    Pose<T>::Pose(const typename Pose<T>::VectorXT& position,
+    Pose<T>::Pose(
+        const typename Pose<T>::VectorXT& position,
         const typename Pose<T>::VectorXT& rotation)
         : position(position)
         , rotation(rotation)
@@ -43,8 +44,8 @@ namespace physics {
     }
 
     template <typename T>
-    std::vector<Pose<T>> Pose<T>::dofs_to_poses(
-        const typename Pose<T>::VectorXT& dofs, int dim)
+    std::vector<Pose<T>>
+    Pose<T>::dofs_to_poses(const typename Pose<T>::VectorXT& dofs, int dim)
     {
         int ndof = dim_to_ndof(dim);
         int num_poses = dofs.size() / ndof;
@@ -58,8 +59,8 @@ namespace physics {
     }
 
     template <typename T>
-    typename Pose<T>::VectorXT Pose<T>::poses_to_dofs(
-        const std::vector<Pose<T>>& poses)
+    typename Pose<T>::VectorXT
+    Pose<T>::poses_to_dofs(const std::vector<Pose<T>>& poses)
     {
         int ndof = poses.size() ? poses[0].ndof() : 0;
         VectorXT dofs(poses.size() * ndof);
@@ -86,8 +87,8 @@ namespace physics {
         } else {
             typedef Eigen::Matrix<T, 3, 1> Vector3T;
             return (Eigen::AngleAxis<T>(rotation.z(), Vector3T::UnitZ())
-                * Eigen::AngleAxis<T>(rotation.y(), Vector3T::UnitY())
-                * Eigen::AngleAxis<T>(rotation.x(), Vector3T::UnitX()))
+                    * Eigen::AngleAxis<T>(rotation.y(), Vector3T::UnitY())
+                    * Eigen::AngleAxis<T>(rotation.x(), Vector3T::UnitX()))
                 .toRotationMatrix();
         }
     }
@@ -149,7 +150,8 @@ namespace physics {
     std::vector<std::vector<typename Pose<T>::MatrixXT>>
     Pose<T>::construct_rotation_matrix_hessian() const
     {
-        std::vector<std::vector<MatrixXT>> hess_R(rot_ndof(),
+        std::vector<std::vector<MatrixXT>> hess_R(
+            rot_ndof(),
             std::vector<MatrixXT>(rot_ndof(), MatrixXT(dim(), dim())));
 
         if (dim() == 2) {
@@ -205,12 +207,14 @@ namespace physics {
 
     template <typename T> Pose<T> Pose<T>::operator+(Pose<T> other) const
     {
+        assert(dim() == other.dim());
         return Pose<T>(
             this->position + other.position, this->rotation + other.rotation);
     }
 
     template <typename T> Pose<T>& Pose<T>::operator+=(Pose<T> other)
     {
+        assert(dim() == other.dim());
         this->position += other.position;
         this->rotation += other.rotation;
         return *this;
@@ -218,30 +222,33 @@ namespace physics {
 
     template <typename T> Pose<T> Pose<T>::operator-(Pose<T> other) const
     {
+        assert(dim() == other.dim());
         return Pose<T>(
             this->position - other.position, this->rotation - other.rotation);
     }
 
     template <typename T> Pose<T>& Pose<T>::operator-=(Pose<T> other)
     {
+        assert(dim() == other.dim());
         this->position -= other.position;
         this->rotation -= other.rotation;
         return *this;
     }
 
-    template <typename T> Pose<T> Pose<T>::operator/(double x) const
+    template <typename T> Pose<T> Pose<T>::operator/(T x) const
     {
         return Pose<T>(this->position / x, this->rotation / x);
     }
 
-    template <typename T> Pose<T> Pose<T>::operator*(double x) const
+    template <typename T> Pose<T> Pose<T>::operator*(T x) const
     {
         return Pose<T>(this->position * x, this->rotation * x);
     }
 
     template <typename T>
-    Pose<T> Pose<T>::lerp_poses(Pose<T> pose0, Pose<T> pose1, double t)
+    Pose<T> Pose<T>::lerp_poses(Pose<T> pose0, Pose<T> pose1, T t)
     {
+        assert(pose0.dim() == pose1.dim());
         return (pose1 - pose0) * t + pose0;
     }
 

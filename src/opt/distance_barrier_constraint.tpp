@@ -5,7 +5,7 @@
 
 #include <constants.hpp>
 #include <logger.hpp>
-#include <opt/barrier.hpp>
+#include <barrier/barrier.hpp>
 
 namespace ccd {
 namespace opt {

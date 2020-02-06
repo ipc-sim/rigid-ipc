@@ -1,14 +1,9 @@
 {
-    "scene_type": "rigid_body_problem",
+    "scene_type": "distance_barrier_rb_problem",
     "timestep_size": 1.0,
-    "gravity": [
-        0.0,
-        0.0,
-        0.0
-    ],
     "rigid_body_problem": {
-        "rigid_bodies": [
-            {
+        "gravity": [0.0, 0.0],
+        "rigid_bodies": [{
                 "vertices": [
                     [
                         -1,

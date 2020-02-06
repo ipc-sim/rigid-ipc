@@ -1,5 +1,5 @@
 {
-    "scene_type": "rigid_body_problem",
+    "scene_type": "distance_barrier_rb_problem",
     "timestep_size": 0.1,
     "distance_barrier_constraint": {
         "custom_initial_epsilon": 0.01,

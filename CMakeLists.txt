@@ -10,16 +10,16 @@ option(LIBIGL_WITH_OPENGL_GLFW          "Use GLFW"                     ON)
 option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"                    ON)
 
 # project-options
-option(BUILD_UNIT_TESTS         "Build unit-tests"     ON)
-option(BUILD_SCRIPTS            "Build scripts"        ON)
-option(ENABLE_DERIVATIVE_CHECK  "Check Derivatives"    ON)
-option(ENABLE_PROFILING         "Profile Functions"    ON)
-option(ENABLE_NLOPT             "Enable NLopt Library" OFF)
-option(ENABLE_IPOPT             "Enable Ipopt Library" OFF)
-option(ENABLE_OSQP              "Enable OSQP Library"  OFF)
-option(ENABLE_MOSEK             "Enable Mosek Library" OFF)
-option(BUILD_COMPARISONS        "Build comparisons"    ON)
-option(CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
+option(FIXING_COLLISIONS_BUILD_UNIT_TESTS         "Build unit-tests"      ON)
+option(FIXING_COLLISIONS_BUILD_SCRIPTS            "Build scripts"         ON)
+option(FIXING_COLLISIONS_ENABLE_DERIVATIVE_CHECK  "Check Derivatives"     ON)
+option(FIXING_COLLISIONS_ENABLE_PROFILING         "Profile Functions"     ON)
+option(FIXING_COLLISIONS_ENABLE_NLOPT             "Enable NLopt Library" OFF)
+option(FIXING_COLLISIONS_ENABLE_IPOPT             "Enable Ipopt Library" OFF)
+option(FIXING_COLLISIONS_ENABLE_OSQP              "Enable OSQP Library"  OFF)
+option(FIXING_COLLISIONS_ENABLE_MOSEK             "Enable Mosek Library" OFF)
+option(FIXING_COLLISIONS_BUILD_COMPARISONS        "Build comparisons"     ON)
+option(FIXING_COLLISIONS_CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
 
 # debug-options
 option(DEBUG_COLLISIONS         "Extra logs in newton" OFF)
@@ -52,6 +52,7 @@ add_library(${PROJECT_NAME}
     src/ccd/prune_impacts.cpp
     src/ccd/time_of_impact.cpp
     src/ccd/interval_root_finder.cpp
+    src/ccd/rigid_time_of_impact.cpp
 
     src/io/read_scene.cpp
     src/io/write_scene.cpp
@@ -67,9 +68,9 @@ add_library(${PROJECT_NAME}
     src/physics/rigid_body.cpp
     src/physics/rigid_body_assembler.cpp
 
+    src/barrier/barrier.cpp
+    src/barrier/barrier_chorner.cpp
 
-    src/opt/barrier.cpp
-    src/opt/barrier_chorner.cpp
     src/opt/distance_barrier_constraint.cpp
     src/opt/collision_constraint.cpp
     src/opt/optimization_problem.cpp
@@ -275,7 +276,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost)
 # Tests
 ################################################################################
 
-if(CODE_COVERAGE)
+if(FIXING_COLLISIONS_CODE_COVERAGE)
     message(STATUS "Building with code coverage")
     include(CodeCoverage)
     add_code_coverage_all_targets()
@@ -286,7 +287,7 @@ if(CODE_COVERAGE)
     target_code_coverage(${PROJECT_NAME}_ngui)
 endif()
 
-if(BUILD_UNIT_TESTS)
+if(FIXING_COLLISIONS_BUILD_UNIT_TESTS)
     # Catch2
     if(NOT TARGET Catch2::Catch2)
         download_catch2()
@@ -303,7 +304,7 @@ endif()
 # Scripts
 ################################################################################
 
-if(BUILD_SCRIPTS)
+if(FIXING_COLLISIONS_BUILD_SCRIPTS)
 #    add_subdirectory(scripts)
 endif()
 

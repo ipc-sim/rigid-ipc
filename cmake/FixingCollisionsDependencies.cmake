@@ -15,7 +15,7 @@ include(FixingCollisionsDownloadExternal)
 ################################################################################
 
 # NLopt library
-if(ENABLE_NLOPT)
+if(FIXING_COLLISIONS_ENABLE_NLOPT)
     if(NOT TARGET nlopt)
         download_nlopt()
         find_package(NLopt QUIET)
@@ -32,7 +32,7 @@ if(ENABLE_NLOPT)
 endif()
 
 # OSQP library
-if(ENABLE_OSQP)
+if(FIXING_COLLISIONS_ENABLE_OSQP)
     if(NOT TARGET osqp::osqp)
         download_osqp()
         # Make sure the right types are used
@@ -47,7 +47,7 @@ if(ENABLE_OSQP)
 endif()
 
 # MOSEK library
-if(ENABLE_MOSEK)
+if(FIXING_COLLISIONS_ENABLE_MOSEK)
     if(NOT TARGET mosek)
         # download_mosek()
         find_package(MOSEK QUIET)

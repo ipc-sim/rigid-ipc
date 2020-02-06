@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include <finitediff.hpp>
-#include <opt/barrier.hpp>
+#include <barrier/barrier.hpp>
 #include <opt/distance_barrier_constraint.hpp>
 #include <physics/rigid_body_assembler.hpp>
 #include <utils/flatten.hpp>
