@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 ################################################################################
 
-add_executable(unit_tests
+add_executable(${PROJECT_NAME}_tests
     main.cpp
 
     # Test CCD
@@ -39,11 +39,11 @@ add_executable(unit_tests
 
 )
 
-target_link_libraries(unit_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)
-target_link_libraries(unit_tests PUBLIC FiniteDiff::FiniteDiff)
+target_link_libraries(${PROJECT_NAME}_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)
+target_link_libraries(${PROJECT_NAME}_tests PUBLIC FiniteDiff::FiniteDiff)
 
 if(FIXING_COLLISIONS_CODE_COVERAGE)
-    target_code_coverage(unit_tests AUTO ALL)
+    target_code_coverage(${PROJECT_NAME}_tests AUTO ALL)
 endif()
 
 foreach(source IN ITEMS ${test_sources})
@@ -53,4 +53,4 @@ endforeach()
 # Register tests
 set(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS ON)
 include(Catch)
-catch_discover_tests(unit_tests)
+catch_discover_tests(${PROJECT_NAME}_tests)

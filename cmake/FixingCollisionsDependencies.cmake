@@ -17,7 +17,7 @@ include(FixingCollisionsDownloadExternal)
 # NLopt library
 if(FIXING_COLLISIONS_ENABLE_NLOPT)
     if(NOT TARGET nlopt)
-        download_nlopt()
+        fixing_collisions_download_nlopt()
         find_package(NLopt QUIET)
         if(NLOPT_FOUND)
             message(STATUS "Including NLOPT")
@@ -34,7 +34,7 @@ endif()
 # OSQP library
 if(FIXING_COLLISIONS_ENABLE_OSQP)
     if(NOT TARGET osqp::osqp)
-        download_osqp()
+        fixing_collisions_download_osqp()
         # Make sure the right types are used
         set(DFLOAT OFF CACHE BOOL "Use float numbers instead of doubles"   FORCE)
         set(DLONG  OFF CACHE BOOL "Use long integers (64bit) for indexing" FORCE)
@@ -49,7 +49,7 @@ endif()
 # MOSEK library
 if(FIXING_COLLISIONS_ENABLE_MOSEK)
     if(NOT TARGET mosek)
-        # download_mosek()
+        # fixing_collisions_download_mosek()
         find_package(MOSEK QUIET)
         if(MOSEK_FOUND)
             message(STATUS "Including MOSEK")
@@ -69,13 +69,13 @@ if(FIXING_COLLISIONS_ENABLE_MOSEK)
 endif()
 
 if(NOT TARGET fmt::fmt)
-    download_fmt()
+    fixing_collisions_download_fmt()
     add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/fmt)
 endif()
 
 # spdlog
 if(NOT TARGET spdlog::spdlog)
-    download_spdlog()
+    fixing_collisions_download_spdlog()
     add_library(spdlog INTERFACE)
     add_library(spdlog::spdlog ALIAS spdlog)
     target_include_directories(spdlog SYSTEM INTERFACE ${FIXING_COLLISIONS_EXTERNAL}/spdlog/include)
@@ -85,7 +85,7 @@ endif()
 
 # libigl
 if(NOT TARGET igl::core)
-    download_libigl()
+    fixing_collisions_download_libigl()
 
     # Import libigl targets
     list(APPEND CMAKE_MODULE_PATH "${FIXING_COLLISIONS_EXTERNAL}/libigl/cmake")
@@ -94,20 +94,32 @@ endif()
 
 # json
 if(NOT TARGET nlohmann_json::nlohmann_json)
-    download_json()
+    fixing_collisions_download_json()
     option(JSON_BuildTests "" OFF)
     option(JSON_MultipleHeaders "" ON)
     add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/json json)
 endif()
 
 if(NOT TARGET CLI11::CLI11)
-    download_cli11()
+    fixing_collisions_download_cli11()
     add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/cli11)
 endif()
 
 # finite-diff
 if(NOT TARGET FiniteDiff::FiniteDiff)
-  download_finite_diff()
+  fixing_collisions_download_finite_diff()
   add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/finite-diff EXCLUDE_FROM_ALL)
   add_library(FiniteDiff::FiniteDiff ALIAS FiniteDiff)
+endif()
+
+# TBB
+if(NOT TARGET TBB::tbb)
+  fixing_collisions_download_tbb()
+  set(TBB_BUILD_STATIC ON CACHE BOOL " " FORCE)
+  set(TBB_BUILD_SHARED OFF CACHE BOOL " " FORCE)
+  set(TBB_BUILD_TBBMALLOC OFF CACHE BOOL " " FORCE)
+  set(TBB_BUILD_TBBMALLOC_PROXY OFF CACHE BOOL " " FORCE)
+  set(TBB_BUILD_TESTS OFF CACHE BOOL " " FORCE)
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/tbb EXCLUDE_FROM_ALL)
+  add_library(TBB::tbb ALIAS tbb_static)
 endif()

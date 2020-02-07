@@ -54,6 +54,9 @@ add_library(${PROJECT_NAME}
     src/ccd/interval_root_finder.cpp
     src/ccd/rigid_time_of_impact.cpp
 
+    src/geometry/distance.cpp
+    src/geometry/closest_point.cpp
+
     src/io/read_scene.cpp
     src/io/write_scene.cpp
     src/io/opt_results.cpp
@@ -272,6 +275,9 @@ endif()
 find_package(Boost REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost)
 
+# TBB
+target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
+
 ################################################################################
 # Tests
 ################################################################################
@@ -290,7 +296,7 @@ endif()
 if(FIXING_COLLISIONS_BUILD_UNIT_TESTS)
     # Catch2
     if(NOT TARGET Catch2::Catch2)
-        download_catch2()
+        fixing_collisions_download_catch2()
         add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/Catch2 catch2)
         list(APPEND CMAKE_MODULE_PATH ${FIXING_COLLISIONS_EXTERNAL}/Catch2/contrib)
     endif()

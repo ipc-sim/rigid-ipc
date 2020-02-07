@@ -1,11 +1,12 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <iomanip>
 #include <list>
+#include <tbb/parallel_sort.h>
 #include <unordered_set>
 #include <vector>
 
-#include <Eigen/Core>
 namespace ccd {
 
 struct EdgeVertexCandidate {
@@ -100,24 +101,28 @@ public:
 class HashGrid {
 public:
     void resize(Eigen::Vector2d mn, Eigen::Vector2d mx, double cellSize);
-    void resize(const Eigen::MatrixX2d& vertices,
+    void resize(
+        const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements,
         const Eigen::MatrixX2i edges,
         const double inflation_radius = 0.0);
 
     /// @brief Add a vertex as a AABB containing the time swept edge.
-    void addVertex(const Eigen::Vector2d& v,
+    void addVertex(
+        const Eigen::Vector2d& v,
         const Eigen::Vector2d& u,
         const int index,
         const double inflation_radius = 0.0);
 
     /// @brief Add all vertices as AABBs containing the time swept edge.
-    void addVertices(const Eigen::MatrixX2d& vertices,
+    void addVertices(
+        const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements,
         const double inflation_radius = 0.0);
 
     /// @brief Add an edge as a AABB containing the time swept quad.
-    void addEdge(const Eigen::Vector2d& vi,
+    void addEdge(
+        const Eigen::Vector2d& vi,
         const Eigen::Vector2d& vj,
         const Eigen::Vector2d& ui,
         const Eigen::Vector2d& uj,
@@ -125,13 +130,15 @@ public:
         const double inflation_radius = 0.0);
 
     /// @brief Add all edges as AABBs containing the time swept quad.
-    void addEdges(const Eigen::MatrixX2d& vertices,
+    void addEdges(
+        const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2d& displacements,
         const Eigen::MatrixX2i& edges,
         const double inflation_radius = 0.0);
 
     /// @brief Compute the candidate edge-vertex intersections.
-    void getVertexEdgePairs(const Eigen::MatrixX2i& edges,
+    void getVertexEdgePairs(
+        const Eigen::MatrixX2i& edges,
         const Eigen::VectorXi& group_ids,
         EdgeVertexCandidates& ev_candidates);
 
@@ -140,7 +147,7 @@ protected:
     void addElement(const AABB& aabb, const int id);
 
     /// @brief Sort all hash items.
-    inline void sort() { std::sort(m_hash.begin(), m_hash.end()); }
+    inline void sort() { tbb::parallel_sort(m_hash.begin(), m_hash.end()); }
 
     /// @brief Create the hash of a cell location.
     inline int hash(const int& x, const int& y) const

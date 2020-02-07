@@ -3,15 +3,16 @@
 
 #include <iostream>
 
+#include <barrier/barrier.hpp>
 #include <constants.hpp>
 #include <logger.hpp>
-#include <barrier/barrier.hpp>
 
 namespace ccd {
 namespace opt {
 
     template <typename T>
-    T point_to_edge_sq_distance(const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
+    T point_to_edge_sq_distance(
+        const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& c)
     {
@@ -58,7 +59,8 @@ namespace opt {
     }
 
     template <typename T>
-    T point_to_edge_distance(const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
+    T point_to_edge_distance(
+        const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& c)
     {
@@ -96,8 +98,8 @@ namespace opt {
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& c)
     {
-//        T distance = sqrt(point_to_edge_sq_distance<T>(a, b, c));
-        T distance = point_to_edge_distance<T>(a,b,c);
+        // T distance = sqrt(point_to_edge_sq_distance<T>(a, b, c));
+        T distance = point_to_edge_distance<T>(a, b, c);
         return distance_barrier<T>(distance, m_barrier_epsilon);
     }
 
