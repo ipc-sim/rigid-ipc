@@ -5,12 +5,14 @@ cache: ccache
 addons:
   apt:
     sources:
-    - ubuntu-toolchain-r-test
+    - sourceline: 'ppa:ubuntu-toolchain-r/test'
+    - sourceline: 'ppa:mhier/libboost-latest'
     packages:
     - g++-7
     - gcc-7
     - xorg-dev
-    - libboost-dev
+    # - libboost-dev
+    - libboost1.70-dev
   homebrew:
     packages:
     - ccache
@@ -18,11 +20,13 @@ addons:
 matrix:
   include:
   - os: linux
+    # dist: "bionic"
     compiler: gcc-7
     env:
     - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Debug"
 
   - os: linux
+    # dist: "bionic"
     compiler: gcc-7
     env:
     - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Release"
