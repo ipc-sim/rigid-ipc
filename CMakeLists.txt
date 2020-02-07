@@ -317,6 +317,6 @@ endif()
 ################################################################################
 # Comparisons to other methods
 ################################################################################
-if(BUILD_COMPARISONS)
+if(FIXING_COLLISIONS_BUILD_COMPARISONS)
     add_subdirectory(comparisons)
 endif()
