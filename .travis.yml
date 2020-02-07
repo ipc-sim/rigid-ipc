@@ -7,8 +7,8 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     packages:
-    - g++-9
-    - gcc-9
+    - g++-7
+    - gcc-7
     - xorg-dev
     - libboost-dev
   homebrew:
@@ -17,15 +17,15 @@ addons:
     - boost
 matrix:
   include:
-  - dist: bionic
-    compiler: gcc-9
+  - os: linux
+    compiler: gcc-7
     env:
-    - MATRIX_EVAL="export CC=gcc-9 && CXX=g++-9 && CONFIG=Debug"
+    - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Debug"
 
-  - dist: bionic
-    compiler: gcc-9
+  - os: linux
+    compiler: gcc-7
     env:
-    - MATRIX_EVAL="export CC=gcc-9 && CXX=g++-9 && CONFIG=Release"
+    - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Release"
 
   - os: osx
     osx_image: xcode11.3
