@@ -3,80 +3,43 @@
 #include <Eigen/Core>
 #include <iomanip>
 #include <list>
-#include <tbb/parallel_sort.h>
-#include <unordered_set>
+#include <tbb/tbb.h>
 #include <vector>
 
-namespace ccd {
-
-struct EdgeVertexCandidate {
-    long edge_index;
-    long vertex_index;
-
-    EdgeVertexCandidate(long edge_index, long vertex_index)
-        : edge_index(edge_index)
-        , vertex_index(vertex_index)
-    {
-    }
-
-    bool operator==(const EdgeVertexCandidate& other) const
-    {
-        return this->edge_index == other.edge_index
-            && this->vertex_index == other.vertex_index;
-    }
-};
-
-typedef std::vector<EdgeVertexCandidate> EdgeVertexCandidates;
-typedef std::unordered_set<EdgeVertexCandidate> EdgeVertexCandidateSet;
-
-} // namespace ccd
-
-namespace std {
-template <> struct hash<ccd::EdgeVertexCandidate> {
-    inline size_t operator()(const ccd::EdgeVertexCandidate& ev_candidate) const
-    {
-        // https://www.techiedelight.com/use-std-pair-key-std-unordered_map-cpp/
-        std::hash<size_t> int_hasher;
-        return int_hasher(ev_candidate.edge_index)
-            ^ int_hasher(ev_candidate.vertex_index);
-    }
-};
-} // namespace std
+#include <ccd/collision_candidate.hpp>
 
 namespace ccd {
 
 /// @brief Axis aligned bounding-box of some type
 class AABB {
 public:
-    AABB()
-        : AABB(Eigen::Vector2d(0, 0), Eigen::Vector2d(0, 0))
-    {
-    }
+    AABB() {}
 
-    AABB(const Eigen::Vector2d& min, const Eigen::Vector2d& max)
+    AABB(const Eigen::VectorXd& min, const Eigen::VectorXd& max)
         : min(min)
         , max(max)
     {
-        half_width = (max.x() - min.x()) / 2.0;
-        half_height = (max.y() - min.y()) / 2.0;
-        center = min + Eigen::Vector2d(half_width, half_height);
+        half_extent = (max - min) / 2;
+        center = min + half_extent;
+        dim = min.size();
+        assert(max.size() == dim);
     }
 
     virtual ~AABB() {}
 
     static bool are_overlaping(const AABB& a, const AABB& b);
 
-    Eigen::Vector2d getMin() const { return min; }
-    Eigen::Vector2d getMax() const { return max; }
-    double getHalfWidth() const { return half_width; }
-    double getHalfHeight() const { return half_height; }
-    Eigen::Vector2d getCenter() const { return center; }
+    inline const Eigen::VectorXd& getMin() const { return min; }
+    inline const Eigen::VectorXd& getMax() const { return max; }
+    inline const Eigen::VectorXd& getHalfExtent() const { return half_extent; }
+    inline const Eigen::VectorXd& getCenter() const { return center; }
 
 private:
-    Eigen::Vector2d min;
-    Eigen::Vector2d max;
-    double half_width, half_height;
-    Eigen::Vector2d center;
+    Eigen::VectorXd min;
+    Eigen::VectorXd max;
+    Eigen::VectorXd half_extent;
+    Eigen::VectorXd center;
+    int dim;
 };
 
 /// @brief An entry into the hash grid as a (key, value) pair.
@@ -98,76 +61,110 @@ public:
     bool operator<(const HashItem& other) const { return key < other.key; }
 };
 
+typedef tbb::concurrent_vector<HashItem> HashItems;
+
 class HashGrid {
 public:
-    void resize(Eigen::Vector2d mn, Eigen::Vector2d mx, double cellSize);
+    void resize(Eigen::VectorXd min, Eigen::VectorXd max, double cellSize);
+
     void resize(
-        const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2d& displacements,
-        const Eigen::MatrixX2i edges,
+        const Eigen::MatrixXd& vertices,
+        const Eigen::MatrixXd& displacements,
+        const Eigen::MatrixXi& edges,
         const double inflation_radius = 0.0);
 
     /// @brief Add a vertex as a AABB containing the time swept edge.
     void addVertex(
-        const Eigen::Vector2d& v,
-        const Eigen::Vector2d& u,
-        const int index,
+        const Eigen::VectorXd& v,
+        const Eigen::VectorXd& u,
+        const long index,
         const double inflation_radius = 0.0);
 
     /// @brief Add all vertices as AABBs containing the time swept edge.
     void addVertices(
-        const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2d& displacements,
+        const Eigen::MatrixXd& vertices,
+        const Eigen::MatrixXd& displacements,
         const double inflation_radius = 0.0);
 
     /// @brief Add an edge as a AABB containing the time swept quad.
     void addEdge(
-        const Eigen::Vector2d& vi,
-        const Eigen::Vector2d& vj,
-        const Eigen::Vector2d& ui,
-        const Eigen::Vector2d& uj,
-        const int index,
+        const Eigen::VectorXd& vi,
+        const Eigen::VectorXd& vj,
+        const Eigen::VectorXd& ui,
+        const Eigen::VectorXd& uj,
+        const long index,
         const double inflation_radius = 0.0);
 
     /// @brief Add all edges as AABBs containing the time swept quad.
     void addEdges(
-        const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2d& displacements,
-        const Eigen::MatrixX2i& edges,
+        const Eigen::MatrixXd& vertices,
+        const Eigen::MatrixXd& displacements,
+        const Eigen::MatrixXi& edges,
         const double inflation_radius = 0.0);
 
-    /// @brief Compute the candidate edge-vertex intersections.
+    /// @brief Add an edge as a AABB containing the time swept quad.
+    void addFace(
+        const Eigen::VectorXd& vi,
+        const Eigen::VectorXd& vj,
+        const Eigen::VectorXd& vk,
+        const Eigen::VectorXd& ui,
+        const Eigen::VectorXd& uj,
+        const Eigen::VectorXd& uk,
+        const long index,
+        const double inflation_radius = 0.0);
+
+    /// @brief Add all edges as AABBs containing the time swept quad.
+    void addFaces(
+        const Eigen::MatrixXd& vertices,
+        const Eigen::MatrixXd& displacements,
+        const Eigen::MatrixXi& faces,
+        const double inflation_radius = 0.0);
+
+    /// @brief Compute the candidate edge-vertex candidate collisisons.
     void getVertexEdgePairs(
-        const Eigen::MatrixX2i& edges,
+        const Eigen::MatrixXi& edges,
         const Eigen::VectorXi& group_ids,
         EdgeVertexCandidates& ev_candidates);
 
+    /// @brief Compute the candidate edge-edge candidate collisions.
+    void getEdgeEdgePairs(
+        const Eigen::MatrixXi& edges,
+        const Eigen::VectorXi& group_ids,
+        EdgeEdgeCandidates& ee_candidates);
+
+    /// @brief Compute the candidate edge-edge candidate collisions.
+    void getFaceVertexPairs(
+        const Eigen::MatrixXi& faces,
+        const Eigen::VectorXi& group_ids,
+        FaceVertexCandidates& fv_candidates);
+
 protected:
     /// @brief Add an AABB of the extents to the hash grid.
-    void addElement(const AABB& aabb, const int id);
-
-    /// @brief Sort all hash items.
-    inline void sort() { tbb::parallel_sort(m_hash.begin(), m_hash.end()); }
+    void addElement(const AABB& aabb, const int id, HashItems& items);
 
     /// @brief Create the hash of a cell location.
-    inline int hash(const int& x, const int& y) const
+    inline long hash(int x, int y, int z) const
     {
-        return y * m_gridSize + x;
+        return z + m_gridSize * (y * m_gridSize + x);
     }
 
     /// @brief Clear the hash grid.
-    inline void clear() { m_hash.clear(); }
-
-    /// @brief Get the item with the given id.
-    inline HashItem& get(unsigned int i) { return m_hash[i]; }
+    inline void clear()
+    {
+        m_vertexItems.clear();
+        m_edgeItems.clear();
+        m_faceItems.clear();
+    }
 
 protected:
     double m_cellSize;
     int m_gridSize;
-    Eigen::Vector2d m_domainMin;
-    Eigen::Vector2d m_domainMax;
+    Eigen::VectorXd m_domainMin;
+    Eigen::VectorXd m_domainMax;
 
-    std::vector<HashItem> m_hash;
+    HashItems m_vertexItems;
+    HashItems m_edgeItems;
+    HashItems m_faceItems;
 };
 
 } // namespace ccd

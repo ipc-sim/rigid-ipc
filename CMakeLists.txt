@@ -46,6 +46,7 @@ add_library(${PROJECT_NAME}
 
     src/ccd/degenerate_edge_error.cpp
     src/ccd/impact.cpp
+    src/ccd/collision_candidate.cpp
     src/ccd/hash_grid.cpp
     src/ccd/collision_detection_narrow_phase.cpp
     src/ccd/collision_detection_broad_phase.cpp

@@ -1,4 +1,5 @@
-#include <ccd/hash_grid.hpp>
+#include "ccd/hash_grid.hpp"
+
 #include <logger.hpp>
 
 namespace ccd {
@@ -6,197 +7,273 @@ namespace ccd {
 bool AABB::are_overlaping(const AABB& a, const AABB& b)
 {
     // https://bit.ly/2ZP3tW4
-    return (abs(a.center.x() - b.center.x()) <= (a.half_width + b.half_width))
+    assert(a.dim == b.dim);
+    return (abs(a.center.x() - b.center.x())
+            <= (a.half_extent.x() + b.half_extent.x()))
         && (abs(a.center.y() - b.center.y())
-               <= (a.half_height + b.half_height));
+            <= (a.half_extent.y() + b.half_extent.y()))
+        && (a.dim == 2
+            || abs(a.center.z() - b.center.z())
+                <= (a.half_extent.z() + b.half_extent.z()));
 };
 
-void HashGrid::resize(Eigen::Vector2d mn, Eigen::Vector2d mx, double cellSize)
+void HashGrid::resize(Eigen::VectorXd min, Eigen::VectorXd max, double cellSize)
 {
     clear();
     m_cellSize = cellSize * 2.0;
-    m_domainMin = mn;
-    m_domainMax = mx;
-    m_gridSize = int(
-        std::ceil(std::max(mx.x() - mn.x(), mx.y() - mn.y()) / m_cellSize));
+    m_domainMin = min;
+    m_domainMax = max;
+    m_gridSize = int(std::ceil((max - min).maxCoeff() / m_cellSize));
 }
 
 /// @brief Compute an AABB around a given 2D mesh.
-void calculate_mesh_extents(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements,
-    Eigen::Vector2d& lower_bound,
-    Eigen::Vector2d& upper_bound)
+void calculate_mesh_extents(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements,
+    Eigen::VectorXd& lower_bound,
+    Eigen::VectorXd& upper_bound)
 {
-    Eigen::MatrixXd points(vertices.rows() + displacements.rows(), 2);
-    points.block(0, 0, vertices.rows(), vertices.cols()) = vertices;
-    points.block(vertices.rows(), 0, displacements.rows(), displacements.cols())
-        = vertices + displacements;
+    int dim = vertices.cols();
+    Eigen::MatrixXd points(vertices.rows() + displacements.rows(), dim);
+    points.topRows(vertices.rows()) = vertices;
+    points.bottomRows(displacements.rows()) = vertices + displacements;
 
-    lower_bound.x() = points.col(0).minCoeff();
-    lower_bound.y() = points.col(1).minCoeff();
-    upper_bound.x() = points.col(0).maxCoeff();
-    upper_bound.y() = points.col(1).maxCoeff();
+    lower_bound = points.colwise().minCoeff();
+    upper_bound = points.colwise().maxCoeff();
 }
 
 /// @brief Compute the average edge length of a mesh.
-double average_edge_length(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements,
-    const Eigen::MatrixX2i& edges)
+double average_edge_length(
+    const Eigen::MatrixXd& V,
+    const Eigen::MatrixXd& U,
+    const Eigen::MatrixXi& E)
 {
-    double sum = 0;
-    for (int i = 0; i < edges.rows(); i++) {
-        sum += (vertices.row(edges(i, 1)) - vertices.row(edges(i, 0))).norm();
-        sum += ((vertices.row(edges(i, 1)) + displacements.row(edges(i, 1)))
-            - (vertices.row(edges(i, 0)) + displacements.row(edges(i, 0))))
+    double avg = 0;
+    for (unsigned i = 0; i < E.rows(); ++i) {
+        avg += (V.row(E(i, 0)) - V.row(E(i, 1))).norm();
+        avg += ((V.row(E(i, 0)) + U.row(E(i, 0)))
+                - (V.row(E(i, 1)) + U.row(E(i, 1))))
                    .norm();
     }
-    return sum / (2 * edges.rows());
+    return avg / E.rows();
 }
 
 /// @brief Compute the average displacement length.
-double average_displacement_length(const Eigen::MatrixX2d& displacements)
+double average_displacement_length(const Eigen::MatrixXd& displacements)
 {
-    double sum = 0;
-    for (int i = 0; i < displacements.rows(); i++) {
-        sum += displacements.row(i).norm();
-    }
-    return sum / displacements.rows();
+    return displacements.rowwise().norm().sum() / displacements.rows();
 }
 
-void HashGrid::resize(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements,
-    const Eigen::MatrixX2i edges,
+void HashGrid::resize(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXi& edges,
     const double inflation_radius)
 {
-    Eigen::Vector2d mesh_min, mesh_max;
+    Eigen::VectorXd mesh_min, mesh_max;
     calculate_mesh_extents(vertices, displacements, mesh_min, mesh_max);
-    this->resize(mesh_min.array() - inflation_radius,
+    this->resize(
+        mesh_min.array() - inflation_radius,
         mesh_max.array() + inflation_radius,
-        average_edge_length(vertices, displacements, edges) + inflation_radius
-            + average_displacement_length(displacements));
+        (average_edge_length(vertices, displacements, edges)
+         + average_displacement_length(displacements))
+                / 2.0
+            + inflation_radius);
 }
 
 /// @brief Compute a AABB for a vertex moving through time (i.e. temporal edge).
-void calculate_vertex_extents(const Eigen::Vector2d& v,
-    const Eigen::Vector2d& u,
-    Eigen::Vector2d& lower_bound,
-    Eigen::Vector2d& upper_bound)
+void calculate_vertex_extents(
+    const Eigen::VectorXd& v,
+    const Eigen::VectorXd& u,
+    Eigen::VectorXd& lower_bound,
+    Eigen::VectorXd& upper_bound)
 {
-    static Eigen::Matrix<double, 2, 2> points;
+    Eigen::MatrixXd points(2, v.size());
     points.row(0) = v;
     points.row(1) = v + u;
 
-    lower_bound.x() = points.col(0).minCoeff();
-    lower_bound.y() = points.col(1).minCoeff();
-    upper_bound.x() = points.col(0).maxCoeff();
-    upper_bound.y() = points.col(1).maxCoeff();
+    lower_bound = points.colwise().minCoeff();
+    upper_bound = points.colwise().maxCoeff();
 }
 
-void HashGrid::addVertex(const Eigen::Vector2d& v,
-    const Eigen::Vector2d& u,
-    const int index,
+void HashGrid::addVertex(
+    const Eigen::VectorXd& v,
+    const Eigen::VectorXd& u,
+    const long index,
     const double inflation_radius)
 {
-    static Eigen::Vector2d lower_bound, upper_bound;
+    Eigen::VectorXd lower_bound, upper_bound;
     calculate_vertex_extents(v, u, lower_bound, upper_bound);
-    this->addElement(AABB(lower_bound.array() - inflation_radius,
-                         upper_bound.array() + inflation_radius),
-        -(index + 1)); // Vertices have a negative id
+    this->addElement(
+        AABB(
+            lower_bound.array() - inflation_radius,
+            upper_bound.array() + inflation_radius),
+        -(index + 1), m_vertexItems); // Vertices have a negative id
 }
 
-void HashGrid::addVertices(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements,
+void HashGrid::addVertices(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements,
     const double inflation_radius)
 {
-    for (int i = 0; i < vertices.rows(); i++) {
-        this->addVertex(
-            vertices.row(i), displacements.row(i), i, inflation_radius);
-    }
+    tbb::parallel_for(0l, vertices.rows(), 1l, [&](long i) {
+        addVertex(vertices.row(i), displacements.row(i), i, inflation_radius);
+    });
 }
 
 /// @brief Compute a AABB for an edge moving through time (i.e. temporal quad).
-void calculate_edge_extents(const Eigen::Vector2d& vi,
-    const Eigen::Vector2d& vj,
-    const Eigen::Vector2d& ui,
-    const Eigen::Vector2d& uj,
-    Eigen::Vector2d& lower_bound,
-    Eigen::Vector2d& upper_bound)
+void calculate_edge_extents(
+    const Eigen::VectorXd& vi,
+    const Eigen::VectorXd& vj,
+    const Eigen::VectorXd& ui,
+    const Eigen::VectorXd& uj,
+    Eigen::VectorXd& lower_bound,
+    Eigen::VectorXd& upper_bound)
 {
-    static Eigen::Matrix<double, 4, 2> points;
+    Eigen::MatrixXd points(4, vi.size());
     points.row(0) = vi;
     points.row(1) = vj;
     points.row(2) = vi + ui;
     points.row(3) = vj + uj;
 
-    lower_bound.x() = points.col(0).minCoeff();
-    lower_bound.y() = points.col(1).minCoeff();
-    upper_bound.x() = points.col(0).maxCoeff();
-    upper_bound.y() = points.col(1).maxCoeff();
+    lower_bound = points.colwise().minCoeff();
+    upper_bound = points.colwise().maxCoeff();
 }
 
-void HashGrid::addEdge(const Eigen::Vector2d& vi,
-    const Eigen::Vector2d& vj,
-    const Eigen::Vector2d& ui,
-    const Eigen::Vector2d& uj,
-    const int index,
+void HashGrid::addEdge(
+    const Eigen::VectorXd& vi,
+    const Eigen::VectorXd& vj,
+    const Eigen::VectorXd& ui,
+    const Eigen::VectorXd& uj,
+    const long index,
     const double inflation_radius)
 {
-    static Eigen::Vector2d lower_bound, upper_bound;
+    Eigen::VectorXd lower_bound, upper_bound;
     calculate_edge_extents(vi, vj, ui, uj, lower_bound, upper_bound);
-    this->addElement(AABB(lower_bound.array() - inflation_radius,
-                         upper_bound.array() + inflation_radius),
-        index + 1); // Edges have a positive id
+    this->addElement(
+        AABB(
+            lower_bound.array() - inflation_radius,
+            upper_bound.array() + inflation_radius),
+        index + 1, m_edgeItems); // Edges have a positive id
 }
 
-void HashGrid::addEdges(const Eigen::MatrixX2d& vertices,
-    const Eigen::MatrixX2d& displacements,
-    const Eigen::MatrixX2i& edges,
+void HashGrid::addEdges(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXi& edges,
     const double inflation_radius)
 {
-    for (int i = 0; i < edges.rows(); i++) {
-        this->addEdge(vertices.row(edges(i, 0)), vertices.row(edges(i, 1)),
+    tbb::parallel_for(0l, edges.rows(), 1l, [&](long i) {
+        addEdge(
+            vertices.row(edges(i, 0)), vertices.row(edges(i, 1)),
             displacements.row(edges(i, 0)), displacements.row(edges(i, 1)), i,
             inflation_radius);
-    }
+    });
 }
 
-void HashGrid::addElement(const AABB& aabb, const int id)
+/// @brief Compute a AABB for an edge moving through time (i.e. temporal quad).
+void calculate_face_extents(
+    const Eigen::VectorXd& vi,
+    const Eigen::VectorXd& vj,
+    const Eigen::VectorXd& vk,
+    const Eigen::VectorXd& ui,
+    const Eigen::VectorXd& uj,
+    const Eigen::VectorXd& uk,
+    Eigen::VectorXd& lower_bound,
+    Eigen::VectorXd& upper_bound)
 {
-    Eigen::Vector2i int_min
+    Eigen::MatrixXd points(6, vi.size());
+    points.row(0) = vi;
+    points.row(1) = vj;
+    points.row(1) = vk;
+    points.row(2) = vi + ui;
+    points.row(3) = vj + uj;
+    points.row(3) = vk + uk;
+
+    lower_bound = points.colwise().minCoeff();
+    upper_bound = points.colwise().maxCoeff();
+}
+
+void HashGrid::addFace(
+    const Eigen::VectorXd& vi,
+    const Eigen::VectorXd& vj,
+    const Eigen::VectorXd& vk,
+    const Eigen::VectorXd& ui,
+    const Eigen::VectorXd& uj,
+    const Eigen::VectorXd& uk,
+    const long index,
+    const double inflation_radius)
+{
+    Eigen::VectorXd lower_bound, upper_bound;
+    calculate_face_extents(vi, vj, vk, ui, uj, uk, lower_bound, upper_bound);
+    this->addElement(
+        AABB(
+            lower_bound.array() - inflation_radius,
+            upper_bound.array() + inflation_radius),
+        index + 1, m_faceItems); // Faces have a positive id
+}
+
+void HashGrid::addFaces(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXi& faces,
+    const double inflation_radius)
+{
+    tbb::parallel_for(0l, faces.rows(), 1l, [&](long i) {
+        addFace(
+            vertices.row(faces(i, 0)), vertices.row(faces(i, 1)),
+            vertices.row(faces(i, 2)), displacements.row(faces(i, 0)),
+            displacements.row(faces(i, 1)), displacements.row(faces(i, 2)), i,
+            inflation_radius);
+    });
+}
+
+void HashGrid::addElement(const AABB& aabb, const int id, HashItems& items)
+{
+    Eigen::VectorXi int_min
         = ((aabb.getMin() - m_domainMin) / m_cellSize).cast<int>();
-    Eigen::Vector2i int_max
+    Eigen::VectorXi int_max
         = ((aabb.getMax() - m_domainMin) / m_cellSize)
               .unaryExpr([](const double x) { return std::ceil(x); })
               .cast<int>();
 
+    int min_z = int_min.size() == 3 ? int_min.z() : 0;
+    int max_z = int_max.size() == 3 ? int_max.z() : 0;
     for (int x = int_min.x(); x <= int_max.x(); ++x) {
         for (int y = int_min.y(); y <= int_max.y(); ++y) {
-            m_hash.push_back(HashItem(hash(x, y), id, aabb));
+            for (int z = min_z; z <= max_z; ++z) {
+                items.emplace_back(hash(x, y, z), id, aabb);
+            }
         }
     }
 }
 
-void HashGrid::getVertexEdgePairs(const Eigen::MatrixX2i& edges,
+void HashGrid::getVertexEdgePairs(
+    const Eigen::MatrixXi& edges,
     const Eigen::VectorXi& group_ids,
     EdgeVertexCandidates& ev_candidates)
 {
-    EdgeVertexCandidateSet unique_ev_candidates;
-
     std::vector<HashItem> edge_items;
     std::vector<HashItem> vertex_items;
 
     bool check_groups = group_ids.size() > 0;
 
+    // Combine the edge and vertex hash items.
+    std::vector<HashItem> items;
+    items.reserve(m_vertexItems.size() + m_edgeItems.size());
+    items.insert(items.end(), m_vertexItems.begin(), m_vertexItems.end());
+    items.insert(items.end(), m_edgeItems.begin(), m_edgeItems.end());
+
     // Sorted all they (key,value) pairs, where key is the hash key, and value
     // is the element index
-    this->sort();
+    tbb::parallel_sort(items.begin(), items.end());
 
     // Entries with the same key means they share a cell (that cell index
     // hashes to the same key) and should be flagged for low-level intersection
     // testing. So we loop over the entire sorted set of (key,value) pairs
     // creating Candidate entries for vertex-edge pairs with the same key
-    for (unsigned i = 0; i < m_hash.size(); ++i) {
-        HashItem& item = get(i);
+    for (unsigned i = 0; i < items.size(); ++i) {
+        HashItem& item = items[i];
         const int currH = item.key;
         const int currId = item.id;
 
@@ -213,7 +290,7 @@ void HashGrid::getVertexEdgePairs(const Eigen::MatrixX2i& edges,
 
         // CLOSE BUCKET:
         // if this is the last element, or next is from another bucket
-        if ((i == m_hash.size() - 1) || currH != get(i + 1).key) {
+        if ((i == items.size() - 1) || currH != items[i + 1].key) {
             // We are closing the bucket (key entry), so tally up all
             // vertex-edge pairs encountered in the bucket that just ended
             for (const HashItem& edge_item : edge_items) {
@@ -233,8 +310,7 @@ void HashGrid::getVertexEdgePairs(const Eigen::MatrixX2i& edges,
                     }
                     if (!is_endpoint && !same_group
                         && AABB::are_overlaping(edge_aabb, vertex_aabb)) {
-                        unique_ev_candidates.insert(
-                            EdgeVertexCandidate(edge_id, vertex_id));
+                        ev_candidates.emplace_back(edge_id, vertex_id);
                     }
                 }
             }
@@ -244,9 +320,161 @@ void HashGrid::getVertexEdgePairs(const Eigen::MatrixX2i& edges,
         }
     }
 
-    // Copy the unique candidates over to the output vector of candidates
-    std::copy(unique_ev_candidates.begin(), unique_ev_candidates.end(),
-        std::back_inserter(ev_candidates));
+    // Remove the duplicate candidates
+    tbb::parallel_sort(ev_candidates.begin(), ev_candidates.end());
+    auto new_end = std::unique(ev_candidates.begin(), ev_candidates.end());
+    ev_candidates.erase(new_end, ev_candidates.end());
+}
+
+void HashGrid::getEdgeEdgePairs(
+    const Eigen::MatrixXi& edges,
+    const Eigen::VectorXi& group_ids,
+    EdgeEdgeCandidates& ee_candidates)
+{
+    std::vector<HashItem> edge_items;
+
+    bool check_groups = group_ids.size() > 0;
+
+    // Sorted all they (key,value) pairs, where key is the hash key, and value
+    // is the element index
+    tbb::parallel_sort(m_edgeItems.begin(), m_edgeItems.end());
+
+    // Entries with the same key means they share a cell (that cell index
+    // hashes to the same key) and should be flagged for low-level intersection
+    // testing. So we loop over the entire sorted set of (key,value) pairs
+    // creating Candidate entries for vertex-edge pairs with the same key
+    for (unsigned i = 0; i < m_edgeItems.size(); ++i) {
+        HashItem& item = m_edgeItems[i];
+        const int currH = item.key;
+        const int currId = item.id;
+
+        // read this element
+        if (currId > 0) { // Edge elements have positive id
+            item.id = currId - 1;
+            edge_items.push_back(item);
+        } else {
+            throw "Invalid edge id given to Hash!";
+        }
+
+        // CLOSE BUCKET:
+        // if this is the last element, or next is from another bucket
+        if ((i == m_edgeItems.size() - 1) || currH != m_edgeItems[i + 1].key) {
+            // We are closing the bucket (key entry), so tally up all
+            // edge-edge pairs encountered in the bucket that just ended
+            for (int ei = 0; ei < edge_items.size(); ei++) {
+                const HashItem& ei_item = edge_items[ei];
+                const int& ei_id = ei_item.id;
+                const AABB& ei_aabb = ei_item.aabb;
+
+                for (int ej = ei; ej < edge_items.size(); ej++) {
+                    const HashItem& ej_item = edge_items[ej];
+                    const int& ej_id = ej_item.id;
+                    const AABB& ej_aabb = ej_item.aabb;
+
+                    bool has_common_endpoint
+                        = edges(ei_id, 0) == edges(ej_id, 0)
+                        || edges(ei_id, 0) == edges(ej_id, 1)
+                        || edges(ei_id, 1) == edges(ej_id, 0)
+                        || edges(ei_id, 1) == edges(ej_id, 1);
+                    bool same_group = false;
+                    if (check_groups) {
+                        same_group = group_ids(edges(ei_id, 0))
+                            == group_ids(edges(ej_id, 0));
+                    }
+                    if (!has_common_endpoint && !same_group
+                        && AABB::are_overlaping(ei_aabb, ej_aabb)) {
+                        ee_candidates.emplace_back(ei_id, ej_id);
+                    }
+                }
+            }
+
+            edge_items.clear();
+        }
+    }
+
+    // Remove the duplicate candidates
+    tbb::parallel_sort(ee_candidates.begin(), ee_candidates.end());
+    auto new_end = std::unique(ee_candidates.begin(), ee_candidates.end());
+    ee_candidates.erase(new_end, ee_candidates.end());
+}
+
+void HashGrid::getFaceVertexPairs(
+    const Eigen::MatrixXi& faces,
+    const Eigen::VectorXi& group_ids,
+    FaceVertexCandidates& fv_candidates)
+{
+    std::vector<HashItem> face_items;
+    std::vector<HashItem> vertex_items;
+
+    bool check_groups = group_ids.size() > 0;
+
+    // Combine the face and vertex hash items.
+    std::vector<HashItem> items;
+    items.reserve(m_vertexItems.size() + m_faceItems.size());
+    items.insert(items.end(), m_vertexItems.begin(), m_vertexItems.end());
+    items.insert(items.end(), m_faceItems.begin(), m_faceItems.end());
+
+    // Sorted all they (key,value) pairs, where key is the hash key, and value
+    // is the element index
+    tbb::parallel_sort(items.begin(), items.end());
+
+    // Entries with the same key means they share a cell (that cell index
+    // hashes to the same key) and should be flagged for low-level intersection
+    // testing. So we loop over the entire sorted set of (key,value) pairs
+    // creating Candidate entries for vertex-face pairs with the same key
+    for (unsigned i = 0; i < items.size(); ++i) {
+        HashItem& item = items[i];
+        const int currH = item.key;
+        const int currId = item.id;
+
+        // read this element
+        if (currId > 0) { // Face elements have positive id
+            item.id = currId - 1;
+            face_items.push_back(item);
+        } else if (currId < 0) { // Vertex elements have negative id
+            item.id = -currId - 1;
+            vertex_items.push_back(item);
+        } else {
+            throw "Invalid id given to Hash!";
+        }
+
+        // CLOSE BUCKET:
+        // if this is the last element, or next is from another bucket
+        if ((i == items.size() - 1) || currH != items[i + 1].key) {
+            // We are closing the bucket (key entry), so tally up all
+            // vertex-face pairs encountered in the bucket that just ended
+            for (const HashItem& face_item : face_items) {
+                const int& face_id = face_item.id;
+                const AABB& face_aabb = face_item.aabb;
+
+                for (const HashItem& vertex_item : vertex_items) {
+                    const int& vertex_id = vertex_item.id;
+                    const AABB& vertex_aabb = vertex_item.aabb;
+
+                    bool is_endpoint = faces(face_id, 0) == vertex_id
+                        || faces(face_id, 1) == vertex_id
+                        || faces(face_id, 2) == vertex_id;
+                    bool same_group = false;
+                    if (check_groups) {
+                        same_group = group_ids(vertex_id)
+                            == group_ids(faces(face_id, 0));
+                    }
+                    if (!is_endpoint && !same_group
+                        && AABB::are_overlaping(face_aabb, vertex_aabb)) {
+                        fv_candidates.emplace_back(face_id, vertex_id);
+                    }
+                }
+            }
+
+            face_items.clear();
+            vertex_items.clear();
+        }
+    }
+
+    // Remove the duplicate candidates
+    tbb::parallel_sort(fv_candidates.begin(), fv_candidates.end());
+    auto new_end = std::unique(fv_candidates.begin(), fv_candidates.end());
+    fv_candidates.erase(new_end, fv_candidates.end());
 }
 
 } // namespace ccd

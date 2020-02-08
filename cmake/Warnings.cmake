@@ -23,7 +23,7 @@ set(MY_FLAGS
 		-Wformat=2
 		-Wuninitialized
 		-Wcast-qual
-		-Wmissing-noreturn
+		# -Wmissing-noreturn
 		-Wmissing-format-attribute
 		-Wredundant-decls
 
@@ -50,7 +50,7 @@ set(MY_FLAGS
 		# -Wno-sign-conversion
 		#-Wsign-conversion
 
-		-Wshadow
+		# -Wshadow
 
 		-Wstrict-null-sentinel
 		-Woverloaded-virtual
@@ -67,7 +67,7 @@ set(MY_FLAGS
 		# This is annoying if there is a default that covers the rest.
 		# -Wswitch-enum
 		-Wswitch-unreachable
-		# -Wcovered-switch-default # Annoying warnings from nlohmann::json 
+		# -Wcovered-switch-default # Annoying warnings from nlohmann::json
 
 		-Wcast-align
 		-Wdisabled-optimization

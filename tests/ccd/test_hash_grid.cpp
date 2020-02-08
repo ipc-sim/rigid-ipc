@@ -12,26 +12,39 @@ using namespace nlohmann;
 
 TEST_CASE("AABB initilization", "[hashgrid][AABB]")
 {
+    int dim = GENERATE(2, 3);
+    CAPTURE(dim);
     AABB aabb;
-    Eigen::Vector2d actual_center;
-    SECTION("Empty AABB") { actual_center = Eigen::Vector2d::Zero(); }
+    Eigen::VectorXd actual_center(dim);
+    SECTION("Empty AABB")
+    {
+        aabb = AABB(Eigen::VectorXd::Zero(dim), Eigen::VectorXd::Zero(dim));
+        actual_center = Eigen::VectorXd::Zero(dim);
+    }
     SECTION("Box centered at zero")
     {
-        Eigen::Vector2d min
-            = Eigen::Vector2d::Random().array() - 1; // in range [-2, 0]
-        Eigen::Vector2d max = -min;
+        Eigen::VectorXd min
+            = Eigen::VectorXd::Random(dim).array() - 1; // in range [-2, 0]
+        Eigen::VectorXd max = -min;
         aabb = AABB(min, max);
-        actual_center = Eigen::Vector2d::Zero();
+        actual_center = Eigen::VectorXd::Zero(dim);
     }
     SECTION("Box not centered at zero")
     {
-        Eigen::Vector2d min(5.1, 3.14), max(10.4, 7.89);
+        Eigen::VectorXd min(dim), max(dim);
+        if (dim == 2) {
+            min << 5.1, 3.14;
+            max << 10.4, 7.89;
+            actual_center << 7.75, 5.515;
+        } else {
+            min << 5.1, 3.14, 7.94;
+            max << 10.4, 7.89, 10.89;
+            actual_center << 7.75, 5.515, 9.415;
+        }
         aabb = AABB(min, max);
-        actual_center = Eigen::Vector2d(7.75, 5.515);
     }
-    Eigen::Vector2d center_diff = aabb.getCenter() - actual_center;
-    CHECK(center_diff.x() == Approx(0.0).margin(1e-12));
-    CHECK(center_diff.y() == Approx(0.0).margin(1e-12));
+    Eigen::VectorXd center_diff = aabb.getCenter() - actual_center;
+    CHECK(center_diff.norm() == Approx(0.0).margin(1e-12));
 }
 
 TEST_CASE("AABB overlapping", "[hashgrid][AABB]")
@@ -115,22 +128,26 @@ TEST_CASE("Hash grid gets same impacts as brute force", "[hashgrid]")
         displacements *= 3;
 
         EdgeVertexImpacts brute_force_ev_impacts;
-        detect_edge_vertex_collisions(vertices, displacements, edges,
-            brute_force_ev_impacts, DetectionMethod::BRUTE_FORCE);
+        detect_edge_vertex_collisions(
+            vertices, displacements, edges, brute_force_ev_impacts,
+            DetectionMethod::BRUTE_FORCE);
         EdgeVertexImpacts hash_ev_impacts;
-        detect_edge_vertex_collisions(vertices, displacements, edges,
-            hash_ev_impacts, DetectionMethod::HASH_GRID);
+        detect_edge_vertex_collisions(
+            vertices, displacements, edges, hash_ev_impacts,
+            DetectionMethod::HASH_GRID);
 
         REQUIRE(brute_force_ev_impacts.size() == hash_ev_impacts.size());
         for (const auto& impact : brute_force_ev_impacts) {
-            CHECK(std::find(
-                      hash_ev_impacts.begin(), hash_ev_impacts.end(), impact)
+            CHECK(
+                std::find(
+                    hash_ev_impacts.begin(), hash_ev_impacts.end(), impact)
                 != hash_ev_impacts.end());
         }
     }
 }
 
-TEST_CASE("Hash grid gets same impacts as brute force using failure case",
+TEST_CASE(
+    "Hash grid gets same impacts as brute force using failure case",
     "[hashgrid][AABB]")
 {
     Eigen::MatrixXd vertices;
@@ -194,16 +211,19 @@ TEST_CASE("Hash grid gets same impacts as brute force using failure case",
         displacements *= 10;
 
         EdgeVertexImpacts brute_force_ev_impacts;
-        detect_edge_vertex_collisions(vertices, displacements, edges,
-            brute_force_ev_impacts, DetectionMethod::BRUTE_FORCE);
+        detect_edge_vertex_collisions(
+            vertices, displacements, edges, brute_force_ev_impacts,
+            DetectionMethod::BRUTE_FORCE);
         EdgeVertexImpacts hash_ev_impacts;
-        detect_edge_vertex_collisions(vertices, displacements, edges,
-            hash_ev_impacts, DetectionMethod::HASH_GRID);
+        detect_edge_vertex_collisions(
+            vertices, displacements, edges, hash_ev_impacts,
+            DetectionMethod::HASH_GRID);
 
         REQUIRE(brute_force_ev_impacts.size() == hash_ev_impacts.size());
         for (const auto& impact : brute_force_ev_impacts) {
-            CHECK(std::find(
-                      hash_ev_impacts.begin(), hash_ev_impacts.end(), impact)
+            CHECK(
+                std::find(
+                    hash_ev_impacts.begin(), hash_ev_impacts.end(), impact)
                 != hash_ev_impacts.end());
         }
     }
