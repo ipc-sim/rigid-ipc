@@ -90,3 +90,11 @@ function(fixing_collisions_download_tbb)
     GIT_TAG        20357d83871e4cb93b2c724fe0c337cd999fd14f
   )
 endfunction()
+
+# Etienne Vouga's CTCD Library
+function(fixing_collisions_download_evctcd)
+  fixing_collisions_download_project(EVCTCD
+    GIT_REPOSITORY https://github.com/evouga/collisiondetection.git
+    GIT_TAG        e5fe5c9767207df5047e375fb20180a665ae186f
+  )
+endfunction()

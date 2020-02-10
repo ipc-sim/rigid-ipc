@@ -20,7 +20,7 @@ bool AABB::are_overlaping(const AABB& a, const AABB& b)
 void HashGrid::resize(Eigen::VectorXd min, Eigen::VectorXd max, double cellSize)
 {
     clear();
-    m_cellSize = cellSize * 2.0;
+    m_cellSize = cellSize;
     m_domainMin = min;
     m_domainMax = max;
     m_gridSize = int(std::ceil((max - min).maxCoeff() / m_cellSize));
@@ -55,7 +55,7 @@ double average_edge_length(
                 - (V.row(E(i, 1)) + U.row(E(i, 1))))
                    .norm();
     }
-    return avg / E.rows();
+    return avg / (2 * E.rows());
 }
 
 /// @brief Compute the average displacement length.
@@ -75,9 +75,10 @@ void HashGrid::resize(
     this->resize(
         mesh_min.array() - inflation_radius,
         mesh_max.array() + inflation_radius,
-        (average_edge_length(vertices, displacements, edges)
-         + average_displacement_length(displacements))
-                / 2.0
+        std::max(
+            average_edge_length(vertices, displacements, edges),
+            average_displacement_length(displacements))
+                * 2
             + inflation_radius);
 }
 
@@ -108,7 +109,7 @@ void HashGrid::addVertex(
         AABB(
             lower_bound.array() - inflation_radius,
             upper_bound.array() + inflation_radius),
-        -(index + 1), m_vertexItems); // Vertices have a negative id
+        index, m_vertexItems); // Vertices have a negative id
 }
 
 void HashGrid::addVertices(
@@ -154,7 +155,7 @@ void HashGrid::addEdge(
         AABB(
             lower_bound.array() - inflation_radius,
             upper_bound.array() + inflation_radius),
-        index + 1, m_edgeItems); // Edges have a positive id
+        index, m_edgeItems); // Edges have a positive id
 }
 
 void HashGrid::addEdges(
@@ -185,10 +186,10 @@ void calculate_face_extents(
     Eigen::MatrixXd points(6, vi.size());
     points.row(0) = vi;
     points.row(1) = vj;
-    points.row(1) = vk;
-    points.row(2) = vi + ui;
-    points.row(3) = vj + uj;
-    points.row(3) = vk + uk;
+    points.row(2) = vk;
+    points.row(3) = vi + ui;
+    points.row(4) = vj + uj;
+    points.row(5) = vk + uk;
 
     lower_bound = points.colwise().minCoeff();
     upper_bound = points.colwise().maxCoeff();
@@ -210,7 +211,7 @@ void HashGrid::addFace(
         AABB(
             lower_bound.array() - inflation_radius,
             upper_bound.array() + inflation_radius),
-        index + 1, m_faceItems); // Faces have a positive id
+        index, m_faceItems); // Faces have a positive id
 }
 
 void HashGrid::addFaces(
@@ -230,12 +231,11 @@ void HashGrid::addFaces(
 
 void HashGrid::addElement(const AABB& aabb, const int id, HashItems& items)
 {
-    Eigen::VectorXi int_min
-        = ((aabb.getMin() - m_domainMin) / m_cellSize).cast<int>();
-    Eigen::VectorXi int_max
-        = ((aabb.getMax() - m_domainMin) / m_cellSize)
-              .unaryExpr([](const double x) { return std::ceil(x); })
-              .cast<int>();
+    Eigen::VectorXi int_min =
+        ((aabb.getMin() - m_domainMin) / m_cellSize).cast<int>();
+    Eigen::VectorXi int_max =
+        ((aabb.getMax() - m_domainMin) / m_cellSize).cast<int>();
+    assert((int_min.array() <= int_max.array()).all());
 
     int min_z = int_min.size() == 3 ? int_min.z() : 0;
     int max_z = int_max.size() == 3 ? int_max.z() : 0;
@@ -248,22 +248,62 @@ void HashGrid::addElement(const AABB& aabb, const int id, HashItems& items)
     }
 }
 
-void HashGrid::getVertexEdgePairs(
-    const Eigen::MatrixXi& edges,
-    const Eigen::VectorXi& group_ids,
-    EdgeVertexCandidates& ev_candidates)
+template <typename T>
+void getPairs(
+    std::function<bool(int, int)> is_endpoint,
+    std::function<bool(int, int)> is_same_group,
+    HashItems& items0,
+    HashItems& items1,
+    T& candidates)
 {
-    std::vector<HashItem> edge_items;
-    std::vector<HashItem> vertex_items;
+    // Sorted all they (key,value) pairs, where key is the hash key, and value
+    // is the element index
+    tbb::parallel_sort(items0.begin(), items0.end());
+    tbb::parallel_sort(items1.begin(), items1.end());
 
-    bool check_groups = group_ids.size() > 0;
+    // Entries with the same key means they share a cell (that cell index
+    // hashes to the same key) and should be flagged for low-level intersection
+    // testing. So we loop over the entire sorted set of (key,value) pairs
+    // creating Candidate entries for vertex-edge pairs with the same key
+    int i = 0, j_start = 0;
+    while (i < items0.size() && j_start < items1.size()) {
+        const HashItem& item0 = items0[i];
 
-    // Combine the edge and vertex hash items.
-    std::vector<HashItem> items;
-    items.reserve(m_vertexItems.size() + m_edgeItems.size());
-    items.insert(items.end(), m_vertexItems.begin(), m_vertexItems.end());
-    items.insert(items.end(), m_edgeItems.begin(), m_edgeItems.end());
+        int j = j_start;
+        while (j < items1.size()) {
+            const HashItem& item1 = items1[j];
 
+            if (item0.key == item1.key) {
+                if (!is_endpoint(item0.id, item1.id)
+                    && !is_same_group(item0.id, item1.id)
+                    && AABB::are_overlaping(item0.aabb, item1.aabb)) {
+                    candidates.emplace_back(item0.id, item1.id);
+                }
+            } else {
+                break;
+            }
+            j++;
+        }
+
+        if (i == items0.size() - 1 || item0.key != items0[i + 1].key) {
+            j_start = j;
+        }
+        i++;
+    }
+
+    // Remove the duplicate candidates
+    tbb::parallel_sort(candidates.begin(), candidates.end());
+    auto new_end = std::unique(candidates.begin(), candidates.end());
+    candidates.erase(new_end, candidates.end());
+}
+
+template <typename T>
+void getPairs(
+    std::function<bool(int, int)> is_endpoint,
+    std::function<bool(int, int)> is_same_group,
+    HashItems& items,
+    T& candidates)
+{
     // Sorted all they (key,value) pairs, where key is the hash key, and value
     // is the element index
     tbb::parallel_sort(items.begin(), items.end());
@@ -272,58 +312,46 @@ void HashGrid::getVertexEdgePairs(
     // hashes to the same key) and should be flagged for low-level intersection
     // testing. So we loop over the entire sorted set of (key,value) pairs
     // creating Candidate entries for vertex-edge pairs with the same key
-    for (unsigned i = 0; i < items.size(); ++i) {
-        HashItem& item = items[i];
-        const int currH = item.key;
-        const int currId = item.id;
-
-        // read this element
-        if (currId > 0) { // Edge elements have positive id
-            item.id = currId - 1;
-            edge_items.push_back(item);
-        } else if (currId < 0) { // Vertex elements have negative id
-            item.id = -currId - 1;
-            vertex_items.push_back(item);
-        } else {
-            throw "Invalid id given to Hash!";
-        }
-
-        // CLOSE BUCKET:
-        // if this is the last element, or next is from another bucket
-        if ((i == items.size() - 1) || currH != items[i + 1].key) {
-            // We are closing the bucket (key entry), so tally up all
-            // vertex-edge pairs encountered in the bucket that just ended
-            for (const HashItem& edge_item : edge_items) {
-                const int& edge_id = edge_item.id;
-                const AABB& edge_aabb = edge_item.aabb;
-
-                for (const HashItem& vertex_item : vertex_items) {
-                    const int& vertex_id = vertex_item.id;
-                    const AABB& vertex_aabb = vertex_item.aabb;
-
-                    bool is_endpoint = edges(edge_id, 0) == vertex_id
-                        || edges(edge_id, 1) == vertex_id;
-                    bool same_group = false;
-                    if (check_groups) {
-                        same_group = group_ids(vertex_id)
-                            == group_ids(edges(edge_id, 0));
-                    }
-                    if (!is_endpoint && !same_group
-                        && AABB::are_overlaping(edge_aabb, vertex_aabb)) {
-                        ev_candidates.emplace_back(edge_id, vertex_id);
-                    }
+    for (int i = 0; i < items.size(); i++) {
+        const HashItem& item0 = items[i];
+        for (int j = i + 1; j < items.size(); j++) {
+            const HashItem& item1 = items[j];
+            if (item0.key == item1.key) {
+                if (!is_endpoint(item0.id, item1.id)
+                    && !is_same_group(item0.id, item1.id)
+                    && AABB::are_overlaping(item0.aabb, item1.aabb)) {
+                    candidates.emplace_back(item0.id, item1.id);
                 }
+            } else {
+                break; // This avoids a brute force comparison
             }
-
-            edge_items.clear();
-            vertex_items.clear();
         }
     }
 
     // Remove the duplicate candidates
-    tbb::parallel_sort(ev_candidates.begin(), ev_candidates.end());
-    auto new_end = std::unique(ev_candidates.begin(), ev_candidates.end());
-    ev_candidates.erase(new_end, ev_candidates.end());
+    tbb::parallel_sort(candidates.begin(), candidates.end());
+    auto new_end = std::unique(candidates.begin(), candidates.end());
+    candidates.erase(new_end, candidates.end());
+}
+
+void HashGrid::getVertexEdgePairs(
+    const Eigen::MatrixXi& edges,
+    const Eigen::VectorXi& group_ids,
+    EdgeVertexCandidates& ev_candidates)
+{
+    auto is_endpoint = [&](int ei, int vi) {
+        return edges(ei, 0) == vi || edges(ei, 1) == vi;
+    };
+
+    bool check_groups = group_ids.size() > 0;
+    auto is_same_group = [&](int ei, int vi) {
+        return check_groups
+            && (group_ids(vi) == group_ids(edges(ei, 0))
+                || group_ids(vi) == group_ids(edges(ei, 1)));
+    };
+
+    getPairs(
+        is_endpoint, is_same_group, m_edgeItems, m_vertexItems, ev_candidates);
 }
 
 void HashGrid::getEdgeEdgePairs(
@@ -331,71 +359,21 @@ void HashGrid::getEdgeEdgePairs(
     const Eigen::VectorXi& group_ids,
     EdgeEdgeCandidates& ee_candidates)
 {
-    std::vector<HashItem> edge_items;
+    auto is_endpoint = [&](int ei, int ej) {
+        return edges(ei, 0) == edges(ej, 0) || edges(ei, 0) == edges(ej, 1)
+            || edges(ei, 1) == edges(ej, 0) || edges(ei, 1) == edges(ej, 1);
+    };
 
     bool check_groups = group_ids.size() > 0;
+    auto is_same_group = [&](int ei, int ej) {
+        return check_groups
+            && (group_ids(edges(ei, 0)) == group_ids(edges(ej, 0))
+                || group_ids(edges(ei, 0)) == group_ids(edges(ej, 1))
+                || group_ids(edges(ei, 1)) == group_ids(edges(ej, 0))
+                || group_ids(edges(ei, 1)) == group_ids(edges(ej, 1)));
+    };
 
-    // Sorted all they (key,value) pairs, where key is the hash key, and value
-    // is the element index
-    tbb::parallel_sort(m_edgeItems.begin(), m_edgeItems.end());
-
-    // Entries with the same key means they share a cell (that cell index
-    // hashes to the same key) and should be flagged for low-level intersection
-    // testing. So we loop over the entire sorted set of (key,value) pairs
-    // creating Candidate entries for vertex-edge pairs with the same key
-    for (unsigned i = 0; i < m_edgeItems.size(); ++i) {
-        HashItem& item = m_edgeItems[i];
-        const int currH = item.key;
-        const int currId = item.id;
-
-        // read this element
-        if (currId > 0) { // Edge elements have positive id
-            item.id = currId - 1;
-            edge_items.push_back(item);
-        } else {
-            throw "Invalid edge id given to Hash!";
-        }
-
-        // CLOSE BUCKET:
-        // if this is the last element, or next is from another bucket
-        if ((i == m_edgeItems.size() - 1) || currH != m_edgeItems[i + 1].key) {
-            // We are closing the bucket (key entry), so tally up all
-            // edge-edge pairs encountered in the bucket that just ended
-            for (int ei = 0; ei < edge_items.size(); ei++) {
-                const HashItem& ei_item = edge_items[ei];
-                const int& ei_id = ei_item.id;
-                const AABB& ei_aabb = ei_item.aabb;
-
-                for (int ej = ei; ej < edge_items.size(); ej++) {
-                    const HashItem& ej_item = edge_items[ej];
-                    const int& ej_id = ej_item.id;
-                    const AABB& ej_aabb = ej_item.aabb;
-
-                    bool has_common_endpoint
-                        = edges(ei_id, 0) == edges(ej_id, 0)
-                        || edges(ei_id, 0) == edges(ej_id, 1)
-                        || edges(ei_id, 1) == edges(ej_id, 0)
-                        || edges(ei_id, 1) == edges(ej_id, 1);
-                    bool same_group = false;
-                    if (check_groups) {
-                        same_group = group_ids(edges(ei_id, 0))
-                            == group_ids(edges(ej_id, 0));
-                    }
-                    if (!has_common_endpoint && !same_group
-                        && AABB::are_overlaping(ei_aabb, ej_aabb)) {
-                        ee_candidates.emplace_back(ei_id, ej_id);
-                    }
-                }
-            }
-
-            edge_items.clear();
-        }
-    }
-
-    // Remove the duplicate candidates
-    tbb::parallel_sort(ee_candidates.begin(), ee_candidates.end());
-    auto new_end = std::unique(ee_candidates.begin(), ee_candidates.end());
-    ee_candidates.erase(new_end, ee_candidates.end());
+    getPairs(is_endpoint, is_same_group, m_edgeItems, ee_candidates);
 }
 
 void HashGrid::getFaceVertexPairs(
@@ -403,78 +381,20 @@ void HashGrid::getFaceVertexPairs(
     const Eigen::VectorXi& group_ids,
     FaceVertexCandidates& fv_candidates)
 {
-    std::vector<HashItem> face_items;
-    std::vector<HashItem> vertex_items;
+    auto is_endpoint = [&](int fi, int vi) {
+        return vi == faces(fi, 0) || vi == faces(fi, 1) || vi == faces(fi, 2);
+    };
 
     bool check_groups = group_ids.size() > 0;
+    auto is_same_group = [&](int fi, int vi) {
+        return check_groups
+            && (group_ids(vi) == group_ids(faces(fi, 0))
+                || group_ids(vi) == group_ids(faces(fi, 1))
+                || group_ids(vi) == group_ids(faces(fi, 2)));
+    };
 
-    // Combine the face and vertex hash items.
-    std::vector<HashItem> items;
-    items.reserve(m_vertexItems.size() + m_faceItems.size());
-    items.insert(items.end(), m_vertexItems.begin(), m_vertexItems.end());
-    items.insert(items.end(), m_faceItems.begin(), m_faceItems.end());
-
-    // Sorted all they (key,value) pairs, where key is the hash key, and value
-    // is the element index
-    tbb::parallel_sort(items.begin(), items.end());
-
-    // Entries with the same key means they share a cell (that cell index
-    // hashes to the same key) and should be flagged for low-level intersection
-    // testing. So we loop over the entire sorted set of (key,value) pairs
-    // creating Candidate entries for vertex-face pairs with the same key
-    for (unsigned i = 0; i < items.size(); ++i) {
-        HashItem& item = items[i];
-        const int currH = item.key;
-        const int currId = item.id;
-
-        // read this element
-        if (currId > 0) { // Face elements have positive id
-            item.id = currId - 1;
-            face_items.push_back(item);
-        } else if (currId < 0) { // Vertex elements have negative id
-            item.id = -currId - 1;
-            vertex_items.push_back(item);
-        } else {
-            throw "Invalid id given to Hash!";
-        }
-
-        // CLOSE BUCKET:
-        // if this is the last element, or next is from another bucket
-        if ((i == items.size() - 1) || currH != items[i + 1].key) {
-            // We are closing the bucket (key entry), so tally up all
-            // vertex-face pairs encountered in the bucket that just ended
-            for (const HashItem& face_item : face_items) {
-                const int& face_id = face_item.id;
-                const AABB& face_aabb = face_item.aabb;
-
-                for (const HashItem& vertex_item : vertex_items) {
-                    const int& vertex_id = vertex_item.id;
-                    const AABB& vertex_aabb = vertex_item.aabb;
-
-                    bool is_endpoint = faces(face_id, 0) == vertex_id
-                        || faces(face_id, 1) == vertex_id
-                        || faces(face_id, 2) == vertex_id;
-                    bool same_group = false;
-                    if (check_groups) {
-                        same_group = group_ids(vertex_id)
-                            == group_ids(faces(face_id, 0));
-                    }
-                    if (!is_endpoint && !same_group
-                        && AABB::are_overlaping(face_aabb, vertex_aabb)) {
-                        fv_candidates.emplace_back(face_id, vertex_id);
-                    }
-                }
-            }
-
-            face_items.clear();
-            vertex_items.clear();
-        }
-    }
-
-    // Remove the duplicate candidates
-    tbb::parallel_sort(fv_candidates.begin(), fv_candidates.end());
-    auto new_end = std::unique(fv_candidates.begin(), fv_candidates.end());
-    fv_candidates.erase(new_end, fv_candidates.end());
+    getPairs(
+        is_endpoint, is_same_group, m_faceItems, m_vertexItems, fv_candidates);
 }
 
 } // namespace ccd

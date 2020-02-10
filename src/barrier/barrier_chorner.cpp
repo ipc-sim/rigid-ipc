@@ -4,15 +4,16 @@
 #include <cmath>
 #include <limits>
 
-#include <math.h>
 #include <assert.h>
+#include <math.h>
 
 namespace ccd {
 namespace opt {
+
     double horner_double(double* polynomial, int n, double x)
     {
         double s = 0.0;
-        for (int i = 0; i < n; i++){
+        for (int i = 0; i < n; i++) {
             s = s * x + polynomial[i];
         }
         return s;
@@ -21,7 +22,7 @@ namespace opt {
     double horner_fma(double* polynomial, int n, double x)
     {
         double s = 0.0;
-        for (int i = 0; i < n; i++){
+        for (int i = 0; i < n; i++) {
             s = fma(s, x, polynomial[i]);
         }
         return s;

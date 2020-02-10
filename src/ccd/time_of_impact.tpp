@@ -8,7 +8,8 @@ namespace ccd {
 namespace autodiff {
 
     template <typename T>
-    bool temporal_parameterization_to_spatial(const Eigen::Vector2d& Vi,
+    bool temporal_parameterization_to_spatial(
+        const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj,
         const Eigen::Vector2d& Vk,
         const Vector2T<T>& Ui,
@@ -42,21 +43,8 @@ namespace autodiff {
     }
 
     template <typename T>
-    bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
-        const Eigen::Vector2d& Vj,
-        const Eigen::Vector2d& Vk,
-        const Vector2T<T>& Ui,
-        const Vector2T<T>& Uj,
-        const Vector2T<T>& Uk,
-        T& toi)
-    {
-        T alpha;
-        return compute_edge_vertex_time_of_impact(
-            Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha);
-    }
-
-    template <typename T>
-    bool compute_edge_vertex_time_of_impact(const Eigen::Vector2d& Vi,
+    bool compute_edge_vertex_time_of_impact(
+        const Eigen::Vector2d& Vi,
         const Eigen::Vector2d& Vj,
         const Eigen::Vector2d& Vk,
         const Vector2T<T>& Ui,
@@ -89,13 +77,13 @@ namespace autodiff {
             T sqrt_rad = sqrt(radicand);
             if (b > 0) {
                 x1 = -2 * c / (b + sqrt_rad);
-                //if (a_not_zero) {
-                    x2 = (-b - sqrt_rad) / (2 * a);
+                // if (a_not_zero) {
+                x2 = (-b - sqrt_rad) / (2 * a);
                 //}
             } else { // note x1 and x2 switched
                 x2 = 2 * c / (-b + sqrt_rad);
-                //if (a_not_zero) {
-                    x1 = (-b + sqrt_rad) / (2 * a);
+                // if (a_not_zero) {
+                x1 = (-b + sqrt_rad) / (2 * a);
                 //}
             }
         } else if (radicand == 0 && a_not_zero) {

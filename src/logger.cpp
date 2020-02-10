@@ -10,7 +10,9 @@
 
 namespace ccd {
 namespace logger {
-    static const Eigen::IOFormat CleanFmt(Eigen::FullPrecision, 0, ", ", "\n", "", "");
+
+    static const Eigen::IOFormat
+        CleanFmt(Eigen::FullPrecision, 0, ", ", "\n", "", "");
     std::string fmt_eigen(const Eigen::MatrixXd& x, const int precision)
     {
         std::stringstream ssx;
@@ -32,8 +34,5 @@ namespace logger {
         return ss.str();
     }
 
-
-
-} // namespace log
-
+} // namespace logger
 } // namespace ccd

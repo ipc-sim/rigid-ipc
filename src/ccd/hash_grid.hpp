@@ -19,13 +19,12 @@ public:
         : min(min)
         , max(max)
     {
+        assert((min.array() <= max.array()).all());
         half_extent = (max - min) / 2;
         center = min + half_extent;
         dim = min.size();
         assert(max.size() == dim);
     }
-
-    virtual ~AABB() {}
 
     static bool are_overlaping(const AABB& a, const AABB& b);
 
@@ -58,7 +57,13 @@ public:
     }
 
     /// @brief Compare HashItems by their keys for sorting.
-    bool operator<(const HashItem& other) const { return key < other.key; }
+    bool operator<(const HashItem& other) const
+    {
+        if (key == other.key) {
+            return id < other.id;
+        }
+        return key < other.key;
+    }
 };
 
 typedef tbb::concurrent_vector<HashItem> HashItems;
@@ -145,7 +150,8 @@ protected:
     /// @brief Create the hash of a cell location.
     inline long hash(int x, int y, int z) const
     {
-        return z + m_gridSize * (y * m_gridSize + x);
+        assert(x < m_gridSize && y < m_gridSize && z < m_gridSize);
+        return (z * m_gridSize + y) * m_gridSize + x;
     }
 
     /// @brief Clear the hash grid.

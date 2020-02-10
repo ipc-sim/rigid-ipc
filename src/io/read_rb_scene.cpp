@@ -1,9 +1,6 @@
 #include "read_rb_scene.hpp"
 
-#include <fstream>
-#include <iostream>
-#include <unordered_set>
-
+#include <igl/edges.h>
 #include <igl/read_triangle_mesh.h>
 
 #include <io/serialize_json.hpp>
@@ -19,35 +16,6 @@ namespace io {
         using nlohmann::json;
         json scene = json::parse(str.c_str());
         return read_rb_scene(scene, rbs);
-    }
-
-    struct pair_hash {
-        template <class T1, class T2>
-        size_t operator()(std::pair<T1, T2> pair) const
-        {
-            return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
-        }
-    };
-
-    void faces_to_edges(const Eigen::MatrixXi& faces, Eigen::MatrixXi& edges)
-    {
-        std::unordered_set<std::pair<int, int>, pair_hash> edge_set;
-        for (size_t i = 0; i < faces.rows(); i++) {
-            for (size_t j = 0; j < faces.cols(); j++) {
-                // Do not put duplicate backwards edges
-                size_t next_j = (j + 1) % faces.cols();
-                if (edge_set.find(
-                        std::pair<int, int>(faces(i, next_j), faces(i, j)))
-                    == edge_set.end()) {
-                    edge_set.emplace(faces(i, j), faces(i, next_j));
-                }
-            }
-        }
-        edges.resize(edge_set.size(), 2);
-        size_t i = 0;
-        for (const auto& edge : edge_set) {
-            edges.row(i++) << edge.first, edge.second;
-        }
     }
 
     int read_rb_scene(
@@ -78,7 +46,7 @@ namespace io {
             if (mesh_fname != "") {
                 igl::read_triangle_mesh(mesh_fname, vertices, faces);
                 // Initialize edges
-                faces_to_edges(faces, edges);
+                igl::edges(faces, edges);
             } else {
                 from_json<double>(args["vertices"], vertices);
                 from_json<int>(args["faces"], faces);
@@ -136,7 +104,8 @@ namespace io {
             double density = args["density"].get<double>();
             bool is_oriented = args["oriented"].get<bool>();
 
-            auto rb = physics::RigidBody::from_points(vertices, faces, edges,
+            auto rb = physics::RigidBody::from_points(
+                vertices, faces, edges,
                 physics::Pose<double>(position, rotation),
                 physics::Pose<double>(linear_velocity, angular_velocity),
                 density, is_dof_fixed, is_oriented);

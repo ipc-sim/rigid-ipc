@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <vector>
 
 namespace ccd {
@@ -12,6 +13,8 @@ public:
 
     /// @brief Compare EdgeVertexCandidates for sorting.
     virtual bool operator<(const Candidate& other) const;
+
+    virtual std::string string() const;
 
 protected:
     virtual inline int get_index0() const = 0;
@@ -33,6 +36,11 @@ protected:
 class EdgeEdgeCandidate : public Candidate {
 public:
     EdgeEdgeCandidate(long edge0_index, long edge1_index);
+
+    virtual bool operator==(const EdgeEdgeCandidate& other) const;
+
+    /// @brief Compare EdgeVertexCandidates for sorting.
+    virtual bool operator<(const EdgeEdgeCandidate& other) const;
 
     long edge0_index;
     long edge1_index;

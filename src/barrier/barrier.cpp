@@ -7,13 +7,12 @@
 
 #include <iostream>
 
-#include <barrier/barrier_chorner.hpp>
 #include <autodiff/autodiff_types.hpp>
+#include <barrier/barrier_chorner.hpp>
 
 namespace ccd {
 
 namespace opt {
-
 
     // template spetialization
     template <> double spline_barrier<double>(double x, double s)
@@ -69,64 +68,6 @@ namespace opt {
         // ϕ''(x) = 2g^-3 * (g')^2 + -g^-2 * g'' = (2 / g * (g')^2 - g'') / g^2
         return (2 / g * dg * dg - ddg) / (g * g);
     }
-
-    // Function that grows to infinity as x approaches 0 from the right.
-    double log_barrier(double x, double s)
-    {
-        if (x <= 0)
-            return std::numeric_limits<double>::infinity();
-        if (x >= s)
-            return 0;
-        return -log(x / s);
-    }
-
-    // Derivative of the log_barrier function with respect to x.
-    double log_barrier_gradient(double x, double s)
-    {
-        if (x <= 0 || x >= s)
-            return 0;
-        return -1 / x;
-    }
-
-    // Second derivative of the log_barrier function with respect to x.
-    double log_barrier_hessian(double x, double s)
-    {
-        if (x <= 0 || x >= s)
-            return 0;
-        return 1 / (x * x);
-    }
-
-    // Function that grows to infinity as x approaches 0 from the right.
-    double hookean_barrier(double x, double s)
-    {
-        // ϕ(x) = log(x / s) ^ 2
-        return x > 0 ? pow(log(x / s), 2)
-                     : std::numeric_limits<double>::infinity();
-    }
-
-    // Derivative of the hookean_barrier function with respect to x.
-    double hookean_barrier_gradient(double x, double s)
-    {
-        if (x <= 0)
-            return 0;
-        // ϕ'(x) = 2 * log(x / s) / x
-        return 2 * log(x / s) / x;
-    };
-
-    // Second derivative of the hookean_barrier function with respect to
-    double hookean_barrier_hessian(double x, double s)
-    {
-        if (x <= 0)
-            return 0;
-        // ϕ'(x) = 2 * log(x / s) / x = 2 * f(x) / g(x)
-        // f(x) = log(x / s)
-        // f'(x) = 1 / x
-        // g(x) = x
-        // g'(x) = 1
-        // ϕ'(x) = 2 * (g(x) * f'(x) - f(x) * g'(x)) / (g(x))^2 (Quotient rule)
-        //       = 2 * (1 - log(x / s)) / (x^2)
-        return 2 * (1 - log(x / s)) / (x * x);
-    };
 
 } // namespace opt
 } // namespace ccd

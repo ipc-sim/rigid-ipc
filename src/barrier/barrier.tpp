@@ -6,17 +6,15 @@ namespace ccd {
 
 namespace opt {
 
-    // Function that grows to infinity as x approaches 0 from the right.
-    template <typename T> T spline_barrier(T x, double s)
+    template <typename T> T ipc_barrier(T d, double dhat)
     {
-        if (x <= T(0))
+        if (d <= T(0))
             return T(std::numeric_limits<double>::infinity());
-        if (x >= s)
+        if (d >= dhat)
             return T(0);
-        T x_s = x / s;
-        // g(x) = (x / s)^3 - 3 * (x / s)^2 + 3 * (x / s)
-        T g = x_s * (3 + x_s * (-3 + x_s)); // Horner's method
-        return 1 / g - 1;
+        // b(d) = -(d-d̂)²ln(d / d̂)
+        T dhat_T = T(dhat);
+        return -(d - dhat_T) * (d - dhat_T) * log(d / dhat_T);
     }
 
     template <typename T> T poly_log_barrier(T x, double s)
@@ -30,6 +28,18 @@ namespace opt {
         T y = x / s;
         T g = -log(y) * ((2 * y - 3) * y * y + 1);
         return g;
+    }
+
+    template <typename T> T spline_barrier(T x, double s)
+    {
+        if (x <= T(0))
+            return T(std::numeric_limits<double>::infinity());
+        if (x >= s)
+            return T(0);
+        T x_s = x / s;
+        // g(x) = (x / s)^3 - 3 * (x / s)^2 + 3 * (x / s)
+        T g = x_s * (3 + x_s * (-3 + x_s)); // Horner's method
+        return 1 / g - 1;
     }
 
 } // namespace opt

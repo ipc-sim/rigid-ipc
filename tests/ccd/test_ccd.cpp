@@ -26,12 +26,12 @@ TEST_CASE("Test Continous Collision Detection", "[ccd][thisone]")
             displacements.row(2) << -4, 0;
             // The edge will become degenerate at t=0.25
         }
-//        SECTION("Edge degenerates at impact")
-//        {
-//            displacements.row(0) << 0, -2;
-//            displacements.row(1) << 2, 0;
-//            displacements.row(2) << -2, 0;
-//        }
+        // SECTION("Edge degenerates at impact")
+        // {
+        //     displacements.row(0) << 0, -2;
+        //     displacements.row(1) << 2, 0;
+        //     displacements.row(2) << -2, 0;
+        // }
         SECTION("Edge degenerates after impact")
         {
             displacements.row(0) << 0, -2;

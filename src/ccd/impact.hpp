@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <vector>
+#include <tbb/tbb.h>
 
 namespace ccd {
 
@@ -12,7 +12,7 @@ struct EdgeVertexImpact {
     double alpha; ///< @brief Parameter along the edge where the impact occured
     long vertex_index; ///< @brief Impacting vertex
 
-    EdgeVertexImpact();
+    EdgeVertexImpact() {}
     EdgeVertexImpact(
         double time, long edge_index, double alpha, long vertex_index);
 
@@ -20,7 +20,7 @@ struct EdgeVertexImpact {
 };
 
 /// @brief A vector of edge-vertex impact pointers.
-typedef std::vector<EdgeVertexImpact> EdgeVertexImpacts;
+typedef tbb::concurrent_vector<EdgeVertexImpact> EdgeVertexImpacts;
 
 /// @brief Data structure representing an impact of an edge and edge.
 struct EdgeEdgeImpact {
@@ -32,18 +32,21 @@ struct EdgeEdgeImpact {
     double impacting_alpha; ///< @brief Parameter along the impacting edge where
                             ///< the impact occured.
 
-    EdgeEdgeImpact();
-    EdgeEdgeImpact(double time,
+    EdgeEdgeImpact() {}
+    EdgeEdgeImpact(
+        double time,
         long impacted_edge_index,
         double impacted_alpha,
         long impacting_edge_index,
         double impacting_alpha);
 
     size_t impacting_node() const { return (impacting_alpha < 0.5 ? 0 : 1); }
+
+    bool operator==(const EdgeEdgeImpact& other) const;
 };
 
 /// @brief A vector of edge-edge impact pointers.
-typedef std::vector<EdgeEdgeImpact> EdgeEdgeImpacts;
+typedef tbb::concurrent_vector<EdgeEdgeImpact> EdgeEdgeImpacts;
 
 /// @brief Data structure representing an impact of an vertex and face.
 struct FaceVertexImpact {
@@ -55,13 +58,15 @@ struct FaceVertexImpact {
                      ///< the impact occured
     long vertex_index; ///< @brief Impacting vertex
 
-    FaceVertexImpact();
+    FaceVertexImpact() {}
     FaceVertexImpact(
         double time, long face_index, double u, double v, long vertex_index);
+
+    bool operator==(const FaceVertexImpact& other) const;
 };
 
 /// A vector of edge-edge impact pointers.
-typedef std::vector<FaceVertexImpact> FaceVertexImpacts;
+typedef tbb::concurrent_vector<FaceVertexImpact> FaceVertexImpacts;
 
 /**
  * @brief Compare two impacts to determine if impact0 comes before impact1.
@@ -87,7 +92,8 @@ bool compare_impacts_by_time(Impact impact1, Impact impact2);
  *     The vector will be cleared.
  * @return Stores the converted edge-edge impacts in ee_impacts.
  */
-void convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
+void convert_edge_vertex_to_edge_edge_impacts(
+    const Eigen::MatrixX2i& edges,
     const EdgeVertexImpacts& ev_impacts,
     EdgeEdgeImpacts& ee_impacts);
 
@@ -103,7 +109,8 @@ void convert_edge_vertex_to_edge_edge_impacts(const Eigen::MatrixX2i& edges,
  *     impacts. The vector will be cleared.
  * @return Stores the converted edge-vertex impacts in ev_impacts.
  */
-void convert_edge_edge_to_edge_vertex_impacts(const Eigen::MatrixX2i& edges,
+void convert_edge_edge_to_edge_vertex_impacts(
+    const Eigen::MatrixX2i& edges,
     const EdgeEdgeImpacts& ee_impacts,
     EdgeVertexImpacts& ev_impacts);
 
