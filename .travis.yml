@@ -8,11 +8,12 @@ addons:
     - sourceline: 'ppa:ubuntu-toolchain-r/test'
     - sourceline: 'ppa:mhier/libboost-latest'
     packages:
-    - g++-7
-    - gcc-7
+    - g++-9
+    - gcc-9
     - xorg-dev
     # - libboost-dev
     - libboost1.70-dev
+    - freeglut3-dev
   homebrew:
     packages:
     - ccache
@@ -23,13 +24,13 @@ matrix:
     dist: "bionic"
     compiler: gcc-9
     env:
-    - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Debug"
+    - MATRIX_EVAL="export CC=gcc-9 && CXX=g++-9 && CONFIG=Debug"
 
   - os: linux
     dist: "bionic"
     compiler: gcc-9
     env:
-    - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Release"
+    - MATRIX_EVAL="export CC=gcc-9 && CXX=g++-9 && CONFIG=Release"
 
   - os: osx
     osx_image: xcode11.3

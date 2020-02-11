@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <filesystem>
+#include <boost/filesystem>
 #include <string>
 
 #include <igl/edges.h>
@@ -247,10 +247,10 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
         std::string fname = GENERATE(std::string("cube.obj")
                                      /*, std::string("bunny-lowpoly.obj")*/);
 
-        std::filesystem::path mesh_path = std::filesystem::path(__FILE__)
-                                              .parent_path()
-                                              .parent_path()
-                                              .parent_path()
+        boost::filesystem::path mesh_path = std::filesystem::path(__FILE__)
+                                                .parent_path()
+                                                .parent_path()
+                                                .parent_path()
             / "meshes" / fname;
         igl::read_triangle_mesh(mesh_path.string(), vertices, faces);
         igl::edges(faces, edges);

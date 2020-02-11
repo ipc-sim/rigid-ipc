@@ -244,8 +244,8 @@ find_package(FMA)
 string(REPLACE " " ";" SIMD_FLAGS "${SSE_FLAGS} ${AVX_FLAGS} ${FMA_FLAGS}")
 target_compile_options(${PROJECT_NAME} PUBLIC ${SIMD_FLAGS})
 
-# Use C++17
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+# Use C++14
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_14)
 
 ################################################################################
 # Simulations Executable
