@@ -20,14 +20,14 @@ addons:
 matrix:
   include:
   - os: linux
-    # dist: "bionic"
-    compiler: gcc-7
+    dist: "bionic"
+    compiler: gcc-9
     env:
     - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Debug"
 
   - os: linux
-    # dist: "bionic"
-    compiler: gcc-7
+    dist: "bionic"
+    compiler: gcc-9
     env:
     - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Release"
 

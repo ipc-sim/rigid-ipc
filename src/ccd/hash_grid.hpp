@@ -150,6 +150,7 @@ protected:
     /// @brief Create the hash of a cell location.
     inline long hash(int x, int y, int z) const
     {
+        assert(x >= 0 && y >= 0 && z >= 0);
         assert(x < m_gridSize && y < m_gridSize && z < m_gridSize);
         return (z * m_gridSize + y) * m_gridSize + x;
     }

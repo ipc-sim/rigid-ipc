@@ -154,7 +154,7 @@ if(FIXING_COLLISIONS_DEBUG_COLLISIONS)
 endif()
 
 if(FIXING_COLLISIONS_ENABLE_PROFILING)
-    message("Profiling Enabled")
+    message(STATUS "Profiling Enabled")
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DPROFILE_FUNCTIONS)
 endif()
 

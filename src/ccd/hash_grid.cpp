@@ -233,8 +233,16 @@ void HashGrid::addElement(const AABB& aabb, const int id, HashItems& items)
 {
     Eigen::VectorXi int_min =
         ((aabb.getMin() - m_domainMin) / m_cellSize).cast<int>();
+    // We can round down to -1, but not less
+    assert((int_min.array() >= -1).all());
+    assert((int_min.array() <= m_gridSize).all());
+    int_min = int_min.array().max(0).min(m_gridSize - 1);
+
     Eigen::VectorXi int_max =
         ((aabb.getMax() - m_domainMin) / m_cellSize).cast<int>();
+    assert((int_max.array() >= -1).all());
+    assert((int_max.array() <= m_gridSize).all());
+    int_max = int_max.array().max(0).min(m_gridSize - 1);
     assert((int_min.array() <= int_max.array()).all());
 
     int min_z = int_min.size() == 3 ? int_min.z() : 0;
