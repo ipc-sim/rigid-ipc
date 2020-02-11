@@ -217,8 +217,9 @@ if(FIXING_COLLISIONS_ENABLE_MOSEK)
 endif()
 
 # Boost
-find_package(Boost REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost)
+set(Boost_USE_MULTITHREADED TRUE)
+find_package(Boost COMPONENTS filesystem REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost Boost::filesystem)
 
 # TBB
 target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
