@@ -16,9 +16,10 @@ namespace physics {
 
     template <typename T>
     Pose<T>::Pose(int dim)
-        : position(Eigen::VectorXd::Zero(Pose<T>::dim_to_pos_ndof(dim)))
-        , rotation(Eigen::VectorXd::Zero(Pose<T>::dim_to_rot_ndof(dim)))
+        : position(Eigen::VectorX<T>::Zero(Pose<T>::dim_to_pos_ndof(dim)))
+        , rotation(Eigen::VectorX<T>::Zero(Pose<T>::dim_to_rot_ndof(dim)))
     {
+        assert(dim == 2 || dim == 3);
     }
 
     template <typename T>
@@ -45,7 +46,7 @@ namespace physics {
 
     template <typename T>
     std::vector<Pose<T>>
-    Pose<T>::dofs_to_poses(const typename Eigen::VectorX6<T>& dofs, int dim)
+    Pose<T>::dofs_to_poses(const typename Eigen::VectorX<T>& dofs, int dim)
     {
         int ndof = dim_to_ndof(dim);
         int num_poses = dofs.size() / ndof;
@@ -59,11 +60,11 @@ namespace physics {
     }
 
     template <typename T>
-    typename Eigen::VectorX6<T>
+    typename Eigen::VectorX<T>
     Pose<T>::poses_to_dofs(const std::vector<Pose<T>>& poses)
     {
         int ndof = poses.size() ? poses[0].ndof() : 0;
-        Eigen::VectorX6<T> dofs(poses.size() * ndof);
+        Eigen::VectorX<T> dofs(poses.size() * ndof);
         for (int i = 0; i < poses.size(); i++) {
             assert(poses[i].ndof() == ndof);
             dofs.segment(i * ndof, ndof) = poses[i].dof();

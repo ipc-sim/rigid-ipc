@@ -30,6 +30,7 @@ add_executable(${PROJECT_NAME}_tests
     opt/test_distance_barrier_constraint.cpp
 
     physics/test_mass.cpp
+    physics/test_pose.cpp
     physics/test_rigid_body.cpp
     physics/test_rigid_body_system.cpp
     physics/test_rigid_body_problem.cpp

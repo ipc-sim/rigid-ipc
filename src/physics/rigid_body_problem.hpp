@@ -40,8 +40,8 @@ namespace physics {
         virtual bool take_step(
             const std::vector<Pose<double>>& pose, const double time_step);
         /// @brief moves status to given configuration vector
-        virtual bool take_step(
-            const Eigen::VectorXd& sigma, const double time_step) override
+        virtual bool
+        take_step(const Eigen::VectorXd& sigma, const double time_step) override
         {
             return take_step(
                 Pose<double>::dofs_to_poses(sigma, dim()), time_step);
@@ -85,8 +85,8 @@ namespace physics {
         }
         void init(const std::vector<RigidBody> rbs);
 
-        Pose<double> rb_next_pose(
-            const RigidBody& rb, const double time_step) const;
+        Pose<double>
+        rb_next_pose(const RigidBody& rb, const double time_step) const;
 
         ////////////////////////////////////////////////////////////////////////
         /// IUnconstraintedProblem
@@ -99,8 +99,8 @@ namespace physics {
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& sigma) override;
 
         /// @brief Evaluate the hessian of the objective as a sparse matrix.
-        Eigen::SparseMatrix<double> eval_hessian_f(
-            const Eigen::VectorXd& sigma) override;
+        Eigen::SparseMatrix<double>
+        eval_hessian_f(const Eigen::VectorXd& sigma) override;
 
         const int& num_vars() override { return num_vars_; }
         const Eigen::VectorXd& starting_point() override { return x0; }
@@ -118,7 +118,8 @@ namespace physics {
     protected:
         void solve_velocities();
 
-        bool detect_collisions(const Eigen::MatrixXd& q0,
+        bool detect_collisions(
+            const Eigen::MatrixXd& q0,
             const Eigen::MatrixXd& q1,
             const CollisionCheck check_type);
 
@@ -144,7 +145,8 @@ namespace physics {
         std::string name_;
     };
 
-    void assemble_hessian(const Eigen::SparseMatrix<double>& jac_xk_sigma,
+    void assemble_hessian(
+        const Eigen::SparseMatrix<double>& jac_xk_sigma,
         const std::vector<Eigen::SparseMatrix<double>>& hess_xk_sigma,
         const Eigen::MatrixXd& jac_g_uk,
         const std::vector<Eigen::SparseMatrix<double>>& hessian_g_uk,

@@ -19,8 +19,8 @@ namespace physics {
         Pose(const Eigen::VectorX6<T>& dof);
 
         static std::vector<Pose<T>>
-        dofs_to_poses(const Eigen::VectorX6<T>& dofs, int dim);
-        static Eigen::VectorX6<T>
+        dofs_to_poses(const Eigen::VectorX<T>& dofs, int dim);
+        static Eigen::VectorX<T>
         poses_to_dofs(const std::vector<Pose<T>>& poses);
 
         static int dim_to_ndof(const int dim) { return dim == 2 ? 3 : 6; }

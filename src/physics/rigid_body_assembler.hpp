@@ -25,11 +25,11 @@ namespace physics {
         // ----------------------------------------------------------------------
 
         template <typename T>
-        const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_vertices(
-            const std::vector<Pose<T>>& v) const;
+        const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
+        world_vertices(const std::vector<Pose<T>>& v) const;
         template <typename T>
-        const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> world_vertices(
-            const Eigen::Matrix<T, Eigen::Dynamic, 1>& dof) const
+        const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
+        world_vertices(const Eigen::VectorX<T>& dof) const
         {
             return world_vertices(Pose<T>::dofs_to_poses(dof, dim()));
         }
@@ -47,7 +47,8 @@ namespace physics {
 
         Eigen::MatrixXd world_velocities() const;
 
-        void world_vertices_gradient(const std::vector<Pose<double>>& poses,
+        void world_vertices_gradient(
+            const std::vector<Pose<double>>& poses,
             Eigen::SparseMatrix<double>& grad) const;
         void world_vertices_gradient(
             const Eigen::VectorXd& dof, Eigen::SparseMatrix<double>& grad) const
@@ -56,7 +57,8 @@ namespace physics {
                 Pose<double>::dofs_to_poses(dof, dim()), grad);
         }
 
-        void global_to_local(const int global_vertex_id,
+        void global_to_local(
+            const int global_vertex_id,
             int& rigid_body_id,
             int& local_vertex_id);
 
