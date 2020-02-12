@@ -13,6 +13,7 @@ addons:
     # - libboost-dev
     - libboost1.70-dev
     - freeglut3-dev
+    - python3-pip
   homebrew:
     packages:
     - ccache
@@ -50,7 +51,7 @@ before_install:
   # - source "$HOME/miniconda/etc/profile.d/conda.sh"
   # - conda env create -f environment.yml
   # - conda activate ccd-3.6
-  - pip install --user -r requirements.txt
+  - pip3 install --user -r requirements.txt
 
 install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
