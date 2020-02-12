@@ -51,6 +51,7 @@ before_install:
   # - source "$HOME/miniconda/etc/profile.d/conda.sh"
   # - conda env create -f environment.yml
   # - conda activate ccd-3.6
+  - pip3 install --user setuptools
   - pip3 install --user -r requirements.txt
 
 install:
