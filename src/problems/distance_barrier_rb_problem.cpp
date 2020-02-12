@@ -1,14 +1,14 @@
 #include "distance_barrier_rb_problem.hpp"
 
-#include <iostream>
-#include <utils/tensor.hpp>
-
 #include <finitediff.hpp>
-#include <logger.hpp>
-#include <profiler.hpp>
 
 #include <constants.hpp>
+#include <geometry/distance.hpp>
 #include <multiprecision.hpp>
+#include <utils/tensor.hpp>
+
+#include <logger.hpp>
+#include <profiler.hpp>
 
 namespace ccd {
 
@@ -24,9 +24,8 @@ namespace opt {
         constraint_.settings(params["distance_barrier_constraint"]);
         opt_solver_.settings(params["barrier_solver"]);
         opt_solver_.set_problem(*this);
-        nlohmann::json inner_solver_settings
-            = params[params["barrier_solver"]["inner_solver"]
-                         .get<std::string>()];
+        nlohmann::json inner_solver_settings =
+            params[params["barrier_solver"]["inner_solver"].get<std::string>()];
         opt_solver_.inner_solver_settings(inner_solver_settings);
         RigidBodyProblem::settings(params["rigid_body_problem"]);
     }
@@ -96,8 +95,8 @@ namespace opt {
     }
 
 #if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
-    Eigen::MatrixXd DistanceBarrierRBProblem::debug_vertices(
-        const Eigen::VectorXd& sigma) const
+    Eigen::MatrixXd
+    DistanceBarrierRBProblem::debug_vertices(const Eigen::VectorXd& sigma) const
     {
         Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
         return m_assembler.world_vertices(qk);
@@ -117,8 +116,8 @@ namespace opt {
         return -1;
     }
 
-    Eigen::VectorXd DistanceBarrierRBProblem::eval_g(
-        const Eigen::VectorXd& sigma)
+    Eigen::VectorXd
+    DistanceBarrierRBProblem::eval_g(const Eigen::VectorXd& sigma)
     {
         Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
@@ -167,8 +166,8 @@ namespace opt {
         return g_uk;
     }
 
-    Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g(
-        const Eigen::VectorXd& sigma)
+    Eigen::MatrixXd
+    DistanceBarrierRBProblem::eval_jac_g(const Eigen::VectorXd& sigma)
     {
         NAMED_PROFILE_POINT("eval_jac_g__update_constraints", UPDATE)
         NAMED_PROFILE_POINT("eval_jac_g__eval_jac", EVAL)
@@ -202,8 +201,8 @@ namespace opt {
 
         Diff::D1VectorXd d_sigma = Diff::d1vars(0, sigma);
 
-        Diff::D1VectorXd d_qk
-            = m_assembler.m_dof_to_pose.cast<Diff::DDouble1>() * d_sigma;
+        Diff::D1VectorXd d_qk =
+            m_assembler.m_dof_to_pose.cast<Diff::DDouble1>() * d_sigma;
         Diff::D1MatrixXd d_uk = m_assembler.world_vertices<Diff::DDouble1>(d_qk)
             - vertices_t0.cast<Diff::DDouble1>();
         Diff::D1VectorXd d_g_uk;
@@ -279,8 +278,8 @@ namespace opt {
                 "DistanceBarrierRBProblem::eval_jac_g_core() has not been "
                 "implmented for 3D!");
         }
-        Eigen::MatrixXd jac_g
-            = Eigen::MatrixXd::Zero(distance_candidates.size(), num_vars_);
+        Eigen::MatrixXd jac_g =
+            Eigen::MatrixXd::Zero(distance_candidates.size(), num_vars_);
 
         typedef AutodiffType<Eigen::Dynamic> Diff;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
@@ -292,21 +291,22 @@ namespace opt {
             RB2Candidate rbc;
             extract_local_system(ev_candidate, rbc);
 
-            Eigen::VectorXd gradient
-                = distance_barrier<Diff::DDouble1>(sigma, rbc).getGradient();
+            Eigen::VectorXd gradient =
+                distance_barrier<Diff::DDouble1>(sigma, rbc).getGradient();
 
             size_t cstr_id = i;
-            jac_g.block(int(cstr_id), ndof* rbc.vertex_body_id, 1, ndof)
-                = gradient.head(ndof).transpose();
-            jac_g.block(int(cstr_id), ndof* rbc.edge_body_id, 1, ndof)
-                = gradient.tail(ndof).transpose();
+            jac_g.block(int(cstr_id), ndof* rbc.vertex_body_id, 1, ndof) =
+                gradient.head(ndof).transpose();
+            jac_g.block(int(cstr_id), ndof* rbc.edge_body_id, 1, ndof) =
+                gradient.tail(ndof).transpose();
         }
 
         return jac_g;
     }
 
     std::vector<Eigen::SparseMatrix<double>>
-    DistanceBarrierRBProblem::eval_hessian_g_core(const Eigen::VectorXd& sigma,
+    DistanceBarrierRBProblem::eval_hessian_g_core(
+        const Eigen::VectorXd& sigma,
         const EdgeVertexCandidates& distance_candidates)
     {
         if (dim() != 2) {
@@ -328,8 +328,8 @@ namespace opt {
             RB2Candidate rbc;
             extract_local_system(ev_candidate, rbc);
 
-            Eigen::MatrixXd hessian
-                = distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian();
+            Eigen::MatrixXd hessian =
+                distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian();
 
             triplets.clear();
             triplets.reserve(6 * 6);
@@ -340,8 +340,8 @@ namespace opt {
                 for (int b_j = 0; b_j < 2; b_j++) {
                     for (int dim_i = 0; dim_i < 3; dim_i++) {
                         for (int dim_j = 0; dim_j < 3; dim_j++) {
-                            double v
-                                = hessian(3 * b_i + dim_i, 3 * b_j + dim_j);
+                            double v =
+                                hessian(3 * b_i + dim_i, 3 * b_j + dim_j);
                             int r = 3 * bodies[b_i] + dim_i;
                             int c = 3 * bodies[b_j] + dim_j;
                             triplets.push_back(M(r, c, v));
@@ -390,10 +390,10 @@ namespace opt {
 
         VectorXT sigma_E, sigma_V, pose_E, pose_V;
 
-        sigma_V = Diff::dTvars<T>(
-            0, sigma.segment(ndof * rbc.vertex_body_id, ndof));
-        sigma_E = Diff::dTvars<T>(
-            ndof, sigma.segment(ndof * rbc.edge_body_id, ndof));
+        sigma_V =
+            Diff::dTvars<T>(0, sigma.segment(ndof * rbc.vertex_body_id, ndof));
+        sigma_E =
+            Diff::dTvars<T>(ndof, sigma.segment(ndof * rbc.edge_body_id, ndof));
 
         pose_V = sigma_V.array()
             * m_assembler.m_dof_to_pose.diagonal()
@@ -416,7 +416,7 @@ namespace opt {
             pose_V, rbc.vertex_local_id);
 
         // T distance = sqrt(point_to_edge_sq_distance<T>(da, db, dc));
-        T distance = point_to_edge_distance<T>(da, db, dc);
+        T distance = ccd::geometry::point_segment_distance<T>(dc, da, db);
         return distance;
     }
 
@@ -451,13 +451,14 @@ namespace opt {
             pose_E, rbc.edge0_local_id);
         Eigen::VectorXd db = rbs[size_t(rbc.edge_body_id)].world_vertex<double>(
             pose_E, rbc.edge1_local_id);
-        Eigen::VectorXd dc
-            = rbs[size_t(rbc.vertex_body_id)].world_vertex<double>(
+        Eigen::VectorXd dc =
+            rbs[size_t(rbc.vertex_body_id)].world_vertex<double>(
                 pose_V, rbc.vertex_local_id);
 
         // double distance = sqrt(point_to_edge_sq_distance<double>(da, db,
         // dc));
-        double distance = point_to_edge_distance<double>(da, db, dc);
+        double distance =
+            ccd::geometry::point_segment_distance<double>(dc, da, db);
         return distance;
     }
 
@@ -484,7 +485,8 @@ namespace opt {
         rbc.edge1_local_id = le1_id;
     }
 
-    bool DistanceBarrierRBProblem::compare_fd(const Eigen::VectorXd& sigma,
+    bool DistanceBarrierRBProblem::compare_fd(
+        const Eigen::VectorXd& sigma,
         const EdgeVertexCandidate& ev_candidate,
         const Eigen::VectorXd& grad)
     {
@@ -511,15 +513,16 @@ namespace opt {
         Eigen::VectorXd exact_grad(sigma.rows());
         Eigen::VectorXd local_exact_grad = d.getGradient();
         exact_grad.setZero();
-        exact_grad.segment(ndof * rbc.vertex_body_id, ndof)
-            = local_exact_grad.head(ndof);
-        exact_grad.segment(ndof * rbc.edge_body_id, ndof)
-            = local_exact_grad.tail(ndof);
+        exact_grad.segment(ndof * rbc.vertex_body_id, ndof) =
+            local_exact_grad.head(ndof);
+        exact_grad.segment(ndof * rbc.edge_body_id, ndof) =
+            local_exact_grad.tail(ndof);
 
-        finite_gradient(sigma, f, approx_grad, fd::AccuracyOrder::SECOND,
+        finite_gradient(
+            sigma, f, approx_grad, fd::AccuracyOrder::SECOND,
             Constants::FINITE_DIFF_H);
-        if (!fd::compare_gradient(approx_grad, exact_grad,
-                Constants::FINITE_DIFF_TEST,
+        if (!fd::compare_gradient(
+                approx_grad, exact_grad, Constants::FINITE_DIFF_TEST,
                 fmt::format(
                     "check_finite_diff DISTANCE barrier_eps={:3e} d={:3e}",
                     constraint_.get_barrier_epsilon(), d.getValue()))) {
@@ -529,13 +532,15 @@ namespace opt {
         double distance_grad = constraint_.distance_barrier_grad(d.getValue());
         approx_grad = approx_grad * distance_grad;
 
-        return fd::compare_gradient(approx_grad, grad,
-            Constants::FINITE_DIFF_TEST,
-            fmt::format("check_finite_diff BARRIER barrier_eps={:3e} d={:3e}",
+        return fd::compare_gradient(
+            approx_grad, grad, Constants::FINITE_DIFF_TEST,
+            fmt::format(
+                "check_finite_diff BARRIER barrier_eps={:3e} d={:3e}",
                 constraint_.get_barrier_epsilon(), d.getValue()));
     }
 
-    bool DistanceBarrierRBProblem::compare_jac_g(const Eigen::VectorXd& sigma,
+    bool DistanceBarrierRBProblem::compare_jac_g(
+        const Eigen::VectorXd& sigma,
         const EdgeVertexCandidates& ev_candidates,
         const Eigen::MatrixXd& jac_g)
     {

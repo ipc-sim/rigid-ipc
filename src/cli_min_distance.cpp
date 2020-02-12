@@ -5,8 +5,8 @@
 #include <nlohmann/json.hpp>
 
 #include <ccd/collision_detection.hpp>
+#include <geometry/distance.hpp>
 #include <io/serialize_json.hpp>
-#include <opt/distance_barrier_constraint.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -15,20 +15,20 @@ int main(int argc, char* argv[])
     struct {
         std::string input_json = "";
         std::string output_csv = "";
-        std::string header ="min_distance";
+        std::string header = "min_distance";
     } args;
 
     CLI::App app { "run headless simulation" };
 
-    app.add_option("input_json,-i,--input", args.input_json,
+    app.add_option(
+           "input_json,-i,--input", args.input_json,
            "JSON file with input simulation.")
         ->required();
 
-    app.add_option("output_csv,-o,--outputh", args.output_csv,
-           "CSV file for output.")
+    app.add_option(
+           "output_csv,-o,--outputh", args.output_csv, "CSV file for output.")
         ->required();
-    app.add_option("--header", args.header,
-           "use as name for header.");
+    app.add_option("--header", args.header, "use as name for header.");
 
     try {
         app.parse(argc, argv);
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     auto& vtx_sequence = scene["animation"]["vertices_sequence"];
 
     std::stringstream csv;
-    csv << fmt::format("it, {}\n", args.header );
+    csv << fmt::format("it, {}\n", args.header);
     for (size_t i = 0; i < vtx_sequence.size(); ++i) {
         auto& jv = vtx_sequence[i];
         Eigen::MatrixXd vertices, displacements;
@@ -64,9 +64,9 @@ int main(int argc, char* argv[])
         displacements.setZero();
 
         ccd::EdgeVertexCandidates ev_candidates;
-        ccd::detect_edge_vertex_collision_candidates(vertices, displacements,
-            edges, group_ids, ev_candidates, ccd::DetectionMethod::BRUTE_FORCE,
-            0.0);
+        ccd::detect_edge_vertex_collision_candidates(
+            vertices, displacements, edges, group_ids, ev_candidates,
+            ccd::DetectionMethod::BRUTE_FORCE, 0.0);
         if (ev_candidates.size() == 0) {
             csv << fmt::format("{},\n", i);
             continue;
@@ -75,10 +75,10 @@ int main(int argc, char* argv[])
         for (size_t j = 0; j < ev_candidates.size(); j++) {
             const ccd::EdgeVertexCandidate& ev_candidate = ev_candidates[j];
 
-            double distance = ccd::opt::point_to_edge_distance<double>(
+            double distance = ccd::geometry::point_segment_distance<double>(
+                vertices.row(ev_candidate.vertex_index),
                 vertices.row(edges(ev_candidate.edge_index, 0)),
-                vertices.row(edges(ev_candidate.edge_index, 1)),
-                vertices.row(ev_candidate.vertex_index));
+                vertices.row(edges(ev_candidate.edge_index, 1)));
 
             if (min_distance < 0 || distance < min_distance) {
                 min_distance = distance;

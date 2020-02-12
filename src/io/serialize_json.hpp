@@ -2,31 +2,32 @@
 
 #include <Eigen/Dense>
 #include <nlohmann/json.hpp>
+#include <utils/eigen_ext.hpp>
 
 namespace ccd {
 namespace io {
 
     template <typename T>
-    nlohmann::json to_json(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vector);
+    nlohmann::json to_json(const Eigen::VectorX<T>& vector);
 
     template <typename T>
-    void from_json(const nlohmann::json&,
-        Eigen::Matrix<T, Eigen::Dynamic, 1>& vector);
+    void from_json(const nlohmann::json&, Eigen::VectorX<T>& vector);
 
     template <typename T>
-    nlohmann::json to_json(
-        const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& matrix);
+    void from_json(const nlohmann::json&, Eigen::VectorX3<T>& vector);
+
+    template <typename T>
+    nlohmann::json to_json(const Eigen::MatrixX<T>& matrix);
 
     nlohmann::json to_json_string(
-        const Eigen::MatrixXd& matrix, const std::string& format =".16e");
+        const Eigen::MatrixXd& matrix, const std::string& format = ".16e");
 
-    template <typename type>
-    void from_json(const nlohmann::json&,
-        Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic>& matrix);
+    template <typename T>
+    void from_json(const nlohmann::json&, Eigen::MatrixX<T>& matrix);
 
     template <>
-    void from_json<bool>(const nlohmann::json& json,
-        Eigen::Matrix<bool, Eigen::Dynamic, 1>& vector);
+    void
+    from_json<bool>(const nlohmann::json& json, Eigen::VectorX<bool>& vector);
 
 } // namespace io
 } // namespace ccd

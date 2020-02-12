@@ -23,14 +23,14 @@ namespace physics {
 
     template <typename T>
     Pose<T>::Pose(
-        const typename Pose<T>::VectorXT& position,
-        const typename Pose<T>::VectorXT& rotation)
+        const typename Eigen::VectorX3<T>& position,
+        const typename Eigen::VectorX3<T>& rotation)
         : position(position)
         , rotation(rotation)
     {
     }
 
-    template <typename T> Pose<T>::Pose(const typename Pose<T>::VectorXT& dof)
+    template <typename T> Pose<T>::Pose(const typename Eigen::VectorX6<T>& dof)
     {
         if (dof.size() == dim_to_ndof(2)) {
             position = dof.head(dim_to_pos_ndof(2));
@@ -45,7 +45,7 @@ namespace physics {
 
     template <typename T>
     std::vector<Pose<T>>
-    Pose<T>::dofs_to_poses(const typename Pose<T>::VectorXT& dofs, int dim)
+    Pose<T>::dofs_to_poses(const typename Eigen::VectorX6<T>& dofs, int dim)
     {
         int ndof = dim_to_ndof(dim);
         int num_poses = dofs.size() / ndof;
@@ -59,11 +59,11 @@ namespace physics {
     }
 
     template <typename T>
-    typename Pose<T>::VectorXT
+    typename Eigen::VectorX6<T>
     Pose<T>::poses_to_dofs(const std::vector<Pose<T>>& poses)
     {
         int ndof = poses.size() ? poses[0].ndof() : 0;
-        VectorXT dofs(poses.size() * ndof);
+        Eigen::VectorX6<T> dofs(poses.size() * ndof);
         for (int i = 0; i < poses.size(); i++) {
             assert(poses[i].ndof() == ndof);
             dofs.segment(i * ndof, ndof) = poses[i].dof();
@@ -71,16 +71,16 @@ namespace physics {
         return dofs;
     }
 
-    template <typename T> typename Pose<T>::VectorXT Pose<T>::dof() const
+    template <typename T> typename Eigen::VectorX6<T> Pose<T>::dof() const
     {
-        VectorXT pose_dof(ndof());
+        Eigen::VectorX6<T> pose_dof(ndof());
         pose_dof.head(pos_ndof()) = position;
         pose_dof.tail(rot_ndof()) = rotation;
         return pose_dof;
     }
 
     template <typename T>
-    typename Pose<T>::MatrixXT Pose<T>::construct_rotation_matrix() const
+    typename Eigen::MatrixXX3<T> Pose<T>::construct_rotation_matrix() const
     {
         if (dim() == 2) {
             return Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
@@ -94,10 +94,11 @@ namespace physics {
     }
 
     template <typename T>
-    std::vector<typename Pose<T>::MatrixXT>
+    std::vector<typename Eigen::MatrixXX3<T>>
     Pose<T>::construct_rotation_matrix_gradient() const
     {
-        std::vector<MatrixXT> grad_R(rot_ndof(), MatrixXT(dim(), dim()));
+        std::vector<Eigen::MatrixXX3<T>> grad_R(
+            rot_ndof(), Eigen::MatrixXX3<T>(dim(), dim()));
         if (dim() == 2) {
             // clang-format off
             grad_R[0] <<
@@ -107,15 +108,15 @@ namespace physics {
         } else {
             // Construct 3D rotation matricies
             typedef Eigen::Matrix<T, 3, 1> Vector3T;
-            Eigen::Matrix<T, 3, 3> Rx
-                = Eigen::AngleAxis<T>(rotation.x(), Vector3T::UnitX())
-                      .toRotationMatrix();
-            Eigen::Matrix<T, 3, 3> Ry
-                = Eigen::AngleAxis<T>(rotation.y(), Vector3T::UnitY())
-                      .toRotationMatrix();
-            Eigen::Matrix<T, 3, 3> Rz
-                = Eigen::AngleAxis<T>(rotation.z(), Vector3T::UnitZ())
-                      .toRotationMatrix();
+            Eigen::Matrix<T, 3, 3> Rx =
+                Eigen::AngleAxis<T>(rotation.x(), Vector3T::UnitX())
+                    .toRotationMatrix();
+            Eigen::Matrix<T, 3, 3> Ry =
+                Eigen::AngleAxis<T>(rotation.y(), Vector3T::UnitY())
+                    .toRotationMatrix();
+            Eigen::Matrix<T, 3, 3> Rz =
+                Eigen::AngleAxis<T>(rotation.z(), Vector3T::UnitZ())
+                    .toRotationMatrix();
 
             // Construct gradient of each rotation matrix wrt its angle
             Eigen::Matrix<T, 3, 3> grad_Rx;
@@ -147,28 +148,29 @@ namespace physics {
     }
 
     template <typename T>
-    std::vector<std::vector<typename Pose<T>::MatrixXT>>
+    std::vector<std::vector<typename Eigen::MatrixXX3<T>>>
     Pose<T>::construct_rotation_matrix_hessian() const
     {
-        std::vector<std::vector<MatrixXT>> hess_R(
+        std::vector<std::vector<Eigen::MatrixXX3<T>>> hess_R(
             rot_ndof(),
-            std::vector<MatrixXT>(rot_ndof(), MatrixXT(dim(), dim())));
+            std::vector<Eigen::MatrixXX3<T>>(
+                rot_ndof(), Eigen::MatrixXX3<T>(dim(), dim())));
 
         if (dim() == 2) {
-            hess_R[0][0]
-                = -Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
+            hess_R[0][0] =
+                -Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
         } else {
             // Construct 3D rotation matricies
             typedef Eigen::Matrix<T, 3, 1> Vector3T;
-            Eigen::Matrix<T, 3, 3> Rx
-                = Eigen::AngleAxis<T>(rotation.x(), Vector3T::UnitX())
-                      .toRotationMatrix();
-            Eigen::Matrix<T, 3, 3> Ry
-                = Eigen::AngleAxis<T>(rotation.y(), Vector3T::UnitY())
-                      .toRotationMatrix();
-            Eigen::Matrix<T, 3, 3> Rz
-                = Eigen::AngleAxis<T>(rotation.z(), Vector3T::UnitZ())
-                      .toRotationMatrix();
+            Eigen::Matrix<T, 3, 3> Rx =
+                Eigen::AngleAxis<T>(rotation.x(), Vector3T::UnitX())
+                    .toRotationMatrix();
+            Eigen::Matrix<T, 3, 3> Ry =
+                Eigen::AngleAxis<T>(rotation.y(), Vector3T::UnitY())
+                    .toRotationMatrix();
+            Eigen::Matrix<T, 3, 3> Rz =
+                Eigen::AngleAxis<T>(rotation.z(), Vector3T::UnitZ())
+                    .toRotationMatrix();
 
             // Construct gradient of each rotation matrix wrt its angle
             Eigen::Matrix<T, 3, 3> grad_Rx;

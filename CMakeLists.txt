@@ -53,9 +53,6 @@ add_library(${PROJECT_NAME}
     src/ccd/interval_root_finder.cpp
     src/ccd/rigid_time_of_impact.cpp
 
-    src/geometry/distance.cpp
-    src/geometry/closest_point.cpp
-
     src/io/read_scene.cpp
     src/io/write_scene.cpp
     src/io/opt_results.cpp
@@ -63,7 +60,6 @@ add_library(${PROJECT_NAME}
     src/io/read_rb_scene.cpp
 
     src/physics/mass.cpp
-    src/physics/pose.cpp
     src/physics/simulation_problem.cpp
     src/physics/particles_problem.cpp
     src/physics/rigid_body_problem.cpp

@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <catch2/catch.hpp>
 
 #include <ccd/collision_detection.hpp>

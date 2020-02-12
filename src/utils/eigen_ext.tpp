@@ -4,10 +4,9 @@
 
 namespace Eigen {
 
-template <typename T>
-SparseMatrix<T> SparseDiagonal(const Matrix<T, Dynamic, 1>& x)
+template <typename T> SparseMatrix<T> SparseDiagonal(const VectorX<T>& x)
 {
-    return Matrix<T, Dynamic, Dynamic>(x.asDiagonal()).sparseView();
+    return MatrixX<T>(x.asDiagonal()).sparseView();
 }
 
 } // namespace Eigen

@@ -37,6 +37,7 @@ add_executable(${PROJECT_NAME}_tests
     io/test_serialize_json.cpp
     io/test_read_rb_scene.cpp
 
+    geometry/test_distance.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)

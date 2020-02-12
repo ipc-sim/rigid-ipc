@@ -1,105 +1,21 @@
 #pragma once
 #include "distance_barrier_constraint.hpp"
 
-#include <iostream>
-
 #include <barrier/barrier.hpp>
-#include <constants.hpp>
+#include <geometry/distance.hpp>
 #include <logger.hpp>
 
 namespace ccd {
 namespace opt {
 
     template <typename T>
-    T point_to_edge_sq_distance(
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& c)
-    {
-        assert(false);
-
-        Eigen::Matrix<T, Eigen::Dynamic, 1> ab = b - a;
-        Eigen::Matrix<T, Eigen::Dynamic, 1> ac = c - a;
-        Eigen::Matrix<T, Eigen::Dynamic, 1> bc = c - b;
-
-        T e = ac.dot(ab);
-
-        // Handle cases where c projects outside ab
-        if (e <= T(0.0)) {
-            return ac.dot(ac);
-        }
-        T f = ab.dot(ab);
-        if (e >= f) {
-            return bc.dot(bc);
-        }
-
-        // Handle cases where c projects onto ab
-        T g = ac.dot(ac);
-        T d = g - e * e / f;
-
-#ifdef NDEBUG
-        if (d <= Constants::POINT_EDGE_SQ_DISTANCE_NEG_TOL) {
-            std::stringstream data;
-            data << d;
-            spdlog::error("negative square distance d={}", data.str());
-        }
-#else
-        assert(d > Constants::POINT_EDGE_SQ_DISTANCE_NEG_TOL);
-#endif
-        if (d < 0) {
-            d = Constants::POINT_EDGE_SQ_DISTANCE_ZERO;
-        }
-        assert(d >= 0);
-        return d;
-    }
-
-    template <typename T> inline T dot(const T v[2], const T w[2])
-    {
-        return v[0] * w[0] + v[1] * w[1];
-    }
-
-    template <typename T>
-    T point_to_edge_distance(
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& c)
-    {
-        T ab[2], ac[2], bc[2];
-        ab[0] = b[0] - a[0];
-        ab[1] = b[1] - a[1];
-        ac[0] = c[0] - a[0];
-        ac[1] = c[1] - a[1];
-        bc[0] = c[0] - b[0];
-        bc[1] = c[1] - b[1];
-
-        // Handle cases where c projects outside ab
-        if (dot(ac, ab) <= T(0.0)) {
-            return sqrt(dot(ac, ac));
-        }
-        if (dot(bc, ab) >= T(0.0)) {
-            return sqrt(dot(bc, bc));
-        }
-        T abperp[2];
-        abperp[0] = -ab[1];
-        abperp[1] = ab[0];
-
-        T f = dot(ab, ab);
-        T g = dot(abperp, ac);
-        T e = sqrt(f);
-        if (g < 0) {
-            g *= -1;
-        }
-        return g / e;
-    }
-
-    template <typename T>
     T DistanceBarrierConstraint::distance_barrier(
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& a,
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& b,
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& c)
+        const Eigen::Matrix<T, Eigen::Dynamic, 1>& a, // segment start
+        const Eigen::Matrix<T, Eigen::Dynamic, 1>& b, // segment end
+        const Eigen::Matrix<T, Eigen::Dynamic, 1>& c) // point
     {
         // T distance = sqrt(point_to_edge_sq_distance<T>(a, b, c));
-        T distance = point_to_edge_distance<T>(a, b, c);
+        T distance = ccd::geometry::point_segment_distance<T>(c, a, b);
         return distance_barrier<T>(distance, m_barrier_epsilon);
     }
 

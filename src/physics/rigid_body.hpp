@@ -92,22 +92,19 @@ namespace physics {
         /// @return The positions of all vertices in 'world space',
         ///         taking into account the given body's position.
         template <typename T>
-        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
-        world_vertices(const Pose<T>& pose) const;
+        Eigen::MatrixX<T> world_vertices(const Pose<T>& pose) const;
         template <typename T>
-        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
-        world_vertices(const Eigen::Matrix<T, Eigen::Dynamic, 1>& dof) const
+        Eigen::MatrixX<T> world_vertices(const Eigen::VectorX6<T>& dof) const
         {
             return world_vertices(Pose<T>(dof));
         }
 
         template <typename T>
-        Eigen::Matrix<T, Eigen::Dynamic, 1>
+        Eigen::VectorX3<T>
         world_vertex(const Pose<T>& pose, const int vertex_idx) const;
         template <typename T>
-        Eigen::Matrix<T, Eigen::Dynamic, 1> world_vertex(
-            const Eigen::Matrix<T, Eigen::Dynamic, 1>& dof,
-            const int vertex_idx) const
+        Eigen::VectorX3<T>
+        world_vertex(const Eigen::VectorX6<T>& dof, const int vertex_idx) const
         {
             return world_vertex<T>(Pose<T>(dof), vertex_idx);
         }

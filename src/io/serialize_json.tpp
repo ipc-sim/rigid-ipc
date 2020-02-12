@@ -5,15 +5,14 @@
 namespace ccd {
 namespace io {
     template <typename T>
-    nlohmann::json to_json(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vector)
+    nlohmann::json to_json(const Eigen::VectorX<T>& vector)
     {
         std::vector<T> vec(vector.data(), vector.data() + vector.size());
         return nlohmann::json(vec);
     }
 
     template <typename T>
-    nlohmann::json to_json(
-        const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& matrix)
+    nlohmann::json to_json(const Eigen::MatrixX<T>& matrix)
     {
         size_t num_rows = size_t(matrix.rows());
         size_t num_cols = size_t(matrix.cols());
@@ -29,18 +28,23 @@ namespace io {
     }
 
     template <typename T>
-    void from_json(
-        const nlohmann::json& json, Eigen::Matrix<T, Eigen::Dynamic, 1>& vector)
+    void from_json(const nlohmann::json& json, Eigen::VectorX<T>& vector)
     {
         typedef std::vector<T> L;
         L list = json.get<L>();
-        vector = Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, 1>>(
-            list.data(), long(list.size()));
+        vector = Eigen::Map<Eigen::VectorX<T>>(list.data(), long(list.size()));
     }
 
     template <typename T>
-    void from_json(const nlohmann::json& json,
-        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& matrix)
+    void from_json(const nlohmann::json& json, Eigen::VectorX3<T>& vector)
+    {
+        typedef std::vector<T> L;
+        L list = json.get<L>();
+        vector = Eigen::Map<Eigen::VectorX3<T>>(list.data(), long(list.size()));
+    }
+
+    template <typename T>
+    void from_json(const nlohmann::json& json, Eigen::MatrixX<T>& matrix)
     {
         typedef std::vector<std::vector<T>> L;
         L list = json.get<L>();
@@ -54,8 +58,8 @@ namespace io {
 
         for (size_t i = 0; i < num_rows; ++i) {
             assert(num_cols == list[i].size());
-            matrix.row(int(i))
-                = Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic>>(
+            matrix.row(int(i)) =
+                Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic>>(
                     list[i].data(), long(num_cols));
         }
     }

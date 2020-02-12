@@ -13,7 +13,8 @@ namespace ccd {
 
 namespace physics {
 
-    RigidBody RigidBody::from_points(const Eigen::MatrixXd& vertices,
+    RigidBody RigidBody::from_points(
+        const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& faces,
         const Eigen::MatrixXi& edges,
         const Pose<double>& pose,
@@ -35,18 +36,20 @@ namespace physics {
         Eigen::MatrixXd I;
         compute_mass_properties(
             vertices_, dim == 2 ? edges : faces, m, center_of_mass, I);
-        Eigen::MatrixXd centered_vertices
-            = vertices_.rowwise() - center_of_mass.transpose();
+        Eigen::MatrixXd centered_vertices =
+            vertices_.rowwise() - center_of_mass.transpose();
 
         // set position so current vertices match input
         Pose<double> adjusted_pose(center_of_mass, pose.rotation);
 
         assert(is_dof_fixed.size() == pose.ndof());
-        return RigidBody(centered_vertices, faces, edges, adjusted_pose,
-            velocity, density, is_dof_fixed, oriented);
+        return RigidBody(
+            centered_vertices, faces, edges, adjusted_pose, velocity, density,
+            is_dof_fixed, oriented);
     }
 
-    RigidBody::RigidBody(const Eigen::MatrixXd& vertices,
+    RigidBody::RigidBody(
+        const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& faces,
         const Eigen::MatrixXi& edges,
         const Pose<double>& pose,
@@ -65,8 +68,9 @@ namespace physics {
         , velocity_prev(velocity)
     {
         Eigen::VectorXd center_of_mass;
-        compute_mass_properties(vertices, dim() == 2 ? edges : faces, mass,
-            center_of_mass, moment_of_inertia);
+        compute_mass_properties(
+            vertices, dim() == 2 ? edges : faces, mass, center_of_mass,
+            moment_of_inertia);
         assert(center_of_mass.squaredNorm() < 1e-8);
 
         // TODO: Not sure why this is times based on Chrono
@@ -94,8 +98,8 @@ namespace physics {
     Eigen::MatrixXd RigidBody::world_velocities() const
     {
         // compute X[i] = dR(theta)/d\theta * r_i * d\theta/dt + dX/dt
-        std::vector<Eigen::MatrixXd> dR
-            = pose.construct_rotation_matrix_gradient();
+        std::vector<Eigen::MatrixXX3d> dR =
+            pose.construct_rotation_matrix_gradient();
         Eigen::MatrixXd dR_dt;
         if (dim() == 2) {
             dR_dt = dR[0] * velocity.rotation(0);
@@ -110,13 +114,14 @@ namespace physics {
             + velocity.position.transpose();
     }
 
-    Eigen::MatrixXd RigidBody::world_vertices_gradient(
-        const Pose<double>& _pose) const
+    Eigen::MatrixXd
+    RigidBody::world_vertices_gradient(const Pose<double>& _pose) const
     {
         typedef AutodiffType<Eigen::Dynamic> Diff;
         Diff::activate(_pose.ndof());
 
-        Pose<Diff::DDouble1> dpose(Diff::d1vars(0, _pose.position),
+        Pose<Diff::DDouble1> dpose(
+            Diff::d1vars(0, _pose.position),
             Diff::d1vars(_pose.pos_ndof(), _pose.rotation));
         dpose.rotation /= Diff::DDouble1(r_max);
 
@@ -132,8 +137,8 @@ namespace physics {
         return gradient;
     }
 
-    Eigen::MatrixXd RigidBody::world_vertices_gradient_exact(
-        const Pose<double>& _pose) const
+    Eigen::MatrixXd
+    RigidBody::world_vertices_gradient_exact(const Pose<double>& _pose) const
     {
         /// The gradient has shape vertices.size() by ndof.
         /// The order of rows is x-positions, y-positions(, z-positions).
@@ -141,26 +146,26 @@ namespace physics {
 
         for (int i = 0; i < _pose.pos_ndof(); i++) {
             // gradient of r wrt position(i)
-            Eigen::MatrixXd grad_U
-                = Eigen::MatrixXd::Zero(vertices.rows(), vertices.cols());
+            Eigen::MatrixXd grad_U =
+                Eigen::MatrixXd::Zero(vertices.rows(), vertices.cols());
             grad_U.col(i).setOnes();
             gradient.col(i) = flat<double>(grad_U);
         }
 
         // Tensor of rotation matrix gradients
-        std::vector<Eigen::MatrixXd> grad_R
-            = _pose.construct_rotation_matrix_gradient();
+        std::vector<Eigen::MatrixXX3d> grad_R =
+            _pose.construct_rotation_matrix_gradient();
         for (int i = 0; i < _pose.rot_ndof(); i++) {
             // gradient of r wrt rotation(i)
-            gradient.col(i + _pose.pos_ndof())
-                = flat<double>(vertices * grad_R[i].transpose());
+            gradient.col(i + _pose.pos_ndof()) =
+                flat<double>(vertices * grad_R[i].transpose());
         }
 
         return gradient;
     }
 
-    std::vector<Eigen::MatrixXd> RigidBody::world_vertices_hessian_exact(
-        const Pose<double>& _pose) const
+    std::vector<Eigen::MatrixXd>
+    RigidBody::world_vertices_hessian_exact(const Pose<double>& _pose) const
     {
         /// Each hessian has shape ndof by ndof, we return a list of
         /// vertice.size(). The order of rows is x-positions, y-positions(,
@@ -171,8 +176,8 @@ namespace physics {
         std::vector<Eigen::MatrixXd> hessian(
             vertices.size(), Eigen::MatrixXd::Zero(ndof, ndof));
 
-        std::vector<std::vector<Eigen::MatrixXd>> hess_R
-            = _pose.construct_rotation_matrix_hessian();
+        std::vector<std::vector<Eigen::MatrixXX3d>> hess_R =
+            _pose.construct_rotation_matrix_hessian();
         std::vector<std::vector<Eigen::VectorXd>> grad_U;
         for (int i = 0; i < rot_ndof; i++) {
             grad_U.push_back(std::vector<Eigen::VectorXd>());

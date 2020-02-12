@@ -3,23 +3,25 @@
 #include <Eigen/Core>
 #include <vector>
 
+#include <utils/eigen_ext.hpp>
+
 namespace ccd {
 namespace physics {
 
     /// @brief The position and rotation of an object.
     template <typename T> class Pose {
-        typedef Eigen::Matrix<T, Eigen::Dynamic, 1> VectorXT;
-        typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> MatrixXT;
-
     public:
         Pose();
         Pose(int dim);
-        Pose(const VectorXT& position, const VectorXT& rotation);
-        Pose(const VectorXT& dof);
+        Pose(
+            const Eigen::VectorX3<T>& position,
+            const Eigen::VectorX3<T>& rotation);
+        Pose(const Eigen::VectorX6<T>& dof);
 
         static std::vector<Pose<T>>
-        dofs_to_poses(const VectorXT& dofs, int dim);
-        static VectorXT poses_to_dofs(const std::vector<Pose<T>>& poses);
+        dofs_to_poses(const Eigen::VectorX6<T>& dofs, int dim);
+        static Eigen::VectorX6<T>
+        poses_to_dofs(const std::vector<Pose<T>>& poses);
 
         static int dim_to_ndof(const int dim) { return dim == 2 ? 3 : 6; }
         static int dim_to_pos_ndof(const int dim) { return dim; }
@@ -32,11 +34,12 @@ namespace physics {
         int rot_ndof() const { return rotation.size(); }
         int ndof() const { return pos_ndof() + rot_ndof(); }
 
-        VectorXT dof() const;
+        Eigen::VectorX6<T> dof() const;
 
-        MatrixXT construct_rotation_matrix() const;
-        std::vector<MatrixXT> construct_rotation_matrix_gradient() const;
-        std::vector<std::vector<MatrixXT>>
+        Eigen::MatrixXX3<T> construct_rotation_matrix() const;
+        std::vector<Eigen::MatrixXX3<T>>
+        construct_rotation_matrix_gradient() const;
+        std::vector<std::vector<Eigen::MatrixXX3<T>>>
         construct_rotation_matrix_hessian() const;
 
         Pose<T> operator+(Pose<T> other) const;
@@ -53,10 +56,10 @@ namespace physics {
                 position.template cast<T1>(), rotation.template cast<T1>());
         }
 
-        VectorXT position;
+        Eigen::VectorX3<T> position;
         // TODO: Use Quaternions
         // Eigen::Quaternion<T> rotation;
-        VectorXT rotation; // Euler angles
+        Eigen::VectorX3<T> rotation; // Euler angles
     };
 
 } // namespace physics

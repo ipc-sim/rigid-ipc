@@ -1,13 +1,14 @@
 #include "distance_barrier_constraint.hpp"
 
-#include <ccd/collision_detection.hpp>
-#include <ccd/time_of_impact.hpp>
 #include <igl/slice_mask.h>
 
 #include <barrier/barrier.hpp>
-#include <profiler.hpp>
+#include <ccd/collision_detection.hpp>
+#include <ccd/time_of_impact.hpp>
+#include <geometry/distance.hpp>
 
 #include <logger.hpp>
+#include <profiler.hpp>
 
 namespace ccd {
 namespace opt {
@@ -72,8 +73,8 @@ namespace opt {
             const EdgeVertexCandidate& ev_candidate = ev_candidates[i];
             double toi;
 
-            bool active_impact
-                = ccd::autodiff::compute_edge_vertex_time_of_impact<double>(
+            bool active_impact =
+                ccd::autodiff::compute_edge_vertex_time_of_impact<double>(
                     Xi.row(edges(ev_candidate.edge_index, 0)),
                     Xi.row(edges(ev_candidate.edge_index, 1)),
                     Xi.row(ev_candidate.vertex_index),
@@ -112,13 +113,13 @@ namespace opt {
         for (size_t i = 0; i < ev_candidates.size(); i++) {
             const EdgeVertexCandidate& ev_candidate = ev_candidates[i];
 
-            double distance = point_to_edge_distance<double>(
+            double distance = ccd::geometry::point_segment_distance<double>(
+                vertices_t1.row(ev_candidate.vertex_index),
                 vertices_t1.row(edges(ev_candidate.edge_index, 0)),
-                vertices_t1.row(edges(ev_candidate.edge_index, 1)),
-                vertices_t1.row(ev_candidate.vertex_index));
+                vertices_t1.row(edges(ev_candidate.edge_index, 1)));
 
-            bool distance_active
-                = distance < active_constraint_scale * m_barrier_epsilon;
+            bool distance_active =
+                distance < active_constraint_scale * m_barrier_epsilon;
 
             if (distance_active) {
                 ev_barriers.push_back(ev_candidate);
@@ -163,7 +164,8 @@ namespace opt {
             VectorXd b = vertices_t1.row(b_id);
             VectorXd c = vertices_t1.row(c_id);
 
-            distances(int(i)) = point_to_edge_distance<T>(a, b, c);
+            distances(int(i)) =
+                ccd::geometry::point_segment_distance<T>(c, a, b);
         }
     }
     //#endif
@@ -214,8 +216,8 @@ namespace opt {
 
             for (size_t nid = 0; nid < 3; ++nid) {
                 for (int dim = 0; dim < 2; ++dim) {
-                    barriers_jacobian(int(i), nodes[nid] + num_vertices * dim)
-                        = grad[2 * int(nid) + dim];
+                    barriers_jacobian(int(i), nodes[nid] + num_vertices * dim) =
+                        grad[2 * int(nid) + dim];
                 }
             }
         }
