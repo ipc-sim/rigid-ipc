@@ -145,10 +145,8 @@ namespace opt {
         get_active_barrier_set(Uk, ev_candidates);
 
         typedef double T;
-        typedef const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
-        typedef const Eigen::Matrix<T, Eigen::Dynamic, 1> VectorXd;
 
-        MatrixXd vertices_t1 = vertices.cast<T>() + Uk;
+        Eigen::MatrixX<T> vertices_t1 = vertices.cast<T>() + Uk;
 
         distances.resize(ev_candidates.size(), 1);
         distances.setConstant(T(0.0));
@@ -160,9 +158,9 @@ namespace opt {
             int b_id = edges.coeff(edge_id, 1);
             long c_id = ev_candidate.vertex_index;
             assert(a_id != c_id && b_id != c_id);
-            VectorXd a = vertices_t1.row(a_id);
-            VectorXd b = vertices_t1.row(b_id);
-            VectorXd c = vertices_t1.row(c_id);
+            Eigen::VectorX<T> a = vertices_t1.row(a_id);
+            Eigen::VectorX<T> b = vertices_t1.row(b_id);
+            Eigen::VectorX<T> c = vertices_t1.row(c_id);
 
             distances(int(i)) =
                 ccd::geometry::point_segment_distance<T>(c, a, b);
@@ -282,6 +280,9 @@ namespace opt {
         const Eigen::VectorXd& b,
         const Eigen::VectorXd& c)
     {
+        // TODO: 3D
+        // 6 dof = 3 points * 2 dof / point
+        typedef AutodiffType<6> Diff;
         Diff::activate();
         Diff::D1VectorXd da = Diff::d1vars(0, a);
         Diff::D1VectorXd db = Diff::d1vars(2, b);
@@ -296,6 +297,9 @@ namespace opt {
         const Eigen::VectorXd& b,
         const Eigen::VectorXd& c)
     {
+        // TODO: 3D
+        // 6 dof = 3 points * 2 dof / point
+        typedef AutodiffType<6> Diff;
         Diff::activate();
         Diff::D2VectorXd da = Diff::d2vars(0, a);
         Diff::D2VectorXd db = Diff::d2vars(2, b);

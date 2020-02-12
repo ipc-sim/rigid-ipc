@@ -315,10 +315,14 @@ namespace opt {
                 "implmented for 3D!");
         }
 
+        // TODO: 3D
         std::vector<Eigen::SparseMatrix<double>> gx_hessian;
         gx_hessian.resize(distance_candidates.size());
 
         typedef AutodiffType<Eigen::Dynamic> Diff;
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        Diff::activate(2 * ndof);
+
         typedef Eigen::Triplet<double> M;
         std::vector<M> triplets;
 
@@ -383,12 +387,10 @@ namespace opt {
                 "implmented for 3D!");
         }
         typedef AutodiffType<Eigen::Dynamic> Diff;
-
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         Diff::activate(2 * ndof);
-        typedef Eigen::Matrix<T, Eigen::Dynamic, 1> VectorXT;
 
-        VectorXT sigma_E, sigma_V, pose_E, pose_V;
+        Eigen::VectorX<T> sigma_E, sigma_V, pose_E, pose_V;
 
         sigma_V =
             Diff::dTvars<T>(0, sigma.segment(ndof * rbc.vertex_body_id, ndof));
@@ -408,11 +410,11 @@ namespace opt {
                   .array();
 
         const auto& rbs = m_assembler.m_rbs;
-        VectorXT da = rbs[size_t(rbc.edge_body_id)].world_vertex<T>(
+        Eigen::VectorX<T> da = rbs[size_t(rbc.edge_body_id)].world_vertex<T>(
             pose_E, rbc.edge0_local_id);
-        VectorXT db = rbs[size_t(rbc.edge_body_id)].world_vertex<T>(
+        Eigen::VectorX<T> db = rbs[size_t(rbc.edge_body_id)].world_vertex<T>(
             pose_E, rbc.edge1_local_id);
-        VectorXT dc = rbs[size_t(rbc.vertex_body_id)].world_vertex<T>(
+        Eigen::VectorX<T> dc = rbs[size_t(rbc.vertex_body_id)].world_vertex<T>(
             pose_V, rbc.vertex_local_id);
 
         // T distance = sqrt(point_to_edge_sq_distance<T>(da, db, dc));

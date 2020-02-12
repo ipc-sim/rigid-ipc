@@ -117,7 +117,8 @@ namespace physics {
     Eigen::MatrixXd
     RigidBody::world_vertices_gradient(const Pose<double>& _pose) const
     {
-        typedef AutodiffType<Eigen::Dynamic> Diff;
+        // Dynamic number of dof, but there is a limit of 6 dof in 3D.
+        typedef AutodiffType<Eigen::Dynamic, 6> Diff;
         Diff::activate(_pose.ndof());
 
         Pose<Diff::DDouble1> dpose(

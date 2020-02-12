@@ -14,7 +14,6 @@ namespace opt {
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& b, // segment end
         const Eigen::Matrix<T, Eigen::Dynamic, 1>& c) // point
     {
-        // T distance = sqrt(point_to_edge_sq_distance<T>(a, b, c));
         T distance = ccd::geometry::point_segment_distance<T>(c, a, b);
         return distance_barrier<T>(distance, m_barrier_epsilon);
     }
@@ -32,14 +31,12 @@ namespace opt {
 
     template <typename T>
     void DistanceBarrierConstraint::compute_candidates_constraints(
-        const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& Uk,
+        const Eigen::MatrixX<T>& Uk,
         const EdgeVertexCandidates& ev_candidates,
-        Eigen::Matrix<T, Eigen::Dynamic, 1>& barriers)
+        Eigen::VectorX<T>& barriers)
     {
-        typedef const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
-        typedef const Eigen::Matrix<T, Eigen::Dynamic, 1> VectorXd;
         // distance barrier is evaluated at end-positions
-        MatrixXd vertices_t1 = vertices.cast<T>() + Uk;
+        Eigen::MatrixX<T> vertices_t1 = vertices.cast<T>() + Uk;
 
         barriers.resize(ev_candidates.size(), 1);
         barriers.setConstant(T(0.0));
@@ -51,9 +48,9 @@ namespace opt {
             int b_id = edges.coeff(edge_id, 1);
             long c_id = ev_candidate.vertex_index;
             assert(a_id != c_id && b_id != c_id);
-            VectorXd a = vertices_t1.row(a_id);
-            VectorXd b = vertices_t1.row(b_id);
-            VectorXd c = vertices_t1.row(c_id);
+            Eigen::VectorX<T> a = vertices_t1.row(a_id);
+            Eigen::VectorX<T> b = vertices_t1.row(b_id);
+            Eigen::VectorX<T> c = vertices_t1.row(c_id);
 
             barriers(int(i)) = distance_barrier<T>(a, b, c);
         }

@@ -2,14 +2,15 @@
 #define AUTODIFF_TYPES_H
 
 #include <autodiff/autodiff.h>
+#include <utils/eigen_ext.hpp>
 #include <vector>
 
 namespace ccd {
 
-template <int N> class AutodiffType {
+template <int N, int maxN = N> class AutodiffType {
 public:
-    typedef Eigen::Matrix<double, N, 1> VectorNd;
-    typedef Eigen::Matrix<double, N, N> MatrixNd;
+    typedef Eigen::Matrix<double, N, 1, Eigen::ColMajor, maxN, 1> VectorNd;
+    typedef Eigen::Matrix<double, N, N, Eigen::ColMajor, maxN, maxN> MatrixNd;
 
     typedef DScalar1<double, VectorNd> DDouble1;
     typedef DScalar2<double, VectorNd, MatrixNd> DDouble2;
@@ -32,12 +33,13 @@ public:
     }
     inline static void activate(size_t variableCount)
     {
+        assert(N == Eigen::Dynamic);
         DiffScalarBase::setVariableCount(variableCount);
     }
 
     template <typename T>
-    inline static Eigen::Matrix<T, Eigen::Dynamic, 1> dTvars(
-        const size_t i, const Eigen::VectorXd& v)
+    inline static Eigen::Matrix<T, Eigen::Dynamic, 1>
+    dTvars(const size_t i, const Eigen::VectorXd& v)
     {
         Eigen::Matrix<T, Eigen::Dynamic, 1> vec;
         vec.resize(v.rows());
