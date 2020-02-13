@@ -11,6 +11,7 @@ add_executable(${PROJECT_NAME}_tests
     ccd/test_time_of_impact.cpp
     ccd/test_hash_grid.cpp
     ccd/test_interval_root_finder.cpp
+    ccd/test_rigid_time_of_impact.cpp
 
     # Test libarary integration
     integration/test_mosek.cpp

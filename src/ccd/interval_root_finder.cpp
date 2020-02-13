@@ -1,18 +1,19 @@
 #include "interval_root_finder.hpp"
 
-#include <iostream>
+#include <logger.hpp>
 
 namespace ccd {
 
-bool interval_root_finder(const std::function<Interval(const Interval&)>& f,
+bool interval_root_finder(
+    const std::function<Interval(const Interval&)>& f,
     const std::function<bool(const Interval&)>& constraint_predicate,
     const Interval& x0,
     Interval& x,
     double tol)
 {
-    // std::cout << "[" << x0.lower() << ", " << x0.upper() << "] ↦ ";
     Interval y = f(x0);
-    // std::cout << "[" << y.lower() << ", " << y.upper() << "]" << std::endl;
+    // spdlog::debug("{} ↦ {}", logger::fmt_interval(x0),
+    // logger::fmt_interval(y));
     if (!zero_in(y)) {
         x = Interval::empty(); // Return an empty interval
         return false;
@@ -26,7 +27,8 @@ bool interval_root_finder(const std::function<Interval(const Interval&)>& f,
         || interval_root_finder(f, constraint_predicate, halves.second, x, tol);
 }
 
-bool interval_root_finder(const std::function<Interval(const Interval&)>& f,
+bool interval_root_finder(
+    const std::function<Interval(const Interval&)>& f,
     const Interval& x0,
     Interval& x,
     double tol)

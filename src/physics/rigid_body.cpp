@@ -20,7 +20,7 @@ namespace physics {
         const Pose<double>& pose,
         const Pose<double>& velocity,
         const double density,
-        const Eigen::VectorXb& is_dof_fixed,
+        const Eigen::VectorX6b& is_dof_fixed,
         const bool oriented)
     {
         int dim = vertices.cols();
@@ -55,7 +55,7 @@ namespace physics {
         const Pose<double>& pose,
         const Pose<double>& velocity,
         const double density,
-        const Eigen::VectorXb& is_dof_fixed,
+        const Eigen::VectorX6b& is_dof_fixed,
         const bool oriented)
         : vertices(vertices)
         , faces(faces)

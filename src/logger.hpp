@@ -17,15 +17,26 @@
 #endif
 
 #include <Eigen/Core>
+#include <utils/eigen_ext.hpp>
+
+#include <ccd/interval_root_finder.hpp>
 
 namespace ccd {
 
 namespace logger {
 
+    /// @brief Format an eigen MatrixXd
     std::string fmt_eigen(const Eigen::MatrixXd& x, const int precision = 16);
+
+    /// @brief Get a string of the current time
     std::string now();
 
+    /// @brief Format a string for an Interval
+    std::string fmt_interval(const Interval& i, const int precision = 16);
+    /// @brief Format an eigen VectorX<Interval>
+    std::string fmt_eigen_intervals(
+        const Eigen::VectorX<Interval>& x, const int precision = 16);
 
-} // namespace log
+} // namespace logger
 
 } // namespace ccd

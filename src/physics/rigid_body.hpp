@@ -33,7 +33,7 @@ namespace physics {
             const Pose<double>& pose,
             const Pose<double>& velocity,
             const double density,
-            const Eigen::VectorXb& is_dof_fixed,
+            const Eigen::VectorX6b& is_dof_fixed,
             const bool oriented);
 
     public:
@@ -44,7 +44,7 @@ namespace physics {
             const Pose<double>& pose,
             const Pose<double>& velocity,
             const double density,
-            const Eigen::VectorXb& is_dof_fixed,
+            const Eigen::VectorX6b& is_dof_fixed,
             const bool oriented);
 
         // Faceless version for convienence (useful for 2D)
@@ -54,7 +54,7 @@ namespace physics {
             const Pose<double>& pose,
             const Pose<double>& velocity,
             const double density,
-            const Eigen::VectorXb& is_dof_fixed,
+            const Eigen::VectorX6b& is_dof_fixed,
             const bool oriented)
         {
             return from_points(
@@ -136,7 +136,7 @@ namespace physics {
         double r_max;
 
         /// @brief Flag to indicate if dof is fixed (doesnt' change)
-        Eigen::VectorXb is_dof_fixed;
+        Eigen::VectorX6b is_dof_fixed;
         Eigen::MatrixXd mass_matrix;
         Eigen::MatrixXd inv_mass_matrix;
 

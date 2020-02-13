@@ -7,7 +7,8 @@
 namespace ccd {
 namespace physics {
 
-    void compute_mass_properties(const Eigen::MatrixXd& vertices,
+    void compute_mass_properties(
+        const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& facets,
         double& mass,
         Eigen::VectorXd& center,
@@ -20,7 +21,8 @@ namespace physics {
         }
     }
 
-    void compute_mass_properties_2D(const Eigen::MatrixXd& vertices,
+    void compute_mass_properties_2D(
+        const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& edges,
         double& mass,
         Eigen::VectorXd& center,
@@ -37,7 +39,8 @@ namespace physics {
     // Copyright (c) 2016, Project Chrono Development Team
     // All rights reserved.
     // https://github.com/projectchrono/chrono/blob/develop/LICENSE
-    void compute_mass_properties_3D(const Eigen::MatrixXd& vertices,
+    void compute_mass_properties_3D(
+        const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& faces,
         double& mass,
         Eigen::VectorXd& center,
@@ -47,8 +50,8 @@ namespace physics {
         assert(faces.cols() == 3);
 
         // order:  1, x, y, z, x^2, y^2, z^2, xy, yz, zx
-        Eigen::Matrix<double, 10, 1> integral
-            = Eigen::Matrix<double, 10, 1>::Zero();
+        Eigen::Matrix<double, 10, 1> integral =
+            Eigen::Matrix<double, 10, 1>::Zero();
 
         for (int i = 0; i < faces.rows(); i++) {
             // Get vertices of triangle i.
@@ -139,41 +142,43 @@ namespace physics {
         inertia(2, 2) = integral[4] + integral[5];
 
         // inertia relative to center of mass
-        inertia(0, 0)
-            -= mass * (center.y() * center.y() + center.z() * center.z());
+        inertia(0, 0) -=
+            mass * (center.y() * center.y() + center.z() * center.z());
         inertia(0, 1) += mass * center.x() * center.y();
         inertia(0, 2) += mass * center.z() * center.x();
         inertia(1, 0) = inertia(0, 1);
-        inertia(1, 1)
-            -= mass * (center.z() * center.z() + center.x() * center.x());
+        inertia(1, 1) -=
+            mass * (center.z() * center.z() + center.x() * center.x());
         inertia(1, 2) += mass * center.y() * center.z();
         inertia(2, 0) = inertia(0, 2);
         inertia(2, 1) = inertia(1, 2);
-        inertia(2, 2)
-            -= mass * (center.x() * center.x() + center.y() * center.y());
+        inertia(2, 2) -=
+            mass * (center.x() * center.x() + center.y() * center.y());
     }
 
     // Construct the sparse mass matrix for the given mesh (V, F).
-    void construct_mass_matrix(const Eigen::MatrixXd& vertices,
+    void construct_mass_matrix(
+        const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& facets,
         Eigen::SparseMatrix<double>& mass_matrix)
     {
         if (vertices.cols() == 2) {
             assert(facets.cols() == 2);
-            Eigen::VectorXd vertex_masses
-                = Eigen::VectorXd::Zero(vertices.rows());
+            Eigen::VectorXd vertex_masses =
+                Eigen::VectorXd::Zero(vertices.rows());
             for (long i = 0; i < facets.rows(); i++) {
-                double edge_length
-                    = (vertices.row(facets(i, 1)) - vertices.row(facets(i, 0)))
-                          .norm();
+                double edge_length =
+                    (vertices.row(facets(i, 1)) - vertices.row(facets(i, 0)))
+                        .norm();
                 // Add vornoi areas to the vertex weight
                 vertex_masses(facets(i, 0)) += edge_length / 2;
                 vertex_masses(facets(i, 1)) += edge_length / 2;
             }
             mass_matrix = Eigen::SparseDiagonal<double>(vertex_masses);
         } else {
-            igl::massmatrix(vertices, facets,
-                igl::MassMatrixType::MASSMATRIX_TYPE_VORONOI, mass_matrix);
+            igl::massmatrix(
+                vertices, facets, igl::MassMatrixType::MASSMATRIX_TYPE_VORONOI,
+                mass_matrix);
         }
     }
 
@@ -198,7 +203,8 @@ namespace physics {
         return compute_center_of_mass(vertices, M);
     }
 
-    Eigen::VectorXd compute_center_of_mass(const Eigen::MatrixXd& vertices,
+    Eigen::VectorXd compute_center_of_mass(
+        const Eigen::MatrixXd& vertices,
         const Eigen::SparseMatrix<double>& mass_matrix)
     {
         return (mass_matrix * vertices).colwise().sum() / mass_matrix.sum();
@@ -228,7 +234,8 @@ namespace physics {
         }
     }
 
-    Eigen::MatrixXd compute_moment_of_inertia(const Eigen::MatrixXd& vertices,
+    Eigen::MatrixXd compute_moment_of_inertia(
+        const Eigen::MatrixXd& vertices,
         const Eigen::SparseMatrix<double>& mass_matrix)
     {
         // NOTE: this assumes center of mass is at 0,0

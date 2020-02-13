@@ -34,5 +34,25 @@ namespace logger {
         return ss.str();
     }
 
+    std::string fmt_interval(const Interval& i, const int precision)
+    {
+        std::stringstream ssx;
+        ssx.precision(precision);
+        ssx << "[" << i.lower() << ", " << i.upper() << "]";
+        return ssx.str();
+    }
+
+    std::string
+    fmt_eigen_intervals(const Eigen::VectorX<Interval>& x, const int precision)
+    {
+        std::stringstream ss;
+        ss << "[";
+        for (int i = 0; i < x.size(); i++) {
+            ss << fmt_interval(x(i)) << (i < x.size() - 1 ? ", " : "");
+        }
+        ss << "]";
+        return ss.str();
+    }
+
 } // namespace logger
 } // namespace ccd

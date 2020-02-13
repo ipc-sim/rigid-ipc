@@ -24,6 +24,8 @@ template <typename T>
 using VectorX6 = Matrix<T, Eigen::Dynamic, 1, ColMajor, 6>;
 /// @brief A dynamic size matrix with a fixed maximum size of 3 x 1
 using VectorX6d = VectorX6<double>;
+/// @brief A dynamic size matrix with a fixed maximum size of 3 x 1
+using VectorX6b = VectorX6<bool>;
 /// @brief A dynamic size matrix with a fixed maximum size of 3 x 3
 template <typename T>
 using MatrixXX3 = Matrix<T, Eigen::Dynamic, Eigen::Dynamic, ColMajor, 3, 3>;

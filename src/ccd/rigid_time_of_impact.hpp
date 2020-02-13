@@ -19,5 +19,3 @@ bool compute_edge_vertex_time_of_impact(
     double& toi);
 
 } // namespace ccd
-
-#include "rigid_time_of_impact.tpp"

@@ -48,6 +48,7 @@ add_library(${PROJECT_NAME}
     src/ccd/collision_detection_broad_phase.cpp
     src/ccd/prune_impacts.cpp
     src/ccd/interval_root_finder.cpp
+    src/ccd/rigid_time_of_impact.cpp
 
     src/io/read_scene.cpp
     src/io/write_scene.cpp
