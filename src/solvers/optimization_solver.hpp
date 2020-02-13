@@ -16,13 +16,6 @@
 namespace ccd {
 namespace opt {
 
-    /// Basic Interface class for non-spetiallized solvers
-    class IBasicOptimizationSolver {
-    public:
-        virtual ~IBasicOptimizationSolver() = default;
-        virtual OptimizationResults solve(IConstraintedProblem& problem) = 0;
-    };
-
     // Interface class for optimization solvers used by BarrierSolver
     class IBarrierOptimizationSolver {
     public:
@@ -38,9 +31,8 @@ namespace opt {
         virtual void t(const double) {}
         virtual void m(const double) {}
 
-        virtual std::string debug_stats(){ return ""; }
-        virtual void debug_reset_stats(){};
-
+        virtual std::string debug_stats() { return ""; }
+        virtual void debug_reset_stats() {};
     };
 
     // Interface class for optimizatino solvers used by State

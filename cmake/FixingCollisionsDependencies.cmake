@@ -14,38 +14,6 @@ include(FixingCollisionsDownloadExternal)
 # Required libraries
 ################################################################################
 
-# NLopt library
-if(FIXING_COLLISIONS_ENABLE_NLOPT)
-    if(NOT TARGET nlopt)
-        fixing_collisions_download_nlopt()
-        find_package(NLopt QUIET)
-        if(NLOPT_FOUND)
-            message(STATUS "Including NLOPT")
-            add_library(nlopt_nlopt INTERFACE)
-            target_link_libraries(nlopt_nlopt INTERFACE ${NLOPT_LIBRARIES})
-            add_library(nlopt::nlopt ALIAS nlopt_nlopt)
-        else()
-            message(WARNING "NLopt not found!")
-            add_library(nlopt::nlopt INTERFACE IMPORTED)
-        endif()
-    endif()
-endif()
-
-# OSQP library
-if(FIXING_COLLISIONS_ENABLE_OSQP)
-    if(NOT TARGET osqp::osqp)
-        fixing_collisions_download_osqp()
-        # Make sure the right types are used
-        set(DFLOAT OFF CACHE BOOL "Use float numbers instead of doubles"   FORCE)
-        set(DLONG  OFF CACHE BOOL "Use long integers (64bit) for indexing" FORCE)
-        add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/osqp EXCLUDE_FROM_ALL)
-        if(UNIX AND NOT APPLE)
-            set_target_properties(osqpstatic PROPERTIES INTERFACE_LINK_LIBRARIES ${CMAKE_DL_LIBS})
-        endif()
-        add_library(osqp::osqp ALIAS osqpstatic)
-    endif()
-endif()
-
 # MOSEK library
 if(FIXING_COLLISIONS_ENABLE_MOSEK)
     if(NOT TARGET mosek)

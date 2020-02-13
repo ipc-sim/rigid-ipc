@@ -1,55 +1,35 @@
-[![Build Status](https://travis-ci.com/geometryprocessing/fixing-collisions.svg?token=uiCkVsJXonpF1gk5xcRf&branch=master)](https://travis-ci.com/geometryprocessing/fixing-collisions)
-
 # Fixing Collisions
 
-A project for robustly resolving collisions with a guarantee of no interpenetrations and/or pass through.
+[![Build Status](https://travis-ci.com/geometryprocessing/fixing-collisions.svg?token=uiCkVsJXonpF1gk5xcRf&branch=master)](https://travis-ci.com/geometryprocessing/fixing-collisions)
 
-* [Google Doc](https://docs.google.com/document/d/13MetSJoTTZ0ptT0SERbst1SgG-KbgK48hozhko6mJxc/edit?usp=sharing)
+**Robust, intersection free, simulations of rigid bodies in 2D and 3D.**
+
 * [LaTeX Write-up](https://www.overleaf.com/6555952782nttqwfwgksjb)
+<!-- * [Google Doc](https://docs.google.com/document/d/13MetSJoTTZ0ptT0SERbst1SgG-KbgK48hozhko6mJxc/edit?usp=sharing) -->
 
 ## Compilation
 
 To build the project, use the following commands from the root directory of the project.
 
 ```bash
-mkdir build && cd build
+mkdir build
+cd build
 cmake ..
 make
 ```
 
 ### Dependencies
 
-Fixing Collisions includes some optional and non-optional dependencies.
+Most dependancies are downloaded through CMake depending on the build options.
+The only exceptions to this are:
 
-#### NLopt
+* [Boost](https://www.boost.org/): We currently use the interval arithmetic
+library for interval root finding and the filesystem library for path
+manipulation.
+* Python: We use SymPy to generate some code automatically. See
+`requirements.txt` for a list of required packages.
 
-**Build Option:** `-DENABLE_NLOPT=ON`
-
-NLopt is **automatically downloaded** through CMake.
-
-NLopt is used for non-linear optimization of our constrained objective function. Currently, NLopt is required to make the project, but this may change in the near future.
-
-#### Ipopt
-
-**Build Option:** `-DENABLE_IPOPT=ON`
-
-To install Ipopt via Homebrew, use the following commands.
-
-```bash
-brew tap udacity/CarND-MPC-Project https://github.com/udacity/CarND-MPC-Project
-brew install ipopt --with-openblas
-```
-
-Ipopt is used for non-linear optimization of our constrained objective function. Ipopt is **not required** to make the project, but it is recommended in order to use the interior point optimization method.
-
-#### OSQP
-
-**Build Option:** `-DENABLE_OSQP=ON`
-
-When OSQP is enabled for the first time, it is **downloaded automatically** through CMake.
-
-OSQP is used for quadratic programming of the linearized constraints and the interior iterations of the nonlinear complementarity problem. OSQP is not required to make the project, but it is recommended in order to use the linearized constraints.
-
+<!--
 #### MOSEK
 
 **Build Option:** `-DENABLE_MOSEK=ON`
@@ -62,8 +42,8 @@ MOSEK is used for quadratic programming of the linearized constraints and the in
 
 ```
 dyld: Library not loaded: libmosek64.8.1.dylib
-  Referenced from: <FIXING_COLLISIONS_DIR>/fixing-collisions/build/tests/unit_tests
-  Reason: image not found
+Referenced from: <FIXING_COLLISIONS_DIR>/fixing-collisions/build/tests/unit_tests
+Reason: image not found
 ```
 
 ##### Installation Steps
@@ -82,17 +62,9 @@ or create a `MOSEK_DIR` environment variable:
 ```bash
 export MOSEK_DIR="<MSKHOME>/mosek/7/tools/platform/osx64x86"
 ```
+-->
 
-#### Catch2
+## Scenes
 
-**Build Option:** `-DBUILD_UNIT_TESTS=ON`
-
-Catch2 is **automatically downloaded** through CMake.
-
-Catch2 is used for unit tests. Catch2 is not required to make the project, but it is recommended in order to test the build.
-
-#### libigl
-
-Libigl is **automatically downloaded** through CMake.
-
-Libigl is used for the viewer and for calling MOSEK's QP. Libigl is **required** to make the project.
+We take as input a single JSON file that specifies the mesh and initial
+conditions for each body. The `fixtures` directory contains example scenes.

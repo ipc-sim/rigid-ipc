@@ -13,10 +13,7 @@ add_executable(${PROJECT_NAME}_tests
     ccd/test_interval_root_finder.cpp
 
     # Test libarary integration
-    integration/test_nlopt.cpp
-    integration/test_osqp.cpp
     integration/test_mosek.cpp
-    integration/test_lbfgspp.cpp
 
     solvers/test_ncp.cpp
     solvers/test_ncp_displacements_opt.cpp

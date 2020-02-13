@@ -13,12 +13,10 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"                    ON)
 option(FIXING_COLLISIONS_BUILD_UNIT_TESTS         "Build unit-tests"      ON)
 option(FIXING_COLLISIONS_ENABLE_DERIVATIVE_CHECK  "Check Derivatives"    OFF)
 option(FIXING_COLLISIONS_ENABLE_PROFILING         "Profile Functions"    OFF)
-option(FIXING_COLLISIONS_ENABLE_NLOPT             "Enable NLopt Library" OFF)
-option(FIXING_COLLISIONS_ENABLE_IPOPT             "Enable Ipopt Library" OFF)
-option(FIXING_COLLISIONS_ENABLE_OSQP              "Enable OSQP Library"  OFF)
-option(FIXING_COLLISIONS_ENABLE_MOSEK             "Enable Mosek Library" OFF)
 option(FIXING_COLLISIONS_BUILD_COMPARISONS        "Build comparisons"     ON)
 option(FIXING_COLLISIONS_CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
+option(FIXING_COLLISIONS_ENABLE_MOSEK             "Enable Mosek Library" OFF)
+mark_as_advanced(FIXING_COLLISIONS_ENABLE_MOSEK)
 
 # debug-options
 option(FIXING_COLLISIONS_DEBUG_COLLISIONS  "Extra logs in newton"       OFF)
@@ -49,9 +47,7 @@ add_library(${PROJECT_NAME}
     src/ccd/collision_detection_narrow_phase.cpp
     src/ccd/collision_detection_broad_phase.cpp
     src/ccd/prune_impacts.cpp
-    src/ccd/time_of_impact.cpp
     src/ccd/interval_root_finder.cpp
-    src/ccd/rigid_time_of_impact.cpp
 
     src/io/read_scene.cpp
     src/io/write_scene.cpp
@@ -60,8 +56,6 @@ add_library(${PROJECT_NAME}
     src/io/read_rb_scene.cpp
 
     src/physics/mass.cpp
-    src/physics/simulation_problem.cpp
-    src/physics/particles_problem.cpp
     src/physics/rigid_body_problem.cpp
     src/physics/rigid_body.cpp
     src/physics/rigid_body_assembler.cpp
@@ -76,23 +70,16 @@ add_library(${PROJECT_NAME}
     src/opt/volume_constraint.cpp
 
     src/solvers/barrier_solver.cpp
-    src/solvers/ipopt_solver.cpp
     src/solvers/fischer_newton.cpp
     src/solvers/lcp_solver.cpp
     src/solvers/ncp_solver.cpp
     src/solvers/line_search.cpp
     src/solvers/newton_solver.cpp
     src/solvers/gradient_descent_solver.cpp
-    src/solvers/bfgs_solver.cpp
-    src/solvers/nlopt_solver.cpp
-    src/solvers/optimization_solver.cpp
-    src/solvers/qp_solver.cpp
     src/solvers/solver_factory.cpp
 
     src/problems/distance_barrier_rb_problem.cpp
-    src/problems/distance_barrier_particles_problem.cpp
     src/problems/volume_rb_problem.cpp
-    src/problems/volume_particles_problem.cpp
     src/problems/problem_factory.cpp
 
     src/utils/tensor.cpp
@@ -181,30 +168,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC FiniteDiff::FiniteDiff)
 #target_include_directories(${PROJECT_NAME} PUBLIC ${GMP_INCLUDE_DIRS})
 #target_link_libraries(${PROJECT_NAME} PUBLIC ${GMP_LIBRARIES})
 #
-
-# NLopt
-if(FIXING_COLLISIONS_ENABLE_NLOPT)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DBUILD_WITH_NLOPT)
-    target_link_libraries(${PROJECT_NAME} PUBLIC nlopt::nlopt)
-endif()
-
-# Ipopt
-if(FIXING_COLLISIONS_ENABLE_IPOPT)
-    find_package(IPOPT)
-    if (IPOPT_FOUND)
-        message(STATUS "Including IPOPT")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC -DBUILD_WITH_IPOPT)
-        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${IPOPT_INCLUDE_DIR} )
-        link_directories(${IPOPT_LIBRARY_DIR})
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${IPOPT_LIBRARY})
-    endif()
-endif()
-
-# OSQP
-if(FIXING_COLLISIONS_ENABLE_OSQP)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DBUILD_WITH_OSQP)
-    target_link_libraries(${PROJECT_NAME} PUBLIC osqp::osqp)
-endif()
 
 # Mosek
 if(FIXING_COLLISIONS_ENABLE_MOSEK)

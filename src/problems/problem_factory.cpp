@@ -2,11 +2,8 @@
 
 #include <solvers/barrier_solver.hpp>
 
-#include <physics/particles_problem.hpp>
 #include <problems/distance_barrier_rb_problem.hpp>
-#include <problems/distance_barrier_particles_problem.hpp>
 #include <problems/volume_rb_problem.hpp>
-#include <problems/volume_particles_problem.hpp>
 
 namespace ccd {
 
@@ -19,22 +16,17 @@ const ProblemFactory& ProblemFactory::factory()
 
 ProblemFactory::ProblemFactory()
 {
-    problems_.emplace("distance_barrier_rb_problem",
+    problems_.emplace(
+        "distance_barrier_rb_problem",
         std::make_shared<opt::DistanceBarrierRBProblem>(
             "distance_barrier_rb_problem"));
-    problems_.emplace("distance_barrier_particles_problem",
-        std::make_shared<opt::DistanceBarrierParticleProblem>(
-            "distance_barrier_particles_problem"));
-    problems_.emplace("volume_rb_problem",
-        std::make_shared<opt::VolumeRBProblem>(
-            "volume_rb_problem"));
-    problems_.emplace("volume_particles_problem",
-        std::make_shared<opt::VolumeParticlesProblem>(
-            "volume_particles_problem"));
+    problems_.emplace(
+        "volume_rb_problem",
+        std::make_shared<opt::VolumeRBProblem>("volume_rb_problem"));
 }
 
-std::shared_ptr<physics::ISimulationProblem> ProblemFactory::get_problem(
-    const std::string& name) const
+std::shared_ptr<physics::ISimulationProblem>
+ProblemFactory::get_problem(const std::string& name) const
 {
     auto it = problems_.find(name);
     assert(it != problems_.end());

@@ -28,20 +28,6 @@ function(fixing_collisions_download_catch2)
     )
 endfunction()
 
-function(fixing_collisions_download_nlopt)
-     fixing_collisions_download_project(nlopt
-        GIT_REPOSITORY https://github.com/stevengj/nlopt.git
-        GIT_TAG        463abb855d166503a4f2890379647a54a26ca678
-    )
-endfunction()
-
-function(fixing_collisions_download_osqp)
-     fixing_collisions_download_project(osqp
-        GIT_REPOSITORY https://github.com/oxfordcontrol/osqp.git
-        GIT_TAG        8949e678122d6949139644d2a95985765527535f
-    )
-endfunction()
-
 function(fixing_collisions_download_fmt)
      fixing_collisions_download_project(fmt
         GIT_REPOSITORY https://github.com/fmtlib/fmt.git

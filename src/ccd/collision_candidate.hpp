@@ -7,7 +7,7 @@ namespace ccd {
 
 class Candidate {
 public:
-    virtual ~Candidate() {}
+    virtual ~Candidate() = default;
 
     virtual bool operator==(const Candidate& other) const;
 
