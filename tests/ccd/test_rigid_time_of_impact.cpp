@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include <ccd/rigid_time_of_impact.hpp>
-#include <igl/pi.h>
+#include <igl/PI.h>
 
 TEST_CASE("Rigid motions time of impact", "[ccd][rigid]")
 {
@@ -50,11 +50,12 @@ TEST_CASE("Rigid motions time of impact", "[ccd][rigid]")
     }
     SECTION("Rotation")
     {
-        double theta = M_PI
+        double theta = igl::PI
             * GENERATE(-2, -7.0 / 6.0, -1, 0, 1.0 / 12.0, 1.0 / 6.0 - 1e-12,
                        1.0 / 6.0, 1.0 / 6.0 + 1e-12, 0.5, 1, 2, 100);
-        expected_toi = (theta < 0 ? -7.0 : 1.0) / 6.0 * M_PI / theta;
-        is_impact_expected = theta >= M_PI / 6.0 || theta <= -M_PI * 7.0 / 6.0;
+        expected_toi = (theta < 0 ? -7.0 : 1.0) / 6.0 * igl::PI / theta;
+        is_impact_expected =
+            theta >= igl::PI / 6.0 || theta <= -igl::PI * 7.0 / 6.0;
         bodyA_velocity.rotation = Eigen::Vector3d(0, 0, theta).tail(rot_ndof);
     }
 
