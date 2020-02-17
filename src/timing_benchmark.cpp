@@ -1,7 +1,7 @@
 // Compare timings of two functions
 
 #include <Eigen/Geometry>
-#include <igl/timer.h>
+#include <igl/Timer.h>
 
 #include <ccd/hash_grid.hpp>
 #include <logger.hpp>
