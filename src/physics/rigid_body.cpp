@@ -93,6 +93,13 @@ namespace physics {
         inv_mass_matrix = mass_matrix.cwiseInverse();
 
         r_max = vertices.rowwise().squaredNorm().maxCoeff();
+
+        average_edge_length = 0;
+        for (long i = 0; i < edges.rows(); i++) {
+            average_edge_length +=
+                (vertices.row(edges(i, 0)) - vertices.row(edges(i, 1))).norm();
+        }
+        average_edge_length /= edges.rows();
     }
 
     Eigen::MatrixXd RigidBody::world_velocities() const

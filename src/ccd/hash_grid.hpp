@@ -1,12 +1,14 @@
 #pragma once
 
-#include <Eigen/Core>
 #include <iomanip>
 #include <list>
-#include <tbb/tbb.h>
 #include <vector>
 
+#include <Eigen/Core>
+#include <tbb/tbb.h>
+
 #include <ccd/collision_candidate.hpp>
+#include <utils/eigen_ext.hpp>
 
 namespace ccd {
 
@@ -15,7 +17,7 @@ class AABB {
 public:
     AABB() {}
 
-    AABB(const Eigen::VectorXd& min, const Eigen::VectorXd& max)
+    AABB(const Eigen::VectorX3d& min, const Eigen::VectorX3d& max)
         : min(min)
         , max(max)
     {
@@ -26,18 +28,25 @@ public:
         assert(max.size() == dim);
     }
 
+    AABB(const AABB& aabb1, const AABB& aabb2)
+        : AABB(
+              aabb1.min.array().min(aabb2.min.array()),
+              aabb1.max.array().max(aabb2.max.array()))
+    {
+    }
+
     static bool are_overlaping(const AABB& a, const AABB& b);
 
-    inline const Eigen::VectorXd& getMin() const { return min; }
-    inline const Eigen::VectorXd& getMax() const { return max; }
-    inline const Eigen::VectorXd& getHalfExtent() const { return half_extent; }
-    inline const Eigen::VectorXd& getCenter() const { return center; }
+    inline const Eigen::VectorX3d& getMin() const { return min; }
+    inline const Eigen::VectorX3d& getMax() const { return max; }
+    inline const Eigen::VectorX3d& getHalfExtent() const { return half_extent; }
+    inline const Eigen::VectorX3d& getCenter() const { return center; }
 
-private:
-    Eigen::VectorXd min;
-    Eigen::VectorXd max;
-    Eigen::VectorXd half_extent;
-    Eigen::VectorXd center;
+protected:
+    Eigen::VectorX3d min;
+    Eigen::VectorX3d max;
+    Eigen::VectorX3d half_extent;
+    Eigen::VectorX3d center;
     int dim;
 };
 
@@ -70,7 +79,7 @@ typedef tbb::concurrent_vector<HashItem> HashItems;
 
 class HashGrid {
 public:
-    void resize(Eigen::VectorXd min, Eigen::VectorXd max, double cellSize);
+    void resize(Eigen::VectorX3d min, Eigen::VectorX3d max, double cellSize);
 
     void resize(
         const Eigen::MatrixXd& vertices,
@@ -166,8 +175,8 @@ protected:
 protected:
     double m_cellSize;
     int m_gridSize;
-    Eigen::VectorXd m_domainMin;
-    Eigen::VectorXd m_domainMax;
+    Eigen::VectorX3d m_domainMin;
+    Eigen::VectorX3d m_domainMax;
 
     HashItems m_vertexItems;
     HashItems m_edgeItems;

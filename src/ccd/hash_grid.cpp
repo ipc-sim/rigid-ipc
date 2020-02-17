@@ -17,7 +17,8 @@ bool AABB::are_overlaping(const AABB& a, const AABB& b)
                 <= (a.half_extent.z() + b.half_extent.z()));
 };
 
-void HashGrid::resize(Eigen::VectorXd min, Eigen::VectorXd max, double cellSize)
+void HashGrid::resize(
+    Eigen::VectorX3d min, Eigen::VectorX3d max, double cellSize)
 {
     clear();
     m_cellSize = cellSize;
@@ -72,14 +73,12 @@ void HashGrid::resize(
 {
     Eigen::VectorXd mesh_min, mesh_max;
     calculate_mesh_extents(vertices, displacements, mesh_min, mesh_max);
+    double edge_len = average_edge_length(vertices, displacements, edges);
+    double disp_len = average_displacement_length(displacements);
+    double cell_size = 2 * std::max(edge_len, disp_len) + inflation_radius;
     this->resize(
         mesh_min.array() - inflation_radius,
-        mesh_max.array() + inflation_radius,
-        std::max(
-            average_edge_length(vertices, displacements, edges),
-            average_displacement_length(displacements))
-                * 2
-            + inflation_radius);
+        mesh_max.array() + inflation_radius, cell_size);
 }
 
 /// @brief Compute a AABB for a vertex moving through time (i.e. temporal edge).

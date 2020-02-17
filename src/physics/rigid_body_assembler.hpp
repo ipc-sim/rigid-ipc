@@ -22,16 +22,16 @@ namespace physics {
         void init(const std::vector<RigidBody>& rbs);
 
         // World Vertices Functions
-        // ----------------------------------------------------------------------
+        // --------------------------------------------------------------------
 
         template <typename T>
         const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
-        world_vertices(const std::vector<Pose<T>>& v) const;
+        world_vertices(const std::vector<Pose<T>>& poses) const;
         template <typename T>
         const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
-        world_vertices(const Eigen::VectorX<T>& dof) const
+        world_vertices(const Eigen::VectorX<T>& dofs) const
         {
-            return world_vertices(Pose<T>::dofs_to_poses(dof, dim()));
+            return world_vertices(Pose<T>::dofs_to_poses(dofs, dim()));
         }
 
         Eigen::MatrixXd world_vertices(
@@ -63,7 +63,7 @@ namespace physics {
             int& local_vertex_id);
 
         // Ridig Body CM Functions
-        // ----------------------------------------------------------------------
+        // --------------------------------------------------------------------
         /// @brief assemble rigid body poses to a single vector
         std::vector<Pose<double>> rb_poses(const bool previous = false) const;
         std::vector<Pose<double>> rb_poses_t0() const { return rb_poses(true); }
@@ -74,7 +74,7 @@ namespace physics {
         /// @brief set rigid body poses
         void set_rb_poses(const std::vector<Pose<double>>& poses);
 
-        // ----------------------------------------------------------------------
+        // --------------------------------------------------------------------
 
         long num_vertices() const { return m_body_vertex_id.back(); }
         long num_edges() const { return m_body_edge_id.back(); }
@@ -88,6 +88,8 @@ namespace physics {
         std::vector<long> m_body_vertex_id;
         std::vector<long> m_body_face_id;
         std::vector<long> m_body_edge_id;
+
+        double average_edge_length; ///< Average edge length
 
         /// @brief indexes for vertices
         Eigen::VectorXi m_vertex_to_body_map;

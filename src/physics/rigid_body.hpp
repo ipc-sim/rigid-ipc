@@ -128,6 +128,8 @@ namespace physics {
         Eigen::MatrixXi faces;    ///< Vertices connectivity
         Eigen::MatrixXi edges;    ///< Vertices connectivity
 
+        double average_edge_length; ///< Average edge length
+
         /// @brief total mass (M) of the rigid body
         double mass;
         /// @breif moment of intertia (I) of the rigid body

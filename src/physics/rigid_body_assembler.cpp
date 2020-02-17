@@ -37,11 +37,11 @@ namespace physics {
         m_faces.resize(m_body_face_id.back(), 3);
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
-            m_edges.block(m_body_edge_id[i], 0, rb.edges.rows(), 2)
-                = (rb.edges.array() + int(m_body_vertex_id[i]));
+            m_edges.block(m_body_edge_id[i], 0, rb.edges.rows(), 2) =
+                (rb.edges.array() + int(m_body_vertex_id[i]));
             if (rb.faces.size() != 0) {
-                m_faces.block(m_body_face_id[i], 0, rb.faces.rows(), 3)
-                    = (rb.faces.array() + int(m_body_vertex_id[i]));
+                m_faces.block(m_body_face_id[i], 0, rb.faces.rows(), 3) =
+                    (rb.faces.array() + int(m_body_vertex_id[i]));
             }
         }
         // vertex to body map
@@ -96,8 +96,8 @@ namespace physics {
             physics::construct_mass_matrix(
                 world_vertices_t0(), dim() == 2 ? m_edges : m_faces, M);
             // Repeat the mass vector to make a mass matrix per dof
-            m_mass_matrix = Eigen::SparseDiagonal<double>(
-                M.diagonal().replicate(dim(), 1));
+            m_mass_matrix =
+                Eigen::SparseDiagonal<double>(M.diagonal().replicate(dim(), 1));
         }
         m_inv_mass_matrix = m_mass_matrix.cwiseInverse();
 
@@ -113,21 +113,27 @@ namespace physics {
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
             is_dof_fixed.block(
-                m_body_vertex_id[i], 0, rb.vertices.rows(), rb_ndof)
-                = rb.is_dof_fixed.transpose().replicate(rb.vertices.rows(), 1);
+                m_body_vertex_id[i], 0, rb.vertices.rows(), rb_ndof) =
+                rb.is_dof_fixed.transpose().replicate(rb.vertices.rows(), 1);
         }
+
+        average_edge_length = 0;
+        for (const auto& body : rigid_bodies) {
+            average_edge_length += body.edges.rows() * body.average_edge_length;
+        }
+        average_edge_length /= m_edges.rows();
     }
 
     void RigidBodyAssembler::global_to_local(
         const int global_vertex_id, int& rigid_body_id, int& local_vertex_id)
     {
         rigid_body_id = m_vertex_to_body_map(global_vertex_id);
-        local_vertex_id
-            = global_vertex_id - m_body_vertex_id[size_t(rigid_body_id)];
+        local_vertex_id =
+            global_vertex_id - m_body_vertex_id[size_t(rigid_body_id)];
     }
 
-    std::vector<Pose<double>> RigidBodyAssembler::rb_poses(
-        const bool previous) const
+    std::vector<Pose<double>>
+    RigidBodyAssembler::rb_poses(const bool previous) const
     {
         std::vector<Pose<double>> poses;
         poses.reserve(num_bodies());
@@ -137,8 +143,8 @@ namespace physics {
         return poses;
     }
 
-    void RigidBodyAssembler::set_rb_poses(
-        const std::vector<Pose<double>>& poses)
+    void
+    RigidBodyAssembler::set_rb_poses(const std::vector<Pose<double>>& poses)
     {
         assert(num_bodies() == poses.size());
         for (size_t i = 0; i < num_bodies(); ++i) {
@@ -146,14 +152,14 @@ namespace physics {
         }
     }
 
-    Eigen::MatrixXd RigidBodyAssembler::world_vertices(
-        const RigidBody::Step step) const
+    Eigen::MatrixXd
+    RigidBodyAssembler::world_vertices(const RigidBody::Step step) const
     {
         Eigen::MatrixXd V(num_vertices(), dim());
         for (size_t i = 0; i < num_bodies(); ++i) {
             auto& rb = m_rbs[i];
-            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), dim())
-                = rb.world_vertices(step);
+            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), dim()) =
+                rb.world_vertices(step);
         }
         return V;
     }
@@ -163,8 +169,8 @@ namespace physics {
         Eigen::MatrixXd V(num_vertices(), dim());
         for (size_t i = 0; i < num_bodies(); ++i) {
             auto& rb = m_rbs[i];
-            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), dim())
-                = rb.world_velocities();
+            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), dim()) =
+                rb.world_velocities();
         }
         return V;
     }
@@ -179,7 +185,8 @@ namespace physics {
         std::vector<Triplet> triplets;
         triplets.reserve(size_t(num_vertices()) * dim());
 
-        grad_u.resize(int(num_vertices() * dim()),
+        grad_u.resize(
+            int(num_vertices() * dim()),
             int(num_bodies()) * Pose<double>::dim_to_ndof(dim()));
         for (size_t i = 0; i < num_bodies(); ++i) {
             auto& rb = m_rbs[i];
