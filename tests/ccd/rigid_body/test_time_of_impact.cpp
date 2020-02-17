@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <ccd/rigid_time_of_impact.hpp>
+#include <ccd/rigid_body/time_of_impact.hpp>
 #include <igl/PI.h>
 
 TEST_CASE("Rigid motions time of impact", "[ccd][rigid]")

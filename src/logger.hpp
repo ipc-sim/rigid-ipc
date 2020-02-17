@@ -17,9 +17,9 @@
 #endif
 
 #include <Eigen/Core>
-#include <utils/eigen_ext.hpp>
 
-#include <ccd/interval_root_finder.hpp>
+#include <ccd/rigid_body/interval.hpp>
+#include <utils/eigen_ext.hpp>
 
 namespace ccd {
 

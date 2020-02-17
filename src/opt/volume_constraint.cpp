@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include <autogen/collision_volume.hpp>
-#include <ccd/prune_impacts.hpp>
 #include <ccd/time_of_impact.hpp>
 
 #include <logger.hpp>
@@ -51,8 +50,45 @@ namespace opt {
         return CollisionConstraint::initialize(vertices, edges, group_ids, Uk);
     }
 
-    EdgeEdgeImpacts VolumeConstraint::get_ee_collision_set(
-        const Eigen::MatrixXd& Uk)
+    /**
+     * Prune the impacts to only include the earliest impact for each edge.
+     *
+     * @param all_impacts All of the impacts to be pruned.
+     * @param pruned_impact_indices A vector of lengeth the numbe of edges.
+     * Stores the index of the earliest impact in this vector.
+     * @return The number of edges that have an impact.
+     */
+    int prune_impacts(
+        const EdgeEdgeImpacts& all_impacts,
+        Eigen::VectorXi& pruned_impact_indices)
+    {
+        // An index value of -1 indicates no impact for that edge
+        pruned_impact_indices.setConstant(-1);
+
+        // Loop over all impacts and add them to the prunced impacts if they are
+        // the earliest.
+        int num_pruned_impacts = 0;
+        for (size_t i = 0; i < all_impacts.size(); i++) {
+            EdgeEdgeImpact ee_impact = all_impacts[i];
+            for (int index : { ee_impact.impacted_edge_index,
+                               ee_impact.impacting_edge_index }) {
+                // If the edge is not in the map or the current impact happens
+                // later replace it in the pruned impacts.
+                if (pruned_impact_indices[index] == -1
+                    || all_impacts[size_t(pruned_impact_indices[index])].time
+                        > ee_impact.time) {
+                    num_pruned_impacts +=
+                        int(pruned_impact_indices[index] == -1);
+                    pruned_impact_indices[index] = int(i);
+                }
+            }
+        }
+
+        return num_pruned_impacts;
+    }
+
+    EdgeEdgeImpacts
+    VolumeConstraint::get_ee_collision_set(const Eigen::MatrixXd& Uk)
     {
         auto ev_impacts = get_collision_set(Uk);
 
@@ -89,7 +125,8 @@ namespace opt {
     //        g_uk_active);
     //    }
 
-    void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
+    void VolumeConstraint::compute_constraints(
+        const Eigen::MatrixXd& Uk,
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
@@ -97,7 +134,8 @@ namespace opt {
         compute_constraints(Uk, ee_impacts, g_uk, g_uk_jacobian);
     }
 
-    void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
+    void VolumeConstraint::compute_constraints(
+        const Eigen::MatrixXd& Uk,
         const EdgeEdgeImpacts& ee_impacts,
         Eigen::VectorXd& g_uk)
     {
@@ -146,7 +184,7 @@ namespace opt {
                 v_i, v_j, v_c, u_i, u_j, u_c, toi);
             success = success
                 && ccd::autodiff::temporal_parameterization_to_spatial<double>(
-                       v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
+                          v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
 
             // move toi to add some fake min-distance
             Eigen::Vector2d avg_u = (u_i + alpha_ij * (u_j - u_i) - u_k);
@@ -228,8 +266,8 @@ namespace opt {
                 Diff::DDouble1>(v_i, v_j, v_c, u_i, u_j, u_c, toi);
             success = success
                 && ccd::autodiff::temporal_parameterization_to_spatial<
-                       Diff::DDouble1>(
-                       v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
+                          Diff::DDouble1>(
+                          v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
 
             Diff::D1Vector2d avg_u = (u_i + alpha_ij * (u_j - u_i) - u_k);
             Diff::DDouble1 avg_d = (avg_u).norm();
@@ -239,11 +277,11 @@ namespace opt {
 
             Diff::DDouble1 vol_ij(0), vol_kl(0);
             if (success) {
-                vol_ij
-                    = ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
+                vol_ij =
+                    ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
                         v_i, v_j, u_i, u_j, toi, alpha_ij, volume_epsilon);
-                vol_kl
-                    = ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
+                vol_kl =
+                    ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
                         v_k, v_l, u_k, u_l, toi, alpha_kl, volume_epsilon);
             }
 
@@ -258,13 +296,13 @@ namespace opt {
             for (int n_id = 0; n_id < 4; ++n_id) {
                 // x and y entries
                 jac_uk(int(c_ij), nodes[n_id]) = grad_vol_ij(2 * n_id);
-                jac_uk(int(c_ij), nodes[n_id] + vertices.rows())
-                    = grad_vol_ij(2 * n_id + 1);
+                jac_uk(int(c_ij), nodes[n_id] + vertices.rows()) =
+                    grad_vol_ij(2 * n_id + 1);
 
                 // x and y entries
                 jac_uk(int(c_kl), nodes[n_id]) = grad_vol_kl(2 * n_id);
-                jac_uk(int(c_kl), nodes[n_id] + vertices.rows())
-                    = grad_vol_kl(2 * n_id + 1);
+                jac_uk(int(c_kl), nodes[n_id] + vertices.rows()) =
+                    grad_vol_kl(2 * n_id + 1);
             }
         }
     }
@@ -313,7 +351,7 @@ namespace opt {
                 u_c = u_l;
             }
 
-            double toi=0, alpha_ij=0, alpha_kl = ee_impact.impacting_node();
+            double toi = 0, alpha_ij = 0, alpha_kl = ee_impact.impacting_node();
             alpha_kl = ee_impact.impacting_node();
             // get toi and alpha
             bool success;
@@ -321,7 +359,7 @@ namespace opt {
                 v_i, v_j, v_c, u_i, u_j, u_c, toi);
             success = success
                 && ccd::autodiff::temporal_parameterization_to_spatial<double>(
-                       v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
+                          v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
 
             // move toi to add some fake min-distance
             Eigen::Vector2d avg_u = (u_i + alpha_ij * (u_j - u_i) - u_k);
@@ -339,24 +377,22 @@ namespace opt {
                 n.normalize();
 
                 Eigen::VectorXd u_e = u_i + alpha_ij * (u_j - u_i);
-                if ((u_c - u_e).dot(n) > 0){
+                if ((u_c - u_e).dot(n) > 0) {
                     n *= -1;
                 }
-                grad_vol_ij.segment(0, 2) = - alpha_ij * n; // wrt i
-                grad_vol_ij.segment(2, 2) = - (1.0 - alpha_ij) * n; // wrt j
+                grad_vol_ij.segment(0, 2) = -alpha_ij * n;         // wrt i
+                grad_vol_ij.segment(2, 2) = -(1.0 - alpha_ij) * n; // wrt j
 
-                grad_vol_kl.segment(0, 2) = - alpha_ij * n; // wrt i
-                grad_vol_kl.segment(2, 2) = - (1.0 - alpha_ij) * n; // wrt j
+                grad_vol_kl.segment(0, 2) = -alpha_ij * n;         // wrt i
+                grad_vol_kl.segment(2, 2) = -(1.0 - alpha_ij) * n; // wrt j
 
-                if (ee_impact.impacting_node() ==0){
+                if (ee_impact.impacting_node() == 0) {
                     grad_vol_kl.segment(4, 2) = n; // wrt k
                     grad_vol_ij.segment(4, 2) = n; // wrt k
                 } else {
                     grad_vol_kl.segment(6, 2) = n; // wrt k
                     grad_vol_ij.segment(6, 2) = n; // wrt k
                 }
-
-
             }
 
             // x entries:
@@ -366,13 +402,13 @@ namespace opt {
             for (int n_id = 0; n_id < 4; ++n_id) {
                 // x and y entries
                 jac_uk(int(c_ij), nodes[n_id]) = grad_vol_ij(2 * n_id);
-                jac_uk(int(c_ij), nodes[n_id] + vertices.rows())
-                    = grad_vol_ij(2 * n_id + 1);
+                jac_uk(int(c_ij), nodes[n_id] + vertices.rows()) =
+                    grad_vol_ij(2 * n_id + 1);
 
                 // x and y entries
                 jac_uk(int(c_kl), nodes[n_id]) = grad_vol_kl(2 * n_id);
-                jac_uk(int(c_kl), nodes[n_id] + vertices.rows())
-                    = grad_vol_kl(2 * n_id + 1);
+                jac_uk(int(c_kl), nodes[n_id] + vertices.rows()) =
+                    grad_vol_kl(2 * n_id + 1);
             }
         }
     }
@@ -497,7 +533,8 @@ namespace opt {
     //        dense_indices(ee_impacts, g_uk_active);
     //    }
 
-    void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
+    void VolumeConstraint::compute_constraints(
+        const Eigen::MatrixXd& Uk,
         const EdgeEdgeImpacts& ee_impacts,
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
@@ -516,10 +553,10 @@ namespace opt {
         for (size_t ee = 0; ee < ee_impacts.size(); ++ee) {
             auto& ee_impact = ee_impacts[ee];
 
-            long c_ij
-                = get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
-            long c_kl = get_constraint_index(
-                ee_impact, /*impacted=*/false, num_edges);
+            long c_ij =
+                get_constraint_index(ee_impact, /*impacted=*/true, num_edges);
+            long c_kl =
+                get_constraint_index(ee_impact, /*impacted=*/false, num_edges);
 
             dense_indices(int(2 * ee) + 0) = int(c_ij);
             dense_indices(int(2 * ee) + 1) = int(c_kl);

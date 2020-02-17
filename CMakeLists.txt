@@ -46,10 +46,10 @@ add_library(${PROJECT_NAME}
     src/ccd/hash_grid.cpp
     src/ccd/collision_detection_narrow_phase.cpp
     src/ccd/collision_detection_broad_phase.cpp
-    src/ccd/prune_impacts.cpp
-    src/ccd/interval_root_finder.cpp
-    src/ccd/rigid_time_of_impact.cpp
-    src/ccd/rigid_body_hash_grid.cpp
+
+    src/ccd/rigid_body/interval_root_finder.cpp
+    src/ccd/rigid_body/time_of_impact.cpp
+    src/ccd/rigid_body/hash_grid.cpp
 
     src/io/read_scene.cpp
     src/io/write_scene.cpp

@@ -1,3 +1,4 @@
+/// A spatial hash grid for rigid bodies with angular trajectories.
 #pragma once
 
 #include <ccd/hash_grid.hpp>
@@ -5,6 +6,7 @@
 
 namespace ccd {
 
+/// A spatial hash grid for rigid bodies with angular trajectories.
 class RigidBodyHashGrid : public HashGrid {
 public:
     void resize(

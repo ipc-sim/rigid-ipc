@@ -1,3 +1,4 @@
+// A root finder using interval arithmetic.
 #include "interval_root_finder.hpp"
 
 #include <logger.hpp>

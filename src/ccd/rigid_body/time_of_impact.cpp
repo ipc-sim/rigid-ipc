@@ -1,6 +1,7 @@
-#include "rigid_time_of_impact.hpp"
+// Time-of-impact computation for rigid bodies with angular trajectories.
+#include <ccd/rigid_body/time_of_impact.hpp>
 
-#include <ccd/interval_root_finder.hpp>
+#include <ccd/rigid_body/interval_root_finder.hpp>
 #include <geometry/distance.hpp>
 #include <logger.hpp>
 #include <utils/eigen_ext.hpp>
