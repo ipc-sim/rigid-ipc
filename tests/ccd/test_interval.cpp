@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <ccd/rigid_body/interval.hpp>
+#include <ccd/interval.hpp>
 #include <logger.hpp>
 
 TEST_CASE("Simple interval arithmetic", "[ccd][interval]")

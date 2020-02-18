@@ -18,7 +18,7 @@
 
 #include <Eigen/Core>
 
-#include <ccd/rigid_body/interval.hpp>
+#include <ccd/interval.hpp>
 #include <utils/eigen_ext.hpp>
 
 namespace ccd {

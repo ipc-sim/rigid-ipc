@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <ccd/rigid_body/time_of_impact.hpp>
+#include <ccd/rigid_body_time_of_impact.hpp>
 #include <igl/PI.h>
 
 TEST_CASE("Rigid motions time of impact", "[ccd][rigid]")
@@ -71,8 +71,8 @@ TEST_CASE("Rigid motions time of impact", "[ccd][rigid]")
 
     double toi;
     bool is_impacting = compute_edge_vertex_time_of_impact(
-        bodyA, bodyA.velocity, /*vertex_id=*/0, bodyB, bodyB.velocity,
-        /*edge_id=*/0, toi);
+        bodyA, bodyA.pose, bodyA.velocity, /*vertex_id=*/0, bodyB, bodyB.pose,
+        bodyB.velocity, /*edge_id=*/0, toi);
     CHECK(is_impacting == is_impact_expected);
     if (is_impacting) {
         CHECK(toi == Approx(expected_toi));

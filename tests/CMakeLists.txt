@@ -10,9 +10,10 @@ add_executable(${PROJECT_NAME}_tests
     ccd/test_time_of_impact.cpp
     ccd/test_hash_grid.cpp
 
-    ccd/rigid_body/test_interval.cpp
-    ccd/rigid_body/test_interval_root_finder.cpp
-    ccd/rigid_body/test_time_of_impact.cpp
+    ccd/test_interval.cpp
+    ccd/test_interval_root_finder.cpp
+    ccd/test_rigid_body_time_of_impact.cpp
+    # ccd/test_rigid_body_hash_grid.cpp
 
     # Test libarary integration
     integration/test_mosek.cpp

@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <ccd/rigid_body/interval_root_finder.hpp>
+#include <ccd/interval_root_finder.hpp>
 #include <logger.hpp>
 
 TEST_CASE("Root of simple function", "[ccd][interval]")
