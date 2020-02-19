@@ -2,7 +2,6 @@
 
 #include <igl/slice_mask.h>
 
-#include <barrier/barrier.hpp>
 #include <ccd/collision_detection.hpp>
 #include <ccd/time_of_impact.hpp>
 #include <geometry/distance.hpp>
@@ -12,6 +11,12 @@
 
 namespace ccd {
 namespace opt {
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(
+        BarrierType,
+        { { BarrierType::IPC, "ipc" },
+          { BarrierType::POLY_LOG, "poly_log" },
+          { BarrierType::SPLINE, "spline" } })
 
     DistanceBarrierConstraint::DistanceBarrierConstraint()
         : DistanceBarrierConstraint("distance_barrier_constraint")
@@ -24,7 +29,7 @@ namespace opt {
         , custom_inital_epsilon(1.0)
         , min_distance(1E-10)
         , active_constraint_scale(1.5)
-        , use_log_barrier(false)
+        , barrier_type(BarrierType::POLY_LOG)
         , m_barrier_epsilon(0.0)
     {
     }
@@ -35,7 +40,7 @@ namespace opt {
         custom_inital_epsilon = json["custom_initial_epsilon"].get<double>();
         active_constraint_scale = json["active_constraint_scale"].get<double>();
         min_distance = json["min_distance"].get<double>();
-        use_log_barrier = json["use_log_barrier"].get<bool>();
+        barrier_type = json["barrier_type"].get<BarrierType>();
     }
 
     nlohmann::json DistanceBarrierConstraint::settings() const
@@ -44,7 +49,7 @@ namespace opt {
         json["custom_inital_epsilon"] = custom_inital_epsilon;
         json["active_constraint_scale"] = active_constraint_scale;
         json["min_distance"] = min_distance;
-        json["use_log_barrier"] = use_log_barrier;
+        json["barrier_type"] = barrier_type;
 
         return json;
     }
@@ -275,6 +280,12 @@ namespace opt {
         }
     }
 
+    double DistanceBarrierConstraint::distance_barrier_grad(
+        const double distance, const double eps)
+    {
+        return barrier_gradient(distance, eps, barrier_type);
+    }
+
     Eigen::VectorXd DistanceBarrierConstraint::distance_barrier_grad(
         const Eigen::VectorXd& a,
         const Eigen::VectorXd& b,
@@ -306,16 +317,6 @@ namespace opt {
         Diff::D2VectorXd dc = Diff::d2vars(4, c);
         Diff::DDouble2 barrier = distance_barrier<Diff::DDouble2>(da, db, dc);
         return barrier.getHessian();
-    }
-
-    double DistanceBarrierConstraint::distance_barrier_grad(
-        const double distance, const double eps)
-    {
-        if (use_log_barrier) {
-            return opt::poly_log_barrier_gradient(distance, eps);
-        } else {
-            return opt::spline_barrier_gradient(distance, eps);
-        }
     }
 
 } // namespace opt

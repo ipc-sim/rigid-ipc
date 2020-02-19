@@ -4,11 +4,34 @@
 #include <barrier/barrier.hpp>
 #include <finitediff.hpp>
 
-using namespace ccd::opt;
-
 TEST_CASE("Test barriers and their derivatives", "[opt][barrier]")
 {
-    double s = 1e-4;
+    using namespace ccd::opt;
+    double s = GENERATE(1e-4, 1, 10);
+
+    BarrierType barrier_type =
+        GENERATE(BarrierType::IPC, BarrierType::POLY_LOG, BarrierType::SPLINE);
+
+    Eigen::VectorXd x = (Eigen::ArrayXd::Random(1) + 1) / 2 * s; // ∈ [0, s]
+
+    Eigen::VectorXd fgrad(1);
+    fd::finite_gradient(
+        x,
+        [&](const Eigen::VectorXd& x) {
+            return barrier(x[0], s, barrier_type);
+        },
+        fgrad);
+    Eigen::VectorXd grad = x.unaryExpr([&](const double& xi) {
+        return barrier_gradient(xi, s, barrier_type);
+    });
+    CAPTURE(barrier_type, s, x[0]);
+    CHECK(fd::compare_gradient(fgrad, grad));
+}
+
+TEST_CASE("Test spline barrier", "[opt][barrier]")
+{
+    using namespace ccd::opt;
+    double s = GENERATE(1e-4, 1, 10);
 
     std::function<double(double)> phi;
     std::function<double(double)> phi_gradient;
@@ -20,13 +43,13 @@ TEST_CASE("Test barriers and their derivatives", "[opt][barrier]")
         phi_hessian = [&s](double x) { return spline_barrier_hessian(x, s); };
     }
 
-    Eigen::VectorXd x = Eigen::VectorXd::Random(1);
-    // dis = std::uniform_real_distribution<double>(1e-8, s - 0.1);
+    Eigen::VectorXd x = (Eigen::ArrayXd::Random(1) + 1) / 2 * s; // ∈ [0, s]
 
     Eigen::VectorXd fgrad(1);
     fd::finite_gradient(
         x, [&phi](const Eigen::VectorXd& x) { return phi(x[0]); }, fgrad);
     Eigen::VectorXd grad = x.unaryExpr(phi_gradient);
+    CAPTURE(s, x[0]);
     CHECK(fd::compare_gradient(fgrad, grad));
 
     fd::finite_gradient(

@@ -124,12 +124,32 @@ namespace physics {
         average_edge_length /= m_edges.rows();
     }
 
-    void RigidBodyAssembler::global_to_local(
-        const int global_vertex_id, int& rigid_body_id, int& local_vertex_id)
+    void RigidBodyAssembler::global_to_local_vertex(
+        const long global_vertex_id,
+        long& rigid_body_id,
+        long& local_vertex_id) const
     {
-        rigid_body_id = m_vertex_to_body_map(global_vertex_id);
+        rigid_body_id = vertex_id_to_body_id(global_vertex_id);
         local_vertex_id =
             global_vertex_id - m_body_vertex_id[size_t(rigid_body_id)];
+    }
+
+    void RigidBodyAssembler::global_to_local_edge(
+        const long global_edge_id,
+        long& rigid_body_id,
+        long& local_edge_id) const
+    {
+        rigid_body_id = edge_id_to_body_id(global_edge_id);
+        local_edge_id = global_edge_id - m_body_edge_id[size_t(rigid_body_id)];
+    }
+
+    void RigidBodyAssembler::global_to_local_face(
+        const long global_face_id,
+        long& rigid_body_id,
+        long& local_face_id) const
+    {
+        rigid_body_id = face_id_to_body_id(global_face_id);
+        local_face_id = global_face_id - m_body_face_id[size_t(rigid_body_id)];
     }
 
     std::vector<Pose<double>>

@@ -475,11 +475,11 @@ namespace opt {
         const long v_id = ev_candidate.vertex_index;
         const int e0_id = m_assembler.m_edges(ev_candidate.edge_index, 0);
         const int e1_id = m_assembler.m_edges(ev_candidate.edge_index, 1);
-        int body_V_id, lv_id, body_E_id, le0_id, le1_id;
+        long body_V_id, lv_id, body_E_id, le0_id, le1_id;
 
-        m_assembler.global_to_local(v_id, body_V_id, lv_id);
-        m_assembler.global_to_local(e0_id, body_E_id, le0_id);
-        m_assembler.global_to_local(e1_id, body_E_id, le1_id);
+        m_assembler.global_to_local_vertex(v_id, body_V_id, lv_id);
+        m_assembler.global_to_local_vertex(e0_id, body_E_id, le0_id);
+        m_assembler.global_to_local_vertex(e1_id, body_E_id, le1_id);
         rbc.vertex_body_id = body_V_id;
         rbc.edge_body_id = body_E_id;
         rbc.vertex_local_id = lv_id;

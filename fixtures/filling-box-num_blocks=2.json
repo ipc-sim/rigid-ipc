@@ -5,7 +5,8 @@
     "distance_barrier_constraint": {
         "custom_initial_epsilon": 0.01,
         "detection_method": "hash_grid",
-        "active_constraint_scale": 1.01
+        "active_constraint_scale": 1.01,
+        "barrier_type": "poly_log"
     },
     "barrier_solver": {
         "min_barrier_epsilon": 0.0001

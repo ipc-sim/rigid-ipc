@@ -182,7 +182,7 @@ namespace geometry {
         Eigen::Vector3<T> line1_vec = line1_point1 - line1_point0;
         Eigen::Vector3<T> normal = (line0_vec).cross(line1_vec);
         T normal_norm = normal.norm();
-        if (normal_norm == 0) { // parallel lines
+        if (normal_norm <= 1e-30) { // parallel lines
             // TODO: Define a signed version of the point line distance
             return point_line_distance(
                 line0_point0, line1_point0, line1_point1);

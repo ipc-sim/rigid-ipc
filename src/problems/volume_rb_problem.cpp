@@ -31,7 +31,8 @@ namespace opt {
         return g_uk;
     }
 
-    void VolumeRBProblem::eval_g(const Eigen::VectorXd& sigma,
+    void VolumeRBProblem::eval_g(
+        const Eigen::VectorXd& sigma,
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
@@ -43,7 +44,8 @@ namespace opt {
         eval_jac_g_core(sigma, ee_impacts, g_uk_jacobian);
     }
 
-    void VolumeRBProblem::eval_g_normal(const Eigen::VectorXd& sigma,
+    void VolumeRBProblem::eval_g_normal(
+        const Eigen::VectorXd& sigma,
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
@@ -62,7 +64,8 @@ namespace opt {
         g_uk_jacobian = jac_g_uk * jac_xk_sigma;
     }
 
-    void VolumeRBProblem::eval_jac_g_core(const Eigen::VectorXd& sigma,
+    void VolumeRBProblem::eval_jac_g_core(
+        const Eigen::VectorXd& sigma,
         const EdgeEdgeImpacts& ee_impacts,
         Eigen::MatrixXd& jac_gx)
     {
@@ -75,17 +78,17 @@ namespace opt {
         for (size_t i = 0; i < ee_impacts.size(); ++i) {
             auto& ee_impact = ee_impacts[i];
 
-            Eigen::Vector2i e_ij
-                = m_assembler.m_edges.row(ee_impact.impacted_edge_index);
-            Eigen::Vector2i e_kl
-                = m_assembler.m_edges.row(ee_impact.impacting_edge_index);
-            int body_ij_id, body_kl_id, local_i_id, local_j_id, local_k_id,
+            Eigen::Vector2i e_ij =
+                m_assembler.m_edges.row(ee_impact.impacted_edge_index);
+            Eigen::Vector2i e_kl =
+                m_assembler.m_edges.row(ee_impact.impacting_edge_index);
+            long body_ij_id, body_kl_id, local_i_id, local_j_id, local_k_id,
                 local_l_id;
 
-            m_assembler.global_to_local(e_ij(0), body_ij_id, local_i_id);
-            m_assembler.global_to_local(e_ij(1), body_ij_id, local_j_id);
-            m_assembler.global_to_local(e_kl(0), body_kl_id, local_k_id);
-            m_assembler.global_to_local(e_kl(1), body_kl_id, local_l_id);
+            m_assembler.global_to_local_vertex(e_ij(0), body_ij_id, local_i_id);
+            m_assembler.global_to_local_vertex(e_ij(1), body_ij_id, local_j_id);
+            m_assembler.global_to_local_vertex(e_kl(0), body_kl_id, local_k_id);
+            m_assembler.global_to_local_vertex(e_kl(1), body_kl_id, local_l_id);
 
             Diff::D1Vector3d sigma_ij, sigma_kl;
             sigma_ij = Diff::d1vars(0, sigma.segment(3 * body_ij_id, 3));
@@ -150,8 +153,8 @@ namespace opt {
                 Diff::DDouble1>(v_i, v_j, v_c, u_i, u_j, u_c, toi);
             success = success
                 && ccd::autodiff::temporal_parameterization_to_spatial<
-                       Diff::DDouble1>(
-                       v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
+                          Diff::DDouble1>(
+                          v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
 
             Diff::D1Vector2d avg_u = (u_i + alpha_ij * (u_j - u_i) - u_k);
             Diff::DDouble1 avg_d = (avg_u).norm();
@@ -163,12 +166,12 @@ namespace opt {
 
             Diff::DDouble1 vol_ij(0), vol_kl(0);
             if (success) {
-                vol_ij
-                    = ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
+                vol_ij =
+                    ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
                         v_i, v_j, u_i, u_j, toi, alpha_ij,
                         constraint_.volume_epsilon);
-                vol_kl
-                    = ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
+                vol_kl =
+                    ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
                         v_k, v_l, u_k, u_l, toi, alpha_kl,
                         constraint_.volume_epsilon);
             }

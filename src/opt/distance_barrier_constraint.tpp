@@ -22,11 +22,7 @@ namespace opt {
     T DistanceBarrierConstraint::distance_barrier(
         const T distance, const double eps)
     {
-        if (use_log_barrier) {
-            return opt::poly_log_barrier<T>(distance - min_distance, eps);
-        } else {
-            return opt::spline_barrier<T>(distance - min_distance, eps);
-        }
+        return barrier(distance - min_distance, eps, barrier_type);
     }
 
     template <typename T>

@@ -138,7 +138,7 @@ bool SimState::init(const nlohmann::json& args_in)
            "min_distance":1e-10,
            "active_constraint_scale" : 1.5,
            "detection_method": "hash_grid",
-           "use_log_barrier": true
+           "barrier_type": "poly_log"
        },
        "volume_constraint":{
            "detection_method": "hash_grid",
@@ -162,7 +162,8 @@ bool SimState::init(const nlohmann::json& args_in)
                 valid = true;
             } else {
                 valid = false;
-                spdlog::error("Unknown key in json path={}",
+                spdlog::error(
+                    "Unknown key in json path={}",
                     op["path"].get<std::string>());
             }
         }
@@ -199,13 +200,13 @@ nlohmann::json SimState::get_active_config()
     active_args["scene_type"] = problem_ptr->name();
 
     active_args[problem_ptr->name()] = problem_ptr->settings();
-    active_args[problem_ptr->constraint().name()]
-        = problem_ptr->constraint().settings();
-    active_args[problem_ptr->solver().name()]
-        = problem_ptr->solver().settings();
+    active_args[problem_ptr->constraint().name()] =
+        problem_ptr->constraint().settings();
+    active_args[problem_ptr->solver().name()] =
+        problem_ptr->solver().settings();
     if (problem_ptr->solver().has_inner_solver()) {
-        active_args[problem_ptr->solver().inner_solver().name()]
-            = problem_ptr->solver().inner_solver().settings();
+        active_args[problem_ptr->solver().inner_solver().name()] =
+            problem_ptr->solver().inner_solver().settings();
     }
 
     return active_args;
@@ -275,12 +276,14 @@ bool SimState::solve_collision()
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 
     if (m_step_has_collision) {
-        spdlog::warn("sim_state action=solve_collisions sim_it={} "
-                     "status=linearized_collisions_unsolved",
+        spdlog::warn(
+            "sim_state action=solve_collisions sim_it={} "
+            "status=linearized_collisions_unsolved",
             m_num_simulation_steps);
     } else {
-        spdlog::debug("sim_state action=solve_collisions sim_it={} "
-                      "status=collisions_solved",
+        spdlog::debug(
+            "sim_state action=solve_collisions sim_it={} "
+            "status=collisions_solved",
             m_num_simulation_steps);
     }
     return m_step_has_collision;

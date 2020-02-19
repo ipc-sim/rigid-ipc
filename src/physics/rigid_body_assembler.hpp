@@ -57,10 +57,18 @@ namespace physics {
                 Pose<double>::dofs_to_poses(dof, dim()), grad);
         }
 
-        void global_to_local(
-            const int global_vertex_id,
-            int& rigid_body_id,
-            int& local_vertex_id);
+        void global_to_local_vertex(
+            const long global_vertex_id,
+            long& rigid_body_id,
+            long& local_vertex_id) const;
+        void global_to_local_edge(
+            const long global_edge_id,
+            long& rigid_body_id,
+            long& local_edge_id) const;
+        void global_to_local_face(
+            const long global_face_id,
+            long& rigid_body_id,
+            long& local_face_id) const;
 
         // Ridig Body CM Functions
         // --------------------------------------------------------------------
@@ -76,11 +84,24 @@ namespace physics {
 
         // --------------------------------------------------------------------
 
-        long num_vertices() const { return m_body_vertex_id.back(); }
-        long num_edges() const { return m_body_edge_id.back(); }
-        long num_faces() const { return m_body_face_id.back(); }
-        long num_bodies() const { return m_rbs.size(); }
-        int dim() const { return m_rbs.size() ? m_rbs[0].dim() : 0; }
+        inline long num_vertices() const { return m_body_vertex_id.back(); }
+        inline long num_edges() const { return m_body_edge_id.back(); }
+        inline long num_faces() const { return m_body_face_id.back(); }
+        inline long num_bodies() const { return m_rbs.size(); }
+        inline int dim() const { return m_rbs.size() ? m_rbs[0].dim() : 0; }
+
+        inline long vertex_id_to_body_id(long vi) const
+        {
+            return m_vertex_to_body_map(vi);
+        }
+        inline long edge_id_to_body_id(long ei) const
+        {
+            return m_vertex_to_body_map(m_edges(ei, 0));
+        }
+        inline long face_id_to_body_id(long fi) const
+        {
+            return m_vertex_to_body_map(m_edges(fi, 0));
+        }
 
         std::vector<RigidBody> m_rbs;
 

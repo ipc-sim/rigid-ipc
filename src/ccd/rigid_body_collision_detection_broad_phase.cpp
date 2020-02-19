@@ -1,4 +1,4 @@
-#include <ccd/rigid_body_collision_detection.hpp>
+#include "rigid_body_collision_detection.hpp"
 
 #include <ccd/rigid_body_hash_grid.hpp>
 #include <logger.hpp>

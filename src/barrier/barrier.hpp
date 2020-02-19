@@ -6,16 +6,33 @@
 
 #pragma once
 
+#include <array>
+
 #include <Eigen/Core>
 
 namespace ccd {
 namespace opt {
 
+    /// @brief Barrier functions to choose from.
+    enum BarrierType {
+        IPC,
+        POLY_LOG,
+        SPLINE,
+    };
+
+    /**
+     * @brief Function that grows to infinity as x approaches 0 from the right.
+     *
+     * @param x             The x value at which to evaluate.
+     * @param s             Activation value of the barrier.
+     * @param barrier_type  Barrier function type to use.
+     * @return The value of the barrier function at x.
+     */
+    template <typename T> T barrier(T x, double s, BarrierType barrier_type);
+
     template <typename T> T ipc_barrier(T d, double dhat);
 
     template <typename T> T poly_log_barrier(T x, double s);
-
-    double poly_log_barrier_gradient(double x, double s);
 
     /**
      * @brief Function that grows to infinity as x approaches 0 from the right.
@@ -36,6 +53,12 @@ namespace opt {
      * @return The value of the barrier function at x.
      */
     template <typename T> T spline_barrier(T x, double s);
+
+    double barrier_gradient(double x, double s, BarrierType barrier_type);
+
+    double ipc_barrier_gradient(double d, double dhat);
+
+    double poly_log_barrier_gradient(double x, double s);
 
     /**
      * @brief Derivative of the spline_barrier function with respect to x.

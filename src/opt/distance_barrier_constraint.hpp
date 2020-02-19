@@ -5,6 +5,7 @@
 #include <opt/collision_constraint.hpp>
 
 #include <autodiff/autodiff_types.hpp>
+#include <barrier/barrier.hpp>
 #include <ccd/collision_detection.hpp>
 #include <ccd/hash_grid.hpp>
 #include <utils/eigen_ext.hpp>
@@ -69,12 +70,13 @@ namespace opt {
 
         template <typename T>
         T distance_barrier(const T distance, const double eps);
-        double distance_barrier_grad(const double distance, const double eps);
 
         template <typename T> T distance_barrier(const T distance)
         {
             return distance_barrier(distance, m_barrier_epsilon);
         }
+
+        double distance_barrier_grad(const double distance, const double eps);
 
         double distance_barrier_grad(const double distance)
         {
@@ -108,7 +110,7 @@ namespace opt {
         double active_constraint_scale;
 
     protected:
-        bool use_log_barrier;
+        BarrierType barrier_type;
         double m_barrier_epsilon;
     };
 

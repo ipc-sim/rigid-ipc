@@ -1,4 +1,4 @@
-#include <ccd/rigid_body_collision_detection.hpp>
+#include "rigid_body_collision_detection.hpp"
 
 #include <ccd/rigid_body_time_of_impact.hpp>
 #include <profiler.hpp>
@@ -60,26 +60,21 @@ void detect_edge_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
     const std::vector<physics::Pose<double>>& poses,
     const std::vector<physics::Pose<double>>& displacements,
-    const EdgeVertexCandidate& ev_candidate,
-    EdgeVertexImpacts& ev_impacts)
+    const EdgeVertexCandidate& candidate,
+    EdgeVertexImpacts& impacts)
 {
-    long bodyA_id = bodies.m_vertex_to_body_map(ev_candidate.vertex_index);
-    const physics::RigidBody& bodyA = bodies.m_rbs[bodyA_id];
-    long vertex_id =
-        ev_candidate.vertex_index - bodies.m_body_vertex_id[bodyA_id];
-
-    long bodyB_id = bodies.m_vertex_to_body_map(ev_candidate.vertex_index);
-    const physics::RigidBody& bodyB = bodies.m_rbs[bodyB_id];
-    long edge_id = ev_candidate.edge_index - bodies.m_body_edge_id[bodyB_id];
+    long bodyA_id, vertex_id, bodyB_id, edge_id;
+    bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
+    bodies.global_to_local_edge(candidate.edge_index, bodyB_id, edge_id);
 
     double toi;
     bool are_colliding = compute_edge_vertex_time_of_impact(
-        bodyA, poses[bodyA_id], displacements[bodyA_id], vertex_id, bodyB,
-        poses[bodyB_id], displacements[bodyB_id], edge_id, toi);
+        bodies.m_rbs[bodyA_id], poses[bodyA_id], displacements[bodyA_id],
+        vertex_id, bodies.m_rbs[bodyB_id], poses[bodyB_id],
+        displacements[bodyB_id], edge_id, toi);
     if (are_colliding) {
-        ev_impacts.emplace_back(
-            toi, ev_candidate.edge_index, /*alpha=*/-1,
-            ev_candidate.vertex_index);
+        impacts.emplace_back(
+            toi, candidate.edge_index, /*alpha=*/-1, candidate.vertex_index);
     }
 }
 
@@ -87,22 +82,46 @@ void detect_edge_edge_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
     const std::vector<physics::Pose<double>>& poses,
     const std::vector<physics::Pose<double>>& displacements,
-    const EdgeEdgeCandidate& ee_candidate,
-    EdgeEdgeImpacts& ee_impacts)
+    const EdgeEdgeCandidate& candidate,
+    EdgeEdgeImpacts& impacts)
 {
-    throw NotImplementedError(
-        "Edge-edge collisions not implemented for rigid bodies!");
+    long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
+    bodies.global_to_local_edge(candidate.edge0_index, bodyA_id, edgeA_id);
+    bodies.global_to_local_edge(candidate.edge1_index, bodyB_id, edgeB_id);
+
+    double toi;
+    bool are_colliding = compute_edge_edge_time_of_impact(
+        bodies.m_rbs[bodyA_id], poses[bodyA_id], displacements[bodyA_id],
+        edgeA_id, bodies.m_rbs[bodyB_id], poses[bodyB_id],
+        displacements[bodyB_id], edgeB_id, toi);
+    if (are_colliding) {
+        impacts.emplace_back(
+            toi, candidate.edge0_index, /*impacted_alpha=*/-1,
+            candidate.edge1_index, /*impacting_alpha=*/-1);
+    }
 }
 
 void detect_face_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
     const std::vector<physics::Pose<double>>& poses,
     const std::vector<physics::Pose<double>>& displacements,
-    const FaceVertexCandidate& fv_candidate,
-    FaceVertexImpacts& fv_impacts)
+    const FaceVertexCandidate& candidate,
+    FaceVertexImpacts& impacts)
 {
-    throw NotImplementedError(
-        "Face-vertex collisions not implemented for rigid bodies!");
+    long bodyA_id, vertex_id, bodyB_id, face_id;
+    bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
+    bodies.global_to_local_face(candidate.face_index, bodyB_id, face_id);
+
+    double toi;
+    bool are_colliding = compute_edge_edge_time_of_impact(
+        bodies.m_rbs[bodyA_id], poses[bodyA_id], displacements[bodyA_id],
+        vertex_id, bodies.m_rbs[bodyB_id], poses[bodyB_id],
+        displacements[bodyB_id], face_id, toi);
+    if (are_colliding) {
+        impacts.emplace_back(
+            toi, candidate.face_index, /*u=*/-1, /*v=*/-1,
+            candidate.vertex_index);
+    }
 }
 
 } // namespace ccd

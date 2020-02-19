@@ -27,9 +27,6 @@ namespace CollisionType {
     static const int FACE_VERTEX = 4;
 } // namespace CollisionType
 
-static const char* DetectionMethodNames[] = { "DetectionMethod::HASH_GRID",
-                                              "HASH_GRID" };
-
 /**
  * @brief Find all collisions in one time step.
  *

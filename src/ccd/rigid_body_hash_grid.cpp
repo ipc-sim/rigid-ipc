@@ -1,5 +1,5 @@
 // A spatial hash grid for rigid bodies with angular trajectories.
-#include <ccd/rigid_body_hash_grid.hpp>
+#include "rigid_body_hash_grid.hpp"
 
 #include <ccd/interval.hpp>
 
