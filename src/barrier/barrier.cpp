@@ -25,6 +25,10 @@ namespace opt {
             return poly_log_barrier_gradient(x, s);
         case BarrierType::SPLINE:
             return spline_barrier_gradient(x, s);
+        default:
+            throw NotImplementedError(
+                fmt::format("Invalid barrier type: {:d}", int(barrier_type))
+                    .c_str());
         }
     }
 
