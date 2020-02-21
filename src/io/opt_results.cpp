@@ -3,12 +3,11 @@
 #include <fstream>
 #include <iomanip> // std::setw
 
-#include <io/write_scene.hpp>
-
 namespace ccd {
 namespace io {
 
-    void write_opt_results(const std::string fname,
+    void write_opt_results(
+        const std::string fname,
         const ccd::opt::OptimizationResults& results,
         const std::vector<Eigen::MatrixX2d>& u_history,
         const std::vector<double>& f_history,
@@ -20,10 +19,12 @@ namespace io {
         igl::serialize(g_history, "g_history", fname.c_str());
     }
 
-    void read_opt_results(const std::string fname,
+    void read_opt_results(
+        const std::string fname,
         ccd::opt::OptimizationResults& results,
         std::vector<Eigen::MatrixX2d>& u_history,
-        std::vector<double>& f_history, std::vector<double>& g_history)
+        std::vector<double>& f_history,
+        std::vector<double>& g_history)
     {
         igl::deserialize(results, "results", fname.c_str());
         igl::deserialize(u_history, "u_history", fname.c_str());

@@ -53,8 +53,6 @@ add_library(${PROJECT_NAME}
     src/ccd/rigid_body_collision_detection_narrow_phase.cpp
     src/ccd/rigid_body_collision_detection_broad_phase.cpp
 
-    src/io/read_scene.cpp
-    src/io/write_scene.cpp
     src/io/opt_results.cpp
     src/io/serialize_json.cpp
     src/io/read_rb_scene.cpp

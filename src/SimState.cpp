@@ -21,7 +21,6 @@ SimState::SimState()
     , m_solve_collisions(true)
     , m_max_simulation_steps(-1)
     , m_dirty_constraints(false)
-
 {
 }
 
@@ -85,15 +84,6 @@ bool SimState::init(const nlohmann::json& args_in)
               "gravity":[0.0,0.0,0.0],
               "collision_eps": 0.0
          },
-        "particles_problem":{
-            "vertices":[],
-            "edges":[],
-            "velocities":[],
-            "x_fixed":[],
-            "y_fixed":[],
-            "gravity":[0.0,0.0],
-            "collision_eps": 0.0
-         },
         "barrier_solver": {
             "inner_solver": "newton_solver",
             "min_barrier_epsilon":"DEPRECATED",
@@ -114,11 +104,6 @@ bool SimState::init(const nlohmann::json& args_in)
            "min_step_length": "DEPRECATED",
            "max_iterations": 3000
         },
-        "bfgs_solver":{
-            "absolute_tolerance": 1e-5,
-            "min_step_length": 1e-12,
-            "max_iterations": 3000
-        },
         "ncp_solver":{
             "max_iterations": 1000,
             "do_line_search": false,
@@ -127,13 +112,7 @@ bool SimState::init(const nlohmann::json& args_in)
             "update_type": "linearized",
             "lcp_solver": "lcp_gauss_seidel"
         },
-        "time_barrier_constraint":{
-            "initial_epsilon":"min_toi",
-            "custom_initial_epsilon":1.0,
-            "detection_method": "hash_grid",
-            "custom_hashgrid_cellsize":-1
-        },
-       "distance_barrier_constraint":{
+        "distance_barrier_constraint":{
            "custom_initial_epsilon":0.5,
            "min_distance":1e-10,
            "active_constraint_scale" : 1.5,
@@ -146,8 +125,8 @@ bool SimState::init(const nlohmann::json& args_in)
            "custom_hashgrid_cellsize":-1,
            "time_epsilon":1e-4
        },
-        "timestep_size": 0.1,
-        "viewport_bbox": {"min":[0,0],"max":[0,0]}
+       "timestep_size": 0.1,
+       "viewport_bbox": {"min":[0,0],"max":[0,0]}
     })"_json;
     // clang-format on
 
@@ -325,4 +304,5 @@ void SimState::save_simulation(const std::string& filename)
     std::ofstream o(filename);
     o << std::setw(4) << results << std::endl;
 }
+
 } // namespace ccd

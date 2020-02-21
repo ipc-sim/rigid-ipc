@@ -1,9 +1,11 @@
 #pragma once
 #include "barrier.hpp"
-#include <autodiff/autodiff.h>
-#include <utils/not_implemented_error.hpp>
-namespace ccd {
 
+#include <fmt/format.h>
+
+#include <utils/not_implemented_error.hpp>
+
+namespace ccd {
 namespace opt {
 
     template <typename T> T barrier(T x, double s, BarrierType barrier_type)
@@ -15,6 +17,10 @@ namespace opt {
             return poly_log_barrier(x, s);
         case BarrierType::SPLINE:
             return spline_barrier(x, s);
+        default:
+            throw NotImplementedError(
+                fmt::format("Invalid barrier type: {:d}", int(barrier_type))
+                    .c_str());
         }
     }
 

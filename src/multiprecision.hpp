@@ -3,27 +3,25 @@
 #if 1
 namespace ccd {
 
-class Multiprecision
-{
+class Multiprecision {
 private:
     double _var;
-public:
-    Multiprecision(const double var=0, int dummy=0)
-        : _var(var)
-    {}
 
-    operator double ()
+public:
+    Multiprecision(const double var = 0, int dummy = 0)
+        : _var(var)
     {
-        return _var;
     }
 
-    Multiprecision& operator = (const double& var)
+    operator double() { return _var; }
+
+    Multiprecision& operator=(const double& var)
     {
         _var = var;
         return *this;
     }
 };
-}
+} // namespace ccd
 #else
 #include <cmath>
 #include <gmp.h>
@@ -80,32 +78,32 @@ public:
 
     ~Multiprecision() { mpf_clear(value); }
 
-    friend Multiprecision operator+(
-        const Multiprecision& x, const Multiprecision& y)
+    friend Multiprecision
+    operator+(const Multiprecision& x, const Multiprecision& y)
     {
         static Multiprecision r_out;
         mpf_add(r_out.value, x.value, y.value);
         return r_out;
     }
 
-    friend Multiprecision operator-(
-        const Multiprecision& x, const Multiprecision& y)
+    friend Multiprecision
+    operator-(const Multiprecision& x, const Multiprecision& y)
     {
         static Multiprecision r_out;
         mpf_sub(r_out.value, x.value, y.value);
         return r_out;
     }
 
-    friend Multiprecision operator*(
-        const Multiprecision& x, const Multiprecision& y)
+    friend Multiprecision
+    operator*(const Multiprecision& x, const Multiprecision& y)
     {
         static Multiprecision r_out;
         mpf_mul(r_out.value, x.value, y.value);
         return r_out;
     }
 
-    friend Multiprecision operator/(
-        const Multiprecision& x, const Multiprecision& y)
+    friend Multiprecision
+    operator/(const Multiprecision& x, const Multiprecision& y)
     {
         static Multiprecision r_out;
         mpf_div(r_out.value, x.value, y.value);
@@ -182,7 +180,6 @@ public:
 
         return res;
     }
-
 };
 } // namespace ccd
 #endif

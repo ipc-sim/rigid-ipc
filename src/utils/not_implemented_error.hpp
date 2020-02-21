@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <string>
 
 namespace ccd {
 
@@ -15,6 +16,15 @@ public:
     NotImplementedError(
         const char* error_message = "Functionality not yet implemented!")
         : std::logic_error(error_message) {};
+
+    /**
+     * Create a not implemented error.
+     *
+     * @param error_message Message describing what has not been implmented.
+     */
+    NotImplementedError(
+        const std::string error_message = "Functionality not yet implemented!")
+        : std::logic_error(error_message) {};
 };
 
 class DeprecatedError : public std::logic_error {
@@ -25,7 +35,18 @@ public:
      * @param error_message Message describing what has not been implmented.
      */
     DeprecatedError(
-        const char* error_message = "Functionality deprecated. Do not use this function!")
+        const char* error_message =
+            "Functionality deprecated. Do not use this function!")
+        : std::logic_error(error_message) {};
+
+    /**
+     * Create a not implemented error.
+     *
+     * @param error_message Message describing what has not been implmented.
+     */
+    DeprecatedError(
+        const std::string error_message =
+            "Functionality deprecated. Do not use this function!")
         : std::logic_error(error_message) {};
 };
 
