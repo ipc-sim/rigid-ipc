@@ -4,29 +4,23 @@
 
 namespace ccd {
 
-bool Candidate::operator==(const Candidate& other) const
-{
-    return this->get_index0() == other.get_index0()
-        && this->get_index1() == other.get_index1();
-}
-
-bool Candidate::operator<(const Candidate& other) const
-{
-    if (this->get_index0() == other.get_index0()) {
-        return this->get_index1() < other.get_index1();
-    }
-    return this->get_index0() < other.get_index0();
-}
-
-std::string Candidate::string() const
-{
-    return fmt::format("({:d}, {:d})", this->get_index0(), this->get_index1());
-}
-
 EdgeVertexCandidate::EdgeVertexCandidate(long edge_index, long vertex_index)
     : edge_index(edge_index)
     , vertex_index(vertex_index)
 {
+}
+
+bool EdgeVertexCandidate::operator==(const EdgeVertexCandidate& other) const
+{
+    return edge_index == other.edge_index && vertex_index == other.vertex_index;
+}
+
+bool EdgeVertexCandidate::operator<(const EdgeVertexCandidate& other) const
+{
+    if (edge_index == other.edge_index) {
+        return vertex_index < other.vertex_index;
+    }
+    return edge_index < other.edge_index;
 }
 
 EdgeEdgeCandidate::EdgeEdgeCandidate(long edge0_index, long edge1_index)
@@ -59,6 +53,19 @@ FaceVertexCandidate::FaceVertexCandidate(long face_index, long vertex_index)
     : face_index(face_index)
     , vertex_index(vertex_index)
 {
+}
+
+bool FaceVertexCandidate::operator==(const FaceVertexCandidate& other) const
+{
+    return face_index == other.face_index && vertex_index == other.vertex_index;
+}
+
+bool FaceVertexCandidate::operator<(const FaceVertexCandidate& other) const
+{
+    if (face_index == other.face_index) {
+        return vertex_index < other.vertex_index;
+    }
+    return face_index < other.face_index;
 }
 
 } // namespace ccd

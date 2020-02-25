@@ -1,69 +1,83 @@
 #pragma once
 
 #include <string>
+// #include <tbb/concurrent_vector.h>
 #include <vector>
 
 namespace ccd {
 
-class Candidate {
-public:
-    virtual ~Candidate() = default;
+struct EdgeVertexCandidate {
+    EdgeVertexCandidate(long edge_index, long vertex_index);
 
-    virtual bool operator==(const Candidate& other) const;
+    bool operator==(const EdgeVertexCandidate& other) const;
 
     /// @brief Compare EdgeVertexCandidates for sorting.
-    virtual bool operator<(const Candidate& other) const;
-
-    virtual std::string string() const;
-
-protected:
-    virtual inline int get_index0() const = 0;
-    virtual inline int get_index1() const = 0;
-};
-
-class EdgeVertexCandidate : public Candidate {
-public:
-    EdgeVertexCandidate(long edge_index, long vertex_index);
+    bool operator<(const EdgeVertexCandidate& other) const;
 
     long edge_index;
     long vertex_index;
-
-protected:
-    virtual inline int get_index0() const override { return edge_index; };
-    virtual inline int get_index1() const override { return vertex_index; };
 };
 
-class EdgeEdgeCandidate : public Candidate {
-public:
+struct EdgeEdgeCandidate {
     EdgeEdgeCandidate(long edge0_index, long edge1_index);
 
-    virtual bool operator==(const EdgeEdgeCandidate& other) const;
+    bool operator==(const EdgeEdgeCandidate& other) const;
 
-    /// @brief Compare EdgeVertexCandidates for sorting.
-    virtual bool operator<(const EdgeEdgeCandidate& other) const;
+    /// @brief Compare EdgeEdgeCandidates for sorting.
+    bool operator<(const EdgeEdgeCandidate& other) const;
 
     long edge0_index;
     long edge1_index;
-
-protected:
-    virtual inline int get_index0() const override { return edge0_index; };
-    virtual inline int get_index1() const override { return edge1_index; };
 };
 
-class FaceVertexCandidate : public Candidate {
-public:
+struct FaceVertexCandidate {
     FaceVertexCandidate(long face_index, long vertex_index);
+
+    bool operator==(const FaceVertexCandidate& other) const;
+
+    /// @brief Compare EdgeEdgeCandidates for sorting.
+    bool operator<(const FaceVertexCandidate& other) const;
 
     long face_index;
     long vertex_index;
-
-protected:
-    virtual inline int get_index0() const override { return face_index; };
-    virtual inline int get_index1() const override { return vertex_index; };
 };
 
-typedef std::vector<EdgeVertexCandidate> EdgeVertexCandidates;
-typedef std::vector<EdgeEdgeCandidate> EdgeEdgeCandidates;
-typedef std::vector<FaceVertexCandidate> FaceVertexCandidates;
+struct Candidates {
+    std::vector<EdgeVertexCandidate> ev_candidates;
+    std::vector<EdgeEdgeCandidate> ee_candidates;
+    std::vector<FaceVertexCandidate> fv_candidates;
+
+    size_t size() const
+    {
+        return ev_candidates.size() + ee_candidates.size()
+            + fv_candidates.size();
+    }
+
+    void clear()
+    {
+        ev_candidates.clear();
+        ee_candidates.clear();
+        fv_candidates.clear();
+    }
+};
+
+// struct ConcurrentCandidates {
+//     tbb::concurrent_vector<EdgeVertexCandidate> ev_candidates;
+//     tbb::concurrent_vector<EdgeEdgeCandidate> ee_candidates;
+//     tbb::concurrent_vector<FaceVertexCandidate> fv_candidates;
+//
+//     size_t size() const
+//     {
+//         return ev_candidates.size() + ee_candidates.size()
+//             + fv_candidates.size();
+//     }
+//
+//     void clear()
+//     {
+//         ev_candidates.clear();
+//         ee_candidates.clear();
+//         fv_candidates.clear();
+//     }
+// };
 
 } // namespace ccd

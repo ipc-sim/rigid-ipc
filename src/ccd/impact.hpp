@@ -19,9 +19,6 @@ struct EdgeVertexImpact {
     bool operator==(const EdgeVertexImpact& other) const;
 };
 
-/// @brief A vector of edge-vertex impact pointers.
-typedef tbb::concurrent_vector<EdgeVertexImpact> EdgeVertexImpacts;
-
 /// @brief Data structure representing an impact of an edge and edge.
 struct EdgeEdgeImpact {
     double time;              ///< @brief Time of impact
@@ -45,9 +42,6 @@ struct EdgeEdgeImpact {
     bool operator==(const EdgeEdgeImpact& other) const;
 };
 
-/// @brief A vector of edge-edge impact pointers.
-typedef tbb::concurrent_vector<EdgeEdgeImpact> EdgeEdgeImpacts;
-
 /// @brief Data structure representing an impact of an vertex and face.
 struct FaceVertexImpact {
     double time;     ///< @brief Time of impact
@@ -65,8 +59,41 @@ struct FaceVertexImpact {
     bool operator==(const FaceVertexImpact& other) const;
 };
 
-/// A vector of edge-edge impact pointers.
-typedef tbb::concurrent_vector<FaceVertexImpact> FaceVertexImpacts;
+// struct Impacts {
+//     std::vector<EdgeVertexImpact> ev_impacts;
+//     std::vector<EdgeEdgeImpact> ee_impacts;
+//     std::vector<FaceVertexImpact> fv_impacts;
+//
+//     size_t size() const
+//     {
+//         return ev_impacts.size() + ee_impacts.size() + fv_impacts.size();
+//     }
+//
+//     void clear()
+//     {
+//         ev_impacts.clear();
+//         ee_impacts.clear();
+//         fv_impacts.clear();
+//     }
+// };
+
+struct ConcurrentImpacts {
+    tbb::concurrent_vector<EdgeVertexImpact> ev_impacts;
+    tbb::concurrent_vector<EdgeEdgeImpact> ee_impacts;
+    tbb::concurrent_vector<FaceVertexImpact> fv_impacts;
+
+    size_t size() const
+    {
+        return ev_impacts.size() + ee_impacts.size() + fv_impacts.size();
+    }
+
+    void clear()
+    {
+        ev_impacts.clear();
+        ee_impacts.clear();
+        fv_impacts.clear();
+    }
+};
 
 /**
  * @brief Compare two impacts to determine if impact0 comes before impact1.
@@ -94,8 +121,8 @@ bool compare_impacts_by_time(Impact impact1, Impact impact2);
  */
 void convert_edge_vertex_to_edge_edge_impacts(
     const Eigen::MatrixX2i& edges,
-    const EdgeVertexImpacts& ev_impacts,
-    EdgeEdgeImpacts& ee_impacts);
+    const std::vector<EdgeVertexImpact>& ev_impacts,
+    std::vector<EdgeEdgeImpact>& ee_impacts);
 
 /**
  * @brief Convert all edge-edge impacts to correspoding edge-vertex impacts.
@@ -111,8 +138,8 @@ void convert_edge_vertex_to_edge_edge_impacts(
  */
 void convert_edge_edge_to_edge_vertex_impacts(
     const Eigen::MatrixX2i& edges,
-    const EdgeEdgeImpacts& ee_impacts,
-    EdgeVertexImpacts& ev_impacts);
+    const std::vector<EdgeEdgeImpact>& ee_impacts,
+    std::vector<EdgeVertexImpact>& ev_impacts);
 
 } // namespace ccd
 

@@ -4,8 +4,12 @@
 
 #include "collision_detection.hpp"
 
+#include <cmath>
+
 // Ettien Vouga's CCD using a root finder in floating points
 #include <CTCD.h>
+#include <igl/barycentric_coordinates.h>
+
 #include <ccd/time_of_impact.hpp>
 #include <profiler.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -17,12 +21,8 @@ void detect_collisions_from_candidates(
     const Eigen::MatrixXd& displacements,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
-    const EdgeVertexCandidates& ev_candidates,
-    const EdgeEdgeCandidates& ee_candidates,
-    const FaceVertexCandidates& fv_candidates,
-    EdgeVertexImpacts& ev_impacts,
-    EdgeEdgeImpacts& ee_impacts,
-    FaceVertexImpacts& fv_impacts)
+    const Candidates& candidates,
+    ConcurrentImpacts& impacts)
 {
     PROFILE_POINT("collisions_detection");
     NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
@@ -30,54 +30,84 @@ void detect_collisions_from_candidates(
     PROFILE_START();
     PROFILE_START(NARROW_PHASE);
 
+    auto detect_ev_collisions = [&](const EdgeVertexCandidate& ev_candidate) {
+        long ei = ev_candidate.edge_index, vi = ev_candidate.vertex_index;
+        double toi, alpha;
+        bool is_impacting = detect_edge_vertex_collisions_narrow_phase(
+            // Edge at t=0
+            vertices.row(edges(ei, 0)), vertices.row(edges(ei, 1)),
+            // Vertex at t=0
+            vertices.row(vi),
+            // Edge displacement (TODO: Convert this to edge at t=1)
+            displacements.row(edges(ei, 0)), displacements.row(edges(ei, 1)),
+            // Vertex displacement (TODO: Convert this to vertex at t=1)
+            displacements.row(vi),
+            // Output parameters
+            toi, alpha);
+        // Add the impact if the candidate is impacting
+        if (is_impacting) {
+            impacts.ev_impacts.emplace_back(toi, ei, alpha, vi);
+        }
+    };
+
+    auto detect_ee_collisions = [&](const EdgeEdgeCandidate& ee_candidate) {
+        long e0i = ee_candidate.edge0_index, e1i = ee_candidate.edge1_index;
+        double toi, alpha0, alpha1;
+        bool is_impacting = detect_edge_edge_collisions_narrow_phase(
+            // Edge 0 at t=0
+            vertices.row(edges(e0i, 0)), vertices.row(edges(e0i, 1)),
+            // Edge 1 at t=0
+            vertices.row(edges(e1i, 0)), vertices.row(edges(e1i, 1)),
+            // Edge 0 displacement (TODO: Convert this to edge at t=1)
+            displacements.row(edges(e0i, 0)), displacements.row(edges(e0i, 1)),
+            // Edge 1 displacement (TODO: Convert this to edge at t=1)
+            displacements.row(edges(e1i, 0)), displacements.row(edges(e1i, 1)),
+            // Output parameters
+            toi, alpha0, alpha1);
+        // Add the impact if the candidate is impacting
+        if (is_impacting) {
+            impacts.ee_impacts.emplace_back(toi, e0i, alpha0, e1i, alpha1);
+        }
+    };
+
+    auto detect_fv_collisions = [&](const FaceVertexCandidate& fv_candidate) {
+        long fi = fv_candidate.face_index, vi = fv_candidate.vertex_index;
+        double toi, u, v;
+        bool is_impacting = detect_face_vertex_collisions_narrow_phase(
+            // Face at t = 1
+            vertices.row(faces(fi, 0)), vertices.row(faces(fi, 1)),
+            vertices.row(faces(fi, 2)),
+            // Vertex at t = 1
+            vertices.row(fv_candidate.vertex_index),
+            // Face displacement
+            displacements.row(faces(fi, 0)), displacements.row(faces(fi, 1)),
+            displacements.row(faces(fi, 2)),
+            // Vertex displacement
+            displacements.row(fv_candidate.vertex_index),
+            // Output parameters
+            toi, u, v);
+        if (is_impacting) {
+            impacts.fv_impacts.emplace_back(toi, fi, u, v, vi);
+        }
+    };
+
     tbb::parallel_invoke(
         [&] {
-            ev_impacts.clear();
+            impacts.ev_impacts.clear();
             tbb::parallel_for_each(
-                ev_candidates, [&](const EdgeVertexCandidate& ev_candidate) {
-                    detect_edge_vertex_collisions_narrow_phase(
-                        vertices.row(edges(ev_candidate.edge_index, 0)),
-                        vertices.row(edges(ev_candidate.edge_index, 1)),
-                        vertices.row(ev_candidate.vertex_index),
-                        displacements.row(edges(ev_candidate.edge_index, 0)),
-                        displacements.row(edges(ev_candidate.edge_index, 1)),
-                        displacements.row(ev_candidate.vertex_index),
-                        ev_candidate, ev_impacts);
-                });
+                candidates.ev_candidates, detect_ev_collisions);
         },
 
         [&] {
-            ee_impacts.clear();
+            impacts.ee_impacts.clear();
             tbb::parallel_for_each(
-                ee_candidates, [&](const EdgeEdgeCandidate& ee_candidate) {
-                    detect_edge_edge_collisions_narrow_phase(
-                        vertices.row(edges(ee_candidate.edge0_index, 0)),
-                        vertices.row(edges(ee_candidate.edge0_index, 1)),
-                        vertices.row(edges(ee_candidate.edge1_index, 0)),
-                        vertices.row(edges(ee_candidate.edge1_index, 1)),
-                        displacements.row(edges(ee_candidate.edge0_index, 0)),
-                        displacements.row(edges(ee_candidate.edge0_index, 1)),
-                        displacements.row(edges(ee_candidate.edge1_index, 0)),
-                        displacements.row(edges(ee_candidate.edge1_index, 1)),
-                        ee_candidate, ee_impacts);
-                });
+                candidates.ee_candidates, detect_ee_collisions);
         },
 
         [&] {
-            fv_impacts.clear();
+            impacts.fv_impacts.clear();
             tbb::parallel_for_each(
-                fv_candidates, [&](const FaceVertexCandidate& fv_candidate) {
-                    detect_face_vertex_collisions_narrow_phase(
-                        vertices.row(faces(fv_candidate.face_index, 0)),
-                        vertices.row(faces(fv_candidate.face_index, 1)),
-                        vertices.row(faces(fv_candidate.face_index, 2)),
-                        vertices.row(fv_candidate.vertex_index),
-                        displacements.row(faces(fv_candidate.face_index, 0)),
-                        displacements.row(faces(fv_candidate.face_index, 1)),
-                        displacements.row(faces(fv_candidate.face_index, 2)),
-                        displacements.row(fv_candidate.vertex_index),
-                        fv_candidate, fv_impacts);
-                });
+                candidates.fv_candidates, detect_fv_collisions);
         });
 
     PROFILE_END(NARROW_PHASE);
@@ -85,74 +115,74 @@ void detect_collisions_from_candidates(
 }
 
 // Determine if a single edge-vertext pair intersects.
-void detect_edge_vertex_collisions_narrow_phase(
+bool detect_edge_vertex_collisions_narrow_phase(
     const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj,
     const Eigen::Vector2d& Vk,
     const Eigen::Vector2d& Ui,
     const Eigen::Vector2d& Uj,
     const Eigen::Vector2d& Uk,
-    const EdgeVertexCandidate& ev_candidate,
-    EdgeVertexImpacts& ev_impacts)
+    double& toi,
+    double& alpha)
 {
-    double toi, alpha;
-
-    bool are_colliding = ccd::autodiff::compute_edge_vertex_time_of_impact(
+    return ccd::autodiff::compute_edge_vertex_time_of_impact(
         Vi, Vj, Vk, Ui, Uj, Uk, toi, alpha);
-    if (are_colliding) {
-        ev_impacts.emplace_back(
-            toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index);
-    }
 }
 
-void detect_edge_edge_collisions_narrow_phase(
-    const Eigen::VectorXd& Vi,
-    const Eigen::VectorXd& Vj,
-    const Eigen::VectorXd& Vk,
-    const Eigen::VectorXd& Vl,
-    const Eigen::VectorXd& Ui,
-    const Eigen::VectorXd& Uj,
-    const Eigen::VectorXd& Uk,
-    const Eigen::VectorXd& Ul,
-    const EdgeEdgeCandidate& ee_candidate,
-    EdgeEdgeImpacts& ee_impacts)
+bool detect_edge_edge_collisions_narrow_phase(
+    const Eigen::Vector3d& Vi,
+    const Eigen::Vector3d& Vj,
+    const Eigen::Vector3d& Vk,
+    const Eigen::Vector3d& Vl,
+    const Eigen::Vector3d& Ui,
+    const Eigen::Vector3d& Uj,
+    const Eigen::Vector3d& Uk,
+    const Eigen::Vector3d& Ul,
+    double& toi,
+    double& edge0_alpha,
+    double& edge1_alpha)
 {
-    double toi;
-
+    // TODO: Check if edges are parallel
     bool are_colliding = CTCD::edgeEdgeCTCD(
-        Vi.head<3>(), Vj.head<3>(), Vk.head<3>(), Vl.head<3>(),
-        Vi.head<3>() + Ui.head<3>(), Vj.head<3>() + Uj.head<3>(),
-        Vk.head<3>() + Uk.head<3>(), Vl.head<3>() + Ul.head<3>(), /*eta=*/0,
-        toi);
+        Vi, Vj, Vk, Vl, Vi + Ui, Vj + Uj, Vk + Uk, Vl + Ul, /*eta=*/0, toi);
     if (are_colliding) {
-        ee_impacts.emplace_back(
-            toi, ee_candidate.edge0_index, -1, ee_candidate.edge1_index, -1);
+        edge0_alpha = -1; // TODO: Compute this correctly
+        edge1_alpha = -1; // TODO: Compute this correctly
     }
+    return are_colliding;
 }
 
-void detect_face_vertex_collisions_narrow_phase(
-    const Eigen::VectorXd& Vi,
-    const Eigen::VectorXd& Vj,
-    const Eigen::VectorXd& Vk,
-    const Eigen::VectorXd& Vl,
-    const Eigen::VectorXd& Ui,
-    const Eigen::VectorXd& Uj,
-    const Eigen::VectorXd& Uk,
-    const Eigen::VectorXd& Ul,
-    const FaceVertexCandidate& fv_candidate,
-    FaceVertexImpacts& fv_impacts)
+bool detect_face_vertex_collisions_narrow_phase(
+    const Eigen::Vector3d& Vi,
+    const Eigen::Vector3d& Vj,
+    const Eigen::Vector3d& Vk,
+    const Eigen::Vector3d& Vl,
+    const Eigen::Vector3d& Ui,
+    const Eigen::Vector3d& Uj,
+    const Eigen::Vector3d& Uk,
+    const Eigen::Vector3d& Ul,
+    double& toi,
+    double& u,
+    double& v)
 {
-    double toi;
-
     bool are_colliding = CTCD::vertexFaceCTCD(
-        Vl.head<3>(), Vi.head<3>(), Vj.head<3>(), Vk.head<3>(),
-        Vl.head<3>() + Ul.head<3>(), Vi.head<3>() + Ui.head<3>(),
-        Vj.head<3>() + Uj.head<3>(), Vk.head<3>() + Uk.head<3>(), /*eta=*/0,
-        toi);
+        Vl, Vi, Vj, Vk, Vl + Ul, Vi + Ui, Vj + Uj, Vk + Uk, /*eta=*/0, toi);
     if (are_colliding) {
-        fv_impacts.emplace_back(
-            toi, fv_candidate.face_index, -1, fv_candidate.vertex_index, -1);
+        // TODO: Consider moving this computation to an as needed basis
+        Eigen::MatrixXd coords;
+        igl::barycentric_coordinates(
+            (Vl + Ul * toi).transpose(), // vertex position at time of impact
+            // first face vertex's position at time of impact
+            (Vi + Ui * toi).transpose(),
+            // second face vertex's position at time of impact
+            (Vj + Uj * toi).transpose(),
+            // third face vertex's position at time of impact
+            (Vk + Uk * toi).transpose(), coords);
+        u = coords(0);
+        v = coords(1);
+        assert(u + v + coords(2) == 1);
     }
+    return are_colliding;
 }
 
 } // namespace ccd

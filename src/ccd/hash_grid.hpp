@@ -75,6 +75,7 @@ public:
     }
 };
 
+// TODO: This may be less efficient than a std::vector
 typedef tbb::concurrent_vector<HashItem> HashItems;
 
 class HashGrid {
@@ -138,19 +139,19 @@ public:
     void getVertexEdgePairs(
         const Eigen::MatrixXi& edges,
         const Eigen::VectorXi& group_ids,
-        EdgeVertexCandidates& ev_candidates);
+        std::vector<EdgeVertexCandidate>& ev_candidates);
 
     /// @brief Compute the candidate edge-edge candidate collisions.
     void getEdgeEdgePairs(
         const Eigen::MatrixXi& edges,
         const Eigen::VectorXi& group_ids,
-        EdgeEdgeCandidates& ee_candidates);
+        std::vector<EdgeEdgeCandidate>& ee_candidates);
 
     /// @brief Compute the candidate edge-edge candidate collisions.
     void getFaceVertexPairs(
         const Eigen::MatrixXi& faces,
         const Eigen::VectorXi& group_ids,
-        FaceVertexCandidates& fv_candidates);
+        std::vector<FaceVertexCandidate>& fv_candidates);
 
 protected:
     /// @brief Add an AABB of the extents to the hash grid.

@@ -11,14 +11,14 @@ class RigidBodyHashGrid : public HashGrid {
 public:
     void resize(
         const physics::RigidBodyAssembler& bodies,
-        const std::vector<physics::Pose<double>>& poses,
-        const std::vector<physics::Pose<double>>& displacements,
+        const physics::Poses<double>& poses,
+        const physics::Poses<double>& displacements,
         const double inflation_radius = 0.0);
 
     void addBodies(
         const physics::RigidBodyAssembler& bodies,
-        const std::vector<physics::Pose<double>>& poses,
-        const std::vector<physics::Pose<double>>& displacements,
+        const physics::Poses<double>& poses,
+        const physics::Poses<double>& displacements,
         const double inflation_radius = 0.0);
 };
 

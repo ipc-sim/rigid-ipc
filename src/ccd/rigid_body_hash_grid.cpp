@@ -7,25 +7,21 @@ namespace ccd {
 
 void compute_vertices_intervals(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     Eigen::MatrixX<Interval>& vertices)
 {
     Interval t(0, 1);
-    std::vector<physics::Pose<Interval>> interval_poses;
-    interval_poses.reserve(bodies.num_bodies());
-    for (int i = 0; i < bodies.num_bodies(); i++) {
-        interval_poses.push_back(
-            poses[i].template cast<Interval>()
-            + displacements[i].template cast<Interval>() * t);
-    }
+    physics::Poses<Interval> interval_poses =
+        physics::cast<double, Interval>(poses)
+        + physics::cast<double, Interval>(displacements) * t;
     vertices = bodies.world_vertices(interval_poses);
 }
 
 void RigidBodyHashGrid::resize(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const double inflation_radius)
 {
     Eigen::MatrixX<Interval> vertices;
@@ -61,8 +57,8 @@ void RigidBodyHashGrid::resize(
 
 void RigidBodyHashGrid::addBodies(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const double inflation_radius)
 {
     assert(bodies.num_bodies() == poses.size());

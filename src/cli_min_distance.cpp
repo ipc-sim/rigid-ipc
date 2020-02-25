@@ -63,17 +63,19 @@ int main(int argc, char* argv[])
         displacements.resizeLike(vertices);
         displacements.setZero();
 
-        ccd::EdgeVertexCandidates ev_candidates;
-        ccd::detect_edge_vertex_collision_candidates(
-            vertices, displacements, edges, group_ids, ev_candidates,
+        ccd::Candidates candidates;
+        ccd::detect_collision_candidates(
+            vertices, displacements, edges, Eigen::MatrixXi(0, 3), group_ids,
+            ccd::CollisionType::EDGE_VERTEX, candidates,
             ccd::DetectionMethod::BRUTE_FORCE, 0.0);
-        if (ev_candidates.size() == 0) {
+        if (candidates.ev_candidates.size() == 0) {
             csv << fmt::format("{},\n", i);
             continue;
         }
         double min_distance = -1;
-        for (size_t j = 0; j < ev_candidates.size(); j++) {
-            const ccd::EdgeVertexCandidate& ev_candidate = ev_candidates[j];
+        for (size_t j = 0; j < candidates.ev_candidates.size(); j++) {
+            const ccd::EdgeVertexCandidate& ev_candidate =
+                candidates.ev_candidates[j];
 
             double distance = ccd::geometry::point_segment_distance<double>(
                 vertices.row(ev_candidate.vertex_index),

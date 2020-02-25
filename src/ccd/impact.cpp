@@ -68,8 +68,8 @@ bool FaceVertexImpact::operator==(const FaceVertexImpact& other) const
 // connectivity.
 void convert_edge_vertex_to_edge_edge_impacts(
     const Eigen::MatrixX2i& edges,
-    const EdgeVertexImpacts& ev_impacts,
-    EdgeEdgeImpacts& ee_impacts)
+    const std::vector<EdgeVertexImpact>& ev_impacts,
+    std::vector<EdgeEdgeImpact>& ee_impacts)
 {
     ee_impacts.clear();
     for (EdgeVertexImpact ev_impact : ev_impacts) {
@@ -91,8 +91,8 @@ void convert_edge_vertex_to_edge_edge_impacts(
 // connectivity.
 void convert_edge_edge_to_edge_vertex_impacts(
     const Eigen::MatrixX2i& edges,
-    const EdgeEdgeImpacts& ee_impacts,
-    EdgeVertexImpacts& ev_impacts)
+    const std::vector<EdgeEdgeImpact>& ee_impacts,
+    std::vector<EdgeVertexImpact>& ev_impacts)
 {
     ev_impacts.clear();
     for (EdgeEdgeImpact ee_impact : ee_impacts) {

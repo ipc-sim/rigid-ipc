@@ -17,54 +17,20 @@ void detect_collisions(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    EdgeVertexImpacts& ev_impacts,
-    EdgeEdgeImpacts& ee_impacts,
-    FaceVertexImpacts& fv_impacts,
+    ConcurrentImpacts& impacts,
     DetectionMethod method)
 {
     assert(vertices.size() == displacements.size());
 
     // Do the broad phase by detecting candidate impacts
-    EdgeVertexCandidates ev_candidates;
-    EdgeEdgeCandidates ee_candidates;
-    FaceVertexCandidates fv_candidates;
+    Candidates candidates;
     detect_collision_candidates(
         vertices, displacements, edges, faces, group_ids, collision_types,
-        ev_candidates, ee_candidates, fv_candidates, method);
+        candidates, method);
 
     // Do the narrow phase by detecting actual impacts from the candidate set
     detect_collisions_from_candidates(
-        vertices, displacements, edges, faces, ev_candidates, ee_candidates,
-        fv_candidates, ev_impacts, ee_impacts, fv_impacts);
-}
-
-// Find all edge-vertex collisions in one time step.
-void detect_edge_vertex_collisions(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixXi& edges,
-    const Eigen::VectorXi& group_ids,
-    EdgeVertexImpacts& ev_impacts,
-    DetectionMethod method)
-{
-    // Both of these will be untouched
-    EdgeEdgeImpacts ee_impacts;
-    FaceVertexImpacts fv_impacts;
-    detect_collisions(
-        vertices, displacements, edges, Eigen::MatrixXi(), group_ids,
-        CollisionType::EDGE_VERTEX, ev_impacts, ee_impacts, fv_impacts, method);
-}
-
-// Find all edge-vertex collisions in one time step.
-void detect_edge_vertex_collisions(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixXi& edges,
-    EdgeVertexImpacts& ev_impacts,
-    DetectionMethod method)
-{
-    return detect_edge_vertex_collisions(
-        vertices, displacements, edges, Eigen::VectorXi(), ev_impacts, method);
+        vertices, displacements, edges, faces, candidates, impacts);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -78,9 +44,7 @@ void detect_collision_candidates(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    EdgeVertexCandidates& ev_candidates,
-    EdgeEdgeCandidates& ee_candidates,
-    FaceVertexCandidates& fv_candidates,
+    Candidates& candidates,
     DetectionMethod method,
     const double inflation_radius)
 {
@@ -96,18 +60,18 @@ void detect_collision_candidates(
     switch (method) {
     case BRUTE_FORCE:
         detect_collision_candidates_brute_force(
-            vertices, edges, faces, group_ids, collision_types, ev_candidates,
-            ee_candidates, fv_candidates);
+            vertices, edges, faces, group_ids, collision_types, candidates);
         break;
     case HASH_GRID:
         detect_collision_candidates_hash_grid(
             vertices, displacements, edges, faces, group_ids, collision_types,
-            ev_candidates, ee_candidates, fv_candidates, inflation_radius);
+            candidates, inflation_radius);
         spdlog::debug(
             "hash_grid_ev_candidates.size()={:d} "
             "hash_grid_ee_candidates.size()={:d} "
             "hash_grid_fv_candidates.size()={:d}",
-            ev_candidates.size(), ee_candidates.size(), fv_candidates.size());
+            candidates.ev_candidates.size(), candidates.ee_candidates.size(),
+            candidates.fv_candidates.size());
         break;
     }
 
@@ -115,22 +79,75 @@ void detect_collision_candidates(
     PROFILE_END();
 }
 
-void detect_edge_vertex_collision_candidates(
+void detect_edge_vertex_collision_candidates_brute_force(
     const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
     const Eigen::MatrixXi& edges,
     const Eigen::VectorXi& group_ids,
-    EdgeVertexCandidates& ev_candidates,
-    DetectionMethod method,
-    const double inflation_radius)
+    std::vector<EdgeVertexCandidate>& ev_candidates)
 {
-    // Both of these will be untouched
-    EdgeEdgeCandidates ee_candidates;
-    FaceVertexCandidates fv_candidates;
-    detect_collision_candidates(
-        vertices, displacements, edges, Eigen::MatrixXi(), group_ids,
-        CollisionType::EDGE_VERTEX, ev_candidates, ee_candidates, fv_candidates,
-        method, inflation_radius);
+    const bool check_group = group_ids.size() > 0;
+    for (int ei = 0; ei < edges.rows(); ei++) {
+        // Loop over all vertices
+        for (int vi = 0; vi < vertices.rows(); vi++) {
+            // Check that the vertex is not an endpoint of the edge
+            bool is_endpoint = vi == edges(ei, 0) || vi == edges(ei, 1);
+            bool same_group = check_group
+                && (group_ids(vi) == group_ids(edges(ei, 0))
+                    || group_ids(vi) == group_ids(edges(ei, 1)));
+            if (!is_endpoint && !same_group) {
+                ev_candidates.emplace_back(ei, vi);
+            }
+        }
+    }
+}
+
+void detect_edge_edge_collision_candidates_brute_force(
+    const Eigen::MatrixXi& edges,
+    const Eigen::VectorXi& group_ids,
+    std::vector<EdgeEdgeCandidate>& ee_candidates)
+{
+    const bool check_group = group_ids.size() > 0;
+    for (int ei = 0; ei < edges.rows(); ei++) {
+        // Loop over all remaining edges
+        for (int ej = ei + 1; ej < edges.rows(); ej++) {
+            bool has_common_endpoint = edges(ei, 0) == edges(ej, 0)
+                || edges(ei, 0) == edges(ej, 1) || edges(ei, 1) == edges(ej, 0)
+                || edges(ei, 1) == edges(ej, 1);
+            bool same_group = check_group
+                && (group_ids(edges(ei, 0)) == group_ids(edges(ej, 0))
+                    || group_ids(edges(ei, 0)) == group_ids(edges(ej, 1))
+                    || group_ids(edges(ei, 1)) == group_ids(edges(ej, 0))
+                    || group_ids(edges(ei, 1)) == group_ids(edges(ej, 1)));
+            if (!has_common_endpoint && !same_group) {
+                ee_candidates.emplace_back(ei, ej);
+            }
+        }
+    }
+}
+
+void detect_face_vertex_collision_candidates_brute_force(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXi& faces,
+    const Eigen::VectorXi& group_ids,
+    std::vector<FaceVertexCandidate>& fv_candidates)
+{
+    const bool check_group = group_ids.size() > 0;
+    // Loop over all faces
+    for (int fi = 0; fi < faces.rows(); fi++) {
+        // Loop over all vertices
+        for (int vi = 0; vi < vertices.rows(); vi++) {
+            // Check that the vertex is not an endpoint of the edge
+            bool is_endpoint =
+                vi == faces(fi, 0) || vi == faces(fi, 1) || vi == faces(fi, 2);
+            bool same_group = check_group
+                && (group_ids(vi) == group_ids(faces(fi, 0))
+                    || group_ids(vi) == group_ids(faces(fi, 1))
+                    || group_ids(vi) == group_ids(faces(fi, 2)));
+            if (!is_endpoint && !same_group) {
+                fv_candidates.emplace_back(fi, vi);
+            }
+        }
+    }
 }
 
 // Find all edge-vertex collisions in one time step using brute-force
@@ -141,65 +158,31 @@ void detect_collision_candidates_brute_force(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    EdgeVertexCandidates& ev_candidates,
-    EdgeEdgeCandidates& ee_candidates,
-    FaceVertexCandidates& fv_candidates)
+    Candidates& candidates)
 {
     assert(edges.size() == 0 || edges.cols() == 2);
     assert(faces.size() == 0 || faces.cols() == 3);
 
-    const bool check_group = group_ids.size() > 0;
     // Loop over all edges
-    for (int ei = 0; ei < edges.rows(); ei++) {
-        if (collision_types & CollisionType::EDGE_VERTEX) {
-            // Loop over all vertices
-            for (int vi = 0; vi < vertices.rows(); vi++) {
-                // Check that the vertex is not an endpoint of the edge
-                bool is_endpoint = vi == edges(ei, 0) || vi == edges(ei, 1);
-                bool same_group = check_group
-                    && (group_ids(vi) == group_ids(edges(ei, 0))
-                        || group_ids(vi) == group_ids(edges(ei, 1)));
-                if (!is_endpoint && !same_group) {
-                    ev_candidates.emplace_back(ei, vi);
-                }
+    tbb::parallel_invoke(
+        [&] {
+            if (collision_types & CollisionType::EDGE_VERTEX) {
+                detect_edge_vertex_collision_candidates_brute_force(
+                    vertices, edges, group_ids, candidates.ev_candidates);
             }
-        }
-        if (collision_types & CollisionType::EDGE_EDGE) {
-            // Loop over all remaining edges
-            for (int ej = ei + 1; ej < edges.rows(); ej++) {
-                bool has_common_endpoint = edges(ei, 0) == edges(ej, 0)
-                    || edges(ei, 0) == edges(ej, 1)
-                    || edges(ei, 1) == edges(ej, 0)
-                    || edges(ei, 1) == edges(ej, 1);
-                bool same_group = check_group
-                    && (group_ids(edges(ei, 0)) == group_ids(edges(ej, 0))
-                        || group_ids(edges(ei, 0)) == group_ids(edges(ej, 1))
-                        || group_ids(edges(ei, 1)) == group_ids(edges(ej, 0))
-                        || group_ids(edges(ei, 1)) == group_ids(edges(ej, 1)));
-                if (!has_common_endpoint && !same_group) {
-                    ee_candidates.emplace_back(ei, ej);
-                }
+        },
+        [&] {
+            if (collision_types & CollisionType::EDGE_EDGE) {
+                detect_edge_edge_collision_candidates_brute_force(
+                    edges, group_ids, candidates.ee_candidates);
             }
-        }
-    }
-    if (collision_types & CollisionType::FACE_VERTEX) {
-        // Loop over all faces
-        for (int fi = 0; fi < faces.rows(); fi++) {
-            // Loop over all vertices
-            for (int vi = 0; vi < vertices.rows(); vi++) {
-                // Check that the vertex is not an endpoint of the edge
-                bool is_endpoint = vi == faces(fi, 0) || vi == faces(fi, 1)
-                    || vi == faces(fi, 2);
-                bool same_group = check_group
-                    && (group_ids(vi) == group_ids(faces(fi, 0))
-                        || group_ids(vi) == group_ids(faces(fi, 1))
-                        || group_ids(vi) == group_ids(faces(fi, 2)));
-                if (!is_endpoint && !same_group) {
-                    fv_candidates.emplace_back(fi, vi);
-                }
+        },
+        [&] {
+            if (collision_types & CollisionType::FACE_VERTEX) {
+                detect_face_vertex_collision_candidates_brute_force(
+                    vertices, faces, group_ids, candidates.fv_candidates);
             }
-        }
-    }
+        });
 }
 
 // Find all edge-vertex collisions in one time step using spatial-hashing to
@@ -211,9 +194,7 @@ void detect_collision_candidates_hash_grid(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    EdgeVertexCandidates& ev_candidates,
-    EdgeEdgeCandidates& ee_candidates,
-    FaceVertexCandidates& fv_candidates,
+    Candidates& candidates,
     const double inflation_radius)
 {
     using namespace CollisionType;
@@ -244,17 +225,20 @@ void detect_collision_candidates_hash_grid(
     tbb::parallel_invoke(
         [&] {
             if (collision_types & EDGE_VERTEX) {
-                hashgrid.getVertexEdgePairs(edges, group_ids, ev_candidates);
+                hashgrid.getVertexEdgePairs(
+                    edges, group_ids, candidates.ev_candidates);
             }
         },
         [&] {
             if (collision_types & EDGE_EDGE) {
-                hashgrid.getEdgeEdgePairs(edges, group_ids, ee_candidates);
+                hashgrid.getEdgeEdgePairs(
+                    edges, group_ids, candidates.ee_candidates);
             }
         },
         [&] {
             if (collision_types & FACE_VERTEX) {
-                hashgrid.getFaceVertexPairs(faces, group_ids, fv_candidates);
+                hashgrid.getFaceVertexPairs(
+                    faces, group_ids, candidates.fv_candidates);
             }
         });
 }

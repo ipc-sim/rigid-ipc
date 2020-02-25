@@ -12,12 +12,10 @@ namespace ccd {
 /// @brief Find all collisions in one time step.
 void detect_collisions(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const int collision_types,
-    EdgeVertexImpacts& ev_impacts,
-    EdgeEdgeImpacts& ee_impacts,
-    FaceVertexImpacts& fv_impacts,
+    ConcurrentImpacts& impacts,
     DetectionMethod method = DetectionMethod::HASH_GRID);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,24 +25,20 @@ void detect_collisions(
 /// @brief Use broad-phase method to create a set of candidate collisions.
 void detect_collision_candidates(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const int collision_types,
-    EdgeVertexCandidates& ev_candidates,
-    EdgeEdgeCandidates& ee_candidates,
-    FaceVertexCandidates& fv_candidates,
+    Candidates& candidates,
     DetectionMethod method = DetectionMethod::HASH_GRID,
     const double inflation_radius = 0.0);
 
 /// @brief Use a hash grid method to create a set of all candidate collisions.
 void detect_collision_candidates_hash_grid(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const int collision_types,
-    EdgeVertexCandidates& ev_candidates,
-    EdgeEdgeCandidates& ee_candidates,
-    FaceVertexCandidates& fv_candidates,
+    Candidates& candidates,
     const double inflation_radius = 0.0);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,35 +47,36 @@ void detect_collision_candidates_hash_grid(
 
 void detect_collisions_from_candidates(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
-    const EdgeVertexCandidates& ev_candidates,
-    const EdgeEdgeCandidates& ee_candidates,
-    const FaceVertexCandidates& fv_candidates,
-    EdgeVertexImpacts& ev_impacts,
-    EdgeEdgeImpacts& ee_impacts,
-    FaceVertexImpacts& fv_impacts);
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
+    const Candidates& candidates,
+    ConcurrentImpacts& impacts);
 
 /// @brief Determine if a single edge-vertext pair intersects.
-void detect_edge_vertex_collisions_narrow_phase(
+bool detect_edge_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const EdgeVertexCandidate& ev_candidate,
-    EdgeVertexImpacts& ev_impacts);
+    double& toi,
+    double& alpha);
 
-void detect_edge_edge_collisions_narrow_phase(
+bool detect_edge_edge_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const EdgeEdgeCandidate& ee_candidate,
-    EdgeEdgeImpacts& ee_impacts);
+    double& toi,
+    double& edge0_alpha,
+    double& edge1_alpha);
 
-void detect_face_vertex_collisions_narrow_phase(
+bool detect_face_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const FaceVertexCandidate& fv_candidate,
-    FaceVertexImpacts& fv_impacts);
+    double& toi,
+    double& u,
+    double& v);
 
 } // namespace ccd

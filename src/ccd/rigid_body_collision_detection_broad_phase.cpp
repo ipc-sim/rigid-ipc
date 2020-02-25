@@ -8,29 +8,23 @@ namespace ccd {
 
 void detect_collisions(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const int collision_types,
-    EdgeVertexImpacts& ev_impacts,
-    EdgeEdgeImpacts& ee_impacts,
-    FaceVertexImpacts& fv_impacts,
+    ConcurrentImpacts& impacts,
     DetectionMethod method)
 {
     assert(bodies.num_bodies() == poses.size());
     assert(poses.size() == displacements.size());
 
     // Do the broad phase by detecting candidate impacts
-    EdgeVertexCandidates ev_candidates;
-    EdgeEdgeCandidates ee_candidates;
-    FaceVertexCandidates fv_candidates;
+    Candidates candidates;
     detect_collision_candidates(
-        bodies, poses, displacements, collision_types, ev_candidates,
-        ee_candidates, fv_candidates, method);
+        bodies, poses, displacements, collision_types, candidates, method);
 
     // Do the narrow phase by detecting actual impacts from the candidate set
     detect_collisions_from_candidates(
-        bodies, poses, displacements, ev_candidates, ee_candidates,
-        fv_candidates, ev_impacts, ee_impacts, fv_impacts);
+        bodies, poses, displacements, candidates, impacts);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,12 +33,10 @@ void detect_collisions(
 
 void detect_collision_candidates(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const int collision_types,
-    EdgeVertexCandidates& ev_candidates,
-    EdgeEdgeCandidates& ee_candidates,
-    FaceVertexCandidates& fv_candidates,
+    Candidates& candidates,
     DetectionMethod method,
     const double inflation_radius)
 {
@@ -61,18 +53,18 @@ void detect_collision_candidates(
     case BRUTE_FORCE:
         detect_collision_candidates_brute_force(
             bodies.world_vertices(poses), bodies.m_edges, bodies.m_faces,
-            bodies.m_vertex_to_body_map, collision_types, ev_candidates,
-            ee_candidates, fv_candidates);
+            bodies.m_vertex_to_body_map, collision_types, candidates);
         break;
     case HASH_GRID:
         detect_collision_candidates_hash_grid(
-            bodies, poses, displacements, collision_types, ev_candidates,
-            ee_candidates, fv_candidates, inflation_radius);
+            bodies, poses, displacements, collision_types, candidates,
+            inflation_radius);
         spdlog::debug(
             "hash_grid_ev_candidates.size()={:d} "
             "hash_grid_ee_candidates.size()={:d} "
             "hash_grid_fv_candidates.size()={:d}",
-            ev_candidates.size(), ee_candidates.size(), fv_candidates.size());
+            candidates.ev_candidates.size(), candidates.ee_candidates.size(),
+            candidates.fv_candidates.size());
         break;
     }
 
@@ -84,12 +76,10 @@ void detect_collision_candidates(
 // only compare points and edge in the same cells.
 void detect_collision_candidates_hash_grid(
     const physics::RigidBodyAssembler& bodies,
-    const std::vector<physics::Pose<double>>& poses,
-    const std::vector<physics::Pose<double>>& displacements,
+    const physics::Poses<double>& poses,
+    const physics::Poses<double>& displacements,
     const int collision_types,
-    EdgeVertexCandidates& ev_candidates,
-    EdgeEdgeCandidates& ee_candidates,
-    FaceVertexCandidates& fv_candidates,
+    Candidates& candidates,
     const double inflation_radius)
 {
     RigidBodyHashGrid hashgrid;
@@ -101,19 +91,19 @@ void detect_collision_candidates_hash_grid(
         [&] {
             if (collision_types & CollisionType::EDGE_VERTEX) {
                 hashgrid.getVertexEdgePairs(
-                    bodies.m_edges, group_ids, ev_candidates);
+                    bodies.m_edges, group_ids, candidates.ev_candidates);
             }
         },
         [&] {
             if (collision_types & CollisionType::EDGE_EDGE) {
                 hashgrid.getEdgeEdgePairs(
-                    bodies.m_edges, group_ids, ee_candidates);
+                    bodies.m_edges, group_ids, candidates.ee_candidates);
             }
         },
         [&] {
             if (collision_types & CollisionType::FACE_VERTEX) {
                 hashgrid.getFaceVertexPairs(
-                    bodies.m_faces, group_ids, fv_candidates);
+                    bodies.m_faces, group_ids, candidates.fv_candidates);
             }
         });
 }

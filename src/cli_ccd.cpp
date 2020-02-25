@@ -18,7 +18,8 @@ int main(int argc, char* argv[])
 
     CLI::App app { "run headless simulation" };
 
-    app.add_option("input_json,-i,--input", args.input_json,
+    app.add_option(
+           "input_json,-i,--input", args.input_json,
            "JSON file with input simulation.")
         ->required();
 
@@ -55,10 +56,12 @@ int main(int argc, char* argv[])
 
         assert(vertices.rows() == group_ids.rows());
 
-        ccd::EdgeVertexImpacts ev_impacts;
-        ccd::detect_edge_vertex_collisions(vertices, displacements, edges,
-            group_ids, ev_impacts, ccd::DetectionMethod::BRUTE_FORCE);
-        if (ev_impacts.size() != 0) {
+        ccd::ConcurrentImpacts impacts;
+        ccd::detect_collisions(
+            vertices, displacements, edges, Eigen::MatrixXi(0, 3), group_ids,
+            ccd::CollisionType::EDGE_VERTEX, impacts,
+            ccd::DetectionMethod::BRUTE_FORCE);
+        if (impacts.ev_impacts.size() != 0) {
             std::cout << args.input_json << ": step " << i << " failed"
                       << std::endl;
             collision_steps += 1;

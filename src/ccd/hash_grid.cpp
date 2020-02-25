@@ -344,7 +344,7 @@ void getPairs(
 void HashGrid::getVertexEdgePairs(
     const Eigen::MatrixXi& edges,
     const Eigen::VectorXi& group_ids,
-    EdgeVertexCandidates& ev_candidates)
+    std::vector<EdgeVertexCandidate>& ev_candidates)
 {
     auto is_endpoint = [&](int ei, int vi) {
         return edges(ei, 0) == vi || edges(ei, 1) == vi;
@@ -364,7 +364,7 @@ void HashGrid::getVertexEdgePairs(
 void HashGrid::getEdgeEdgePairs(
     const Eigen::MatrixXi& edges,
     const Eigen::VectorXi& group_ids,
-    EdgeEdgeCandidates& ee_candidates)
+    std::vector<EdgeEdgeCandidate>& ee_candidates)
 {
     auto is_endpoint = [&](int ei, int ej) {
         return edges(ei, 0) == edges(ej, 0) || edges(ei, 0) == edges(ej, 1)
@@ -386,7 +386,7 @@ void HashGrid::getEdgeEdgePairs(
 void HashGrid::getFaceVertexPairs(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
-    FaceVertexCandidates& fv_candidates)
+    std::vector<FaceVertexCandidate>& fv_candidates)
 {
     auto is_endpoint = [&](int fi, int vi) {
         return vi == faces(fi, 0) || vi == faces(fi, 1) || vi == faces(fi, 2);
