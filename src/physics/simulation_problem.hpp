@@ -17,7 +17,7 @@ namespace physics {
         virtual ~ISimulationProblem() = default;
         enum CollisionCheck { EXACT = 0, CONSERVATIVE };
 
-        virtual const opt::CollisionConstraint& constraint() const = 0;
+        virtual opt::CollisionConstraint& constraint() = 0;
         virtual opt::IStateOptimizationSolver& solver() = 0;
 
         virtual std::string name() = 0;
