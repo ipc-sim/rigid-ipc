@@ -46,7 +46,7 @@ namespace logger {
     fmt_eigen_intervals(const Eigen::VectorX<Interval>& x, const int precision)
     {
         std::stringstream ss;
-        ss << "[";
+        ss << std::setprecision(precision) << "[";
         for (int i = 0; i < x.size(); i++) {
             ss << fmt_interval(x(i)) << (i < x.size() - 1 ? ", " : "");
         }

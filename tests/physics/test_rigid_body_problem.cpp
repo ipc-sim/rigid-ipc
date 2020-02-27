@@ -161,7 +161,6 @@ TEST_CASE(
 
 TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
 {
-
     using namespace test_utils;
     Eigen::MatrixXd vertices(4, 2);
     int dim = vertices.cols();
@@ -210,6 +209,59 @@ TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
     Eigen::MatrixXd hess_fx_approx = eval_hess_f_approx(rbp, x);
 
     CHECK(fd::compare_jacobian(hess_fx, hess_fx_approx));
+}
+
+TEST_CASE("dof -> poses -> dof", "[RB][RB-Problem]")
+{
+    using namespace test_utils;
+    Eigen::MatrixXd vertices(4, 2);
+    int dim = vertices.cols();
+    Eigen::MatrixXi edges(4, 2);
+    Pose<double> vel_1 = Pose<double>::Zero(dim),
+                 vel_2 = Pose<double>::Zero(dim);
+
+    Eigen::MatrixXd expected(4, 2);
+
+    vertices << -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5;
+    edges << 0, 1, 1, 2, 2, 3, 3, 0;
+
+    SECTION("Translation Case")
+    {
+        vel_1.position << 0.5, 0.5;
+        vel_2.position << 1.0, 1.0;
+    }
+
+    SECTION("90 Deg Rotation Case")
+    {
+        vel_1.rotation << 0.5 * M_PI;
+        vel_2.rotation << M_PI;
+    }
+    SECTION("Translation and Rotation Case")
+    {
+        vel_1.position << 0.5, 0.5;
+        vel_1.rotation << 0.5 * M_PI;
+        vel_2.position << 1.0, 1.0;
+        vel_2.rotation << M_PI;
+    }
+
+    using namespace ccd::physics;
+    using namespace ccd::opt;
+
+    std::vector<RigidBody> rbs = {
+        { rb_from_displacements(vertices, edges, vel_1),
+          rb_from_displacements(vertices, edges, vel_2) }
+    };
+
+    DistanceBarrierRBProblem rbp("rb_problem");
+    rbp.init(rbs);
+
+    for (int i = 0; i < 100; i++) {
+        Eigen::VectorXd expected_dof = Eigen::VectorXd::Random(3 * rbs.size());
+        Eigen::VectorXd actual_dof =
+            rbp.poses_to_dofs(rbp.dofs_to_poses(expected_dof));
+        REQUIRE(expected_dof.size() == actual_dof.size());
+        CHECK((expected_dof - actual_dof).squaredNorm() == Approx(0.0));
+    }
 }
 
 // TODO: Add 3D RB test

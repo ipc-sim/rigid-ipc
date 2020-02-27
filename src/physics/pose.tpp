@@ -217,6 +217,12 @@ namespace physics {
         return hess_R;
     }
 
+    template <typename T> bool Pose<T>::operator==(const Pose<T>& other) const
+    {
+        return this->position == other.position
+            && this->rotation == other.rotation;
+    }
+
     template <typename T> Pose<T> Pose<T>::operator+(const Pose<T>& other) const
     {
         assert(dim() == other.dim());

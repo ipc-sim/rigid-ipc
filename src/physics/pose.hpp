@@ -49,6 +49,8 @@ namespace physics {
         std::vector<std::vector<Eigen::MatrixXX3<T>>>
         construct_rotation_matrix_hessian() const;
 
+        bool operator==(const Pose<T>& other) const;
+
         Pose<T> operator+(const Pose<T>& other) const;
         inline Pose<T>& operator+=(const Pose<T>& other);
         Pose<T> operator-(const Pose<T>& other) const;
@@ -78,7 +80,6 @@ namespace physics {
     template <typename T>
     Poses<T> operator-(const Poses<T>& poses0, const Poses<T>& poses1);
     template <typename T> Poses<T> operator*(const Poses<T>& poses, const T& x);
-    // Poses<double> operator*(const Poses<double>& poses, const double& x);
     /// @brief Cast poses element-wise.
     template <typename T1, typename T2>
     Poses<T2> cast(const Poses<T1>& poses_T1);

@@ -21,11 +21,6 @@ namespace physics {
         /// I-SIMULATION
         ////////////////////////////////////////////////////////////////////////
 
-        // virtual functions to implement by child classes
-        // ----------------------------------------------------
-        // virtual opt::CollisionConstraint& constraint() = 0;
-        // virtual opt::IStateOptimizationSolver& solver() = 0;
-
         std::string name() override { return name_; }
         virtual void settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;

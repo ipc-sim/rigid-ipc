@@ -152,24 +152,22 @@ namespace physics {
         local_face_id = global_face_id - m_body_face_id[size_t(rigid_body_id)];
     }
 
-    std::vector<Pose<double>>
-    RigidBodyAssembler::rb_poses(const bool previous) const
+    Poses<double> RigidBodyAssembler::rb_poses(const bool previous) const
     {
-        std::vector<Pose<double>> poses;
-        poses.reserve(num_bodies());
-        for (const auto& rb : m_rbs) {
-            poses.push_back(previous ? rb.pose_prev : rb.pose);
-        }
+        Poses<double> poses;
+        poses.resize(num_bodies());
+        tbb::parallel_for(size_t(0), m_rbs.size(), [&](size_t i) {
+            poses[i] = previous ? m_rbs[i].pose_prev : m_rbs[i].pose;
+        });
         return poses;
     }
 
-    void
-    RigidBodyAssembler::set_rb_poses(const std::vector<Pose<double>>& poses)
+    void RigidBodyAssembler::set_rb_poses(const Poses<double>& poses)
     {
         assert(num_bodies() == poses.size());
-        for (size_t i = 0; i < num_bodies(); ++i) {
+        tbb::parallel_for(size_t(0), num_bodies(), [&](size_t i) {
             m_rbs[i].pose = poses[i];
-        }
+        });
     }
 
     Eigen::MatrixXd
@@ -196,8 +194,7 @@ namespace physics {
     }
 
     void RigidBodyAssembler::world_vertices_gradient(
-        const std::vector<Pose<double>>& poses,
-        Eigen::SparseMatrix<double>& grad_u) const
+        const Poses<double>& poses, Eigen::SparseMatrix<double>& grad_u) const
     {
         assert(num_bodies() == poses.size());
 

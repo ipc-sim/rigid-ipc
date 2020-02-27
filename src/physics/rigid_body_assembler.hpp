@@ -4,11 +4,10 @@
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <utils/eigen_ext.hpp>
-
-#include <physics/rigid_body.hpp>
 
 #include <autodiff/autodiff.h>
+#include <physics/rigid_body.hpp>
+#include <utils/eigen_ext.hpp>
 
 namespace ccd {
 namespace physics {
@@ -25,11 +24,9 @@ namespace physics {
         // --------------------------------------------------------------------
 
         template <typename T>
-        const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
-        world_vertices(const std::vector<Pose<T>>& poses) const;
+        Eigen::MatrixX<T> world_vertices(const Poses<T>& poses) const;
         template <typename T>
-        const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
-        world_vertices(const Eigen::VectorX<T>& dofs) const
+        Eigen::MatrixX<T> world_vertices(const Eigen::VectorX<T>& dofs) const
         {
             return world_vertices(Pose<T>::dofs_to_poses(dofs, dim()));
         }
@@ -48,7 +45,7 @@ namespace physics {
         Eigen::MatrixXd world_velocities() const;
 
         void world_vertices_gradient(
-            const std::vector<Pose<double>>& poses,
+            const Poses<double>& poses,
             Eigen::SparseMatrix<double>& grad) const;
         void world_vertices_gradient(
             const Eigen::VectorXd& dof, Eigen::SparseMatrix<double>& grad) const
@@ -73,21 +70,18 @@ namespace physics {
         // Ridig Body CM Functions
         // --------------------------------------------------------------------
         /// @brief assemble rigid body poses to a single vector
-        std::vector<Pose<double>> rb_poses(const bool previous = false) const;
-        std::vector<Pose<double>> rb_poses_t0() const { return rb_poses(true); }
-        std::vector<Pose<double>> rb_poses_t1() const
-        {
-            return rb_poses(false);
-        }
+        Poses<double> rb_poses(const bool previous = false) const;
+        Poses<double> rb_poses_t0() const { return rb_poses(true); }
+        Poses<double> rb_poses_t1() const { return rb_poses(false); }
         /// @brief set rigid body poses
-        void set_rb_poses(const std::vector<Pose<double>>& poses);
+        void set_rb_poses(const Poses<double>& poses);
 
         // --------------------------------------------------------------------
 
         inline long num_vertices() const { return m_body_vertex_id.back(); }
         inline long num_edges() const { return m_body_edge_id.back(); }
         inline long num_faces() const { return m_body_face_id.back(); }
-        inline long num_bodies() const { return m_rbs.size(); }
+        inline size_t num_bodies() const { return m_rbs.size(); }
         inline int dim() const { return m_rbs.size() ? m_rbs[0].dim() : 0; }
 
         inline long vertex_id_to_body_id(long vi) const
@@ -101,6 +95,11 @@ namespace physics {
         inline long face_id_to_body_id(long fi) const
         {
             return m_vertex_to_body_map(m_edges(fi, 0));
+        }
+
+        inline const Eigen::VectorXi& group_ids() const
+        {
+            return m_vertex_to_body_map;
         }
 
         std::vector<RigidBody> m_rbs;
