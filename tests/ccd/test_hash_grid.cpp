@@ -1,14 +1,15 @@
 #include <catch2/catch.hpp>
 
-#include <boost/filesystem.hpp>
 #include <string>
 
+#include <boost/filesystem.hpp>
 #include <igl/edges.h>
 #include <igl/read_triangle_mesh.h>
-
-#include <ccd/collision_detection.hpp>
 #include <io/serialize_json.hpp>
 #include <nlohmann/json.hpp>
+
+#include <ccd/collision_detection.hpp>
+#include <logger.hpp>
 
 using namespace ccd;
 using namespace nlohmann;
@@ -188,24 +189,27 @@ TEST_CASE("2D hash grid", "[hashgrid][2D]")
         displacements.setRandom();
         displacements *= 10;
 
-        EdgeVertexImpacts brute_force_ev_impacts;
-        detect_edge_vertex_collisions(
-            vertices, displacements, edges, brute_force_ev_impacts,
+        ConcurrentImpacts brute_force_impacts;
+        detect_collisions(
+            vertices, displacements, edges, Eigen::MatrixXi(0, 3),
+            Eigen::VectorXi(), CollisionType::EDGE_VERTEX, brute_force_impacts,
             DetectionMethod::BRUTE_FORCE);
 
-        EdgeVertexImpacts hash_ev_impacts;
-        detect_edge_vertex_collisions(
-            vertices, displacements, edges, hash_ev_impacts,
+        ConcurrentImpacts hash_impacts;
+        detect_collisions(
+            vertices, displacements, edges, Eigen::MatrixXi(0, 3),
+            Eigen::VectorXi(), CollisionType::EDGE_VERTEX, hash_impacts,
             DetectionMethod::HASH_GRID);
 
-        REQUIRE(brute_force_ev_impacts.size() == hash_ev_impacts.size());
+        REQUIRE(brute_force_impacts.size() == hash_impacts.size());
         std::sort(
-            brute_force_ev_impacts.begin(), brute_force_ev_impacts.end(),
+            brute_force_impacts.ev_impacts.begin(),
+            brute_force_impacts.ev_impacts.end(),
             compare_impacts_by_time<EdgeVertexImpact>);
         std::sort(
-            hash_ev_impacts.begin(), hash_ev_impacts.end(),
+            hash_impacts.ev_impacts.begin(), hash_impacts.ev_impacts.end(),
             compare_impacts_by_time<EdgeVertexImpact>);
-        CHECK(brute_force_ev_impacts == hash_ev_impacts);
+        CHECK(brute_force_impacts.ev_impacts == hash_impacts.ev_impacts);
     }
 }
 
@@ -260,43 +264,150 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
     }
 
     for (int i = 0; i < 10; i++) {
-        EdgeVertexImpacts brute_force_ev_impacts;
-        EdgeEdgeImpacts brute_force_ee_impacts;
-        FaceVertexImpacts brute_force_fv_impacts;
+        ConcurrentImpacts brute_force_impacts;
         detect_collisions(
             vertices, displacements, edges, faces, group_ids,
             CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX,
-            brute_force_ev_impacts, brute_force_ee_impacts,
-            brute_force_fv_impacts, DetectionMethod::BRUTE_FORCE);
-        REQUIRE(brute_force_ev_impacts.size() == 0);
+            brute_force_impacts, DetectionMethod::BRUTE_FORCE);
+        REQUIRE(brute_force_impacts.ev_impacts.size() == 0);
 
-        EdgeVertexImpacts hash_ev_impacts;
-        EdgeEdgeImpacts hash_ee_impacts;
-        FaceVertexImpacts hash_fv_impacts;
+        ConcurrentImpacts hash_impacts;
         detect_collisions(
             vertices, displacements, edges, faces, group_ids,
-            CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX,
-            hash_ev_impacts, hash_ee_impacts, hash_fv_impacts,
+            CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX, hash_impacts,
             DetectionMethod::HASH_GRID);
-        REQUIRE(hash_ev_impacts.size() == 0);
+        REQUIRE(hash_impacts.ev_impacts.size() == 0);
 
-        REQUIRE(brute_force_ee_impacts.size() == hash_ee_impacts.size());
+        REQUIRE(
+            brute_force_impacts.ee_impacts.size()
+            == hash_impacts.ee_impacts.size());
         std::sort(
-            brute_force_ee_impacts.begin(), brute_force_ee_impacts.end(),
+            brute_force_impacts.ee_impacts.begin(),
+            brute_force_impacts.ee_impacts.end(),
             compare_impacts_by_time<EdgeEdgeImpact>);
         std::sort(
-            hash_ee_impacts.begin(), hash_ee_impacts.end(),
+            hash_impacts.ee_impacts.begin(), hash_impacts.ee_impacts.end(),
             compare_impacts_by_time<EdgeEdgeImpact>);
-        CHECK(brute_force_ee_impacts == hash_ee_impacts);
+        bool is_equal =
+            brute_force_impacts.ee_impacts == hash_impacts.ee_impacts;
+        if (!is_equal && brute_force_impacts.size() > 0) {
+            spdlog::error(
+                "bf_impacts.ee[0]={{time={:g}, e0i={:d}, α₀={:g}, e0i={:d}, "
+                "α₁={:g}}}",
+                brute_force_impacts.ee_impacts[0].time,
+                brute_force_impacts.ee_impacts[0].impacted_edge_index,
+                brute_force_impacts.ee_impacts[0].impacted_alpha,
+                brute_force_impacts.ee_impacts[0].impacting_edge_index,
+                brute_force_impacts.ee_impacts[0].impacting_alpha);
+            spdlog::error(
+                "hash_impacts[0]={{time={:g}, e0i={:d}, α₀={:g}, e0i={:d}, "
+                "α₁={:g}}}",
+                hash_impacts.ee_impacts[0].time,
+                hash_impacts.ee_impacts[0].impacted_edge_index,
+                hash_impacts.ee_impacts[0].impacted_alpha,
+                hash_impacts.ee_impacts[0].impacting_edge_index,
+                hash_impacts.ee_impacts[0].impacting_alpha);
+        }
+        CHECK(is_equal);
 
-        REQUIRE(brute_force_fv_impacts.size() == hash_fv_impacts.size());
+        REQUIRE(
+            brute_force_impacts.fv_impacts.size()
+            == hash_impacts.fv_impacts.size());
         std::sort(
-            brute_force_fv_impacts.begin(), brute_force_fv_impacts.end(),
+            brute_force_impacts.fv_impacts.begin(),
+            brute_force_impacts.fv_impacts.end(),
             compare_impacts_by_time<FaceVertexImpact>);
         std::sort(
-            hash_fv_impacts.begin(), hash_fv_impacts.end(),
+            hash_impacts.fv_impacts.begin(), hash_impacts.fv_impacts.end(),
             compare_impacts_by_time<FaceVertexImpact>);
-        CHECK(brute_force_fv_impacts == hash_fv_impacts);
+        CHECK(brute_force_impacts.fv_impacts == hash_impacts.fv_impacts);
+
+        displacements.setRandom();
+        displacements *= 3;
+    }
+}
+
+TEST_CASE("3D brute force is duplicate free", "[ccd][brute_force]")
+{
+    Eigen::MatrixXd vertices;
+    Eigen::MatrixXd displacements;
+    Eigen::MatrixXi edges;
+    Eigen::MatrixXi faces;
+    Eigen::VectorXi group_ids;
+
+    SECTION("Simple")
+    {
+        vertices.resize(4, 3);
+        vertices.row(0) << -1, -1, 0;
+        vertices.row(1) << 1, -1, 0;
+        vertices.row(2) << 0, 1, 1;
+        vertices.row(3) << 0, 1, -1;
+
+        edges.resize(2, 2);
+        edges.row(0) << 0, 1;
+        edges.row(1) << 2, 3;
+
+        SECTION("Without group ids") {}
+        SECTION("With group ids")
+        {
+            group_ids.resize(4);
+            group_ids << 0, 0, 1, 1;
+        }
+
+        faces.resize(0, 3);
+
+        displacements = Eigen::MatrixXd::Zero(vertices.rows(), vertices.cols());
+        displacements.col(1).head(2).setConstant(2);
+        displacements.col(1).tail(2).setConstant(-2);
+    }
+    SECTION("Complex")
+    {
+        std::string fname = GENERATE(std::string("cube.obj")
+                                     /*, std::string("bunny-lowpoly.obj")*/);
+
+        boost::filesystem::path mesh_path = boost::filesystem::path(__FILE__)
+                                                .parent_path()
+                                                .parent_path()
+                                                .parent_path()
+            / "meshes" / fname;
+        igl::read_triangle_mesh(mesh_path.string(), vertices, faces);
+        igl::edges(faces, edges);
+
+        displacements = Eigen::MatrixXd::Zero(vertices.rows(), vertices.cols());
+        displacements.col(1).setOnes();
+    }
+
+    for (int i = 0; i < 10; i++) {
+        Candidates candidates;
+        using namespace CollisionType;
+        detect_collision_candidates_brute_force(
+            vertices, edges, faces, group_ids,
+            (EDGE_VERTEX | EDGE_EDGE | FACE_VERTEX), candidates);
+
+        tbb::parallel_sort(
+            candidates.ev_candidates.begin(), candidates.ev_candidates.end());
+        auto ev_unique_end = std::unique(
+            candidates.ev_candidates.begin(), candidates.ev_candidates.end());
+        CHECK(ev_unique_end == candidates.ev_candidates.end());
+        CHECK(
+            candidates.ev_candidates.size() <= edges.rows() * vertices.rows());
+
+        tbb::parallel_sort(
+            candidates.ee_candidates.begin(), candidates.ee_candidates.end());
+        auto ee_unique_end = std::unique(
+            candidates.ee_candidates.begin(), candidates.ee_candidates.end());
+        CHECK(ee_unique_end == candidates.ee_candidates.end());
+        CHECK(
+            candidates.fv_candidates.size()
+            <= edges.rows() * (edges.rows() - 1) / 2);
+
+        tbb::parallel_sort(
+            candidates.fv_candidates.begin(), candidates.fv_candidates.end());
+        auto fv_unique_end = std::unique(
+            candidates.fv_candidates.begin(), candidates.fv_candidates.end());
+        CHECK(fv_unique_end == candidates.fv_candidates.end());
+        CHECK(
+            candidates.fv_candidates.size() <= faces.rows() * vertices.rows());
 
         displacements.setRandom();
         displacements *= 3;

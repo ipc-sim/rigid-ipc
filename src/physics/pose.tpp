@@ -1,6 +1,7 @@
 #include "pose.hpp"
 
 #include <Eigen/Geometry>
+#include <tbb/tbb.h>
 
 #include <utils/not_implemented_error.hpp>
 
@@ -15,23 +16,14 @@ namespace physics {
     }
 
     template <typename T>
-    Pose<T>::Pose(int dim)
-        : position(Eigen::VectorX<T>::Zero(Pose<T>::dim_to_pos_ndof(dim)))
-        , rotation(Eigen::VectorX<T>::Zero(Pose<T>::dim_to_rot_ndof(dim)))
-    {
-        assert(dim == 2 || dim == 3);
-    }
-
-    template <typename T>
     Pose<T>::Pose(
-        const typename Eigen::VectorX3<T>& position,
-        const typename Eigen::VectorX3<T>& rotation)
+        const Eigen::VectorX3<T>& position, const Eigen::VectorX3<T>& rotation)
         : position(position)
         , rotation(rotation)
     {
     }
 
-    template <typename T> Pose<T>::Pose(const typename Eigen::VectorX6<T>& dof)
+    template <typename T> Pose<T>::Pose(const Eigen::VectorX6<T>& dof)
     {
         if (dof.size() == dim_to_ndof(2)) {
             position = dof.head(dim_to_pos_ndof(2));
@@ -45,13 +37,41 @@ namespace physics {
     }
 
     template <typename T>
-    std::vector<Pose<T>>
-    Pose<T>::dofs_to_poses(const typename Eigen::VectorX<T>& dofs, int dim)
+    Pose<T>::Pose(const T& x, const T& y, const T& theta)
+        : Pose(Eigen::Vector2<T>(x, y), Eigen::Vector1<T>())
+    {
+        rotation << theta;
+    }
+
+    template <typename T>
+    Pose<T>::Pose(
+        const T& x,
+        const T& y,
+        const T& z,
+        const T& theta_x,
+        const T& theta_y,
+        const T& theta_z)
+        : Pose(
+              Eigen::Vector3<T>(x, y, z),
+              Eigen::Vector3<T>(theta_x, theta_y, theta_z))
+    {
+    }
+
+    template <typename T> Pose<T> Pose<T>::Zero(int dim)
+    {
+        assert(dim == 2 || dim == 3);
+        return Pose(
+            Eigen::VectorX<T>::Zero(Pose<T>::dim_to_pos_ndof(dim)),
+            Eigen::VectorX<T>::Zero(Pose<T>::dim_to_rot_ndof(dim)));
+    }
+
+    template <typename T>
+    Poses<T> Pose<T>::dofs_to_poses(const Eigen::VectorX<T>& dofs, int dim)
     {
         int ndof = dim_to_ndof(dim);
         int num_poses = dofs.size() / ndof;
         assert(dofs.size() % ndof == 0);
-        std::vector<Pose<T>> poses;
+        Poses<T> poses;
         poses.reserve(num_poses);
         for (int i = 0; i < num_poses; i++) {
             poses.emplace_back(dofs.segment(i * ndof, ndof));
@@ -60,19 +80,18 @@ namespace physics {
     }
 
     template <typename T>
-    typename Eigen::VectorX<T>
-    Pose<T>::poses_to_dofs(const std::vector<Pose<T>>& poses)
+    Eigen::VectorX<T> Pose<T>::poses_to_dofs(const Poses<T>& poses)
     {
-        int ndof = poses.size() ? poses[0].ndof() : 0;
+        const int ndof = poses.size() ? poses[0].ndof() : 0;
         Eigen::VectorX<T> dofs(poses.size() * ndof);
-        for (int i = 0; i < poses.size(); i++) {
+        for (size_t i = 0; i < poses.size(); i++) {
             assert(poses[i].ndof() == ndof);
             dofs.segment(i * ndof, ndof) = poses[i].dof();
         }
         return dofs;
     }
 
-    template <typename T> typename Eigen::VectorX6<T> Pose<T>::dof() const
+    template <typename T> Eigen::VectorX6<T> Pose<T>::dof() const
     {
         Eigen::VectorX6<T> pose_dof(ndof());
         pose_dof.head(pos_ndof()) = position;
@@ -81,12 +100,12 @@ namespace physics {
     }
 
     template <typename T>
-    typename Eigen::MatrixXX3<T> Pose<T>::construct_rotation_matrix() const
+    Eigen::MatrixXX3<T> Pose<T>::construct_rotation_matrix() const
     {
         if (dim() == 2) {
             return Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
         } else {
-            typedef Eigen::Matrix<T, 3, 1> Vector3T;
+            typedef Eigen::Vector3<T> Vector3T;
             return (Eigen::AngleAxis<T>(rotation.z(), Vector3T::UnitZ())
                     * Eigen::AngleAxis<T>(rotation.y(), Vector3T::UnitY())
                     * Eigen::AngleAxis<T>(rotation.x(), Vector3T::UnitX()))
@@ -95,7 +114,7 @@ namespace physics {
     }
 
     template <typename T>
-    std::vector<typename Eigen::MatrixXX3<T>>
+    std::vector<Eigen::MatrixXX3<T>>
     Pose<T>::construct_rotation_matrix_gradient() const
     {
         std::vector<Eigen::MatrixXX3<T>> grad_R(
@@ -108,15 +127,14 @@ namespace physics {
             // clang-format on
         } else {
             // Construct 3D rotation matricies
-            typedef Eigen::Matrix<T, 3, 1> Vector3T;
             Eigen::Matrix<T, 3, 3> Rx =
-                Eigen::AngleAxis<T>(rotation.x(), Vector3T::UnitX())
+                Eigen::AngleAxis<T>(rotation.x(), Eigen::Vector3<T>::UnitX())
                     .toRotationMatrix();
             Eigen::Matrix<T, 3, 3> Ry =
-                Eigen::AngleAxis<T>(rotation.y(), Vector3T::UnitY())
+                Eigen::AngleAxis<T>(rotation.y(), Eigen::Vector3<T>::UnitY())
                     .toRotationMatrix();
             Eigen::Matrix<T, 3, 3> Rz =
-                Eigen::AngleAxis<T>(rotation.z(), Vector3T::UnitZ())
+                Eigen::AngleAxis<T>(rotation.z(), Eigen::Vector3<T>::UnitZ())
                     .toRotationMatrix();
 
             // Construct gradient of each rotation matrix wrt its angle
@@ -126,16 +144,12 @@ namespace physics {
                 0,          0,                  0,
                 0, -sin(rotation.x()), -cos(rotation.x()),
                 0,  cos(rotation.x()), -sin(rotation.x());
-            // clang-format on
             Eigen::Matrix<T, 3, 3> grad_Ry;
-            // clang-format off
             grad_Rx <<
                 -sin(rotation.y()), 0,  cos(rotation.y()),
                          0,         0,          0,
                 -cos(rotation.y()), 0, -sin(rotation.y());
-            // clang-format on
             Eigen::Matrix<T, 3, 3> grad_Rz;
-            // clang-format off
             grad_Rx <<
                 -sin(rotation.z()), -cos(rotation.z()), 0,
                  cos(rotation.z()), -sin(rotation.z()), 0,
@@ -149,7 +163,7 @@ namespace physics {
     }
 
     template <typename T>
-    std::vector<std::vector<typename Eigen::MatrixXX3<T>>>
+    std::vector<std::vector<Eigen::MatrixXX3<T>>>
     Pose<T>::construct_rotation_matrix_hessian() const
     {
         std::vector<std::vector<Eigen::MatrixXX3<T>>> hess_R(
@@ -162,15 +176,14 @@ namespace physics {
                 -Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
         } else {
             // Construct 3D rotation matricies
-            typedef Eigen::Matrix<T, 3, 1> Vector3T;
             Eigen::Matrix<T, 3, 3> Rx =
-                Eigen::AngleAxis<T>(rotation.x(), Vector3T::UnitX())
+                Eigen::AngleAxis<T>(rotation.x(), Eigen::Vector3<T>::UnitX())
                     .toRotationMatrix();
             Eigen::Matrix<T, 3, 3> Ry =
-                Eigen::AngleAxis<T>(rotation.y(), Vector3T::UnitY())
+                Eigen::AngleAxis<T>(rotation.y(), Eigen::Vector3<T>::UnitY())
                     .toRotationMatrix();
             Eigen::Matrix<T, 3, 3> Rz =
-                Eigen::AngleAxis<T>(rotation.z(), Vector3T::UnitZ())
+                Eigen::AngleAxis<T>(rotation.z(), Eigen::Vector3<T>::UnitZ())
                     .toRotationMatrix();
 
             // Construct gradient of each rotation matrix wrt its angle
@@ -180,16 +193,12 @@ namespace physics {
                 0,          0,                  0,
                 0, -sin(rotation.x()), -cos(rotation.x()),
                 0,  cos(rotation.x()), -sin(rotation.x());
-            // clang-format on
             Eigen::Matrix<T, 3, 3> grad_Ry;
-            // clang-format off
             grad_Rx <<
                 -sin(rotation.y()), 0,  cos(rotation.y()),
                          0,         0,          0,
                 -cos(rotation.y()), 0, -sin(rotation.y());
-            // clang-format on
             Eigen::Matrix<T, 3, 3> grad_Rz;
-            // clang-format off
             grad_Rx <<
                 -sin(rotation.z()), -cos(rotation.z()), 0,
                  cos(rotation.z()), -sin(rotation.z()), 0,
@@ -208,14 +217,14 @@ namespace physics {
         return hess_R;
     }
 
-    template <typename T> Pose<T> Pose<T>::operator+(Pose<T> other) const
+    template <typename T> Pose<T> Pose<T>::operator+(const Pose<T>& other) const
     {
         assert(dim() == other.dim());
         return Pose<T>(
             this->position + other.position, this->rotation + other.rotation);
     }
 
-    template <typename T> Pose<T>& Pose<T>::operator+=(Pose<T> other)
+    template <typename T> Pose<T>& Pose<T>::operator+=(const Pose<T>& other)
     {
         assert(dim() == other.dim());
         this->position += other.position;
@@ -223,14 +232,14 @@ namespace physics {
         return *this;
     }
 
-    template <typename T> Pose<T> Pose<T>::operator-(Pose<T> other) const
+    template <typename T> Pose<T> Pose<T>::operator-(const Pose<T>& other) const
     {
         assert(dim() == other.dim());
         return Pose<T>(
             this->position - other.position, this->rotation - other.rotation);
     }
 
-    template <typename T> Pose<T>& Pose<T>::operator-=(Pose<T> other)
+    template <typename T> Pose<T>& Pose<T>::operator-=(const Pose<T>& other)
     {
         assert(dim() == other.dim());
         this->position -= other.position;
@@ -238,21 +247,66 @@ namespace physics {
         return *this;
     }
 
-    template <typename T> Pose<T> Pose<T>::operator/(T x) const
+    template <typename T> Pose<T> Pose<T>::operator/(const T& x) const
     {
         return Pose<T>(this->position / x, this->rotation / x);
     }
 
-    template <typename T> Pose<T> Pose<T>::operator*(T x) const
+    template <typename T> Pose<T> Pose<T>::operator*(const T& x) const
     {
         return Pose<T>(this->position * x, this->rotation * x);
     }
 
+    template <typename T> Pose<T>& Pose<T>::operator*=(const T& x)
+    {
+        this->position *= x;
+        this->rotation *= x;
+        return *this;
+    }
+
     template <typename T>
-    Pose<T> Pose<T>::lerp_poses(Pose<T> pose0, Pose<T> pose1, T t)
+    Pose<T>
+    Pose<T>::lerp_poses(const Pose<T>& pose0, const Pose<T>& pose1, const T& t)
     {
         assert(pose0.dim() == pose1.dim());
         return (pose1 - pose0) * t + pose0;
+    }
+
+    template <typename T>
+    Poses<T> operator+(const Poses<T>& poses0, const Poses<T>& poses1)
+    {
+        Poses<T> sum = poses0;
+        tbb::parallel_for(
+            size_t(0), sum.size(), [&](size_t i) { sum[i] += poses1[i]; });
+        return sum;
+    }
+
+    template <typename T>
+    Poses<T> operator-(const Poses<T>& poses0, const Poses<T>& poses1)
+    {
+        Poses<T> diff = poses0;
+        tbb::parallel_for(
+            size_t(0), diff.size(), [&](size_t i) { diff[i] -= poses1[i]; });
+        return diff;
+    }
+
+    template <typename T> Poses<T> operator*(const Poses<T>& poses, const T& x)
+    {
+        Poses<T> product = poses;
+        tbb::parallel_for(
+            size_t(0), product.size(), [&](size_t i) { product[i] *= x; });
+        return product;
+    }
+
+    template <typename T1, typename T2>
+    Poses<T2> cast(const Poses<T1>& poses_T1)
+    {
+        Poses<T2> poses_T2;
+        poses_T2.reserve(poses_T1.size());
+        for (int i = 0; i < poses_T1.size(); i++) {
+            poses_T2.push_back(poses_T1[i].template cast<T2>());
+        }
+        return poses_T2;
     }
 
 } // namespace physics

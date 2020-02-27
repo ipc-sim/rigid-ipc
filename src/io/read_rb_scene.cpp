@@ -72,24 +72,24 @@ namespace io {
                 faces.resize(0, 0);
             }
 
-            Eigen::VectorXd position;
+            Eigen::VectorX3d position;
             from_json<double>(args["position"], position);
             assert(position.size() >= dim);
             position.conservativeResize(dim);
 
-            Eigen::VectorXd rotation;
+            Eigen::VectorX3d rotation;
             from_json<double>(args["rotation"], rotation);
             assert(rotation.size() >= angular_dim);
             rotation.conservativeResize(angular_dim);
             // Convert to radians for easy use later
             rotation *= M_PI / 180.0;
 
-            Eigen::VectorXd linear_velocity;
+            Eigen::VectorX3d linear_velocity;
             from_json<double>(args["linear_velocity"], linear_velocity);
             assert(linear_velocity.size() >= dim);
             linear_velocity.conservativeResize(dim);
 
-            Eigen::VectorXd angular_velocity;
+            Eigen::VectorX3d angular_velocity;
             from_json<double>(args["angular_velocity"], angular_velocity);
             assert(angular_velocity.size() >= angular_dim);
             angular_velocity.conservativeResize(angular_dim);
@@ -105,7 +105,7 @@ namespace io {
             bool is_oriented = args["oriented"].get<bool>();
 
             auto rb = physics::RigidBody::from_points(
-                vertices, faces, edges,
+                vertices, edges, faces,
                 physics::Pose<double>(position, rotation),
                 physics::Pose<double>(linear_velocity, angular_velocity),
                 density, is_dof_fixed, is_oriented);

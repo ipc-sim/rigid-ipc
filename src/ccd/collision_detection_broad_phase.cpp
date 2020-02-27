@@ -21,6 +21,8 @@ void detect_collisions(
     DetectionMethod method)
 {
     assert(vertices.size() == displacements.size());
+    assert(edges.size() == 0 || edges.cols() == 2);
+    assert(faces.size() == 0 || faces.cols() == 3);
 
     // Do the broad phase by detecting candidate impacts
     Candidates candidates;
@@ -51,6 +53,8 @@ void detect_collision_candidates(
     assert(
         method == DetectionMethod::BRUTE_FORCE
         || method == DetectionMethod::HASH_GRID);
+    assert(edges.size() == 0 || edges.cols() == 2);
+    assert(faces.size() == 0 || faces.cols() == 3);
     PROFILE_POINT("collisions_detection");
     NAMED_PROFILE_POINT("collisions_detection__broad_phase", BROAD_PHASE);
 

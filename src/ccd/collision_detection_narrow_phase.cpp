@@ -6,7 +6,7 @@
 
 #include <cmath>
 
-// Ettien Vouga's CCD using a root finder in floating points
+// Etienne Vouga's CCD using a root finder in floating points
 #include <CTCD.h>
 #include <igl/barycentric_coordinates.h>
 

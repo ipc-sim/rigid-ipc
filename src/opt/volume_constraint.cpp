@@ -37,7 +37,7 @@ namespace opt {
         return json;
     }
 
-    EdgeVertexImpacts VolumeConstraint::initialize(
+    tbb::concurrent_vector<EdgeVertexImpact> VolumeConstraint::initialize(
         const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges,
         const Eigen::VectorXi& group_ids,
@@ -47,7 +47,7 @@ namespace opt {
         m_edge_impact_map.setZero();
 
         num_constraints = get_constraints_size(edges.rows());
-        return CollisionConstraint::initialize(vertices, edges, group_ids, Uk);
+        return CollisionConstraint::initialize();
     }
 
     /**
@@ -59,7 +59,7 @@ namespace opt {
      * @return The number of edges that have an impact.
      */
     int prune_impacts(
-        const EdgeEdgeImpacts& all_impacts,
+        const tbb::concurrent_vector<EdgeEdgeImpact>& all_impacts,
         Eigen::VectorXi& pruned_impact_indices)
     {
         // An index value of -1 indicates no impact for that edge
@@ -87,12 +87,12 @@ namespace opt {
         return num_pruned_impacts;
     }
 
-    EdgeEdgeImpacts
+    tbb::concurrent_vector<EdgeEdgeImpact>
     VolumeConstraint::get_ee_collision_set(const Eigen::MatrixXd& Uk)
     {
         auto ev_impacts = get_collision_set(Uk);
 
-        EdgeEdgeImpacts ee_impacts;
+        tbb::concurrent_vector<EdgeEdgeImpact> ee_impacts;
         ccd::convert_edge_vertex_to_edge_edge_impacts(
             edges, ev_impacts, ee_impacts);
         prune_impacts(ee_impacts, m_edge_impact_map);
@@ -104,39 +104,24 @@ namespace opt {
     void VolumeConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk)
     {
-        EdgeEdgeImpacts ee_impacts = get_ee_collision_set(Uk);
+        tbb::concurrent_vector<EdgeEdgeImpact> ee_impacts =
+            get_ee_collision_set(Uk);
         compute_constraints(Uk, ee_impacts, g_uk);
     }
-
-    //    void VolumeConstraint::compute_constraints_jacobian(
-    //        const Eigen::MatrixXd& Uk, Eigen::SparseMatrix<double>& jac_uk)
-    //    {
-    //        EdgeEdgeImpacts ee_impacts = get_ee_collision_set(Uk);
-    //        compute_constraints_jacobian(Uk, ee_impacts, jac_uk);
-    //    }
-
-    //    void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
-    //        Eigen::VectorXd& g_uk,
-    //        Eigen::SparseMatrix<double>& g_uk_jacobian,
-    //        Eigen::VectorXi& g_uk_active)
-    //    {
-    //        EdgeEdgeImpacts ee_impacts = get_ee_collision_set(Uk);
-    //        compute_constraints(Uk, ee_impacts, g_uk, g_uk_jacobian,
-    //        g_uk_active);
-    //    }
 
     void VolumeConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk,
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
-        EdgeEdgeImpacts ee_impacts = get_ee_collision_set(Uk);
+        tbb::concurrent_vector<EdgeEdgeImpact> ee_impacts =
+            get_ee_collision_set(Uk);
         compute_constraints(Uk, ee_impacts, g_uk, g_uk_jacobian);
     }
 
     void VolumeConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk,
-        const EdgeEdgeImpacts& ee_impacts,
+        const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
         Eigen::VectorXd& g_uk)
     {
         //        g_uk.resize(num_constraints);
@@ -201,10 +186,10 @@ namespace opt {
                     v_k, v_l, u_k, u_l, toi, alpha_kl, volume_epsilon);
             }
 
-            //            long c_ij = get_constraint_index(
-            //                ee_impact, /*impacted=*/true, edges.rows());
-            //            long c_kl = get_constraint_index(
-            //                ee_impact, /*impacted=*/false, edges.rows());
+            // long c_ij = get_constraint_index(
+            //     ee_impact, /*impacted=*/true, edges.rows());
+            // long c_kl = get_constraint_index(
+            //     ee_impact, /*impacted=*/false, edges.rows());
 
             int c_ij = 2 * int(i) + 0;
             int c_kl = 2 * int(i) + 1;
@@ -215,10 +200,9 @@ namespace opt {
 
     void VolumeConstraint::compute_constraints_jacobian(
         const Eigen::MatrixXd& Uk,
-        const EdgeEdgeImpacts& ee_impacts,
+        const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
         Eigen::MatrixXd& jac_uk)
     {
-
         jac_uk.resize(int(ee_impacts.size()) * 2, int(vertices.size()));
 
         typedef AutodiffType<8> Diff;
@@ -309,7 +293,7 @@ namespace opt {
 
     void VolumeConstraint::compute_constraints_normals(
         const Eigen::MatrixXd& Uk,
-        const EdgeEdgeImpacts& ee_impacts,
+        const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
         Eigen::MatrixXd& jac_uk)
     {
         jac_uk.resize(int(ee_impacts.size()) * 2, int(vertices.size()));
@@ -413,129 +397,9 @@ namespace opt {
         }
     }
 
-    //    void VolumeConstraint::compute_constraints_jacobian(
-    //        const Eigen::MatrixXd& Uk,
-    //        const EdgeEdgeImpacts& ee_impacts,
-    //        Eigen::SparseMatrix<double>& jac_uk)
-    //    {
-
-    //        typedef Eigen::Triplet<double> M;
-    //        std::vector<M> triplets;
-
-    //        typedef AutodiffType<8> Diff;
-    //        Diff::activate();
-
-    //        for (size_t i = 0; i < ee_impacts.size(); ++i) {
-    //            auto& ee_impact = ee_impacts[i];
-
-    //            Eigen::Vector2i e_ij =
-    //            edges.row(ee_impact.impacted_edge_index); Eigen::Vector2i e_kl
-    //            = edges.row(ee_impact.impacting_edge_index);
-
-    //            int node_i, node_j, node_k, node_l;
-    //            node_i = e_ij(0);
-    //            node_j = e_ij(1);
-    //            node_k = e_kl(0);
-    //            node_l = e_kl(1);
-
-    //            Eigen::VectorXd v_i, v_j, v_k, v_l;
-    //            v_i = vertices.row(node_i);
-    //            v_j = vertices.row(node_j);
-    //            v_k = vertices.row(node_k);
-    //            v_l = vertices.row(node_l);
-
-    //            Diff::D1Vector2d u_i, u_j, u_k, u_l;
-    //            u_i = Diff::d1vars(0, Uk.row(node_i));
-    //            u_j = Diff::d1vars(2, Uk.row(node_j));
-    //            u_k = Diff::d1vars(4, Uk.row(node_k));
-    //            u_l = Diff::d1vars(6, Uk.row(node_l));
-
-    //            Eigen::VectorXd v_c;
-    //            Diff::D1Vector2d u_c;
-    //            if (ee_impact.impacting_node() == 0) {
-    //                v_c = v_k;
-    //                u_c = u_k;
-    //            } else {
-    //                v_c = v_l;
-    //                u_c = u_l;
-    //            }
-
-    //            Diff::DDouble1 toi, alpha_ij, alpha_kl;
-    //            alpha_kl = ee_impact.impacting_node();
-    //            // get toi and alpha
-    //            bool success;
-    //            success = ccd::autodiff::compute_edge_vertex_time_of_impact<
-    //                Diff::DDouble1>(v_i, v_j, v_c, u_i, u_j, u_c, toi);
-    //            success = success
-    //                && ccd::autodiff::temporal_parameterization_to_spatial<
-    //                       Diff::DDouble1>(
-    //                       v_i, v_j, v_c, u_i, u_j, u_c, toi, alpha_ij);
-
-    //            Diff::D1Vector2d avg_u = (u_i + alpha_ij * (u_j - u_i) - u_k);
-    //            Diff::DDouble1 avg_d = (avg_u).norm();
-    //            toi = toi * (1.0 - time_epsilon / avg_d);
-    //            if (toi < 0)
-    //                toi = Diff::DDouble1(0);
-
-    //            Diff::DDouble1 vol_ij(0), vol_kl(0);
-    //            if (success) {
-    //                vol_ij
-    //                    =
-    //                    ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
-    //                        v_i, v_j, u_i, u_j, toi, alpha_ij,
-    //                        volume_epsilon);
-    //                vol_kl
-    //                    =
-    //                    ccd::autogen::space_time_collision_volume<Diff::DDouble1>(
-    //                        v_k, v_l, u_k, u_l, toi, alpha_kl,
-    //                        volume_epsilon);
-    //            }
-    //            long c_ij = get_constraint_index(
-    //                ee_impact, /*impacted=*/true, edges.rows());
-    //            long c_kl = get_constraint_index(
-    //                ee_impact, /*impacted=*/false, edges.rows());
-
-    //            // local gradients
-    //            Eigen::VectorXd grad_vol_ij = vol_ij.getGradient();
-    //            Eigen::VectorXd grad_vol_kl = vol_kl.getGradient();
-
-    //            // x entries:
-    //            int nodes[4] = { node_i, node_j, node_k, node_l };
-    //            for (int n_id = 0; n_id < 4; ++n_id) {
-    //                // x and y entries
-    //                triplets.emplace_back(
-    //                    int(c_ij), nodes[n_id], grad_vol_ij(2 * n_id));
-    //                triplets.emplace_back(int(c_ij), nodes[n_id] +
-    //                vertices.rows(),
-    //                    grad_vol_ij(2 * n_id + 1));
-
-    //                // x and y entries
-    //                triplets.emplace_back(
-    //                    int(c_kl), nodes[n_id], grad_vol_kl(2 * n_id));
-    //                triplets.emplace_back(int(c_kl), nodes[n_id] +
-    //                vertices.rows(),
-    //                    grad_vol_kl(2 * n_id + 1));
-    //            }
-    //        }
-
-    //        jac_uk.resize(int(num_constraints), int(vertices.size()));
-    //        jac_uk.setFromTriplets(triplets.begin(), triplets.end());
-    //    }
-
-    //    void VolumeConstraint::compute_constraints(const Eigen::MatrixXd& Uk,
-    //        const EdgeEdgeImpacts& ee_impacts,
-    //        Eigen::VectorXd& g_uk,
-    //        Eigen::SparseMatrix<double>& g_uk_jacobian,
-    //        Eigen::VectorXi& g_uk_active)
-    //    {
-    //        compute_constraints(Uk, ee_impacts, g_uk);
-    //        compute_constraints_jacobian(Uk, ee_impacts, g_uk_jacobian);
-    //        dense_indices(ee_impacts, g_uk_active);
-    //    }
-
     void VolumeConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk,
-        const EdgeEdgeImpacts& ee_impacts,
+        const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
@@ -544,7 +408,8 @@ namespace opt {
     }
 
     void VolumeConstraint::dense_indices(
-        const EdgeEdgeImpacts& ee_impacts, Eigen::VectorXi& dense_indices)
+        const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+        Eigen::VectorXi& dense_indices)
     {
         dense_indices.resize(int(ee_impacts.size()) * 2);
 

@@ -1,6 +1,8 @@
 #include "mass.hpp"
 
 #include <igl/massmatrix.h>
+
+#include <logger.hpp>
 #include <utils/eigen_ext.hpp>
 #include <utils/not_implemented_error.hpp>
 
@@ -17,7 +19,14 @@ namespace physics {
         if (vertices.cols() == 2) {
             compute_mass_properties_2D(vertices, facets, mass, center, inertia);
         } else {
-            compute_mass_properties_3D(vertices, facets, mass, center, inertia);
+            // TODO: Fix this temporary version
+            try {
+                compute_mass_properties_3D(
+                    vertices, facets, mass, center, inertia);
+            } catch (NotImplementedError err) {
+                compute_mass_properties_2D(
+                    vertices, facets, mass, center, inertia);
+            }
         }
     }
 
@@ -125,6 +134,12 @@ namespace physics {
 
         // mass
         mass = integral[0];
+        if (mass == 0) {
+            spdlog::error("3D mass computation failed!");
+            throw NotImplementedError(
+                "3D mass computation only works for closed meshes!");
+        }
+        assert(mass != 0);
 
         // center of mass
         center = Eigen::Vector3d(integral[1], integral[2], integral[3]) / mass;
@@ -248,8 +263,10 @@ namespace physics {
             I << (mass_matrix * vertices.rowwise().squaredNorm()).sum();
             return I;
         } else {
-            throw NotImplementedError(
+            // throw NotImplementedError(
+            spdlog::error(
                 "3D moment of interia from the mass matrix is not impmented!");
+            return Eigen::Matrix3d::Identity();
         }
     }
 

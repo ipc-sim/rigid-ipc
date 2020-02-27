@@ -15,8 +15,8 @@ namespace physics {
 
     RigidBody RigidBody::from_points(
         const Eigen::MatrixXd& vertices,
-        const Eigen::MatrixXi& faces,
         const Eigen::MatrixXi& edges,
+        const Eigen::MatrixXi& faces,
         const Pose<double>& pose,
         const Pose<double>& velocity,
         const double density,
@@ -26,6 +26,8 @@ namespace physics {
         int dim = vertices.cols();
         assert(dim == pose.dim());
         assert(dim == velocity.dim());
+        assert(edges.size() == 0 || edges.cols() == 2);
+        assert(faces.size() == 0 || faces.cols() == 3);
 
         // move vertices so their center of mass is at (0, 0)
         Eigen::MatrixXd vertices_ = vertices;

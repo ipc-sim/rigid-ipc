@@ -39,8 +39,8 @@ namespace physics {
     public:
         static RigidBody from_points(
             const Eigen::MatrixXd& vertices,
-            const Eigen::MatrixXi& faces,
             const Eigen::MatrixXi& edges,
+            const Eigen::MatrixXi& faces,
             const Pose<double>& pose,
             const Pose<double>& velocity,
             const double density,
@@ -58,7 +58,7 @@ namespace physics {
             const bool oriented)
         {
             return from_points(
-                vertices, Eigen::MatrixXi(), edges, pose, velocity, density,
+                vertices, edges, Eigen::MatrixXi(), pose, velocity, density,
                 is_dof_fixed, oriented);
         }
 

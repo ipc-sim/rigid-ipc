@@ -13,7 +13,8 @@
 namespace test_utils {
 
 using namespace ccd::physics;
-RigidBody rb_from_displacements(const Eigen::MatrixXd& vertices,
+RigidBody rb_from_displacements(
+    const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& edges,
     const Pose<double>& displacement)
 {
@@ -22,17 +23,18 @@ RigidBody rb_from_displacements(const Eigen::MatrixXd& vertices,
     Eigen::MatrixXd centered_vertices = vertices.rowwise() - x;
 
     // set position so current vertices match input
-    Pose<double> pose_t0(vertices.cols());
+    Pose<double> pose_t0 = Pose<double>::Zero(vertices.cols());
     pose_t0.position = x;
 
     // set previous_step position to:
     Pose<double> pose_t1 = pose_t0 + displacement;
 
     // set velocity to zero
-    Pose<double> velocity(vertices.cols());
+    Pose<double> velocity = Pose<double>::Zero(vertices.cols());
 
     int ndof = pose_t0.ndof();
-    auto rb = RigidBody::from_points(vertices, edges, pose_t0, velocity,
+    auto rb = RigidBody::from_points(
+        vertices, edges, pose_t0, velocity,
         /*density=*/1,
         /*dof=*/Eigen::VectorXb::Zero(ndof),
         /*oriented=*/false);
@@ -50,7 +52,8 @@ TEST_CASE(
     Eigen::MatrixXd vertices(4, 2);
     int dim = vertices.cols();
     Eigen::MatrixXi edges(4, 2);
-    Pose<double> displ_1(dim), displ_2(dim);
+    Pose<double> displ_1 = Pose<double>::Zero(dim),
+                 displ_2 = Pose<double>::Zero(dim);
 
     Eigen::MatrixXd expected(4, 2);
 
@@ -60,9 +63,9 @@ TEST_CASE(
     // expected displacement of nodes
     double dx = 0.0;
 
-    double mass = 4.0; // \sum mi = 4 * 1.0
-    double moment_inertia
-        = 8.0 * 0.5 * 0.5; // sum mi ||ri||2 =  4 * 1.0 * 2.0 * (0.5)**2
+    double mass = 4.0; // ∑ mᵢ = 4 * 1.0
+    double moment_inertia =
+        8.0 * 0.5 * 0.5; // ∑ mᵢ ||rᵢ||² =  4 * 1.0 * 2.0 * (0.5)**2
 
     SECTION("Translation Case")
     {
@@ -91,16 +94,13 @@ TEST_CASE(
     rbp.init(rbs);
 
     // displacement cases
-    Eigen::VectorXd x(2 * rbs[0].ndof());
-    x << rbs[0].pose_prev.dof() + displ_1.dof(),
-        rbs[1].pose_prev.dof() + displ_2.dof();
-    x = rbp.m_assembler.m_pose_to_dof * x;
+    Eigen::VectorXd x = rbp.poses_to_dofs<double>(
+        { { rbs[0].pose_prev + displ_1, rbs[1].pose_prev + displ_2 } });
     double fx = rbp.eval_f(x);
     CHECK(fx == Approx(0.0));
 
-    x << rbs[0].pose_prev.dof() + 2 * displ_1.dof(),
-        rbs[1].pose_prev.dof() + 2 * displ_2.dof();
-    x = rbp.m_assembler.m_pose_to_dof * x;
+    x = rbp.poses_to_dofs<double>(
+        { { rbs[0].pose_prev + displ_1 * 2, rbs[1].pose_prev + displ_2 * 2 } });
     fx = rbp.eval_f(x);
     CHECK(fx == Approx(dx));
 }
@@ -113,7 +113,8 @@ TEST_CASE(
     Eigen::MatrixXd vertices(4, 2);
     int dim = vertices.cols();
     Eigen::MatrixXi edges(4, 2);
-    Pose<double> vel_1(dim), vel_2(dim);
+    Pose<double> vel_1 = Pose<double>::Zero(dim),
+                 vel_2 = Pose<double>::Zero(dim);
 
     Eigen::MatrixXd expected(4, 2);
 
@@ -165,7 +166,8 @@ TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
     Eigen::MatrixXd vertices(4, 2);
     int dim = vertices.cols();
     Eigen::MatrixXi edges(4, 2);
-    Pose<double> vel_1(dim), vel_2(dim);
+    Pose<double> vel_1 = Pose<double>::Zero(dim),
+                 vel_2 = Pose<double>::Zero(dim);
 
     Eigen::MatrixXd expected(4, 2);
 

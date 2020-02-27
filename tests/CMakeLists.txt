@@ -26,7 +26,7 @@ add_executable(${PROJECT_NAME}_tests
     solvers/test_line_search.cpp
 
     opt/test_barriers.cpp
-    opt/test_volume_constraint.cpp
+    # opt/test_volume_constraint.cpp
     opt/test_distance_barrier_constraint.cpp
 
     physics/test_mass.cpp

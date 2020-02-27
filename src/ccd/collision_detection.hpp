@@ -52,8 +52,8 @@ namespace CollisionType {
 void detect_collisions(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixXi& faces,
     const Eigen::MatrixXi& edges,
+    const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
     ConcurrentImpacts& impacts,

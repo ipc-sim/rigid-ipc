@@ -11,7 +11,7 @@ TEST_CASE("Test Continous Collision Detection", "[ccd][thisone]")
     Eigen::Matrix<double, 3, 2, Eigen::RowMajor> displacements;
     Eigen::Matrix<int, 1, 2, Eigen::RowMajor> edges;
     edges.row(0) << 1, 2;
-    EdgeVertexImpacts ev_impacts;
+    ConcurrentImpacts impacts;
     SECTION("Edge becomes degenerate")
     {
         vertices.row(0) << 0, 1;
@@ -38,14 +38,15 @@ TEST_CASE("Test Continous Collision Detection", "[ccd][thisone]")
             // The edge will become degenerate at t=2/3
         }
         // The point will collide with the edge at t=0.5
-        ccd::detect_edge_vertex_collisions(
-            vertices, displacements, edges, ev_impacts);
-        CHECK(ev_impacts.size() == 1);
-        if (ev_impacts.size() == 1) {
-            CHECK(ev_impacts.front().time == Approx(0.5));
-            CHECK(ev_impacts.front().alpha == Approx(0.5));
-            CHECK(ev_impacts.front().vertex_index == 0);
-            CHECK(ev_impacts.front().edge_index == 0);
+        ccd::detect_collisions(
+            vertices, displacements, edges, Eigen::MatrixXi(0, 3),
+            Eigen::VectorXi(), ccd::CollisionType::EDGE_VERTEX, impacts);
+        CHECK(impacts.ev_impacts.size() == 1);
+        if (impacts.ev_impacts.size() == 1) {
+            CHECK(impacts.ev_impacts.front().time == Approx(0.5));
+            CHECK(impacts.ev_impacts.front().alpha == Approx(0.5));
+            CHECK(impacts.ev_impacts.front().vertex_index == 0);
+            CHECK(impacts.ev_impacts.front().edge_index == 0);
         }
     }
     SECTION("Edge moving right; point moving left")
@@ -56,14 +57,15 @@ TEST_CASE("Test Continous Collision Detection", "[ccd][thisone]")
         displacements.row(0) << 2, 0;
         displacements.row(1) << -2, 0;
         displacements.row(2) << -2, 0;
-        ccd::detect_edge_vertex_collisions(
-            vertices, displacements, edges, ev_impacts);
-        CHECK(ev_impacts.size() == 1);
-        if (ev_impacts.size() == 1) {
-            CHECK(ev_impacts.front().time == Approx(0.5));
-            CHECK(ev_impacts.front().alpha == Approx(0.5));
-            CHECK(ev_impacts.front().vertex_index == 0);
-            CHECK(ev_impacts.front().edge_index == 0);
+        ccd::detect_collisions(
+            vertices, displacements, edges, Eigen::MatrixXi(0, 3),
+            Eigen::VectorXi(), ccd::CollisionType::EDGE_VERTEX, impacts);
+        CHECK(impacts.ev_impacts.size() == 1);
+        if (impacts.ev_impacts.size() == 1) {
+            CHECK(impacts.ev_impacts.front().time == Approx(0.5));
+            CHECK(impacts.ev_impacts.front().alpha == Approx(0.5));
+            CHECK(impacts.ev_impacts.front().vertex_index == 0);
+            CHECK(impacts.ev_impacts.front().edge_index == 0);
         }
     }
     SECTION("Point on edge's line moving towards edge")
@@ -74,14 +76,15 @@ TEST_CASE("Test Continous Collision Detection", "[ccd][thisone]")
         displacements.row(0) << 0, 2;
         displacements.row(1) << 0, 0;
         displacements.row(2) << 0, 0;
-        ccd::detect_edge_vertex_collisions(
-            vertices, displacements, edges, ev_impacts);
-        CHECK(ev_impacts.size() == 1);
-        if (ev_impacts.size() == 1) {
-            CHECK(ev_impacts.front().time == Approx(0.5));
-            CHECK(ev_impacts.front().alpha == Approx(0.0));
-            CHECK(ev_impacts.front().vertex_index == 0);
-            CHECK(ev_impacts.front().edge_index == 0);
+        ccd::detect_collisions(
+            vertices, displacements, edges, Eigen::MatrixXi(0, 3),
+            Eigen::VectorXi(), ccd::CollisionType::EDGE_VERTEX, impacts);
+        CHECK(impacts.ev_impacts.size() == 1);
+        if (impacts.ev_impacts.size() == 1) {
+            CHECK(impacts.ev_impacts.front().time == Approx(0.5));
+            CHECK(impacts.ev_impacts.front().alpha == Approx(0.0));
+            CHECK(impacts.ev_impacts.front().vertex_index == 0);
+            CHECK(impacts.ev_impacts.front().edge_index == 0);
         }
     }
     SECTION("Point and edge moving parallel")
@@ -92,9 +95,10 @@ TEST_CASE("Test Continous Collision Detection", "[ccd][thisone]")
         displacements.row(0) << 0, 1;
         displacements.row(1) << 0, 1;
         displacements.row(2) << 0, 1;
-        ccd::detect_edge_vertex_collisions(
-            vertices, displacements, edges, ev_impacts);
-        CHECK(ev_impacts.size() == 0);
+        ccd::detect_collisions(
+            vertices, displacements, edges, Eigen::MatrixXi(0, 3),
+            Eigen::VectorXi(), ccd::CollisionType::EDGE_VERTEX, impacts);
+        CHECK(impacts.ev_impacts.size() == 0);
     }
     SECTION("Point moving right; edge stretching vertically")
     {
@@ -107,11 +111,12 @@ TEST_CASE("Test Continous Collision Detection", "[ccd][thisone]")
             displacements.row(0) << 0, 1;
             displacements.row(1) << 1, 0;
             edges(0) = 0;
-            ccd::detect_edge_vertex_collisions(
-                vertices, displacements, edges, ev_impacts);
-            CHECK(ev_impacts.size() == 1);
-            if (ev_impacts.size() == 1) {
-                CHECK(ev_impacts.front().vertex_index == 1);
+            ccd::detect_collisions(
+                vertices, displacements, edges, Eigen::MatrixXi(0, 3),
+                Eigen::VectorXi(), ccd::CollisionType::EDGE_VERTEX, impacts);
+            CHECK(impacts.ev_impacts.size() == 1);
+            if (impacts.ev_impacts.size() == 1) {
+                CHECK(impacts.ev_impacts.front().vertex_index == 1);
             }
         }
         SECTION("Swap vertices order e_0 = [1, 2]")
@@ -121,15 +126,16 @@ TEST_CASE("Test Continous Collision Detection", "[ccd][thisone]")
             displacements.row(0) << 1, 0;
             displacements.row(1) << 0, 1;
             edges(0) = 1;
-            ccd::detect_edge_vertex_collisions(
-                vertices, displacements, edges, ev_impacts);
-            CHECK(ev_impacts.size() == 1);
-            if (ev_impacts.size() == 1) {
-                CHECK(ev_impacts.front().vertex_index == 0);
+            ccd::detect_collisions(
+                vertices, displacements, edges, Eigen::MatrixXi(0, 3),
+                Eigen::VectorXi(), ccd::CollisionType::EDGE_VERTEX, impacts);
+            CHECK(impacts.ev_impacts.size() == 1);
+            if (impacts.ev_impacts.size() == 1) {
+                CHECK(impacts.ev_impacts.front().vertex_index == 0);
             }
         }
-        CHECK(ev_impacts.front().edge_index == 0);
-        CHECK(ev_impacts.front().time == Approx(1.0));
-        CHECK(ev_impacts.front().alpha == Approx(0.5));
+        CHECK(impacts.ev_impacts.front().edge_index == 0);
+        CHECK(impacts.ev_impacts.front().time == Approx(1.0));
+        CHECK(impacts.ev_impacts.front().alpha == Approx(0.5));
     }
 }

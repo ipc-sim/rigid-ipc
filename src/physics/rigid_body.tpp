@@ -20,7 +20,7 @@ namespace physics {
     Eigen::VectorX3<T>
     RigidBody::world_vertex(const Pose<T>& _pose, const int vertex_idx) const
     {
-        // compute X[i] = R(theta) * r_i + X
+        // compute X[i] = R(θ) * rᵢ + X
         Eigen::MatrixXX3<T> R = _pose.construct_rotation_matrix();
         return (vertices.row(vertex_idx).cast<T>() * R.transpose())
             + _pose.position.transpose();

@@ -17,7 +17,7 @@ namespace physics {
         virtual ~ISimulationProblem() = default;
         enum CollisionCheck { EXACT = 0, CONSERVATIVE };
 
-        virtual opt::CollisionConstraint& constraint() = 0;
+        virtual const opt::CollisionConstraint& constraint() const = 0;
         virtual opt::IStateOptimizationSolver& solver() = 0;
 
         virtual std::string name() = 0;
@@ -31,9 +31,8 @@ namespace physics {
         virtual bool simulation_step(const double time_step) = 0;
 
         /// @brief moves status to given positions
-        virtual bool take_step(
-            const Eigen::VectorXd& positions, const double time_step)
-            = 0;
+        virtual bool
+        take_step(const Eigen::VectorXd& positions, const double time_step) = 0;
 
         /// \brief update optimization problem using current status.
         virtual void update_constraint() = 0;

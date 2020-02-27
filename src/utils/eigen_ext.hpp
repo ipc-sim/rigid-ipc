@@ -9,6 +9,7 @@ typedef Matrix<bool, 3, 1> Vector3b;
 typedef Matrix<bool, Dynamic, Dynamic> MatrixXb;
 
 template <typename T, int dim> using Vector = Matrix<T, dim, 1>;
+template <typename T> using Vector1 = Vector<T, 1>;
 template <typename T> using Vector2 = Vector<T, 2>;
 template <typename T> using Vector3 = Vector<T, 3>;
 template <typename T> using VectorX = Vector<T, Eigen::Dynamic>;

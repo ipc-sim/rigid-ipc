@@ -69,7 +69,7 @@ add_library(${PROJECT_NAME}
     src/opt/collision_constraint.cpp
     src/opt/optimization_problem.cpp
     src/opt/optimization_results.cpp
-    src/opt/volume_constraint.cpp
+    # src/opt/volume_constraint.cpp
 
     src/solvers/barrier_solver.cpp
     src/solvers/fischer_newton.cpp
@@ -81,7 +81,7 @@ add_library(${PROJECT_NAME}
     src/solvers/solver_factory.cpp
 
     src/problems/distance_barrier_rb_problem.cpp
-    src/problems/volume_rb_problem.cpp
+    # src/problems/volume_rb_problem.cpp
     src/problems/problem_factory.cpp
 
     src/utils/tensor.cpp
