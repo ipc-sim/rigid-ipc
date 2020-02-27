@@ -2,11 +2,11 @@
 
 #include <nlohmann/json.hpp>
 
-#include <ccd/collision_detection.hpp>
+#include <ccd/rigid_body_collision_detection.hpp>
+#include <physics/rigid_body_assembler.hpp>
 
 namespace ccd {
 namespace opt {
-
 
     class CollisionConstraint {
     public:
@@ -18,22 +18,17 @@ namespace opt {
 
         inline const std::string& name() const { return name_; }
 
-        virtual EdgeVertexImpacts initialize(const Eigen::MatrixX2d& vertices,
-            const Eigen::MatrixX2i& edges,
-            const Eigen::VectorXi& group_ids,
-            const Eigen::MatrixXd& Uk);
+        virtual void initialize() {};
 
-        EdgeVertexImpacts get_collision_set(const Eigen::MatrixXd& Uk);
+        void construct_collision_set(
+            const physics::RigidBodyAssembler& bodies,
+            const physics::Poses<double> poses,
+            const physics::Poses<double> displacements,
+            ConcurrentImpacts& impacts) const;
 
         // Settings
         // ----------
         DetectionMethod detection_method;
-
-        // Structures used for detection
-        // ------------
-        Eigen::MatrixX2d vertices;
-        Eigen::MatrixX2i edges;
-        Eigen::VectorXi group_ids;
 
     protected:
         inline static int dim_to_collision_type(int dim)

@@ -87,15 +87,18 @@ namespace opt {
         }
 
         opt::CollisionConstraint& constraint() override { return constraint_; }
+        const opt::CollisionConstraint& constraint() const override
+        {
+            return constraint_;
+        }
         opt::IStateOptimizationSolver& solver() override { return opt_solver_; }
 
         Eigen::MatrixXd eval_jac_g_full(
-            const Eigen::VectorXd& sigma,
-            const EdgeVertexCandidates& ev_candidates);
+            const Eigen::VectorXd& sigma, const Candidates& candidates);
 
         bool compare_jac_g(
             const Eigen::VectorXd& x,
-            const EdgeVertexCandidates& ev_candidates,
+            const Candidates& candidates,
             const Eigen::MatrixXd& jac_g);
 
         bool has_collisions(
@@ -112,7 +115,7 @@ namespace opt {
         debug_vertices(const Eigen::VectorXd& sigma) const override;
         Eigen::MatrixXd debug_vertices_t0() const override
         {
-            return vertices_t0;
+            return m_assembler.world_vertices(poses_t0);
         }
 #endif
         double debug_min_distance(const Eigen::VectorXd& sigma) const override;
@@ -128,11 +131,11 @@ namespace opt {
         template <typename T>
         T distance(const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
 
-        Eigen::MatrixXd eval_jac_g_core(
-            const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
+        Eigen::MatrixXd
+        eval_jac_g_core(const Eigen::VectorXd& sigma, const Candidates&);
 
-        std::vector<Eigen::SparseMatrix<double>> eval_hessian_g_core(
-            const Eigen::VectorXd& sigma, const EdgeVertexCandidates&);
+        std::vector<Eigen::SparseMatrix<double>>
+        eval_hessian_g_core(const Eigen::VectorXd& sigma, const Candidates&);
 
         bool compare_fd(
             const Eigen::VectorXd& sigma,

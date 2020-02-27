@@ -27,28 +27,43 @@ namespace opt {
 
     template <typename T>
     void DistanceBarrierConstraint::compute_candidates_constraints(
-        const Eigen::MatrixX<T>& Uk,
-        const EdgeVertexCandidates& ev_candidates,
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses,
+        const physics::Poses<T>& displacements,
+        const Candidates& candidates,
         Eigen::VectorX<T>& barriers)
     {
         // distance barrier is evaluated at end-positions
-        Eigen::MatrixX<T> vertices_t1 = vertices.cast<T>() + Uk;
+        physics::Poses<T> poses_t1 =
+            physics::cast<double, T>(poses) + displacements;
+        Eigen::MatrixX<T> vertices_t1 = bodies.world_vertices(poses_t1);
 
-        barriers.resize(ev_candidates.size(), 1);
+        int num_barriers = candidates.size();
+        barriers.resize(num_barriers);
         barriers.setConstant(T(0.0));
-        for (size_t i = 0; i < ev_candidates.size(); ++i) {
-            const auto& ev_candidate = ev_candidates[i];
+
+        // Add edge-vertex barriers
+        for (size_t i = 0; i < candidates.ev_candidates.size(); i++) {
+            const auto& ev_candidate = candidates.ev_candidates[i];
             // a and b are the endpoints of the edge; c is the vertex
             long edge_id = ev_candidate.edge_index;
-            int a_id = edges.coeff(edge_id, 0);
-            int b_id = edges.coeff(edge_id, 1);
+            long a_id = bodies.m_edges(edge_id, 0);
+            long b_id = bodies.m_edges(edge_id, 1);
             long c_id = ev_candidate.vertex_index;
             assert(a_id != c_id && b_id != c_id);
-            Eigen::VectorX<T> a = vertices_t1.row(a_id);
-            Eigen::VectorX<T> b = vertices_t1.row(b_id);
-            Eigen::VectorX<T> c = vertices_t1.row(c_id);
+            Eigen::VectorX3<T> a = vertices_t1.row(a_id);
+            Eigen::VectorX3<T> b = vertices_t1.row(b_id);
+            Eigen::VectorX3<T> c = vertices_t1.row(c_id);
 
             barriers(int(i)) = distance_barrier<T>(a, b, c);
+        }
+
+        // TODO: Add edge-edge barriers
+        // TODO: Add face-vertex barriers
+        if (bodies.dim() != 2) {
+            throw NotImplementedError(
+                "DistanceBarrierConstraint::compute_candidates_constraints "
+                "not implemented in 3D!");
         }
     }
 } // namespace opt

@@ -2,7 +2,7 @@
 
 #include <igl/slice_mask.h>
 
-#include <ccd/collision_detection.hpp>
+#include <ccd/rigid_body_collision_detection.hpp>
 #include <ccd/time_of_impact.hpp>
 #include <geometry/distance.hpp>
 
@@ -54,47 +54,70 @@ namespace opt {
         return json;
     }
 
-    EdgeVertexImpacts DistanceBarrierConstraint::initialize(
-        const Eigen::MatrixX2d& vertices,
-        const Eigen::MatrixX2i& edges,
-        const Eigen::VectorXi& group_ids,
-        const Eigen::MatrixXd& Uk)
+    void DistanceBarrierConstraint::initialize()
     {
         m_barrier_epsilon = custom_inital_epsilon;
-        return CollisionConstraint::initialize(vertices, edges, group_ids, Uk);
+        CollisionConstraint::initialize();
     }
 
     bool DistanceBarrierConstraint::has_active_collisions(
-        const Eigen::MatrixXd& Xi, const Eigen::MatrixXd& Xj) const
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1) const
     {
-        EdgeVertexCandidates ev_candidates;
-        Eigen::MatrixXd Uk = Xj - Xi; // displacements
-        detect_edge_vertex_collision_candidates(
-            Xi, Uk, edges, group_ids, ev_candidates, detection_method,
+        Candidates candidates;
+
+        detect_collision_candidates(
+            bodies, poses_t0, poses_t1 - poses_t0,
+            dim_to_collision_type(bodies.dim()), candidates, detection_method,
             /*inflation_radius=*/0);
 
-        for (size_t i = 0; i < ev_candidates.size(); i++) {
-            const EdgeVertexCandidate& ev_candidate = ev_candidates[i];
-            double toi;
-
-            bool active_impact =
-                ccd::autodiff::compute_edge_vertex_time_of_impact<double>(
-                    Xi.row(edges(ev_candidate.edge_index, 0)),
-                    Xi.row(edges(ev_candidate.edge_index, 1)),
-                    Xi.row(ev_candidate.vertex_index),
-                    Uk.row(edges(ev_candidate.edge_index, 0)),
-                    Uk.row(edges(ev_candidate.edge_index, 1)),
-                    Uk.row(ev_candidate.vertex_index), toi);
-
-            if (active_impact) {
+        for (const auto& ev_candidate : candidates.ev_candidates) {
+            double toi, alpha;
+            bool are_colliding = detect_edge_vertex_collisions_narrow_phase(
+                bodies, poses_t0, poses_t1 - poses_t0, ev_candidate, toi,
+                alpha);
+            if (are_colliding) {
+                return true;
+            }
+        }
+        for (const auto& ee_candidate : candidates.ee_candidates) {
+            double toi, edge0_alpha, edge1_alpha;
+            bool are_colliding = detect_edge_edge_collisions_narrow_phase(
+                bodies, poses_t0, poses_t1 - poses_t0, ee_candidate, toi,
+                edge0_alpha, edge1_alpha);
+            if (are_colliding) {
+                return true;
+            }
+        }
+        for (const auto& fv_candidate : candidates.fv_candidates) {
+            double toi, u, v;
+            bool are_colliding = detect_face_vertex_collisions_narrow_phase(
+                bodies, poses_t0, poses_t1 - poses_t0, fv_candidate, toi, u, v);
+            if (are_colliding) {
                 return true;
             }
         }
         return false;
     }
 
-    void DistanceBarrierConstraint::get_active_barrier_set(
-        const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers) const
+    void DistanceBarrierConstraint::compute_constraints(
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses,
+        const physics::Poses<double>& displacements,
+        Eigen::VectorXd& barriers)
+    {
+        Candidates candidates;
+        construct_active_barrier_set(bodies, poses, displacements, candidates);
+        compute_candidates_constraints(
+            bodies, poses, displacements, candidates, barriers);
+    }
+
+    void DistanceBarrierConstraint::construct_active_barrier_set(
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses,
+        const physics::Poses<double>& displacements,
+        Candidates& barriers) const
     {
         NAMED_PROFILE_POINT(
             "distance_barrier__update_collision_set", BROAD_PHASE)
@@ -102,71 +125,81 @@ namespace opt {
 
         PROFILE_START(BROAD_PHASE)
 
-        EdgeVertexCandidates ev_candidates;
-        detect_edge_vertex_collision_candidates(
-            vertices, Uk, edges, group_ids, ev_candidates, detection_method,
-            m_barrier_epsilon);
+        Candidates candidates;
+
+        detect_collision_candidates(
+            bodies, poses, displacements, dim_to_collision_type(bodies.dim()),
+            candidates, detection_method,
+            /*inflation_radius=*/active_constraint_scale * m_barrier_epsilon);
 
         PROFILE_END(BROAD_PHASE)
 
         PROFILE_START(NARROW_PHASE)
 
-        ev_barriers.clear();
-        Eigen::MatrixXd vertices_t1 = vertices + Uk;
+        barriers.clear();
 
-        for (size_t i = 0; i < ev_candidates.size(); i++) {
-            const EdgeVertexCandidate& ev_candidate = ev_candidates[i];
+        // Compute the world vertices at the end of the time-step
+        Eigen::MatrixXd vertices_t1 =
+            bodies.world_vertices(poses + displacements);
 
+        // Compute the edge-vertex distance candidates
+        for (const auto& ev_candidate : candidates.ev_candidates) {
             double distance = ccd::geometry::point_segment_distance<double>(
                 vertices_t1.row(ev_candidate.vertex_index),
-                vertices_t1.row(edges(ev_candidate.edge_index, 0)),
-                vertices_t1.row(edges(ev_candidate.edge_index, 1)));
+                vertices_t1.row(bodies.m_edges(ev_candidate.edge_index, 0)),
+                vertices_t1.row(bodies.m_edges(ev_candidate.edge_index, 1)));
 
-            bool distance_active =
-                distance < active_constraint_scale * m_barrier_epsilon;
-
-            if (distance_active) {
-                ev_barriers.push_back(ev_candidate);
+            if (distance < active_constraint_scale * m_barrier_epsilon) {
+                barriers.ev_candidates.push_back(ev_candidate);
             }
+        }
+
+        // TODO: 3D
+        if (bodies.dim() != 2) {
+            throw NotImplementedError(
+                "construct_active_barrier_set() not implmented for 3D!");
         }
 
         PROFILE_END(NARROW_PHASE)
     }
 
-    void DistanceBarrierConstraint::compute_constraints(
-        const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers)
-    {
-        EdgeVertexCandidates ev_candidates;
-        get_active_barrier_set(Uk, ev_candidates);
-        compute_candidates_constraints(Uk, ev_candidates, barriers);
-    }
-
     void DistanceBarrierConstraint::debug_compute_distances(
-        const Eigen::MatrixXd& Uk, Eigen::VectorXd& distances) const
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses,
+        const physics::Poses<double>& displacements,
+        Eigen::VectorXd& distances) const
     {
-        EdgeVertexCandidates ev_candidates;
-        get_active_barrier_set(Uk, ev_candidates);
+        Candidates candidates;
+        construct_active_barrier_set(bodies, poses, displacements, candidates);
 
         typedef double T;
 
-        Eigen::MatrixX<T> vertices_t1 = vertices.cast<T>() + Uk;
+        Eigen::MatrixX<T> vertices_t1 =
+            bodies.world_vertices(poses + displacements);
 
-        distances.resize(ev_candidates.size(), 1);
+        distances.resize(candidates.size(), 1);
         distances.setConstant(T(0.0));
-        for (size_t i = 0; i < ev_candidates.size(); ++i) {
-            const auto& ev_candidate = ev_candidates[i];
+        for (size_t i = 0; i < candidates.ev_candidates.size(); i++) {
+            const auto& ev_candidate = candidates.ev_candidates[i];
             // a and b are the endpoints of the edge; c is the vertex
             long edge_id = ev_candidate.edge_index;
-            int a_id = edges.coeff(edge_id, 0);
-            int b_id = edges.coeff(edge_id, 1);
+            int a_id = bodies.m_edges(edge_id, 0);
+            int b_id = bodies.m_edges(edge_id, 1);
             long c_id = ev_candidate.vertex_index;
+            // Check that the vertex is not an endpoint of the edge
             assert(a_id != c_id && b_id != c_id);
-            Eigen::VectorX<T> a = vertices_t1.row(a_id);
-            Eigen::VectorX<T> b = vertices_t1.row(b_id);
-            Eigen::VectorX<T> c = vertices_t1.row(c_id);
+            Eigen::VectorX3<T> a = vertices_t1.row(a_id);
+            Eigen::VectorX3<T> b = vertices_t1.row(b_id);
+            Eigen::VectorX3<T> c = vertices_t1.row(c_id);
 
             distances(int(i)) =
                 ccd::geometry::point_segment_distance<T>(c, a, b);
+        }
+
+        if (bodies.dim() != 2) {
+            throw NotImplementedError(
+                "DistanceBarrierConstraint::debug_compute_distances() not "
+                "implemented in 3D!");
         }
     }
 

@@ -17,6 +17,13 @@ void detect_collisions(
     assert(bodies.num_bodies() == poses.size());
     assert(poses.size() == displacements.size());
 
+#ifdef LINEARIZED_TRAJECTORY_CCD
+    Eigen::MatrixXd V_t0 = bodies.world_vertices(poses);
+    Eigen::MatrixXd V_t1 = bodies.world_vertices(poses + displacements);
+    detect_collisions(
+        V_t0, V_t1 - V_t0, bodies.m_edges, bodies.m_faces, bodies.group_ids(),
+        collision_types, impacts, method);
+#else
     // Do the broad phase by detecting candidate impacts
     Candidates candidates;
     detect_collision_candidates(
@@ -25,6 +32,7 @@ void detect_collisions(
     // Do the narrow phase by detecting actual impacts from the candidate set
     detect_collisions_from_candidates(
         bodies, poses, displacements, candidates, impacts);
+#endif
 }
 
 void detect_edge_vertex_collisions(
@@ -66,6 +74,13 @@ void detect_collision_candidates(
     DetectionMethod method,
     const double inflation_radius)
 {
+#ifdef LINEARIZED_TRAJECTORY_CCD
+    Eigen::MatrixXd V_t0 = bodies.world_vertices(poses);
+    Eigen::MatrixXd V_t1 = bodies.world_vertices(poses + displacements);
+    detect_collision_candidates(
+        V_t0, V_t1 - V_t0, bodies.m_edges, bodies.m_faces, bodies.group_ids(),
+        collision_types, candidates, method, inflation_radius);
+#else
     assert(
         method == DetectionMethod::BRUTE_FORCE
         || method == DetectionMethod::HASH_GRID);
@@ -79,7 +94,7 @@ void detect_collision_candidates(
     case BRUTE_FORCE:
         detect_collision_candidates_brute_force(
             bodies.world_vertices(poses), bodies.m_edges, bodies.m_faces,
-            bodies.m_vertex_to_body_map, collision_types, candidates);
+            bodies.group_ids(), collision_types, candidates);
         break;
     case HASH_GRID:
         detect_collision_candidates_hash_grid(
@@ -96,6 +111,7 @@ void detect_collision_candidates(
 
     PROFILE_END(BROAD_PHASE);
     PROFILE_END();
+#endif
 }
 
 void detect_edge_vertex_collision_candidates(
@@ -128,7 +144,7 @@ void detect_collision_candidates_hash_grid(
     hashgrid.resize(bodies, poses, displacements, inflation_radius);
     hashgrid.addBodies(bodies, poses, displacements, inflation_radius);
 
-    const Eigen::VectorXi& group_ids = bodies.m_vertex_to_body_map;
+    const Eigen::VectorXi& group_ids = bodies.group_ids();
     tbb::parallel_invoke(
         [&] {
             if (collision_types & CollisionType::EDGE_VERTEX) {

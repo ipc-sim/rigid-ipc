@@ -21,46 +21,35 @@ namespace opt {
         void settings(const nlohmann::json& json) override;
         nlohmann::json settings() const override;
 
+        virtual void initialize() override;
+
         double get_barrier_epsilon() { return m_barrier_epsilon; }
         void set_barrier_epsilon(const double eps) { m_barrier_epsilon = eps; }
 
-        EdgeVertexImpacts initialize(
-            const Eigen::MatrixX2d& vertices,
-            const Eigen::MatrixX2i& edges,
-            const Eigen::VectorXi& group_ids,
-            const Eigen::MatrixXd& Uk) override;
-
-        void get_active_barrier_set(
-            const Eigen::MatrixXd& Uk, EdgeVertexCandidates& ev_barriers) const;
-
         bool has_active_collisions(
-            const Eigen::MatrixXd& Xi, const Eigen::MatrixXd& Xj) const;
+            const physics::RigidBodyAssembler& bodies,
+            const physics::Poses<double>& poses_t0,
+            const physics::Poses<double>& poses_t1) const;
 
         void compute_constraints(
-            const Eigen::MatrixXd& Uk, Eigen::VectorXd& barriers);
+            const physics::RigidBodyAssembler& bodies,
+            const physics::Poses<double>& poses,
+            const physics::Poses<double>& displacements,
+            Eigen::VectorXd& barriers);
 
-        void compute_constraints_jacobian(
-            const Eigen::MatrixXd& Uk, Eigen::MatrixXd& barriers_jacobian);
-
-        void compute_constraints_hessian(
-            const Eigen::MatrixXd& Uk,
-            std::vector<Eigen::SparseMatrix<double>>& barriers_hessian);
+        void construct_active_barrier_set(
+            const physics::RigidBodyAssembler& bodies,
+            const physics::Poses<double>& poses,
+            const physics::Poses<double>& displacements,
+            Candidates& barriers) const;
 
         template <typename T>
         void compute_candidates_constraints(
-            const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& Uk,
-            const EdgeVertexCandidates& ev_candidates,
+            const physics::RigidBodyAssembler& bodies,
+            const physics::Poses<double>& poses,
+            const physics::Poses<T>& displacements,
+            const Candidates& candidates,
             Eigen::Matrix<T, Eigen::Dynamic, 1>& barriers);
-
-        void compute_candidates_constraints_jacobian(
-            const Eigen::MatrixXd& Uk,
-            const EdgeVertexCandidates& ev_candidates,
-            Eigen::MatrixXd& barriers_jacobian);
-
-        void compute_candidates_constraints_hessian(
-            const Eigen::MatrixXd& Uk,
-            const EdgeVertexCandidates& ev_candidates,
-            std::vector<Eigen::SparseMatrix<double>>& barriers_hessian);
 
         template <typename T>
         T distance_barrier(
@@ -93,10 +82,11 @@ namespace opt {
             const Eigen::VectorXd& b,
             const Eigen::VectorXd& c);
 
-        //#ifdef DEBUG_LINESEARCH
         void debug_compute_distances(
-            const Eigen::MatrixXd& Uk, Eigen::VectorXd& distances) const;
-        //#endif
+            const physics::RigidBodyAssembler& bodies,
+            const physics::Poses<double>& poses,
+            const physics::Poses<double>& displacements,
+            Eigen::VectorXd& distances) const;
 
         // Settings
         // ----------

@@ -7,6 +7,8 @@
 #include <ccd/collision_detection.hpp>
 #include <physics/rigid_body_assembler.hpp>
 
+#define LINEARIZED_TRAJECTORY_CCD
+
 namespace ccd {
 
 /// @brief Find all collisions in one time step.

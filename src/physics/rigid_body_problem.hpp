@@ -32,15 +32,8 @@ namespace physics {
         bool simulation_step(const double time_step) override;
 
         /// @brief moves status to given configuration vector
-        virtual bool take_step(
-            const std::vector<Pose<double>>& pose, const double time_step);
-        /// @brief moves status to given configuration vector
         virtual bool
-        take_step(const Eigen::VectorXd& sigma, const double time_step) override
-        {
-            return take_step(
-                Pose<double>::dofs_to_poses(sigma, dim()), time_step);
-        }
+        take_step(const Eigen::VectorXd& dof, const double time_step) override;
 
         /// @brief update problem using current status of bodies.
         void update_constraint() override;
@@ -130,25 +123,24 @@ namespace physics {
         void solve_velocities();
 
         bool detect_collisions(
-            const Eigen::MatrixXd& q0,
-            const Eigen::MatrixXd& q1,
-            const CollisionCheck check_type);
+            const Poses<double>& poses_t0,
+            const Poses<double>& poses_t1,
+            const CollisionCheck check_type) const;
+
+        void update_dof();
 
         int num_vars_;
         Eigen::VectorXd x0;
 
         /// Used during collision resolution
-        ///< vertices positions at begining of interval
-        Eigen::MatrixXd vertices_t0;
-        ///< vertices positions at end of interval
-        Eigen::MatrixXd vertices_q1;
         /// Rigid body poses at start of time-step
         Poses<double> poses_t0;
         /// Rigid body poses at end of time-step
         Poses<double> poses_t1;
 
         /// Used for velocity restoration
-        EdgeVertexImpacts original_ev_impacts;
+        /// TODO: Replace this with the std::vector version
+        ConcurrentImpacts original_impacts;
 
         /// Used for visualization and debugging
         Eigen::MatrixXd Fcollision; ///< forces used to resolve collisions

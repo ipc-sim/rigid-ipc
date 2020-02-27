@@ -104,11 +104,10 @@ namespace opt {
     double DistanceBarrierRBProblem::debug_min_distance(
         const Eigen::VectorXd& sigma) const
     {
-        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
-        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-
+        physics::Poses<double> poses = this->dofs_to_poses(sigma);
         Eigen::VectorXd d;
-        constraint_.debug_compute_distances(uk, d);
+        constraint_.debug_compute_distances(
+            m_assembler, poses_t0, poses - poses_t0, d);
         if (d.rows() > 0) {
             return d.minCoeff();
         }
@@ -118,23 +117,18 @@ namespace opt {
     Eigen::VectorXd
     DistanceBarrierRBProblem::eval_g(const Eigen::VectorXd& sigma)
     {
-        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
-        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-
         Eigen::VectorXd g_uk;
-        constraint_.compute_constraints(uk, g_uk);
+        constraint_.compute_constraints(
+            m_assembler, poses_t0, this->dofs_to_poses(sigma) - poses_t0, g_uk);
         return g_uk;
     }
 
     bool DistanceBarrierRBProblem::has_collisions(
         const Eigen::VectorXd& sigma_i, const Eigen::VectorXd& sigma_j) const
     {
-        Eigen::VectorXd qi = m_assembler.m_dof_to_pose * sigma_i;
-        Eigen::MatrixXd xi = m_assembler.world_vertices(qi);
-
-        Eigen::VectorXd qj = m_assembler.m_dof_to_pose * sigma_j;
-        Eigen::MatrixXd xj = m_assembler.world_vertices(qj);
-        return constraint_.has_active_collisions(xi, xj);
+        physics::Poses<double> poses_i = this->dofs_to_poses(sigma_i);
+        physics::Poses<double> poses_j = this->dofs_to_poses(sigma_j);
+        return constraint_.has_active_collisions(m_assembler, poses_i, poses_j);
     }
 
     Eigen::MatrixXd
@@ -144,27 +138,25 @@ namespace opt {
         NAMED_PROFILE_POINT("eval_jac_g__eval_jac", EVAL)
 
         PROFILE_START(UPDATE)
-
-        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
-        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-
-        EdgeVertexCandidates ev_candidates;
-        constraint_.get_active_barrier_set(uk, ev_candidates);
+        physics::Poses<double> poses = this->dofs_to_poses(sigma);
+        Candidates candidates;
+        constraint_.construct_active_barrier_set(
+            m_assembler, poses_t0, poses - poses_t0, candidates);
         PROFILE_END(UPDATE)
 
         PROFILE_START(EVAL)
-        Eigen::MatrixXd gx_jacobian = eval_jac_g_core(sigma, ev_candidates);
+        Eigen::MatrixXd gx_jacobian = eval_jac_g_core(sigma, candidates);
         PROFILE_END(EVAL)
 
 #ifdef WITH_DERIVATIVE_CHECK
-        bool is_grad_correct = compare_jac_g(sigma, ev_candidates, gx_jacobian);
+        bool is_grad_correct = compare_jac_g(sigma, candidates, gx_jacobian);
         assert(is_grad_correct);
 #endif
         return gx_jacobian;
     }
 
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_full(
-        const Eigen::VectorXd& sigma, const EdgeVertexCandidates& ev_candidates)
+        const Eigen::VectorXd& sigma, const Candidates& candidates)
     {
         typedef AutodiffType<Eigen::Dynamic> Diff;
         Diff::activate(num_vars_);
@@ -172,15 +164,14 @@ namespace opt {
 
         Diff::D1VectorXd d_sigma = Diff::d1vars(0, sigma);
 
-        Diff::D1VectorXd d_qk =
-            m_assembler.m_dof_to_pose.cast<Diff::DDouble1>() * d_sigma;
-        Diff::D1MatrixXd d_uk = m_assembler.world_vertices<Diff::DDouble1>(d_qk)
-            - vertices_t0.cast<Diff::DDouble1>();
+        physics::Poses<Diff::DDouble1> d_poses_t0 =
+            physics::cast<double, Diff::DDouble1>(poses_t0);
+        physics::Poses<Diff::DDouble1> d_poses = this->dofs_to_poses(d_sigma);
         Diff::D1VectorXd d_g_uk;
         constraint_.compute_candidates_constraints<Diff::DDouble1>(
-            d_uk, ev_candidates, d_g_uk);
+            m_assembler, poses_t0, d_poses - d_poses_t0, candidates, d_g_uk);
 
-        assert(ev_candidates.size() == d_g_uk.rows());
+        assert(candidates.size() == d_g_uk.rows());
         return Diff::get_gradient(d_g_uk);
     }
 
@@ -191,16 +182,15 @@ namespace opt {
         NAMED_PROFILE_POINT("eval_hess_g__eval", EVAL)
 
         PROFILE_START(UPDATE)
-        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
-        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-
-        EdgeVertexCandidates ev_candidates;
-        constraint_.get_active_barrier_set(uk, ev_candidates);
+        physics::Poses<double> poses = this->dofs_to_poses(sigma);
+        Candidates candidates;
+        constraint_.construct_active_barrier_set(
+            m_assembler, poses_t0, poses - poses_t0, candidates);
         PROFILE_END(UPDATE)
 
         std::vector<Eigen::SparseMatrix<double>> gx_hessian;
         PROFILE_START(EVAL)
-        gx_hessian = eval_hessian_g_core(sigma, ev_candidates);
+        gx_hessian = eval_hessian_g_core(sigma, candidates);
         PROFILE_END(EVAL)
 
         return gx_hessian;
@@ -217,32 +207,31 @@ namespace opt {
         NAMED_PROFILE_POINT("eval_hess_g__eval_hess", EVAL_HESS)
 
         PROFILE_START(UPDATE)
-        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
-        Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-
-        EdgeVertexCandidates ev_candidates;
-        constraint_.get_active_barrier_set(uk, ev_candidates);
+        physics::Poses<double> poses = this->dofs_to_poses(sigma);
+        Candidates candidates;
+        constraint_.construct_active_barrier_set(
+            m_assembler, poses_t0, poses - poses_t0, candidates);
         PROFILE_END(UPDATE)
 
-        constraint_.compute_candidates_constraints(uk, ev_candidates, gx);
+        constraint_.compute_candidates_constraints(
+            m_assembler, poses_t0, poses - poses_t0, candidates, gx);
 
         PROFILE_START(EVAL_GRAD)
-        gx_jacobian = eval_jac_g_core(sigma, ev_candidates);
+        gx_jacobian = eval_jac_g_core(sigma, candidates);
         PROFILE_END(EVAL_GRAD)
 
         PROFILE_START(EVAL_HESS)
-        gx_hessian = eval_hessian_g_core(sigma, ev_candidates);
+        gx_hessian = eval_hessian_g_core(sigma, candidates);
         PROFILE_END(EVAL_HESS)
 
 #ifdef WITH_DERIVATIVE_CHECK
-        bool is_grad_correct = compare_jac_g(sigma, ev_candidates, gx_jacobian);
+        bool is_grad_correct = compare_jac_g(sigma, candidates, gx_jacobian);
         assert(is_grad_correct);
 #endif
     }
 
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_core(
-        const Eigen::VectorXd& sigma,
-        const EdgeVertexCandidates& distance_candidates)
+        const Eigen::VectorXd& sigma, const Candidates& distance_candidates)
     {
         if (dim() != 2) {
             throw NotImplementedError(
@@ -256,8 +245,8 @@ namespace opt {
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         Diff::activate(2 * ndof);
 
-        for (size_t i = 0; i < distance_candidates.size(); ++i) {
-            const auto& ev_candidate = distance_candidates[i];
+        for (size_t i = 0; i < distance_candidates.ev_candidates.size(); ++i) {
+            const auto& ev_candidate = distance_candidates.ev_candidates[i];
 
             RB2Candidate rbc;
             extract_local_system(ev_candidate, rbc);
@@ -277,8 +266,7 @@ namespace opt {
 
     std::vector<Eigen::SparseMatrix<double>>
     DistanceBarrierRBProblem::eval_hessian_g_core(
-        const Eigen::VectorXd& sigma,
-        const EdgeVertexCandidates& distance_candidates)
+        const Eigen::VectorXd& sigma, const Candidates& distance_candidates)
     {
         if (dim() != 2) {
             throw NotImplementedError(
@@ -297,8 +285,8 @@ namespace opt {
         typedef Eigen::Triplet<double> M;
         std::vector<M> triplets;
 
-        for (size_t i = 0; i < distance_candidates.size(); ++i) {
-            const auto& ev_candidate = distance_candidates[i];
+        for (size_t i = 0; i < distance_candidates.ev_candidates.size(); ++i) {
+            const auto& ev_candidate = distance_candidates.ev_candidates[i];
 
             RB2Candidate rbc;
             extract_local_system(ev_candidate, rbc);
@@ -514,10 +502,10 @@ namespace opt {
 
     bool DistanceBarrierRBProblem::compare_jac_g(
         const Eigen::VectorXd& sigma,
-        const EdgeVertexCandidates& ev_candidates,
+        const Candidates& candidates,
         const Eigen::MatrixXd& jac_g)
     {
-        auto jac_full = eval_jac_g_full(sigma, ev_candidates);
+        auto jac_full = eval_jac_g_full(sigma, candidates);
 
         bool pass = fd::compare_jacobian(
             jac_full, jac_g, /*test_eps=*/Constants::FULL_GRADIENT_TEST);
@@ -525,8 +513,8 @@ namespace opt {
             spdlog::error("autodiff_gradients_dont_match");
         }
 
-        for (size_t i = 0; i < ev_candidates.size(); ++i) {
-            const auto& ev = ev_candidates[i];
+        for (size_t i = 0; i < candidates.ev_candidates.size(); ++i) {
+            const auto& ev = candidates.ev_candidates[i];
             compare_fd(sigma, ev, jac_full.row(int(i)));
             compare_fd(sigma, ev, jac_g.row(int(i)));
         }

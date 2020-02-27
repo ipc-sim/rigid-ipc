@@ -18,6 +18,7 @@ namespace physics {
         enum CollisionCheck { EXACT = 0, CONSERVATIVE };
 
         virtual opt::CollisionConstraint& constraint() = 0;
+        virtual const opt::CollisionConstraint& constraint() const = 0;
         virtual opt::IStateOptimizationSolver& solver() = 0;
 
         virtual std::string name() = 0;

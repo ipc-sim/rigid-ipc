@@ -26,26 +26,15 @@ namespace opt {
         return json;
     }
 
-    EdgeVertexImpacts CollisionConstraint::initialize(
-        const Eigen::MatrixX2d& V,
-        const Eigen::MatrixX2i& E,
-        const Eigen::VectorXi& Gid,
-        const Eigen::MatrixXd& Uk)
+    void CollisionConstraint::construct_collision_set(
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double> poses,
+        const physics::Poses<double> displacements,
+        ConcurrentImpacts& impacts) const
     {
-        vertices = V;
-        edges = E;
-        group_ids = Gid;
-
-        return get_collision_set(Uk);
-    }
-
-    EdgeVertexImpacts
-    CollisionConstraint::get_collision_set(const Eigen::MatrixXd& Uk)
-    {
-        EdgeVertexImpacts ev_impacts;
-        ccd::detect_edge_vertex_collisions(
-            vertices, Uk, edges, group_ids, ev_impacts, detection_method);
-        return ev_impacts;
+        ccd::detect_collisions(
+            bodies, poses, displacements, dim_to_collision_type(bodies.dim()),
+            impacts, detection_method);
     }
 
 } // namespace opt

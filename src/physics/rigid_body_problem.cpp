@@ -59,12 +59,6 @@ namespace physics {
     {
         m_assembler.init(rbs);
 
-        vertices_t0.resize(m_assembler.num_vertices(), dim());
-        vertices_t0.setZero();
-
-        vertices_q1.resize(m_assembler.num_vertices(), dim());
-        vertices_q1.setZero();
-
         Fcollision.resize(m_assembler.num_vertices(), dim());
         Fcollision.setZero();
         update_constraint();
@@ -145,54 +139,53 @@ namespace physics {
         }
     }
 
+    void RigidBodyProblem::update_dof()
+    {
+        poses_t0 = m_assembler.rb_poses_t0();
+        poses_t1 = m_assembler.rb_poses_t1();
+        x0 = this->poses_to_dofs(poses_t0);
+        num_vars_ = x0.size();
+    }
+
     bool RigidBodyProblem::simulation_step(const double time_step)
     {
-        for (auto& rb : m_assembler.m_rbs) {
+        tbb::parallel_for_each(m_assembler.m_rbs, [&](RigidBody& rb) {
             rb.pose_prev = rb.pose;
             rb.velocity_prev = rb.velocity;
             rb.pose = rb_next_pose(rb, time_step);
             rb.velocity = (rb.pose - rb.pose_prev) / time_step;
-        }
+        });
 
         Fcollision.setZero();
-        vertices_q1.setZero();
 
-        vertices_t0 = m_assembler.world_vertices_t0();
-        vertices_q1 = m_assembler.world_vertices_t1();
+        update_dof();
 
         return detect_collisions(
-            vertices_t0, vertices_q1, CollisionCheck::CONSERVATIVE);
+            poses_t0, poses_t1, CollisionCheck::CONSERVATIVE);
     }
 
     void RigidBodyProblem::update_constraint()
     {
-        if (dim() != 2) {
-            throw NotImplementedError(
-                "RigidBodyProblem::update_constraint() not implmented for 3D!");
-        }
+        update_dof();
 
-        vertices_t0 = m_assembler.world_vertices_t0();
-        vertices_q1 = m_assembler.world_vertices_t1();
+        // Compute the collisions
+        original_impacts.clear();
+        constraint().initialize();
+        constraint().construct_collision_set(
+            m_assembler, poses_t0, poses_t1 - poses_t0, original_impacts);
 
-        // base problem initial solution
-        // start from collision free state
-        poses_t0 = m_assembler.rb_poses_t0();
-        poses_t1 = m_assembler.rb_poses_t1();
-        for (int i = 0; i < m_assembler.num_bodies(); i++) {
-            // Convert from radians to arc length
-            poses_t0[i].rotation *= m_assembler.m_rbs[i].r_max;
-            poses_t1[i].rotation *= m_assembler.m_rbs[i].r_max;
-        }
-
-        x0 = Pose<double>::poses_to_dofs(poses_t0);
-        num_vars_ = int(x0.size());
-
-        original_ev_impacts = constraint().initialize(
-            vertices_t0, edges(), group_id(), vertices_q1 - vertices_t0);
-
-        std::sort(
-            original_ev_impacts.begin(), original_ev_impacts.end(),
+        tbb::parallel_sort(
+            original_impacts.ev_impacts.begin(),
+            original_impacts.ev_impacts.end(),
             ccd::compare_impacts_by_time<ccd::EdgeVertexImpact>);
+        tbb::parallel_sort(
+            original_impacts.ee_impacts.begin(),
+            original_impacts.ee_impacts.end(),
+            ccd::compare_impacts_by_time<ccd::EdgeEdgeImpact>);
+        tbb::parallel_sort(
+            original_impacts.fv_impacts.begin(),
+            original_impacts.fv_impacts.end(),
+            ccd::compare_impacts_by_time<ccd::FaceVertexImpact>);
     }
 
     opt::OptimizationResults RigidBodyProblem::solve_constraints()
@@ -201,13 +194,14 @@ namespace physics {
     }
 
     void RigidBodyProblem::init_solve() { return solver().init_solve(); }
+
     opt::OptimizationResults RigidBodyProblem::step_solve()
     {
         return solver().step_solve();
     }
 
     bool RigidBodyProblem::take_step(
-        const std::vector<Pose<double>>& poses, const double time_step)
+        const Eigen::VectorXd& dof, const double time_step)
     {
         // This need to be done BEFORE updating poses
         // -------------------------------------
@@ -217,22 +211,17 @@ namespace physics {
 
         // update final pose
         // -------------------------------------
-        std::vector<Pose<double>> rb_poses = poses;
-        for (int i = 0; i < m_assembler.num_bodies(); i++) {
-            // Convert from arc length to radians
-            rb_poses[i].rotation /= m_assembler.m_rbs[i].r_max;
-        }
-        m_assembler.set_rb_poses(rb_poses);
-        Eigen::MatrixXd q1 = m_assembler.world_vertices_t1();
+        m_assembler.set_rb_poses(this->dofs_to_poses(dof));
+        Poses<double> poses_q1 = m_assembler.rb_poses_t1();
 
         // This need to be done AFTER updating poses
         if (coefficient_restitution < 0) {
-            for (auto& rb : m_assembler.m_rbs) {
+            tbb::parallel_for_each(m_assembler.m_rbs, [&](RigidBody& rb) {
                 rb.velocity = (rb.pose - rb.pose_prev) / time_step;
-            }
+            });
         }
 
-        return detect_collisions(vertices_t0, q1, CollisionCheck::EXACT);
+        return detect_collisions(poses_t0, poses_q1, CollisionCheck::EXACT);
     }
 
     void RigidBodyProblem::solve_velocities()
@@ -244,15 +233,16 @@ namespace physics {
 
         // precompute normal directions (since velocities will change i can't do
         // it after
-        Eigen::MatrixXd normals(original_ev_impacts.size(), 2);
+        Eigen::MatrixXd normals(original_impacts.ev_impacts.size(), 2);
 
-        for (int i = 0; i < normals.rows(); ++i) {
-            const auto& ev_candidate = original_ev_impacts[size_t(i)];
+        for (long i = 0; i < normals.rows(); ++i) {
+            const EdgeVertexImpact& ev_impact =
+                original_impacts.ev_impacts[size_t(i)];
 
-            double toi = ev_candidate.time;
+            double toi = ev_impact.time;
 
-            const long edge_id = ev_candidate.edge_index;
-            const long a_id = ev_candidate.vertex_index;
+            const long edge_id = ev_impact.edge_index;
+            const long a_id = ev_impact.vertex_index;
             const int b0_id = m_assembler.m_edges.coeff(edge_id, 0);
             const int b1_id = m_assembler.m_edges.coeff(edge_id, 1);
 
@@ -261,6 +251,9 @@ namespace physics {
             bool is_oriented = m_assembler.m_rbs[body_B_id].is_oriented;
 
             Eigen::Vector2d n_toi;
+            // TODO: Update this to fully nonlinear rotations
+            Eigen::MatrixXd vertices_t0 = m_assembler.world_vertices(poses_t0);
+            Eigen::MatrixXd vertices_q1 = m_assembler.world_vertices(poses_t1);
             auto v_toi = vertices_t0 + (vertices_q1 - vertices_t0) * toi;
             Eigen::VectorXd e_toi =
                 v_toi.row(b1_id) - v_toi.row(b0_id); // edge at toi
@@ -283,19 +276,20 @@ namespace physics {
 #ifndef NDEBUG
         double prev_toi = -1;
 #endif
-        for (int i = 0; i < normals.rows(); ++i) {
-            const auto& ev_candidate = original_ev_impacts[size_t(i)];
+        for (long i = 0; i < normals.rows(); ++i) {
+            const EdgeVertexImpact& ev_impact =
+                original_impacts.ev_impacts[size_t(i)];
 
-            double toi = ev_candidate.time;
+            double toi = ev_impact.time;
 #ifndef NDEBUG
             assert(prev_toi <= toi);
             prev_toi = toi;
 #endif
-            double alpha = ev_candidate.alpha;
+            double alpha = ev_impact.alpha;
 
             // global ids of the vertices
-            const long edge_id = ev_candidate.edge_index;
-            const long a_id = ev_candidate.vertex_index;
+            const long edge_id = ev_impact.edge_index;
+            const long a_id = ev_impact.vertex_index;
             const int b0_id = m_assembler.m_edges.coeff(edge_id, 0);
             const int b1_id = m_assembler.m_edges.coeff(edge_id, 1);
 
@@ -434,24 +428,20 @@ namespace physics {
     }
 
     bool RigidBodyProblem::detect_collisions(
-        const Eigen::MatrixXd& q0,
-        const Eigen::MatrixXd& q1,
-        const CollisionCheck check_type)
+        const Poses<double>& poses_q0,
+        const Poses<double>& poses_q1,
+        const CollisionCheck check_type) const
     {
-        if (dim() != 2) {
-            throw NotImplementedError("RigidBodyProblem::detect_collisions() "
-                                      "not implemented in 3D yet!");
-        }
+        ConcurrentImpacts impacts;
 
-        EdgeVertexImpacts ev_impacts;
         double scale =
             check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
-        ccd::detect_edge_vertex_collisions(
-            q0, (q1 - q0) * scale, m_assembler.m_edges,
-            m_assembler.m_vertex_to_body_map, ev_impacts,
-            constraint().detection_method);
+        Poses<double> displacements = (poses_q1 - poses_q0) * scale;
 
-        return ev_impacts.size() > 0;
+        constraint().construct_collision_set(
+            m_assembler, poses_q0, displacements, impacts);
+
+        return impacts.size();
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -460,7 +450,7 @@ namespace physics {
 
     double RigidBodyProblem::eval_f(const Eigen::VectorXd& sigma)
     {
-        Eigen::VectorXd diff = (sigma - Pose<double>::poses_to_dofs(poses_t1));
+        Eigen::VectorXd diff = sigma - this->poses_to_dofs(poses_t1);
         const Eigen::SparseMatrix<double>& invS = m_assembler.m_dof_to_pose;
         const Eigen::SparseMatrix<double>& M = m_assembler.m_rb_mass_matrix;
         return 0.5 * diff.transpose() * invS.transpose() * M * invS * diff;
@@ -469,7 +459,7 @@ namespace physics {
     Eigen::VectorXd RigidBodyProblem::eval_grad_f(const Eigen::VectorXd& sigma)
     {
         Eigen::VectorXd grad_f;
-        Eigen::VectorXd diff = (sigma - Pose<double>::poses_to_dofs(poses_t1));
+        Eigen::VectorXd diff = sigma - this->poses_to_dofs(poses_t1);
 
         const Eigen::SparseMatrix<double>& invS = m_assembler.m_dof_to_pose;
         const Eigen::SparseMatrix<double>& M = m_assembler.m_rb_mass_matrix;
