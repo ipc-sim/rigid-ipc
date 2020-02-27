@@ -77,10 +77,6 @@ struct FaceVertexImpact {
 //     }
 // };
 
-typedef tbb::concurrent_vector<EdgeVertexImpact> EdgeVertexImpacts;
-typedef tbb::concurrent_vector<EdgeEdgeImpact> EdgeEdgeImpacts;
-typedef tbb::concurrent_vector<FaceVertexImpact> FaceVertexImpacts;
-
 struct ConcurrentImpacts {
     tbb::concurrent_vector<EdgeVertexImpact> ev_impacts;
     tbb::concurrent_vector<EdgeEdgeImpact> ee_impacts;

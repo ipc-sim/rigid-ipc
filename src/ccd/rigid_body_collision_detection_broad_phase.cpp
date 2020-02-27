@@ -35,32 +35,6 @@ void detect_collisions(
 #endif
 }
 
-void detect_edge_vertex_collisions(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixXi& edges,
-    const Eigen::VectorXi& group_ids,
-    EdgeVertexImpacts& ev_impacts,
-    DetectionMethod method)
-{
-    ConcurrentImpacts impacts;
-    detect_collisions(
-        vertices, displacements, edges, Eigen::MatrixXi(), group_ids,
-        CollisionType::EDGE_VERTEX, impacts, method);
-    ev_impacts = impacts.ev_impacts;
-}
-
-void detect_edge_vertex_collisions(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixXi& edges,
-    EdgeVertexImpacts& ev_impacts,
-    DetectionMethod method)
-{
-    detect_edge_vertex_collisions(
-        vertices, displacements, edges, Eigen::VectorXi(), ev_impacts, method);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Broad-Phase CCD
 ///////////////////////////////////////////////////////////////////////////////
@@ -112,22 +86,6 @@ void detect_collision_candidates(
     PROFILE_END(BROAD_PHASE);
     PROFILE_END();
 #endif
-}
-
-void detect_edge_vertex_collision_candidates(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixXi& edges,
-    const Eigen::VectorXi& group_ids,
-    EdgeVertexCandidates& ev_candidates,
-    DetectionMethod method,
-    const double inflation_radius)
-{
-    Candidates candidates;
-    detect_collision_candidates(
-        vertices, displacements, edges, Eigen::MatrixXi(), group_ids,
-        CollisionType::EDGE_VERTEX, candidates, method, inflation_radius);
-    ev_candidates = candidates.ev_candidates;
 }
 
 // Find all edge-vertex collisions in one time step using spatial-hashing to

@@ -42,10 +42,6 @@ struct FaceVertexCandidate {
     long vertex_index;
 };
 
-typedef std::vector<EdgeVertexCandidate> EdgeVertexCandidates;
-typedef std::vector<EdgeEdgeCandidate> EdgeEdgeCandidates;
-typedef std::vector<FaceVertexCandidate> FaceVertexCandidates;
-
 struct Candidates {
     std::vector<EdgeVertexCandidate> ev_candidates;
     std::vector<EdgeEdgeCandidate> ee_candidates;

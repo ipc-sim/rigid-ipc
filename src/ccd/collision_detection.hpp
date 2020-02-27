@@ -59,23 +59,6 @@ void detect_collisions(
     ConcurrentImpacts& impacts,
     DetectionMethod method = DetectionMethod::HASH_GRID);
 
-/// @brief Backward compatibility with old definition.
-void detect_edge_vertex_collisions(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixXi& edges,
-    const Eigen::VectorXi& group_ids,
-    EdgeVertexImpacts& ev_impacts,
-    DetectionMethod method = DetectionMethod::HASH_GRID);
-
-/// @brief Backward compatibility with old definition.
-void detect_edge_vertex_collisions(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixXi& edges,
-    EdgeVertexImpacts& ev_impacts,
-    DetectionMethod method = DetectionMethod::HASH_GRID);
-
 ///////////////////////////////////////////////////////////////////////////////
 // Broad-Phase CCD
 ///////////////////////////////////////////////////////////////////////////////
@@ -89,16 +72,6 @@ void detect_collision_candidates(
     const Eigen::VectorXi& group_ids,
     const int collision_types,
     Candidates& candidates,
-    DetectionMethod method = DetectionMethod::HASH_GRID,
-    const double inflation_radius = 0.0);
-
-/// @brief Backward compatibility with old definition.
-void detect_edge_vertex_collision_candidates(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
-    const Eigen::MatrixXi& edges,
-    const Eigen::VectorXi& group_ids,
-    EdgeVertexCandidates& ev_candidates,
     DetectionMethod method = DetectionMethod::HASH_GRID,
     const double inflation_radius = 0.0);
 
