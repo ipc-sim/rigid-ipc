@@ -1,10 +1,9 @@
 #include "collision_constraint.hpp"
 
-#include <profiler.hpp>
-
 namespace ccd {
 // !important: this needs to be define in the enum namespace
-NLOHMANN_JSON_SERIALIZE_ENUM(DetectionMethod,
+NLOHMANN_JSON_SERIALIZE_ENUM(
+    DetectionMethod,
     { { HASH_GRID, "hash_grid" }, { BRUTE_FORCE, "brute_force" } })
 
 namespace opt {
@@ -14,8 +13,6 @@ namespace opt {
         , name_(name)
     {
     }
-
-    CollisionConstraint::~CollisionConstraint() {}
 
     void CollisionConstraint::settings(const nlohmann::json& json)
     {
@@ -29,7 +26,8 @@ namespace opt {
         return json;
     }
 
-    EdgeVertexImpacts CollisionConstraint::initialize(const Eigen::MatrixX2d& V,
+    EdgeVertexImpacts CollisionConstraint::initialize(
+        const Eigen::MatrixX2d& V,
         const Eigen::MatrixX2i& E,
         const Eigen::VectorXi& Gid,
         const Eigen::MatrixXd& Uk)
@@ -41,8 +39,8 @@ namespace opt {
         return get_collision_set(Uk);
     }
 
-    EdgeVertexImpacts CollisionConstraint::get_collision_set(
-        const Eigen::MatrixXd& Uk)
+    EdgeVertexImpacts
+    CollisionConstraint::get_collision_set(const Eigen::MatrixXd& Uk)
     {
         EdgeVertexImpacts ev_impacts;
         ccd::detect_edge_vertex_collisions(

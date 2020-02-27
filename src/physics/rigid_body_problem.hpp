@@ -71,7 +71,7 @@ namespace physics {
 
         Eigen::VectorXi group_id() const override
         {
-            return m_assembler.m_vertex_to_body_map;
+            return m_assembler.group_ids();
         }
 
         const Eigen::MatrixXb& particle_dof_fixed() const override
@@ -82,6 +82,22 @@ namespace physics {
 
         Pose<double>
         rb_next_pose(const RigidBody& rb, const double time_step) const;
+
+        /// Convert from dof expressed in distances to poses
+        template <typename T>
+        Eigen::VectorX<T> poses_to_dofs(const Poses<T>& poses) const
+        {
+            return m_assembler.m_pose_to_dof.cast<T>()
+                * Pose<T>::poses_to_dofs(poses);
+        }
+
+        /// Convert from poses to dof expressed in distances
+        template <typename T>
+        Poses<T> dofs_to_poses(const Eigen::VectorX<T>& dofs) const
+        {
+            return Pose<T>::dofs_to_poses(
+                m_assembler.m_dof_to_pose.cast<T>() * dofs, dim());
+        }
 
         ////////////////////////////////////////////////////////////////////////
         /// IUnconstraintedProblem
@@ -126,10 +142,10 @@ namespace physics {
         Eigen::MatrixXd vertices_t0;
         ///< vertices positions at end of interval
         Eigen::MatrixXd vertices_q1;
-        ///< rigid body poses at start of interval
-        std::vector<Pose<double>> poses_t0;
-        ///< rigid body poses at end of interval
-        std::vector<Pose<double>> poses_t1;
+        /// Rigid body poses at start of time-step
+        Poses<double> poses_t0;
+        /// Rigid body poses at end of time-step
+        Poses<double> poses_t1;
 
         /// Used for velocity restoration
         EdgeVertexImpacts original_ev_impacts;

@@ -45,8 +45,7 @@ namespace opt {
     {
         bool has_collision = RigidBodyProblem::simulation_step(time_step);
 
-        Eigen::VectorXd sigma = m_assembler.m_pose_to_dof
-            * physics::Pose<double>::poses_to_dofs(m_assembler.rb_poses_t0());
+        Eigen::VectorXd sigma = this->poses_to_dofs(m_assembler.rb_poses_t0());
         debug_min_distance_ = debug_min_distance(sigma);
         if (debug_min_distance_ >= 0) {
             spdlog::info(
@@ -136,34 +135,6 @@ namespace opt {
         Eigen::VectorXd qj = m_assembler.m_dof_to_pose * sigma_j;
         Eigen::MatrixXd xj = m_assembler.world_vertices(qj);
         return constraint_.has_active_collisions(xi, xj);
-    }
-
-    Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1>
-    DistanceBarrierRBProblem::eval_mp_g(const Eigen::VectorXd& /*sigma*/)
-    {
-        // Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
-        // Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
-
-        Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> g_uk;
-        // EdgeVertexCandidates ev_candidates;
-        // auto check = constraint_.get_active_barrier_set(uk, ev_candidates);
-
-        // if (check == DistanceBarrierConstraint::HAS_COLLISION) {
-        g_uk.resize(1);
-        g_uk(0) = Multiprecision(std::numeric_limits<double>::infinity(), 256);
-
-        // } else {
-        //     Eigen::Matrix<Multiprecision, Eigen::Dynamic, Eigen::Dynamic>
-        //     uk_mp;
-        //
-        //     uk_mp.resizeLike(uk);
-        //     for (int i = 0; i < uk.size(); ++i) {
-        //         uk_mp(i) = Multiprecision(uk(i), 256);
-        //     }
-        //     constraint_.compute_candidates_constraints<Multiprecision>(
-        //         uk_mp, ev_candidates, g_uk);
-        // }
-        return g_uk;
     }
 
     Eigen::MatrixXd
@@ -558,6 +529,20 @@ namespace opt {
             const auto& ev = ev_candidates[i];
             compare_fd(sigma, ev, jac_full.row(int(i)));
             compare_fd(sigma, ev, jac_g.row(int(i)));
+        }
+        // for (size_t i = 0; i < candidates.ee_candidates.size(); ++i) {
+        //     const auto& ee = candidates.ee_candidates[i];
+        //     compare_fd(sigma, ee, jac_full.row(int(i)));
+        //     compare_fd(sigma, ee, jac_g.row(int(i)));
+        // }
+        // for (size_t i = 0; i < candidates.fv__candidates.size(); ++i) {
+        //     const auto& fv = candidates.fv_candidates[i];
+        //     compare_fd(sigma, fv, jac_full.row(int(i)));
+        //     compare_fd(sigma, fv, jac_g.row(int(i)));
+        // }
+
+        if (dim() != 2) {
+            throw NotImplementedError("compare_jac_g not implemented in 3D!");
         }
 
         return pass;

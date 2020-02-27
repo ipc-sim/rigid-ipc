@@ -73,7 +73,6 @@ namespace opt {
             Xi, Uk, edges, group_ids, ev_candidates, detection_method,
             /*inflation_radius=*/0);
 
-        bool has_collisions = false;
         for (size_t i = 0; i < ev_candidates.size(); i++) {
             const EdgeVertexCandidate& ev_candidate = ev_candidates[i];
             double toi;
@@ -91,7 +90,7 @@ namespace opt {
                 return true;
             }
         }
-        return has_collisions;
+        return false;
     }
 
     void DistanceBarrierConstraint::get_active_barrier_set(
@@ -142,7 +141,6 @@ namespace opt {
         compute_candidates_constraints(Uk, ev_candidates, barriers);
     }
 
-    //#ifdef DEBUG_LINESEARCH
     void DistanceBarrierConstraint::debug_compute_distances(
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& distances) const
     {
@@ -169,114 +167,6 @@ namespace opt {
 
             distances(int(i)) =
                 ccd::geometry::point_segment_distance<T>(c, a, b);
-        }
-    }
-    //#endif
-
-    void DistanceBarrierConstraint::compute_constraints_jacobian(
-        const Eigen::MatrixXd& Uk, Eigen::MatrixXd& barriers_jacobian)
-    {
-        EdgeVertexCandidates ev_candidates;
-        get_active_barrier_set(Uk, ev_candidates);
-        compute_candidates_constraints_jacobian(
-            Uk, ev_candidates, barriers_jacobian);
-    }
-    void DistanceBarrierConstraint::compute_constraints_hessian(
-        const Eigen::MatrixXd& Uk,
-        std::vector<Eigen::SparseMatrix<double>>& barriers_hessian)
-    {
-        EdgeVertexCandidates ev_candidates;
-        get_active_barrier_set(Uk, ev_candidates);
-        compute_candidates_constraints_hessian(
-            Uk, ev_candidates, barriers_hessian);
-    }
-
-    void DistanceBarrierConstraint::compute_candidates_constraints_jacobian(
-        const Eigen::MatrixXd& Uk,
-        const EdgeVertexCandidates& ev_candidates,
-        Eigen::MatrixXd& barriers_jacobian)
-    {
-        Eigen::MatrixXd vertices_t1 = vertices + Uk;
-
-        int num_vertices = int(vertices.rows());
-        barriers_jacobian.resize(ev_candidates.size(), vertices.size());
-        barriers_jacobian.setZero();
-
-        for (size_t i = 0; i < ev_candidates.size(); ++i) {
-            const auto& ev_candidate = ev_candidates[i];
-            long edge_id = ev_candidate.edge_index;
-            int a_id = edges.coeff(edge_id, 0);
-            int b_id = edges.coeff(edge_id, 1);
-            int c_id = int(ev_candidate.vertex_index);
-            assert(a_id != c_id && b_id != c_id);
-            Eigen::VectorXd a = vertices_t1.row(a_id);
-            Eigen::VectorXd b = vertices_t1.row(b_id);
-            Eigen::VectorXd c = vertices_t1.row(c_id);
-
-            Eigen::VectorXd grad = distance_barrier_grad(a, b, c);
-
-            std::vector<int> nodes = { { a_id, b_id, c_id } };
-
-            for (size_t nid = 0; nid < 3; ++nid) {
-                for (int dim = 0; dim < 2; ++dim) {
-                    barriers_jacobian(int(i), nodes[nid] + num_vertices * dim) =
-                        grad[2 * int(nid) + dim];
-                }
-            }
-        }
-    }
-
-    void DistanceBarrierConstraint::compute_candidates_constraints_hessian(
-        const Eigen::MatrixXd& Uk,
-        const EdgeVertexCandidates& ev_candidates,
-        std::vector<Eigen::SparseMatrix<double>>& barriers_hessian)
-    {
-        typedef Eigen::Triplet<double> M;
-        std::vector<M> triplets;
-
-        Eigen::MatrixXd vertices_t1 = vertices + Uk;
-
-        int num_vertices = int(vertices.rows());
-
-        barriers_hessian.clear();
-        barriers_hessian.resize(ev_candidates.size());
-
-        for (size_t i = 0; i < ev_candidates.size(); ++i) {
-            const auto& ev_candidate = ev_candidates[i];
-            Eigen::SparseMatrix<double> global_el_hessian(
-                int(vertices.size()), int(vertices.size()));
-
-            long edge_id = ev_candidate.edge_index;
-            int a_id = edges.coeff(edge_id, 0);
-            int b_id = edges.coeff(edge_id, 1);
-            int c_id = int(ev_candidate.vertex_index);
-            assert(a_id != c_id && b_id != c_id);
-            Eigen::VectorXd a = vertices_t1.row(a_id);
-            Eigen::VectorXd b = vertices_t1.row(b_id);
-            Eigen::VectorXd c = vertices_t1.row(c_id);
-
-            Eigen::MatrixXd hess = distance_barrier_hess(a, b, c);
-
-            std::vector<int> nodes = { { a_id, b_id, c_id } };
-            triplets.clear();
-            triplets.reserve(3 * 3 * 2 * 2);
-            for (size_t nid_i = 0; nid_i < 3; ++nid_i) {
-                for (size_t nid_j = 0; nid_j < 3; ++nid_j) {
-                    for (int dim_i = 0; dim_i < 2; ++dim_i) {
-                        for (int dim_j = 0; dim_j < 2; ++dim_j) {
-                            triplets.push_back(
-                                M(nodes[nid_i] + num_vertices * dim_i,
-                                  nodes[nid_j] + num_vertices * dim_j,
-                                  hess(
-                                      2 * int(nid_i) + dim_i,
-                                      2 * int(nid_j) + dim_j)));
-                        }
-                    }
-                }
-            }
-
-            global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
-            barriers_hessian[i] = global_el_hessian;
         }
     }
 

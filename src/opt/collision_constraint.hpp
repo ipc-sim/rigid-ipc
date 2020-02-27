@@ -1,14 +1,8 @@
 #pragma once
 
-#include <Eigen/SparseCore>
-#include <memory> // shared_ptr
-
 #include <nlohmann/json.hpp>
 
 #include <ccd/collision_detection.hpp>
-#include <utils/not_implemented_error.hpp>
-
-#include <autodiff/autodiff_types.hpp>
 
 namespace ccd {
 namespace opt {
@@ -17,7 +11,7 @@ namespace opt {
     class CollisionConstraint {
     public:
         CollisionConstraint(const std::string& name);
-        virtual ~CollisionConstraint();
+        virtual ~CollisionConstraint() = default;
 
         virtual void settings(const nlohmann::json& json);
         virtual nlohmann::json settings() const;
@@ -42,16 +36,15 @@ namespace opt {
         Eigen::VectorXi group_ids;
 
     protected:
+        inline static int dim_to_collision_type(int dim)
+        {
+            return dim == 2
+                ? CollisionType::EDGE_VERTEX
+                : (CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX);
+        }
 
         std::string name_;
     };
-
-    void slice_vector(const Eigen::MatrixX2d& data,
-        const Eigen::Vector2i e_ij,
-        Eigen::Vector2i e_kl,
-        std::array<Eigen::Vector2d, 4>& d);
-
-    template <typename T> bool differentiable();
 
 } // namespace opt
 } // namespace ccd

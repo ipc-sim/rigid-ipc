@@ -98,9 +98,6 @@ namespace opt {
             const EdgeVertexCandidates& ev_candidates,
             const Eigen::MatrixXd& jac_g);
 
-        Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1>
-        eval_mp_g(const Eigen::VectorXd& x) override;
-
         bool has_collisions(
             const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) const override;
