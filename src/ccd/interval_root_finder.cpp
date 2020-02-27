@@ -16,7 +16,7 @@ bool interval_root_finder(
     // spdlog::debug("{} ↦ {}", logger::fmt_interval(x0),
     // logger::fmt_interval(y));
     if (!zero_in(y)) {
-        x = Interval::empty(); // Return an empty interval
+        // x = Interval::empty(); // Return an empty interval
         return false;
     }
     if (width(x0) <= tol) {

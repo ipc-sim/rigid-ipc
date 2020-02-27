@@ -1,7 +1,11 @@
 // A spatial hash grid for rigid bodies with angular trajectories.
 #include "rigid_body_hash_grid.hpp"
 
+#include <cmath>
+#include <iostream>
+
 #include <ccd/interval.hpp>
+#include <logger.hpp>
 
 namespace ccd {
 
@@ -27,14 +31,14 @@ void RigidBodyHashGrid::resize(
     Eigen::MatrixX<Interval> vertices;
     compute_vertices_intervals(bodies, poses, displacements, vertices);
 
-    Eigen::VectorX3<Interval> mesh_extents =
-        Eigen::VectorX3<Interval>::Constant(bodies.dim(), Interval::empty());
+    Eigen::VectorX3<Interval> mesh_extents(bodies.dim());
     double average_displacement_length = 0;
     for (int i = 0; i < vertices.rows(); i++) {
         double max_side_width = 0;
         for (int j = 0; j < vertices.cols(); j++) {
-            mesh_extents(j) =
-                boost::numeric::hull(mesh_extents(j), vertices(i, j));
+            mesh_extents(j) = i == 0
+                ? vertices(i, j)
+                : boost::numeric::hull(mesh_extents(j), vertices(i, j));
             max_side_width =
                 std::max(max_side_width, boost::numeric::width(vertices(i, j)));
         }

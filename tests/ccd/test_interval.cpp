@@ -2,6 +2,7 @@
 
 #include <ccd/interval.hpp>
 #include <logger.hpp>
+#include <physics/pose.hpp>
 
 TEST_CASE("Simple interval arithmetic", "[ccd][interval]")
 {
@@ -88,4 +89,52 @@ TEST_CASE("Sine interval arithmetic", "[ccd][interval]")
     r = sin(ccd::Interval(1, 2) + shift);
     CHECK(r.lower() < 0);
     CHECK(r.upper() > 0);
+}
+
+TEST_CASE("Interval rotation rounding", "[ccd][interval][matrix]")
+{
+    using namespace ccd;
+    using namespace ccd::physics;
+    Pose<double> pose(
+        /*x=*/0.30969396267858817, /*y=*/0.85675409103416755,
+        /*theta=*/0.79358805865013693);
+    Eigen::Matrix<double, 4, 2> V;
+    V.row(0) << 0.5, 0.0;
+    V.row(1) << 0.0, 0.5;
+    V.row(2) << -0.5, 0.0;
+    V.row(3) << 0.0, -0.5;
+
+    Pose<Interval> posei = pose.cast<Interval>();
+    Eigen::MatrixXX3<Interval> R = posei.construct_rotation_matrix();
+    Eigen::MatrixXX3<Interval> expected_R;
+    expected_R.resize(2, 2);
+    // b test_interval.cpp: 112
+    expected_R.row(0) << cos(posei.rotation(0)), -sin(posei.rotation(0));
+    expected_R.row(1) << sin(posei.rotation(0)), cos(posei.rotation(0));
+    // [0.70129200121194357, 0.70129200121194346]
+
+    CHECK((R - expected_R).squaredNorm().lower() == Approx(0.0).margin(1e-12));
+    CHECK((R - expected_R).squaredNorm().upper() == Approx(0.0).margin(1e-12));
+
+    Interval interval = R(0, 0);
+    CHECK(!boost::numeric::empty(interval));
+    Interval tmp = 0.5 * interval;
+
+    Eigen::MatrixXX3<Interval> RT = R.transpose();
+    Eigen::Matrix<Interval, 4, 2> Vi = V.cast<Interval>();
+    // Eigen::Matrix<Interval, 4, 2> RV = Vi * RT;
+    Eigen::Matrix<Interval, 4, 2> RV;
+    for (int i = 0; i < V.rows(); i++) {
+        for (int j = 0; j < V.cols(); j++) {
+            Interval tmp1 = V(i, j) * R(0, j);
+            Interval tmp2 = V(i, j) * R(1, j);
+            RV(i, 0) = tmp1 + tmp2;
+        }
+    }
+    RV.rowwise() += posei.position.transpose();
+    for (int i = 0; i < RV.size(); i++) {
+        CHECK(std::isfinite(RV(i).lower()));
+        CHECK(std::isfinite(RV(i).upper()));
+    }
+    // std::cout << RV << std::endl;
 }

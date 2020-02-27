@@ -120,11 +120,8 @@ namespace physics {
         std::vector<Eigen::MatrixXX3<T>> grad_R(
             rot_ndof(), Eigen::MatrixXX3<T>(dim(), dim()));
         if (dim() == 2) {
-            // clang-format off
-            grad_R[0] <<
-                -sin(rotation(0)), -cos(rotation(0)),
-                 cos(rotation(0)), -sin(rotation(0));
-            // clang-format on
+            grad_R[0].row(0) << -sin(rotation(0)), -cos(rotation(0));
+            grad_R[0].row(1) << cos(rotation(0)), -sin(rotation(0));
         } else {
             // Construct 3D rotation matricies
             Eigen::Matrix<T, 3, 3> Rx =

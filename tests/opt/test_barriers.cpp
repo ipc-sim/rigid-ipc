@@ -43,7 +43,8 @@ TEST_CASE("Test spline barrier", "[opt][barrier]")
         phi_hessian = [&s](double x) { return spline_barrier_hessian(x, s); };
     }
 
-    Eigen::VectorXd x = (Eigen::ArrayXd::Random(1) + 1) / 2 * s; // ∈ [0, s]
+    Eigen::VectorXd x(1);
+    x << 0.5 * s; // ∈ [0, s]
 
     Eigen::VectorXd fgrad(1);
     fd::finite_gradient(
