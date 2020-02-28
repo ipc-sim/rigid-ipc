@@ -143,6 +143,10 @@ set(MY_FLAGS
 		# Gives meaningful stack traces
 		-fno-omit-frame-pointer
 		-fno-optimize-sibling-calls
+
+		-W\#pragma-messages
+		-W\#warnings
+		-Wno-pedantic
 )
 
 # Flags above don't make sense for MSVC
