@@ -144,8 +144,6 @@ set(MY_FLAGS
 		-fno-omit-frame-pointer
 		-fno-optimize-sibling-calls
 
-		-W\#pragma-messages
-		-W\#warnings
 		-Wno-pedantic
 )
 
