@@ -3,6 +3,8 @@
 
 #include <ccd/interval_root_finder.hpp>
 #include <geometry/distance.hpp>
+#include <geometry/intersection.hpp>
+#include <geometry/normal.hpp>
 #include <logger.hpp>
 #include <utils/eigen_ext.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -64,13 +66,8 @@ bool compute_edge_vertex_time_of_impact(
         // Get the world vertex of the vertex and edge at time t
         Eigen::VectorX3<Interval> vertex, edge_vertex0, edge_vertex1;
         vertex_positions(t, vertex, edge_vertex0, edge_vertex1);
-
-        // Project the point onto the edge by computing its scalar projection
-        Eigen::VectorX3<Interval> edge_vec = edge_vertex1 - edge_vertex0;
-        Interval alpha =
-            (vertex - edge_vertex0).dot(edge_vec) / edge_vec.squaredNorm();
-        // spdlog::debug("α ∈ {}", logger::fmt_interval(alpha));
-        return overlap(alpha, Interval(0, 1));
+        return geometry::is_point_along_segment(
+            vertex, edge_vertex0, edge_vertex1);
     };
 
     Interval toi_interval;
@@ -179,16 +176,6 @@ bool compute_edge_edge_time_of_impact(
     return is_impacting;
 }
 
-template <typename T>
-inline Eigen::VectorX3<T> triangle_normal(
-    const Eigen::VectorX3<T>& face_vertex0,
-    const Eigen::VectorX3<T>& face_vertex1,
-    const Eigen::VectorX3<T>& face_vertex2)
-{
-    return ((face_vertex1 - face_vertex0).template head<3>())
-        .cross((face_vertex2 - face_vertex0).template head<3>());
-}
-
 // Find time-of-impact between two rigid bodies
 bool compute_face_vertex_time_of_impact(
     const physics::RigidBody& bodyA,            // Body of the vertex
@@ -241,8 +228,8 @@ bool compute_face_vertex_time_of_impact(
         Eigen::VectorX3<Interval> face_vertex0, face_vertex1, face_vertex2;
         vertex_positions(t, vertex, face_vertex0, face_vertex1, face_vertex2);
 
-        Eigen::VectorX3<Interval> normal =
-            triangle_normal(face_vertex0, face_vertex1, face_vertex2);
+        Eigen::VectorX3<Interval> normal = geometry::triangle_normal(
+            face_vertex0, face_vertex1, face_vertex2, /*normalized=*/false);
 
         return geometry::point_plane_signed_distance(
             vertex, face_vertex0, normal);
@@ -253,19 +240,8 @@ bool compute_face_vertex_time_of_impact(
         Eigen::VectorX3<Interval> vertex;
         Eigen::VectorX3<Interval> face_vertex0, face_vertex1, face_vertex2;
         vertex_positions(t, vertex, face_vertex0, face_vertex1, face_vertex2);
-
-        Eigen::VectorX3<Interval> normal0 =
-            triangle_normal(face_vertex0, face_vertex1, vertex).normalized();
-        Eigen::VectorX3<Interval> normal1 =
-            triangle_normal(face_vertex0, vertex, face_vertex2).normalized();
-        Eigen::VectorX3<Interval> normal2 =
-            triangle_normal(face_vertex1, face_vertex2, vertex).normalized();
-        for (int i = 0; i < normal0.size(); i++) {
-            if (!overlap(intersect(normal0(i), normal1(i)), normal2(i))) {
-                return false;
-            }
-        }
-        return true;
+        return geometry::is_point_inside_triangle(
+            vertex, face_vertex0, face_vertex1, face_vertex2);
     };
 
     Interval toi_interval;

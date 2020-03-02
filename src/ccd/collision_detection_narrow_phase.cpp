@@ -143,13 +143,13 @@ bool detect_edge_edge_collisions_narrow_phase(
     double& edge1_alpha)
 {
     // TODO: Check if edges are parallel
-    bool are_colliding = CTCD::edgeEdgeCTCD(
+    bool is_colliding = CTCD::edgeEdgeCTCD(
         Vi, Vj, Vk, Vl, Vi + Ui, Vj + Uj, Vk + Uk, Vl + Ul, /*eta=*/0, toi);
-    if (are_colliding) {
+    if (is_colliding) {
         edge0_alpha = -1; // TODO: Compute this correctly
         edge1_alpha = -1; // TODO: Compute this correctly
     }
-    return are_colliding;
+    return is_colliding;
 }
 
 bool detect_face_vertex_collisions_narrow_phase(
@@ -165,9 +165,9 @@ bool detect_face_vertex_collisions_narrow_phase(
     double& u,
     double& v)
 {
-    bool are_colliding = CTCD::vertexFaceCTCD(
+    bool is_colliding = CTCD::vertexFaceCTCD(
         Vl, Vi, Vj, Vk, Vl + Ul, Vi + Ui, Vj + Uj, Vk + Uk, /*eta=*/0, toi);
-    if (are_colliding) {
+    if (is_colliding) {
         // TODO: Consider moving this computation to an as needed basis
         Eigen::MatrixXd coords;
         igl::barycentric_coordinates(
@@ -182,7 +182,7 @@ bool detect_face_vertex_collisions_narrow_phase(
         v = coords(1);
         assert(u + v + coords(2) == 1);
     }
-    return are_colliding;
+    return is_colliding;
 }
 
 } // namespace ccd

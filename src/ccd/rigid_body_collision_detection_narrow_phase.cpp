@@ -2,7 +2,10 @@
 
 #include <cmath>
 
+#include <igl/barycentric_coordinates.h>
+
 #include <ccd/rigid_body_time_of_impact.hpp>
+#include <geometry/intersection.hpp>
 #include <profiler.hpp>
 #include <utils/not_implemented_error.hpp>
 
@@ -29,9 +32,9 @@ void detect_collisions_from_candidates(
 
     auto detect_ev_collision = [&](const EdgeVertexCandidate& ev_candidate) {
         double toi, alpha;
-        bool are_colliding = detect_edge_vertex_collisions_narrow_phase(
+        bool is_colliding = detect_edge_vertex_collisions_narrow_phase(
             bodies, poses, displacements, ev_candidate, toi, alpha);
-        if (are_colliding) {
+        if (is_colliding) {
             impacts.ev_impacts.emplace_back(
                 toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index);
         }
@@ -39,10 +42,10 @@ void detect_collisions_from_candidates(
 
     auto detect_ee_collision = [&](const EdgeEdgeCandidate& ee_candidate) {
         double toi, edge0_alpha, edge1_alpha;
-        bool are_colliding = detect_edge_edge_collisions_narrow_phase(
+        bool is_colliding = detect_edge_edge_collisions_narrow_phase(
             bodies, poses, displacements, ee_candidate, toi, edge0_alpha,
             edge1_alpha);
-        if (are_colliding) {
+        if (is_colliding) {
             impacts.ee_impacts.emplace_back(
                 toi, ee_candidate.edge0_index, edge0_alpha,
                 ee_candidate.edge1_index, edge1_alpha);
@@ -51,9 +54,9 @@ void detect_collisions_from_candidates(
 
     auto detect_fv_collision = [&](const FaceVertexCandidate& fv_candidate) {
         double toi, u, v;
-        bool are_colliding = detect_face_vertex_collisions_narrow_phase(
+        bool is_colliding = detect_face_vertex_collisions_narrow_phase(
             bodies, poses, displacements, fv_candidate, toi, u, v);
-        if (are_colliding) {
+        if (is_colliding) {
             impacts.fv_impacts.emplace_back(
                 toi, fv_candidate.face_index, u, v, fv_candidate.vertex_index);
         }
@@ -108,11 +111,11 @@ bool detect_edge_vertex_collisions_narrow_phase(
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_edge(candidate.edge_index, bodyB_id, edge_id);
 
-    bool are_colliding = compute_edge_vertex_time_of_impact(
+    bool is_colliding = compute_edge_vertex_time_of_impact(
         bodies.m_rbs[bodyA_id], poses[bodyA_id], displacements[bodyA_id],
         vertex_id, bodies.m_rbs[bodyB_id], poses[bodyB_id],
         displacements[bodyB_id], edge_id, toi);
-    if (are_colliding) {
+    if (is_colliding) {
         // Compute the poses at time toi
         physics::Pose<double> poseA =
             poses[bodyA_id] + displacements[bodyA_id] * toi;
@@ -128,11 +131,10 @@ bool detect_edge_vertex_collisions_narrow_phase(
         Eigen::VectorX3d v2 = bodies.m_rbs[bodyB_id].world_vertex(
             poseB, bodies.m_rbs[bodyB_id].edges(edge_id, 1));
 
-        // Project the point onto the edge by computing its scalar projection
-        Eigen::VectorX3d edge_vec = v2 - v1;
-        alpha = (v0 - v1).dot(edge_vec) / edge_vec.squaredNorm();
+        // Compute the impact parameter along the edge
+        geometry::point_segment_intersection(v0, v1, v2, alpha);
     }
-    return are_colliding;
+    return is_colliding;
 #endif
 }
 
@@ -152,15 +154,16 @@ bool detect_edge_edge_collisions_narrow_phase(
     bodies.global_to_local_edge(candidate.edge0_index, bodyA_id, edgeA_id);
     bodies.global_to_local_edge(candidate.edge1_index, bodyB_id, edgeB_id);
 
-    bool are_colliding = compute_edge_edge_time_of_impact(
+    bool is_colliding = compute_edge_edge_time_of_impact(
         bodies.m_rbs[bodyA_id], poses[bodyA_id], displacements[bodyA_id],
         edgeA_id, bodies.m_rbs[bodyB_id], poses[bodyB_id],
         displacements[bodyB_id], edgeB_id, toi);
-    if (are_colliding) {
-        edge0_alpha = -1; // TODO: Compute this correctly
-        edge0_alpha = -1; // TODO: Compute this correctly
+    if (is_colliding) {
+        // edge0_alpha = -1;
+        // edge0_alpha = -1;
+        throw NotImplementedError("Position of EE impact not implemented!");
     }
-    return are_colliding;
+    return is_colliding;
 #endif
 }
 
@@ -180,15 +183,38 @@ bool detect_face_vertex_collisions_narrow_phase(
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_face(candidate.face_index, bodyB_id, face_id);
 
-    bool are_colliding = compute_edge_edge_time_of_impact(
+    bool is_colliding = compute_edge_edge_time_of_impact(
         bodies.m_rbs[bodyA_id], poses[bodyA_id], displacements[bodyA_id],
         vertex_id, bodies.m_rbs[bodyB_id], poses[bodyB_id],
         displacements[bodyB_id], face_id, toi);
-    if (are_colliding) {
-        u = -1; // TODO: Compute this correctly
-        v = -1; // TODO: Compute this correctly
+    if (is_colliding) {
+        // Compute the poses at time toi
+        physics::Pose<double> poseA =
+            poses[bodyA_id] + displacements[bodyA_id] * toi;
+        physics::Pose<double> poseB =
+            poses[bodyB_id] + displacements[bodyB_id] * toi;
+
+        // Get the world vertex of the point at time t
+        Eigen::VectorX3d vertex_toi =
+            bodies.m_rbs[bodyA_id].world_vertex(poseA, vertex_id);
+        // Get the world vertex of the edge at time t
+        Eigen::VectorX3d triangle_vertex0 = bodies.m_rbs[bodyB_id].world_vertex(
+            poseB, bodies.m_rbs[bodyB_id].faces(face_id, 0));
+        Eigen::VectorX3d triangle_vertex1 = bodies.m_rbs[bodyB_id].world_vertex(
+            poseB, bodies.m_rbs[bodyB_id].faces(face_id, 1));
+        Eigen::VectorX3d triangle_vertex2 = bodies.m_rbs[bodyB_id].world_vertex(
+            poseB, bodies.m_rbs[bodyB_id].faces(face_id, 2));
+
+        // TODO: Consider moving this computation to an as needed basis
+        Eigen::MatrixXd coords;
+        igl::barycentric_coordinates(
+            vertex_toi, triangle_vertex0, triangle_vertex1, triangle_vertex2,
+            coords);
+        u = coords(0);
+        v = coords(1);
+        assert(u + v + coords(2) == 1);
     }
-    return are_colliding;
+    return is_colliding;
 #endif
 }
 

@@ -39,6 +39,7 @@ add_executable(${PROJECT_NAME}_tests
     io/test_read_rb_scene.cpp
 
     geometry/test_distance.cpp
+    geometry/test_intersection.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)

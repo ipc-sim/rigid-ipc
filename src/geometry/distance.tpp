@@ -3,6 +3,7 @@
 
 #include <Eigen/Geometry>
 #include <constants.hpp>
+#include <geometry/normal.hpp>
 #include <utils/not_implemented_error.hpp>
 
 namespace ccd {
@@ -17,13 +18,6 @@ namespace geometry {
         const Eigen::VectorX3<T>& point0, const Eigen::VectorX3<T>& point1)
     {
         return (point1 - point0).norm();
-    }
-
-    template <typename T>
-    inline Eigen::Vector2<T> perpendicular(const Eigen::VectorX3<T>& v)
-    {
-        assert(v.size() == 2);
-        return Eigen::Vector2<T>(-v.y(), v.x());
     }
 
     template <typename T>
@@ -60,7 +54,8 @@ namespace geometry {
         if (bc.dot(ab) >= T(0.0)) {
             return bc.norm();
         }
-        Eigen::VectorX3<T> abperp = perpendicular(ab);
+        Eigen::VectorX3<T> abperp =
+            segment_normal(segment_start, segment_end, /*normalized=*/false);
 
         T g = abperp.dot(ac);
         if (g < 0) {
@@ -161,9 +156,8 @@ namespace geometry {
             throw NotImplementedError(
                 "point_line_signed_distance() not implmeneted in 3D!");
         }
-        Eigen::VectorX3<T> line_vec = line_point1 - line_point0;
-        Eigen::VectorX3<T> normal = perpendicular(line_vec);
-        return (point - line_point0).dot(normal.normalized());
+        Eigen::VectorX3<T> normal = segment_normal(line_point0, line_point1);
+        return (point - line_point0).dot(normal);
     }
 
     // Compute the signed distance between two lines
