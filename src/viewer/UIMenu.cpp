@@ -8,7 +8,9 @@ namespace ccd {
 
 void UISimState::draw_menu()
 {
-    draw_labels_window();
+    if (m_show_vertex_data) {
+        draw_labels_window();
+    }
 
     float menu_width = 220.f * menu_scaling();
     static bool player_menu = true;
@@ -22,13 +24,15 @@ void UISimState::draw_menu()
         ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
     bool _viewer_menu_visible = true;
 
-    ImGui::Begin("Viewer", &_viewer_menu_visible,
+    ImGui::Begin(
+        "Viewer", &_viewer_menu_visible,
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
     {
 
         const char* level_strings[] = SPDLOG_LEVEL_NAMES;
-        if (ImGui::Combo("log-level##logger", &m_log_level, level_strings,
+        if (ImGui::Combo(
+                "log-level##logger", &m_log_level, level_strings,
                 CCD_IM_ARRAYSIZE(level_strings))) {
             spdlog::set_level(
                 static_cast<spdlog::level::level_enum>(m_log_level));
@@ -41,7 +45,8 @@ void UISimState::draw_menu()
                     "Player", &player_menu, ImGuiTreeNodeFlags_DefaultOpen)) {
                 draw_simulation_player();
             }
-            if (ImGui::CollapsingHeader("Collisions", &collisions_menu,
+            if (ImGui::CollapsingHeader(
+                    "Collisions", &collisions_menu,
                     ImGuiTreeNodeFlags_DefaultOpen)) {
                 draw_collision_menu();
             }
@@ -64,7 +69,8 @@ void UISimState::draw_menu()
             ImVec2(200.0f, 30.0f), ImVec2(legends_width, -1.0f));
         bool _colors_menu_visible = true;
 
-        ImGui::Begin("UI", &_colors_menu_visible,
+        ImGui::Begin(
+            "UI", &_colors_menu_visible,
             ImGuiWindowFlags_NoSavedSettings
                 | ImGuiWindowFlags_AlwaysAutoResize);
         {
@@ -84,8 +90,10 @@ void UISimState::draw_io()
         if (ImGui::Button("Reload##IO", ImVec2(-1, 0))) {
             reload();
         }
-        ImGui::BeginChild("##filename",
-            ImVec2(ImGui::GetWindowContentRegionWidth() * 0.9f,
+        ImGui::BeginChild(
+            "##filename",
+            ImVec2(
+                ImGui::GetWindowContentRegionWidth() * 0.9f,
                 ImGui::GetFontSize() * 3),
             false, ImGuiWindowFlags_HorizontalScrollbar);
         {
@@ -113,24 +121,20 @@ void UISimState::draw_simulation_player()
         simulation_step();
     }
     // --------------------------------------------------------------------
+    ImGui::Checkbox("pause if intersecting", &m_bkp_has_intersections);
+    ImGui::SameLine();
+    ImGui::HelpMarker("yes - stop playing if step has intersections.");
+
     ImGui::Checkbox("auto. solve collisions", &m_state.m_solve_collisions);
     ImGui::SameLine();
     ImGui::HelpMarker("yes - solve collisions automatically on each step.");
 
-    ImGui::Checkbox("break had collision", &m_bkp_had_collision);
+    ImGui::Checkbox("pause on collisions", &m_bkp_had_collision);
     ImGui::SameLine();
     ImGui::HelpMarker("yes - stop playing if step had a collision.");
 
-    ImGui::Checkbox("break has collision", &m_bkp_has_collision);
-    ImGui::SameLine();
-    ImGui::HelpMarker("yes - stop playing if step has unsolved collision.");
-
     // --------------------------------------------------------------------
     ImGui::Text("Step %i", m_state.m_num_simulation_steps);
-
-    ImGui::SameLine();
-    ImGui::HelpMarker("yes - shows velocities and forces as position-delta\n "
-                      "i.e scaling them by time.");
 }
 
 void UISimState::draw_collision_menu()
@@ -146,8 +150,8 @@ void UISimState::draw_collision_menu()
 void UISimState::draw_settings()
 {
     auto config = m_state.get_active_config();
-    ImGui::BeginChild("##config",
-        ImVec2(ImGui::GetWindowContentRegionWidth(), 300), false,
+    ImGui::BeginChild(
+        "##config", ImVec2(ImGui::GetWindowContentRegionWidth(), 300), false,
         ImGuiWindowFlags_HorizontalScrollbar);
     {
         ImGui::TreeNodeJson(config);
@@ -157,9 +161,8 @@ void UISimState::draw_settings()
 
 void UISimState::draw_legends()
 {
-    static float second_col = 120;
-    static bool show_vertex_data = true;
-    float slider_width = ImGui::GetWindowWidth() * 0.25f;
+    static float second_col = 100;
+    float slider_width = ImGui::GetWindowWidth() * 0.2f;
     for (auto& label : get_data_names()) {
         auto ptr = get_data(label);
 
@@ -176,20 +179,21 @@ void UISimState::draw_legends()
         }
 
         /// other specific attributes
-        if (ptr->is_graph()) {
+        if (ptr->is_mesh()) {
             ImGui::SameLine(second_col);
             if (ImGui::Checkbox(
-                    ("data##UI-" + label).c_str(), &show_vertex_data)) {
+                    ("data##UI-" + label).c_str(), &m_show_vertex_data)) {
             }
-            ptr->show_vertex_data = show_vertex_data;
+            ptr->show_vertex_data = m_show_vertex_data;
             ptr->update_vertex_data();
 
             ImGui::SameLine();
             ImGui::PushItemWidth(slider_width);
             {
                 float point_size = ptr->data().point_size / pixel_ratio();
-                if (ImGui::SliderFloat(("##UI-scaling" + label).c_str(),
-                        &point_size, 0.00f, 10.0f, "%1.f")) {
+                if (ImGui::SliderFloat(
+                        ("vertices##UI-scaling" + label).c_str(), &point_size,
+                        0.00f, 10.0f, "%1.f")) {
                     ptr->data().point_size = point_size * pixel_ratio();
                 }
             }
@@ -222,9 +226,10 @@ void UISimState::draw_legends()
             ImGui::PushItemWidth(slider_width);
             {
                 float aux = float(ptr->m_scaling);
-                if (ImGui::SliderFloat(("##UI-scaling" + label).c_str(), &aux,
-                        0.00f, 1000.0f, "%1.f")) {
-                    ptr->m_scaling = double(aux) / 100.0;
+                if (ImGui::SliderFloat(
+                        ("scale##UI-scaling" + label).c_str(), &aux, 0.00f,
+                        10.0f, "%1.f")) {
+                    ptr->m_scaling = double(aux);
                     ptr->recolor();
                 }
             }

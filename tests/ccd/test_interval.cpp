@@ -108,10 +108,8 @@ TEST_CASE("Interval rotation rounding", "[ccd][interval][matrix]")
     Eigen::MatrixXX3<Interval> R = posei.construct_rotation_matrix();
     Eigen::MatrixXX3<Interval> expected_R;
     expected_R.resize(2, 2);
-    // b test_interval.cpp: 112
     expected_R.row(0) << cos(posei.rotation(0)), -sin(posei.rotation(0));
     expected_R.row(1) << sin(posei.rotation(0)), cos(posei.rotation(0));
-    // [0.70129200121194357, 0.70129200121194346]
 
     CHECK((R - expected_R).squaredNorm().lower() == Approx(0.0).margin(1e-12));
     CHECK((R - expected_R).squaredNorm().upper() == Approx(0.0).margin(1e-12));

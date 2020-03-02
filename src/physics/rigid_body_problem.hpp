@@ -62,7 +62,7 @@ namespace physics {
             return m_assembler.m_faces;
         }
 
-        Eigen::VectorXi group_id() const override
+        Eigen::VectorXi group_ids() const override
         {
             return m_assembler.group_ids();
         }

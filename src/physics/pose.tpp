@@ -269,7 +269,7 @@ namespace physics {
 
     template <typename T>
     Pose<T>
-    Pose<T>::lerp_poses(const Pose<T>& pose0, const Pose<T>& pose1, const T& t)
+    Pose<T>::lerp(const Pose<T>& pose0, const Pose<T>& pose1, const T& t)
     {
         assert(pose0.dim() == pose1.dim());
         return (pose1 - pose0) * t + pose0;

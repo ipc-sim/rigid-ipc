@@ -16,13 +16,20 @@
         "inner_solver": "newton_solver"
     },
     "rigid_body_problem": {
-        "coefficient_restitution": 1,
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
-            "mesh": "/Users/zachary/models/keenan-crane/spot/spot_triangulated.obj",
-            "position": [0, 0, 0],
-            "rotation": [0, 135, 0],
-            "linear_velocity": [1, 0, 0],
-            "angular_velocity": [0, 0, 0]
-        }]
+                "mesh": "/Users/zachary/models/keenan-crane/spot/spot_triangulated.obj",
+                "position": [0, 0, 0],
+                "rotation": [0, 135, 0],
+                "linear_velocity": [0, 0, 0],
+                "angular_velocity": [0, 0, 0]
+            },
+            {
+                "mesh": "/Users/zachary/Development/grad-research/collisions/fixing-collisions/meshes/plane.obj",
+                "is_dof_fixed": [true, true, true, true, true, true],
+                "position": [0, -1, 0]
+            }
+        ]
     }
 }

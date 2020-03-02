@@ -59,7 +59,7 @@ namespace physics {
         Pose<T> operator*(const T& x) const;
         inline Pose<T>& operator*=(const T& x);
         static Pose<T>
-        lerp_poses(const Pose<T>& pose0, const Pose<T>& pose1, const T& t);
+        lerp(const Pose<T>& pose0, const Pose<T>& pose1, const T& t);
 
         template <typename T1> Pose<T1> cast() const
         {

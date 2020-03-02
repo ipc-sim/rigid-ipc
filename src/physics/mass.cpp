@@ -55,6 +55,10 @@ namespace physics {
         Eigen::VectorXd& center,
         Eigen::MatrixXd& inertia)
     {
+        if (faces.size() == 0) {
+            throw NotImplementedError("compute_mass_properties_3D() not "
+                                      "implemented for faceless meshes!");
+        }
         assert(vertices.cols() == 3);
         assert(faces.cols() == 3);
 
@@ -191,6 +195,7 @@ namespace physics {
             }
             mass_matrix = Eigen::SparseDiagonal<double>(vertex_masses);
         } else {
+            assert(facets.cols() == 3);
             igl::massmatrix(
                 vertices, facets, igl::MassMatrixType::MASSMATRIX_TYPE_VORONOI,
                 mass_matrix);

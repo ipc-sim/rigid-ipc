@@ -9,9 +9,10 @@ UISimState::UISimState()
     : m_player_state(PlayerState::Paused)
     , m_has_scene(false)
     , m_bkp_had_collision(false)
-    , m_bkp_has_collision(true)
+    , m_bkp_has_intersections(true)
     , m_log_level(spdlog::level::info)
     , m_interval_time(0.0)
+    , m_show_vertex_data(false)
 {
 }
 
@@ -23,8 +24,9 @@ void UISimState::launch()
     m_viewer.core().orthographic = true;
     m_viewer.core().is_animating = true;
     m_viewer.core().lighting_factor = 0.0;
-    m_viewer.callback_pre_draw
-        = [&](igl::opengl::glfw::Viewer&) { return pre_draw_loop(); };
+    m_viewer.callback_pre_draw = [&](igl::opengl::glfw::Viewer&) {
+        return pre_draw_loop();
+    };
     m_viewer.launch();
 }
 
@@ -34,14 +36,16 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
     viewer->data().clear();
 
     viewer->append_mesh();
-    edges_data = std::make_unique<igl::opengl::GraphData>(_viewer,
-        Eigen::RowVector3d(231.0, 76, 60) / 255.0); // #e74c3c - ALIZARIN RED
+    mesh_data = std::make_unique<igl::opengl::MeshData>(
+        _viewer,
+        Eigen::RowVector3d(0xE7, 0x4C, 0x3C) / 0xFF); // #E74C3C - ALIZARIN RED
     viewer->append_mesh();
-    velocity_data = std::make_unique<igl::opengl::VectorFieldData>(_viewer,
-        Eigen::RowVector3d(241, 196, 15) / 255.0); // #f1c40f SUN FLOWER
+    velocity_data = std::make_unique<igl::opengl::VectorFieldData>(
+        _viewer,
+        Eigen::RowVector3d(0xF1, 0xC4, 0x0F) / 0xFF); // #F1C40F SUN FLOWER
     velocity_data->data().show_overlay = false;
 
-    datas_.emplace("edges", edges_data);
+    datas_.emplace("edges", mesh_data);
     datas_.emplace("velocity", velocity_data);
 
     for (auto it = datas_.begin(); it != datas_.end(); ++it) {
@@ -49,8 +53,8 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
     }
 }
 
-std::shared_ptr<igl::opengl::ViewerDataExt> UISimState::get_data(
-    const std::string& dataname) const
+std::shared_ptr<igl::opengl::ViewerDataExt>
+UISimState::get_data(const std::string& dataname) const
 {
     auto it = datas_.find(dataname);
     assert(it != datas_.end());
@@ -62,21 +66,23 @@ void UISimState::load_scene()
     auto q = m_state.problem_ptr->vertices();
     auto v = m_state.problem_ptr->velocities() * m_state.m_timestep_size;
 
-    edges_data->data().show_vertid = false;
-    edges_data->set_graph(q, m_state.problem_ptr->edges());
-    edges_data->set_vertex_data(m_state.problem_ptr->particle_dof_fixed());
-    edges_data->data().point_size = 10 * pixel_ratio();
+    mesh_data->data().show_vertid = false;
+    mesh_data->set_mesh(
+        q, m_state.problem_ptr->edges(), m_state.problem_ptr->faces());
+    mesh_data->set_vertex_data(m_state.problem_ptr->particle_dof_fixed());
+    mesh_data->data().point_size = 0 * pixel_ratio();
 
     velocity_data->set_vector_field(q, v);
 
     int dim = q.cols();
     m_viewer.core().trackball_angle = Eigen::Quaternionf::Identity();
-    m_viewer.core().set_rotation_type(dim == 2
-            ? igl::opengl::ViewerCore::ROTATION_TYPE_NO_ROTATION
-            : igl::opengl::ViewerCore::
-                  ROTATION_TYPE_TWO_AXIS_VALUATOR_FIXED_UP);
+    m_viewer.core().set_rotation_type(
+        dim == 2 ? igl::opengl::ViewerCore::ROTATION_TYPE_NO_ROTATION
+                 : igl::opengl::ViewerCore::
+                       ROTATION_TYPE_TWO_AXIS_VALUATOR_FIXED_UP);
     m_viewer.core().orthographic = dim == 2;
-    viewer->core().align_camera_center(edges_data->mV, edges_data->mE);
+    m_viewer.core().lighting_factor = float(dim == 2);
+    viewer->core().align_camera_center(mesh_data->mV, mesh_data->mE);
     m_has_scene = true;
     m_player_state = PlayerState::Paused;
     m_interval_time = 0.0;
@@ -102,7 +108,7 @@ void UISimState::redraw_scene()
     auto q1 = m_state.problem_ptr->vertices();
     auto v1 = m_state.problem_ptr->velocities() * m_state.m_timestep_size;
 
-    edges_data->update_graph(q1);
+    mesh_data->update_vertices(q1);
     velocity_data->update_vector_field(q1, v1);
 }
 
@@ -112,11 +118,11 @@ bool UISimState::pre_draw_loop()
         simulation_step();
         bool breakpoint = m_bkp_had_collision && m_state.m_step_had_collision;
         breakpoint = breakpoint
-            || (m_bkp_has_collision && m_state.m_step_has_collision);
+            || (m_bkp_has_intersections && m_state.m_step_has_collision);
         if (m_state.m_max_simulation_steps > -1) {
             breakpoint = breakpoint
                 || (m_state.m_num_simulation_steps
-                       >= m_state.m_max_simulation_steps);
+                    >= m_state.m_max_simulation_steps);
         }
         if (breakpoint) {
             m_player_state = PlayerState::Paused;

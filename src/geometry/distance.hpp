@@ -65,7 +65,7 @@ namespace geometry {
         const Eigen::VectorX3<T>& triangle_vertex2);
 
     //-------------------------------------------------------------------------
-    // Signed Distances
+    // Signed Distances (useful for CCD)
     //-------------------------------------------------------------------------
 
     /// Compute the signed distance between a point and a line
@@ -77,7 +77,7 @@ namespace geometry {
 
     /// Compute the signed distance between two lines
     template <typename T>
-    inline T line_line_distance(
+    inline T line_line_signed_distance(
         const Eigen::VectorX3<T>& line0_point0,
         const Eigen::VectorX3<T>& line0_point1,
         const Eigen::VectorX3<T>& line1_point0,

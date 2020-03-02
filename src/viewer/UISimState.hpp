@@ -31,8 +31,8 @@ public:
     {
         return data_names_;
     }
-    std::shared_ptr<igl::opengl::ViewerDataExt> get_data(
-        const std::string& data) const;
+    std::shared_ptr<igl::opengl::ViewerDataExt>
+    get_data(const std::string& data) const;
 
     void launch();
     void load_scene();
@@ -89,9 +89,10 @@ public:
 
     bool m_has_scene;
     bool m_bkp_had_collision;
-    bool m_bkp_has_collision;
+    bool m_bkp_has_intersections;
     int m_log_level;        ///< @brief setup log
     double m_interval_time; ///< @brief time within the interval
+    bool m_show_vertex_data;
 
 protected:
     void draw_io();
@@ -101,7 +102,7 @@ protected:
     void draw_legends();
 
 private:
-    std::shared_ptr<igl::opengl::GraphData> edges_data;
+    std::shared_ptr<igl::opengl::MeshData> mesh_data;
     std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
 
     std::map<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>> datas_;

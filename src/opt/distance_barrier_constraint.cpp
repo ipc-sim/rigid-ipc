@@ -127,8 +127,11 @@ namespace opt {
 
         Candidates candidates;
 
+        physics::Poses<double> poses_t1 = poses + displacements;
+        physics::Poses<double> zeros(
+            poses.size(), physics::Pose<double>::Zero(bodies.dim()));
         detect_collision_candidates(
-            bodies, poses, displacements, dim_to_collision_type(bodies.dim()),
+            bodies, poses_t1, zeros, dim_to_collision_type(bodies.dim()),
             candidates, detection_method,
             /*inflation_radius=*/active_constraint_scale * m_barrier_epsilon);
 
@@ -138,26 +141,51 @@ namespace opt {
 
         barriers.clear();
 
-        // Compute the world vertices at the end of the time-step
-        Eigen::MatrixXd vertices_t1 =
-            bodies.world_vertices(poses + displacements);
-
         // Compute the edge-vertex distance candidates
+        // TODO: Parallelize
+        // TODO: Store these distance for use later
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double distance = ccd::geometry::point_segment_distance<double>(
-                vertices_t1.row(ev_candidate.vertex_index),
-                vertices_t1.row(bodies.m_edges(ev_candidate.edge_index, 0)),
-                vertices_t1.row(bodies.m_edges(ev_candidate.edge_index, 1)));
+                bodies.world_vertex(poses_t1, ev_candidate.vertex_index),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ev_candidate.edge_index, 0)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ev_candidate.edge_index, 1)));
 
             if (distance < active_constraint_scale * m_barrier_epsilon) {
                 barriers.ev_candidates.push_back(ev_candidate);
             }
         }
 
-        // TODO: 3D
-        if (bodies.dim() != 2) {
-            throw NotImplementedError(
-                "construct_active_barrier_set() not implmented for 3D!");
+        for (const auto& ee_candidate : candidates.ee_candidates) {
+            double distance = ccd::geometry::segment_segment_distance<double>(
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ee_candidate.edge0_index, 0)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ee_candidate.edge0_index, 1)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ee_candidate.edge1_index, 0)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ee_candidate.edge1_index, 1)));
+
+            if (distance < active_constraint_scale * m_barrier_epsilon) {
+                barriers.ee_candidates.push_back(ee_candidate);
+            }
+        }
+
+        for (const auto& fv_candidate : candidates.fv_candidates) {
+            double distance = ccd::geometry::point_triangle_distance<double>(
+                bodies.world_vertex(poses_t1, fv_candidate.vertex_index),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_faces(fv_candidate.face_index, 0)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_faces(fv_candidate.face_index, 1)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_faces(fv_candidate.face_index, 2)));
+
+            if (distance < active_constraint_scale * m_barrier_epsilon) {
+                barriers.fv_candidates.push_back(fv_candidate);
+            }
         }
 
         PROFILE_END(NARROW_PHASE)
@@ -172,34 +200,46 @@ namespace opt {
         Candidates candidates;
         construct_active_barrier_set(bodies, poses, displacements, candidates);
 
-        typedef double T;
+        physics::Poses<double> poses_t1 = poses + displacements;
 
-        Eigen::MatrixX<T> vertices_t1 =
-            bodies.world_vertices(poses + displacements);
+        typedef double T;
 
         distances.resize(candidates.size(), 1);
         distances.setConstant(T(0.0));
+
         for (size_t i = 0; i < candidates.ev_candidates.size(); i++) {
             const auto& ev_candidate = candidates.ev_candidates[i];
-            // a and b are the endpoints of the edge; c is the vertex
-            long edge_id = ev_candidate.edge_index;
-            int a_id = bodies.m_edges(edge_id, 0);
-            int b_id = bodies.m_edges(edge_id, 1);
-            long c_id = ev_candidate.vertex_index;
-            // Check that the vertex is not an endpoint of the edge
-            assert(a_id != c_id && b_id != c_id);
-            Eigen::VectorX3<T> a = vertices_t1.row(a_id);
-            Eigen::VectorX3<T> b = vertices_t1.row(b_id);
-            Eigen::VectorX3<T> c = vertices_t1.row(c_id);
-
-            distances(int(i)) =
-                ccd::geometry::point_segment_distance<T>(c, a, b);
+            distances(int(i)) = ccd::geometry::point_segment_distance<T>(
+                bodies.world_vertex(poses_t1, ev_candidate.vertex_index),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ev_candidate.edge_index, 0)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ev_candidate.edge_index, 1)));
         }
 
-        if (bodies.dim() != 2) {
-            throw NotImplementedError(
-                "DistanceBarrierConstraint::debug_compute_distances() not "
-                "implemented in 3D!");
+        for (size_t i = 0; i < candidates.ee_candidates.size(); i++) {
+            const auto& ee_candidate = candidates.ee_candidates[i];
+            distances(int(i)) = ccd::geometry::segment_segment_distance<double>(
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ee_candidate.edge0_index, 0)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ee_candidate.edge0_index, 1)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ee_candidate.edge1_index, 0)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_edges(ee_candidate.edge1_index, 1)));
+        }
+
+        for (size_t i = 0; i < candidates.fv_candidates.size(); i++) {
+            const auto& fv_candidate = candidates.fv_candidates[i];
+            distances(int(i)) = ccd::geometry::point_triangle_distance<double>(
+                bodies.world_vertex(poses_t1, fv_candidate.vertex_index),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_faces(fv_candidate.face_index, 0)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_faces(fv_candidate.face_index, 1)),
+                bodies.world_vertex(
+                    poses_t1, bodies.m_faces(fv_candidate.face_index, 2)));
         }
     }
 

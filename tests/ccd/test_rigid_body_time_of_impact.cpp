@@ -98,10 +98,11 @@ TEST_CASE(
     bodyA_vertices.row(0) << -1, 0, 0;
     bodyA_vertices.row(1) << 1, 0, 0;
     bodyA_vertices.row(2) << 0, 1, 0;
+    double y = GENERATE(1.0 + 1e-8, 1.0, 1.0 - 1e-8, 0.5, 1e-8, 0.0, 1e-8);
     Eigen::MatrixXd bodyB_vertices(3, dim);
-    bodyB_vertices.row(0) << 0, 0.5, 1;
-    bodyB_vertices.row(1) << 1, 0.5, 1.5;
-    bodyB_vertices.row(2) << -1, 0.5, 1.5;
+    bodyB_vertices.row(0) << 0, y, 1;
+    bodyB_vertices.row(1) << 1, y, 1.5;
+    bodyB_vertices.row(2) << -1, y, 1.5;
 
     Eigen::MatrixXi bodyA_faces(1, 3);
     bodyA_faces.row(0) << 0, 1, 2;
@@ -120,13 +121,14 @@ TEST_CASE(
 
     double expected_toi = -1;
     bool is_impact_expected = false;
+    double velz = GENERATE(-1.0 - 1e-8, -2.0, -10);
     SECTION("Translation")
     {
-        double velz = -2.0;
-        expected_toi = 0.5;
+        expected_toi = -1 / velz;
+        is_impact_expected = velz <= -1.0 && y >= 0 && y <= 1.0;
         bodyB_velocity.position.z() = velz;
-        is_impact_expected = true;
     }
+    // TODO: Rotation
 
     Eigen::VectorX6b bodyA_is_dof_fixed = Eigen::VectorX6b::Ones(ndof);
     Eigen::VectorX6b bodyB_is_dof_fixed = Eigen::VectorX6b::Zero(ndof);
@@ -146,6 +148,7 @@ TEST_CASE(
         bodyA, bodyA.pose, bodyA.velocity, /*face_id=*/0,
         // Output time of impact
         toi);
+    CAPTURE(y, velz);
     CHECK(is_impacting == is_impact_expected);
     if (is_impacting) {
         CHECK(toi == Approx(expected_toi));

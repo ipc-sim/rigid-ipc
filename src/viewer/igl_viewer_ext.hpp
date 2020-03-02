@@ -16,7 +16,7 @@ namespace opengl {
         ViewerData& data() { return m_viewer->data_list[data_id]; }
 
         virtual void recolor() {}
-        virtual inline bool is_graph() { return false; }
+        virtual inline bool is_mesh() { return false; }
         virtual inline bool is_scalar_field() { return false; }
         virtual inline bool is_vector_field() { return false; }
 
@@ -49,27 +49,36 @@ namespace opengl {
             const Eigen::MatrixXi& E,
             const Eigen::MatrixXd& color);
 
+        void set_faces(const Eigen::MatrixXd& V,
+            const Eigen::MatrixXi& F,
+            const Eigen::MatrixXd& color);
+
         void set_vector_field(const Eigen::MatrixXd& V,
             const Eigen::MatrixXd& F,
             const Eigen::MatrixXd& color);
     };
 
-    class GraphData : public ViewerDataExt {
+    class MeshData : public ViewerDataExt {
     public:
-        GraphData(igl::opengl::glfw::Viewer* _viewer,
+        MeshData(igl::opengl::glfw::Viewer* _viewer,
             const Eigen::RowVector3d& color);
 
-        void set_graph(const Eigen::MatrixXd& V, const Eigen::MatrixXi& E);
+        void set_mesh(const Eigen::MatrixXd& V,
+            const Eigen::MatrixXi& E,
+            const Eigen::MatrixXi& F);
 
         void set_vertex_data(
             const Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> data);
         void update_vertex_data() override;
-        void update_graph(const Eigen::MatrixXd& V);
+        void update_vertices(const Eigen::MatrixXd& V);
 
         void recolor() override;
-        inline bool is_graph() override { return true; }
-        Eigen::MatrixXi mE;
+        inline bool is_mesh() override { return true; }
         Eigen::MatrixXd mV;
+        Eigen::MatrixXi mE;
+        Eigen::MatrixXi mF;
+
+        Eigen::RowVector3d m_edge_color;
 
         std::vector<std::string> vertex_data_labels;
     };

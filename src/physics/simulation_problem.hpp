@@ -46,7 +46,7 @@ namespace physics {
         virtual const Eigen::MatrixXi& edges() const = 0;
         virtual const Eigen::MatrixXi& faces() const = 0;
         virtual Eigen::MatrixXd velocities() const = 0;
-        virtual Eigen::VectorXi group_id() const = 0;
+        virtual Eigen::VectorXi group_ids() const = 0;
 
         virtual const Eigen::MatrixXb& particle_dof_fixed() const = 0;
     };

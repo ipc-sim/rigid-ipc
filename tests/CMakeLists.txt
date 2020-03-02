@@ -56,3 +56,9 @@ endforeach()
 set(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS ON)
 include(Catch)
 catch_discover_tests(${PROJECT_NAME}_tests)
+
+################################################################################
+
+add_executable(test_rounding rounding_test.cpp)
+target_link_libraries(test_rounding PUBLIC Boost::boost)
+target_compile_options(test_rounding PUBLIC -msse2)

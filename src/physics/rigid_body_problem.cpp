@@ -235,6 +235,13 @@ namespace physics {
         // it after
         Eigen::MatrixXd normals(original_impacts.ev_impacts.size(), 2);
 
+#ifndef LINEARIZED_TRAJECTORY_CCD
+        // Only interpolate the poses as needed
+        Poses<double> poses_toi = Poses<double>(poses_t0.size());
+        Eigen::VectorXb is_toi_pose_available =
+            Eigen::VectorXb::Zero(poses_toi.size());
+#endif
+
         for (long i = 0; i < normals.rows(); ++i) {
             const EdgeVertexImpact& ev_impact =
                 original_impacts.ev_impacts[size_t(i)];
@@ -251,21 +258,41 @@ namespace physics {
             bool is_oriented = m_assembler.m_rbs[body_B_id].is_oriented;
 
             Eigen::Vector2d n_toi;
-            // TODO: Update this to fully nonlinear rotations
-            Eigen::MatrixXd vertices_t0 = m_assembler.world_vertices(poses_t0);
-            Eigen::MatrixXd vertices_q1 = m_assembler.world_vertices(poses_t1);
-            auto v_toi = vertices_t0 + (vertices_q1 - vertices_t0) * toi;
-            Eigen::VectorXd e_toi =
-                v_toi.row(b1_id) - v_toi.row(b0_id); // edge at toi
-            n_toi << -e_toi(1), e_toi(0);            // 90deg ccw rotation
+#ifdef LINEARIZED_TRAJECTORY_CCD
+            // Use linearized trajectories
+            Eigen::VectorX3d e_v0_t0 =
+                m_assembler.world_vertex(poses_t0, b0_id);
+            Eigen::VectorX3d e_v0_t1 =
+                m_assembler.world_vertex(poses_t1, b0_id);
+            Eigen::VectorX3d e_v0_toi = (e_v0_t1 - e_v0_t0) * toi + e_v0_t0;
+
+            Eigen::VectorX3d e_v1_t0 =
+                m_assembler.world_vertex(poses_t0, b1_id);
+            Eigen::VectorX3d e_v1_t1 =
+                m_assembler.world_vertex(poses_t1, b1_id);
+            Eigen::VectorX3d e_v1_toi = (e_v1_t1 - e_v1_t0) * toi + e_v1_t0;
+
+            Eigen::VectorX3d e_toi = e_v1_toi - e_v0_toi; // edge at toi
+#else
+            // Use nonlinear trajectory
+            long edge_body_id = m_assembler.edge_id_to_body_id(edge_id);
+            if (!is_toi_pose_available(edge_body_id)) {
+                poses_toi[edge_body_id] = Pose<double>::lerp(
+                    poses_t0[edge_body_id], poses_t1[edge_body_id], toi);
+                is_toi_pose_available(edge_body_id) = true;
+            }
+            Eigen::VectorX3d e_toi = m_assembler.world_vertex(poses_toi, b1_id)
+                - m_assembler.world_vertex(poses_toi, b0_id); // edge at toi
+#endif
+            n_toi << -e_toi(1), e_toi(0); // 90deg ccw rotation
             n_toi.normalize();
 
             if (is_oriented) {
                 n_toi = -n_toi;
             } else {
                 // check normal points towards A
-                Eigen::Vector2d va = vertices_t0.row(a_id);
-                Eigen::Vector2d vb = vertices_t0.row(b0_id);
+                Eigen::Vector2d va = m_assembler.world_vertex(poses_t0, a_id);
+                Eigen::Vector2d vb = m_assembler.world_vertex(poses_t0, b0_id);
                 if ((va - vb).transpose() * n_toi <= 0.0) {
                     n_toi *= -1;
                 }
@@ -309,10 +336,10 @@ namespace physics {
             auto& body_B = m_assembler.m_rbs[body_B_id];
 
             // The velocities of the center of mass at the time of collision!!
-            Pose<double> vel_A_prev = Pose<double>::lerp_poses(
-                body_A.velocity_prev, body_A.velocity, toi);
-            Pose<double> vel_B_prev = Pose<double>::lerp_poses(
-                body_B.velocity_prev, body_B.velocity, toi);
+            Pose<double> vel_A_prev =
+                Pose<double>::lerp(body_A.velocity_prev, body_A.velocity, toi);
+            Pose<double> vel_B_prev =
+                Pose<double>::lerp(body_B.velocity_prev, body_B.velocity, toi);
 
             // The masss
             const double inv_m_A =
@@ -349,9 +376,9 @@ namespace physics {
 
             // (2) and the angular displacement at time of collision
             const Pose<double> pose_Atoi =
-                Pose<double>::lerp_poses(body_A.pose_prev, body_A.pose, toi);
+                Pose<double>::lerp(body_A.pose_prev, body_A.pose, toi);
             const Pose<double> pose_Btoi =
-                Pose<double>::lerp_poses(body_B.pose_prev, body_B.pose, toi);
+                Pose<double>::lerp(body_B.pose_prev, body_B.pose, toi);
             // (3) then the vectors are given by r = R(\theta_{t})*r_0
             const Eigen::VectorXd r_Aperp_toi =
                 pose_Atoi.construct_rotation_matrix_gradient()[0] * r0_A;

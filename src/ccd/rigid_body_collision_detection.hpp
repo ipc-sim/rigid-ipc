@@ -7,6 +7,8 @@
 #include <ccd/collision_detection.hpp>
 #include <physics/rigid_body_assembler.hpp>
 
+// Uncomment this line to use the linearized trajectory with a floating point
+// root finder CCD.
 // #define LINEARIZED_TRAJECTORY_CCD
 
 namespace ccd {

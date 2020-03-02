@@ -70,44 +70,66 @@ namespace opengl {
         }
         data().set_edges(V_temp, E, color);
     }
+    void ViewerDataExt::set_faces(const Eigen::MatrixXd& V,
+        const Eigen::MatrixXi& F,
+        const Eigen::MatrixXd& color)
+    {
+        data().V = Eigen::MatrixXd(0, 3);
+        data().F = Eigen::MatrixXi(0, 3);
+        data().set_mesh(V, F);
+        data().set_colors(color);
+        data().show_lines = false;
+    }
 
     ///////////////////////////////////////////////////////////////////////////
-    /// \brief GraphData::GraphData
+    /// \brief MeshData::MeshData
     /// \param _viewer
     ////////////////////////////////////////////////////////////////////////
-    GraphData::GraphData(
+    MeshData::MeshData(
         igl::opengl::glfw::Viewer* _viewer, const Eigen::RowVector3d& color)
         : ViewerDataExt(_viewer, color)
-
     {
+        m_edge_color = Eigen::RowVector3d::Zero();
     }
 
-    void GraphData::set_graph(
-        const Eigen::MatrixXd& V, const Eigen::MatrixXi& E)
+    void MeshData::set_mesh(const Eigen::MatrixXd& V,
+        const Eigen::MatrixXi& E,
+        const Eigen::MatrixXi& F)
     {
+        data().clear();
         mV = set_vertices(V);
-        set_points(V, m_color);
-        set_edges(V, E, m_color);
+        set_points(V, F.size() ? m_edge_color : m_color);
+        set_edges(V, E, F.size() ? m_edge_color : m_color);
+        if (F.size()) {
+            set_faces(V, F, m_color);
+        }
 
         mE = E;
+        mF = F;
     }
 
-    void GraphData::update_graph(const Eigen::MatrixXd& V)
+    void MeshData::update_vertices(const Eigen::MatrixXd& V)
     {
         mV = set_vertices(V);
-        set_points(V, m_color);
-        set_edges(V, mE, m_color);
+        set_points(V, mF.size() ? m_edge_color : m_color);
+        set_edges(V, mE, mF.size() ? m_edge_color : m_color);
+        if (mF.size()) {
+            set_faces(V, mF, m_color);
+        }
         data().labels_positions = mV;
     }
 
-    void GraphData::recolor()
+    void MeshData::recolor()
     {
         if (mE.size() > 0) {
-            set_points(mV, m_color);
-            set_edges(mV, mE, m_color);
+            set_points(mV, mF.size() ? m_edge_color : m_color);
+            set_edges(mV, mE, mF.size() ? m_edge_color : m_color);
+            if (mF.size()) {
+                set_faces(mV, mF, m_color);
+            }
         }
     }
-    void GraphData::set_vertex_data(
+    void MeshData::set_vertex_data(
         const Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> vtx_data)
     {
         assert(vtx_data.rows() == mV.rows());
@@ -128,7 +150,7 @@ namespace opengl {
         data().labels_strings = vertex_data_labels;
     }
 
-    void GraphData::update_vertex_data()
+    void MeshData::update_vertex_data()
     {
         if (show_vertex_data) {
             data().labels_positions = mV;

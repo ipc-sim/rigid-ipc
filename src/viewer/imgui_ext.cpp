@@ -2,7 +2,8 @@
 
 namespace ImGui {
 
-bool InputIntBounded(const char* label,
+bool InputIntBounded(
+    const char* label,
     int* val,
     int lower_bound,
     int upper_bound,
@@ -20,7 +21,8 @@ bool InputIntBounded(const char* label,
     return false;
 }
 
-bool InputDoubleBounded(const char* label,
+bool InputDoubleBounded(
+    const char* label,
     double* val,
     double lower_bound,
     double upper_bound,
@@ -40,7 +42,8 @@ bool InputDoubleBounded(const char* label,
     return false;
 }
 
-bool DragDouble(const char* label,
+bool DragDouble(
+    const char* label,
     double* v,
     double v_speed,
     double v_min,
@@ -49,15 +52,17 @@ bool DragDouble(const char* label,
     float power)
 {
 
-    return DragScalar(label, ImGuiDataType_Double, v, float(v_speed), &v_min,
-        &v_max, format, power);
+    return DragScalar(
+        label, ImGuiDataType_Double, v, float(v_speed), &v_min, &v_max, format,
+        power);
 }
 
 bool DoubleColorEdit3(const char* label, Eigen::RowVector3d& color)
 {
     Eigen::Vector3f color_f = color.cast<float>();
     bool changed = false;
-    if (ImGui::ColorEdit3(label, color_f.data(),
+    if (ImGui::ColorEdit3(
+            label, color_f.data(),
             ImGuiColorEditFlags_NoInputs
                 | ImGuiColorEditFlags_PickerHueWheel)) {
         color = color_f.cast<double>();
@@ -80,8 +85,8 @@ void HelpMarker(const char* desc)
 
 void TreeNodeJson(const nlohmann::json json)
 {
-    static const ImVec4 label_color
-        = ImVec4(241.f / 255.f, 196.f / 255.f, 15.f / 255.f, 1.0f);
+    static const ImVec4 label_color =
+        ImVec4(241.f / 255.f, 196.f / 255.f, 15.f / 255.f, 1.0f);
     ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing() * 0.1f);
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetFontSize() * 1);
     for (auto& j : json.items()) {

@@ -37,7 +37,8 @@ namespace physics {
         Eigen::VectorXd center_of_mass;
         Eigen::MatrixXd I;
         compute_mass_properties(
-            vertices_, dim == 2 ? edges : faces, m, center_of_mass, I);
+            vertices_, dim == 2 || faces.size() == 0 ? edges : faces, m,
+            center_of_mass, I);
         Eigen::MatrixXd centered_vertices =
             vertices_.rowwise() - center_of_mass.transpose();
 
@@ -71,8 +72,8 @@ namespace physics {
     {
         Eigen::VectorXd center_of_mass;
         compute_mass_properties(
-            vertices, dim() == 2 ? edges : faces, mass, center_of_mass,
-            moment_of_inertia);
+            vertices, dim() == 2 || faces.size() == 0 ? edges : faces, mass,
+            center_of_mass, moment_of_inertia);
         assert(center_of_mass.squaredNorm() < 1e-8);
 
         // TODO: Not sure why this is times based on Chrono
@@ -109,7 +110,7 @@ namespace physics {
         // compute X[i] = dR(theta)/d\theta * r_i * d\theta/dt + dX/dt
         std::vector<Eigen::MatrixXX3d> dR =
             pose.construct_rotation_matrix_gradient();
-        Eigen::MatrixXd dR_dt;
+        Eigen::MatrixXX3d dR_dt;
         if (dim() == 2) {
             dR_dt = dR[0] * velocity.rotation(0);
         } else {

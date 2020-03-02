@@ -30,7 +30,7 @@ void detect_collisions_from_candidates(
     PROFILE_START();
     PROFILE_START(NARROW_PHASE);
 
-    auto detect_ev_collisions = [&](const EdgeVertexCandidate& ev_candidate) {
+    auto detect_ev_collision = [&](const EdgeVertexCandidate& ev_candidate) {
         long ei = ev_candidate.edge_index, vi = ev_candidate.vertex_index;
         double toi, alpha;
         bool is_impacting = detect_edge_vertex_collisions_narrow_phase(
@@ -50,7 +50,7 @@ void detect_collisions_from_candidates(
         }
     };
 
-    auto detect_ee_collisions = [&](const EdgeEdgeCandidate& ee_candidate) {
+    auto detect_ee_collision = [&](const EdgeEdgeCandidate& ee_candidate) {
         long e0i = ee_candidate.edge0_index, e1i = ee_candidate.edge1_index;
         double toi, alpha0, alpha1;
         bool is_impacting = detect_edge_edge_collisions_narrow_phase(
@@ -70,7 +70,7 @@ void detect_collisions_from_candidates(
         }
     };
 
-    auto detect_fv_collisions = [&](const FaceVertexCandidate& fv_candidate) {
+    auto detect_fv_collision = [&](const FaceVertexCandidate& fv_candidate) {
         long fi = fv_candidate.face_index, vi = fv_candidate.vertex_index;
         double toi, u, v;
         bool is_impacting = detect_face_vertex_collisions_narrow_phase(
@@ -95,19 +95,19 @@ void detect_collisions_from_candidates(
         [&] {
             impacts.ev_impacts.clear();
             tbb::parallel_for_each(
-                candidates.ev_candidates, detect_ev_collisions);
+                candidates.ev_candidates, detect_ev_collision);
         },
 
         [&] {
             impacts.ee_impacts.clear();
             tbb::parallel_for_each(
-                candidates.ee_candidates, detect_ee_collisions);
+                candidates.ee_candidates, detect_ee_collision);
         },
 
         [&] {
             impacts.fv_impacts.clear();
             tbb::parallel_for_each(
-                candidates.fv_candidates, detect_fv_collisions);
+                candidates.fv_candidates, detect_fv_collision);
         });
 
     PROFILE_END(NARROW_PHASE);

@@ -42,6 +42,13 @@ namespace physics {
             return world_vertices(RigidBody::CURRENT_STEP);
         }
 
+        template <typename T>
+        Eigen::VectorX3<T>
+        world_vertex(const Pose<T>& pose, const int vertex_idx) const;
+        template <typename T>
+        Eigen::VectorX3<T>
+        world_vertex(const Poses<T>& poses, const int vertex_idx) const;
+
         Eigen::MatrixXd world_velocities() const;
 
         void world_vertices_gradient(
@@ -95,6 +102,19 @@ namespace physics {
         inline long face_id_to_body_id(long fi) const
         {
             return m_vertex_to_body_map(m_edges(fi, 0));
+        }
+
+        inline const RigidBody& vertex_id_to_body(long vi) const
+        {
+            return m_rbs[vertex_id_to_body_id(vi)];
+        }
+        inline const RigidBody& edge_id_to_body(long ei) const
+        {
+            return m_rbs[edge_id_to_body_id(ei)];
+        }
+        inline const RigidBody& face_id_to_body(long fi) const
+        {
+            return m_rbs[face_id_to_body_id(fi)];
         }
 
         inline const Eigen::VectorXi& group_ids() const
