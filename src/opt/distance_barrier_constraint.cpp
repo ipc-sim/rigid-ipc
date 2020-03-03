@@ -243,44 +243,5 @@ namespace opt {
         }
     }
 
-    double DistanceBarrierConstraint::distance_barrier_grad(
-        const double distance, const double eps)
-    {
-        return barrier_gradient(distance, eps, barrier_type);
-    }
-
-    Eigen::VectorXd DistanceBarrierConstraint::distance_barrier_grad(
-        const Eigen::VectorXd& a,
-        const Eigen::VectorXd& b,
-        const Eigen::VectorXd& c)
-    {
-        // TODO: 3D
-        // 6 dof = 3 points * 2 dof / point
-        typedef AutodiffType<6> Diff;
-        Diff::activate();
-        Diff::D1VectorXd da = Diff::d1vars(0, a);
-        Diff::D1VectorXd db = Diff::d1vars(2, b);
-        Diff::D1VectorXd dc = Diff::d1vars(4, c);
-        Diff::DDouble1 barrier = distance_barrier<Diff::DDouble1>(da, db, dc);
-
-        return barrier.getGradient();
-    }
-
-    Eigen::MatrixXd DistanceBarrierConstraint::distance_barrier_hess(
-        const Eigen::VectorXd& a,
-        const Eigen::VectorXd& b,
-        const Eigen::VectorXd& c)
-    {
-        // TODO: 3D
-        // 6 dof = 3 points * 2 dof / point
-        typedef AutodiffType<6> Diff;
-        Diff::activate();
-        Diff::D2VectorXd da = Diff::d2vars(0, a);
-        Diff::D2VectorXd db = Diff::d2vars(2, b);
-        Diff::D2VectorXd dc = Diff::d2vars(4, c);
-        Diff::DDouble2 barrier = distance_barrier<Diff::DDouble2>(da, db, dc);
-        return barrier.getHessian();
-    }
-
 } // namespace opt
 } // namespace ccd

@@ -8,6 +8,8 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include <ccd/interval.hpp>
+
 namespace ccd {
 namespace logger {
 

@@ -482,21 +482,10 @@ namespace opt {
         finite_gradient(
             sigma, f, approx_grad, fd::AccuracyOrder::SECOND,
             Constants::FINITE_DIFF_H);
-        if (!fd::compare_gradient(
-                approx_grad, exact_grad, Constants::FINITE_DIFF_TEST,
-                fmt::format(
-                    "check_finite_diff DISTANCE barrier_eps={:3e} d={:3e}",
-                    constraint_.get_barrier_epsilon(), d.getValue()))) {
-        }
-
-        // barrier finite diff - chain rule
-        double distance_grad = constraint_.distance_barrier_grad(d.getValue());
-        approx_grad = approx_grad * distance_grad;
-
         return fd::compare_gradient(
-            approx_grad, grad, Constants::FINITE_DIFF_TEST,
+            approx_grad, exact_grad, Constants::FINITE_DIFF_TEST,
             fmt::format(
-                "check_finite_diff BARRIER barrier_eps={:3e} d={:3e}",
+                "check_finite_diff DISTANCE barrier_eps={:3e} d={:3e}",
                 constraint_.get_barrier_epsilon(), d.getValue()));
     }
 

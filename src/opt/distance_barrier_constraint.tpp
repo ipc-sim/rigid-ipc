@@ -10,16 +10,6 @@ namespace opt {
 
     template <typename T>
     T DistanceBarrierConstraint::distance_barrier(
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& a, // segment start
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& b, // segment end
-        const Eigen::Matrix<T, Eigen::Dynamic, 1>& c) // point
-    {
-        T distance = ccd::geometry::point_segment_distance<T>(c, a, b);
-        return distance_barrier<T>(distance, m_barrier_epsilon);
-    }
-
-    template <typename T>
-    T DistanceBarrierConstraint::distance_barrier(
         const T distance, const double eps)
     {
         return barrier(distance - min_distance, eps, barrier_type);
@@ -43,27 +33,61 @@ namespace opt {
         barriers.setConstant(T(0.0));
 
         // Add edge-vertex barriers
+        size_t start_i = 0;
         for (size_t i = 0; i < candidates.ev_candidates.size(); i++) {
             const auto& ev_candidate = candidates.ev_candidates[i];
-            // a and b are the endpoints of the edge; c is the vertex
-            long edge_id = ev_candidate.edge_index;
-            long a_id = bodies.m_edges(edge_id, 0);
-            long b_id = bodies.m_edges(edge_id, 1);
-            long c_id = ev_candidate.vertex_index;
-            assert(a_id != c_id && b_id != c_id);
-            Eigen::VectorX3<T> a = vertices_t1.row(a_id);
-            Eigen::VectorX3<T> b = vertices_t1.row(b_id);
-            Eigen::VectorX3<T> c = vertices_t1.row(c_id);
 
-            barriers(int(i)) = distance_barrier<T>(a, b, c);
+            const Eigen::Vector2<T>& vertex =
+                vertices_t1.row(ev_candidate.vertex_index);
+            const Eigen::Vector2<T>& edge_v0 =
+                vertices_t1.row(bodies.m_edges(ev_candidate.edge_index, 0));
+            const Eigen::Vector2<T>& edge_v1 =
+                vertices_t1.row(bodies.m_edges(ev_candidate.edge_index, 1));
+
+            T distance = ccd::geometry::point_segment_distance<T>(
+                vertex, edge_v0, edge_v1);
+
+            barriers(start_i + i) = distance_barrier(distance);
         }
 
-        // TODO: Add edge-edge barriers
-        // TODO: Add face-vertex barriers
-        if (bodies.dim() != 2) {
-            throw NotImplementedError(
-                "DistanceBarrierConstraint::compute_candidates_constraints "
-                "not implemented in 3D!");
+        // Add edge-edge barriers
+        start_i += candidates.ev_candidates.size();
+        for (size_t i = 0; i < candidates.ee_candidates.size(); i++) {
+            const auto& ee_candidate = candidates.ee_candidates[i];
+
+            const Eigen::Vector3<T>& edge0_v0 =
+                vertices_t1.row(bodies.m_edges(ee_candidate.edge0_index, 0));
+            const Eigen::Vector3<T>& edge0_v1 =
+                vertices_t1.row(bodies.m_edges(ee_candidate.edge0_index, 1));
+            const Eigen::Vector3<T>& edge1_v0 =
+                vertices_t1.row(bodies.m_edges(ee_candidate.edge1_index, 0));
+            const Eigen::Vector3<T>& edge1_v1 =
+                vertices_t1.row(bodies.m_edges(ee_candidate.edge1_index, 1));
+
+            T distance = ccd::geometry::segment_segment_distance<T>(
+                edge0_v0, edge0_v1, edge1_v0, edge1_v1);
+
+            barriers(start_i + i) = distance_barrier(distance);
+        }
+
+        // Add face-vertex barriers
+        start_i += candidates.ee_candidates.size();
+        for (size_t i = 0; i < candidates.fv_candidates.size(); i++) {
+            const auto& fv_candidate = candidates.fv_candidates[i];
+
+            const Eigen::Vector3<T>& vertex =
+                vertices_t1.row(fv_candidate.vertex_index);
+            const Eigen::Vector3<T>& face_v0 =
+                vertices_t1.row(bodies.m_faces(fv_candidate.face_index, 0));
+            const Eigen::Vector3<T>& face_v1 =
+                vertices_t1.row(bodies.m_faces(fv_candidate.face_index, 2));
+            const Eigen::Vector3<T>& face_v2 =
+                vertices_t1.row(bodies.m_faces(fv_candidate.face_index, 2));
+
+            T distance = ccd::geometry::point_triangle_distance<T>(
+                vertex, face_v0, face_v1, face_v2);
+
+            barriers(start_i + i) = distance_barrier(distance);
         }
     }
 } // namespace opt

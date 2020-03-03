@@ -1,7 +1,12 @@
 /// An interval object.
 #pragma once
 
+#include <string>
+
+#include <Eigen/Core>
 #include <boost/numeric/interval.hpp>
+
+#include <utils/eigen_ext.hpp>
 
 namespace ccd {
 
@@ -34,5 +39,15 @@ typedef boost::numeric::interval<
     Interval;
 
 #endif
+
+namespace logger {
+
+    /// @brief Format a string for an Interval
+    std::string fmt_interval(const Interval& i, const int precision = 16);
+    /// @brief Format an eigen VectorX<Interval>
+    std::string fmt_eigen_intervals(
+        const Eigen::VectorX<Interval>& x, const int precision = 16);
+
+} // namespace logger
 
 } // namespace ccd

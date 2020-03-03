@@ -301,12 +301,3 @@ endif()
 if(FIXING_COLLISIONS_BUILD_COMPARISONS)
     add_subdirectory(comparisons)
 endif()
-
-################################################################################
-# Timing benchmark exectuable
-################################################################################
-add_executable(${PROJECT_NAME}_benchmark
-     src/timing_benchmark.cpp
-)
-target_include_directories(${PROJECT_NAME}_benchmark PRIVATE src)
-target_link_libraries(${PROJECT_NAME}_benchmark PUBLIC ${PROJECT_NAME})

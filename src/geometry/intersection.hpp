@@ -36,10 +36,10 @@ namespace geometry {
         T& alpha1);
 
     bool is_point_inside_triangle(
-        const Eigen::VectorX3<Interval>& point,
-        const Eigen::VectorX3<Interval>& triangle_vertex0,
-        const Eigen::VectorX3<Interval>& triangle_vertex1,
-        const Eigen::VectorX3<Interval>& triangle_vertex2);
+        const Eigen::Vector3<Interval>& point,
+        const Eigen::Vector3<Interval>& triangle_vertex0,
+        const Eigen::Vector3<Interval>& triangle_vertex1,
+        const Eigen::Vector3<Interval>& triangle_vertex2);
 
 } // namespace geometry
 } // namespace ccd
