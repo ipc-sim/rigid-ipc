@@ -91,16 +91,11 @@ if(NOT TARGET TBB::tbb)
   add_library(TBB::tbb ALIAS tbb_static)
 endif()
 
-# Etienne Vouga's CTCD Library
-if(NOT TARGET EVCTCD)
-  fixing_collisions_download_evctcd()
+if(NOT TARGET CCDWrapper::CCDWrapper)
+  fixing_collisions_download_ccd_wrapper()
+  set(CCD_WRAPPER_WITH_UNIT_TESTS OFF CACHE BOOL " " FORCE)
   # Set Eigen directory environment variable (needed for EVCTCD)
   set(ENV{EIGEN3_INCLUDE_DIR} "${FIXING_COLLISIONS_EXTERNAL}/libigl/external/eigen/")
-  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/EVCTCD)
-  # These includes are PRIVATE for some reason
-  target_include_directories(collisiondetection PUBLIC "${FIXING_COLLISIONS_EXTERNAL}/EVCTCD/include")
-  # Turn of floating point contraction for CCD robustness
-  target_compile_options(collisiondetection PUBLIC "-ffp-contract=off")
-  # Rename for convenience
-  add_library(EVCTCD ALIAS collisiondetection)
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/ccd-wrapper)
+  add_library(CCDWrapper::CCDWrapper ALIAS CCDWrapper)
 endif()

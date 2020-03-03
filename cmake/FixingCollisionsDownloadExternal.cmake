@@ -77,10 +77,10 @@ function(fixing_collisions_download_tbb)
   )
 endfunction()
 
-# Etienne Vouga's CTCD Library
-function(fixing_collisions_download_evctcd)
-  fixing_collisions_download_project(EVCTCD
-    GIT_REPOSITORY https://github.com/evouga/collisiondetection.git
-    GIT_TAG        e5fe5c9767207df5047e375fb20180a665ae186f
+# Wrapper for various CCD codes
+function(fixing_collisions_download_ccd_wrapper)
+  fixing_collisions_download_project(ccd-wrapper
+    GIT_REPOSITORY https://github.com/zfergus/ccd-wrapper.git
+    GIT_TAG        2ca865f2c3526ca2fb6e713cdfdbaa62ed1e2912
   )
 endfunction()
