@@ -11,12 +11,28 @@ namespace ccd {
 
 namespace opt {
 
-    struct RB2Candidate {
-        int vertex_body_id;
-        int edge_body_id;
-        int vertex_local_id;
-        int edge0_local_id;
-        int edge1_local_id;
+    struct RigidBodyEdgeVertexCandidate {
+        long vertex_body_id;
+        long edge_body_id;
+        long vertex_local_id;
+        long edge_vertex0_local_id;
+        long edge_vertex1_local_id;
+    };
+    struct RigidBodyEdgeEdgeCandidate {
+        long edge0_body_id;
+        long edge1_body_id;
+        long edge0_vertex0_local_id;
+        long edge0_vertex1_local_id;
+        long edge1_vertex0_local_id;
+        long edge1_vertex1_local_id;
+    };
+    struct RigidBodyFaceVertexCandidate {
+        long vertex_body_id;
+        long face_body_id;
+        long vertex_local_id;
+        long face_vertex0_local_id;
+        long face_vertex1_local_id;
+        long face_vertex2_local_id;
     };
 
     class DistanceBarrierRBProblem
@@ -121,15 +137,29 @@ namespace opt {
         double debug_min_distance(const Eigen::VectorXd& sigma) const override;
 
     protected:
-        void
-        extract_local_system(const EdgeVertexCandidate& c, RB2Candidate& rbc);
+        void extract_local_system(
+            const EdgeVertexCandidate& c, RigidBodyEdgeVertexCandidate& rbc);
+        void extract_local_system(
+            const EdgeEdgeCandidate& c, RigidBodyEdgeEdgeCandidate& rbc);
+        void extract_local_system(
+            const FaceVertexCandidate& c, RigidBodyFaceVertexCandidate& rbc);
+
+        template <typename T, typename RigidBodyCandidate>
+        T distance_barrier(
+            const Eigen::VectorXd& sigma, const RigidBodyCandidate& rbc);
 
         template <typename T>
-        T
-        distance_barrier(const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
-
+        T distance(
+            const Eigen::VectorXd& sigma,
+            const RigidBodyEdgeVertexCandidate& rbc);
         template <typename T>
-        T distance(const Eigen::VectorXd& sigma, const RB2Candidate& rbc);
+        T distance(
+            const Eigen::VectorXd& sigma,
+            const RigidBodyEdgeEdgeCandidate& rbc);
+        template <typename T>
+        T distance(
+            const Eigen::VectorXd& sigma,
+            const RigidBodyFaceVertexCandidate& rbc);
 
         Eigen::MatrixXd
         eval_jac_g_core(const Eigen::VectorXd& sigma, const Candidates&);
@@ -137,10 +167,11 @@ namespace opt {
         std::vector<Eigen::SparseMatrix<double>>
         eval_hessian_g_core(const Eigen::VectorXd& sigma, const Candidates&);
 
+        template <typename Candidate, typename RigidBodyCandidate>
         bool compare_fd(
             const Eigen::VectorXd& sigma,
-            const EdgeVertexCandidate&,
-            const Eigen::VectorXd&);
+            const Candidate& candidate,
+            const Eigen::VectorXd& grad);
 
         double debug_min_distance_ = -1;
         opt::DistanceBarrierConstraint constraint_;

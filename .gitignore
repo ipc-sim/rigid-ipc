@@ -252,5 +252,7 @@ tmp
 hpc-results
 paper
 temp-plot.html
+*.blend[123456789]
+erleben.blend
 
 **/*.bak

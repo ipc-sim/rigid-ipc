@@ -22,10 +22,10 @@ namespace geometry {
 
     template <typename T>
     inline bool segment_segment_intersection(
-        const Eigen::VectorX3<T>& segment0_start,
-        const Eigen::VectorX3<T>& segment0_end,
-        const Eigen::VectorX3<T>& segment1_start,
-        const Eigen::VectorX3<T>& segment1_end,
+        const Eigen::Vector3<T>& segment0_start,
+        const Eigen::Vector3<T>& segment0_end,
+        const Eigen::Vector3<T>& segment1_start,
+        const Eigen::Vector3<T>& segment1_end,
         T& alpha0,
         T& alpha1)
     {

@@ -55,8 +55,10 @@ public:
 
     inline void reload()
     {
+        m_reloading_scene = true;
         m_state.reload_scene();
         load_scene();
+        m_reloading_scene = false;
     }
 
     inline void simulation_step()
@@ -107,6 +109,8 @@ private:
 
     std::map<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>> datas_;
     std::vector<std::string> data_names_;
+
+    bool m_reloading_scene;
 };
 
 } // namespace ccd

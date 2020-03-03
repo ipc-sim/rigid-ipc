@@ -159,9 +159,26 @@ bool detect_edge_edge_collisions_narrow_phase(
         edgeA_id, bodies.m_rbs[bodyB_id], poses[bodyB_id],
         displacements[bodyB_id], edgeB_id, toi);
     if (is_colliding) {
-        // edge0_alpha = -1;
-        // edge0_alpha = -1;
-        throw NotImplementedError("Position of EE impact not implemented!");
+        // Compute the poses at time toi
+        physics::Pose<double> poseA =
+            poses[bodyA_id] + displacements[bodyA_id] * toi;
+        physics::Pose<double> poseB =
+            poses[bodyB_id] + displacements[bodyB_id] * toi;
+
+        Eigen::Vector3d edgeA_vertex0_toi = bodies.m_rbs[bodyA_id].world_vertex(
+            poseA, bodies.m_rbs[bodyA_id].edges(edgeA_id, 0));
+        Eigen::Vector3d edgeA_vertex1_toi = bodies.m_rbs[bodyA_id].world_vertex(
+            poseA, bodies.m_rbs[bodyA_id].edges(edgeA_id, 1));
+
+        Eigen::Vector3d edgeB_vertex0_toi = bodies.m_rbs[bodyB_id].world_vertex(
+            poseB, bodies.m_rbs[bodyB_id].edges(edgeB_id, 0));
+        Eigen::Vector3d edgeB_vertex1_toi = bodies.m_rbs[bodyB_id].world_vertex(
+            poseB, bodies.m_rbs[bodyB_id].edges(edgeB_id, 1));
+
+        geometry::segment_segment_intersection(
+            edgeA_vertex0_toi, edgeA_vertex1_toi, //
+            edgeB_vertex0_toi, edgeB_vertex1_toi, //
+            edge0_alpha, edge1_alpha);
     }
     return is_colliding;
 #endif
@@ -183,7 +200,7 @@ bool detect_face_vertex_collisions_narrow_phase(
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_face(candidate.face_index, bodyB_id, face_id);
 
-    bool is_colliding = compute_edge_edge_time_of_impact(
+    bool is_colliding = compute_face_vertex_time_of_impact(
         bodies.m_rbs[bodyA_id], poses[bodyA_id], displacements[bodyA_id],
         vertex_id, bodies.m_rbs[bodyB_id], poses[bodyB_id],
         displacements[bodyB_id], face_id, toi);
@@ -195,21 +212,24 @@ bool detect_face_vertex_collisions_narrow_phase(
             poses[bodyB_id] + displacements[bodyB_id] * toi;
 
         // Get the world vertex of the point at time t
-        Eigen::VectorX3d vertex_toi =
+        Eigen::RowVector3d vertex_toi =
             bodies.m_rbs[bodyA_id].world_vertex(poseA, vertex_id);
-        // Get the world vertex of the edge at time t
-        Eigen::VectorX3d triangle_vertex0 = bodies.m_rbs[bodyB_id].world_vertex(
-            poseB, bodies.m_rbs[bodyB_id].faces(face_id, 0));
-        Eigen::VectorX3d triangle_vertex1 = bodies.m_rbs[bodyB_id].world_vertex(
-            poseB, bodies.m_rbs[bodyB_id].faces(face_id, 1));
-        Eigen::VectorX3d triangle_vertex2 = bodies.m_rbs[bodyB_id].world_vertex(
-            poseB, bodies.m_rbs[bodyB_id].faces(face_id, 2));
+        // Get the world vertex of the face at time t
+        Eigen::RowVector3d triangle_vertex0_toi =
+            bodies.m_rbs[bodyB_id].world_vertex(
+                poseB, bodies.m_rbs[bodyB_id].faces(face_id, 0));
+        Eigen::RowVector3d triangle_vertex1_toi =
+            bodies.m_rbs[bodyB_id].world_vertex(
+                poseB, bodies.m_rbs[bodyB_id].faces(face_id, 1));
+        Eigen::RowVector3d triangle_vertex2_toi =
+            bodies.m_rbs[bodyB_id].world_vertex(
+                poseB, bodies.m_rbs[bodyB_id].faces(face_id, 2));
 
         // TODO: Consider moving this computation to an as needed basis
         Eigen::MatrixXd coords;
         igl::barycentric_coordinates(
-            vertex_toi, triangle_vertex0, triangle_vertex1, triangle_vertex2,
-            coords);
+            vertex_toi, triangle_vertex0_toi, triangle_vertex1_toi,
+            triangle_vertex2_toi, coords);
         u = coords(0);
         v = coords(1);
         assert(u + v + coords(2) == 1);

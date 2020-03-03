@@ -13,6 +13,7 @@ UISimState::UISimState()
     , m_log_level(spdlog::level::info)
     , m_interval_time(0.0)
     , m_show_vertex_data(false)
+    , m_reloading_scene(false)
 {
 }
 
@@ -74,6 +75,15 @@ void UISimState::load_scene()
 
     velocity_data->set_vector_field(q, v);
 
+    m_has_scene = true;
+    m_player_state = PlayerState::Paused;
+    m_interval_time = 0.0;
+
+    // Do not change the view setting upon reload
+    if (m_reloading_scene) {
+        return;
+    }
+
     int dim = q.cols();
     m_viewer.core().trackball_angle = Eigen::Quaternionf::Identity();
     m_viewer.core().set_rotation_type(
@@ -83,9 +93,6 @@ void UISimState::load_scene()
     m_viewer.core().orthographic = dim == 2;
     m_viewer.core().lighting_factor = float(dim == 2);
     viewer->core().align_camera_center(mesh_data->mV, mesh_data->mE);
-    m_has_scene = true;
-    m_player_state = PlayerState::Paused;
-    m_interval_time = 0.0;
 
     // Default colors
     // background_color << 0.3f, 0.3f, 0.5f, 1.0f;

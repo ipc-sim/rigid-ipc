@@ -1,5 +1,6 @@
 #include "read_rb_scene.hpp"
 
+#include <boost/filesystem.hpp>
 #include <igl/edges.h>
 #include <igl/read_triangle_mesh.h>
 
@@ -34,6 +35,7 @@ namespace io {
                   "oriented":false,
                   "position":[0.0,0.0,0.0],
                   "rotation":[0.0,0.0,0.0],
+                  "scale":[1.0,1.0,1.0],
                   "linear_velocity":[0.0,0.0,0.0],
                   "angular_velocity":[0.0,0.0,0.0]
                   })"_json;
@@ -44,7 +46,17 @@ namespace io {
 
             std::string mesh_fname = args["mesh"].get<std::string>();
             if (mesh_fname != "") {
-                igl::read_triangle_mesh(mesh_fname, vertices, faces);
+                boost::filesystem::path mesh_path(mesh_fname);
+                if (!exists(mesh_path)) {
+                    // TODO: First check a path relative to the input file
+                    mesh_path = boost::filesystem::path(__FILE__)
+                                    .parent_path() // io
+                                    .parent_path() // src
+                                    .parent_path() // root
+                        / "meshes" / mesh_path;
+                }
+                spdlog::info("loading mesh: {:s}", mesh_path.string());
+                igl::read_triangle_mesh(mesh_path.string(), vertices, faces);
                 // Initialize edges
                 igl::edges(faces, edges);
             } else {
@@ -83,6 +95,14 @@ namespace io {
             rotation.conservativeResize(angular_dim);
             // Convert to radians for easy use later
             rotation *= M_PI / 180.0;
+
+            Eigen::VectorX3d scale;
+            from_json<double>(args["scale"], scale);
+            assert(scale.size() >= angular_dim);
+            scale.conservativeResize(dim);
+            for (int i = 0; i < dim; i++) {
+                vertices.col(i) *= scale(i);
+            }
 
             Eigen::VectorX3d linear_velocity;
             from_json<double>(args["linear_velocity"], linear_velocity);

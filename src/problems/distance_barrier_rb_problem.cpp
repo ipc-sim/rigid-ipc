@@ -233,22 +233,19 @@ namespace opt {
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_core(
         const Eigen::VectorXd& sigma, const Candidates& distance_candidates)
     {
-        if (dim() != 2) {
-            throw NotImplementedError(
-                "DistanceBarrierRBProblem::eval_jac_g_core() has not been "
-                "implmented for 3D!");
-        }
+        // ∇²g: Rⁿ ↦ Rᵐˣⁿ
         Eigen::MatrixXd jac_g =
             Eigen::MatrixXd::Zero(distance_candidates.size(), num_vars_);
 
-        typedef AutodiffType<Eigen::Dynamic> Diff;
+        typedef AutodiffType<Eigen::Dynamic, /*maxN=2*6=*/12> Diff;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         Diff::activate(2 * ndof);
 
+        // TODO: Parallelize
         for (size_t i = 0; i < distance_candidates.ev_candidates.size(); ++i) {
             const auto& ev_candidate = distance_candidates.ev_candidates[i];
 
-            RB2Candidate rbc;
+            RigidBodyEdgeVertexCandidate rbc;
             extract_local_system(ev_candidate, rbc);
 
             Eigen::VectorXd gradient =
@@ -261,57 +258,90 @@ namespace opt {
                 gradient.tail(ndof).transpose();
         }
 
+        for (size_t i = 0; i < distance_candidates.ee_candidates.size(); ++i) {
+            const auto& ee_candidate = distance_candidates.ee_candidates[i];
+
+            RigidBodyEdgeEdgeCandidate rbc;
+            extract_local_system(ee_candidate, rbc);
+
+            Eigen::VectorXd gradient =
+                distance_barrier<Diff::DDouble1>(sigma, rbc).getGradient();
+
+            size_t cstr_id = i + distance_candidates.ev_candidates.size();
+            jac_g.block(int(cstr_id), ndof* rbc.edge0_body_id, 1, ndof) =
+                gradient.head(ndof).transpose();
+            jac_g.block(int(cstr_id), ndof* rbc.edge1_body_id, 1, ndof) =
+                gradient.tail(ndof).transpose();
+        }
+
+        for (size_t i = 0; i < distance_candidates.fv_candidates.size(); ++i) {
+            const auto& fv_candidate = distance_candidates.fv_candidates[i];
+
+            RigidBodyFaceVertexCandidate rbc;
+            extract_local_system(fv_candidate, rbc);
+
+            Eigen::VectorXd gradient =
+                distance_barrier<Diff::DDouble1>(sigma, rbc).getGradient();
+
+            size_t cstr_id = i + distance_candidates.ev_candidates.size()
+                + distance_candidates.ee_candidates.size();
+            jac_g.block(int(cstr_id), ndof* rbc.vertex_body_id, 1, ndof) =
+                gradient.head(ndof).transpose();
+            jac_g.block(int(cstr_id), ndof* rbc.face_body_id, 1, ndof) =
+                gradient.tail(ndof).transpose();
+        }
+
         return jac_g;
+    }
+
+    void local_hessian_to_global_triplets(
+        const Eigen::MatrixXd& local_hessian,
+        const std::array<long, 2>& body_ids,
+        int ndof,
+        std::vector<Eigen::Triplet<double>>& triplets)
+    {
+        triplets.clear();
+        triplets.reserve(/*(2 * ndof) x (2 * ndof) = */ 4 * ndof * ndof);
+        for (int b_i = 0; b_i < body_ids.size(); b_i++) {
+            for (int b_j = 0; b_j < body_ids.size(); b_j++) {
+                for (int dof_i = 0; dof_i < ndof; dof_i++) {
+                    for (int dof_j = 0; dof_j < ndof; dof_j++) {
+                        double v = local_hessian(
+                            ndof * b_i + dof_i, ndof * b_j + dof_j);
+                        int r = ndof * body_ids[b_i] + dof_i;
+                        int c = ndof * body_ids[b_j] + dof_j;
+                        triplets.emplace_back(r, c, v);
+                    }
+                }
+            }
+        }
     }
 
     std::vector<Eigen::SparseMatrix<double>>
     DistanceBarrierRBProblem::eval_hessian_g_core(
         const Eigen::VectorXd& sigma, const Candidates& distance_candidates)
     {
-        if (dim() != 2) {
-            throw NotImplementedError(
-                "DistanceBarrierRBProblem::eval_hessian_g_core() has not been "
-                "implmented for 3D!");
-        }
-
-        // TODO: 3D
+        // ∇²g: Rⁿ ↦ Rᵐˣᵐˣⁿ
         std::vector<Eigen::SparseMatrix<double>> gx_hessian;
         gx_hessian.resize(distance_candidates.size());
 
-        typedef AutodiffType<Eigen::Dynamic> Diff;
+        typedef AutodiffType<Eigen::Dynamic, /*maxN=2*6=*/12> Diff;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         Diff::activate(2 * ndof);
 
-        typedef Eigen::Triplet<double> M;
-        std::vector<M> triplets;
+        std::vector<Eigen::Triplet<double>> triplets;
 
+        // Compute EV constraint hessian
         for (size_t i = 0; i < distance_candidates.ev_candidates.size(); ++i) {
             const auto& ev_candidate = distance_candidates.ev_candidates[i];
 
-            RB2Candidate rbc;
+            RigidBodyEdgeVertexCandidate rbc;
             extract_local_system(ev_candidate, rbc);
 
-            Eigen::MatrixXd hessian =
-                distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian();
+            local_hessian_to_global_triplets(
+                distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian(),
+                { rbc.vertex_body_id, rbc.edge_body_id }, ndof, triplets);
 
-            triplets.clear();
-            triplets.reserve(6 * 6);
-
-            int bodies[2] = { rbc.vertex_body_id, rbc.edge_body_id };
-
-            for (int b_i = 0; b_i < 2; b_i++) {
-                for (int b_j = 0; b_j < 2; b_j++) {
-                    for (int dim_i = 0; dim_i < 3; dim_i++) {
-                        for (int dim_j = 0; dim_j < 3; dim_j++) {
-                            double v =
-                                hessian(3 * b_i + dim_i, 3 * b_j + dim_j);
-                            int r = 3 * bodies[b_i] + dim_i;
-                            int c = 3 * bodies[b_j] + dim_j;
-                            triplets.push_back(M(r, c, v));
-                        }
-                    }
-                }
-            }
             Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
             global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
 
@@ -319,148 +349,292 @@ namespace opt {
             gx_hessian[cstr_id] = global_el_hessian;
         }
 
+        // Compute EE constraint hessian
+        for (size_t i = 0; i < distance_candidates.ee_candidates.size(); ++i) {
+            const auto& ee_candidate = distance_candidates.ee_candidates[i];
+
+            RigidBodyEdgeEdgeCandidate rbc;
+            extract_local_system(ee_candidate, rbc);
+
+            local_hessian_to_global_triplets(
+                distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian(),
+                { rbc.edge0_body_id, rbc.edge1_body_id }, ndof, triplets);
+
+            Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
+            global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
+
+            size_t cstr_id = i + distance_candidates.ev_candidates.size();
+            gx_hessian[cstr_id] = global_el_hessian;
+        }
+
+        // Compute FV constraint hessian
+        for (size_t i = 0; i < distance_candidates.fv_candidates.size(); ++i) {
+            const auto& fv_candidate = distance_candidates.fv_candidates[i];
+
+            RigidBodyFaceVertexCandidate rbc;
+            extract_local_system(fv_candidate, rbc);
+
+            local_hessian_to_global_triplets(
+                distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian(),
+                { rbc.vertex_body_id, rbc.face_body_id }, ndof, triplets);
+
+            Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
+            global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
+
+            size_t cstr_id = i + distance_candidates.ev_candidates.size()
+                + distance_candidates.ee_candidates.size();
+            gx_hessian[cstr_id] = global_el_hessian;
+        }
+
         return gx_hessian;
     }
 
-    template <typename T>
+    template <typename T, typename RigidBodyCandidate>
     T DistanceBarrierRBProblem::distance_barrier(
-        const Eigen::VectorXd& sigma, const RB2Candidate& rbc)
+        const Eigen::VectorXd& sigma, const RigidBodyCandidate& rbc)
     {
-        if (dim() != 2) {
-            throw NotImplementedError(
-                "DistanceBarrierRBProblem::distance_barrier<double>() has not "
-                "been implmented for 3D!");
-        }
         T d = distance<T>(sigma, rbc);
         T barrier = constraint_.distance_barrier<T>(d);
         return barrier;
     }
 
     template <typename T>
-    T DistanceBarrierRBProblem::distance(
-        const Eigen::VectorXd& sigma, const RB2Candidate& rbc)
+    void init_body_sigmas(
+        const Eigen::VectorXd& sigma,
+        long body_id0,
+        long body_id1,
+        int ndof,
+        Eigen::VectorX6<T>& sigma0,
+        Eigen::VectorX6<T>& sigma1)
     {
-        if (dim() != 2) {
-            throw NotImplementedError(
-                "DistanceBarrierRBProblem::distance<T>() has not been "
-                "implmented for 3D!");
-        }
-        typedef AutodiffType<Eigen::Dynamic> Diff;
-        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        typedef AutodiffType<Eigen::Dynamic, /*maxN=2*6=*/12> Diff;
         Diff::activate(2 * ndof);
-
-        Eigen::VectorX<T> sigma_E, sigma_V, pose_E, pose_V;
-
-        sigma_V =
-            Diff::dTvars<T>(0, sigma.segment(ndof * rbc.vertex_body_id, ndof));
-        sigma_E =
-            Diff::dTvars<T>(ndof, sigma.segment(ndof * rbc.edge_body_id, ndof));
-
-        pose_V = sigma_V.array()
-            * m_assembler.m_dof_to_pose.diagonal()
-                  .segment(ndof * rbc.vertex_body_id, ndof)
-                  .cast<T>()
-                  .array();
-
-        pose_E = sigma_E.array()
-            * m_assembler.m_dof_to_pose.diagonal()
-                  .segment(ndof * rbc.edge_body_id, ndof)
-                  .cast<T>()
-                  .array();
-
-        const auto& rbs = m_assembler.m_rbs;
-        Eigen::VectorX<T> da = rbs[size_t(rbc.edge_body_id)].world_vertex<T>(
-            pose_E, rbc.edge0_local_id);
-        Eigen::VectorX<T> db = rbs[size_t(rbc.edge_body_id)].world_vertex<T>(
-            pose_E, rbc.edge1_local_id);
-        Eigen::VectorX<T> dc = rbs[size_t(rbc.vertex_body_id)].world_vertex<T>(
-            pose_V, rbc.vertex_local_id);
-
-        // T distance = sqrt(point_to_edge_sq_distance<T>(da, db, dc));
-        T distance = ccd::geometry::point_segment_distance<T>(dc, da, db);
-        return distance;
+        sigma0 = Diff::dTvars<T>(0, sigma.segment(ndof * body_id0, ndof));
+        sigma1 = Diff::dTvars<T>(ndof, sigma.segment(ndof * body_id1, ndof));
     }
 
     template <>
-    double DistanceBarrierRBProblem::distance<double>(
-        const Eigen::VectorXd& sigma, const RB2Candidate& rbc)
+    void init_body_sigmas(
+        const Eigen::VectorXd& sigma,
+        long body_id0,
+        long body_id1,
+        int ndof,
+        Eigen::VectorX6d& sigma0,
+        Eigen::VectorX6d& sigma1)
     {
-        if (dim() != 2) {
-            throw NotImplementedError(
-                "DistanceBarrierRBProblem::distance<double>() has not been "
-                "implmented for 3D!");
-        }
+        sigma0 = sigma.segment(ndof * body_id0, ndof);
+        sigma1 = sigma.segment(ndof * body_id1, ndof);
+    }
 
-        Eigen::VectorXd sigma_E, sigma_V, pose_E, pose_V;
-
+    template <typename T>
+    T DistanceBarrierRBProblem::distance(
+        const Eigen::VectorXd& sigma, const RigidBodyEdgeVertexCandidate& rbc)
+    {
+        Eigen::VectorX6<T> sigma_E, sigma_V, pose_E, pose_V;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
-        sigma_V = sigma.segment(ndof * rbc.vertex_body_id, ndof);
-        sigma_E = sigma.segment(ndof * rbc.edge_body_id, ndof);
+        init_body_sigmas(
+            sigma, rbc.vertex_body_id, rbc.edge_body_id, ndof, //
+            sigma_V, sigma_E);
 
+        // Convert body dof (rotation in arclength) to a ndof pose vector
         pose_V = sigma_V.array()
             * m_assembler.m_dof_to_pose.diagonal()
                   .segment(ndof * rbc.vertex_body_id, ndof)
+                  .template cast<T>()
                   .array();
-
         pose_E = sigma_E.array()
             * m_assembler.m_dof_to_pose.diagonal()
                   .segment(ndof * rbc.edge_body_id, ndof)
+                  .template cast<T>()
                   .array();
 
         const auto& rbs = m_assembler.m_rbs;
-        Eigen::VectorXd da = rbs[size_t(rbc.edge_body_id)].world_vertex<double>(
-            pose_E, rbc.edge0_local_id);
-        Eigen::VectorXd db = rbs[size_t(rbc.edge_body_id)].world_vertex<double>(
-            pose_E, rbc.edge1_local_id);
-        Eigen::VectorXd dc =
-            rbs[size_t(rbc.vertex_body_id)].world_vertex<double>(
-                pose_V, rbc.vertex_local_id);
+        Eigen::VectorX<T> d_vertex = rbs[rbc.vertex_body_id].world_vertex<T>(
+            pose_V, rbc.vertex_local_id);
+        Eigen::VectorX<T> d_edge_vertex0 =
+            rbs[rbc.edge_body_id].world_vertex<T>(
+                pose_E, rbc.edge_vertex0_local_id);
+        Eigen::VectorX<T> d_edge_vertex1 =
+            rbs[rbc.edge_body_id].world_vertex<T>(
+                pose_E, rbc.edge_vertex1_local_id);
 
-        // double distance = sqrt(point_to_edge_sq_distance<double>(da, db,
-        // dc));
-        double distance =
-            ccd::geometry::point_segment_distance<double>(dc, da, db);
+        // T distance = sqrt(point_to_edge_sq_distance<T>(da, db, dc));
+        T distance = ccd::geometry::point_segment_distance<T>(
+            d_vertex, d_edge_vertex0, d_edge_vertex1);
+        return distance;
+    }
+
+    template <typename T>
+    T DistanceBarrierRBProblem::distance(
+        const Eigen::VectorXd& sigma, const RigidBodyEdgeEdgeCandidate& rbc)
+    {
+        Eigen::VectorX6<T> sigma_E0, sigma_E1, pose_E0, pose_E1;
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        init_body_sigmas(
+            sigma, rbc.edge0_body_id, rbc.edge1_body_id, ndof, //
+            sigma_E0, sigma_E1);
+
+        // Convert body dof (rotation in arclength) to a ndof pose vector
+        pose_E0 = sigma_E0.array()
+            * m_assembler.m_dof_to_pose.diagonal()
+                  .segment(ndof * rbc.edge0_body_id, ndof)
+                  .template cast<T>()
+                  .array();
+        pose_E1 = sigma_E1.array()
+            * m_assembler.m_dof_to_pose.diagonal()
+                  .segment(ndof * rbc.edge1_body_id, ndof)
+                  .template cast<T>()
+                  .array();
+
+        const auto& rbs = m_assembler.m_rbs;
+        Eigen::VectorX<T> d_edge0_vertex0 =
+            rbs[rbc.edge0_body_id].world_vertex<T>(
+                pose_E0, rbc.edge0_vertex0_local_id);
+        Eigen::VectorX<T> d_edge0_vertex1 =
+            rbs[rbc.edge0_body_id].world_vertex<T>(
+                pose_E0, rbc.edge0_vertex1_local_id);
+        Eigen::VectorX<T> d_edge1_vertex0 =
+            rbs[rbc.edge1_body_id].world_vertex<T>(
+                pose_E1, rbc.edge1_vertex0_local_id);
+        Eigen::VectorX<T> d_edge1_vertex1 =
+            rbs[rbc.edge1_body_id].world_vertex<T>(
+                pose_E1, rbc.edge1_vertex1_local_id);
+
+        T distance = ccd::geometry::segment_segment_distance<T>(
+            d_edge0_vertex0, d_edge0_vertex1, d_edge1_vertex0, d_edge1_vertex1);
+        return distance;
+    }
+
+    template <typename T>
+    T DistanceBarrierRBProblem::distance(
+        const Eigen::VectorXd& sigma, const RigidBodyFaceVertexCandidate& rbc)
+    {
+        Eigen::VectorX6<T> sigma_F, sigma_V, pose_F, pose_V;
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        init_body_sigmas(
+            sigma, rbc.face_body_id, rbc.vertex_body_id, ndof, //
+            sigma_F, sigma_V);
+
+        // Convert body dof (rotation in arclength) to a ndof pose vector
+        pose_V = sigma_V.array()
+            * m_assembler.m_dof_to_pose.diagonal()
+                  .segment(ndof * rbc.vertex_body_id, ndof)
+                  .template cast<T>()
+                  .array();
+        pose_F = sigma_F.array()
+            * m_assembler.m_dof_to_pose.diagonal()
+                  .segment(ndof * rbc.face_body_id, ndof)
+                  .template cast<T>()
+                  .array();
+
+        const auto& rbs = m_assembler.m_rbs;
+        Eigen::VectorX<T> d_vertex = rbs[rbc.vertex_body_id].world_vertex<T>(
+            pose_V, rbc.vertex_local_id);
+        Eigen::VectorX<T> d_face_vertex0 =
+            rbs[rbc.face_body_id].world_vertex<T>(
+                pose_F, rbc.face_vertex0_local_id);
+        Eigen::VectorX<T> d_face_vertex1 =
+            rbs[rbc.face_body_id].world_vertex<T>(
+                pose_F, rbc.face_vertex1_local_id);
+        Eigen::VectorX<T> d_face_vertex2 =
+            rbs[rbc.face_body_id].world_vertex<T>(
+                pose_F, rbc.face_vertex2_local_id);
+
+        T distance = ccd::geometry::point_triangle_distance<T>(
+            d_vertex, d_face_vertex0, d_face_vertex1, d_face_vertex2);
         return distance;
     }
 
     void DistanceBarrierRBProblem::extract_local_system(
-        const EdgeVertexCandidate& ev_candidate, RB2Candidate& rbc)
+        const EdgeVertexCandidate& ev_candidate,
+        RigidBodyEdgeVertexCandidate& rbc)
     {
-        if (dim() != 2) {
-            throw NotImplementedError(
-                "DistanceBarrierRBProblem::extract_local_system() has not been "
-                "implmented for 3D!");
-        }
         const long v_id = ev_candidate.vertex_index;
-        const int e0_id = m_assembler.m_edges(ev_candidate.edge_index, 0);
-        const int e1_id = m_assembler.m_edges(ev_candidate.edge_index, 1);
-        long body_V_id, lv_id, body_E_id, le0_id, le1_id;
+        const long e_v0_id = m_assembler.m_edges(ev_candidate.edge_index, 0);
+        const long e_v1_id = m_assembler.m_edges(ev_candidate.edge_index, 1);
 
+        long body_V_id, lv_id, body_E_id, le_v0_id, le_v1_id;
         m_assembler.global_to_local_vertex(v_id, body_V_id, lv_id);
-        m_assembler.global_to_local_vertex(e0_id, body_E_id, le0_id);
-        m_assembler.global_to_local_vertex(e1_id, body_E_id, le1_id);
+        m_assembler.global_to_local_vertex(e_v0_id, body_E_id, le_v0_id);
+        m_assembler.global_to_local_vertex(e_v1_id, body_E_id, le_v1_id);
+
         rbc.vertex_body_id = body_V_id;
         rbc.edge_body_id = body_E_id;
         rbc.vertex_local_id = lv_id;
-        rbc.edge0_local_id = le0_id;
-        rbc.edge1_local_id = le1_id;
+        rbc.edge_vertex0_local_id = le_v0_id;
+        rbc.edge_vertex1_local_id = le_v1_id;
     }
 
+    void DistanceBarrierRBProblem::extract_local_system(
+        const EdgeEdgeCandidate& ee_candidate, RigidBodyEdgeEdgeCandidate& rbc)
+    {
+        const long e0_v0_id = m_assembler.m_edges(ee_candidate.edge0_index, 0);
+        const long e0_v1_id = m_assembler.m_edges(ee_candidate.edge0_index, 1);
+        const long e1_v0_id = m_assembler.m_edges(ee_candidate.edge1_index, 0);
+        const long e1_v1_id = m_assembler.m_edges(ee_candidate.edge1_index, 1);
+
+        long body_E0_id, le0_v0_id, le0_v1_id, body_E1_id, le1_v0_id, le1_v1_id;
+        m_assembler.global_to_local_vertex(e0_v0_id, body_E0_id, le0_v0_id);
+        m_assembler.global_to_local_vertex(e0_v1_id, body_E0_id, le0_v1_id);
+        m_assembler.global_to_local_vertex(e1_v0_id, body_E1_id, le1_v0_id);
+        m_assembler.global_to_local_vertex(e1_v1_id, body_E1_id, le1_v1_id);
+
+        rbc.edge0_body_id = body_E0_id;
+        rbc.edge1_body_id = body_E1_id;
+        rbc.edge0_vertex0_local_id = le0_v0_id;
+        rbc.edge0_vertex1_local_id = le0_v1_id;
+        rbc.edge1_vertex0_local_id = le1_v0_id;
+        rbc.edge1_vertex1_local_id = le1_v1_id;
+    }
+
+    void DistanceBarrierRBProblem::extract_local_system(
+        const FaceVertexCandidate& fv_candidate,
+        RigidBodyFaceVertexCandidate& rbc)
+    {
+        const long v_id = fv_candidate.vertex_index;
+        const long f_v0_id = m_assembler.m_faces(fv_candidate.face_index, 0);
+        const long f_v1_id = m_assembler.m_faces(fv_candidate.face_index, 1);
+        const long f_v2_id = m_assembler.m_faces(fv_candidate.face_index, 2);
+
+        long body_V_id, lv_id, body_F_id, lf_v0_id, lf_v1_id, lf_v2_id;
+        m_assembler.global_to_local_vertex(v_id, body_V_id, lv_id);
+        m_assembler.global_to_local_vertex(f_v0_id, body_F_id, lf_v0_id);
+        m_assembler.global_to_local_vertex(f_v1_id, body_F_id, lf_v1_id);
+        m_assembler.global_to_local_vertex(f_v2_id, body_F_id, lf_v2_id);
+
+        rbc.vertex_body_id = body_V_id;
+        rbc.face_body_id = body_F_id;
+        rbc.vertex_local_id = lv_id;
+        rbc.face_vertex0_local_id = lf_v0_id;
+        rbc.face_vertex1_local_id = lf_v1_id;
+        rbc.face_vertex2_local_id = lf_v2_id;
+    }
+
+    inline std::array<long, 2> get_body_ids(RigidBodyEdgeVertexCandidate rbc)
+    {
+        return { rbc.vertex_body_id, rbc.edge_body_id };
+    }
+    inline std::array<long, 2> get_body_ids(RigidBodyEdgeEdgeCandidate rbc)
+    {
+        return { rbc.edge0_body_id, rbc.edge1_body_id };
+    }
+    inline std::array<long, 2> get_body_ids(RigidBodyFaceVertexCandidate rbc)
+    {
+        return { rbc.vertex_body_id, rbc.face_body_id };
+    }
+
+    template <typename Candidate, typename RigidBodyCandidate>
     bool DistanceBarrierRBProblem::compare_fd(
         const Eigen::VectorXd& sigma,
-        const EdgeVertexCandidate& ev_candidate,
+        const Candidate& candidate,
         const Eigen::VectorXd& grad)
     {
-        if (dim() != 2) {
-            throw NotImplementedError("DistanceBarrierRBProblem::compare_fd() "
-                                      "has not been implmented for 3D!");
-        }
         typedef AutodiffType<Eigen::Dynamic> Diff;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         Diff::activate(2 * ndof);
 
-        RB2Candidate rbc;
-        extract_local_system(ev_candidate, rbc);
+        RigidBodyCandidate rbc;
+        extract_local_system(candidate, rbc);
         Diff::DDouble1 d = distance<Diff::DDouble1>(sigma, rbc);
 
         // distance finite diff
@@ -469,14 +643,16 @@ namespace opt {
             return dk;
         };
 
+        std::array<long, 2> body_ids = get_body_ids(rbc);
+
         // distance finite diff
         Eigen::VectorXd approx_grad;
         Eigen::VectorXd exact_grad(sigma.rows());
         Eigen::VectorXd local_exact_grad = d.getGradient();
         exact_grad.setZero();
-        exact_grad.segment(ndof * rbc.vertex_body_id, ndof) =
+        exact_grad.segment(ndof * body_ids[0], ndof) =
             local_exact_grad.head(ndof);
-        exact_grad.segment(ndof * rbc.edge_body_id, ndof) =
+        exact_grad.segment(ndof * body_ids[1], ndof) =
             local_exact_grad.tail(ndof);
 
         finite_gradient(
@@ -504,22 +680,24 @@ namespace opt {
 
         for (size_t i = 0; i < candidates.ev_candidates.size(); ++i) {
             const auto& ev = candidates.ev_candidates[i];
-            compare_fd(sigma, ev, jac_full.row(int(i)));
-            compare_fd(sigma, ev, jac_g.row(int(i)));
+            compare_fd<EdgeVertexCandidate, RigidBodyEdgeVertexCandidate>(
+                sigma, ev, jac_full.row(int(i)));
+            compare_fd<EdgeVertexCandidate, RigidBodyEdgeVertexCandidate>(
+                sigma, ev, jac_g.row(int(i)));
         }
-        // for (size_t i = 0; i < candidates.ee_candidates.size(); ++i) {
-        //     const auto& ee = candidates.ee_candidates[i];
-        //     compare_fd(sigma, ee, jac_full.row(int(i)));
-        //     compare_fd(sigma, ee, jac_g.row(int(i)));
-        // }
-        // for (size_t i = 0; i < candidates.fv__candidates.size(); ++i) {
-        //     const auto& fv = candidates.fv_candidates[i];
-        //     compare_fd(sigma, fv, jac_full.row(int(i)));
-        //     compare_fd(sigma, fv, jac_g.row(int(i)));
-        // }
-
-        if (dim() != 2) {
-            throw NotImplementedError("compare_jac_g not implemented in 3D!");
+        for (size_t i = 0; i < candidates.ee_candidates.size(); ++i) {
+            const auto& ee = candidates.ee_candidates[i];
+            compare_fd<EdgeEdgeCandidate, RigidBodyEdgeEdgeCandidate>(
+                sigma, ee, jac_full.row(int(i)));
+            compare_fd<EdgeEdgeCandidate, RigidBodyEdgeEdgeCandidate>(
+                sigma, ee, jac_g.row(int(i)));
+        }
+        for (size_t i = 0; i < candidates.fv_candidates.size(); ++i) {
+            const auto& fv = candidates.fv_candidates[i];
+            compare_fd<FaceVertexCandidate, RigidBodyFaceVertexCandidate>(
+                sigma, fv, jac_full.row(int(i)));
+            compare_fd<FaceVertexCandidate, RigidBodyFaceVertexCandidate>(
+                sigma, fv, jac_g.row(int(i)));
         }
 
         return pass;

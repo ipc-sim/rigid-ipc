@@ -269,8 +269,8 @@ namespace physics {
             return I;
         } else {
             // throw NotImplementedError(
-            spdlog::error(
-                "3D moment of interia from the mass matrix is not impmented!");
+            spdlog::error("3D moment of interia from the mass matrix is not "
+                          "implemented!");
             return Eigen::Matrix3d::Identity();
         }
     }

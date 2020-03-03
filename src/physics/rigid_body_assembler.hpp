@@ -101,7 +101,7 @@ namespace physics {
         }
         inline long face_id_to_body_id(long fi) const
         {
-            return m_vertex_to_body_map(m_edges(fi, 0));
+            return m_vertex_to_body_map(m_faces(fi, 0));
         }
 
         inline const RigidBody& vertex_id_to_body(long vi) const
