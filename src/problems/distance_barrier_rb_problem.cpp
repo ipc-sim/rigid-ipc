@@ -340,7 +340,7 @@ namespace opt {
 
             local_hessian_to_global_triplets(
                 distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian(),
-                { rbc.vertex_body_id, rbc.edge_body_id }, ndof, triplets);
+                { { rbc.vertex_body_id, rbc.edge_body_id } }, ndof, triplets);
 
             Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
             global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
@@ -358,7 +358,7 @@ namespace opt {
 
             local_hessian_to_global_triplets(
                 distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian(),
-                { rbc.edge0_body_id, rbc.edge1_body_id }, ndof, triplets);
+                { { rbc.edge0_body_id, rbc.edge1_body_id } }, ndof, triplets);
 
             Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
             global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
@@ -376,7 +376,7 @@ namespace opt {
 
             local_hessian_to_global_triplets(
                 distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian(),
-                { rbc.vertex_body_id, rbc.face_body_id }, ndof, triplets);
+                { { rbc.vertex_body_id, rbc.face_body_id } }, ndof, triplets);
 
             Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
             global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
@@ -612,15 +612,15 @@ namespace opt {
 
     inline std::array<long, 2> get_body_ids(RigidBodyEdgeVertexCandidate rbc)
     {
-        return { rbc.vertex_body_id, rbc.edge_body_id };
+        return { { rbc.vertex_body_id, rbc.edge_body_id } };
     }
     inline std::array<long, 2> get_body_ids(RigidBodyEdgeEdgeCandidate rbc)
     {
-        return { rbc.edge0_body_id, rbc.edge1_body_id };
+        return { { rbc.edge0_body_id, rbc.edge1_body_id } };
     }
     inline std::array<long, 2> get_body_ids(RigidBodyFaceVertexCandidate rbc)
     {
-        return { rbc.vertex_body_id, rbc.face_body_id };
+        return { { rbc.vertex_body_id, rbc.face_body_id } };
     }
 
     template <typename Candidate, typename RigidBodyCandidate>
