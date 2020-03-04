@@ -8,9 +8,9 @@
 
 // Etienne Vouga's CCD using a root finder in floating points
 #include <CTCD.h>
-#include <igl/barycentric_coordinates.h>
 
 #include <ccd/time_of_impact.hpp>
+#include <geometry/barycentric_coordinates.hpp>
 #include <profiler.hpp>
 #include <utils/not_implemented_error.hpp>
 
@@ -169,18 +169,16 @@ bool detect_face_vertex_collisions_narrow_phase(
         Vl, Vi, Vj, Vk, Vl + Ul, Vi + Ui, Vj + Uj, Vk + Uk, /*eta=*/0, toi);
     if (is_colliding) {
         // TODO: Consider moving this computation to an as needed basis
-        Eigen::MatrixXd coords;
-        igl::barycentric_coordinates(
-            (Vl + Ul * toi).transpose(), // vertex position at time of impact
+        double w;
+        geometry::barycentric_coordinates(
+            (Vl + Ul * toi).eval(), // vertex position at time of impact
             // first face vertex's position at time of impact
-            (Vi + Ui * toi).transpose(),
+            (Vi + Ui * toi).eval(),
             // second face vertex's position at time of impact
-            (Vj + Uj * toi).transpose(),
+            (Vj + Uj * toi).eval(),
             // third face vertex's position at time of impact
-            (Vk + Uk * toi).transpose(), coords);
-        u = coords(0);
-        v = coords(1);
-        assert(u + v + coords(2) == 1);
+            (Vk + Uk * toi).eval(), u, v, w);
+        assert(u + v + w == 1);
     }
     return is_colliding;
 }

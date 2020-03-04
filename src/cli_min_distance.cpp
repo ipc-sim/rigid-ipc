@@ -77,10 +77,13 @@ int main(int argc, char* argv[])
             const ccd::EdgeVertexCandidate& ev_candidate =
                 candidates.ev_candidates[j];
 
-            double distance = ccd::geometry::point_segment_distance<double>(
-                vertices.row(ev_candidate.vertex_index),
-                vertices.row(edges(ev_candidate.edge_index, 0)),
-                vertices.row(edges(ev_candidate.edge_index, 1)));
+            Eigen::VectorXd p = vertices.row(ev_candidate.vertex_index);
+            Eigen::VectorXd s0 =
+                vertices.row(edges(ev_candidate.edge_index, 0));
+            Eigen::VectorXd s1 =
+                vertices.row(edges(ev_candidate.edge_index, 1));
+            double distance =
+                ccd::geometry::point_segment_distance<double>(p, s0, s1);
 
             if (min_distance < 0 || distance < min_distance) {
                 min_distance = distance;

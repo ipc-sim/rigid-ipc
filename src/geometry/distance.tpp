@@ -3,7 +3,9 @@
 
 #include <Eigen/Geometry>
 #include <constants.hpp>
+#include <geometry/barycentric_coordinates.hpp>
 #include <geometry/normal.hpp>
+#include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
 
 namespace ccd {
@@ -13,46 +15,35 @@ namespace geometry {
     // Unsigned Distances
     //-------------------------------------------------------------------------
 
-    template <typename T>
-    inline T point_segment_distance_2D(
-        const Eigen::Vector2<T>& point,
-        const Eigen::Vector2<T>& segment_start,
-        const Eigen::Vector2<T>& segment_end)
+    template <typename T, int dim, int max_dim>
+    inline T point_point_distance(
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point0,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point1)
     {
-        assert(point.size() == 2);
-        assert(segment_start.size() == 2);
-        assert(segment_end.size() == 2);
-
-        Eigen::Vector2<T> ab = segment_end - segment_start;
-        Eigen::Vector2<T> ac = point - segment_start;
-        Eigen::Vector2<T> bc = point - segment_end;
-
-        // Handle cases where point projects outside ab
-        if (ac.dot(ab) <= T(0.0)) {
-            return ac.norm();
-        }
-        if (bc.dot(ab) >= T(0.0)) {
-            return bc.norm();
-        }
-        Eigen::Vector2<T> abperp =
-            segment_normal(segment_start, segment_end, /*normalized=*/false);
-
-        T g = abperp.dot(ac);
-        if (g < 0) {
-            g *= -1; // Avoid using abs for autodiff
-        }
-        T e = ab.norm();
-        return g / e;
+        return (point1 - point0).norm();
     }
 
-    template <typename T>
-    inline T point_segment_distance_3D(
-        const Eigen::Vector3<T>& point,
-        const Eigen::Vector3<T>& segment_start,
-        const Eigen::Vector3<T>& segment_end)
+    template <typename T, int dim, int max_dim>
+    inline T point_segment_distance(
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_start,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end)
     {
-        throw NotImplementedError(
-            "point_segment_distance() not implemented in 3D!");
+        // https://zalo.github.io/blog/closest-point-between-segments/
+        Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim> segment_vec =
+            segment_end - segment_start;
+        T segment_length_sqr = segment_vec.squaredNorm();
+        // if (segment_length_sqr == T(0.0)) {
+        //     return point_point_distance(point, segment_start);
+        // }
+        T alpha = (point - segment_start).dot(segment_vec) / segment_length_sqr;
+        if (alpha > T(1.0)) {
+            alpha = T(1.0);
+        } else if (alpha < T(0.0)) {
+            alpha = T(0.0);
+        }
+        return point_point_distance(
+            point, (segment_start + alpha * segment_vec).eval());
     }
 
     template <typename T>
@@ -73,7 +64,57 @@ namespace geometry {
         const Eigen::Vector3<T>& triangle_vertex1,
         const Eigen::Vector3<T>& triangle_vertex2)
     {
-        throw NotImplementedError("point_triangle_distance() not implmeneted!");
+        const Eigen::Vector3<T> normal = triangle_normal(
+            triangle_vertex0, triangle_vertex1, triangle_vertex2);
+        const Eigen::Vector3<T> projected_point =
+            point - ((point - triangle_vertex0).dot(normal)) * normal;
+        T u, v, w;
+        barycentric_coordinates(
+            projected_point, triangle_vertex0, triangle_vertex1,
+            triangle_vertex2, u, v, w);
+
+        // Find the closest point using the barycentric coordinates
+        // https://math.stackexchange.com/a/589362
+
+        // Is closest point in the plane inside the trianlge?
+        if (u >= 0 && v >= 0 && w >= 0) {
+            return point_point_distance(point, projected_point);
+        }
+
+        // Check if a vertex is the closest point on the triangle
+        if (u >= 0 && v < 0 && w < 0) {
+            // vertex 0 is the closest
+            return point_point_distance(point, triangle_vertex0);
+        }
+        if (u < 0 && v <= 0 && w < 0) {
+            // vertex 0 is the closest
+            return point_point_distance(point, triangle_vertex1);
+        }
+        if (u < 0 && v < 0 && w >= 0) {
+            // vertex 0 is the closest
+            return point_point_distance(point, triangle_vertex2);
+        }
+
+        // Check if an edge is the closest point on the triangle
+        if (u >= 0 && v >= 0 && w < 0) {
+            // vertex 0 is the closest
+            return point_segment_distance(
+                point, triangle_vertex0, triangle_vertex1);
+        }
+        if (u >= 0 && v < 0 && w >= 0) {
+            // vertex 0 is the closest
+            return point_segment_distance(
+                point, triangle_vertex2, triangle_vertex0);
+        }
+        if (u < 0 && v >= 0 && w >= 0) {
+            // vertex 0 is the closest
+            return point_segment_distance(
+                point, triangle_vertex1, triangle_vertex2);
+        }
+
+        // This should never happen.because u + v + w = 1.
+        throw NotImplementedError(
+            "point_triangle_distance is not implemented correctly!");
     }
 
     //-------------------------------------------------------------------------

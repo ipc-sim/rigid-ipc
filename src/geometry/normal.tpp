@@ -23,8 +23,7 @@ namespace geometry {
         bool normalized)
     {
         Eigen::Vector3<T> normal =
-            ((face_vertex1 - face_vertex0).template head<3>())
-                .cross((face_vertex2 - face_vertex0).template head<3>());
+            (face_vertex1 - face_vertex0).cross(face_vertex2 - face_vertex0);
         return normalized ? normal.normalized() : normal;
     }
 

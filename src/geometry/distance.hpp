@@ -16,36 +16,16 @@ namespace geometry {
     // Unsigned Distances
     //-------------------------------------------------------------------------
 
-    template <typename T>
-    inline T point_segment_distance_2D(
-        const Eigen::Vector2<T>& point,
-        const Eigen::Vector2<T>& segment_start,
-        const Eigen::Vector2<T>& segment_end);
+    template <typename T, int dim, int max_dim = dim>
+    inline T point_point_distance(
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point0,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point1);
 
-    template <typename T>
-    inline T point_segment_distance_3D(
-        const Eigen::Vector3<T>& point,
-        const Eigen::Vector3<T>& segment_start,
-        const Eigen::Vector3<T>& segment_end);
-
-    template <typename T>
+    template <typename T, int dim, int max_dim>
     inline T point_segment_distance(
-        const Eigen::VectorX3<T>& point,
-        const Eigen::VectorX3<T>& segment_start,
-        const Eigen::VectorX3<T>& segment_end)
-    {
-        if (point.size() == 2) {
-            return point_segment_distance_2D(
-                point.template head<2>().eval(),
-                segment_start.template head<2>().eval(),
-                segment_end.template head<2>().eval());
-        } else {
-            return point_segment_distance_3D(
-                point.template head<3>().eval(),
-                segment_start.template head<3>().eval(),
-                segment_end.template head<3>().eval());
-        }
-    }
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_start,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end);
 
     template <typename T>
     inline T segment_segment_distance(

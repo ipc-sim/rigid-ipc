@@ -80,7 +80,7 @@ namespace opt {
             const Eigen::Vector3<T>& face_v0 =
                 vertices_t1.row(bodies.m_faces(fv_candidate.face_index, 0));
             const Eigen::Vector3<T>& face_v1 =
-                vertices_t1.row(bodies.m_faces(fv_candidate.face_index, 2));
+                vertices_t1.row(bodies.m_faces(fv_candidate.face_index, 1));
             const Eigen::Vector3<T>& face_v2 =
                 vertices_t1.row(bodies.m_faces(fv_candidate.face_index, 2));
 

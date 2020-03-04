@@ -2,9 +2,8 @@
 
 #include <cmath>
 
-#include <igl/barycentric_coordinates.h>
-
 #include <ccd/rigid_body_time_of_impact.hpp>
+#include <geometry/barycentric_coordinates.hpp>
 #include <geometry/intersection.hpp>
 #include <profiler.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -212,27 +211,25 @@ bool detect_face_vertex_collisions_narrow_phase(
             poses[bodyB_id] + displacements[bodyB_id] * toi;
 
         // Get the world vertex of the point at time t
-        Eigen::RowVector3d vertex_toi =
+        Eigen::Vector3d vertex_toi =
             bodies.m_rbs[bodyA_id].world_vertex(poseA, vertex_id);
         // Get the world vertex of the face at time t
-        Eigen::RowVector3d triangle_vertex0_toi =
+        Eigen::Vector3d triangle_vertex0_toi =
             bodies.m_rbs[bodyB_id].world_vertex(
                 poseB, bodies.m_rbs[bodyB_id].faces(face_id, 0));
-        Eigen::RowVector3d triangle_vertex1_toi =
+        Eigen::Vector3d triangle_vertex1_toi =
             bodies.m_rbs[bodyB_id].world_vertex(
                 poseB, bodies.m_rbs[bodyB_id].faces(face_id, 1));
-        Eigen::RowVector3d triangle_vertex2_toi =
+        Eigen::Vector3d triangle_vertex2_toi =
             bodies.m_rbs[bodyB_id].world_vertex(
                 poseB, bodies.m_rbs[bodyB_id].faces(face_id, 2));
 
         // TODO: Consider moving this computation to an as needed basis
-        Eigen::MatrixXd coords;
-        igl::barycentric_coordinates(
+        double w;
+        geometry::barycentric_coordinates(
             vertex_toi, triangle_vertex0_toi, triangle_vertex1_toi,
-            triangle_vertex2_toi, coords);
-        u = coords(0);
-        v = coords(1);
-        assert(u + v + coords(2) == 1);
+            triangle_vertex2_toi, u, v, w);
+        assert(u + v + w == 1);
     }
     return is_colliding;
 #endif
