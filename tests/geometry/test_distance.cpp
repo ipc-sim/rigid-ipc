@@ -1,5 +1,8 @@
 #include <catch2/catch.hpp>
 
+#include <Eigen/Geometry>
+#include <igl/PI.h>
+
 #include <geometry/distance.hpp>
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -44,7 +47,60 @@ TEST_CASE("Point-segment distance", "[distance]")
 
 TEST_CASE("Segment-segment distance", "[distance]")
 {
-    // TODO
+    double s0y = GENERATE(-10, -1, -1e-4, 0, 1e-4, 1, 10);
+    Eigen::Vector3d s00(-1, s0y, 0);
+    Eigen::Vector3d s01(1, s0y, 0);
+    Eigen::Vector3d s10(0, 0, -1);
+    Eigen::Vector3d s11(0, 0, 1);
+
+    Eigen::Vector3d s0_closest, s1_closest;
+    double shiftx = GENERATE(-2, 0, 2);
+    double shiftz = GENERATE(-2, 0, 2);
+    double s0x = shiftx + GENERATE(-1, -0.5, 0, 0.5, 1);
+    double s0z = shiftz + GENERATE(-1, -0.5, 0, 0.5, 1);
+    s00.x() += s0x;
+    s01.x() += s0x;
+    s00.z() += s0z;
+    s01.z() += s0z;
+    s0_closest =
+        shiftx > 1 ? s00 : (shiftx < -1 ? s01 : Eigen::Vector3d(0, s0y, s0z));
+    s1_closest =
+        shiftz > 1 ? s11 : (shiftz < -1 ? s10 : Eigen::Vector3d(0, 0, s0z));
+
+    double distance = segment_segment_distance(s00, s01, s10, s11);
+    CAPTURE(s0y);
+    CHECK(
+        distance
+        == Approx(point_point_distance(s0_closest, s1_closest)).margin(1e-12));
+}
+
+TEST_CASE("Segment-segment distance degenerate case", "[distance]")
+{
+    double s0y = GENERATE(-10, -1, -1e-4, 0, 1e-4, 1, 10);
+    Eigen::Vector3d s00(-1, s0y, 0);
+    Eigen::Vector3d s01(1, s0y, 0);
+    Eigen::Vector3d s10(0, 0, -1);
+    Eigen::Vector3d s11(0, 0, 1);
+
+    double theta =
+        GENERATE(-2, -1.5, -1, -0.123124, 0, 0.2342352, 0.5, 1, 1.5, 2, 50, 51)
+        * igl::PI;
+    Eigen::Matrix3d R =
+        Eigen::AngleAxisd(theta, Eigen::Vector3d::UnitY()).toRotationMatrix();
+
+    SECTION("s0 rotating")
+    {
+        s00 = R * s00;
+        s01 = R * s01;
+    }
+    SECTION("s1 rotating")
+    {
+        s10 = R * s10;
+        s11 = R * s11;
+    }
+
+    double distance = segment_segment_distance(s00, s01, s10, s11);
+    CHECK(distance == Approx(abs(s0y)).margin(1e-12));
 }
 
 TEST_CASE("Point-triangle distance", "[distance]")

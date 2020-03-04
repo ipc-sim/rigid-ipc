@@ -23,6 +23,11 @@ namespace geometry {
         return (point1 - point0).norm();
     }
 
+    template <typename T> inline T clamp_to_01(T x)
+    {
+        return x > T(1.0) ? T(1.0) : (x < T(0.0) ? T(0.0) : x);
+    }
+
     template <typename T, int dim, int max_dim>
     inline T point_segment_distance(
         const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point,
@@ -30,20 +35,16 @@ namespace geometry {
         const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end)
     {
         // https://zalo.github.io/blog/closest-point-between-segments/
-        Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim> segment_vec =
+        Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim> segment_dir =
             segment_end - segment_start;
-        T segment_length_sqr = segment_vec.squaredNorm();
-        // if (segment_length_sqr == T(0.0)) {
-        //     return point_point_distance(point, segment_start);
-        // }
-        T alpha = (point - segment_start).dot(segment_vec) / segment_length_sqr;
-        if (alpha > T(1.0)) {
-            alpha = T(1.0);
-        } else if (alpha < T(0.0)) {
-            alpha = T(0.0);
+        T segment_length_sqr = segment_dir.squaredNorm();
+        if (segment_length_sqr == 0.0) {
+            return point_point_distance(point, segment_start);
         }
+        T alpha = clamp_to_01(
+            (point - segment_start).dot(segment_dir) / segment_length_sqr);
         return point_point_distance(
-            point, (segment_start + alpha * segment_vec).eval());
+            point, (segment_start + alpha * segment_dir).eval());
     }
 
     template <typename T>
@@ -53,8 +54,44 @@ namespace geometry {
         const Eigen::Vector3<T>& segment1_start,
         const Eigen::Vector3<T>& segment1_end)
     {
-        throw NotImplementedError(
-            "segment_segment_distance() not implmeneted!");
+        // https://zalo.github.io/blog/closest-point-between-segments/
+        // Project the points of segment 0 to the plane orthogonal to segment 1
+        Eigen::Vector3<T> normal = segment1_end - segment1_start;
+        T normal_sqrnorm = normal.squaredNorm();
+        if (normal_sqrnorm == 0) {
+            // The second segment is degenerate
+            return point_segment_distance(
+                segment1_start, segment0_start, segment0_end);
+        }
+
+        auto project_to_plane = [&](const Eigen::Vector3<T>& p) {
+            T alpha = (p - segment1_start).dot(normal) / normal_sqrnorm;
+            return p - (alpha * normal);
+        };
+
+        Eigen::Vector3<T> s00_plane = project_to_plane(segment0_start);
+        Eigen::Vector3<T> s01_plane = project_to_plane(segment0_end);
+
+        // Compute the segment 0 direction in the plane
+        Eigen::Vector3<T> s0_plane_dir = s01_plane - s00_plane;
+        T s0_plane_len_sqr = s0_plane_dir.squaredNorm();
+
+        // Compute the point-segment distance in the plane
+        T alpha = (s0_plane_len_sqr == 0.0)
+            ? T(0.0) // Zero if parallel or first segment is degenerate
+            : (segment1_start - s00_plane).dot(s0_plane_dir) / s0_plane_len_sqr;
+        // Clamp the parameter to the endpoints of segment 0
+        alpha = clamp_to_01(alpha);
+
+        // This is the closest point between segment 0 and the line through
+        // segment 1.
+        Eigen::Vector3<T> closest_point_on_segment0 =
+            (segment0_end - segment0_start) * alpha + segment0_start;
+
+        // Compute the distance from the closest point on segment 0 to the
+        // closest point on segment 1.
+        return point_segment_distance(
+            closest_point_on_segment0, segment1_start, segment1_end);
     }
 
     template <typename T>
@@ -64,10 +101,15 @@ namespace geometry {
         const Eigen::Vector3<T>& triangle_vertex1,
         const Eigen::Vector3<T>& triangle_vertex2)
     {
+        // Project the point to the plane without the need for a sqrt
         const Eigen::Vector3<T> normal = triangle_normal(
-            triangle_vertex0, triangle_vertex1, triangle_vertex2);
-        const Eigen::Vector3<T> projected_point =
-            point - ((point - triangle_vertex0).dot(normal)) * normal;
+            triangle_vertex0, triangle_vertex1, triangle_vertex2,
+            /*normalized=*/false);
+        Eigen::Vector3<T> projected_point = point
+            - ((point - triangle_vertex0).dot(normal) / normal.squaredNorm())
+                * normal;
+
+        // Compute the barycentric coordinates of the projected_point
         T u, v, w;
         barycentric_coordinates(
             projected_point, triangle_vertex0, triangle_vertex1,
@@ -141,10 +183,10 @@ namespace geometry {
         const Eigen::Vector3<T>& line1_point0,
         const Eigen::Vector3<T>& line1_point1)
     {
-        Eigen::Vector3<T> line0_vec = line0_point1 - line0_point0;
-        Eigen::Vector3<T> line1_vec = line1_point1 - line1_point0;
+        Eigen::Vector3<T> line0_dir = line0_point1 - line0_point0;
+        Eigen::Vector3<T> line1_dir = line1_point1 - line1_point0;
 
-        Eigen::Vector3<T> normal = (line0_vec).cross(line1_vec);
+        Eigen::Vector3<T> normal = (line0_dir).cross(line1_dir);
 
         // WARNING: Parallel edges will result in a distance of 0.
         // WARNING: This is not Euclidean distance
