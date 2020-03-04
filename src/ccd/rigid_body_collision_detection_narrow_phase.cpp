@@ -229,7 +229,7 @@ bool detect_face_vertex_collisions_narrow_phase(
         geometry::barycentric_coordinates(
             vertex_toi, triangle_vertex0_toi, triangle_vertex1_toi,
             triangle_vertex2_toi, u, v, w);
-        assert(u + v + w == 1);
+        assert(u + v + w < 1 + 1e-12 && u + v + w > 1 - 1e-12);
     }
     return is_colliding;
 #endif

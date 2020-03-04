@@ -178,7 +178,7 @@ bool detect_face_vertex_collisions_narrow_phase(
             (Vj + Uj * toi).eval(),
             // third face vertex's position at time of impact
             (Vk + Uk * toi).eval(), u, v, w);
-        assert(u + v + w == 1);
+        assert(u + v + w < 1 + 1e-12 && u + v + w > 1 - 1e-12);
     }
     return is_colliding;
 }
