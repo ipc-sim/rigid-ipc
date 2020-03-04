@@ -10,7 +10,8 @@ namespace opengl {
 
     class ViewerDataExt {
     public:
-        ViewerDataExt(igl::opengl::glfw::Viewer* _viewer,
+        ViewerDataExt(
+            igl::opengl::glfw::Viewer* _viewer,
             const Eigen::RowVector3d& color);
         virtual ~ViewerDataExt();
         ViewerData& data() { return m_viewer->data_list[data_id]; }
@@ -45,25 +46,30 @@ namespace opengl {
 
         void set_points(const Eigen::MatrixXd& V, const Eigen::MatrixXd& color);
 
-        void set_edges(const Eigen::MatrixXd& V,
+        void set_edges(
+            const Eigen::MatrixXd& V,
             const Eigen::MatrixXi& E,
             const Eigen::MatrixXd& color);
 
-        void set_faces(const Eigen::MatrixXd& V,
+        void set_faces(
+            const Eigen::MatrixXd& V,
             const Eigen::MatrixXi& F,
             const Eigen::MatrixXd& color);
 
-        void set_vector_field(const Eigen::MatrixXd& V,
+        void set_vector_field(
+            const Eigen::MatrixXd& V,
             const Eigen::MatrixXd& F,
             const Eigen::MatrixXd& color);
     };
 
     class MeshData : public ViewerDataExt {
     public:
-        MeshData(igl::opengl::glfw::Viewer* _viewer,
+        MeshData(
+            igl::opengl::glfw::Viewer* _viewer,
             const Eigen::RowVector3d& color);
 
-        void set_mesh(const Eigen::MatrixXd& V,
+        void set_mesh(
+            const Eigen::MatrixXd& V,
             const Eigen::MatrixXi& E,
             const Eigen::MatrixXi& F);
 
@@ -78,24 +84,28 @@ namespace opengl {
         Eigen::MatrixXi mE;
         Eigen::MatrixXi mF;
 
+        Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> m_is_vertex_fixed;
+
         Eigen::RowVector3d m_edge_color;
+        Eigen::RowVector3d m_fixed_color;
 
         std::vector<std::string> vertex_data_labels;
     };
 
     class VectorFieldData : public ViewerDataExt {
     public:
-        VectorFieldData(igl::opengl::glfw::Viewer* _viewer,
+        VectorFieldData(
+            igl::opengl::glfw::Viewer* _viewer,
             const Eigen::RowVector3d& color);
 
         inline bool is_vector_field() override { return true; }
 
         void recolor() override;
-        void set_vector_field(
-            const Eigen::MatrixXd& V, const Eigen::MatrixXd& F);
+        void
+        set_vector_field(const Eigen::MatrixXd& V, const Eigen::MatrixXd& F);
 
-        void update_vector_field(
-            const Eigen::MatrixXd& V, const Eigen::MatrixXd& F);
+        void
+        update_vector_field(const Eigen::MatrixXd& V, const Eigen::MatrixXd& F);
 
         Eigen::MatrixXd mF;
         Eigen::MatrixXd mV;
@@ -103,7 +113,8 @@ namespace opengl {
 
     class ScalarFieldData : public ViewerDataExt {
     public:
-        ScalarFieldData(igl::opengl::glfw::Viewer* _viewer,
+        ScalarFieldData(
+            igl::opengl::glfw::Viewer* _viewer,
             const Eigen::RowVector3d& inf_color,
             const Eigen::RowVector3d& bg_color);
 

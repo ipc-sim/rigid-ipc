@@ -9,7 +9,8 @@
 
 namespace ImGui {
 
-bool InputIntBounded(const char* label,
+bool InputIntBounded(
+    const char* label,
     int* val,
     int lower_bound = std::numeric_limits<int>::min(),
     int upper_bound = std::numeric_limits<int>::max(),
@@ -17,7 +18,8 @@ bool InputIntBounded(const char* label,
     int step_fast = 100,
     ImGuiInputTextFlags flags = 0);
 
-bool InputDoubleBounded(const char* label,
+bool InputDoubleBounded(
+    const char* label,
     double* val,
     double lower_bound = -std::numeric_limits<double>::infinity(),
     double upper_bound = std::numeric_limits<double>::infinity(),
@@ -26,7 +28,8 @@ bool InputDoubleBounded(const char* label,
     const char* format = "%.6f",
     ImGuiInputTextFlags flags = 0);
 
-bool DragDouble(const char* label,
+bool DragDouble(
+    const char* label,
     double* v,
     double v_speed = 1.0,
     double v_min = 0.0,

@@ -55,7 +55,8 @@ namespace opengl {
         }
         data().set_points(V_temp, color);
     }
-    void ViewerDataExt::set_edges(const Eigen::MatrixXd& V,
+    void ViewerDataExt::set_edges(
+        const Eigen::MatrixXd& V,
         const Eigen::MatrixXi& E,
         const Eigen::MatrixXd& color)
     {
@@ -70,7 +71,8 @@ namespace opengl {
         }
         data().set_edges(V_temp, E, color);
     }
-    void ViewerDataExt::set_faces(const Eigen::MatrixXd& V,
+    void ViewerDataExt::set_faces(
+        const Eigen::MatrixXd& V,
         const Eigen::MatrixXi& F,
         const Eigen::MatrixXd& color)
     {
@@ -89,10 +91,12 @@ namespace opengl {
         igl::opengl::glfw::Viewer* _viewer, const Eigen::RowVector3d& color)
         : ViewerDataExt(_viewer, color)
     {
-        m_edge_color = Eigen::RowVector3d::Zero();
+        m_edge_color = Eigen::RowVector3d::Zero();                   // #000000
+        m_fixed_color = Eigen::RowVector3d(0xB3, 0xB3, 0xB3) / 0xFF; // #B3B3B3
     }
 
-    void MeshData::set_mesh(const Eigen::MatrixXd& V,
+    void MeshData::set_mesh(
+        const Eigen::MatrixXd& V,
         const Eigen::MatrixXi& E,
         const Eigen::MatrixXi& F)
     {
@@ -111,24 +115,40 @@ namespace opengl {
     void MeshData::update_vertices(const Eigen::MatrixXd& V)
     {
         mV = set_vertices(V);
-        set_points(V, mF.size() ? m_edge_color : m_color);
-        set_edges(V, mE, mF.size() ? m_edge_color : m_color);
-        if (mF.size()) {
-            set_faces(V, mF, m_color);
-        }
+        recolor();
         data().labels_positions = mV;
     }
 
     void MeshData::recolor()
     {
-        if (mE.size() > 0) {
-            set_points(mV, mF.size() ? m_edge_color : m_color);
-            set_edges(mV, mE, mF.size() ? m_edge_color : m_color);
-            if (mF.size()) {
-                set_faces(mV, mF, m_color);
+        assert(mV.rows() == m_is_vertex_fixed.rows());
+
+        Eigen::MatrixXd vertex_colors(mV.rows(), 3);
+        Eigen::MatrixXd edge_vertex_colors(mV.rows(), 3);
+        Eigen::MatrixXd face_vertex_colors(mV.rows(), 3);
+
+        for (int i = 0; i < mV.rows(); i++) {
+            if (m_is_vertex_fixed(i)) {
+                vertex_colors.row(i) = mF.size() ? m_edge_color : m_fixed_color;
+                edge_vertex_colors.row(i) =
+                    mF.size() ? m_edge_color : m_fixed_color;
+                face_vertex_colors.row(i) = m_fixed_color;
+            } else {
+                vertex_colors.row(i) = mF.size() ? m_edge_color : m_color;
+                edge_vertex_colors.row(i) = mF.size() ? m_edge_color : m_color;
+                face_vertex_colors.row(i) = m_color;
             }
         }
+
+        set_points(mV, vertex_colors);
+        if (mE.size()) {
+            set_edges(mV, mE, edge_vertex_colors);
+        }
+        if (mF.size()) {
+            set_faces(mV, mF, face_vertex_colors);
+        }
     }
+
     void MeshData::set_vertex_data(
         const Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> vtx_data)
     {
@@ -148,6 +168,9 @@ namespace opengl {
         show_vertex_data = true;
         data().labels_positions = mV;
         data().labels_strings = vertex_data_labels;
+
+        m_is_vertex_fixed = vtx_data.rowwise().all();
+        recolor();
     }
 
     void MeshData::update_vertex_data()
@@ -205,7 +228,8 @@ namespace opengl {
     /// \brief ScalarFieldData::ScalarFieldData
     /// \param _viewer
     ////////////////////////////////////////////////////////////////////////
-    ScalarFieldData::ScalarFieldData(igl::opengl::glfw::Viewer* _viewer,
+    ScalarFieldData::ScalarFieldData(
+        igl::opengl::glfw::Viewer* _viewer,
         const Eigen::RowVector3d& inf_color,
         const Eigen::RowVector3d& bg_color)
         : ViewerDataExt(_viewer, inf_color)
