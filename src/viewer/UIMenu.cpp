@@ -25,7 +25,7 @@ void UISimState::draw_menu()
     bool _viewer_menu_visible = true;
 
     ImGui::Begin(
-        "Viewer", &_viewer_menu_visible,
+        "Controls", &_viewer_menu_visible,
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
     {
@@ -70,7 +70,7 @@ void UISimState::draw_menu()
         bool _colors_menu_visible = true;
 
         ImGui::Begin(
-            "UI", &_colors_menu_visible,
+            "Legend", &_colors_menu_visible,
             ImGuiWindowFlags_NoSavedSettings
                 | ImGuiWindowFlags_AlwaysAutoResize);
         {

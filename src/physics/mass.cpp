@@ -48,6 +48,9 @@ namespace physics {
     // Copyright (c) 2016, Project Chrono Development Team
     // All rights reserved.
     // https://github.com/projectchrono/chrono/blob/develop/LICENSE
+    //
+    // This requires the mesh to be closed, watertight, with proper triangle
+    // orientation.
     void compute_mass_properties_3D(
         const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& faces,

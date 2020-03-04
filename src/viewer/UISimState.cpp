@@ -28,7 +28,9 @@ void UISimState::launch()
     m_viewer.callback_pre_draw = [&](igl::opengl::glfw::Viewer&) {
         return pre_draw_loop();
     };
-    m_viewer.launch();
+    m_viewer.launch(
+        /*resizable=*/true, /*fullscreen=*/false,
+        /*name=*/"Simulation");
 }
 
 void UISimState::init(igl::opengl::glfw::Viewer* _viewer)

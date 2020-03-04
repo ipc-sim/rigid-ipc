@@ -149,8 +149,7 @@ namespace opt {
         PROFILE_END(EVAL)
 
 #ifdef WITH_DERIVATIVE_CHECK
-        bool is_grad_correct = compare_jac_g(sigma, candidates, gx_jacobian);
-        assert(is_grad_correct);
+        compare_jac_g(sigma, candidates, gx_jacobian);
 #endif
         return gx_jacobian;
     }
@@ -225,8 +224,7 @@ namespace opt {
         PROFILE_END(EVAL_HESS)
 
 #ifdef WITH_DERIVATIVE_CHECK
-        bool is_grad_correct = compare_jac_g(sigma, candidates, gx_jacobian);
-        assert(is_grad_correct);
+        compare_jac_g(sigma, candidates, gx_jacobian);
 #endif
     }
 
@@ -675,7 +673,7 @@ namespace opt {
         bool pass = fd::compare_jacobian(
             jac_full, jac_g, /*test_eps=*/Constants::FULL_GRADIENT_TEST);
         if (!pass) {
-            spdlog::error("autodiff_gradients_dont_match");
+            spdlog::error("autodiff gradients do not match");
         }
 
         for (size_t i = 0; i < candidates.ev_candidates.size(); ++i) {
@@ -700,6 +698,7 @@ namespace opt {
                 sigma, fv, jac_g.row(int(i)));
         }
 
+        assert(pass);
         return pass;
     }
 
