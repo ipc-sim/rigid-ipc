@@ -23,13 +23,15 @@ namespace geometry {
         return (point1 - point0).norm();
     }
 
-    template <typename T> inline T clamp_to_01(T x)
+    template <typename T> inline T clamp_to_01(const T& x)
     {
         return x > T(1.0) ? T(1.0) : (x < T(0.0) ? T(0.0) : x);
     }
 
+    // Find the closest point on the segment to the point.
     template <typename T, int dim, int max_dim>
-    inline T point_segment_distance(
+    Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>
+    point_segment_closest_point(
         const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point,
         const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_start,
         const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end)
@@ -39,12 +41,23 @@ namespace geometry {
             segment_end - segment_start;
         T segment_length_sqr = segment_dir.squaredNorm();
         if (segment_length_sqr == 0.0) {
-            return point_point_distance(point, segment_start);
+            // Segment is degenerate so return a point
+            return segment_start; // Either point will do
         }
         T alpha = clamp_to_01(
             (point - segment_start).dot(segment_dir) / segment_length_sqr);
+        return segment_start + alpha * segment_dir;
+    }
+
+    template <typename T, int dim, int max_dim>
+    inline T point_segment_distance(
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_start,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end)
+    {
         return point_point_distance(
-            point, (segment_start + alpha * segment_dir).eval());
+            point,
+            point_segment_closest_point(point, segment_start, segment_end));
     }
 
     template <typename T>
@@ -85,13 +98,18 @@ namespace geometry {
 
         // This is the closest point between segment 0 and the line through
         // segment 1.
-        Eigen::Vector3<T> closest_point_on_segment0 =
+        Eigen::Vector3<T> seg0_to_line1 =
             (segment0_end - segment0_start) * alpha + segment0_start;
 
-        // Compute the distance from the closest point on segment 0 to the
-        // closest point on segment 1.
-        return point_segment_distance(
-            closest_point_on_segment0, segment1_start, segment1_end);
+        // Compute the closesty point from seg1 to seg 0
+        Eigen::Vector3<T> seg1_to_seg0 = point_segment_closest_point(
+            seg0_to_line1, segment1_start, segment1_end);
+        // Compute the closesty point from seg0 to seg 1
+        Eigen::Vector3<T> seg0_to_seg1 = point_segment_closest_point(
+            seg1_to_seg0, segment0_start, segment0_end);
+
+        // Return the distance between the two closest points
+        return point_point_distance(seg1_to_seg0, seg0_to_seg1);
     }
 
     template <typename T>

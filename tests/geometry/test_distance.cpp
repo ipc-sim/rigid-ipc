@@ -103,6 +103,34 @@ TEST_CASE("Segment-segment distance degenerate case", "[distance]")
     CHECK(distance == Approx(abs(s0y)).margin(1e-12));
 }
 
+TEST_CASE(
+    "Segment-segment distance degenerate case not overlapping", "[distance]")
+{
+    double s0y = GENERATE(-10, -1, -1e-4, 0, 1e-4, 1, 10);
+    double gap = GENERATE(0, 0.01, 0.1, 1);
+    Eigen::Vector3d s00(gap, s0y, 0);
+    Eigen::Vector3d s01(1, s0y, 0);
+    Eigen::Vector3d s10(-1, 0, 0);
+    Eigen::Vector3d s11(-gap, 0, 0);
+
+    SECTION("original order") {}
+    SECTION("swap s0") { std::swap(s00, s01); }
+    SECTION("swap s1") { std::swap(s10, s11); }
+    SECTION("swap s0 and s1")
+    {
+        std::swap(s00, s01);
+        std::swap(s10, s11);
+    }
+
+    double distance = segment_segment_distance(s00, s01, s10, s11);
+    CHECK(
+        distance
+        == Approx(point_point_distance(
+                      Eigen::Vector3d(gap, s0y, 0), //
+                      Eigen::Vector3d(-gap, 0, 0)))
+               .margin(1e-12));
+}
+
 TEST_CASE("Point-triangle distance", "[distance]")
 {
     double py = GENERATE(-10, -1, -1e-12, 0, 1e-12, 1, 10);
