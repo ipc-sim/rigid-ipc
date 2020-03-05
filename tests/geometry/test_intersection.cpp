@@ -23,8 +23,7 @@ TEST_CASE("Point-segment interval intersection", "[intersection]")
     bool intersecting = is_point_along_segment(p, s0, s1);
     CHECK(intersecting == abs(expected_distance) <= 1e-12);
     if (intersecting) {
-        ccd::Interval alpha;
-        point_segment_intersection(p, s0, s1, alpha);
+        ccd::Interval alpha = point_segment_intersection(p, s0, s1);
         CHECK(boost::numeric::median(alpha) == Approx(0.5).margin(1e-12));
     }
 }

@@ -7,17 +7,21 @@
 namespace ccd {
 namespace geometry {
 
-    template <typename T>
-    inline void point_segment_intersection(
-        const Eigen::VectorX3<T>& point,
-        const Eigen::VectorX3<T>& segment_start,
-        const Eigen::VectorX3<T>& segment_end,
-        T& alpha)
+    template <typename T, int dim, int max_dim>
+    inline T point_segment_intersection(
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_start,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end)
     {
-        // Project the point onto the edge by computing its scalar projection
-        Eigen::VectorX3<T> segment_vec = segment_end - segment_start;
-        alpha = (point - segment_start).dot(segment_vec)
-            / segment_vec.squaredNorm();
+        // https://zalo.github.io/blog/closest-point-between-segments/
+        Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim> segment_dir =
+            segment_end - segment_start;
+        T segment_length_sqr = segment_dir.squaredNorm();
+        if (segment_length_sqr == 0.0) {
+            // Segment is degenerate so return a point
+            return T(0); // Either point will do
+        }
+        return (point - segment_start).dot(segment_dir) / segment_length_sqr;
     }
 
     template <typename T>

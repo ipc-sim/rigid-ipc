@@ -131,7 +131,7 @@ bool detect_edge_vertex_collisions_narrow_phase(
             poseB, bodies.m_rbs[bodyB_id].edges(edge_id, 1));
 
         // Compute the impact parameter along the edge
-        geometry::point_segment_intersection(v0, v1, v2, alpha);
+        alpha = geometry::point_segment_intersection(v0, v1, v2);
     }
     return is_colliding;
 #endif

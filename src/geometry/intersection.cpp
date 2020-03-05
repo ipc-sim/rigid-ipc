@@ -12,8 +12,8 @@ namespace geometry {
         const Eigen::VectorX3<Interval>& segment_start,
         const Eigen::VectorX3<Interval>& segment_end)
     {
-        Interval alpha;
-        point_segment_intersection(point, segment_start, segment_end, alpha);
+        Interval alpha =
+            point_segment_intersection(point, segment_start, segment_end);
         // Check this in case empty intervals are not allowed
         if (!overlap(alpha, Interval(0, 1))) {
             return false;

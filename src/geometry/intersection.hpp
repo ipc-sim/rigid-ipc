@@ -14,12 +14,11 @@
 namespace ccd {
 namespace geometry {
 
-    template <typename T>
-    inline void point_segment_intersection(
-        const Eigen::VectorX3<T>& point,
-        const Eigen::VectorX3<T>& segment_start,
-        const Eigen::VectorX3<T>& segment_end,
-        T& alpha);
+    template <typename T, int dim, int max_dim>
+    inline T point_segment_intersection(
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_start,
+        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end);
 
     bool is_point_along_segment(
         const Eigen::VectorX3<Interval>& point,

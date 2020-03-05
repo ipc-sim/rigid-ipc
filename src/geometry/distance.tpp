@@ -4,6 +4,7 @@
 #include <Eigen/Geometry>
 #include <constants.hpp>
 #include <geometry/barycentric_coordinates.hpp>
+#include <geometry/intersection.hpp>
 #include <geometry/normal.hpp>
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -36,17 +37,9 @@ namespace geometry {
         const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_start,
         const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end)
     {
-        // https://zalo.github.io/blog/closest-point-between-segments/
-        Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim> segment_dir =
-            segment_end - segment_start;
-        T segment_length_sqr = segment_dir.squaredNorm();
-        if (segment_length_sqr == 0.0) {
-            // Segment is degenerate so return a point
-            return segment_start; // Either point will do
-        }
         T alpha = clamp_to_01(
-            (point - segment_start).dot(segment_dir) / segment_length_sqr);
-        return segment_start + alpha * segment_dir;
+            point_segment_intersection(point, segment_start, segment_end));
+        return (segment_end - segment_start) * alpha + segment_start;
     }
 
     template <typename T, int dim, int max_dim>
