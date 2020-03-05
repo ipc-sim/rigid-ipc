@@ -145,10 +145,8 @@ bool compute_edge_edge_time_of_impact(
         Eigen::Vector3<Interval> edgeB_vertex0, edgeB_vertex1;
         vertex_positions(
             t, edgeA_vertex0, edgeA_vertex1, edgeB_vertex0, edgeB_vertex1);
-        Interval alpha0, alpha1;
-        return geometry::segment_segment_intersection(
-            edgeA_vertex0, edgeA_vertex1, edgeB_vertex0, edgeB_vertex1, //
-            alpha0, alpha1);
+        return geometry::are_segments_intersecting(
+            edgeA_vertex0, edgeA_vertex1, edgeB_vertex0, edgeB_vertex1);
     };
 
     Interval toi_interval;

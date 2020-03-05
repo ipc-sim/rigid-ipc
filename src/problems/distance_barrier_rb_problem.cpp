@@ -428,7 +428,7 @@ namespace opt {
     T DistanceBarrierRBProblem::distance(
         const Eigen::VectorXd& sigma, const RigidBodyEdgeVertexCandidate& rbc)
     {
-        Eigen::VectorX6<T> sigma_E, sigma_V, pose_E, pose_V;
+        Eigen::VectorX6<T> sigma_V, sigma_E, pose_V, pose_E;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         init_body_sigmas(
             sigma, rbc.vertex_body_id, rbc.edge_body_id, ndof, //
@@ -507,11 +507,11 @@ namespace opt {
     T DistanceBarrierRBProblem::distance(
         const Eigen::VectorXd& sigma, const RigidBodyFaceVertexCandidate& rbc)
     {
-        Eigen::VectorX6<T> sigma_F, sigma_V, pose_F, pose_V;
+        Eigen::VectorX6<T> sigma_V, sigma_F, pose_V, pose_F;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         init_body_sigmas(
-            sigma, rbc.face_body_id, rbc.vertex_body_id, ndof, //
-            sigma_F, sigma_V);
+            sigma, rbc.vertex_body_id, rbc.face_body_id, ndof, //
+            sigma_V, sigma_F);
 
         // Convert body dof (rotation in arclength) to a ndof pose vector
         pose_V = sigma_V.array()

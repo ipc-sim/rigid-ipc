@@ -25,6 +25,8 @@ namespace Constants {
     /// \brief Value to replace neg-zeros with.
     static const double POINT_EDGE_SQ_DISTANCE_ZERO = 1E-20;
 
+    static const double PARAMETER_ASSERTION_TOL = 1e-12;
+
     // ------------------------------------------------------------------------
     // Nonlinear Complementarity Problem
     // ------------------------------------------------------------------------

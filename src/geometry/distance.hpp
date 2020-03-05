@@ -9,6 +9,9 @@
 /// Segment: A line segment in either 2D or 3D defined by its endpoints.
 /// Triangle: A triangle in 3D
 
+// Uncomment this line to switch to distance squared
+//#define USE_DISTANCE_SQUARED
+
 namespace ccd {
 namespace geometry {
 
@@ -18,14 +21,14 @@ namespace geometry {
 
     template <typename T, int dim, int max_dim = dim>
     inline T point_point_distance(
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point0,
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point1);
+        const Eigen::Vector<T, dim, max_dim>& point0,
+        const Eigen::Vector<T, dim, max_dim>& point1);
 
     template <typename T, int dim, int max_dim>
     inline T point_segment_distance(
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point,
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_start,
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end);
+        const Eigen::Vector<T, dim, max_dim>& point,
+        const Eigen::Vector<T, dim, max_dim>& segment_start,
+        const Eigen::Vector<T, dim, max_dim>& segment_end);
 
     template <typename T>
     inline T segment_segment_distance(

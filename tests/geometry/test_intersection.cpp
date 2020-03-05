@@ -2,6 +2,7 @@
 
 #include <ccd/interval.hpp>
 #include <geometry/intersection.hpp>
+#include <geometry/projection.hpp>
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
 
@@ -23,7 +24,7 @@ TEST_CASE("Point-segment interval intersection", "[intersection]")
     bool intersecting = is_point_along_segment(p, s0, s1);
     CHECK(intersecting == abs(expected_distance) <= 1e-12);
     if (intersecting) {
-        ccd::Interval alpha = point_segment_intersection(p, s0, s1);
+        ccd::Interval alpha = project_point_to_line(p, s0, (s1 - s0).eval());
         CHECK(boost::numeric::median(alpha) == Approx(0.5).margin(1e-12));
     }
 }

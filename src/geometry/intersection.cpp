@@ -2,6 +2,7 @@
 
 #include <ccd/interval.hpp>
 #include <geometry/normal.hpp>
+#include <geometry/projection.hpp>
 #include <utils/not_implemented_error.hpp>
 
 namespace ccd {
@@ -12,8 +13,9 @@ namespace geometry {
         const Eigen::VectorX3<Interval>& segment_start,
         const Eigen::VectorX3<Interval>& segment_end)
     {
+        Eigen::VectorX3<Interval> segment_dir = segment_end - segment_start;
         Interval alpha =
-            point_segment_intersection(point, segment_start, segment_end);
+            project_point_to_line(point, segment_start, segment_dir);
         // Check this in case empty intervals are not allowed
         if (!overlap(alpha, Interval(0, 1))) {
             return false;
@@ -21,7 +23,7 @@ namespace geometry {
         // Check the distance to the closest point is small
         Interval valid_alpha = boost::numeric::intersect(alpha, Interval(0, 1));
         Eigen::VectorX3<Interval> segment_to_point =
-            segment_start + (segment_end - segment_start) * valid_alpha - point;
+            segment_start + valid_alpha * segment_dir - point;
 
         // Check that all components contain zero
         // WARNING: This is conservative, but no exact
@@ -31,6 +33,16 @@ namespace geometry {
             }
         }
         return true;
+    }
+
+    bool are_segments_intersecting(
+        const Eigen::Vector3<Interval>& segment0_start,
+        const Eigen::Vector3<Interval>& segment0_end,
+        const Eigen::Vector3<Interval>& segment1_start,
+        const Eigen::Vector3<Interval>& segment1_end)
+    {
+        throw NotImplementedError(
+            "are_segments_intersecting is not implemented!");
     }
 
     bool is_point_inside_triangle(
@@ -55,5 +67,3 @@ namespace geometry {
 
 } // namespace geometry
 } // namespace ccd
-
-#include "intersection.tpp"

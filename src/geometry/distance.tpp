@@ -6,6 +6,7 @@
 #include <geometry/barycentric_coordinates.hpp>
 #include <geometry/intersection.hpp>
 #include <geometry/normal.hpp>
+#include <geometry/projection.hpp>
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
 
@@ -18,10 +19,14 @@ namespace geometry {
 
     template <typename T, int dim, int max_dim>
     inline T point_point_distance(
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point0,
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point1)
+        const Eigen::Vector<T, dim, max_dim>& point0,
+        const Eigen::Vector<T, dim, max_dim>& point1)
     {
+#ifdef USE_DISTANCE_SQUARED
+        return (point1 - point0).squaredNorm();
+#else
         return (point1 - point0).norm();
+#endif
     }
 
     template <typename T> inline T clamp_to_01(const T& x)
@@ -31,22 +36,23 @@ namespace geometry {
 
     // Find the closest point on the segment to the point.
     template <typename T, int dim, int max_dim>
-    Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>
-    point_segment_closest_point(
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point,
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_start,
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end)
+    Eigen::Vector<T, dim, max_dim> point_segment_closest_point(
+        const Eigen::Vector<T, dim, max_dim>& point,
+        const Eigen::Vector<T, dim, max_dim>& segment_start,
+        const Eigen::Vector<T, dim, max_dim>& segment_end)
     {
+        Eigen::Vector<T, dim, max_dim> segment_dir =
+            segment_end - segment_start;
         T alpha = clamp_to_01(
-            point_segment_intersection(point, segment_start, segment_end));
-        return (segment_end - segment_start) * alpha + segment_start;
+            project_point_to_line(point, segment_start, segment_dir));
+        return segment_dir * alpha + segment_start;
     }
 
     template <typename T, int dim, int max_dim>
     inline T point_segment_distance(
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& point,
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_start,
-        const Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim>& segment_end)
+        const Eigen::Vector<T, dim, max_dim>& point,
+        const Eigen::Vector<T, dim, max_dim>& segment_start,
+        const Eigen::Vector<T, dim, max_dim>& segment_end)
     {
         return point_point_distance(
             point,
@@ -70,13 +76,10 @@ namespace geometry {
                 segment1_start, segment0_start, segment0_end);
         }
 
-        auto project_to_plane = [&](const Eigen::Vector3<T>& p) {
-            T alpha = (p - segment1_start).dot(normal) / normal_sqrnorm;
-            return p - (alpha * normal);
-        };
-
-        Eigen::Vector3<T> s00_plane = project_to_plane(segment0_start);
-        Eigen::Vector3<T> s01_plane = project_to_plane(segment0_end);
+        Eigen::Vector3<T> s00_plane = project_point_to_plane(
+            segment0_start, segment1_start, normal, normal_sqrnorm);
+        Eigen::Vector3<T> s01_plane = project_point_to_plane(
+            segment0_end, segment1_start, normal, normal_sqrnorm);
 
         // Compute the segment 0 direction in the plane
         Eigen::Vector3<T> s0_plane_dir = s01_plane - s00_plane;
@@ -112,19 +115,16 @@ namespace geometry {
         const Eigen::Vector3<T>& triangle_vertex1,
         const Eigen::Vector3<T>& triangle_vertex2)
     {
-        // Project the point to the plane without the need for a sqrt
+        // Compute the barycentric coordinates of the projected_point
         const Eigen::Vector3<T> normal = triangle_normal(
             triangle_vertex0, triangle_vertex1, triangle_vertex2,
             /*normalized=*/false);
-        Eigen::Vector3<T> projected_point = point
-            - ((point - triangle_vertex0).dot(normal) / normal.squaredNorm())
-                * normal;
-
-        // Compute the barycentric coordinates of the projected_point
+        Eigen::Vector3<T> projected_point =
+            project_point_to_plane(point, triangle_vertex0, normal);
         T u, v, w;
         barycentric_coordinates(
-            projected_point, triangle_vertex0, triangle_vertex1,
-            triangle_vertex2, u, v, w);
+            point, triangle_vertex0, triangle_vertex1, triangle_vertex2, //
+            u, v, w);
 
         // Find the closest point using the barycentric coordinates
         // https://math.stackexchange.com/a/589362

@@ -53,7 +53,6 @@ add_library(${PROJECT_NAME}
     src/ccd/rigid_body_collision_detection_narrow_phase.cpp
     src/ccd/rigid_body_collision_detection_broad_phase.cpp
 
-    src/geometry/distance.cpp
     src/geometry/intersection.cpp
 
     src/io/opt_results.cpp
