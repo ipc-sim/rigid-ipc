@@ -1,8 +1,10 @@
 #include "intersection.hpp"
 
 #include <ccd/interval.hpp>
+#include <geometry/distance.hpp>
 #include <geometry/normal.hpp>
 #include <geometry/projection.hpp>
+#include <utils/is_zero.hpp>
 #include <utils/not_implemented_error.hpp>
 
 namespace ccd {
@@ -25,14 +27,7 @@ namespace geometry {
         Eigen::VectorX3<Interval> segment_to_point =
             segment_start + valid_alpha * segment_dir - point;
 
-        // Check that all components contain zero
-        // WARNING: This is conservative, but no exact
-        for (int i = 0; i < segment_to_point.size(); i++) {
-            if (!boost::numeric::zero_in(segment_to_point(i))) {
-                return false;
-            }
-        }
-        return true;
+        return is_zero(segment_to_point);
     }
 
     bool are_segments_intersecting(
@@ -41,8 +36,10 @@ namespace geometry {
         const Eigen::Vector3<Interval>& segment1_start,
         const Eigen::Vector3<Interval>& segment1_end)
     {
-        throw NotImplementedError(
-            "are_segments_intersecting is not implemented!");
+        // TODO: This can be made more efficient
+        Interval distance = segment_segment_distance(
+            segment0_start, segment0_end, segment1_start, segment1_end);
+        return is_zero(distance);
     }
 
     bool is_point_inside_triangle(

@@ -11,6 +11,7 @@
 
 #include <ccd/time_of_impact.hpp>
 #include <geometry/barycentric_coordinates.hpp>
+#include <geometry/projection.hpp>
 #include <profiler.hpp>
 #include <utils/not_implemented_error.hpp>
 
@@ -146,8 +147,18 @@ bool detect_edge_edge_collisions_narrow_phase(
     bool is_colliding = CTCD::edgeEdgeCTCD(
         Vi, Vj, Vk, Vl, Vi + Ui, Vj + Uj, Vk + Uk, Vl + Ul, /*eta=*/0, toi);
     if (is_colliding) {
-        edge0_alpha = -1; // TODO: Compute this correctly
-        edge1_alpha = -1; // TODO: Compute this correctly
+        Eigen::Vector3d Vi_toi = Vi + toi * Ui;
+        Eigen::Vector3d Vj_toi = Vj + toi * Uj;
+        Eigen::Vector3d Vk_toi = Vk + toi * Uk;
+        Eigen::Vector3d Vl_toi = Vl + toi * Ul;
+        geometry::project_segment_to_segment(
+            Vi_toi, Vj_toi, Vk_toi, Vl_toi, edge0_alpha, edge1_alpha);
+        assert(
+            edge0_alpha > -Constants::PARAMETER_ASSERTION_TOL
+            && edge0_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
+        assert(
+            edge1_alpha > -Constants::PARAMETER_ASSERTION_TOL
+            && edge1_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
     }
     return is_colliding;
 }

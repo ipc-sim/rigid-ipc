@@ -20,7 +20,7 @@ namespace geometry {
         const Eigen::Vector<T, dim, max_dim>& line_dir);
 
     template <typename T>
-    inline Eigen::Vector3<T> project_segment_to_segment(
+    inline void project_segment_to_segment(
         const Eigen::Vector3<T>& segment0_start,
         const Eigen::Vector3<T>& segment0_end,
         const Eigen::Vector3<T>& segment1_start,

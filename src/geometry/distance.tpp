@@ -8,6 +8,7 @@
 #include <geometry/normal.hpp>
 #include <geometry/projection.hpp>
 #include <logger.hpp>
+#include <utils/clamp.hpp>
 #include <utils/not_implemented_error.hpp>
 
 namespace ccd {
@@ -27,11 +28,6 @@ namespace geometry {
 #else
         return (point1 - point0).norm();
 #endif
-    }
-
-    template <typename T> inline T clamp_to_01(const T& x)
-    {
-        return x > T(1.0) ? T(1.0) : (x < T(0.0) ? T(0.0) : x);
     }
 
     // Find the closest point on the segment to the point.
@@ -66,46 +62,20 @@ namespace geometry {
         const Eigen::Vector3<T>& segment1_start,
         const Eigen::Vector3<T>& segment1_end)
     {
-        // https://zalo.github.io/blog/closest-point-between-segments/
-        // Project the points of segment 0 to the plane orthogonal to segment 1
-        Eigen::Vector3<T> normal = segment1_end - segment1_start;
-        T normal_sqrnorm = normal.squaredNorm();
-        if (normal_sqrnorm == 0) {
-            // The second segment is degenerate
-            return point_segment_distance(
-                segment1_start, segment0_start, segment0_end);
-        }
+        T alpha0, alpha1;
+        project_segment_to_segment(
+            segment0_start, segment0_end, segment1_start, segment1_end, alpha0,
+            alpha1);
 
-        Eigen::Vector3<T> s00_plane = project_point_to_plane(
-            segment0_start, segment1_start, normal, normal_sqrnorm);
-        Eigen::Vector3<T> s01_plane = project_point_to_plane(
-            segment0_end, segment1_start, normal, normal_sqrnorm);
-
-        // Compute the segment 0 direction in the plane
-        Eigen::Vector3<T> s0_plane_dir = s01_plane - s00_plane;
-        T s0_plane_len_sqr = s0_plane_dir.squaredNorm();
-
-        // Compute the point-segment distance in the plane
-        T alpha = (s0_plane_len_sqr == 0.0)
-            ? T(0.0) // Zero if parallel or first segment is degenerate
-            : (segment1_start - s00_plane).dot(s0_plane_dir) / s0_plane_len_sqr;
-        // Clamp the parameter to the endpoints of segment 0
-        alpha = clamp_to_01(alpha);
-
-        // This is the closest point between segment 0 and the line through
-        // segment 1.
-        Eigen::Vector3<T> seg0_to_line1 =
-            (segment0_end - segment0_start) * alpha + segment0_start;
-
-        // Compute the closesty point from seg1 to seg 0
-        Eigen::Vector3<T> seg1_to_seg0 = point_segment_closest_point(
-            seg0_to_line1, segment1_start, segment1_end);
         // Compute the closesty point from seg0 to seg 1
-        Eigen::Vector3<T> seg0_to_seg1 = point_segment_closest_point(
-            seg1_to_seg0, segment0_start, segment0_end);
+        Eigen::Vector3<T> seg0_to_seg1 =
+            (segment0_end - segment0_start) * alpha0 + segment0_start;
+        // Compute the closesty point from seg1 to seg 0
+        Eigen::Vector3<T> seg1_to_seg0 =
+            (segment1_end - segment1_start) * alpha1 + segment1_start;
 
         // Return the distance between the two closest points
-        return point_point_distance(seg1_to_seg0, seg0_to_seg1);
+        return point_point_distance(seg0_to_seg1, seg1_to_seg0);
     }
 
     template <typename T>
@@ -139,7 +109,7 @@ namespace geometry {
             // vertex 0 is the closest
             return point_point_distance(point, triangle_vertex0);
         }
-        if (u < 0 && v <= 0 && w < 0) {
+        if (u < 0 && v >= 0 && w < 0) {
             // vertex 0 is the closest
             return point_point_distance(point, triangle_vertex1);
         }
