@@ -171,7 +171,7 @@ namespace geometry {
 
         // WARNING: Parallel edges will result in a distance of 0.
         // WARNING: This is not Euclidean distance
-        return (line1_point0 - line0_point0).dot(normal);
+        return (line0_point0 - line1_point0).dot(normal);
     }
 
     /// Compute the distance between a point and a plane.
