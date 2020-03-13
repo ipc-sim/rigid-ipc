@@ -18,7 +18,10 @@ namespace ccd {
 
 SimState::SimState()
     : m_timestep_size(0.1)
+    , m_step_had_collision(false)
+    , m_step_has_collision(false)
     , m_solve_collisions(true)
+    , m_num_simulation_steps(0)
     , m_max_simulation_steps(-1)
     , m_dirty_constraints(false)
 {
@@ -77,12 +80,14 @@ bool SimState::init(const nlohmann::json& args_in)
     // clang-format off
     args = R"({
         "max_iterations":-1,
+        "max_time":-1,
+        "timestep_size": 0.1,
         "scene_type":"distance_barrier_rb_problem",
         "rigid_body_problem":{
-              "rigid_bodies": [],
-              "coefficient_restitution":0.0,
-              "gravity":[0.0,0.0,0.0],
-              "collision_eps": 0.0
+            "rigid_bodies": [],
+            "coefficient_restitution":0.0,
+            "gravity":[0.0,0.0,0.0],
+            "collision_eps": 0.0
          },
         "barrier_solver": {
             "inner_solver": "newton_solver",
@@ -98,8 +103,8 @@ bool SimState::init(const nlohmann::json& args_in)
             "max_iterations": 3000
         },
         "newton_solver":{
-           "absolute_tolerance": 1e-5,
-           "max_iterations": 3000
+            "absolute_tolerance": 1e-5,
+            "max_iterations": 3000
         },
         "ncp_solver":{
             "max_iterations": 1000,
@@ -110,19 +115,20 @@ bool SimState::init(const nlohmann::json& args_in)
             "lcp_solver": "lcp_gauss_seidel"
         },
         "distance_barrier_constraint":{
-           "custom_initial_epsilon":0.5,
-           "min_distance":1e-10,
-           "active_constraint_scale" : 1.5,
-           "detection_method": "hash_grid",
-           "barrier_type": "poly_log"
+            "detection_method": "hash_grid",
+            "trajectory_type": "screwing",
+            "custom_initial_epsilon":0.5,
+            "min_distance":1e-10,
+            "active_constraint_scale" : 1.5,
+            "barrier_type": "poly_log"
        },
        "volume_constraint":{
-           "detection_method": "hash_grid",
-           "volume_epsilon": 1e-6,
-           "custom_hashgrid_cellsize":-1,
-           "time_epsilon":1e-4
+            "detection_method": "hash_grid",
+            "trajectory_type": "screwing",
+            "volume_epsilon": 1e-6,
+            "custom_hashgrid_cellsize":-1,
+            "time_epsilon":1e-4
        },
-       "timestep_size": 0.1,
        "viewport_bbox": {"min":[0,0],"max":[0,0]}
     })"_json;
     // clang-format on
@@ -151,6 +157,11 @@ bool SimState::init(const nlohmann::json& args_in)
     args.merge_patch(args_in);
     m_max_simulation_steps = args["max_iterations"].get<int>();
     m_timestep_size = args["timestep_size"].get<double>();
+    double max_time = args["max_time"].get<int>();
+    if (max_time >= 0) {
+        assert(m_max_simulation_steps == -1);
+        m_max_simulation_steps = int(ceil(max_time / m_timestep_size));
+    }
 
     auto problem_name = args["scene_type"].get<std::string>();
 

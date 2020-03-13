@@ -68,3 +68,27 @@ export MOSEK_DIR="<MSKHOME>/mosek/7/tools/platform/osx64x86"
 
 We take as input a single JSON file that specifies the mesh and initial
 conditions for each body. The `fixtures` directory contains example scenes.
+
+## Algorithm
+
+```
+x_0^{t+1} = x^{t} + h * v^{t} + h^2 * g
+v_0^{t+1} = (x_0^{t+1} - x^{t}) / h
+if (collision_between(x^{t}, x_0^{t+1})) {
+    original_collisions = CCD(x^{t}, x_0^{t+1})
+    x^{t+1} = barrier_newton_solve(x^{t}, x_0^{t+1})
+    if (using sequential impulses for restitution) {
+         // Apply the restitution model in the above write-up
+        v^{t+1} = solve_velocities(
+            x^{t}, x_0^{t+1},
+            v^{t}, v_0^{t+1},
+            original_collisions,
+            coefficient_of_restitution)
+    } else {
+        v^{t+1} = x^{t+1} - x^{t} / h
+    }
+} else {
+    x^{t+1} = x_0^{t+1}
+    v^{t+1} = v_0^{t+1}
+}
+```

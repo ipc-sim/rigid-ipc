@@ -25,7 +25,11 @@ namespace Constants {
     /// \brief Value to replace neg-zeros with.
     static const double POINT_EDGE_SQ_DISTANCE_ZERO = 1E-20;
 
+    /// \brief Tolerance when asserting for valid barycentric coordinates.
     static const double PARAMETER_ASSERTION_TOL = 1e-12;
+
+    /// \brief ETA used in Etienne Vouga's CCD as an activation distance.
+    static const double LINEARIZED_CCD_ETA = 1e-8;
 
     // ------------------------------------------------------------------------
     // Nonlinear Complementarity Problem

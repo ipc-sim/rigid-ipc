@@ -17,14 +17,19 @@ void detect_collisions_from_candidates(
     const physics::Poses<double>& poses,
     const physics::Poses<double>& displacements,
     const Candidates& candidates,
-    ConcurrentImpacts& impacts)
+    ConcurrentImpacts& impacts,
+    TrajectoryType trajectory)
 {
-#ifdef LINEARIZED_TRAJECTORY_CCD
-    Eigen::MatrixXd V_t0 = bodies.world_vertices(poses);
-    Eigen::MatrixXd V_t1 = bodies.world_vertices(poses + displacements);
-    detect_collisions_from_candidates(
-        V_t0, V_t1 - V_t0, bodies.m_edges, bodies.m_faces, candidates, impacts);
-#else
+    if (trajectory == TrajectoryType::LINEARIZED) {
+        Eigen::MatrixXd V_t0 = bodies.world_vertices(poses);
+        Eigen::MatrixXd V_t1 = bodies.world_vertices(poses + displacements);
+        detect_collisions_from_candidates(
+            V_t0, V_t1 - V_t0, bodies.m_edges, bodies.m_faces, candidates,
+            impacts);
+        return;
+    }
+
+    assert(trajectory == TrajectoryType::SCREWING);
     PROFILE_POINT("collisions_detection");
     NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
 
@@ -34,7 +39,7 @@ void detect_collisions_from_candidates(
     auto detect_ev_collision = [&](const EdgeVertexCandidate& ev_candidate) {
         double toi, alpha;
         bool is_colliding = detect_edge_vertex_collisions_narrow_phase(
-            bodies, poses, displacements, ev_candidate, toi, alpha);
+            bodies, poses, displacements, ev_candidate, toi, alpha, trajectory);
         if (is_colliding) {
             impacts.ev_impacts.emplace_back(
                 toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index);
@@ -45,7 +50,7 @@ void detect_collisions_from_candidates(
         double toi, edge0_alpha, edge1_alpha;
         bool is_colliding = detect_edge_edge_collisions_narrow_phase(
             bodies, poses, displacements, ee_candidate, toi, edge0_alpha,
-            edge1_alpha);
+            edge1_alpha, trajectory);
         if (is_colliding) {
             impacts.ee_impacts.emplace_back(
                 toi, ee_candidate.edge0_index, edge0_alpha,
@@ -56,7 +61,7 @@ void detect_collisions_from_candidates(
     auto detect_fv_collision = [&](const FaceVertexCandidate& fv_candidate) {
         double toi, u, v;
         bool is_colliding = detect_face_vertex_collisions_narrow_phase(
-            bodies, poses, displacements, fv_candidate, toi, u, v);
+            bodies, poses, displacements, fv_candidate, toi, u, v, trajectory);
         if (is_colliding) {
             impacts.fv_impacts.emplace_back(
                 toi, fv_candidate.face_index, u, v, fv_candidate.vertex_index);
@@ -84,7 +89,6 @@ void detect_collisions_from_candidates(
 
     PROFILE_END(NARROW_PHASE);
     PROFILE_END();
-#endif
 }
 
 // Determine if a single edge-vertext pair intersects.
@@ -94,20 +98,32 @@ bool detect_edge_vertex_collisions_narrow_phase(
     const physics::Poses<double>& displacements,
     const EdgeVertexCandidate& candidate,
     double& toi,
-    double& alpha)
+    double& alpha,
+    TrajectoryType trajectory)
 {
-#ifdef LINEARIZED_TRAJECTORY_CCD
-    Eigen::MatrixXd V_t0 = bodies.world_vertices(poses);
-    Eigen::MatrixXd V_t1 = bodies.world_vertices(poses + displacements);
-    Eigen::MatrixXd U = V_t1 - V_t0;
-    return detect_edge_vertex_collisions_narrow_phase(
-        V_t0.row(bodies.m_edges(candidate.edge_index, 0)),
-        V_t0.row(bodies.m_edges(candidate.edge_index, 1)),
-        V_t0.row(candidate.vertex_index),
-        U.row(bodies.m_edges(candidate.edge_index, 0)),
-        U.row(bodies.m_edges(candidate.edge_index, 1)),
-        U.row(candidate.vertex_index), toi, alpha);
-#else
+    if (trajectory == TrajectoryType::LINEARIZED) {
+        physics::Poses<double> poses_t1 = poses + displacements;
+        Eigen::VectorX3d Vi_t0 =
+            bodies.world_vertex(poses, bodies.m_edges(candidate.edge_index, 0));
+        Eigen::VectorX3d Vi_t1 = bodies.world_vertex(
+            poses_t1, bodies.m_edges(candidate.edge_index, 0));
+
+        Eigen::VectorX3d Vj_t0 =
+            bodies.world_vertex(poses, bodies.m_edges(candidate.edge_index, 1));
+        Eigen::VectorX3d Vj_t1 = bodies.world_vertex(
+            poses_t1, bodies.m_edges(candidate.edge_index, 1));
+
+        Eigen::VectorX3d Vk_t0 =
+            bodies.world_vertex(poses, candidate.vertex_index);
+        Eigen::VectorX3d Vk_t1 =
+            bodies.world_vertex(poses_t1, candidate.vertex_index);
+
+        return detect_edge_vertex_collisions_narrow_phase(
+            Vi_t0, Vj_t0, Vk_t0, Vi_t1 - Vi_t0, Vj_t1 - Vj_t0, Vk_t1 - Vk_t0,
+            toi, alpha);
+    }
+
+    assert(trajectory == TrajectoryType::SCREWING);
     long bodyA_id, vertex_id, bodyB_id, edge_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_edge(candidate.edge_index, bodyB_id, edge_id);
@@ -139,7 +155,6 @@ bool detect_edge_vertex_collisions_narrow_phase(
             && alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
     }
     return is_colliding;
-#endif
 }
 
 bool detect_edge_edge_collisions_narrow_phase(
@@ -149,11 +164,38 @@ bool detect_edge_edge_collisions_narrow_phase(
     const EdgeEdgeCandidate& candidate,
     double& toi,
     double& edge0_alpha,
-    double& edge1_alpha)
+    double& edge1_alpha,
+    TrajectoryType trajectory)
 {
-#ifdef LINEARIZED_TRAJECTORY_CCD
-    throw NotImplementedError("Conversion from RB to linearized trajectories");
-#else
+    if (trajectory == TrajectoryType::LINEARIZED) {
+        physics::Poses<double> poses_t1 = poses + displacements;
+
+        Eigen::VectorX3d Vi_t0 = bodies.world_vertex(
+            poses, bodies.m_edges(candidate.edge0_index, 0));
+        Eigen::VectorX3d Vi_t1 = bodies.world_vertex(
+            poses_t1, bodies.m_edges(candidate.edge0_index, 0));
+
+        Eigen::VectorX3d Vj_t0 = bodies.world_vertex(
+            poses, bodies.m_edges(candidate.edge0_index, 1));
+        Eigen::VectorX3d Vj_t1 = bodies.world_vertex(
+            poses_t1, bodies.m_edges(candidate.edge0_index, 1));
+
+        Eigen::VectorX3d Vk_t0 = bodies.world_vertex(
+            poses, bodies.m_edges(candidate.edge1_index, 0));
+        Eigen::VectorX3d Vk_t1 = bodies.world_vertex(
+            poses_t1, bodies.m_edges(candidate.edge1_index, 0));
+
+        Eigen::VectorX3d Vl_t0 = bodies.world_vertex(
+            poses, bodies.m_edges(candidate.edge1_index, 1));
+        Eigen::VectorX3d Vl_t1 = bodies.world_vertex(
+            poses_t1, bodies.m_edges(candidate.edge1_index, 1));
+
+        return detect_edge_edge_collisions_narrow_phase(
+            Vi_t0, Vj_t0, Vk_t0, Vl_t0, Vi_t1 - Vi_t0, Vj_t1 - Vj_t0,
+            Vk_t1 - Vk_t0, Vl_t1 - Vl_t0, toi, edge0_alpha, edge1_alpha);
+    }
+
+    assert(trajectory == TrajectoryType::SCREWING);
     long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
     bodies.global_to_local_edge(candidate.edge0_index, bodyA_id, edgeA_id);
     bodies.global_to_local_edge(candidate.edge1_index, bodyB_id, edgeB_id);
@@ -191,7 +233,6 @@ bool detect_edge_edge_collisions_narrow_phase(
             && edge1_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
     }
     return is_colliding;
-#endif
 }
 
 bool detect_face_vertex_collisions_narrow_phase(
@@ -201,11 +242,38 @@ bool detect_face_vertex_collisions_narrow_phase(
     const FaceVertexCandidate& candidate,
     double& toi,
     double& u,
-    double& v)
+    double& v,
+    TrajectoryType trajectory)
 {
-#ifdef LINEARIZED_TRAJECTORY_CCD
-    throw NotImplementedError("Conversion from RB to linearized trajectories");
-#else
+    if (trajectory == TrajectoryType::LINEARIZED) {
+        physics::Poses<double> poses_t1 = poses + displacements;
+
+        Eigen::VectorX3d Vi_t0 =
+            bodies.world_vertex(poses, bodies.m_faces(candidate.face_index, 0));
+        Eigen::VectorX3d Vi_t1 = bodies.world_vertex(
+            poses_t1, bodies.m_faces(candidate.face_index, 0));
+
+        Eigen::VectorX3d Vj_t0 =
+            bodies.world_vertex(poses, bodies.m_faces(candidate.face_index, 1));
+        Eigen::VectorX3d Vj_t1 = bodies.world_vertex(
+            poses_t1, bodies.m_faces(candidate.face_index, 1));
+
+        Eigen::VectorX3d Vk_t0 =
+            bodies.world_vertex(poses, bodies.m_faces(candidate.face_index, 2));
+        Eigen::VectorX3d Vk_t1 = bodies.world_vertex(
+            poses_t1, bodies.m_faces(candidate.face_index, 2));
+
+        Eigen::VectorX3d Vl_t0 =
+            bodies.world_vertex(poses, candidate.vertex_index);
+        Eigen::VectorX3d Vl_t1 =
+            bodies.world_vertex(poses_t1, candidate.vertex_index);
+
+        return detect_face_vertex_collisions_narrow_phase(
+            Vi_t0, Vj_t0, Vk_t0, Vl_t0, Vi_t1 - Vi_t0, Vj_t1 - Vj_t0,
+            Vk_t1 - Vk_t0, Vl_t1 - Vl_t0, toi, u, v);
+    }
+
+    assert(trajectory == TrajectoryType::SCREWING);
     long bodyA_id, vertex_id, bodyB_id, face_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_face(candidate.face_index, bodyB_id, face_id);
@@ -245,7 +313,6 @@ bool detect_face_vertex_collisions_narrow_phase(
             && u + v + w > 1 - Constants::PARAMETER_ASSERTION_TOL);
     }
     return is_colliding;
-#endif
 }
 
 } // namespace ccd

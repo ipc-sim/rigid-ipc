@@ -10,6 +10,7 @@
 #include <CTCD.h>
 
 #include <ccd/time_of_impact.hpp>
+#include <constants.hpp>
 #include <geometry/barycentric_coordinates.hpp>
 #include <geometry/projection.hpp>
 #include <profiler.hpp>
@@ -145,7 +146,8 @@ bool detect_edge_edge_collisions_narrow_phase(
 {
     // TODO: Check if edges are parallel
     bool is_colliding = CTCD::edgeEdgeCTCD(
-        Vi, Vj, Vk, Vl, Vi + Ui, Vj + Uj, Vk + Uk, Vl + Ul, /*eta=*/0, toi);
+        Vi, Vj, Vk, Vl, Vi + Ui, Vj + Uj, Vk + Uk, Vl + Ul,
+        Constants::LINEARIZED_CCD_ETA, toi);
     if (is_colliding) {
         Eigen::Vector3d Vi_toi = Vi + toi * Ui;
         Eigen::Vector3d Vj_toi = Vj + toi * Uj;
@@ -177,7 +179,8 @@ bool detect_face_vertex_collisions_narrow_phase(
     double& v)
 {
     bool is_colliding = CTCD::vertexFaceCTCD(
-        Vl, Vi, Vj, Vk, Vl + Ul, Vi + Ui, Vj + Uj, Vk + Uk, /*eta=*/0, toi);
+        Vl, Vi, Vj, Vk, Vl + Ul, Vi + Ui, Vj + Uj, Vk + Uk,
+        Constants::LINEARIZED_CCD_ETA, toi);
     if (is_colliding) {
         // TODO: Consider moving this computation to an as needed basis
         double w;

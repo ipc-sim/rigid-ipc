@@ -70,13 +70,13 @@ namespace opt {
         detect_collision_candidates(
             bodies, poses_t0, poses_t1 - poses_t0,
             dim_to_collision_type(bodies.dim()), candidates, detection_method,
-            /*inflation_radius=*/0);
+            trajectory_type, /*inflation_radius=*/0);
 
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double toi, alpha;
             bool are_colliding = detect_edge_vertex_collisions_narrow_phase(
-                bodies, poses_t0, poses_t1 - poses_t0, ev_candidate, toi,
-                alpha);
+                bodies, poses_t0, poses_t1 - poses_t0, ev_candidate, toi, alpha,
+                trajectory_type);
             if (are_colliding) {
                 return true;
             }
@@ -85,7 +85,7 @@ namespace opt {
             double toi, edge0_alpha, edge1_alpha;
             bool are_colliding = detect_edge_edge_collisions_narrow_phase(
                 bodies, poses_t0, poses_t1 - poses_t0, ee_candidate, toi,
-                edge0_alpha, edge1_alpha);
+                edge0_alpha, edge1_alpha, trajectory_type);
             if (are_colliding) {
                 return true;
             }
@@ -93,7 +93,8 @@ namespace opt {
         for (const auto& fv_candidate : candidates.fv_candidates) {
             double toi, u, v;
             bool are_colliding = detect_face_vertex_collisions_narrow_phase(
-                bodies, poses_t0, poses_t1 - poses_t0, fv_candidate, toi, u, v);
+                bodies, poses_t0, poses_t1 - poses_t0, fv_candidate, toi, u, v,
+                trajectory_type);
             if (are_colliding) {
                 return true;
             }
@@ -132,7 +133,7 @@ namespace opt {
             poses.size(), physics::Pose<double>::Zero(bodies.dim()));
         detect_collision_candidates(
             bodies, poses_t1, zeros, dim_to_collision_type(bodies.dim()),
-            candidates, detection_method,
+            candidates, detection_method, trajectory_type,
             /*inflation_radius=*/active_constraint_scale * m_barrier_epsilon);
 
         PROFILE_END(BROAD_PHASE)

@@ -29,6 +29,7 @@ namespace opt {
         // Settings
         // ----------
         DetectionMethod detection_method;
+        TrajectoryType trajectory_type;
 
     protected:
         inline static int dim_to_collision_type(int dim)

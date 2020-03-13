@@ -12,27 +12,22 @@ void detect_collisions(
     const physics::Poses<double>& displacements,
     const int collision_types,
     ConcurrentImpacts& impacts,
-    DetectionMethod method)
+    DetectionMethod method,
+    TrajectoryType trajectory)
 {
     assert(bodies.num_bodies() == poses.size());
     assert(poses.size() == displacements.size());
 
-#ifdef LINEARIZED_TRAJECTORY_CCD
-    Eigen::MatrixXd V_t0 = bodies.world_vertices(poses);
-    Eigen::MatrixXd V_t1 = bodies.world_vertices(poses + displacements);
-    detect_collisions(
-        V_t0, V_t1 - V_t0, bodies.m_edges, bodies.m_faces, bodies.group_ids(),
-        collision_types, impacts, method);
-#else
     // Do the broad phase by detecting candidate impacts
     Candidates candidates;
     detect_collision_candidates(
-        bodies, poses, displacements, collision_types, candidates, method);
+        bodies, poses, displacements, collision_types, candidates, method,
+        trajectory);
 
-    // Do the narrow phase by detecting actual impacts from the candidate set
+    // Do the narrow phase by detecting actual impacts from the candidate
+    // set
     detect_collisions_from_candidates(
-        bodies, poses, displacements, candidates, impacts);
-#endif
+        bodies, poses, displacements, candidates, impacts, trajectory);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,15 +41,20 @@ void detect_collision_candidates(
     const int collision_types,
     Candidates& candidates,
     DetectionMethod method,
+    TrajectoryType trajectory,
     const double inflation_radius)
 {
-#ifdef LINEARIZED_TRAJECTORY_CCD
-    Eigen::MatrixXd V_t0 = bodies.world_vertices(poses);
-    Eigen::MatrixXd V_t1 = bodies.world_vertices(poses + displacements);
-    detect_collision_candidates(
-        V_t0, V_t1 - V_t0, bodies.m_edges, bodies.m_faces, bodies.group_ids(),
-        collision_types, candidates, method, inflation_radius);
-#else
+    if (trajectory == TrajectoryType::LINEARIZED) {
+        Eigen::MatrixXd V_t0 = bodies.world_vertices(poses);
+        Eigen::MatrixXd V_t1 = bodies.world_vertices(poses + displacements);
+        detect_collision_candidates(
+            V_t0, V_t1 - V_t0, bodies.m_edges, bodies.m_faces,
+            bodies.group_ids(), collision_types, candidates, method,
+            inflation_radius);
+        return;
+    }
+
+    assert(trajectory == TrajectoryType::SCREWING);
     assert(
         method == DetectionMethod::BRUTE_FORCE
         || method == DetectionMethod::HASH_GRID);
@@ -74,18 +74,11 @@ void detect_collision_candidates(
         detect_collision_candidates_hash_grid(
             bodies, poses, displacements, collision_types, candidates,
             inflation_radius);
-        spdlog::debug(
-            "hash_grid_ev_candidates.size()={:d} "
-            "hash_grid_ee_candidates.size()={:d} "
-            "hash_grid_fv_candidates.size()={:d}",
-            candidates.ev_candidates.size(), candidates.ee_candidates.size(),
-            candidates.fv_candidates.size());
         break;
     }
 
     PROFILE_END(BROAD_PHASE);
     PROFILE_END();
-#endif
 }
 
 // Find all edge-vertex collisions in one time step using spatial-hashing to

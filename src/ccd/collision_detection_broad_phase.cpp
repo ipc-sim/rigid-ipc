@@ -70,12 +70,6 @@ void detect_collision_candidates(
         detect_collision_candidates_hash_grid(
             vertices, displacements, edges, faces, group_ids, collision_types,
             candidates, inflation_radius);
-        spdlog::debug(
-            "hash_grid_ev_candidates.size()={:d} "
-            "hash_grid_ee_candidates.size()={:d} "
-            "hash_grid_fv_candidates.size()={:d}",
-            candidates.ev_candidates.size(), candidates.ee_candidates.size(),
-            candidates.fv_candidates.size());
         break;
     }
 

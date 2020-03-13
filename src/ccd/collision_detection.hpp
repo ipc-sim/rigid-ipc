@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include <Eigen/Core>
 #include <array>
+
+#include <Eigen/Core>
+#include <nlohmann/json.hpp>
 
 #include <ccd/hash_grid.hpp>
 #include <ccd/impact.hpp>
@@ -20,6 +22,10 @@ enum DetectionMethod {
     BRUTE_FORCE, ///< @brief Use brute-force to detect all collisions.
     HASH_GRID ///< @brief Use a spatial data structure to detect all collisions.
 };
+
+NLOHMANN_JSON_SERIALIZE_ENUM(
+    DetectionMethod,
+    { { HASH_GRID, "hash_grid" }, { BRUTE_FORCE, "brute_force" } });
 
 namespace CollisionType {
     static const int EDGE_VERTEX = 1;
