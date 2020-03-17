@@ -6,6 +6,7 @@
 #include <autodiff/autodiff_types.hpp>
 #include <finitediff.hpp>
 #include <logger.hpp>
+#include <utils/eigen_ext.hpp>
 #include <utils/flatten.hpp>
 #include <utils/not_implemented_error.hpp>
 
@@ -107,20 +108,11 @@ namespace physics {
 
     Eigen::MatrixXd RigidBody::world_velocities() const
     {
-        // compute X[i] = dR(theta)/d\theta * r_i * d\theta/dt + dX/dt
-        std::vector<Eigen::MatrixXX3d> dR =
-            pose.construct_rotation_matrix_gradient();
-        Eigen::MatrixXX3d dR_dt;
-        if (dim() == 2) {
-            dR_dt = dR[0] * velocity.rotation(0);
-        } else {
-            assert(velocity.rotation.size() == dim());
-            dR_dt.resize(dim(), dim());
-            for (int i = 0; i < dR.size(); i++) {
-                dR_dt.row(i) = (dR[i] * velocity.rotation).transpose();
-            }
-        }
-        return (vertices * dR_dt.transpose()).rowwise()
+        // compute ẋ = Q̇ * x_B + q̇
+        // where Q̇ = Q[ω] and [.] constructs skew-symmetric matrices
+        Eigen::MatrixXX3d dQ_dt = pose.construct_rotation_matrix()
+            * Eigen::SkewSymmetricMatrix(velocity.rotation);
+        return (vertices * dQ_dt.transpose()).rowwise()
             + velocity.position.transpose();
     }
 

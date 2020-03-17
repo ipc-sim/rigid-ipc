@@ -148,8 +148,8 @@ namespace geometry {
     template <typename T>
     inline T point_line_signed_distance(
         const Eigen::Vector2<T>& point,
-        const Eigen::Vector2<T>& line_point1,
-        const Eigen::Vector2<T>& line_point0)
+        const Eigen::Vector2<T>& line_point0,
+        const Eigen::Vector2<T>& line_point1)
     {
         Eigen::Vector2<T> normal =
             segment_normal(line_point0, line_point1, /*normalized=*/false);

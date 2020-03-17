@@ -66,8 +66,9 @@ UISimState::get_data(const std::string& dataname) const
 
 void UISimState::load_scene()
 {
-    auto q = m_state.problem_ptr->vertices();
-    auto v = m_state.problem_ptr->velocities() * m_state.m_timestep_size;
+    Eigen::MatrixXd q = m_state.problem_ptr->vertices();
+    Eigen::MatrixXd v =
+        m_state.problem_ptr->velocities() * m_state.m_timestep_size;
 
     mesh_data->data().show_vertid = false;
     mesh_data->set_mesh(
@@ -114,8 +115,9 @@ void UISimState::load_scene()
 
 void UISimState::redraw_scene()
 {
-    auto q1 = m_state.problem_ptr->vertices();
-    auto v1 = m_state.problem_ptr->velocities() * m_state.m_timestep_size;
+    Eigen::MatrixXd q1 = m_state.problem_ptr->vertices();
+    Eigen::MatrixXd v1 =
+        m_state.problem_ptr->velocities() * m_state.m_timestep_size;
 
     mesh_data->update_vertices(q1);
     velocity_data->update_vector_field(q1, v1);

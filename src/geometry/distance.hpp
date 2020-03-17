@@ -54,8 +54,8 @@ namespace geometry {
     template <typename T>
     inline T point_line_signed_distance(
         const Eigen::Vector2<T>& point,
-        const Eigen::Vector2<T>& line_point1,
-        const Eigen::Vector2<T>& line_point0);
+        const Eigen::Vector2<T>& line_point0,
+        const Eigen::Vector2<T>& line_point1);
 
     /// Compute the signed distance between two lines
     /// WARNING: Produces the same sign as euclidean distance but may be
