@@ -51,3 +51,9 @@ namespace logger {
 } // namespace logger
 
 } // namespace ccd
+
+namespace Eigen {
+typedef Vector2<ccd::Interval> Vector2I;
+typedef Vector3<ccd::Interval> Vector3I;
+typedef VectorX<ccd::Interval> VectorXI;
+} // namespace Eigen

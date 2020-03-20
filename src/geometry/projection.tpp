@@ -1,6 +1,7 @@
 #pragma once
 #include "projection.tpp"
 
+#include <logger.hpp>
 #include <utils/clamp.hpp>
 #include <utils/is_zero.hpp>
 #include <utils/not_implemented_error.hpp>

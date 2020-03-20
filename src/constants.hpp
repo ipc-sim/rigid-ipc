@@ -31,6 +31,9 @@ namespace Constants {
     /// \brief ETA used in Etienne Vouga's CCD as an activation distance.
     static const double LINEARIZED_CCD_ETA = 1e-8;
 
+    /// \brief Default tolerance used for interval root finding.
+    static const double INTERVAL_ROOT_FINDER_TOL = 1e-8;
+
     // ------------------------------------------------------------------------
     // Nonlinear Complementarity Problem
     // ------------------------------------------------------------------------

@@ -124,20 +124,23 @@ namespace opengl {
         assert(mV.rows() == m_is_vertex_fixed.rows());
 
         Eigen::MatrixXd vertex_colors(mV.rows(), 3);
-        Eigen::MatrixXd edge_vertex_colors(mV.rows(), 3);
+        Eigen::MatrixXd edge_vertex_colors(mE.rows(), 3);
         Eigen::MatrixXd face_vertex_colors(mV.rows(), 3);
 
         for (int i = 0; i < mV.rows(); i++) {
-            if (m_is_vertex_fixed(i)) {
-                vertex_colors.row(i) = mF.size() ? m_edge_color : m_fixed_color;
-                edge_vertex_colors.row(i) =
-                    mF.size() ? m_edge_color : m_fixed_color;
-                face_vertex_colors.row(i) = m_fixed_color;
-            } else {
-                vertex_colors.row(i) = mF.size() ? m_edge_color : m_color;
-                edge_vertex_colors.row(i) = mF.size() ? m_edge_color : m_color;
-                face_vertex_colors.row(i) = m_color;
-            }
+            vertex_colors.row(i) = mF.size()
+                ? m_edge_color
+                : (m_is_vertex_fixed(i) ? m_fixed_color : m_color);
+            face_vertex_colors.row(i) =
+                m_is_vertex_fixed(i) ? m_fixed_color : m_color;
+        }
+
+        for (int i = 0; i < mE.rows(); i++) {
+            edge_vertex_colors.row(i) = mF.size()
+                ? m_edge_color
+                : ((m_is_vertex_fixed(mE(i, 0)) || m_is_vertex_fixed(mE(i, 1)))
+                       ? m_fixed_color
+                       : m_color);
         }
 
         set_points(mV, vertex_colors);

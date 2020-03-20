@@ -1,0 +1,35 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "rigid_body_problem": {
+        "coefficient_restitution": 1,
+        "rigid_bodies": [{
+                "vertices": [
+                    [-0.5, 0],
+                    [0.5, 0]
+                ],
+                "edges": [
+                    [0, 1]
+                ],
+                "position": [-0.6, 0],
+                "rotation": [0],
+                "linear_velocity": [0.0, 0.0],
+                "angular_velocity": [0.0],
+                "is_dof_fixed": [false, false, false]
+            },
+            {
+                "vertices": [
+                    [-0.5, 0],
+                    [0.5, 0]
+                ],
+                "edges": [
+                    [0, 1]
+                ],
+                "position": [0.6, 0],
+                "rotation": [0],
+                "linear_velocity": [-1.0, 0.0],
+                "angular_velocity": [0.0],
+                "is_dof_fixed": [false, false, false]
+            }
+        ]
+    }
+}

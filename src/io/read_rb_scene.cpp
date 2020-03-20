@@ -25,6 +25,11 @@ namespace io {
         using namespace nlohmann;
         int dim = -1, ndof, angular_dim;
         for (auto& jrb : scene["rigid_bodies"]) {
+            // NOTE:
+            // rotation: degrees as xyz euler angles
+            // scale: scale the vertices around the model origin
+            // angular_velocity: world coordinates in degrees
+            // torque: world coordinates in degrees
             json args = R"({
                   "mesh": "",
                   "vertices":[],
@@ -37,7 +42,9 @@ namespace io {
                   "rotation":[0.0,0.0,0.0],
                   "scale":[1.0,1.0,1.0],
                   "linear_velocity":[0.0,0.0,0.0],
-                  "angular_velocity":[0.0,0.0,0.0]
+                  "angular_velocity":[0.0,0.0,0.0],
+                  "force":[0.0,0.0,0.0],
+                  "torque":[0.0,0.0,0.0]
                   })"_json;
             args.merge_patch(jrb);
 
@@ -116,6 +123,18 @@ namespace io {
             // Convert to radians for easy use later
             angular_velocity *= M_PI / 180.0;
 
+            Eigen::VectorX3d force;
+            from_json<double>(args["force"], force);
+            assert(force.size() >= dim);
+            force.conservativeResize(dim);
+
+            Eigen::VectorX3d torque;
+            from_json<double>(args["torque"], torque);
+            assert(torque.size() >= angular_dim);
+            torque.conservativeResize(angular_dim);
+            // Convert to radians for easy use later
+            torque *= M_PI / 180.0;
+
             Eigen::VectorXb is_dof_fixed;
             from_json<bool>(args["is_dof_fixed"], is_dof_fixed);
             assert(is_dof_fixed.size() >= ndof);
@@ -128,7 +147,8 @@ namespace io {
                 vertices, edges, faces,
                 physics::Pose<double>(position, rotation),
                 physics::Pose<double>(linear_velocity, angular_velocity),
-                density, is_dof_fixed, is_oriented);
+                physics::Pose<double>(force, torque), density, is_dof_fixed,
+                is_oriented);
 
             rbs.push_back(rb);
         }

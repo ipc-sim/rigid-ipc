@@ -106,11 +106,12 @@ bool compute_edge_edge_time_of_impact(
     const physics::Pose<Interval> displacementB_interval =
         displacementB.cast<Interval>();
 
-    const auto vertex_positions = [&](const Interval& t,
-                                      Eigen::Vector3<Interval>& edgeA_vertex0,
-                                      Eigen::Vector3<Interval>& edgeA_vertex1,
-                                      Eigen::Vector3<Interval>& edgeB_vertex0,
-                                      Eigen::Vector3<Interval>& edgeB_vertex1) {
+    const auto distance = [&](const Eigen::VectorXI& params) {
+        assert(params.size() == 3);
+        Interval t = params(0);
+        Interval edgeA_alpha = params(1);
+        Interval edgeB_alpha = params(2);
+
         // Compute the poses at time t
         physics::Pose<Interval> bodyA_pose_interval =
             poseA_interval + displacementA_interval * t;
@@ -118,43 +119,31 @@ bool compute_edge_edge_time_of_impact(
             poseB_interval + displacementB_interval * t;
 
         // Get the world vertex of the edges at time t
-        edgeA_vertex0 =
+        Eigen::Vector3I edgeA_vertex0 =
             bodyA.world_vertex(bodyA_pose_interval, bodyA.edges(edgeA_id, 0));
-        edgeA_vertex1 =
+        Eigen::Vector3I edgeA_vertex1 =
             bodyA.world_vertex(bodyA_pose_interval, bodyA.edges(edgeA_id, 1));
+        Eigen::Vector3I edgeA_vertex =
+            (edgeA_vertex1 - edgeA_vertex0) * edgeA_alpha + edgeA_vertex0;
 
-        edgeB_vertex0 =
+        Eigen::Vector3I edgeB_vertex0 =
             bodyB.world_vertex(bodyB_pose_interval, bodyB.edges(edgeB_id, 0));
-        edgeB_vertex1 =
+        Eigen::Vector3I edgeB_vertex1 =
             bodyB.world_vertex(bodyB_pose_interval, bodyB.edges(edgeB_id, 1));
+        Eigen::Vector3I edgeB_vertex =
+            (edgeB_vertex1 - edgeB_vertex0) * edgeB_alpha + edgeB_vertex0;
+
+        return (edgeB_vertex - edgeA_vertex).eval();
     };
 
-    const auto distance = [&](const Interval& t) {
-        // Get the world vertex of the edges at time t
-        Eigen::Vector3<Interval> edgeA_vertex0, edgeA_vertex1;
-        Eigen::Vector3<Interval> edgeB_vertex0, edgeB_vertex1;
-        vertex_positions(
-            t, edgeA_vertex0, edgeA_vertex1, edgeB_vertex0, edgeB_vertex1);
-        return geometry::line_line_signed_distance(
-            edgeA_vertex0, edgeA_vertex1, edgeB_vertex0, edgeB_vertex1);
-    };
-
-    const auto is_intersection_inside_edges = [&](const Interval& t) -> bool {
-        // Get the world vertex of the edges at time t
-        Eigen::Vector3<Interval> edgeA_vertex0, edgeA_vertex1;
-        Eigen::Vector3<Interval> edgeB_vertex0, edgeB_vertex1;
-        vertex_positions(
-            t, edgeA_vertex0, edgeA_vertex1, edgeB_vertex0, edgeB_vertex1);
-        return geometry::are_segments_intersecting(
-            edgeA_vertex0, edgeA_vertex1, edgeB_vertex0, edgeB_vertex1);
-    };
-
-    Interval toi_interval;
+    Eigen::VectorXI toi_interval;
     // TODO: Set tolerance dynamically
     bool is_impacting = interval_root_finder(
-        distance, is_intersection_inside_edges, Interval(0, 1), toi_interval);
+        distance, Eigen::VectorXI::Constant(3, Interval(0, 1)), toi_interval);
     // Return a conservative time-of-impact
-    toi = toi_interval.lower();
+    if (is_impacting) {
+        toi = toi_interval(0).lower();
+    }
     // This time of impact is very dangerous for convergence
     // assert(!is_impacting || toi > 0);
     return is_impacting;
@@ -185,10 +174,10 @@ bool compute_face_vertex_time_of_impact(
         displacementB.cast<Interval>();
 
     const auto vertex_positions = [&](const Interval& t,
-                                      Eigen::Vector3<Interval>& vertex,
-                                      Eigen::Vector3<Interval>& face_vertex0,
-                                      Eigen::Vector3<Interval>& face_vertex1,
-                                      Eigen::Vector3<Interval>& face_vertex2) {
+                                      Eigen::Vector3I& vertex,
+                                      Eigen::Vector3I& face_vertex0,
+                                      Eigen::Vector3I& face_vertex1,
+                                      Eigen::Vector3I& face_vertex2) {
         // Compute the poses at time t
         physics::Pose<Interval> bodyA_pose_interval =
             poseA_interval + displacementA_interval * t;
@@ -208,8 +197,8 @@ bool compute_face_vertex_time_of_impact(
 
     const auto distance = [&](const Interval& t) {
         // Get the world vertex and face of the point at time t
-        Eigen::Vector3<Interval> vertex;
-        Eigen::Vector3<Interval> face_vertex0, face_vertex1, face_vertex2;
+        Eigen::Vector3I vertex;
+        Eigen::Vector3I face_vertex0, face_vertex1, face_vertex2;
         vertex_positions(t, vertex, face_vertex0, face_vertex1, face_vertex2);
         return geometry::point_plane_signed_distance(
             vertex, face_vertex0, face_vertex1, face_vertex2);
@@ -217,8 +206,8 @@ bool compute_face_vertex_time_of_impact(
 
     const auto is_point_inside_triangle = [&](const Interval& t) {
         // Get the world vertex and face of the point at time t
-        Eigen::Vector3<Interval> vertex;
-        Eigen::Vector3<Interval> face_vertex0, face_vertex1, face_vertex2;
+        Eigen::Vector3I vertex;
+        Eigen::Vector3I face_vertex0, face_vertex1, face_vertex2;
         vertex_positions(t, vertex, face_vertex0, face_vertex1, face_vertex2);
         return geometry::is_point_inside_triangle(
             vertex, face_vertex0, face_vertex1, face_vertex2);

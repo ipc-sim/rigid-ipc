@@ -216,8 +216,8 @@ TEST_CASE("Point-line signed distance", "[distance]")
     double expected_distance = GENERATE(-10, -1, -1e-4, 0, 1e-4, 1, 10);
     Eigen::Vector2d p = Eigen::Vector2d::Random();
     p.y() = expected_distance;
-    Eigen::Vector2d s0(-9, 0);
-    Eigen::Vector2d s1(-10, 0);
+    Eigen::Vector2d s0(-10, 0);
+    Eigen::Vector2d s1(-9, 0);
 
     double distance = point_line_signed_distance(p, s0, s1);
     CAPTURE(distance, expected_distance);

@@ -28,10 +28,11 @@ namespace physics {
          */
         RigidBody(
             const Eigen::MatrixXd& vertices,
-            const Eigen::MatrixXi& faces,
             const Eigen::MatrixXi& edges,
+            const Eigen::MatrixXi& faces,
             const Pose<double>& pose,
             const Pose<double>& velocity,
+            const Pose<double>& force,
             const double density,
             const Eigen::VectorX6b& is_dof_fixed,
             const bool oriented);
@@ -43,9 +44,26 @@ namespace physics {
             const Eigen::MatrixXi& faces,
             const Pose<double>& pose,
             const Pose<double>& velocity,
+            const Pose<double>& force,
             const double density,
             const Eigen::VectorX6b& is_dof_fixed,
             const bool oriented);
+
+        static RigidBody from_points(
+            const Eigen::MatrixXd& vertices,
+            const Eigen::MatrixXi& edges,
+            const Eigen::MatrixXi& faces,
+            const Pose<double>& pose,
+            const Pose<double>& velocity,
+            const double density,
+            const Eigen::VectorX6b& is_dof_fixed,
+            const bool oriented)
+        {
+            return from_points(
+                vertices, edges, faces, pose, velocity,
+                Pose<double>::Zero(velocity.dim()), density, is_dof_fixed,
+                oriented);
+        }
 
         // Faceless version for convienence (useful for 2D)
         static RigidBody from_points(
@@ -125,8 +143,8 @@ namespace physics {
         // Geometry
         // --------------------------------------------------------------------
         Eigen::MatrixXd vertices; ///< Vertices positions in body space
-        Eigen::MatrixXi faces;    ///< Vertices connectivity
         Eigen::MatrixXi edges;    ///< Vertices connectivity
+        Eigen::MatrixXi faces;    ///< Vertices connectivity
 
         double average_edge_length; ///< Average edge length
 
@@ -156,6 +174,9 @@ namespace physics {
         Pose<double> velocity;
         /// @brief previous timestep velocity of the center of mass
         Pose<double> velocity_prev;
+
+        /// @brief external force acting on the body
+        Pose<double> force;
     };
 
 } // namespace physics

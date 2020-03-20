@@ -20,6 +20,7 @@ namespace physics {
         const Eigen::MatrixXi& faces,
         const Pose<double>& pose,
         const Pose<double>& velocity,
+        const Pose<double>& force,
         const double density,
         const Eigen::VectorX6b& is_dof_fixed,
         const bool oriented)
@@ -27,6 +28,7 @@ namespace physics {
         int dim = vertices.cols();
         assert(dim == pose.dim());
         assert(dim == velocity.dim());
+        assert(dim == force.dim());
         assert(edges.size() == 0 || edges.cols() == 2);
         assert(faces.size() == 0 || faces.cols() == 3);
 
@@ -48,29 +50,34 @@ namespace physics {
 
         assert(is_dof_fixed.size() == pose.ndof());
         return RigidBody(
-            centered_vertices, faces, edges, adjusted_pose, velocity, density,
-            is_dof_fixed, oriented);
+            centered_vertices, edges, faces, adjusted_pose, velocity, force,
+            density, is_dof_fixed, oriented);
     }
 
     RigidBody::RigidBody(
         const Eigen::MatrixXd& vertices,
-        const Eigen::MatrixXi& faces,
         const Eigen::MatrixXi& edges,
+        const Eigen::MatrixXi& faces,
         const Pose<double>& pose,
         const Pose<double>& velocity,
+        const Pose<double>& force,
         const double density,
         const Eigen::VectorX6b& is_dof_fixed,
         const bool oriented)
         : vertices(vertices)
-        , faces(faces)
         , edges(edges)
+        , faces(faces)
         , is_dof_fixed(is_dof_fixed)
         , is_oriented(oriented)
         , pose(pose)
         , pose_prev(pose)
         , velocity(velocity)
         , velocity_prev(velocity)
+        , force(force)
     {
+        assert(edges.size() == 0 || edges.cols() == 2);
+        assert(faces.size() == 0 || faces.cols() == 3);
+
         Eigen::VectorXd center_of_mass;
         compute_mass_properties(
             vertices, dim() == 2 || faces.size() == 0 ? edges : faces, mass,
@@ -81,7 +88,7 @@ namespace physics {
         // (https://bit.ly/2TVjJVm). Might be because mass above is actually
         // volume.
         mass *= density;
-        Eigen::VectorXd principal_I;
+        Eigen::VectorX3d principal_I;
         if (dim() == 3) {
             // Got this from Chrono: https://bit.ly/2RpbTl1
             Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> es;

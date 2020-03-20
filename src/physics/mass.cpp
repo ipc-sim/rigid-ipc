@@ -58,7 +58,7 @@ namespace physics {
         Eigen::VectorXd& center,
         Eigen::MatrixXd& inertia)
     {
-        if (faces.size() == 0) {
+        if (faces.size() == 0 || faces.cols() != 3) {
             throw NotImplementedError("compute_mass_properties_3D() not "
                                       "implemented for faceless meshes!");
         }
@@ -142,7 +142,6 @@ namespace physics {
         // mass
         mass = integral[0];
         if (mass == 0) {
-            spdlog::error("3D mass computation failed!");
             throw NotImplementedError(
                 "3D mass computation only works for closed meshes!");
         }
@@ -184,7 +183,7 @@ namespace physics {
         const Eigen::MatrixXi& facets,
         Eigen::SparseMatrix<double>& mass_matrix)
     {
-        if (vertices.cols() == 2) {
+        if (vertices.cols() == 2 || facets.cols() == 2) {
             assert(facets.cols() == 2);
             Eigen::VectorXd vertex_masses =
                 Eigen::VectorXd::Zero(vertices.rows());

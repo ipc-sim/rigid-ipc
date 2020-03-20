@@ -438,9 +438,17 @@ namespace physics {
     {
         // TODO: Use a better time-integrator
         Pose<double> pose = rb.pose;
-        pose.position += time_step * rb.velocity.position; // linear momentum
-        pose.rotation += time_step * rb.velocity.rotation; // angular momentum
-        pose.position += time_step * time_step * gravity_; // body-forces
+
+        // qᵗ⁺¹ = qᵗ + h * q̇ᵗ + h² * g + h² * m⁻¹fₑ
+        pose.position += time_step
+            * (rb.velocity.position
+               + time_step * (gravity_ + rb.force.position / rb.mass));
+
+        // TODO: Fix this once the angular veolicity is fixed
+        pose.rotation += time_step
+            * (rb.velocity.rotation
+               + time_step
+                   * rb.moment_of_inertia.lu().solve(rb.force.rotation));
 
         pose.position =
             (rb.is_dof_fixed.head(pose.pos_ndof()))
