@@ -86,6 +86,10 @@ add_library(${PROJECT_NAME}
     # src/problems/volume_rb_problem.cpp
     src/problems/problem_factory.cpp
 
+    src/time_stepper/sympletic_euler_time_stepper.cpp
+    src/time_stepper/dmv_time_stepper.cpp
+    src/time_stepper/time_stepper_factory.cpp
+
     src/utils/tensor.cpp
     src/utils/regular_2d_grid.cpp
 

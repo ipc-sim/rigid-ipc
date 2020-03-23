@@ -8,6 +8,7 @@
 
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
+#include <time_stepper/time_stepper_factory.hpp>
 
 #include <logger.hpp>
 #include <profiler.hpp>
@@ -43,6 +44,11 @@ namespace physics {
         io::from_json(params["gravity"], gravity_);
         assert(gravity_.size() >= dim());
         gravity_.conservativeResize(dim());
+
+        auto time_stepper_name = params["time_stepper"].get<std::string>();
+        m_time_stepper = time_stepper_name == "default"
+            ? TimeStepperFactory::factory().get_default_time_stepper(dim())
+            : TimeStepperFactory::factory().get_time_stepper(time_stepper_name);
     }
 
     nlohmann::json RigidBodyProblem::settings() const
@@ -52,6 +58,7 @@ namespace physics {
         json["collision_eps"] = collision_eps;
         json["coefficient_restitution"] = coefficient_restitution;
         json["gravity"] = io::to_json(gravity_);
+        json["time_stepper"] = m_time_stepper->name();
         return json;
     }
 
@@ -59,8 +66,6 @@ namespace physics {
     {
         m_assembler.init(rbs);
 
-        Fcollision.resize(m_assembler.num_vertices(), dim());
-        Fcollision.setZero();
         update_constraint();
 
         if (dim() == 2) {
@@ -149,14 +154,8 @@ namespace physics {
 
     bool RigidBodyProblem::simulation_step(const double time_step)
     {
-        tbb::parallel_for_each(m_assembler.m_rbs, [&](RigidBody& rb) {
-            rb.pose_prev = rb.pose;
-            rb.velocity_prev = rb.velocity;
-            rb.pose = rb_next_pose(rb, time_step);
-            rb.velocity = (rb.pose - rb.pose_prev) / time_step;
-        });
-
-        Fcollision.setZero();
+        // Take an unconstrained time-step
+        m_time_stepper->step(m_assembler, gravity_, time_step);
 
         update_dof();
 
@@ -431,32 +430,6 @@ namespace physics {
                     vel_B_prev.rotation(0) + w_B_delta;
             }
         }
-    }
-
-    Pose<double> RigidBodyProblem::rb_next_pose(
-        const RigidBody& rb, const double time_step) const
-    {
-        // TODO: Use a better time-integrator
-        Pose<double> pose = rb.pose;
-
-        // qᵗ⁺¹ = qᵗ + h * q̇ᵗ + h² * g + h² * m⁻¹fₑ
-        pose.position += time_step
-            * (rb.velocity.position
-               + time_step * (gravity_ + rb.force.position / rb.mass));
-
-        // TODO: Fix this once the angular veolicity is fixed
-        pose.rotation += time_step
-            * (rb.velocity.rotation
-               + time_step
-                   * rb.moment_of_inertia.lu().solve(rb.force.rotation));
-
-        pose.position =
-            (rb.is_dof_fixed.head(pose.pos_ndof()))
-                .select(rb.pose.position, pose.position); // reset fixed dof
-        pose.rotation =
-            (rb.is_dof_fixed.tail(pose.rot_ndof()))
-                .select(rb.pose.rotation, pose.rotation); // reset fixed dof
-        return pose;
     }
 
     bool RigidBodyProblem::detect_collisions(

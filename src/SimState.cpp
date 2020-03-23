@@ -87,15 +87,16 @@ bool SimState::init(const nlohmann::json& args_in)
             "rigid_bodies": [],
             "coefficient_restitution":0.0,
             "gravity":[0.0,0.0,0.0],
-            "collision_eps": 0.0
+            "collision_eps": 0.0,
+            "time_stepper": "default"
          },
         "barrier_solver": {
             "inner_solver": "newton_solver",
-            "e_b": 1e-5,
-            "t_inc": 2,
-            "t_init": 1,
+            "e_b": 1e-6,
+            "t_inc": 100,
+            "t_init": 100,
             "m": 1,
-            "c": 0.01
+            "c": 0.1
         },
         "gradient_descent_solver":{
             "absolute_tolerance": 1e-5,

@@ -43,8 +43,10 @@ namespace opt {
 
     bool DistanceBarrierRBProblem::simulation_step(const double time_step)
     {
+        // Take an unconstrained step
         bool has_collision = RigidBodyProblem::simulation_step(time_step);
 
+        // Update the optimization dof (arclength for rotations)
         Eigen::VectorXd sigma = this->poses_to_dofs(m_assembler.rb_poses_t0());
         debug_min_distance_ = debug_min_distance(sigma);
         if (debug_min_distance_ >= 0) {

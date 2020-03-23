@@ -2,6 +2,20 @@
     "scene_type": "distance_barrier_rb_problem",
     "max_iterations": 1000,
     "timestep_size": 0.01,
+    "distance_barrier_constraint": {
+        "detection_method": "hash_grid",
+        "trajectory_type": "screwing",
+        "custom_initial_epsilon": 0.01,
+        "#active_constraint_scale": 1.01
+    },
+    "barrier_solver": {
+        "e_b": 1e-06,
+        "m": 1,
+        "t_init": 100,
+        "t_inc": 100,
+        "c": 0.1,
+        "inner_solver": "newton_solver"
+    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],

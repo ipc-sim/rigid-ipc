@@ -35,10 +35,11 @@ bool compute_edge_vertex_time_of_impact(
     const physics::Pose<Interval> displacementB_interval =
         displacementB.cast<Interval>();
 
-    const auto vertex_positions = [&](const Interval& t,
-                                      Eigen::Vector2<Interval>& vertex,
-                                      Eigen::Vector2<Interval>& edge_vertex0,
-                                      Eigen::Vector2<Interval>& edge_vertex1) {
+    const auto distance = [&](const Eigen::VectorXI& params) {
+        assert(params.size() == 2);
+        Interval t = params(0);
+        Interval alpha = params(1);
+
         // Compute the poses at time t
         physics::Pose<Interval> bodyA_pose_interval =
             poseA_interval + displacementA_interval * t;
@@ -46,37 +47,28 @@ bool compute_edge_vertex_time_of_impact(
             poseB_interval + displacementB_interval * t;
 
         // Get the world vertex of the edges at time t
-        vertex = bodyA.world_vertex(bodyA_pose_interval, vertex_id);
+        Eigen::Vector2I vertex =
+            bodyA.world_vertex(bodyA_pose_interval, vertex_id);
+
         // Get the world vertex of the edge at time t
-        edge_vertex0 =
+        Eigen::Vector2I edge_vertex0 =
             bodyB.world_vertex(bodyB_pose_interval, bodyB.edges(edge_id, 0));
-        edge_vertex1 =
+        Eigen::Vector2I edge_vertex1 =
             bodyB.world_vertex(bodyB_pose_interval, bodyB.edges(edge_id, 1));
+        Eigen::Vector2I edge_vertex =
+            (edge_vertex1 - edge_vertex0) * alpha + edge_vertex0;
+
+        return (vertex - edge_vertex).eval();
     };
 
-    const auto distance = [&](const Interval& t) {
-        // Get the world vertex of the vertex and edge at time t
-        Eigen::Vector2<Interval> vertex, edge_vertex0, edge_vertex1;
-        vertex_positions(t, vertex, edge_vertex0, edge_vertex1);
-        return geometry::point_line_signed_distance(
-            vertex, edge_vertex0, edge_vertex1);
-    };
-
-    const auto is_point_along_edge = [&](const Interval& t) {
-        // Get the world vertex of the vertex and edge at time t
-        Eigen::Vector2<Interval> vertex, edge_vertex0, edge_vertex1;
-        vertex_positions(t, vertex, edge_vertex0, edge_vertex1);
-        return geometry::is_point_along_segment(
-            vertex, edge_vertex0, edge_vertex1);
-    };
-
-    Interval toi_interval;
+    Eigen::VectorXI toi_interval;
     // TODO: Set tolerance dynamically
     bool is_impacting = interval_root_finder(
-        distance, is_point_along_edge, Interval(0, 1), toi_interval,
-        /*tol=*/1e-8);
+        distance, Eigen::VectorXI::Constant(2, Interval(0, 1)), toi_interval);
     // Return a conservative time-of-impact
-    toi = toi_interval.lower();
+    if (is_impacting) {
+        toi = toi_interval(0).lower();
+    }
     // This time of impact is very dangerous for convergence
     // assert(!is_impacting || toi > 0);
     return is_impacting;

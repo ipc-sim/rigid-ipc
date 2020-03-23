@@ -4,6 +4,7 @@
 
 #include <physics/rigid_body_assembler.hpp>
 #include <physics/simulation_problem.hpp>
+#include <time_stepper/time_stepper.hpp>
 
 namespace ccd {
 
@@ -142,10 +143,9 @@ namespace physics {
         /// TODO: Replace this with the std::vector version
         ConcurrentImpacts original_impacts;
 
-        /// Used for visualization and debugging
-        Eigen::MatrixXd Fcollision; ///< forces used to resolve collisions
-
         std::string name_;
+
+        std::shared_ptr<time_stepper::TimeStepper> m_time_stepper;
     };
 
     void assemble_hessian(
