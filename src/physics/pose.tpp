@@ -250,21 +250,16 @@ namespace physics {
         return *this;
     }
 
-    template <typename T> Pose<T> Pose<T>::operator/(const T& x) const
-    {
-        return Pose<T>(this->position / x, this->rotation / x);
-    }
-
-    template <typename T> Pose<T> Pose<T>::operator*(const T& x) const
-    {
-        return Pose<T>(this->position * x, this->rotation * x);
-    }
-
     template <typename T> Pose<T>& Pose<T>::operator*=(const T& x)
     {
         this->position *= x;
         this->rotation *= x;
         return *this;
+    }
+
+    template <typename T> Pose<T> Pose<T>::operator/(const T& x) const
+    {
+        return Pose<T>(this->position / x, this->rotation / x);
     }
 
     template <typename T>

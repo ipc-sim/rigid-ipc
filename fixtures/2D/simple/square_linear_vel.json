@@ -2,6 +2,7 @@
     "scene_type": "distance_barrier_rb_problem",
     "rigid_body_problem": {
         "rigid_bodies": [{
+            "time_stepper": "verlet",
             "vertices": [
                 [
                     -1,

@@ -1,52 +1,51 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "rigid_body_problem": {
-        "rigid_bodies": [
-            {
-                "vertices": [
-                    [
-                        -1,
-                        -1
-                    ],
-                    [
-                        -1,
-                        1
-                    ],
-                    [
-                        1,
-                        1
-                    ],
-                    [
-                        1,
-                        -1
-                    ]
+        "rigid_bodies": [{
+            "time_stepper": "verlet",
+            "vertices": [
+                [
+                    -1,
+                    -1
                 ],
-                "edges": [
-                    [
-                        0,
-                        1
-                    ],
-                    [
-                        1,
-                        2
-                    ],
-                    [
-                        2,
-                        3
-                    ],
-                    [
-                        3,
-                        0
-                    ]
+                [
+                    -1,
+                    1
                 ],
-                "linear_velocity": [
-                    0.0,
-                    0.0
+                [
+                    1,
+                    1
                 ],
-                "angular_velocity": [
-                    3.14159
+                [
+                    1,
+                    -1
                 ]
-            }
-        ]
+            ],
+            "edges": [
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    2
+                ],
+                [
+                    2,
+                    3
+                ],
+                [
+                    3,
+                    0
+                ]
+            ],
+            "linear_velocity": [
+                0.0,
+                0.0
+            ],
+            "angular_velocity": [
+                3.14159
+            ]
+        }]
     }
 }

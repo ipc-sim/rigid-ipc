@@ -5,14 +5,14 @@
 namespace ccd {
 namespace time_stepper {
 
-    class DMVTimeStepper : public TimeStepper {
+    class VerletTimeStepper : public TimeStepper {
     public:
-        virtual ~DMVTimeStepper() = default;
+        virtual ~VerletTimeStepper() = default;
 
-        static std::string default_name() { return "DMV"; }
+        static std::string default_name() { return "verlet"; }
         virtual std::string name() const override
         {
-            return DMVTimeStepper::default_name();
+            return VerletTimeStepper::default_name();
         }
 
     protected:
@@ -23,9 +23,9 @@ namespace time_stepper {
          * @param gravity    Acceleration due to gravity
          * @param time_step  Timestep
          */
-        virtual void step3D(
+        virtual void step2D(
             physics::RigidBodyAssembler& bodies,
-            const Eigen::Vector3d& gravity,
+            const Eigen::Vector2d& gravity,
             const double& time_step) const override;
     };
 

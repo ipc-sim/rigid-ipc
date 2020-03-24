@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 
+#include <logger.hpp>
 #include <physics/pose.hpp>
 #include <physics/rigid_body_assembler.hpp>
 #include <utils/eigen_ext.hpp>
@@ -49,7 +50,11 @@ namespace time_stepper {
         virtual void step2D(
             physics::RigidBodyAssembler& bodies,
             const Eigen::Vector2d& gravity,
-            const double& time_step) const = 0;
+            const double& time_step) const
+        {
+            throw NotImplementedError(
+                fmt::format("Time-stepper {} not implemented in 2D!", name()));
+        }
 
         /**
          * @brief Take a single time step.
@@ -61,7 +66,11 @@ namespace time_stepper {
         virtual void step3D(
             physics::RigidBodyAssembler& bodies,
             const Eigen::Vector3d& gravity,
-            const double& time_step) const = 0;
+            const double& time_step) const
+        {
+            throw NotImplementedError(
+                fmt::format("Time-stepper {} not implemented in 3D!", name()));
+        }
     };
 
 } // namespace time_stepper

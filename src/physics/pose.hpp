@@ -55,9 +55,16 @@ namespace physics {
         inline Pose<T>& operator+=(const Pose<T>& other);
         Pose<T> operator-(const Pose<T>& other) const;
         inline Pose<T>& operator-=(const Pose<T>& other);
-        Pose<T> operator/(const T& x) const;
-        Pose<T> operator*(const T& x) const;
+        friend Pose<T> operator*(const Pose<T>& pose, const T& x)
+        {
+            return Pose<T>(pose.position * x, pose.rotation * x);
+        }
+        friend Pose<T> operator*(const T& x, const Pose<T>& pose)
+        {
+            return Pose<T>(x * pose.position, x * pose.rotation);
+        }
         inline Pose<T>& operator*=(const T& x);
+        Pose<T> operator/(const T& x) const;
         static Pose<T>
         lerp(const Pose<T>& pose0, const Pose<T>& pose1, const T& t);
 

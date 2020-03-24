@@ -1,7 +1,9 @@
 #include "time_stepper_factory.hpp"
 
 #include <time_stepper/dmv_time_stepper.hpp>
+#include <time_stepper/exponential_euler_time_stepper.hpp>
 #include <time_stepper/sympletic_euler_time_stepper.hpp>
+#include <time_stepper/verlet_time_stepper.hpp>
 
 namespace ccd {
 
@@ -14,9 +16,17 @@ const TimeStepperFactory& TimeStepperFactory::factory()
 TimeStepperFactory::TimeStepperFactory()
 {
     using namespace time_stepper;
+    // 2D
     time_steppers.emplace(
         SympleticEulerTimeStepper::default_name(),
         std::make_shared<SympleticEulerTimeStepper>());
+    time_steppers.emplace(
+        VerletTimeStepper::default_name(),
+        std::make_shared<VerletTimeStepper>());
+    // 3D
+    time_steppers.emplace(
+        ExponentialEulerTimeStepper::default_name(),
+        std::make_shared<ExponentialEulerTimeStepper>());
     time_steppers.emplace(
         DMVTimeStepper::default_name(), std::make_shared<DMVTimeStepper>());
 }
@@ -25,6 +35,9 @@ std::shared_ptr<time_stepper::TimeStepper>
 TimeStepperFactory::get_time_stepper(const std::string& name) const
 {
     auto it = time_steppers.find(name);
+    if (it == time_steppers.end()) {
+        spdlog::error("Invalid choice of time-stepper: {}", name);
+    }
     assert(it != time_steppers.end());
     return it->second;
 }

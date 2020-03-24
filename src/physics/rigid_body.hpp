@@ -150,8 +150,8 @@ namespace physics {
 
         /// @brief total mass (M) of the rigid body
         double mass;
-        /// @breif moment of intertia (I) of the rigid body
-        Eigen::MatrixXd moment_of_inertia;
+        /// @breif principle moment of intertia (I) of the rigid body
+        Eigen::VectorX3d moment_of_inertia;
         /// @brief maximum distance from CM to a vertex
         double r_max;
 

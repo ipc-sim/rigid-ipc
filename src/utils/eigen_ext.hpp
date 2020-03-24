@@ -38,7 +38,7 @@ using MatrixXX3d = MatrixXX3<double>;
 
 template <typename T> SparseMatrix<T> SparseDiagonal(const VectorX<T>& x);
 
-template <typename T> MatrixXX3<T> SkewSymmetricMatrix(Eigen::VectorX3<T> x);
+template <typename T> MatrixXX3<T> Hat(Eigen::VectorX3<T> x);
 
 } // namespace Eigen
 

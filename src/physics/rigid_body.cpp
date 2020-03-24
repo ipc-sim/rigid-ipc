@@ -79,28 +79,28 @@ namespace physics {
         assert(faces.size() == 0 || faces.cols() == 3);
 
         Eigen::VectorXd center_of_mass;
+        Eigen::MatrixXd I;
         compute_mass_properties(
             vertices, dim() == 2 || faces.size() == 0 ? edges : faces, mass,
-            center_of_mass, moment_of_inertia);
+            center_of_mass, I);
         assert(center_of_mass.squaredNorm() < 1e-8);
 
         // TODO: Not sure why this is times based on Chrono
         // (https://bit.ly/2TVjJVm). Might be because mass above is actually
         // volume.
         mass *= density;
-        Eigen::VectorX3d principal_I;
         if (dim() == 3) {
             // Got this from Chrono: https://bit.ly/2RpbTl1
             Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> es;
-            es.compute(moment_of_inertia);
-            principal_I = es.eigenvalues();
+            es.compute(I);
+            moment_of_inertia = es.eigenvalues();
         } else {
-            principal_I = moment_of_inertia.diagonal();
+            moment_of_inertia = I.diagonal();
         }
 
         mass_matrix = Eigen::MatrixXd(ndof(), ndof());
         mass_matrix.diagonal().head(pos_ndof()).setConstant(mass);
-        mass_matrix.diagonal().tail(rot_ndof()) = principal_I;
+        mass_matrix.diagonal().tail(rot_ndof()) = moment_of_inertia;
         inv_mass_matrix = mass_matrix.cwiseInverse();
 
         r_max = vertices.rowwise().squaredNorm().maxCoeff();
@@ -116,9 +116,9 @@ namespace physics {
     Eigen::MatrixXd RigidBody::world_velocities() const
     {
         // compute ẋ = Q̇ * x_B + q̇
-        // where Q̇ = Q[ω] and [.] constructs skew-symmetric matrices
-        Eigen::MatrixXX3d dQ_dt = pose.construct_rotation_matrix()
-            * Eigen::SkewSymmetricMatrix(velocity.rotation);
+        // where Q̇ = Qω̂
+        Eigen::MatrixXX3d dQ_dt =
+            pose.construct_rotation_matrix() * Eigen::Hat(velocity.rotation);
         return (vertices * dQ_dt.transpose()).rowwise()
             + velocity.position.transpose();
     }

@@ -87,6 +87,8 @@ add_library(${PROJECT_NAME}
     src/problems/problem_factory.cpp
 
     src/time_stepper/sympletic_euler_time_stepper.cpp
+    src/time_stepper/verlet_time_stepper.cpp
+    src/time_stepper/exponential_euler_time_stepper.cpp
     src/time_stepper/dmv_time_stepper.cpp
     src/time_stepper/time_stepper_factory.cpp
 

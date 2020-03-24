@@ -9,7 +9,7 @@ template <typename T> SparseMatrix<T> SparseDiagonal(const VectorX<T>& x)
     return MatrixX<T>(x.asDiagonal()).sparseView();
 }
 
-template <typename T> MatrixXX3<T> SkewSymmetricMatrix(Eigen::VectorX3<T> x)
+template <typename T> MatrixXX3<T> Hat(Eigen::VectorX3<T> x)
 {
     assert(x.size() != 2);
     MatrixXX3<T> M;

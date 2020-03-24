@@ -68,13 +68,10 @@ namespace physics {
                 mass_matrix_triplets.emplace_back(
                     rb_ndof * i + pos_dofi, rb_ndof * i + pos_dofi, rb.mass);
             }
-            for (int Ii = 0; Ii < rb.moment_of_inertia.rows(); Ii++) {
-                for (int Ij = 0; Ij < rb.moment_of_inertia.cols(); Ij++) {
-                    mass_matrix_triplets.emplace_back(
-                        rb_ndof * i + rb.pos_ndof() + Ii,
-                        rb_ndof * i + rb.pos_ndof() + Ij,
-                        rb.moment_of_inertia(Ii, Ij));
-                }
+            for (int Ii = 0; Ii < rb.moment_of_inertia.size(); Ii++) {
+                mass_matrix_triplets.emplace_back(
+                    rb_ndof * i + rb.pos_ndof() + Ii,
+                    rb_ndof * i + rb.pos_ndof() + Ii, rb.moment_of_inertia(Ii));
             }
 
             // scale rigid body pose to dof

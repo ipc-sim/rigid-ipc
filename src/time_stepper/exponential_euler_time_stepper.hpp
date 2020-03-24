@@ -5,14 +5,14 @@
 namespace ccd {
 namespace time_stepper {
 
-    class DMVTimeStepper : public TimeStepper {
+    class ExponentialEulerTimeStepper : public TimeStepper {
     public:
-        virtual ~DMVTimeStepper() = default;
+        virtual ~ExponentialEulerTimeStepper() = default;
 
-        static std::string default_name() { return "DMV"; }
+        static std::string default_name() { return "exponential_euler"; }
         virtual std::string name() const override
         {
-            return DMVTimeStepper::default_name();
+            return ExponentialEulerTimeStepper::default_name();
         }
 
     protected:

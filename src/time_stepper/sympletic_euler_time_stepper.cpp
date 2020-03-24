@@ -16,27 +16,25 @@ namespace time_stepper {
             rb.velocity_prev = rb.velocity;
 
             // Integrate linear terms
-            rb.velocity.position = rb.velocity_prev.position
-                + time_step * (gravity + rb.force.position / rb.mass);
+            rb.velocity.position +=
+                time_step * (gravity + rb.force.position / rb.mass);
             // Fix linear terms
             rb.velocity.position =
                 (rb.is_dof_fixed.head(rb.velocity.pos_ndof()))
                     .select(zero.position, rb.velocity.position);
             // Update position using update velocity
-            rb.pose.position =
-                rb.pose_prev.position + time_step * rb.velocity.position;
+            rb.pose.position += time_step * rb.velocity.position;
 
             // Integrate angular terms
-            rb.velocity.rotation = rb.velocity_prev.rotation
-                + time_step
-                    * rb.moment_of_inertia.lu().solve(rb.force.rotation);
+            rb.velocity.rotation += time_step
+                * rb.moment_of_inertia.cwiseInverse().asDiagonal()
+                * rb.force.rotation;
             // Fix angular terms
             rb.velocity.rotation =
                 (rb.is_dof_fixed.tail(rb.velocity.rot_ndof()))
                     .select(zero.rotation, rb.velocity.rotation);
             // Update position using update velocity
-            rb.pose.rotation =
-                rb.pose_prev.rotation + time_step * rb.velocity.rotation;
+            rb.pose.rotation += time_step * rb.velocity.rotation;
         });
     }
 

@@ -68,13 +68,11 @@ namespace physics {
 
         update_constraint();
 
-        if (dim() == 2) {
-            for (size_t i = 0; i < m_assembler.m_rbs.size(); ++i) {
-                auto& rb = m_assembler.m_rbs[i];
-                spdlog::info(
-                    "rb={} mass={} innertia={}", i, rb.mass,
-                    rb.moment_of_inertia(0));
-            }
+        for (size_t i = 0; i < m_assembler.m_rbs.size(); ++i) {
+            auto& rb = m_assembler.m_rbs[i];
+            spdlog::info(
+                "rb={} mass={} innertia={}", i, rb.mass,
+                logger::fmt_eigen(rb.moment_of_inertia));
         }
     }
 
@@ -101,11 +99,11 @@ namespace physics {
 
             // momentum
             p += rb.mass * rb.velocity.position;
-            L += rb.moment_of_inertia * rb.velocity.rotation;
+            L += rb.moment_of_inertia.asDiagonal() * rb.velocity.rotation;
 
             T += 0.5 * rb.mass * rb.velocity.position.squaredNorm();
-            T += 0.5 * rb.velocity.rotation.transpose() * rb.moment_of_inertia
-                * rb.velocity.rotation;
+            T += 0.5 * rb.velocity.rotation.transpose()
+                * rb.moment_of_inertia.asDiagonal() * rb.velocity.rotation;
 
             if (!rb.is_dof_fixed[0] && !rb.is_dof_fixed[1]) {
                 G -= rb.mass * gravity_.dot(rb.pose.position);
@@ -353,11 +351,13 @@ namespace physics {
             const Eigen::MatrixXd inv_I_A =
                 body_A.is_dof_fixed.tail(rot_ndof).any()
                 ? Eigen::MatrixXd::Zero(rot_ndof, rot_ndof)
-                : Eigen::MatrixXd(body_A.moment_of_inertia.inverse());
+                : Eigen::MatrixXd(
+                      body_A.moment_of_inertia.cwiseInverse().asDiagonal());
             const Eigen::MatrixXd inv_I_B =
                 body_B.is_dof_fixed.tail(rot_ndof).any()
                 ? Eigen::MatrixXd::Zero(rot_ndof, rot_ndof)
-                : Eigen::MatrixXd(body_B.moment_of_inertia.inverse());
+                : Eigen::MatrixXd(
+                      body_B.moment_of_inertia.cwiseInverse().asDiagonal());
 
             // Vectors from the center of mass to the collision point
             // (90deg rotation counter clockwise)
