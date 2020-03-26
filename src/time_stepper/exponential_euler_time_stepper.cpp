@@ -8,10 +8,7 @@ namespace time_stepper {
         Eigen::JacobiSVD<Eigen::Matrix3d> svd;
         svd.compute(R, Eigen::ComputeFullU | Eigen::ComputeFullV);
         R = svd.matrixU() * svd.matrixV().transpose();
-        // clang-format off
-        assert((R * R.transpose() - Eigen::Matrix3d::Identity())
-                .lpNorm<Eigen::Infinity>() < 1.0e-9);
-        // clang-format on
+        assert(R.isUnitary(1e-9));
         assert(fabs(R.determinant() - 1.0) < 1.0e-6);
     }
 
@@ -21,10 +18,13 @@ namespace time_stepper {
         const double& time_step) const
     {
         assert(bodies.dim() == 3);
-        physics::Pose<double> zero = physics::Pose<double>::Zero(bodies.dim());
 
         // Store the previous configurations and velocities
         tbb::parallel_for_each(bodies.m_rbs, [&](physics::RigidBody& rb) {
+            // Zero out velocity of fixed dof
+            // Fixed dof is specified in body frame so provide a transform
+            rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
+
             rb.pose_prev = rb.pose;
             rb.velocity_prev = rb.velocity;
 
@@ -32,11 +32,11 @@ namespace time_stepper {
             rb.pose.position += time_step * rb.velocity.position;
 
             // Update the orientaiton
-            // R₁ = R₀ + h * ω̂R₀
+            // R₁ = R₀ + h * R₀ω̂
             Eigen::Matrix3d R1 = rb.pose_prev.construct_rotation_matrix();
-            R1 += time_step * Eigen::Hat(rb.velocity.rotation) * R1;
+            R1 += time_step * R1 * Eigen::Hat(rb.velocity.rotation);
             project_orientation(R1);
-            rb.pose.rotation = R1.eulerAngles(2, 1, 0);
+            rb.pose.rotation = R1.eulerAngles(2, 1, 0).reverse();
 
             // Compute the acceleration at ( q0, v0 )
             physics::Pose<double> acceleration(
@@ -44,9 +44,12 @@ namespace time_stepper {
                 rb.moment_of_inertia.cwiseInverse().asDiagonal()
                     * rb.force.rotation);
             acceleration.position += gravity;
+            // Zero out acceleration of fixed dof
+            // Fixed dof is specified in body frame so provide a transform
+            acceleration.zero_dof(rb.is_dof_fixed, rb.R0);
 
             // Update the velocity
-            rb.velocity += acceleration * time_step;
+            rb.velocity += time_step * acceleration;
         });
     }
 

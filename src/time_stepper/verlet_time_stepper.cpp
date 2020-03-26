@@ -9,15 +9,9 @@ namespace time_stepper {
         const Eigen::Vector2d& gravity,
         const double& time_step) const
     {
-        physics::Pose<double> zero = physics::Pose<double>::Zero(bodies.dim());
         tbb::parallel_for_each(bodies.m_rbs, [&](physics::RigidBody& rb) {
             // Zero out velocity of fixed dof
-            rb.velocity.position =
-                (rb.is_dof_fixed.head(rb.velocity.pos_ndof()))
-                    .select(zero.position, rb.velocity.position);
-            rb.velocity.rotation =
-                (rb.is_dof_fixed.head(rb.velocity.rot_ndof()))
-                    .select(zero.rotation, rb.velocity.rotation);
+            rb.velocity.zero_dof(rb.is_dof_fixed);
 
             // Store the previous configurations and velocities
             rb.pose_prev = rb.pose;
@@ -27,10 +21,8 @@ namespace time_stepper {
             // fsys.computeForce(q0, v0, start_time, F);
             physics::Pose<double> F = rb.force;
             F.position += rb.mass * gravity;
-            F.position = (rb.is_dof_fixed.head(F.pos_ndof()))
-                             .select(zero.position, F.position);
-            F.rotation = (rb.is_dof_fixed.head(F.rot_ndof()))
-                             .select(zero.rotation, F.rotation);
+            // Zero out forces of fixed dof
+            F.zero_dof(rb.is_dof_fixed);
 
             // v_{1/2} = v0 + (1/2) h a0
             rb.velocity += 0.5 * time_step * F / rb.mass;

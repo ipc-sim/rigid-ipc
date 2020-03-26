@@ -99,6 +99,33 @@ namespace physics {
         return pose_dof;
     }
 
+    // Replace a selected dof with the dof in other.
+    template <typename T>
+    void Pose<T>::select_dof(
+        const Eigen::VectorX6b& is_dof_selected,
+        const Pose<T>& other,
+        const Eigen::MatrixXX3d& R)
+    {
+        assert(is_dof_selected.size() == this->ndof());
+        assert(other.dim() == this->dim());
+        // R should be a rotation
+        assert(R.isUnitary(1e-9));
+        assert(fabs(R.determinant() - 1.0) < 1.0e-6);
+        position =
+            is_dof_selected.head(pos_ndof()).select(other.position, position);
+        rotation = R.transpose()
+            * is_dof_selected.tail(rot_ndof())
+                  .select(R * other.rotation, R * rotation);
+    }
+
+    // Zero out the i-th dof if is_dof_zero(i) == true.
+    template <typename T>
+    void Pose<T>::zero_dof(
+        const Eigen::VectorX6b& is_dof_zero, const Eigen::MatrixXX3d& R)
+    {
+        select_dof(is_dof_zero, Pose<T>::Zero(dim()), R);
+    }
+
     template <typename T>
     Eigen::MatrixXX3<T> Pose<T>::construct_rotation_matrix() const
     {

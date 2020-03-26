@@ -26,9 +26,12 @@ namespace io {
         int dim = -1, ndof, angular_dim;
         for (auto& jrb : scene["rigid_bodies"]) {
             // NOTE:
-            // rotation: degrees as xyz euler angles
+            // position: position of the model origin
+            // rotation: degrees as xyz euler angles in the body's frame
             // scale: scale the vertices around the model origin
+            // linear_velocity: velocity of the body's center
             // angular_velocity: world coordinates in degrees
+            // force: applied to center of mass
             // torque: world coordinates in degrees
             json args = R"({
                   "mesh": "",

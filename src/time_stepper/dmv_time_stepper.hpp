@@ -9,7 +9,7 @@ namespace time_stepper {
     public:
         virtual ~DMVTimeStepper() = default;
 
-        static std::string default_name() { return "DMV"; }
+        static std::string default_name() { return "dmv"; }
         virtual std::string name() const override
         {
             return DMVTimeStepper::default_name();

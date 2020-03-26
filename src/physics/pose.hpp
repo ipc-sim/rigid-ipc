@@ -43,6 +43,32 @@ namespace physics {
 
         Eigen::VectorX6<T> dof() const;
 
+        /// @brief Replace a selected dof with the dof in other.
+        /// @param R Rotation this rotations coordinates to the dof in
+        ///          is_dof_selected.
+        void select_dof(
+            const Eigen::VectorX6b& is_dof_selected,
+            const Pose<T>& other,
+            const Eigen::MatrixXX3d& R);
+        /// @brief Replace a selected dof with the dof in other.
+        void select_dof(
+            const Eigen::VectorX6b& is_dof_selected, const Pose<T>& other)
+        {
+            select_dof(
+                is_dof_selected, other,
+                Eigen::MatrixXX3d::Identity(rot_ndof(), rot_ndof()));
+        }
+        /// @brief Zero out the i-th dof if is_dof_zero(i) == true.
+        void zero_dof(
+            const Eigen::VectorX6b& is_dof_zero, const Eigen::MatrixXX3d& R);
+        /// @brief Zero out the i-th dof if is_dof_zero(i) == true.
+        void zero_dof(const Eigen::VectorX6b& is_dof_zero)
+        {
+            zero_dof(
+                is_dof_zero,
+                Eigen::MatrixXX3d::Identity(rot_ndof(), rot_ndof()));
+        }
+
         Eigen::MatrixXX3<T> construct_rotation_matrix() const;
         std::vector<Eigen::MatrixXX3<T>>
         construct_rotation_matrix_gradient() const;

@@ -93,10 +93,33 @@ namespace physics {
             // Got this from Chrono: https://bit.ly/2RpbTl1
             Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> es;
             es.compute(I);
-            moment_of_inertia = es.eigenvalues();
+            moment_of_inertia = density * es.eigenvalues();
+            R0 = es.eigenvectors();
+            // Ensure that we have an orientation preserving transform
+            if (R0.determinant() < 0.0) {
+                R0.col(0) *= -1.0;
+            }
+            assert(R0.isUnitary(1e-9));
+            assert(fabs(R0.determinant() - 1.0) <= 1.0e-9);
+            // R = RᵢR₀
+            this->pose.rotation =
+                Eigen::Matrix3d(this->pose.construct_rotation_matrix() * R0)
+                    .eulerAngles(2, 1, 0)
+                    .reverse();
+            // v = Rv₀ + p = RᵢR₀v₀ + p = RᵢR₀R₀ᵀv₀ + p
+            this->vertices = this->vertices * R0; // R₀ᵀ * V₀ᵀ = V₀ * R₀
+            // ω = R₀ᵀω₀ (ω₀ expressed in body coordinates)
+            this->velocity.rotation = R0.transpose() * this->velocity.rotation;
+            // τ = R₀ᵀτ₀ (τ₀ expressed in body coordinates)
+            this->force.rotation = R0.transpose() * this->force.rotation;
         } else {
-            moment_of_inertia = I.diagonal();
+            moment_of_inertia = density * I.diagonal();
+            R0 = Eigen::Matrix<double, 1, 1>::Identity();
         }
+
+        // Zero out the velocity and forces of fixed dof
+        this->velocity.zero_dof(is_dof_fixed, R0);
+        this->force.zero_dof(is_dof_fixed, R0);
 
         mass_matrix = Eigen::MatrixXd(ndof(), ndof());
         mass_matrix.diagonal().head(pos_ndof()).setConstant(mass);

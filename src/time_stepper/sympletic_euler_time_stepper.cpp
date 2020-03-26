@@ -9,30 +9,23 @@ namespace time_stepper {
         const Eigen::Vector2d& gravity,
         const double& time_step) const
     {
-        physics::Pose<double> zero = physics::Pose<double>::Zero(bodies.dim());
         tbb::parallel_for_each(bodies.m_rbs, [&](physics::RigidBody& rb) {
             // Store the previous configurations and velocities
             rb.pose_prev = rb.pose;
             rb.velocity_prev = rb.velocity;
 
-            // Integrate linear terms
+            // Update linear velocities
             rb.velocity.position +=
                 time_step * (gravity + rb.force.position / rb.mass);
-            // Fix linear terms
-            rb.velocity.position =
-                (rb.is_dof_fixed.head(rb.velocity.pos_ndof()))
-                    .select(zero.position, rb.velocity.position);
-            // Update position using update velocity
-            rb.pose.position += time_step * rb.velocity.position;
-
-            // Integrate angular terms
+            // Update angular velocity
             rb.velocity.rotation += time_step
                 * rb.moment_of_inertia.cwiseInverse().asDiagonal()
                 * rb.force.rotation;
-            // Fix angular terms
-            rb.velocity.rotation =
-                (rb.is_dof_fixed.tail(rb.velocity.rot_ndof()))
-                    .select(zero.rotation, rb.velocity.rotation);
+            // Zero out velocity of fixed dof
+            rb.velocity.zero_dof(rb.is_dof_fixed);
+
+            // Update position using update velocity
+            rb.pose.position += time_step * rb.velocity.position;
             // Update position using update velocity
             rb.pose.rotation += time_step * rb.velocity.rotation;
         });

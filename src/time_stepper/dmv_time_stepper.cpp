@@ -9,7 +9,7 @@ namespace time_stepper {
         const Eigen::Vector3d& angular_momentum,
         const double& time_step,
         const Eigen::Vector3d& inertia,
-        Eigen::Quaternion<double>& q)
+        Eigen::Quaterniond& q)
     {
         const double eps = fabs(time_step * 1e-15);
         const double ha = time_step / 2.0;
@@ -54,7 +54,7 @@ namespace time_stepper {
     }
 
 #ifndef NDEBUG
-    bool is_unit_length(const Eigen::Quaternion<double>& q)
+    bool is_unit_length(const Eigen::Quaterniond& q)
     {
         const double squared_norm =
             q.w() * q.w() + q.x() * q.x() + q.y() * q.y() + q.z() * q.z();
@@ -63,32 +63,29 @@ namespace time_stepper {
 #endif
 
     void
-    DMV(const physics::Pose<double>& pose_t0,
-        const physics::Pose<double>& momentum,
+    DMV(const Eigen::Matrix3d& R0,
+        const Eigen::Vector3d& angular_momentum,
         double time_step,
-        double mass,
         const Eigen::Vector3d& moment_of_inertia,
-        physics::Pose<double>& pose_t1)
+        Eigen::Matrix3d& R1)
     {
         // Get the orientation of the body
-        Eigen::Matrix3d R0 = pose_t0.construct_rotation_matrix();
         assert(fabs(R0.determinant() - 1.0) <= 1.0e-9);
-        // clang-format off
-        assert((R0 * R0.transpose() - Eigen::Matrix3d::Identity())
-                .lpNorm<Eigen::Infinity>() <= 1.0e-9);
-        // clang-format on
-
-        // Compute the body-space angular momentum
-        Eigen::Vector3d angular_momentum = R0.transpose() * momentum.rotation;
+        assert(R.isUnitary(1e-9));
 
         // Convert the input orientation to a quaternion
-        Eigen::Quaternion<double> Q_new(R0);
+        Eigen::Quaterniond Q_new(R0);
         assert(is_unit_length(Q_new));
+
+        // Solve for the next orientation
         solve_DMV(angular_momentum, time_step, moment_of_inertia, Q_new);
         assert(is_unit_length(Q_new));
 
         // Convert the output orientation to a matrix
-        pose_t1.rotation = Q_new.toRotationMatrix().eulerAngles(2, 1, 0);
+        R1 = Q_new.toRotationMatrix();
+        // Ensure we have still have an orthonormal rotation matrix
+        assert(fabs(R1.determinant() - 1.0) <= 1.0e-9);
+        assert(R1.isUnitary(1e-9));
     }
 
     /**
@@ -108,6 +105,10 @@ namespace time_stepper {
 
         // Store the previous configurations and velocities
         tbb::parallel_for_each(bodies.m_rbs, [&](physics::RigidBody& rb) {
+            // Zero out velocity of fixed dof
+            // Fixed dof is specified in body frame so provide a transform
+            rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
+
             rb.pose_prev = rb.pose;
             rb.velocity_prev = rb.velocity;
 
@@ -121,19 +122,22 @@ namespace time_stepper {
             // fsys.computeForce(q0, v0, next_time, F);
             physics::Pose<double> F = rb.force;
             F.position += rb.mass * gravity; // mass will be divided out
+            // Zero out force of fixed dof
+            // Fixed dof is specified in body frame so provide a transform
+            F.zero_dof(rb.is_dof_fixed, rb.R0);
 
             // First momentum update
             // p1 += 0.5 * h * F_q0;
             momentum_t1 += 0.5 * time_step * F;
 
             // Linear position update
-            rb.pose.position += time_step
-                * (rb.velocity.position
-                   + 0.5 * time_step * F.position / rb.mass);
+            rb.pose.position += time_step * momentum_t1.position / rb.mass;
 
             // Angular position update
-            DMV(rb.pose_prev, momentum_t1, time_step, rb.mass,
-                rb.moment_of_inertia, rb.pose);
+            Eigen::Matrix3d R1;
+            DMV(rb.pose.construct_rotation_matrix(), momentum_t1.rotation,
+                time_step, rb.moment_of_inertia, R1);
+            rb.pose.rotation = R1.eulerAngles(2, 1, 0).reverse();
 
             // TODO: Compute forces at end of time_step
             // Hamiltonian so there shouldn't be velocity dependent forces
@@ -141,22 +145,18 @@ namespace time_stepper {
 
             // Second momentum update
             // p1 += 0.5 * h * F_q1;
-            rb.velocity += 0.5 * time_step * F;
+            momentum_t1 += 0.5 * time_step * F;
 
             // Convert momentum to velocity
             // Linear component
-            rb.velocity.position /= rb.mass;
+            rb.velocity.position = momentum_t1.position / rb.mass;
             // Rotational component
             Eigen::Matrix3d R = rb.pose.construct_rotation_matrix();
             assert(fabs(R.determinant() - 1.0) < 1.0e-9);
-            // clang-format off
-            assert((R * R.transpose() - Eigen::Matrix3d::Identity())
-                    .lpNorm<Eigen::Infinity>() < 1.0e-9);
-            // clang-format on
+            assert(R.isUnitary(1e-9));
             Eigen::Vector3d Iinv0 = rb.moment_of_inertia.cwiseInverse();
             assert((Iinv0.array() > 0.0).all());
-            rb.velocity.rotation =
-                R * Iinv0.asDiagonal() * R.transpose() * rb.velocity.rotation;
+            rb.velocity.rotation = Iinv0.asDiagonal() * momentum_t1.rotation;
         });
     }
 

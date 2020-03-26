@@ -44,6 +44,31 @@ void detect_collision_candidates(
     TrajectoryType trajectory,
     const double inflation_radius)
 {
+    if (bodies.m_rbs.size() <= 1) {
+        return;
+    }
+
+    // TODO: Add a quick capsule test for intersecting rigid bodies
+    // def capsule(body, pose, displacement):
+    //     return {"radius": body.r_max, "start": pose.position, "end":
+    //     pose.position + displacement.position}
+    //
+    // def distance(capsule1, capsule2):
+    //     return segment_segment_distance(capsule1.start, capsule1.end,
+    //     capsule2.start, capsule2.end) - capsule1.radius - capsule2.radius
+    //
+    // capsules = [capsule(body, pose, displacement) for body in bodies]
+    //
+    // intersecting_capsules = {}
+    // # O(n^2) segment_segment_distance calls
+    // for i in range(len(capsules)):
+    //     for j in range(i, len(capsules)):
+    //         if distance(capsules[i], capsules[j]) <= tol:
+    //             intersecting_capsules.add(i)
+    //             intersecting_capsules.add(j)
+    //
+    // detect_collisions(bodies[intersecting_capsules], ...)
+
     if (trajectory == TrajectoryType::LINEARIZED) {
         Eigen::MatrixXd V_t0 = bodies.world_vertices(poses);
         Eigen::MatrixXd V_t1 = bodies.world_vertices(poses + displacements);
