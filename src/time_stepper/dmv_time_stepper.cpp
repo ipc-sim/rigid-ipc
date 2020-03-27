@@ -71,7 +71,7 @@ namespace time_stepper {
     {
         // Get the orientation of the body
         assert(fabs(R0.determinant() - 1.0) <= 1.0e-9);
-        assert(R.isUnitary(1e-9));
+        assert(R0.isUnitary(1e-9));
 
         // Convert the input orientation to a quaternion
         Eigen::Quaterniond Q_new(R0);
