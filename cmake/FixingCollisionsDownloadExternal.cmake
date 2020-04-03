@@ -84,3 +84,11 @@ function(fixing_collisions_download_ccd_wrapper)
     GIT_TAG        2ca865f2c3526ca2fb6e713cdfdbaa62ed1e2912
   )
 endfunction()
+
+# xml for MJCF format
+function(fixing_collisions_download_tinyxml2)
+   fixing_collisions_download_project(tinyxml2
+    GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
+    GIT_TAG        bfbcc0333d1a24ec8d9e10d14116d00dbdedf043
+  )
+endfunction()

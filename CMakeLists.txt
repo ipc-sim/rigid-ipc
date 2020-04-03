@@ -196,6 +196,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
 # Etienne Vouga's CTCD Library for the floating point root finding algorithm
 target_link_libraries(${PROJECT_NAME} PUBLIC EVCTCD)
 
+# tinyxml2
+target_link_libraries(${PROJECT_NAME} PUBLIC tinyxml2::tinyxml2)
+
 ################################################################################
 # Compiler options
 ################################################################################
