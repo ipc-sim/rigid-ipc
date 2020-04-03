@@ -18,15 +18,12 @@ namespace opt {
     template <typename T>
     void DistanceBarrierConstraint::compute_candidates_constraints(
         const physics::RigidBodyAssembler& bodies,
-        const physics::Poses<double>& poses,
-        const physics::Poses<T>& displacements,
+        const physics::Poses<T>& poses,
         const Candidates& candidates,
         Eigen::VectorX<T>& barriers)
     {
         // distance barrier is evaluated at end-positions
-        physics::Poses<T> poses_t1 =
-            physics::cast<double, T>(poses) + displacements;
-        Eigen::MatrixX<T> vertices_t1 = bodies.world_vertices(poses_t1);
+        Eigen::MatrixX<T> vertices_t1 = bodies.world_vertices(poses);
 
         int num_barriers = candidates.size();
         barriers.resize(num_barriers);

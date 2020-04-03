@@ -168,14 +168,18 @@ void UISimState::draw_legends()
 
         /// visibility checkbox
         bool tmp = ptr->visibility();
-        if (ImGui::Checkbox(("##UI-" + label).c_str(), &tmp)) {
+        if (!ptr->is_com()) {
+            if (ImGui::Checkbox(("##UI-" + label).c_str(), &tmp)) {
+                ptr->visibility(tmp);
+            }
+            /// Color
+            ImGui::SameLine();
+            if (ImGui::DoubleColorEdit3(
+                    (label + "##UI-color").c_str(), ptr->m_color)) {
+                ptr->recolor();
+            }
+        } else if (ImGui::Checkbox((label + "##UI-check").c_str(), &tmp)) {
             ptr->visibility(tmp);
-        }
-
-        /// Color
-        ImGui::SameLine();
-        if (ImGui::DoubleColorEdit3((label + "##UI").c_str(), ptr->m_color)) {
-            ptr->recolor();
         }
 
         /// other specific attributes
@@ -229,6 +233,19 @@ void UISimState::draw_legends()
                 if (ImGui::SliderFloat(
                         ("scale##UI-scaling" + label).c_str(), &aux, 0.00f,
                         10.0f, "%1.f")) {
+                    ptr->m_scaling = double(aux);
+                    ptr->recolor();
+                }
+            }
+            ImGui::PopItemWidth();
+        } else if (ptr->is_com()) {
+            ImGui::SameLine();
+            ImGui::PushItemWidth(ImGui::GetWindowWidth() - 150);
+            {
+                float aux = float(ptr->m_scaling);
+                if (ImGui::SliderFloat(
+                        ("scale##UI-com-scaling" + label).c_str(), &aux, 0.00f,
+                        10.0f, "%1.1f", 2.0f)) {
                     ptr->m_scaling = double(aux);
                     ptr->recolor();
                 }

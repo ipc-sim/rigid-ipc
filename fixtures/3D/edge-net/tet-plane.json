@@ -3,7 +3,7 @@
     "timestep_size": 0.01,
     "max_time": 10,
     "distance_barrier_constraint": {
-        "detection_method": "hash_grid",
+        "detection_method": "brute_force",
         "trajectory_type": "screwing",
         "custom_initial_epsilon": 0.01,
         "active_constraint_scale": 1.01
@@ -18,20 +18,20 @@
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "gravity": [0, -9.8, 0],
+        "gravity": [0, 0, 0],
         "time_stepper": "dmv",
         "rigid_bodies": [{
                 "mesh": "tet-pyramid.obj",
-                "position": [0, 0.5, -0.1],
+                "position": [0, 1.0, -0.1],
                 "rotation": [0, 0, 0],
-                "linear_velocity": [0, 0, 0],
+                "linear_velocity": [0, -10, 0],
                 "angular_velocity": [0, 0, 0]
             },
             {
-                "mesh": "tet-pyramid.obj",
-                "position": [0, -0.5, 0],
+                "mesh": "edge-net/plane.obj",
+                "position": [0, 0, 0],
                 "rotation": [0, 0, 0],
-                "is_dof_fixed": [true, true, true, true, true, true]
+                "#is_dof_fixed": [true, true, true, true, true, true]
             }
         ]
     }

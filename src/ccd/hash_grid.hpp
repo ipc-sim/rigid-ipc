@@ -83,55 +83,55 @@ public:
     void resize(Eigen::VectorX3d min, Eigen::VectorX3d max, double cellSize);
 
     void resize(
-        const Eigen::MatrixXd& vertices,
-        const Eigen::MatrixXd& displacements,
+        const Eigen::MatrixXd& vertices_t0,
+        const Eigen::MatrixXd& vertices_t1,
         const Eigen::MatrixXi& edges,
         const double inflation_radius = 0.0);
 
     /// @brief Add a vertex as a AABB containing the time swept edge.
     void addVertex(
-        const Eigen::VectorXd& v,
-        const Eigen::VectorXd& u,
+        const Eigen::VectorX3d& vertex_t0,
+        const Eigen::VectorX3d& vertex_t1,
         const long index,
         const double inflation_radius = 0.0);
 
     /// @brief Add all vertices as AABBs containing the time swept edge.
     void addVertices(
-        const Eigen::MatrixXd& vertices,
-        const Eigen::MatrixXd& displacements,
+        const Eigen::MatrixXd& vertices_t0,
+        const Eigen::MatrixXd& vertices_t1,
         const double inflation_radius = 0.0);
 
     /// @brief Add an edge as a AABB containing the time swept quad.
     void addEdge(
-        const Eigen::VectorXd& vi,
-        const Eigen::VectorXd& vj,
-        const Eigen::VectorXd& ui,
-        const Eigen::VectorXd& uj,
+        const Eigen::VectorX3d& edge_vertex0_t0,
+        const Eigen::VectorX3d& edge_vertex1_t0,
+        const Eigen::VectorX3d& edge_vertex0_t1,
+        const Eigen::VectorX3d& edge_vertex1_t1,
         const long index,
         const double inflation_radius = 0.0);
 
     /// @brief Add all edges as AABBs containing the time swept quad.
     void addEdges(
-        const Eigen::MatrixXd& vertices,
-        const Eigen::MatrixXd& displacements,
+        const Eigen::MatrixXd& vertices_t0,
+        const Eigen::MatrixXd& vertices_t1,
         const Eigen::MatrixXi& edges,
         const double inflation_radius = 0.0);
 
     /// @brief Add an edge as a AABB containing the time swept quad.
     void addFace(
-        const Eigen::VectorXd& vi,
-        const Eigen::VectorXd& vj,
-        const Eigen::VectorXd& vk,
-        const Eigen::VectorXd& ui,
-        const Eigen::VectorXd& uj,
-        const Eigen::VectorXd& uk,
+        const Eigen::VectorX3d& face_vertex0_t0,
+        const Eigen::VectorX3d& face_vertex1_t0,
+        const Eigen::VectorX3d& face_vertex2_t0,
+        const Eigen::VectorX3d& face_vertex0_t1,
+        const Eigen::VectorX3d& face_vertex1_t1,
+        const Eigen::VectorX3d& face_vertex2_t1,
         const long index,
         const double inflation_radius = 0.0);
 
     /// @brief Add all edges as AABBs containing the time swept quad.
     void addFaces(
-        const Eigen::MatrixXd& vertices,
-        const Eigen::MatrixXd& displacements,
+        const Eigen::MatrixXd& vertices_t0,
+        const Eigen::MatrixXd& vertices_t1,
         const Eigen::MatrixXi& faces,
         const double inflation_radius = 0.0);
 

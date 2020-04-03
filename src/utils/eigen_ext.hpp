@@ -38,6 +38,8 @@ using MatrixXX3d = MatrixXX3<double>;
 
 template <typename T> SparseMatrix<T> SparseDiagonal(const VectorX<T>& x);
 
+template <typename T> Matrix2<T> Hat(T x);
+template <typename T> Matrix3<T> Hat(Eigen::Vector3<T> x);
 template <typename T> MatrixXX3<T> Hat(Eigen::VectorX3<T> x);
 
 } // namespace Eigen

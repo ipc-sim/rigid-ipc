@@ -67,17 +67,24 @@ TEST_CASE("Rigid edge-vertex time of impact", "[ccd][rigid][rigid_toi]")
     Eigen::VectorX6b bodyA_is_dof_fixed = Eigen::VectorX6b::Zero(ndof);
     Eigen::VectorX6b bodyB_is_dof_fixed = Eigen::VectorX6b::Ones(ndof);
 
-    physics::RigidBody bodyA = physics::RigidBody::from_points(
+    RigidBody bodyA = RigidBody::from_points(
         bodyA_vertices, bodyA_edges, bodyA_pose, bodyA_velocity, /*density=*/1,
         bodyA_is_dof_fixed, /*oriented=*/false);
-    physics::RigidBody bodyB = physics::RigidBody::from_points(
+    RigidBody bodyB = RigidBody::from_points(
         bodyB_vertices, bodyB_edges, bodyB_pose, bodyB_velocity, /*density=*/1,
         bodyB_is_dof_fixed, /*oriented=*/false);
 
+    Pose<double> poseA_t1, poseB_t1;
+    poseA_t1.position = bodyA.pose.position + bodyA.velocity.position;
+    poseB_t1.position = bodyB.pose.position + bodyB.velocity.position;
+    poseA_t1.rotation = bodyA.pose.rotation + bodyA.velocity.rotation;
+    poseB_t1.rotation = bodyB.pose.rotation + bodyB.velocity.rotation;
+
     double toi;
     bool is_impacting = compute_edge_vertex_time_of_impact(
-        bodyA, bodyA.pose, bodyA.velocity, /*vertex_id=*/0, bodyB, bodyB.pose,
-        bodyB.velocity, /*edge_id=*/0, toi);
+        bodyA, bodyA.pose, poseA_t1, /*vertex_id=*/0, //
+        bodyB, bodyB.pose, poseB_t1, /*edge_id=*/0,   //
+        toi);
     CHECK(is_impacting == is_impact_expected);
     // if (is_impacting) {
     //     CHECK(
@@ -138,19 +145,26 @@ TEST_CASE(
     Eigen::VectorX6b bodyA_is_dof_fixed = Eigen::VectorX6b::Ones(ndof);
     Eigen::VectorX6b bodyB_is_dof_fixed = Eigen::VectorX6b::Zero(ndof);
 
-    physics::RigidBody bodyA = physics::RigidBody::from_points(
+    RigidBody bodyA = RigidBody::from_points(
         bodyA_vertices, bodyA_edges, bodyA_faces, bodyA_pose, bodyA_velocity,
         /*density=*/1, bodyA_is_dof_fixed, /*oriented=*/false);
-    physics::RigidBody bodyB = physics::RigidBody::from_points(
+    RigidBody bodyB = RigidBody::from_points(
         bodyB_vertices, bodyB_edges, bodyB_faces, bodyB_pose, bodyB_velocity,
         /*density=*/1, bodyB_is_dof_fixed, /*oriented=*/false);
+
+    Pose<double> poseA_t1, poseB_t1;
+    poseA_t1.position = bodyA.pose.position + bodyA.velocity.position;
+    poseB_t1.position = bodyB.pose.position + bodyB.velocity.position;
+    // TODO: Rotation
+    poseA_t1.rotation.setZero(3);
+    poseB_t1.rotation.setZero(3);
 
     double toi;
     bool is_impacting = compute_face_vertex_time_of_impact(
         // Vertex body
-        bodyB, bodyB.pose, bodyB.velocity, /*vertex_id=*/0,
+        bodyB, bodyB.pose, poseB_t1, /*vertex_id=*/0,
         // Face body
-        bodyA, bodyA.pose, bodyA.velocity, /*face_id=*/0,
+        bodyA, bodyA.pose, poseA_t1, /*face_id=*/0,
         // Output time of impact
         toi);
     CAPTURE(y, velz);

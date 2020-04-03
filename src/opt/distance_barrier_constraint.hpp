@@ -34,20 +34,17 @@ namespace opt {
         void compute_constraints(
             const physics::RigidBodyAssembler& bodies,
             const physics::Poses<double>& poses,
-            const physics::Poses<double>& displacements,
             Eigen::VectorXd& barriers);
 
         void construct_active_barrier_set(
             const physics::RigidBodyAssembler& bodies,
             const physics::Poses<double>& poses,
-            const physics::Poses<double>& displacements,
             Candidates& barriers) const;
 
         template <typename T>
         void compute_candidates_constraints(
             const physics::RigidBodyAssembler& bodies,
-            const physics::Poses<double>& poses,
-            const physics::Poses<T>& displacements,
+            const physics::Poses<T>& poses,
             const Candidates& candidates,
             Eigen::Matrix<T, Eigen::Dynamic, 1>& barriers);
 
@@ -62,7 +59,6 @@ namespace opt {
         void debug_compute_distances(
             const physics::RigidBodyAssembler& bodies,
             const physics::Poses<double>& poses,
-            const physics::Poses<double>& displacements,
             Eigen::VectorXd& distances) const;
 
         // Settings

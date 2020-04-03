@@ -110,7 +110,14 @@ namespace physics {
         /// @return The positions of all vertices in 'world space',
         ///         taking into account the given body's position.
         template <typename T>
-        Eigen::MatrixX<T> world_vertices(const Pose<T>& pose) const;
+        Eigen::MatrixX<T> world_vertices(
+            const Eigen::MatrixXX3<T>& R, const Eigen::VectorX3<T>& p) const;
+        template <typename T>
+        Eigen::MatrixX<T> world_vertices(const Pose<T>& _pose) const
+        {
+            return world_vertices<T>(
+                _pose.construct_rotation_matrix(), _pose.position);
+        }
         template <typename T>
         Eigen::MatrixX<T> world_vertices(const Eigen::VectorX6<T>& dof) const
         {
@@ -118,8 +125,17 @@ namespace physics {
         }
 
         template <typename T>
+        Eigen::VectorX3<T> world_vertex(
+            const Eigen::MatrixXX3<T>& R,
+            const Eigen::VectorX3<T>& p,
+            const int vertex_idx) const;
+        template <typename T>
         Eigen::VectorX3<T>
-        world_vertex(const Pose<T>& pose, const int vertex_idx) const;
+        world_vertex(const Pose<T>& _pose, const int vertex_idx) const
+        {
+            return world_vertex<T>(
+                _pose.construct_rotation_matrix(), _pose.position, vertex_idx);
+        }
         template <typename T>
         Eigen::VectorX3<T>
         world_vertex(const Eigen::VectorX6<T>& dof, const int vertex_idx) const

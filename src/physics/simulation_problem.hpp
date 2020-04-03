@@ -49,6 +49,8 @@ namespace physics {
         virtual Eigen::VectorXi group_ids() const = 0;
 
         virtual const Eigen::MatrixXb& particle_dof_fixed() const = 0;
+
+        virtual bool is_rb_problem() const { return false; };
     };
 
 } // namespace physics

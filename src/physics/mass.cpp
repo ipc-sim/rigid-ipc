@@ -196,11 +196,15 @@ namespace physics {
                 vertex_masses(facets(i, 1)) += edge_length / 2;
             }
             mass_matrix = Eigen::SparseDiagonal<double>(vertex_masses);
-        } else {
-            assert(facets.cols() == 3);
+        } else if (facets.cols() == 3) {
+            assert(vertices.cols() == 3); // Only use triangles in 3D
             igl::massmatrix(
                 vertices, facets, igl::MassMatrixType::MASSMATRIX_TYPE_VORONOI,
                 mass_matrix);
+        } else {
+            // Probably a point cloud
+            mass_matrix.resize(vertices.rows(), vertices.rows());
+            mass_matrix.setIdentity();
         }
     }
 

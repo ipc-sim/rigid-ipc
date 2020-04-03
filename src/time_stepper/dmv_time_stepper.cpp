@@ -128,7 +128,8 @@ namespace time_stepper {
 
             // First momentum update
             // p1 += 0.5 * h * F_q0;
-            momentum_t1 += 0.5 * time_step * F;
+            momentum_t1.position += 0.5 * time_step * F.position;
+            momentum_t1.rotation += 0.5 * time_step * F.rotation;
 
             // Linear position update
             rb.pose.position += time_step * momentum_t1.position / rb.mass;
@@ -137,7 +138,8 @@ namespace time_stepper {
             Eigen::Matrix3d R1;
             DMV(rb.pose.construct_rotation_matrix(), momentum_t1.rotation,
                 time_step, rb.moment_of_inertia, R1);
-            rb.pose.rotation = R1.eulerAngles(2, 1, 0).reverse();
+            Eigen::AngleAxisd r1 = Eigen::AngleAxisd(R1);
+            rb.pose.rotation = r1.angle() * r1.axis();
 
             // TODO: Compute forces at end of time_step
             // Hamiltonian so there shouldn't be velocity dependent forces
@@ -145,7 +147,8 @@ namespace time_stepper {
 
             // Second momentum update
             // p1 += 0.5 * h * F_q1;
-            momentum_t1 += 0.5 * time_step * F;
+            momentum_t1.position += 0.5 * time_step * F.position;
+            momentum_t1.rotation += 0.5 * time_step * F.rotation;
 
             // Convert momentum to velocity
             // Linear component

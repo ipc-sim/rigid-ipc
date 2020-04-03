@@ -37,8 +37,10 @@ namespace physics {
         m_faces.resize(m_body_face_id.back(), 3);
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
-            m_edges.block(m_body_edge_id[i], 0, rb.edges.rows(), 2) =
-                (rb.edges.array() + int(m_body_vertex_id[i]));
+            if (rb.edges.size() != 0) {
+                m_edges.block(m_body_edge_id[i], 0, rb.edges.rows(), 2) =
+                    (rb.edges.array() + int(m_body_vertex_id[i]));
+            }
             if (rb.faces.size() != 0) {
                 m_faces.block(m_body_face_id[i], 0, rb.faces.rows(), 3) =
                     (rb.faces.array() + int(m_body_vertex_id[i]));
@@ -79,24 +81,14 @@ namespace physics {
             scaling_vector.segment(rb_ndof * i, rb.pos_ndof()).setOnes();
             // set rotation scaling to r_max
             scaling_vector.segment(rb_ndof * i + rb.pos_ndof(), rb.rot_ndof())
-                .setConstant(rb.r_max);
+                .setOnes();
+            // .setConstant(rb.r_max);
         }
         m_rb_mass_matrix.resize(num_bodies * rb_ndof, num_bodies * rb_ndof);
         m_rb_mass_matrix.setFromTriplets(
             mass_matrix_triplets.begin(), mass_matrix_triplets.end());
         m_pose_to_dof = Eigen::SparseDiagonal<double>(scaling_vector);
         m_dof_to_pose = m_pose_to_dof.cwiseInverse();
-
-        // particles mass-matrix
-        {
-            Eigen::SparseMatrix<double> M;
-            physics::construct_mass_matrix(
-                world_vertices_t0(), dim() == 2 ? m_edges : m_faces, M);
-            // Repeat the mass vector to make a mass matrix per dof
-            m_mass_matrix =
-                Eigen::SparseDiagonal<double>(M.diagonal().replicate(dim(), 1));
-        }
-        m_inv_mass_matrix = m_mass_matrix.cwiseInverse();
 
         // rigid_body dof_fixed flag
         is_rb_dof_fixed.resize(int(num_bodies) * rb_ndof);

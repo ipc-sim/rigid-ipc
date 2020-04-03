@@ -228,6 +228,67 @@ namespace opengl {
     }
 
     ////////////////////////////////////////////////////////////////////////
+    /// \brief VectorFieldData::VectorFieldData
+    /// \param _viewer
+    ////////////////////////////////////////////////////////////////////////
+    CoMData::CoMData(igl::opengl::glfw::Viewer* _viewer)
+        : VectorFieldData(_viewer, Eigen::RowVector3d::Zero())
+    {
+    }
+
+    void CoMData::set_coms(const ccd::physics::Poses<double>& poses)
+    {
+        int dim = poses.size() ? poses[0].dim() : 0;
+        Eigen::MatrixXd com(dim * poses.size(), dim);
+        Eigen::MatrixXd principle_axes(dim * poses.size(), dim);
+
+        for (int i = 0; i < poses.size(); i++) {
+            Eigen::MatrixXX3d R = poses[i].construct_rotation_matrix();
+            for (int j = 0; j < dim; j++) {
+                com.row(dim * i + j) = poses[i].position;
+                Eigen::VectorX3d axis = Eigen::VectorX3d::Zero(dim);
+                axis(j) = 1;
+                principle_axes.row(dim * i + j) = R * axis;
+            }
+        }
+
+        this->set_vector_field(com, principle_axes);
+    }
+
+    void CoMData::set_vector_field(
+        const Eigen::MatrixXd& V, const Eigen::MatrixXd& F)
+    {
+        Eigen::MatrixXd f = F;
+        if (f.size() == 0) {
+            f.resizeLike(V);
+            f.setZero();
+        }
+        if (m_normalized) {
+            f.rowwise().normalize();
+        }
+        f *= m_scaling;
+
+        data().lines.resize(0, 9);
+
+        int dim = V.cols();
+        Eigen::MatrixXd colors(V.rows(), 3);
+        for (int i = 0; i < colors.rows(); i += dim) {
+            colors.row(i + 0) =
+                Eigen::RowVector3d(0xFF, 0x26, 0x00) / 0xFF; // #FF2600
+            colors.row(i + 1) =
+                Eigen::RowVector3d(0x00, 0xF9, 0x00) / 0xFF; // #00F900
+            if (dim == 3) {
+                colors.row(i + 2) =
+                    Eigen::RowVector3d(0x03, 0x29, 0xD0) / 0xFF; // #0329D0
+            }
+        }
+
+        data().add_edges(V, V + f, colors);
+        mV = V;
+        mF = F;
+    }
+
+    ////////////////////////////////////////////////////////////////////////
     /// \brief ScalarFieldData::ScalarFieldData
     /// \param _viewer
     ////////////////////////////////////////////////////////////////////////

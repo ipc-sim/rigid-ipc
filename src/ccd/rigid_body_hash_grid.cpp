@@ -11,25 +11,49 @@ namespace ccd {
 
 void compute_vertices_intervals(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     Eigen::MatrixX<Interval>& vertices)
 {
     Interval t(0, 1);
-    physics::Poses<Interval> interval_poses =
-        physics::cast<double, Interval>(poses)
-        + physics::cast<double, Interval>(displacements) * t;
-    vertices = bodies.world_vertices(interval_poses);
+    std::vector<Eigen::MatrixXX3<Interval>> Rs(bodies.num_bodies());
+    std::vector<Eigen::VectorX3<Interval>> ps(bodies.num_bodies());
+
+    physics::Poses<Interval> posesI_t0 =
+        physics::cast<double, Interval>(poses_t0);
+    physics::Poses<Interval> posesI_t1 =
+        physics::cast<double, Interval>(poses_t1);
+
+    tbb::parallel_for(size_t(0), bodies.num_bodies(), [&](size_t i) {
+        ps[i] = (posesI_t1[i].position - posesI_t0[i].position) * t
+            + posesI_t0[i].position;
+
+        if (bodies.dim() == 2) {
+            Rs[i] = Eigen::Rotation2D<Interval>(
+                        ((posesI_t1[i].rotation - posesI_t0[i].rotation) * t
+                         + posesI_t0[i].rotation)(0))
+                        .toRotationMatrix();
+        } else {
+            Eigen::Matrix3d R0, P;
+            double omega;
+            decompose_to_z_screwing(poses_t0[i], poses_t1[i], R0, P, omega);
+            Eigen::Matrix3I Rz = rotate_around_z(t * omega);
+            Eigen::Matrix3I P_I = P.template cast<Interval>();
+            Rs[i] = P_I.transpose() * Rz * P_I * R0.cast<Interval>();
+        }
+    });
+
+    vertices = bodies.world_vertices(Rs, ps);
 }
 
 void RigidBodyHashGrid::resize(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const double inflation_radius)
 {
     Eigen::MatrixX<Interval> vertices;
-    compute_vertices_intervals(bodies, poses, displacements, vertices);
+    compute_vertices_intervals(bodies, poses_t0, poses_t1, vertices);
 
     Eigen::VectorX3<Interval> mesh_extents(bodies.dim());
     double average_displacement_length = 0;
@@ -61,13 +85,13 @@ void RigidBodyHashGrid::resize(
 
 void RigidBodyHashGrid::addBodies(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const double inflation_radius)
 {
-    assert(bodies.num_bodies() == poses.size());
+    assert(bodies.num_bodies() == poses_t0.size());
     Eigen::MatrixX<Interval> vertices;
-    compute_vertices_intervals(bodies, poses, displacements, vertices);
+    compute_vertices_intervals(bodies, poses_t0, poses_t1, vertices);
 
     // Create a bounding box for all vertices
     tbb::concurrent_vector<AABB> vertices_aabb;

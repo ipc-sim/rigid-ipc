@@ -111,6 +111,8 @@ namespace physics {
         const Eigen::VectorXd& starting_point() override { return x0; }
         int dim() const { return m_assembler.dim(); }
 
+        virtual bool is_rb_problem() const override { return true; };
+
         // ------------------------------------------------------------------------
         // Settings
         // ------------------------------------------------------------------------

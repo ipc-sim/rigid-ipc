@@ -21,8 +21,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
 /// @brief Find all collisions in one time step.
 void detect_collisions(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const int collision_types,
     ConcurrentImpacts& impacts,
     DetectionMethod method = DetectionMethod::HASH_GRID,
@@ -35,8 +35,8 @@ void detect_collisions(
 /// @brief Use broad-phase method to create a set of candidate collisions.
 void detect_collision_candidates(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const int collision_types,
     Candidates& candidates,
     DetectionMethod method = DetectionMethod::HASH_GRID,
@@ -46,8 +46,8 @@ void detect_collision_candidates(
 /// @brief Use a hash grid method to create a set of all candidate collisions.
 void detect_collision_candidates_hash_grid(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const int collision_types,
     Candidates& candidates,
     const double inflation_radius = 0.0);
@@ -58,8 +58,8 @@ void detect_collision_candidates_hash_grid(
 
 void detect_collisions_from_candidates(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const Candidates& candidates,
     ConcurrentImpacts& impacts,
     TrajectoryType trajectory = TrajectoryType::SCREWING);
@@ -67,8 +67,8 @@ void detect_collisions_from_candidates(
 /// @brief Determine if a single edge-vertext pair intersects.
 bool detect_edge_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const EdgeVertexCandidate& ev_candidate,
     double& toi,
     double& alpha,
@@ -76,8 +76,8 @@ bool detect_edge_vertex_collisions_narrow_phase(
 
 bool detect_edge_edge_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const EdgeEdgeCandidate& ee_candidate,
     double& toi,
     double& edge0_alpha,
@@ -86,8 +86,8 @@ bool detect_edge_edge_collisions_narrow_phase(
 
 bool detect_face_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const FaceVertexCandidate& fv_candidate,
     double& toi,
     double& u,

@@ -24,6 +24,10 @@ namespace physics {
         // --------------------------------------------------------------------
 
         template <typename T>
+        Eigen::MatrixX<T> world_vertices(
+            const std::vector<Eigen::MatrixXX3<T>>& rotations,
+            const std::vector<Eigen::VectorX3<T>>& positions) const;
+        template <typename T>
         Eigen::MatrixX<T> world_vertices(const Poses<T>& poses) const;
         template <typename T>
         Eigen::MatrixX<T> world_vertices(const Eigen::VectorX<T>& dofs) const
@@ -148,12 +152,6 @@ namespace physics {
 
         /// @brief transforms poses to dof
         Eigen::SparseMatrix<double> m_pose_to_dof;
-
-        /// @brief  mass_matrix of the vertices
-        Eigen::SparseMatrix<double> m_mass_matrix;
-
-        /// @brief inverted mass_matrix of the vertices
-        Eigen::SparseMatrix<double> m_inv_mass_matrix;
 
         /// @brief flags for rb degrees of freedom
         Eigen::VectorXb is_rb_dof_fixed;

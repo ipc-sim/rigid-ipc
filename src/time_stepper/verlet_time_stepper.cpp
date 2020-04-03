@@ -25,17 +25,20 @@ namespace time_stepper {
             F.zero_dof(rb.is_dof_fixed);
 
             // v_{1/2} = v0 + (1/2) h a0
-            rb.velocity += 0.5 * time_step * F / rb.mass;
+            rb.velocity.position += 0.5 * time_step * F.position / rb.mass;
+            rb.velocity.rotation += 0.5 * time_step * F.rotation / rb.mass;
 
             // q1 = q0 + h v0 + (1/2) h^2 a0
-            rb.pose += time_step * rb.velocity;
+            rb.pose.position += time_step * rb.velocity.position;
+            rb.pose.rotation += time_step * rb.velocity.rotation;
 
             // F( q1 )
             // fsys.computeForce(q1, v0, start_time, F);
             // zeroForcesOnKinematicBodies(fsys, F);
 
             // v1 = v0 + (1/2) h ( a0 + a1 )
-            rb.velocity += 0.5 * time_step * F / rb.mass;
+            rb.velocity.position += 0.5 * time_step * F.position / rb.mass;
+            rb.velocity.rotation += 0.5 * time_step * F.rotation / rb.mass;
         });
     }
 

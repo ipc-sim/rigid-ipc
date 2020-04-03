@@ -31,6 +31,9 @@ namespace Constants {
     /// \brief ETA used in Etienne Vouga's CCD as an activation distance.
     static const double LINEARIZED_CCD_ETA = 1e-8;
 
+    /// \breif Tolerance of the length of the screwing trajectory in CCD.
+    static const double SCREWING_CCD_LENGTH_TOL = 1e-6;
+
     /// \brief Default tolerance used for interval root finding.
     static const double INTERVAL_ROOT_FINDER_TOL = 1e-8;
 

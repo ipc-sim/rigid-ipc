@@ -3,15 +3,15 @@
 #include <iostream>
 
 #include <finitediff.hpp>
-#include <utils/flatten.hpp>
-#include <utils/tensor.hpp>
 
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
-#include <time_stepper/time_stepper_factory.hpp>
-
 #include <logger.hpp>
 #include <profiler.hpp>
+#include <time_stepper/time_stepper_factory.hpp>
+#include <utils/eigen_ext.hpp>
+#include <utils/flatten.hpp>
+#include <utils/tensor.hpp>
 
 namespace ccd {
 
@@ -109,12 +109,6 @@ namespace physics {
                 G -= rb.mass * gravity_.dot(rb.pose.position);
             }
         }
-        // Another way of compting total energy
-        // Eigen::MatrixXd vel = m_assembler.world_velocities();
-        // ccd::flatten(vel);
-        // Eigen::VectorXd vel_ = vel;
-        // double kinetic = 1.0 / 2.0  * (vel_.transpose() *
-        // m_assembler.m_mass_matrix * vel_)[0];
 
         json["rigid_bodies"] = rbs;
         json["linear_momentum"] = io::to_json(p);
@@ -169,7 +163,7 @@ namespace physics {
         original_impacts.clear();
         constraint().initialize();
         constraint().construct_collision_set(
-            m_assembler, poses_t0, poses_t1 - poses_t0, original_impacts);
+            m_assembler, poses_t0, poses_t1, original_impacts);
 
         tbb::parallel_sort(
             original_impacts.ev_impacts.begin(),
@@ -214,7 +208,23 @@ namespace physics {
         // This need to be done AFTER updating poses
         if (coefficient_restitution < 0) {
             tbb::parallel_for_each(m_assembler.m_rbs, [&](RigidBody& rb) {
-                rb.velocity = (rb.pose - rb.pose_prev) / time_step;
+                // Assume linear velocity through the time-step.
+                rb.velocity.position =
+                    (rb.pose.position - rb.pose_prev.position) / time_step;
+                if (dim() == 2) {
+                    rb.velocity.rotation =
+                        (rb.pose.rotation - rb.pose_prev.rotation) / time_step;
+                } else {
+                    // Compute the rotation R s.t.
+                    // R * Rᵗ = Rᵗ⁺¹ → R = Rᵗ⁺¹[Rᵗ]ᵀ
+                    Eigen::Matrix3d R = rb.pose.construct_rotation_matrix()
+                        * rb.pose_prev.construct_rotation_matrix().transpose();
+                    // TODO: Convert R from world to body coordinates
+                    // ω = rotation_vector(R)
+                    Eigen::AngleAxisd omega(R);
+                    rb.velocity.rotation =
+                        omega.angle() * omega.axis() / time_step;
+                }
             });
         }
 
@@ -271,7 +281,7 @@ namespace physics {
                 // Use nonlinear trajectory
                 long edge_body_id = m_assembler.edge_id_to_body_id(edge_id);
 
-                Pose<double> pose_toi = Pose<double>::lerp(
+                Pose<double> pose_toi = Pose<double>::interpolate(
                     poses_t0[edge_body_id], poses_t1[edge_body_id], toi);
 
                 e_toi = m_assembler.world_vertex(pose_toi, b1_id)
@@ -330,10 +340,10 @@ namespace physics {
             auto& body_B = m_assembler.m_rbs[body_B_id];
 
             // The velocities of the center of mass at the time of collision!!
-            Pose<double> vel_A_prev =
-                Pose<double>::lerp(body_A.velocity_prev, body_A.velocity, toi);
-            Pose<double> vel_B_prev =
-                Pose<double>::lerp(body_B.velocity_prev, body_B.velocity, toi);
+            Pose<double> vel_A_prev = Pose<double>::interpolate(
+                body_A.velocity_prev, body_A.velocity, toi);
+            Pose<double> vel_B_prev = Pose<double>::interpolate(
+                body_B.velocity_prev, body_B.velocity, toi);
 
             // The masss
             const double inv_m_A =
@@ -372,14 +382,15 @@ namespace physics {
 
             // (2) and the angular displacement at time of collision
             const Pose<double> pose_Atoi =
-                Pose<double>::lerp(body_A.pose_prev, body_A.pose, toi);
+                Pose<double>::interpolate(body_A.pose_prev, body_A.pose, toi);
             const Pose<double> pose_Btoi =
-                Pose<double>::lerp(body_B.pose_prev, body_B.pose, toi);
+                Pose<double>::interpolate(body_B.pose_prev, body_B.pose, toi);
             // (3) then the vectors are given by r = R(\theta_{t})*r_0
+            Eigen::Matrix2d one_hat = Eigen::Hat(1.0);
             const Eigen::VectorXd r_Aperp_toi =
-                pose_Atoi.construct_rotation_matrix_gradient()[0] * r0_A;
+                pose_Atoi.construct_rotation_matrix() * one_hat * r0_A;
             const Eigen::VectorXd r_Bperp_toi =
-                pose_Btoi.construct_rotation_matrix_gradient()[0] * r0_B;
+                pose_Btoi.construct_rotation_matrix() * one_hat * r0_B;
 
             // The collision point velocities BEFORE collision
             const Eigen::VectorXd v_Aprev =
@@ -441,10 +452,10 @@ namespace physics {
 
         double scale =
             check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);
-        Poses<double> displacements = (poses_q1 - poses_q0) * scale;
+        Poses<double> scaled_pose_q1 = interpolate(poses_q0, poses_q1, scale);
 
         constraint().construct_collision_set(
-            m_assembler, poses_q0, displacements, impacts);
+            m_assembler, poses_q0, scaled_pose_q1, impacts);
 
         return impacts.size();
     }
@@ -463,13 +474,12 @@ namespace physics {
 
     Eigen::VectorXd RigidBodyProblem::eval_grad_f(const Eigen::VectorXd& sigma)
     {
-        Eigen::VectorXd grad_f;
         Eigen::VectorXd diff = sigma - this->poses_to_dofs(poses_t1);
 
         const Eigen::SparseMatrix<double>& invS = m_assembler.m_dof_to_pose;
         const Eigen::SparseMatrix<double>& M = m_assembler.m_rb_mass_matrix;
 
-        grad_f = invS.transpose() * M * invS * diff;
+        Eigen::VectorXd grad_f = invS.transpose() * M * invS * diff;
 
 #ifdef WITH_DERIVATIVE_CHECK
         Eigen::VectorXd grad_f_approx = eval_grad_f_approx(*this, sigma);

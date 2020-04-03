@@ -108,8 +108,7 @@ namespace opt {
     {
         physics::Poses<double> poses = this->dofs_to_poses(sigma);
         Eigen::VectorXd d;
-        constraint_.debug_compute_distances(
-            m_assembler, poses_t0, poses - poses_t0, d);
+        constraint_.debug_compute_distances(m_assembler, poses, d);
         if (d.rows() > 0) {
             return d.minCoeff();
         }
@@ -121,7 +120,7 @@ namespace opt {
     {
         Eigen::VectorXd g_uk;
         constraint_.compute_constraints(
-            m_assembler, poses_t0, this->dofs_to_poses(sigma) - poses_t0, g_uk);
+            m_assembler, this->dofs_to_poses(sigma), g_uk);
         return g_uk;
     }
 
@@ -140,10 +139,9 @@ namespace opt {
         NAMED_PROFILE_POINT("eval_jac_g__eval_jac", EVAL)
 
         PROFILE_START(UPDATE)
-        physics::Poses<double> poses = this->dofs_to_poses(sigma);
         Candidates candidates;
         constraint_.construct_active_barrier_set(
-            m_assembler, poses_t0, poses - poses_t0, candidates);
+            m_assembler, this->dofs_to_poses(sigma), candidates);
         PROFILE_END(UPDATE)
 
         PROFILE_START(EVAL)
@@ -170,7 +168,7 @@ namespace opt {
         physics::Poses<Diff::DDouble1> d_poses = this->dofs_to_poses(d_sigma);
         Diff::D1VectorXd d_g_uk;
         constraint_.compute_candidates_constraints<Diff::DDouble1>(
-            m_assembler, poses_t0, d_poses - d_poses_t0, candidates, d_g_uk);
+            m_assembler, d_poses, candidates, d_g_uk);
 
         assert(candidates.size() == d_g_uk.rows());
         return Diff::get_gradient(d_g_uk);
@@ -183,10 +181,9 @@ namespace opt {
         NAMED_PROFILE_POINT("eval_hess_g__eval", EVAL)
 
         PROFILE_START(UPDATE)
-        physics::Poses<double> poses = this->dofs_to_poses(sigma);
         Candidates candidates;
         constraint_.construct_active_barrier_set(
-            m_assembler, poses_t0, poses - poses_t0, candidates);
+            m_assembler, this->dofs_to_poses(sigma), candidates);
         PROFILE_END(UPDATE)
 
         std::vector<Eigen::SparseMatrix<double>> gx_hessian;
@@ -211,11 +208,11 @@ namespace opt {
         physics::Poses<double> poses = this->dofs_to_poses(sigma);
         Candidates candidates;
         constraint_.construct_active_barrier_set(
-            m_assembler, poses_t0, poses - poses_t0, candidates);
+            m_assembler, poses, candidates);
         PROFILE_END(UPDATE)
 
         constraint_.compute_candidates_constraints(
-            m_assembler, poses_t0, poses - poses_t0, candidates, gx);
+            m_assembler, poses, candidates, gx);
 
         PROFILE_START(EVAL_GRAD)
         gx_jacobian = eval_jac_g_core(sigma, candidates);

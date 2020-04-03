@@ -254,5 +254,6 @@ paper
 temp-plot.html
 *.blend[123456789]
 erleben.blend
+meshes/tennis-racket.obj
 
 **/*.bak

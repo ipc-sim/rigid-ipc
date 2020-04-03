@@ -90,12 +90,12 @@ TEST_CASE("2D rigid body hash grid", "[hashgrid][rigid_body][2D]")
 
         EdgeVertexImpacts brute_force_ev_impacts;
         detect_edge_vertex_collisions(
-            vertices, displacements, edges, brute_force_ev_impacts,
+            vertices, vertices + displacements, edges, brute_force_ev_impacts,
             DetectionMethod::BRUTE_FORCE);
 
         EdgeVertexImpacts hash_ev_impacts;
         detect_edge_vertex_collisions(
-            vertices, displacements, edges, hash_ev_impacts,
+            vertices, vertices + displacements, edges, hash_ev_impacts,
             DetectionMethod::HASH_GRID);
 
         REQUIRE(brute_force_ev_impacts.size() == hash_ev_impacts.size());
@@ -164,7 +164,7 @@ TEST_CASE("3D rigid body hash grid", "[hashgrid][rigid_body][3D]")
         EdgeEdgeImpacts brute_force_ee_impacts;
         FaceVertexImpacts brute_force_fv_impacts;
         detect_collisions(
-            vertices, displacements, edges, faces, group_ids,
+            vertices, vertices + displacements, edges, faces, group_ids,
             CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX,
             brute_force_ev_impacts, brute_force_ee_impacts,
             brute_force_fv_impacts, DetectionMethod::BRUTE_FORCE);
@@ -174,7 +174,7 @@ TEST_CASE("3D rigid body hash grid", "[hashgrid][rigid_body][3D]")
         EdgeEdgeImpacts hash_ee_impacts;
         FaceVertexImpacts hash_fv_impacts;
         detect_collisions(
-            vertices, displacements, edges, faces, group_ids,
+            vertices, vertices + displacements, edges, faces, group_ids,
             CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX,
             hash_ev_impacts, hash_ee_impacts, hash_fv_impacts,
             DetectionMethod::HASH_GRID);

@@ -21,6 +21,7 @@ void HashGrid::resize(
     Eigen::VectorX3d min, Eigen::VectorX3d max, double cellSize)
 {
     clear();
+    assert(cellSize != 0.0);
     m_cellSize = cellSize;
     m_domainMin = min;
     m_domainMax = max;
@@ -29,15 +30,15 @@ void HashGrid::resize(
 
 /// @brief Compute an AABB around a given 2D mesh.
 void calculate_mesh_extents(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
-    Eigen::VectorXd& lower_bound,
-    Eigen::VectorXd& upper_bound)
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
+    Eigen::VectorX3d& lower_bound,
+    Eigen::VectorX3d& upper_bound)
 {
-    int dim = vertices.cols();
-    Eigen::MatrixXd points(vertices.rows() + displacements.rows(), dim);
-    points.topRows(vertices.rows()) = vertices;
-    points.bottomRows(displacements.rows()) = vertices + displacements;
+    int dim = vertices_t0.cols();
+    Eigen::MatrixXd points(vertices_t0.rows() + vertices_t1.rows(), dim);
+    points.topRows(vertices_t0.rows()) = vertices_t0;
+    points.bottomRows(vertices_t1.rows()) = vertices_t1;
 
     lower_bound = points.colwise().minCoeff();
     upper_bound = points.colwise().maxCoeff();
@@ -45,16 +46,14 @@ void calculate_mesh_extents(
 
 /// @brief Compute the average edge length of a mesh.
 double average_edge_length(
-    const Eigen::MatrixXd& V,
-    const Eigen::MatrixXd& U,
+    const Eigen::MatrixXd& V_t0,
+    const Eigen::MatrixXd& V_t1,
     const Eigen::MatrixXi& E)
 {
     double avg = 0;
     for (unsigned i = 0; i < E.rows(); ++i) {
-        avg += (V.row(E(i, 0)) - V.row(E(i, 1))).norm();
-        avg += ((V.row(E(i, 0)) + U.row(E(i, 0)))
-                - (V.row(E(i, 1)) + U.row(E(i, 1))))
-                   .norm();
+        avg += (V_t0.row(E(i, 0)) - V_t0.row(E(i, 1))).norm();
+        avg += (V_t1.row(E(i, 0)) - V_t1.row(E(i, 1))).norm();
     }
     return avg / (2 * E.rows());
 }
@@ -66,15 +65,15 @@ double average_displacement_length(const Eigen::MatrixXd& displacements)
 }
 
 void HashGrid::resize(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const double inflation_radius)
 {
-    Eigen::VectorXd mesh_min, mesh_max;
-    calculate_mesh_extents(vertices, displacements, mesh_min, mesh_max);
-    double edge_len = average_edge_length(vertices, displacements, edges);
-    double disp_len = average_displacement_length(displacements);
+    Eigen::VectorX3d mesh_min, mesh_max;
+    calculate_mesh_extents(vertices_t0, vertices_t1, mesh_min, mesh_max);
+    double edge_len = average_edge_length(vertices_t0, vertices_t1, edges);
+    double disp_len = average_displacement_length(vertices_t1 - vertices_t0);
     double cell_size = 2 * std::max(edge_len, disp_len) + inflation_radius;
     this->resize(
         mesh_min.array() - inflation_radius,
@@ -83,27 +82,27 @@ void HashGrid::resize(
 
 /// @brief Compute a AABB for a vertex moving through time (i.e. temporal edge).
 void calculate_vertex_extents(
-    const Eigen::VectorXd& v,
-    const Eigen::VectorXd& u,
-    Eigen::VectorXd& lower_bound,
-    Eigen::VectorXd& upper_bound)
+    const Eigen::VectorX3d& vertex_t0,
+    const Eigen::VectorX3d& vertex_t1,
+    Eigen::VectorX3d& lower_bound,
+    Eigen::VectorX3d& upper_bound)
 {
-    Eigen::MatrixXd points(2, v.size());
-    points.row(0) = v;
-    points.row(1) = v + u;
+    Eigen::MatrixXd points(2, vertex_t0.size());
+    points.row(0) = vertex_t0;
+    points.row(1) = vertex_t1;
 
     lower_bound = points.colwise().minCoeff();
     upper_bound = points.colwise().maxCoeff();
 }
 
 void HashGrid::addVertex(
-    const Eigen::VectorXd& v,
-    const Eigen::VectorXd& u,
+    const Eigen::VectorX3d& vertex_t0,
+    const Eigen::VectorX3d& vertex_t1,
     const long index,
     const double inflation_radius)
 {
-    Eigen::VectorXd lower_bound, upper_bound;
-    calculate_vertex_extents(v, u, lower_bound, upper_bound);
+    Eigen::VectorX3d lower_bound, upper_bound;
+    calculate_vertex_extents(vertex_t0, vertex_t1, lower_bound, upper_bound);
     this->addElement(
         AABB(
             lower_bound.array() - inflation_radius,
@@ -112,44 +111,47 @@ void HashGrid::addVertex(
 }
 
 void HashGrid::addVertices(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const double inflation_radius)
 {
-    tbb::parallel_for(0l, vertices.rows(), 1l, [&](long i) {
-        addVertex(vertices.row(i), displacements.row(i), i, inflation_radius);
+    assert(vertices_t0.rows() == vertices_t1.rows());
+    tbb::parallel_for(0l, vertices_t0.rows(), 1l, [&](long i) {
+        addVertex(vertices_t0.row(i), vertices_t1.row(i), i, inflation_radius);
     });
 }
 
 /// @brief Compute a AABB for an edge moving through time (i.e. temporal quad).
 void calculate_edge_extents(
-    const Eigen::VectorXd& vi,
-    const Eigen::VectorXd& vj,
-    const Eigen::VectorXd& ui,
-    const Eigen::VectorXd& uj,
-    Eigen::VectorXd& lower_bound,
-    Eigen::VectorXd& upper_bound)
+    const Eigen::VectorX3d& edge_vertex0_t0,
+    const Eigen::VectorX3d& edge_vertex1_t0,
+    const Eigen::VectorX3d& edge_vertex0_t1,
+    const Eigen::VectorX3d& edge_vertex1_t1,
+    Eigen::VectorX3d& lower_bound,
+    Eigen::VectorX3d& upper_bound)
 {
-    Eigen::MatrixXd points(4, vi.size());
-    points.row(0) = vi;
-    points.row(1) = vj;
-    points.row(2) = vi + ui;
-    points.row(3) = vj + uj;
+    Eigen::MatrixXd points(4, edge_vertex0_t0.size());
+    points.row(0) = edge_vertex0_t0;
+    points.row(1) = edge_vertex1_t0;
+    points.row(2) = edge_vertex0_t1;
+    points.row(3) = edge_vertex1_t1;
 
     lower_bound = points.colwise().minCoeff();
     upper_bound = points.colwise().maxCoeff();
 }
 
 void HashGrid::addEdge(
-    const Eigen::VectorXd& vi,
-    const Eigen::VectorXd& vj,
-    const Eigen::VectorXd& ui,
-    const Eigen::VectorXd& uj,
+    const Eigen::VectorX3d& edge_vertex0_t0,
+    const Eigen::VectorX3d& edge_vertex1_t0,
+    const Eigen::VectorX3d& edge_vertex0_t1,
+    const Eigen::VectorX3d& edge_vertex1_t1,
     const long index,
     const double inflation_radius)
 {
-    Eigen::VectorXd lower_bound, upper_bound;
-    calculate_edge_extents(vi, vj, ui, uj, lower_bound, upper_bound);
+    Eigen::VectorX3d lower_bound, upper_bound;
+    calculate_edge_extents(
+        edge_vertex0_t0, edge_vertex1_t0, edge_vertex0_t1, edge_vertex1_t1,
+        lower_bound, upper_bound);
     this->addElement(
         AABB(
             lower_bound.array() - inflation_radius,
@@ -158,54 +160,58 @@ void HashGrid::addEdge(
 }
 
 void HashGrid::addEdges(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const double inflation_radius)
 {
+    assert(vertices_t0.rows() == vertices_t1.rows());
     tbb::parallel_for(0l, edges.rows(), 1l, [&](long i) {
         addEdge(
-            vertices.row(edges(i, 0)), vertices.row(edges(i, 1)),
-            displacements.row(edges(i, 0)), displacements.row(edges(i, 1)), i,
+            vertices_t0.row(edges(i, 0)), vertices_t0.row(edges(i, 1)),
+            vertices_t1.row(edges(i, 0)), vertices_t1.row(edges(i, 1)), i,
             inflation_radius);
     });
 }
 
 /// @brief Compute a AABB for an edge moving through time (i.e. temporal quad).
 void calculate_face_extents(
-    const Eigen::VectorXd& vi,
-    const Eigen::VectorXd& vj,
-    const Eigen::VectorXd& vk,
-    const Eigen::VectorXd& ui,
-    const Eigen::VectorXd& uj,
-    const Eigen::VectorXd& uk,
-    Eigen::VectorXd& lower_bound,
-    Eigen::VectorXd& upper_bound)
+    const Eigen::VectorX3d& face_vertex0_t0,
+    const Eigen::VectorX3d& face_vertex1_t0,
+    const Eigen::VectorX3d& face_vertex2_t0,
+    const Eigen::VectorX3d& face_vertex0_t1,
+    const Eigen::VectorX3d& face_vertex1_t1,
+    const Eigen::VectorX3d& face_vertex2_t1,
+    Eigen::VectorX3d& lower_bound,
+    Eigen::VectorX3d& upper_bound)
 {
-    Eigen::MatrixXd points(6, vi.size());
-    points.row(0) = vi;
-    points.row(1) = vj;
-    points.row(2) = vk;
-    points.row(3) = vi + ui;
-    points.row(4) = vj + uj;
-    points.row(5) = vk + uk;
+    Eigen::MatrixXd points(6, face_vertex0_t0.size());
+    points.row(0) = face_vertex0_t0;
+    points.row(1) = face_vertex1_t0;
+    points.row(2) = face_vertex2_t0;
+    points.row(3) = face_vertex0_t1;
+    points.row(4) = face_vertex1_t1;
+    points.row(5) = face_vertex2_t1;
 
     lower_bound = points.colwise().minCoeff();
     upper_bound = points.colwise().maxCoeff();
 }
 
 void HashGrid::addFace(
-    const Eigen::VectorXd& vi,
-    const Eigen::VectorXd& vj,
-    const Eigen::VectorXd& vk,
-    const Eigen::VectorXd& ui,
-    const Eigen::VectorXd& uj,
-    const Eigen::VectorXd& uk,
+    const Eigen::VectorX3d& face_vertex0_t0,
+    const Eigen::VectorX3d& face_vertex1_t0,
+    const Eigen::VectorX3d& face_vertex2_t0,
+    const Eigen::VectorX3d& face_vertex0_t1,
+    const Eigen::VectorX3d& face_vertex1_t1,
+    const Eigen::VectorX3d& face_vertex2_t1,
     const long index,
     const double inflation_radius)
 {
-    Eigen::VectorXd lower_bound, upper_bound;
-    calculate_face_extents(vi, vj, vk, ui, uj, uk, lower_bound, upper_bound);
+    Eigen::VectorX3d lower_bound, upper_bound;
+    calculate_face_extents(
+        face_vertex0_t0, face_vertex1_t0, face_vertex2_t0, //
+        face_vertex0_t1, face_vertex1_t1, face_vertex2_t1, //
+        lower_bound, upper_bound);
     this->addElement(
         AABB(
             lower_bound.array() - inflation_radius,
@@ -214,30 +220,31 @@ void HashGrid::addFace(
 }
 
 void HashGrid::addFaces(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& faces,
     const double inflation_radius)
 {
+    assert(vertices_t0.rows() == vertices_t1.rows());
     tbb::parallel_for(0l, faces.rows(), 1l, [&](long i) {
         addFace(
-            vertices.row(faces(i, 0)), vertices.row(faces(i, 1)),
-            vertices.row(faces(i, 2)), displacements.row(faces(i, 0)),
-            displacements.row(faces(i, 1)), displacements.row(faces(i, 2)), i,
+            vertices_t0.row(faces(i, 0)), vertices_t0.row(faces(i, 1)),
+            vertices_t0.row(faces(i, 2)), vertices_t1.row(faces(i, 0)),
+            vertices_t1.row(faces(i, 1)), vertices_t1.row(faces(i, 2)), i,
             inflation_radius);
     });
 }
 
 void HashGrid::addElement(const AABB& aabb, const int id, HashItems& items)
 {
-    Eigen::VectorXi int_min =
+    Eigen::VectorX3<int> int_min =
         ((aabb.getMin() - m_domainMin) / m_cellSize).cast<int>();
     // We can round down to -1, but not less
     assert((int_min.array() >= -1).all());
     assert((int_min.array() <= m_gridSize).all());
     int_min = int_min.array().max(0).min(m_gridSize - 1);
 
-    Eigen::VectorXi int_max =
+    Eigen::VectorX3<int> int_max =
         ((aabb.getMax() - m_domainMin) / m_cellSize).cast<int>();
     assert((int_max.array() >= -1).all());
     assert((int_max.array() <= m_gridSize).all());

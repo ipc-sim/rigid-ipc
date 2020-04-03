@@ -1,5 +1,6 @@
 #include "read_rb_scene.hpp"
 
+#include <Eigen/Geometry>
 #include <boost/filesystem.hpp>
 #include <igl/edges.h>
 #include <igl/read_triangle_mesh.h>
@@ -68,7 +69,9 @@ namespace io {
                 spdlog::info("loading mesh: {:s}", mesh_path.string());
                 igl::read_triangle_mesh(mesh_path.string(), vertices, faces);
                 // Initialize edges
-                igl::edges(faces, edges);
+                if (faces.size()) {
+                    igl::edges(faces, edges);
+                }
             } else {
                 from_json<double>(args["vertices"], vertices);
                 from_json<int>(args["faces"], faces);
@@ -105,6 +108,14 @@ namespace io {
             rotation.conservativeResize(angular_dim);
             // Convert to radians for easy use later
             rotation *= M_PI / 180.0;
+            if (rotation.size() == 3) {
+                Eigen::AngleAxisd aa(
+                    Eigen::AngleAxisd(rotation.z(), Eigen::Vector3d::UnitZ())
+                    * Eigen::AngleAxisd(rotation.y(), Eigen::Vector3d::UnitY())
+                    * Eigen::AngleAxisd(
+                          rotation.x(), Eigen::Vector3d::UnitX()));
+                rotation = aa.angle() * aa.axis();
+            }
 
             Eigen::VectorX3d scale;
             from_json<double>(args["scale"], scale);

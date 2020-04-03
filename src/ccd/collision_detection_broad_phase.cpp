@@ -11,8 +11,8 @@
 namespace ccd {
 
 void detect_collisions(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
@@ -20,19 +20,19 @@ void detect_collisions(
     ConcurrentImpacts& impacts,
     DetectionMethod method)
 {
-    assert(vertices.size() == displacements.size());
+    assert(vertices_t0.size() == vertices_t1.size());
     assert(edges.size() == 0 || edges.cols() == 2);
     assert(faces.size() == 0 || faces.cols() == 3);
 
     // Do the broad phase by detecting candidate impacts
     Candidates candidates;
     detect_collision_candidates(
-        vertices, displacements, edges, faces, group_ids, collision_types,
+        vertices_t0, vertices_t1, edges, faces, group_ids, collision_types,
         candidates, method);
 
     // Do the narrow phase by detecting actual impacts from the candidate set
     detect_collisions_from_candidates(
-        vertices, displacements, edges, faces, candidates, impacts);
+        vertices_t0, vertices_t1, edges, faces, candidates, impacts);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -40,8 +40,8 @@ void detect_collisions(
 ///////////////////////////////////////////////////////////////////////////////
 
 void detect_collision_candidates(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
@@ -64,11 +64,11 @@ void detect_collision_candidates(
     switch (method) {
     case BRUTE_FORCE:
         detect_collision_candidates_brute_force(
-            vertices, edges, faces, group_ids, collision_types, candidates);
+            vertices_t0, edges, faces, group_ids, collision_types, candidates);
         break;
     case HASH_GRID:
         detect_collision_candidates_hash_grid(
-            vertices, displacements, edges, faces, group_ids, collision_types,
+            vertices_t0, vertices_t1, edges, faces, group_ids, collision_types,
             candidates, inflation_radius);
         break;
     }
@@ -186,8 +186,8 @@ void detect_collision_candidates_brute_force(
 // Find all edge-vertex collisions in one time step using spatial-hashing to
 // only compare points and edge in the same cells.
 void detect_collision_candidates_hash_grid(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
@@ -198,23 +198,24 @@ void detect_collision_candidates_hash_grid(
     using namespace CollisionType;
     HashGrid hashgrid;
     assert(edges.size()); // Even face-vertex need the edges
-    hashgrid.resize(vertices, displacements, edges, inflation_radius);
+    hashgrid.resize(vertices_t0, vertices_t1, edges, inflation_radius);
     tbb::parallel_invoke(
         [&] {
             if (collision_types & (EDGE_VERTEX | FACE_VERTEX)) {
-                hashgrid.addVertices(vertices, displacements, inflation_radius);
+                hashgrid.addVertices(
+                    vertices_t0, vertices_t1, inflation_radius);
             }
         },
         [&] {
             if (collision_types & (EDGE_VERTEX | EDGE_EDGE)) {
                 hashgrid.addEdges(
-                    vertices, displacements, edges, inflation_radius);
+                    vertices_t0, vertices_t1, edges, inflation_radius);
             }
         },
         [&] {
             if (collision_types & FACE_VERTEX) {
                 hashgrid.addFaces(
-                    vertices, displacements, faces, inflation_radius);
+                    vertices_t0, vertices_t1, faces, inflation_radius);
             }
         });
 

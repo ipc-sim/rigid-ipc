@@ -9,10 +9,10 @@ int main(int argc, char* argv[])
 {
     if (argc > 1) {
         int mode = std::stoi(argv[1]);
-        switch(mode) {
+        switch (mode) {
         case 1: { // json to MJCF
             spdlog::info("transform json to MJCF");
-            
+
             if (argc < 3) {
                 spdlog::error("need input json file path!");
                 return -1;

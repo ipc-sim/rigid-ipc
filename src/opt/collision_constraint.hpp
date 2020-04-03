@@ -22,8 +22,8 @@ namespace opt {
 
         void construct_collision_set(
             const physics::RigidBodyAssembler& bodies,
-            const physics::Poses<double> poses,
-            const physics::Poses<double> displacements,
+            const physics::Poses<double> poses_t0,
+            const physics::Poses<double> poses_t1,
             ConcurrentImpacts& impacts) const;
 
         // Settings

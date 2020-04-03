@@ -68,14 +68,14 @@ namespace opt {
         Candidates candidates;
 
         detect_collision_candidates(
-            bodies, poses_t0, poses_t1 - poses_t0,
-            dim_to_collision_type(bodies.dim()), candidates, detection_method,
-            trajectory_type, /*inflation_radius=*/0);
+            bodies, poses_t0, poses_t1, dim_to_collision_type(bodies.dim()),
+            candidates, detection_method, trajectory_type,
+            /*inflation_radius=*/0);
 
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double toi, alpha;
             bool are_colliding = detect_edge_vertex_collisions_narrow_phase(
-                bodies, poses_t0, poses_t1 - poses_t0, ev_candidate, toi, alpha,
+                bodies, poses_t0, poses_t1, ev_candidate, toi, alpha,
                 trajectory_type);
             if (are_colliding) {
                 return true;
@@ -84,8 +84,8 @@ namespace opt {
         for (const auto& ee_candidate : candidates.ee_candidates) {
             double toi, edge0_alpha, edge1_alpha;
             bool are_colliding = detect_edge_edge_collisions_narrow_phase(
-                bodies, poses_t0, poses_t1 - poses_t0, ee_candidate, toi,
-                edge0_alpha, edge1_alpha, trajectory_type);
+                bodies, poses_t0, poses_t1, ee_candidate, toi, edge0_alpha,
+                edge1_alpha, trajectory_type);
             if (are_colliding) {
                 return true;
             }
@@ -93,7 +93,7 @@ namespace opt {
         for (const auto& fv_candidate : candidates.fv_candidates) {
             double toi, u, v;
             bool are_colliding = detect_face_vertex_collisions_narrow_phase(
-                bodies, poses_t0, poses_t1 - poses_t0, fv_candidate, toi, u, v,
+                bodies, poses_t0, poses_t1, fv_candidate, toi, u, v,
                 trajectory_type);
             if (are_colliding) {
                 return true;
@@ -105,19 +105,16 @@ namespace opt {
     void DistanceBarrierConstraint::compute_constraints(
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses,
-        const physics::Poses<double>& displacements,
         Eigen::VectorXd& barriers)
     {
         Candidates candidates;
-        construct_active_barrier_set(bodies, poses, displacements, candidates);
-        compute_candidates_constraints(
-            bodies, poses, displacements, candidates, barriers);
+        construct_active_barrier_set(bodies, poses, candidates);
+        compute_candidates_constraints(bodies, poses, candidates, barriers);
     }
 
     void DistanceBarrierConstraint::construct_active_barrier_set(
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses,
-        const physics::Poses<double>& displacements,
         Candidates& barriers) const
     {
         NAMED_PROFILE_POINT(
@@ -128,11 +125,9 @@ namespace opt {
 
         Candidates candidates;
 
-        physics::Poses<double> poses_t1 = poses + displacements;
-        physics::Poses<double> zeros(
-            poses.size(), physics::Pose<double>::Zero(bodies.dim()));
+        // Use discrete collision detection
         detect_collision_candidates(
-            bodies, poses_t1, zeros, dim_to_collision_type(bodies.dim()),
+            bodies, poses, poses, dim_to_collision_type(bodies.dim()),
             candidates, detection_method, trajectory_type,
             /*inflation_radius=*/active_constraint_scale * m_barrier_epsilon);
 
@@ -147,11 +142,11 @@ namespace opt {
         // TODO: Store these distance for use later
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double distance = ccd::geometry::point_segment_distance<double>(
-                bodies.world_vertex(poses_t1, ev_candidate.vertex_index),
+                bodies.world_vertex(poses, ev_candidate.vertex_index),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ev_candidate.edge_index, 0)),
+                    poses, bodies.m_edges(ev_candidate.edge_index, 0)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ev_candidate.edge_index, 1)));
+                    poses, bodies.m_edges(ev_candidate.edge_index, 1)));
 
             if (distance < active_constraint_scale * m_barrier_epsilon) {
                 barriers.ev_candidates.push_back(ev_candidate);
@@ -161,13 +156,13 @@ namespace opt {
         for (const auto& ee_candidate : candidates.ee_candidates) {
             double distance = ccd::geometry::segment_segment_distance<double>(
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ee_candidate.edge0_index, 0)),
+                    poses, bodies.m_edges(ee_candidate.edge0_index, 0)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ee_candidate.edge0_index, 1)),
+                    poses, bodies.m_edges(ee_candidate.edge0_index, 1)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ee_candidate.edge1_index, 0)),
+                    poses, bodies.m_edges(ee_candidate.edge1_index, 0)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ee_candidate.edge1_index, 1)));
+                    poses, bodies.m_edges(ee_candidate.edge1_index, 1)));
 
             if (distance < active_constraint_scale * m_barrier_epsilon) {
                 barriers.ee_candidates.push_back(ee_candidate);
@@ -176,13 +171,13 @@ namespace opt {
 
         for (const auto& fv_candidate : candidates.fv_candidates) {
             double distance = ccd::geometry::point_triangle_distance<double>(
-                bodies.world_vertex(poses_t1, fv_candidate.vertex_index),
+                bodies.world_vertex(poses, fv_candidate.vertex_index),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_faces(fv_candidate.face_index, 0)),
+                    poses, bodies.m_faces(fv_candidate.face_index, 0)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_faces(fv_candidate.face_index, 1)),
+                    poses, bodies.m_faces(fv_candidate.face_index, 1)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_faces(fv_candidate.face_index, 2)));
+                    poses, bodies.m_faces(fv_candidate.face_index, 2)));
 
             if (distance < active_constraint_scale * m_barrier_epsilon) {
                 barriers.fv_candidates.push_back(fv_candidate);
@@ -195,13 +190,10 @@ namespace opt {
     void DistanceBarrierConstraint::debug_compute_distances(
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses,
-        const physics::Poses<double>& displacements,
         Eigen::VectorXd& distances) const
     {
         Candidates candidates;
-        construct_active_barrier_set(bodies, poses, displacements, candidates);
-
-        physics::Poses<double> poses_t1 = poses + displacements;
+        construct_active_barrier_set(bodies, poses, candidates);
 
         typedef double T;
 
@@ -211,36 +203,36 @@ namespace opt {
         for (size_t i = 0; i < candidates.ev_candidates.size(); i++) {
             const auto& ev_candidate = candidates.ev_candidates[i];
             distances(int(i)) = ccd::geometry::point_segment_distance<T>(
-                bodies.world_vertex(poses_t1, ev_candidate.vertex_index),
+                bodies.world_vertex(poses, ev_candidate.vertex_index),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ev_candidate.edge_index, 0)),
+                    poses, bodies.m_edges(ev_candidate.edge_index, 0)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ev_candidate.edge_index, 1)));
+                    poses, bodies.m_edges(ev_candidate.edge_index, 1)));
         }
 
         for (size_t i = 0; i < candidates.ee_candidates.size(); i++) {
             const auto& ee_candidate = candidates.ee_candidates[i];
             distances(int(i)) = ccd::geometry::segment_segment_distance<double>(
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ee_candidate.edge0_index, 0)),
+                    poses, bodies.m_edges(ee_candidate.edge0_index, 0)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ee_candidate.edge0_index, 1)),
+                    poses, bodies.m_edges(ee_candidate.edge0_index, 1)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ee_candidate.edge1_index, 0)),
+                    poses, bodies.m_edges(ee_candidate.edge1_index, 0)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_edges(ee_candidate.edge1_index, 1)));
+                    poses, bodies.m_edges(ee_candidate.edge1_index, 1)));
         }
 
         for (size_t i = 0; i < candidates.fv_candidates.size(); i++) {
             const auto& fv_candidate = candidates.fv_candidates[i];
             distances(int(i)) = ccd::geometry::point_triangle_distance<double>(
-                bodies.world_vertex(poses_t1, fv_candidate.vertex_index),
+                bodies.world_vertex(poses, fv_candidate.vertex_index),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_faces(fv_candidate.face_index, 0)),
+                    poses, bodies.m_faces(fv_candidate.face_index, 0)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_faces(fv_candidate.face_index, 1)),
+                    poses, bodies.m_faces(fv_candidate.face_index, 1)),
                 bodies.world_vertex(
-                    poses_t1, bodies.m_faces(fv_candidate.face_index, 2)));
+                    poses, bodies.m_faces(fv_candidate.face_index, 2)));
         }
     }
 

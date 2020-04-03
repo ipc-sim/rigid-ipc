@@ -36,7 +36,8 @@ namespace time_stepper {
             Eigen::Matrix3d R1 = rb.pose_prev.construct_rotation_matrix();
             R1 += time_step * R1 * Eigen::Hat(rb.velocity.rotation);
             project_orientation(R1);
-            rb.pose.rotation = R1.eulerAngles(2, 1, 0).reverse();
+            Eigen::AngleAxisd r1 = Eigen::AngleAxisd(R1);
+            rb.pose.rotation = r1.angle() * r1.axis();
 
             // Compute the acceleration at ( q0, v0 )
             physics::Pose<double> acceleration(
@@ -49,7 +50,8 @@ namespace time_stepper {
             acceleration.zero_dof(rb.is_dof_fixed, rb.R0);
 
             // Update the velocity
-            rb.velocity += time_step * acceleration;
+            rb.velocity.position += time_step * acceleration.position;
+            rb.velocity.rotation += time_step * acceleration.rotation;
         });
     }
 

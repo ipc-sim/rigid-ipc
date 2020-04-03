@@ -8,26 +8,26 @@ namespace ccd {
 
 void detect_collisions(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const int collision_types,
     ConcurrentImpacts& impacts,
     DetectionMethod method,
     TrajectoryType trajectory)
 {
-    assert(bodies.num_bodies() == poses.size());
-    assert(poses.size() == displacements.size());
+    assert(bodies.num_bodies() == poses_t0.size());
+    assert(poses_t0.size() == poses_t1.size());
 
     // Do the broad phase by detecting candidate impacts
     Candidates candidates;
     detect_collision_candidates(
-        bodies, poses, displacements, collision_types, candidates, method,
+        bodies, poses_t0, poses_t1, collision_types, candidates, method,
         trajectory);
 
     // Do the narrow phase by detecting actual impacts from the candidate
     // set
     detect_collisions_from_candidates(
-        bodies, poses, displacements, candidates, impacts, trajectory);
+        bodies, poses_t0, poses_t1, candidates, impacts, trajectory);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,8 +36,8 @@ void detect_collisions(
 
 void detect_collision_candidates(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const int collision_types,
     Candidates& candidates,
     DetectionMethod method,
@@ -70,12 +70,11 @@ void detect_collision_candidates(
     // detect_collisions(bodies[intersecting_capsules], ...)
 
     if (trajectory == TrajectoryType::LINEARIZED) {
-        Eigen::MatrixXd V_t0 = bodies.world_vertices(poses);
-        Eigen::MatrixXd V_t1 = bodies.world_vertices(poses + displacements);
+        Eigen::MatrixXd V_t0 = bodies.world_vertices(poses_t0);
+        Eigen::MatrixXd V_t1 = bodies.world_vertices(poses_t1);
         detect_collision_candidates(
-            V_t0, V_t1 - V_t0, bodies.m_edges, bodies.m_faces,
-            bodies.group_ids(), collision_types, candidates, method,
-            inflation_radius);
+            V_t0, V_t1, bodies.m_edges, bodies.m_faces, bodies.group_ids(),
+            collision_types, candidates, method, inflation_radius);
         return;
     }
 
@@ -92,12 +91,12 @@ void detect_collision_candidates(
     switch (method) {
     case BRUTE_FORCE:
         detect_collision_candidates_brute_force(
-            bodies.world_vertices(poses), bodies.m_edges, bodies.m_faces,
+            bodies.world_vertices(poses_t0), bodies.m_edges, bodies.m_faces,
             bodies.group_ids(), collision_types, candidates);
         break;
     case HASH_GRID:
         detect_collision_candidates_hash_grid(
-            bodies, poses, displacements, collision_types, candidates,
+            bodies, poses_t0, poses_t1, collision_types, candidates,
             inflation_radius);
         break;
     }
@@ -110,15 +109,15 @@ void detect_collision_candidates(
 // only compare points and edge in the same cells.
 void detect_collision_candidates_hash_grid(
     const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const physics::Poses<double>& displacements,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
     const int collision_types,
     Candidates& candidates,
     const double inflation_radius)
 {
     RigidBodyHashGrid hashgrid;
-    hashgrid.resize(bodies, poses, displacements, inflation_radius);
-    hashgrid.addBodies(bodies, poses, displacements, inflation_radius);
+    hashgrid.resize(bodies, poses_t0, poses_t1, inflation_radius);
+    hashgrid.addBodies(bodies, poses_t0, poses_t1, inflation_radius);
 
     const Eigen::VectorXi& group_ids = bodies.group_ids();
     tbb::parallel_invoke(

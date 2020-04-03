@@ -36,12 +36,10 @@ namespace CollisionType {
 /**
  * @brief Find all collisions in one time step.
  *
- * @param[in] vertices        The vertices of the bodies.
- * @param[in] displacements   The displacements of the vertices in one
- *                            time-step. There must be an equal number of
- *                            vertices and displacements. The trajectories are
- *                            linear over one time-step and the velocity is
- *                            constant.
+ * @param[in] vertices_t0     The vertices of the bodies at the start of the
+ *                            time-step.
+ * @param[in] vertices_t1     The vertices of the bodies at the end of the
+ *                            time-step.
  * @param[in] edges           The edges of the bodies defined as pairs of
  *                            indices into the rows of the vertices matrix. Each
  *                            row is an edge.
@@ -56,8 +54,8 @@ namespace CollisionType {
  *                            collisions.
  */
 void detect_collisions(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
@@ -71,8 +69,8 @@ void detect_collisions(
 
 /// @brief Use broad-phase method to create a set of candidate collisions.
 void detect_collision_candidates(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
@@ -103,11 +101,10 @@ void detect_collision_candidates_brute_force(
 /**
  * @brief Use a hash grid method to create a set of all candidate collisions.
  *
- * @param[in] vertices       The vertices of the bodies.
- * @param[in] displacements  The displacements of the vertices in one time-step.
- *                           There must be an equal number of vertices and
- *                           displacements. The trajectories are linear over one
- *                           time-step and the velocity is constant.
+ * @param[in] vertices_t0     The vertices of the bodies at the start of the
+ *                            time-step.
+ * @param[in] vertices_t1     The vertices of the bodies at the end of the
+ *                            time-step.
  * @param[in] edges          The edges of the bodies defined as pairs of indices
  *                           into the rows of the vertices matrix. Each row is
  *                           an edge.
@@ -116,8 +113,8 @@ void detect_collision_candidates_brute_force(
  * @param[out] candidates    Vector of candidates to build.
  */
 void detect_collision_candidates_hash_grid(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
@@ -130,57 +127,46 @@ void detect_collision_candidates_hash_grid(
 ///////////////////////////////////////////////////////////////////////////////
 
 void detect_collisions_from_candidates(
-    const Eigen::MatrixXd& vertices,
-    const Eigen::MatrixXd& displacements,
+    const Eigen::MatrixXd& vertices_t0,
+    const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
     const Candidates& candidates,
     ConcurrentImpacts& impacts);
 
-/**
- * @brief Determine if an edge-vertext pair intersects.
- *
- * @param[in] Vi           The position, in 2D, of the first endpoint of the
- *                         edge.
- * @param[in] Vj           The position, in 2D, of the second endpoint of the
- *                         edge.
- * @param[in] Vk           The position, in 2D, of the vertex.
- * @param[in] Ui           The displacement of \f$V_i(t)\f$ over the time-step.
- * @param[in] Uj           The displacement of \f$V_j(t)\f$ over the time-step.
- * @param[in] Uk           The displacement of \f$V_k(t)\f$ over the time-step.
- */
+/// @brief Determine if an edge-vertext pair intersects.
 bool detect_edge_vertex_collisions_narrow_phase(
-    const Eigen::Vector2d& Vi,
-    const Eigen::Vector2d& Vj,
-    const Eigen::Vector2d& Vk,
-    const Eigen::Vector2d& Ui,
-    const Eigen::Vector2d& Uj,
-    const Eigen::Vector2d& Uk,
+    const Eigen::Vector2d& edge_vertex0_t0,
+    const Eigen::Vector2d& edge_vertex1_t0,
+    const Eigen::Vector2d& vertex_t0,
+    const Eigen::Vector2d& edge_vertex0_t1,
+    const Eigen::Vector2d& edge_vertex1_t1,
+    const Eigen::Vector2d& vertex_t1,
     double& toi,
     double& alpha);
 
 bool detect_edge_edge_collisions_narrow_phase(
-    const Eigen::Vector3d& Vi,
-    const Eigen::Vector3d& Vj,
-    const Eigen::Vector3d& Vk,
-    const Eigen::Vector3d& Vl,
-    const Eigen::Vector3d& Ui,
-    const Eigen::Vector3d& Uj,
-    const Eigen::Vector3d& Uk,
-    const Eigen::Vector3d& Ul,
+    const Eigen::Vector3d& edge0_vertex0_t0,
+    const Eigen::Vector3d& edge0_vertex1_t0,
+    const Eigen::Vector3d& edge1_vertex0_t0,
+    const Eigen::Vector3d& edge1_vertex1_t0,
+    const Eigen::Vector3d& edge0_vertex0_t1,
+    const Eigen::Vector3d& edge0_vertex1_t1,
+    const Eigen::Vector3d& edge1_vertex0_t1,
+    const Eigen::Vector3d& edge1_vertex1_t1,
     double& toi,
     double& edge0_alpha,
     double& edge1_alpha);
 
 bool detect_face_vertex_collisions_narrow_phase(
-    const Eigen::Vector3d& Vi,
-    const Eigen::Vector3d& Vj,
-    const Eigen::Vector3d& Vk,
-    const Eigen::Vector3d& Vl,
-    const Eigen::Vector3d& Ui,
-    const Eigen::Vector3d& Uj,
-    const Eigen::Vector3d& Uk,
-    const Eigen::Vector3d& Ul,
+    const Eigen::Vector3d& face_vertex0_t0,
+    const Eigen::Vector3d& face_vertex1_t0,
+    const Eigen::Vector3d& face_vertex2_t0,
+    const Eigen::Vector3d& vertex_t0,
+    const Eigen::Vector3d& face_vertex0_t1,
+    const Eigen::Vector3d& face_vertex1_t1,
+    const Eigen::Vector3d& face_vertex2_t1,
+    const Eigen::Vector3d& vertex_t1,
     double& toi,
     double& u,
     double& v);

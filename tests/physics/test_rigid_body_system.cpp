@@ -34,8 +34,8 @@ TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
     Eigen::MatrixXd vertices(4, 2);
     Eigen::MatrixXi edges(4, 2);
     Pose<double> velocity = Pose<double>::Zero(vertices.cols());
-    Pose<double> rb_displ_1 = Pose<double>::Zero(vertices.cols());
-    Pose<double> rb_displ_2 = Pose<double>::Zero(vertices.cols());
+    Pose<double> rb1_pose_t1 = Pose<double>::Zero(vertices.cols());
+    Pose<double> rb2_pose_t1 = Pose<double>::Zero(vertices.cols());
 
     Eigen::MatrixXd expected(4, 2);
 
@@ -44,21 +44,21 @@ TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
 
     SECTION("Translation Case")
     {
-        rb_displ_1.position << 0.5, 0.5;
-        rb_displ_2.position << 1.0, 1.0;
+        rb1_pose_t1.position << 0.5, 0.5;
+        rb2_pose_t1.position << 1.0, 1.0;
 
         // expected displacements
         expected.resize(8, 2);
         expected.block(0, 0, 4, 2) =
-            rb_displ_1.position.transpose().replicate(4, 1);
+            rb1_pose_t1.position.transpose().replicate(4, 1);
         expected.block(4, 0, 4, 2) =
-            rb_displ_2.position.transpose().replicate(4, 1);
+            rb2_pose_t1.position.transpose().replicate(4, 1);
     }
 
     SECTION("90 Deg Rotation Case")
     {
-        rb_displ_1.rotation << 0.5 * M_PI;
-        rb_displ_2.rotation << M_PI;
+        rb1_pose_t1.rotation << 0.5 * M_PI;
+        rb2_pose_t1.rotation << M_PI;
         expected.resize(8, 2);
         expected.block(0, 0, 4, 2) << 1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, -1.0;
         expected.block(4, 0, 4, 2) << 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
@@ -73,9 +73,7 @@ TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
     RigidBodyAssembler assembler;
     assembler.init(rbs);
 
-    Poses<double> poses(2);
-    poses[0] = rb_displ_1 + rbs[0].pose;
-    poses[1] = rb_displ_2 + rbs[1].pose;
+    Poses<double> poses = { { rb1_pose_t1, rb2_pose_t1 } };
 
     /// compute displacements between current and given positions
     /// TODO: update test to not need displacements

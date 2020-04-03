@@ -191,13 +191,13 @@ TEST_CASE("2D hash grid", "[hashgrid][2D]")
 
         ConcurrentImpacts brute_force_impacts;
         detect_collisions(
-            vertices, displacements, edges, Eigen::MatrixXi(0, 3),
+            vertices, vertices + displacements, edges, Eigen::MatrixXi(0, 3),
             Eigen::VectorXi(), CollisionType::EDGE_VERTEX, brute_force_impacts,
             DetectionMethod::BRUTE_FORCE);
 
         ConcurrentImpacts hash_impacts;
         detect_collisions(
-            vertices, displacements, edges, Eigen::MatrixXi(0, 3),
+            vertices, vertices + displacements, edges, Eigen::MatrixXi(0, 3),
             Eigen::VectorXi(), CollisionType::EDGE_VERTEX, hash_impacts,
             DetectionMethod::HASH_GRID);
 
@@ -266,14 +266,14 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
     for (int i = 0; i < 10; i++) {
         ConcurrentImpacts brute_force_impacts;
         detect_collisions(
-            vertices, displacements, edges, faces, group_ids,
+            vertices, vertices + displacements, edges, faces, group_ids,
             CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX,
             brute_force_impacts, DetectionMethod::BRUTE_FORCE);
         REQUIRE(brute_force_impacts.ev_impacts.size() == 0);
 
         ConcurrentImpacts hash_impacts;
         detect_collisions(
-            vertices, displacements, edges, faces, group_ids,
+            vertices, vertices + displacements, edges, faces, group_ids,
             CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX, hash_impacts,
             DetectionMethod::HASH_GRID);
         REQUIRE(hash_impacts.ev_impacts.size() == 0);
@@ -330,7 +330,6 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
 TEST_CASE("3D brute force is duplicate free", "[ccd][brute_force]")
 {
     Eigen::MatrixXd vertices;
-    Eigen::MatrixXd displacements;
     Eigen::MatrixXi edges;
     Eigen::MatrixXi faces;
     Eigen::VectorXi group_ids;
@@ -355,10 +354,6 @@ TEST_CASE("3D brute force is duplicate free", "[ccd][brute_force]")
         }
 
         faces.resize(0, 3);
-
-        displacements = Eigen::MatrixXd::Zero(vertices.rows(), vertices.cols());
-        displacements.col(1).head(2).setConstant(2);
-        displacements.col(1).tail(2).setConstant(-2);
     }
     SECTION("Complex")
     {
@@ -372,9 +367,6 @@ TEST_CASE("3D brute force is duplicate free", "[ccd][brute_force]")
             / "meshes" / fname;
         igl::read_triangle_mesh(mesh_path.string(), vertices, faces);
         igl::edges(faces, edges);
-
-        displacements = Eigen::MatrixXd::Zero(vertices.rows(), vertices.cols());
-        displacements.col(1).setOnes();
     }
 
     for (int i = 0; i < 10; i++) {
@@ -408,8 +400,5 @@ TEST_CASE("3D brute force is duplicate free", "[ccd][brute_force]")
         CHECK(fv_unique_end == candidates.fv_candidates.end());
         CHECK(
             candidates.fv_candidates.size() <= faces.rows() * vertices.rows());
-
-        displacements.setRandom();
-        displacements *= 3;
     }
 }

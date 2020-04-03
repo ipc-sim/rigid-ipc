@@ -16,7 +16,7 @@ using namespace ccd::physics;
 RigidBody rb_from_displacements(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& edges,
-    const Pose<double>& displacement)
+    Pose<double> pose_t1)
 {
     // move vertices so they center of mass is at 0,0
     Eigen::RowVectorXd x = compute_center_of_mass(vertices, edges);
@@ -27,7 +27,7 @@ RigidBody rb_from_displacements(
     pose_t0.position = x;
 
     // set previous_step position to:
-    Pose<double> pose_t1 = pose_t0 + displacement;
+    pose_t1.position += pose_t0.position;
 
     // set velocity to zero
     Pose<double> velocity = Pose<double>::Zero(vertices.cols());
@@ -52,8 +52,8 @@ TEST_CASE(
     Eigen::MatrixXd vertices(4, 2);
     int dim = vertices.cols();
     Eigen::MatrixXi edges(4, 2);
-    Pose<double> displ_1 = Pose<double>::Zero(dim),
-                 displ_2 = Pose<double>::Zero(dim);
+    Pose<double> rb1_pose_t1 = Pose<double>::Zero(dim);
+    Pose<double> rb2_pose_t1 = Pose<double>::Zero(dim);
 
     Eigen::MatrixXd expected(4, 2);
 
@@ -69,38 +69,41 @@ TEST_CASE(
 
     SECTION("Translation Case")
     {
-        displ_1.position << 0.5, 0.5;
-        displ_2.position << 1.0, 1.0;
+        rb1_pose_t1.position << 0.5, 0.5;
+        rb2_pose_t1.position << 1.0, 1.0;
         dx = 0.5 * mass
-            * (displ_1.position.squaredNorm() + displ_2.position.squaredNorm());
+            * (rb1_pose_t1.position.squaredNorm()
+               + rb2_pose_t1.position.squaredNorm());
     }
 
     SECTION("90 Deg Rotation Case")
     {
-        displ_1.rotation << 0.5 * M_PI;
-        displ_2.rotation << M_PI;
+        rb1_pose_t1.rotation << 0.5 * M_PI;
+        rb2_pose_t1.rotation << M_PI;
         dx = 0.5 * moment_inertia
-            * (displ_1.rotation.squaredNorm() + displ_2.rotation.squaredNorm());
+            * (rb1_pose_t1.rotation.squaredNorm()
+               + rb2_pose_t1.rotation.squaredNorm());
     }
 
     using namespace ccd::physics;
     using namespace ccd::opt;
 
-    std::vector<RigidBody> rbs;
-    rbs.push_back(rb_from_displacements(vertices, edges, displ_1));
-    rbs.push_back(rb_from_displacements(vertices, edges, displ_2));
+    std::vector<RigidBody> rbs = {
+        { rb_from_displacements(vertices, edges, rb1_pose_t1),
+          rb_from_displacements(vertices, edges, rb2_pose_t1) }
+    };
 
     DistanceBarrierRBProblem rbp("rb_problem");
     rbp.init(rbs);
 
     // displacement cases
-    Eigen::VectorXd x = rbp.poses_to_dofs<double>(
-        { { rbs[0].pose_prev + displ_1, rbs[1].pose_prev + displ_2 } });
+
+    Eigen::VectorXd x =
+        rbp.poses_to_dofs<double>({ { rb1_pose_t1, rb2_pose_t1 } });
     double fx = rbp.eval_f(x);
     CHECK(fx == Approx(0.0));
 
-    x = rbp.poses_to_dofs<double>(
-        { { rbs[0].pose_prev + displ_1 * 2, rbs[1].pose_prev + displ_2 * 2 } });
+    x = rbp.poses_to_dofs<double>({ { 2 * rb1_pose_t1, 2 * rb2_pose_t1 } });
     fx = rbp.eval_f(x);
     CHECK(fx == Approx(dx));
 }

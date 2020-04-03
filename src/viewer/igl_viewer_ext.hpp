@@ -1,9 +1,10 @@
 #pragma once
 
+#include <igl/colormap.h>
 #include <igl/opengl/ViewerData.h>
 #include <igl/opengl/glfw/Viewer.h>
 
-#include <igl/colormap.h>
+#include <physics/pose.hpp>
 
 namespace igl {
 namespace opengl {
@@ -20,6 +21,7 @@ namespace opengl {
         virtual inline bool is_mesh() { return false; }
         virtual inline bool is_scalar_field() { return false; }
         virtual inline bool is_vector_field() { return false; }
+        virtual inline bool is_com() { return false; }
 
         /// only used in graph data for now
         virtual void update_vertex_data() {}
@@ -98,10 +100,10 @@ namespace opengl {
             igl::opengl::glfw::Viewer* _viewer,
             const Eigen::RowVector3d& color);
 
-        inline bool is_vector_field() override { return true; }
+        virtual inline bool is_vector_field() override { return true; }
 
         void recolor() override;
-        void
+        virtual void
         set_vector_field(const Eigen::MatrixXd& V, const Eigen::MatrixXd& F);
 
         void
@@ -109,6 +111,19 @@ namespace opengl {
 
         Eigen::MatrixXd mF;
         Eigen::MatrixXd mV;
+    };
+
+    class CoMData : public VectorFieldData {
+    public:
+        CoMData(igl::opengl::glfw::Viewer* _viewer);
+
+        inline bool is_vector_field() override { return false; }
+        inline bool is_com() override { return true; }
+
+        void set_coms(const ccd::physics::Poses<double>& poses);
+
+        void set_vector_field(
+            const Eigen::MatrixXd& V, const Eigen::MatrixXd& F) override;
     };
 
     class ScalarFieldData : public ViewerDataExt {

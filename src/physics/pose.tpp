@@ -3,6 +3,8 @@
 #include <Eigen/Geometry>
 #include <tbb/tbb.h>
 
+#include <logger.hpp>
+#include <utils/is_zero.hpp>
 #include <utils/not_implemented_error.hpp>
 
 namespace ccd {
@@ -132,149 +134,59 @@ namespace physics {
         if (dim() == 2) {
             return Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
         } else {
-            typedef Eigen::Vector3<T> Vector3T;
-            return (Eigen::AngleAxis<T>(rotation.z(), Vector3T::UnitZ())
-                    * Eigen::AngleAxis<T>(rotation.y(), Vector3T::UnitY())
-                    * Eigen::AngleAxis<T>(rotation.x(), Vector3T::UnitX()))
-                .toRotationMatrix();
+            T angle = rotation.norm();
+            Eigen::Vector3<T> axis =
+                rotation / (is_zero(angle) ? T(1.0) : angle);
+            return Eigen::AngleAxis<T>(angle, axis).toRotationMatrix();
         }
     }
 
     template <typename T>
-    std::vector<Eigen::MatrixXX3<T>>
-    Pose<T>::construct_rotation_matrix_gradient() const
+    Eigen::Quaternion<T> Pose<T>::construct_quaternion() const
     {
-        std::vector<Eigen::MatrixXX3<T>> grad_R(
-            rot_ndof(), Eigen::MatrixXX3<T>(dim(), dim()));
         if (dim() == 2) {
-            grad_R[0].row(0) << -sin(rotation(0)), -cos(rotation(0));
-            grad_R[0].row(1) << cos(rotation(0)), -sin(rotation(0));
+            return Eigen::Quaternion<T>(
+                Eigen::AngleAxis<T>(rotation(0), Eigen::Vector3<T>::UnitZ()));
         } else {
-            // Construct 3D rotation matricies
-            Eigen::Matrix<T, 3, 3> Rx =
-                Eigen::AngleAxis<T>(rotation.x(), Eigen::Vector3<T>::UnitX())
-                    .toRotationMatrix();
-            Eigen::Matrix<T, 3, 3> Ry =
-                Eigen::AngleAxis<T>(rotation.y(), Eigen::Vector3<T>::UnitY())
-                    .toRotationMatrix();
-            Eigen::Matrix<T, 3, 3> Rz =
-                Eigen::AngleAxis<T>(rotation.z(), Eigen::Vector3<T>::UnitZ())
-                    .toRotationMatrix();
-
-            // Construct gradient of each rotation matrix wrt its angle
-            Eigen::Matrix<T, 3, 3> grad_Rx;
-            // clang-format off
-            grad_Rx <<
-                0,          0,                  0,
-                0, -sin(rotation.x()), -cos(rotation.x()),
-                0,  cos(rotation.x()), -sin(rotation.x());
-            Eigen::Matrix<T, 3, 3> grad_Ry;
-            grad_Rx <<
-                -sin(rotation.y()), 0,  cos(rotation.y()),
-                         0,         0,          0,
-                -cos(rotation.y()), 0, -sin(rotation.y());
-            Eigen::Matrix<T, 3, 3> grad_Rz;
-            grad_Rx <<
-                -sin(rotation.z()), -cos(rotation.z()), 0,
-                 cos(rotation.z()), -sin(rotation.z()), 0,
-                         0,                 0,          0;
-            // clang-format on
-            grad_R[0] = Rz * Ry * grad_Rx;
-            grad_R[1] = Rz * grad_Ry * Rx;
-            grad_R[2] = grad_Rz * Ry * Rx;
+            T angle = rotation.norm();
+            Eigen::Vector3<T> axis = rotation;
+            if (is_zero(angle)) {
+                // The error of doing this will be on the order of the
+                // adjustment.
+                angle += T(1e-16);
+            }
+            axis /= angle;
+            return Eigen::Quaternion<T>(Eigen::AngleAxis<T>(angle, axis));
         }
-        return grad_R;
     }
 
     template <typename T>
-    std::vector<std::vector<Eigen::MatrixXX3<T>>>
-    Pose<T>::construct_rotation_matrix_hessian() const
+    Pose<T>
+    Pose<T>::interpolate(const Pose<T>& pose0, const Pose<T>& pose1, T t)
     {
-        std::vector<std::vector<Eigen::MatrixXX3<T>>> hess_R(
-            rot_ndof(),
-            std::vector<Eigen::MatrixXX3<T>>(
-                rot_ndof(), Eigen::MatrixXX3<T>(dim(), dim())));
-
-        if (dim() == 2) {
-            hess_R[0][0] =
-                -Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
+        static_assert(
+            !std::is_same<T, Interval>::value,
+            "You cannot use interpolate with Intervals");
+        assert(pose0.dim() == pose1.dim());
+        Pose<T> pose;
+        pose.position = (pose1.position - pose0.position) * t + pose0.position;
+        if (pose0.dim() == 2) {
+            pose.rotation =
+                (pose1.rotation - pose0.rotation) * t + pose0.rotation;
         } else {
-            // Construct 3D rotation matricies
-            Eigen::Matrix<T, 3, 3> Rx =
-                Eigen::AngleAxis<T>(rotation.x(), Eigen::Vector3<T>::UnitX())
-                    .toRotationMatrix();
-            Eigen::Matrix<T, 3, 3> Ry =
-                Eigen::AngleAxis<T>(rotation.y(), Eigen::Vector3<T>::UnitY())
-                    .toRotationMatrix();
-            Eigen::Matrix<T, 3, 3> Rz =
-                Eigen::AngleAxis<T>(rotation.z(), Eigen::Vector3<T>::UnitZ())
-                    .toRotationMatrix();
-
-            // Construct gradient of each rotation matrix wrt its angle
-            Eigen::Matrix<T, 3, 3> grad_Rx;
-            // clang-format off
-            grad_Rx <<
-                0,          0,                  0,
-                0, -sin(rotation.x()), -cos(rotation.x()),
-                0,  cos(rotation.x()), -sin(rotation.x());
-            Eigen::Matrix<T, 3, 3> grad_Ry;
-            grad_Rx <<
-                -sin(rotation.y()), 0,  cos(rotation.y()),
-                         0,         0,          0,
-                -cos(rotation.y()), 0, -sin(rotation.y());
-            Eigen::Matrix<T, 3, 3> grad_Rz;
-            grad_Rx <<
-                -sin(rotation.z()), -cos(rotation.z()), 0,
-                 cos(rotation.z()), -sin(rotation.z()), 0,
-                         0,                 0,          0;
-            // clang-format on
-            hess_R[0][0] = Rz * Ry * -Rx;          // ∂R/∂x ∂R/∂x
-            hess_R[0][1] = Rz * grad_Ry * grad_Rx; // ∂R/∂x ∂R/∂y
-            hess_R[0][2] = grad_Rz * Ry * grad_Rx; // ∂R/∂x ∂R/∂z
-            hess_R[1][0] = Rz * grad_Ry * grad_Rx; // ∂R/∂y ∂R/∂x
-            hess_R[1][1] = Rz * -Ry * Rx;          // ∂R/∂y ∂R/∂y
-            hess_R[1][2] = grad_Rz * grad_Ry * Rx; // ∂R/∂y ∂R/∂z
-            hess_R[2][0] = grad_Rz * Ry * grad_Rx; // ∂R/∂z ∂R/∂x
-            hess_R[2][1] = grad_Rz * grad_Ry * Rx; // ∂R/∂z ∂R/∂y
-            hess_R[2][2] = -Rz * Ry * Rx;          // ∂R/∂z ∂R/∂z
+            Eigen::Quaternion<T> q0 = pose0.construct_quaternion();
+            Eigen::Quaternion<T> q1 = pose1.construct_quaternion();
+            Eigen::Quaternion<T> q = q0.slerp(t, q1);
+            Eigen::AngleAxis<T> aa(q);
+            pose.rotation = aa.angle() * aa.axis();
         }
-        return hess_R;
+        return pose;
     }
 
     template <typename T> bool Pose<T>::operator==(const Pose<T>& other) const
     {
         return this->position == other.position
             && this->rotation == other.rotation;
-    }
-
-    template <typename T> Pose<T> Pose<T>::operator+(const Pose<T>& other) const
-    {
-        assert(dim() == other.dim());
-        return Pose<T>(
-            this->position + other.position, this->rotation + other.rotation);
-    }
-
-    template <typename T> Pose<T>& Pose<T>::operator+=(const Pose<T>& other)
-    {
-        assert(dim() == other.dim());
-        this->position += other.position;
-        this->rotation += other.rotation;
-        return *this;
-    }
-
-    template <typename T> Pose<T> Pose<T>::operator-(const Pose<T>& other) const
-    {
-        assert(dim() == other.dim());
-        return Pose<T>(
-            this->position - other.position, this->rotation - other.rotation);
-    }
-
-    template <typename T> Pose<T>& Pose<T>::operator-=(const Pose<T>& other)
-    {
-        assert(dim() == other.dim());
-        this->position -= other.position;
-        this->rotation -= other.rotation;
-        return *this;
     }
 
     template <typename T> Pose<T>& Pose<T>::operator*=(const T& x)
@@ -289,30 +201,17 @@ namespace physics {
         return Pose<T>(this->position / x, this->rotation / x);
     }
 
-    template <typename T>
-    Pose<T>
-    Pose<T>::lerp(const Pose<T>& pose0, const Pose<T>& pose1, const T& t)
-    {
-        assert(pose0.dim() == pose1.dim());
-        return (pose1 - pose0) * t + pose0;
-    }
+    ///////////////////////////////////////////////////////////////////////////
+    // Operations on vector of Poses
 
     template <typename T>
-    Poses<T> operator+(const Poses<T>& poses0, const Poses<T>& poses1)
+    Poses<T> interpolate(const Poses<T>& poses0, const Poses<T>& poses1, T t)
     {
-        Poses<T> sum = poses0;
-        tbb::parallel_for(
-            size_t(0), sum.size(), [&](size_t i) { sum[i] += poses1[i]; });
-        return sum;
-    }
-
-    template <typename T>
-    Poses<T> operator-(const Poses<T>& poses0, const Poses<T>& poses1)
-    {
-        Poses<T> diff = poses0;
-        tbb::parallel_for(
-            size_t(0), diff.size(), [&](size_t i) { diff[i] -= poses1[i]; });
-        return diff;
+        Poses<T> poses(poses0.size());
+        tbb::parallel_for(size_t(0), poses.size(), [&](size_t i) {
+            poses[i] = Pose<T>::interpolate(poses0[i], poses1[i], t);
+        });
+        return poses;
     }
 
     template <typename T> Poses<T> operator*(const Poses<T>& poses, const T& x)
@@ -335,4 +234,42 @@ namespace physics {
     }
 
 } // namespace physics
+
+template <typename T> Eigen::Matrix3<T> rotate_to_z(Eigen::Vector3<T> n)
+{
+    if (n.norm() == T(0)) {
+        return Eigen::Matrix3<T>::Identity();
+    }
+    return Eigen::Quaternion<T>::FromTwoVectors(n, Eigen::Vector3<T>::UnitZ())
+        .toRotationMatrix();
+}
+
+template <typename T> Eigen::Matrix3<T> rotate_around_z(const T& theta)
+{
+    Eigen::Matrix3<T> R;
+    R.row(0) << cos(theta), -sin(theta), T(0);
+    R.row(1) << sin(theta), cos(theta), T(0);
+    R.row(2) << T(0), T(0), T(1);
+    return R;
+}
+
+template <typename T>
+void decompose_to_z_screwing(
+    const physics::Pose<T>& pose_t0,
+    const physics::Pose<T>& pose_t1,
+    Eigen::Matrix3<T>& R0,
+    Eigen::Matrix3<T>& P,
+    T& omega)
+{
+    // Decompose the inbetween rotation as a rotation around the z-axis:
+    //     R = Pᵀ R_z P
+    // Where R = R₁R₀ᵀ, P is a rotation from n̂ to ẑ, and R_z is a rotation
+    // of θ around the z-axis.
+    R0 = pose_t0.construct_rotation_matrix();
+    Eigen::Matrix3<T> R1 = pose_t1.construct_rotation_matrix();
+    Eigen::AngleAxis<T> r(R1 * R0.transpose());
+    omega = r.angle();
+    P = rotate_to_z(r.axis());
+}
+
 } // namespace ccd

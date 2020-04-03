@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <vector>
 
 #include <utils/eigen_ext.hpp>
@@ -70,17 +71,13 @@ namespace physics {
         }
 
         Eigen::MatrixXX3<T> construct_rotation_matrix() const;
-        std::vector<Eigen::MatrixXX3<T>>
-        construct_rotation_matrix_gradient() const;
-        std::vector<std::vector<Eigen::MatrixXX3<T>>>
-        construct_rotation_matrix_hessian() const;
+        Eigen::Quaternion<T> construct_quaternion() const;
+
+        static Pose<T>
+        interpolate(const Pose<T>& pose0, const Pose<T>& pose1, T t);
 
         bool operator==(const Pose<T>& other) const;
 
-        Pose<T> operator+(const Pose<T>& other) const;
-        inline Pose<T>& operator+=(const Pose<T>& other);
-        Pose<T> operator-(const Pose<T>& other) const;
-        inline Pose<T>& operator-=(const Pose<T>& other);
         friend Pose<T> operator*(const Pose<T>& pose, const T& x)
         {
             return Pose<T>(pose.position * x, pose.rotation * x);
@@ -91,8 +88,6 @@ namespace physics {
         }
         inline Pose<T>& operator*=(const T& x);
         Pose<T> operator/(const T& x) const;
-        static Pose<T>
-        lerp(const Pose<T>& pose0, const Pose<T>& pose1, const T& t);
 
         template <typename T1> Pose<T1> cast() const
         {
@@ -102,22 +97,29 @@ namespace physics {
 
         /// Position dof (either 2D or 3D)
         Eigen::VectorX3<T> position;
-        /// Rotation dof (either 1D or 3D) expressed in Euler angles
+        /// Rotation dof (either 1D or 3D) expressed as a rotation vector
         Eigen::VectorX3<T> rotation;
-        // TODO: Use Quaternions
-        // Eigen::Quaternion<T> rotation;
     };
 
     template <typename T>
-    Poses<T> operator+(const Poses<T>& poses0, const Poses<T>& poses1);
-    template <typename T>
-    Poses<T> operator-(const Poses<T>& poses0, const Poses<T>& poses1);
+    Poses<T> interpolate(const Poses<T>& pose0, const Poses<T>& pose1, T t);
     template <typename T> Poses<T> operator*(const Poses<T>& poses, const T& x);
     /// @brief Cast poses element-wise.
     template <typename T1, typename T2>
     Poses<T2> cast(const Poses<T1>& poses_T1);
 
 } // namespace physics
+
+template <typename T> Eigen::Matrix3<T> rotate_to_z(Eigen::Vector3<T> n);
+template <typename T> Eigen::Matrix3<T> rotate_around_z(const T& theta);
+template <typename T>
+void decompose_to_z_screwing(
+    const physics::Pose<T>& pose_t0,
+    const physics::Pose<T>& pose_t1,
+    Eigen::Matrix3<T>& R0,
+    Eigen::Matrix3<T>& P,
+    T& omega);
+
 } // namespace ccd
 
 #include "pose.tpp"

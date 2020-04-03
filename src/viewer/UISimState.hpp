@@ -106,6 +106,7 @@ protected:
 private:
     std::shared_ptr<igl::opengl::MeshData> mesh_data;
     std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
+    std::shared_ptr<igl::opengl::CoMData> com_data;
 
     std::map<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>> datas_;
     std::vector<std::string> data_names_;

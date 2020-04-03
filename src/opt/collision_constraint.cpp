@@ -28,12 +28,12 @@ namespace opt {
 
     void CollisionConstraint::construct_collision_set(
         const physics::RigidBodyAssembler& bodies,
-        const physics::Poses<double> poses,
-        const physics::Poses<double> displacements,
+        const physics::Poses<double> poses_t0,
+        const physics::Poses<double> poses_t1,
         ConcurrentImpacts& impacts) const
     {
         ccd::detect_collisions(
-            bodies, poses, displacements, dim_to_collision_type(bodies.dim()),
+            bodies, poses_t0, poses_t1, dim_to_collision_type(bodies.dim()),
             impacts, detection_method, trajectory_type);
     }
 

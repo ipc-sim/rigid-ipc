@@ -3,6 +3,8 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include <physics/rigid_body_problem.hpp>
+
 namespace ccd {
 
 UISimState::UISimState()
@@ -45,11 +47,15 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
     viewer->append_mesh();
     velocity_data = std::make_unique<igl::opengl::VectorFieldData>(
         _viewer,
-        Eigen::RowVector3d(0xF1, 0xC4, 0x0F) / 0xFF); // #F1C40F SUN FLOWER
+        Eigen::RowVector3d(0xF1, 0xC4, 0x0F) / 0xFF); // #F1C40F - SUN FLOWER
     velocity_data->data().show_overlay = false;
+
+    com_data = std::make_unique<igl::opengl::CoMData>(_viewer);
+    com_data->data().show_overlay = true;
 
     datas_.emplace("edges", mesh_data);
     datas_.emplace("velocity", velocity_data);
+    datas_.emplace("body-frame", com_data);
 
     for (auto it = datas_.begin(); it != datas_.end(); ++it) {
         data_names_.push_back(it->first);
@@ -77,6 +83,12 @@ void UISimState::load_scene()
     mesh_data->data().point_size = 0 * pixel_ratio();
 
     velocity_data->set_vector_field(q, v);
+
+    if (m_state.problem_ptr->is_rb_problem()) {
+        com_data->set_coms(std::dynamic_pointer_cast<physics::RigidBodyProblem>(
+                               m_state.problem_ptr)
+                               ->m_assembler.rb_poses());
+    }
 
     m_has_scene = true;
     m_player_state = PlayerState::Paused;
@@ -121,6 +133,12 @@ void UISimState::redraw_scene()
 
     mesh_data->update_vertices(q1);
     velocity_data->update_vector_field(q1, v1);
+
+    if (m_state.problem_ptr->is_rb_problem()) {
+        com_data->set_coms(std::dynamic_pointer_cast<physics::RigidBodyProblem>(
+                               m_state.problem_ptr)
+                               ->m_assembler.rb_poses());
+    }
 }
 
 bool UISimState::pre_draw_loop()

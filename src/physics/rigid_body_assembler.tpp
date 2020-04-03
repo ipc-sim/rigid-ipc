@@ -19,6 +19,22 @@ namespace physics {
     }
 
     template <typename T>
+    Eigen::MatrixX<T> RigidBodyAssembler::world_vertices(
+        const std::vector<Eigen::MatrixXX3<T>>& rotations,
+        const std::vector<Eigen::VectorX3<T>>& positions) const
+    {
+        assert(rotations.size() == num_bodies());
+        assert(positions.size() == num_bodies());
+        Eigen::MatrixX<T> V(num_vertices(), dim());
+        for (size_t i = 0; i < num_bodies(); ++i) {
+            const RigidBody& rb = m_rbs[i];
+            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), rb.dim()) =
+                rb.world_vertices(rotations[i], positions[i]);
+        }
+        return V;
+    }
+
+    template <typename T>
     Eigen::VectorX3<T> RigidBodyAssembler::world_vertex(
         const Pose<T>& pose, const int vertex_idx) const
     {
