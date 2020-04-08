@@ -5,6 +5,7 @@
 #include <igl/edges.h>
 #include <igl/read_triangle_mesh.h>
 
+#include <io/read_obj.hpp>
 #include <io/serialize_json.hpp>
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -67,10 +68,15 @@ namespace io {
                         / "meshes" / mesh_path;
                 }
                 spdlog::info("loading mesh: {:s}", mesh_path.string());
-                igl::read_triangle_mesh(mesh_path.string(), vertices, faces);
-                // Initialize edges
-                if (faces.size()) {
-                    igl::edges(faces, edges);
+                if (mesh_path.extension() == ".obj") {
+                    read_obj(mesh_path.string(), vertices, edges, faces);
+                } else {
+                    igl::read_triangle_mesh(
+                        mesh_path.string(), vertices, faces);
+                    // Initialize edges
+                    if (faces.size()) {
+                        igl::edges(faces, edges);
+                    }
                 }
             } else {
                 from_json<double>(args["vertices"], vertices);

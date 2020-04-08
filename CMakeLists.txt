@@ -58,6 +58,7 @@ add_library(${PROJECT_NAME}
     src/io/opt_results.cpp
     src/io/serialize_json.cpp
     src/io/read_rb_scene.cpp
+    src/io/read_obj.cpp
 
     src/physics/mass.cpp
     src/physics/rigid_body_problem.cpp
