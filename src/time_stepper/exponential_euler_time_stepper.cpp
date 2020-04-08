@@ -17,7 +17,7 @@ namespace time_stepper {
         const Eigen::Vector3d& gravity,
         const double& time_step) const
     {
-        assert(bodies.dim() == 3);
+        assert(body.dim() == 3);
 
         // Zero out velocity of fixed dof
         // Fixed dof is specified in body frame so provide a transform
