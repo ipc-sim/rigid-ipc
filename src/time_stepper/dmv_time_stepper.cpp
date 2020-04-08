@@ -37,10 +37,10 @@ namespace time_stepper {
                 break;
             }
         }
-        if (err > eps || !isfinite(err)) {
+        if (err > eps || !std::isfinite(err)) {
             spdlog::warn("DMV failed to terminate");
         }
-        assert(isfinite(err));
+        assert(std::isfinite(err));
 
         const double q0 = q.w();
         const double q1 = q.x();

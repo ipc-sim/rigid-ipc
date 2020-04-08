@@ -290,7 +290,7 @@ namespace opt {
 
 #ifndef NDEBUG
         for (int i = 0; i < jac_g.size(); i++) {
-            assert(isfinite(jac_g(i)));
+            assert(std::isfinite(jac_g(i)));
         }
 #endif
 
@@ -395,7 +395,7 @@ namespace opt {
             for (int k = 0; k < Hi.outerSize(); ++k) {
                 for (Eigen::SparseMatrix<double>::InnerIterator it(Hi, k); it;
                      ++it) {
-                    assert(isfinite(it.value()));
+                    assert(std::isfinite(it.value()));
                 }
             }
         }

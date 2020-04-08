@@ -213,7 +213,7 @@ namespace opt {
         double lower_bound = std::min(1E-12, c_ * e_b_ / 10.0);
         const double eps = problem.get_barrier_epsilon();
 
-        assert(isfinite(-grad_fx.dot(dir)));
+        assert(std::isfinite(-grad_fx.dot(dir)));
 
         while (-grad_fx.dot(dir) * alpha > lower_bound) {
             debug_ls_iterations += 1;
