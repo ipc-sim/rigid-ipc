@@ -1,6 +1,8 @@
 #include "dmv_time_stepper.hpp"
 
 #include <logger.hpp>
+#include <time_stepper/exponential_euler_time_stepper.hpp>
+#include <time_stepper/time_stepper_factory.hpp>
 
 namespace ccd {
 namespace time_stepper {
@@ -24,7 +26,7 @@ namespace time_stepper {
         double cm2 = am2i + fac2 * cm1 * am3i;
         double cm3 = am3i + fac3 * cm1 * cm2;
         double err = std::numeric_limits<double>::infinity();
-        for (unsigned dmv_itr = 0; dmv_itr < 50; ++dmv_itr) {
+        for (unsigned dmv_itr = 0; dmv_itr < 100; ++dmv_itr) {
             const double cm1b = cm1;
             const double cm2b = cm2;
             const double cm3b = cm3;
@@ -32,12 +34,20 @@ namespace time_stepper {
             cm1 = calpha * am1i + fac1 * cm2 * cm3;
             cm2 = calpha * am2i + fac2 * cm1 * cm3;
             cm3 = calpha * am3i + fac3 * cm1 * cm2;
+            spdlog::debug(
+                "solver=dmv iter={} err={} eps={}", dmv_itr + 1, err, eps);
             err = fabs(cm1b - cm1) + fabs(cm2b - cm2) + fabs(cm3b - cm3);
+            if (!std::isfinite(err)) { // The fixed-point iteration diverged
+                spdlog::error(
+                    "solver=dmv failure=\"DMV fixed-point iteration diverged\" "
+                    "failsafe=\"revert to exponential-euler\"");
+                throw "DMV fixed-point iteration diverged!";
+            }
             if (err <= eps) {
                 break;
             }
         }
-        if (err > eps || !std::isfinite(err)) {
+        if (err > eps) {
             spdlog::warn("DMV failed to terminate");
         }
         assert(std::isfinite(err));
@@ -97,71 +107,79 @@ namespace time_stepper {
      * @param time_step  Timestep
      */
     void DMVTimeStepper::step3D(
-        physics::RigidBodyAssembler& bodies,
+        physics::RigidBody& body,
         const Eigen::Vector3d& gravity,
         const double& time_step) const
     {
         assert(bodies.dim() == 3);
-        physics::Pose<double> zero = physics::Pose<double>::Zero(bodies.dim());
+
+        // Zero out velocity of fixed dof
+        // Fixed dof is specified in body frame so provide a transform
+        body.velocity.zero_dof(body.is_dof_fixed, body.R0);
 
         // Store the previous configurations and velocities
-        tbb::parallel_for_each(bodies.m_rbs, [&](physics::RigidBody& rb) {
-            // Zero out velocity of fixed dof
-            // Fixed dof is specified in body frame so provide a transform
-            rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
+        body.pose_prev = body.pose;
+        body.velocity_prev = body.velocity;
 
-            rb.pose_prev = rb.pose;
-            rb.velocity_prev = rb.velocity;
+        // p1 = m * v0
+        physics::Pose<double> momentum_t1(
+            body.mass * body.velocity.position,
+            body.moment_of_inertia.asDiagonal() * body.velocity.rotation);
 
-            // p1 = m * v0
-            physics::Pose<double> momentum_t1(
-                rb.mass * rb.velocity.position,
-                rb.moment_of_inertia.asDiagonal() * rb.velocity.rotation);
+        // TODO: Compute forces at start of time_step
+        // Hamiltonian so there shouldn't be velocity dependent forces
+        // fsys.computeForce(q0, v0, next_time, F);
+        physics::Pose<double> F = body.force;
+        F.position += body.mass * gravity; // mass will be divided out
+        // Zero out force of fixed dof
+        // Fixed dof is specified in body frame so provide a transform
+        F.zero_dof(body.is_dof_fixed, body.R0);
 
-            // TODO: Compute forces at start of time_step
-            // Hamiltonian so there shouldn't be velocity dependent forces
-            // fsys.computeForce(q0, v0, next_time, F);
-            physics::Pose<double> F = rb.force;
-            F.position += rb.mass * gravity; // mass will be divided out
-            // Zero out force of fixed dof
-            // Fixed dof is specified in body frame so provide a transform
-            F.zero_dof(rb.is_dof_fixed, rb.R0);
+        // First momentum update
+        // p1 += 0.5 * h * F_q0;
+        momentum_t1.position += 0.5 * time_step * F.position;
+        momentum_t1.rotation += 0.5 * time_step * F.rotation;
 
-            // First momentum update
-            // p1 += 0.5 * h * F_q0;
-            momentum_t1.position += 0.5 * time_step * F.position;
-            momentum_t1.rotation += 0.5 * time_step * F.rotation;
+        // Linear position update
+        body.pose.position += time_step * momentum_t1.position / body.mass;
 
-            // Linear position update
-            rb.pose.position += time_step * momentum_t1.position / rb.mass;
+        // Angular position update
+        Eigen::Matrix3d R1;
+        try {
+            DMV(body.pose.construct_rotation_matrix(), momentum_t1.rotation,
+                time_step, body.moment_of_inertia, R1);
+        } catch (...) {
+            // If DMV fails revert to exponential Euler
+            // Revert the changes made
+            body.pose = body.pose_prev;
+            body.velocity = body.velocity_prev;
+            TimeStepperFactory::factory()
+                .get_time_stepper(ExponentialEulerTimeStepper::default_name())
+                ->step(body, gravity, time_step);
+            return;
+        }
+        Eigen::AngleAxisd r1 = Eigen::AngleAxisd(R1);
+        body.pose.rotation = r1.angle() * r1.axis();
 
-            // Angular position update
-            Eigen::Matrix3d R1;
-            DMV(rb.pose.construct_rotation_matrix(), momentum_t1.rotation,
-                time_step, rb.moment_of_inertia, R1);
-            Eigen::AngleAxisd r1 = Eigen::AngleAxisd(R1);
-            rb.pose.rotation = r1.angle() * r1.axis();
+        // TODO: Compute forces at end of time_step
+        // Hamiltonian so there shouldn't be velocity dependent forces
+        // fsys.computeForce(q1, v0, next_time, F);
 
-            // TODO: Compute forces at end of time_step
-            // Hamiltonian so there shouldn't be velocity dependent forces
-            // fsys.computeForce(q1, v0, next_time, F);
+        // Second momentum update
+        // p1 += 0.5 * h * F_q1;
+        momentum_t1.position += 0.5 * time_step * F.position;
+        momentum_t1.rotation += 0.5 * time_step * F.rotation;
 
-            // Second momentum update
-            // p1 += 0.5 * h * F_q1;
-            momentum_t1.position += 0.5 * time_step * F.position;
-            momentum_t1.rotation += 0.5 * time_step * F.rotation;
-
-            // Convert momentum to velocity
-            // Linear component
-            rb.velocity.position = momentum_t1.position / rb.mass;
-            // Rotational component
-            Eigen::Matrix3d R = rb.pose.construct_rotation_matrix();
-            assert(fabs(R.determinant() - 1.0) < 1.0e-9);
-            assert(R.isUnitary(1e-9));
-            Eigen::Vector3d Iinv0 = rb.moment_of_inertia.cwiseInverse();
-            assert((Iinv0.array() > 0.0).all());
-            rb.velocity.rotation = Iinv0.asDiagonal() * momentum_t1.rotation;
-        });
+        // Convert momentum to velocity
+        // Linear component
+        body.velocity.position = momentum_t1.position / body.mass;
+        // Rotational component
+        Eigen::Matrix3d R = body.pose.construct_rotation_matrix();
+        assert(fabs(R.determinant() - 1.0) < 1.0e-9);
+        assert(R.isUnitary(1e-9));
+        Eigen::Vector3d Iinv0 = body.moment_of_inertia.cwiseInverse();
+        assert((Iinv0.array() > 0.0).all());
+        body.velocity.rotation = Iinv0.asDiagonal() * momentum_t1.rotation;
     }
 
 } // namespace time_stepper

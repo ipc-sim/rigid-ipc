@@ -19,12 +19,12 @@ namespace time_stepper {
         /**
          * @brief Take a single time step.
          *
-         * @param bodies     Rigid bodies
+         * @param bodies     Rigid body
          * @param gravity    Acceleration due to gravity
          * @param time_step  Timestep
          */
         virtual void step2D(
-            physics::RigidBodyAssembler& bodies,
+            physics::RigidBody& body,
             const Eigen::Vector2d& gravity,
             const double& time_step) const override;
     };

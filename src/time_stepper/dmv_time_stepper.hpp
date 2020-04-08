@@ -24,7 +24,7 @@ namespace time_stepper {
          * @param time_step  Timestep
          */
         virtual void step3D(
-            physics::RigidBodyAssembler& bodies,
+            physics::RigidBody& body,
             const Eigen::Vector3d& gravity,
             const double& time_step) const override;
     };

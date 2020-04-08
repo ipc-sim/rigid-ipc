@@ -18,6 +18,28 @@ namespace time_stepper {
         /**
          * @brief Take a single time step.
          *
+         * @param bodies     Rigid body
+         * @param gravity    Acceleration due to gravity
+         * @param time_step  Timestep
+         */
+        virtual void step(
+            physics::RigidBody& body,
+            const Eigen::VectorX3d& gravity,
+            const double& time_step) const
+        {
+            switch (body.dim()) {
+            case 2:
+                return step2D(body, gravity, time_step);
+            case 3:
+                return step3D(body, gravity, time_step);
+            default:
+                throw NotImplementedError("Invalid dim for timestepper!");
+            }
+        }
+
+        /**
+         * @brief Take a single time step.
+         *
          * @param bodies     Rigid bodies
          * @param gravity    Acceleration due to gravity
          * @param time_step  Timestep
@@ -43,12 +65,12 @@ namespace time_stepper {
         /**
          * @brief Take a single time step.
          *
-         * @param bodies     Rigid bodies
+         * @param bodies     Rigid body
          * @param gravity    Acceleration due to gravity
          * @param time_step  Timestep
          */
         virtual void step2D(
-            physics::RigidBodyAssembler& bodies,
+            physics::RigidBody& body,
             const Eigen::Vector2d& gravity,
             const double& time_step) const
         {
@@ -63,13 +85,49 @@ namespace time_stepper {
          * @param gravity    Acceleration due to gravity
          * @param time_step  Timestep
          */
-        virtual void step3D(
+        virtual void step2D(
             physics::RigidBodyAssembler& bodies,
+            const Eigen::Vector2d& gravity,
+            const double& time_step) const
+        {
+            assert(bodies.dim() == 2);
+            tbb::parallel_for_each(bodies.m_rbs, [&](physics::RigidBody& body) {
+                step2D(body, gravity, time_step);
+            });
+        }
+
+        /**
+         * @brief Take a single time step.
+         *
+         * @param bodies     Rigid body
+         * @param gravity    Acceleration due to gravity
+         * @param time_step  Timestep
+         */
+        virtual void step3D(
+            physics::RigidBody& body,
             const Eigen::Vector3d& gravity,
             const double& time_step) const
         {
             throw NotImplementedError(
                 fmt::format("Time-stepper {} not implemented in 3D!", name()));
+        }
+
+        /**
+         * @brief Take a single time step.
+         *
+         * @param bodies     Rigid bodies
+         * @param gravity    Acceleration due to gravity
+         * @param time_step  Timestep
+         */
+        virtual void step3D(
+            physics::RigidBodyAssembler& bodies,
+            const Eigen::Vector3d& gravity,
+            const double& time_step) const
+        {
+            assert(bodies.dim() == 3);
+            tbb::parallel_for_each(bodies.m_rbs, [&](physics::RigidBody& body) {
+                step3D(body, gravity, time_step);
+            });
         }
     };
 
