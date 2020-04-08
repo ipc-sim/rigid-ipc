@@ -27,7 +27,6 @@ namespace opt {
         , e_b(1e-5)
         , t_inc(2)
         , num_outer_iterations_(0)
-
         , name_(name)
 
     {
@@ -72,8 +71,8 @@ namespace opt {
         assert(general_problem_ptr != nullptr);
         barrier_problem_ptr.reset();
 
-        barrier_problem_ptr
-            = std::make_unique<BarrierProblem>(*general_problem_ptr);
+        barrier_problem_ptr =
+            std::make_unique<BarrierProblem>(*general_problem_ptr);
 
         IBarrierOptimizationSolver& inner_solver = get_inner_solver();
 
@@ -126,36 +125,37 @@ namespace opt {
         int num_constraints = 0;
         barrier_problem_ptr->eval_grad_B(
             barrier_problem_ptr->x0, num_constraints);
-        debug_max_constraints
-            = std::max(debug_max_constraints, num_constraints);
+        debug_max_constraints =
+            std::max(debug_max_constraints, num_constraints);
 
         results = inner_solver.solve(*barrier_problem_ptr);
 
 #ifdef DEBUG_LINESEARCH
         Eigen::VectorXd xdiff = barrier_problem_ptr->x0 - results.x;
-        Eigen::MatrixXd vdiff
-            = barrier_problem_ptr->debug_vertices(barrier_problem_ptr->x0)
+        Eigen::MatrixXd vdiff =
+            barrier_problem_ptr->debug_vertices(barrier_problem_ptr->x0)
             - barrier_problem_ptr->debug_vertices(results.x);
 
         double min_dist = barrier_problem_ptr->debug_min_distance(results.x);
         double min_dist_diff;
         if (min_dist > -1) {
-            min_dist_diff = barrier_problem_ptr->debug_min_distance(
-                                barrier_problem_ptr->x0)
+            min_dist_diff =
+                barrier_problem_ptr->debug_min_distance(barrier_problem_ptr->x0)
                 - min_dist;
         } else {
             min_dist_diff = -1;
         }
-        std::string min_dist_str
-            = min_dist > -1 ? fmt::format("{:.10e}", min_dist) : "NA";
-        std::string min_dist_diff_str
-            = min_dist_diff > -1 ? fmt::format("{:.10e}", min_dist_diff) : "NA";
+        std::string min_dist_str =
+            min_dist > -1 ? fmt::format("{:.10e}", min_dist) : "NA";
+        std::string min_dist_diff_str =
+            min_dist_diff > -1 ? fmt::format("{:.10e}", min_dist_diff) : "NA";
 
         double Ex = general_problem_ptr->eval_f(results.x);
         double Bx = general_problem_ptr->eval_g(results.x).sum();
-        debug << fmt::format("{},{},{:.10e},{:.10e},{},{},{:.10e}\n",
-            num_outer_iterations_, t, xdiff.norm(), vdiff.norm(), min_dist_str,
-            min_dist_diff_str, Ex, Bx);
+        debug << fmt::format(
+            "{},{},{:.10e},{:.10e},{},{},{:.10e}\n", num_outer_iterations_, t,
+            xdiff.norm(), vdiff.norm(), min_dist_str, min_dist_diff_str, Ex,
+            Bx);
 #endif
 
         results.minf = general_problem_ptr->eval_f(results.x);
@@ -164,7 +164,8 @@ namespace opt {
         t *= t_inc;
 
         num_outer_iterations_ += 1;
-        spdlog::debug("\tsolve_step END it={} epsilon={} m / t ={} e_b={}",
+        spdlog::debug(
+            "\tsolve_step END it={} epsilon={} m / t ={} e_b={}",
             num_outer_iterations_, barrier_epsilon(), m / t, e_b);
         return results;
     }
@@ -182,8 +183,8 @@ namespace opt {
         int num_constraints = 0;
         barrier_problem_ptr->eval_grad_B(
             barrier_problem_ptr->x0, num_constraints);
-        debug_max_constraints
-            = std::max(debug_max_constraints, num_constraints);
+        debug_max_constraints =
+            std::max(debug_max_constraints, num_constraints);
 
         // make one last iteration with exactly eb
         t = m / e_b;
@@ -191,8 +192,9 @@ namespace opt {
         results = step_solve();
 
         double min_dist = barrier_problem_ptr->debug_min_distance(results.x);
-        std::cout << fmt::format("GREP_ME,t,{},min_dist,{},num_constraints,{}",
-                         t_used, min_dist, debug_max_constraints)
+        std::cout << fmt::format(
+                         "GREP_ME,t,{},min_dist,{},num_constraints,{}", t_used,
+                         min_dist, debug_max_constraints)
                   << std::endl;
 
 #ifdef DEBUG_LINESEARCH
@@ -252,8 +254,10 @@ namespace opt {
         PROFILE_START(EVAL_G)
         auto gx_ = general_problem->eval_g(x);
         double gx = gx_.sum();
-        PROFILE_MESSAGE(EVAL_G,
-            fmt::format("epsilon,{:10e},gx_sum,{:10e}",
+        PROFILE_MESSAGE(
+            EVAL_G,
+            fmt::format(
+                "epsilon,{:10e},gx_sum,{:10e}",
                 general_problem->get_barrier_epsilon(), gx))
 
         PROFILE_END(EVAL_G)
@@ -280,13 +284,13 @@ namespace opt {
         return f_uk_gradient + g_uk_gradient / t;
     }
 
-    Eigen::SparseMatrix<double> BarrierProblem::eval_hessian_f(
-        const Eigen::VectorXd& x)
+    Eigen::SparseMatrix<double>
+    BarrierProblem::eval_hessian_f(const Eigen::VectorXd& x)
     {
         Eigen::SparseMatrix<double> f_uk_hessian;
         f_uk_hessian = general_problem->eval_hessian_f(x);
-        std::vector<Eigen::SparseMatrix<double>> ddgx
-            = general_problem->eval_hessian_g(x);
+        std::vector<Eigen::SparseMatrix<double>> ddgx =
+            general_problem->eval_hessian_g(x);
 
         Eigen::SparseMatrix<double> g_uk_hessian;
         g_uk_hessian.resize(f_uk_hessian.rows(), f_uk_hessian.cols());
@@ -298,7 +302,8 @@ namespace opt {
         return f_uk_hessian + g_uk_hessian / t;
     }
 
-    void BarrierProblem::eval_f_and_fdiff(const Eigen::VectorXd& x,
+    void BarrierProblem::eval_f_and_fdiff(
+        const Eigen::VectorXd& x,
         double& f_uk,
         Eigen::VectorXd& f_uk_gradient,
         Eigen::SparseMatrix<double>& f_uk_hessian)
@@ -365,8 +370,8 @@ namespace opt {
         return general_problem->eval_grad_f(xk);
     }
 
-    Eigen::VectorXd BarrierProblem::eval_grad_B(
-        const Eigen::VectorXd& xk, int& num_active_b)
+    Eigen::VectorXd
+    BarrierProblem::eval_grad_B(const Eigen::VectorXd& xk, int& num_active_b)
     {
         Eigen::MatrixXd dgx = general_problem->eval_jac_g(xk);
         num_active_b = dgx.rows();

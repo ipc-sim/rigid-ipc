@@ -1,0 +1,42 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "max_iterations": 1000,
+    "timestep_size": 0.01,
+    "distance_barrier_constraint": {
+        "custom_initial_epsilon": 0.01,
+        "detection_method": "hash_grid",
+        "trajectory_type": "screwing",
+        "active_constraint_scale": 1.01
+    },
+    "barrier_solver": {
+        "e_b": 1e-06,
+        "m": 1,
+        "t_init": 100,
+        "t_inc": 100,
+        "c": 0.1,
+        "inner_solver": "newton_solver"
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "cube.obj",
+            "position": [0, 3, 0],
+            "rotation": [0, 0, 30],
+            "scale": [1, 1, 1],
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [0, 0, 0]
+        }, {
+            "mesh": "cube.obj",
+            "position": [0, 1, 0],
+            "rotation": [0, 0, -30],
+            "scale": [2, 1, 1],
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [0, 0, 0]
+        }, {
+            "mesh": "plane.obj",
+            "is_dof_fixed": [true, true, true, true, true, true],
+            "position": [0, -1, 0]
+        }]
+    }
+}

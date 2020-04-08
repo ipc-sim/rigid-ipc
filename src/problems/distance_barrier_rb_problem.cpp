@@ -288,6 +288,12 @@ namespace opt {
                 gradient.tail(ndof).transpose();
         }
 
+#ifndef NDEBUG
+        for (int i = 0; i < jac_g.size(); i++) {
+            assert(isfinite(jac_g(i)));
+        }
+#endif
+
         return jac_g;
     }
 
@@ -382,6 +388,18 @@ namespace opt {
                 + distance_candidates.ee_candidates.size();
             gx_hessian[cstr_id] = global_el_hessian;
         }
+
+#ifndef NDEBUG
+        // Make sure nothing went wrong
+        for (const auto& Hi : gx_hessian) {
+            for (int k = 0; k < Hi.outerSize(); ++k) {
+                for (Eigen::SparseMatrix<double>::InnerIterator it(Hi, k); it;
+                     ++it) {
+                    assert(isfinite(it.value()));
+                }
+            }
+        }
+#endif
 
         return gx_hessian;
     }
@@ -525,15 +543,15 @@ namespace opt {
                   .array();
 
         const auto& rbs = m_assembler.m_rbs;
-        Eigen::VectorX<T> d_vertex = rbs[rbc.vertex_body_id].world_vertex<T>(
+        Eigen::VectorX3<T> d_vertex = rbs[rbc.vertex_body_id].world_vertex<T>(
             pose_V, rbc.vertex_local_id);
-        Eigen::VectorX<T> d_face_vertex0 =
+        Eigen::VectorX3<T> d_face_vertex0 =
             rbs[rbc.face_body_id].world_vertex<T>(
                 pose_F, rbc.face_vertex0_local_id);
-        Eigen::VectorX<T> d_face_vertex1 =
+        Eigen::VectorX3<T> d_face_vertex1 =
             rbs[rbc.face_body_id].world_vertex<T>(
                 pose_F, rbc.face_vertex1_local_id);
-        Eigen::VectorX<T> d_face_vertex2 =
+        Eigen::VectorX3<T> d_face_vertex2 =
             rbs[rbc.face_body_id].world_vertex<T>(
                 pose_F, rbc.face_vertex2_local_id);
 

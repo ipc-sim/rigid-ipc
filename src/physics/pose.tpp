@@ -134,10 +134,28 @@ namespace physics {
         if (dim() == 2) {
             return Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
         } else {
+            auto sinc = [](const T& x) {
+                if (x == 0.0) {
+                    return T(1.0);
+                }
+                // else if (abs(x) < 1e-7) {
+                //     T y(1.0);
+                //     for (int i = 1; i < 5; i++) {
+                //         T fact(1.0);
+                //         for (int j = 2; j <= 2 * n + 1; j++) {
+                //             fact *= j;
+                //         }
+                //         y += pow(-1, n) * pow(x, 2 * i) / fact;
+                //     }
+                //     return y;
+                // }
+                return sin(x) / x;
+            };
             T angle = rotation.norm();
-            Eigen::Vector3<T> axis =
-                rotation / (is_zero(angle) ? T(1.0) : angle);
-            return Eigen::AngleAxis<T>(angle, axis).toRotationMatrix();
+            Eigen::Matrix3<T> K = Eigen::Hat(rotation);
+            Eigen::Matrix3<T> sincK = sinc(angle / T(2.0)) * K;
+            return Eigen::Matrix3<T>::Identity() + sinc(angle) * K
+                + T(0.5) * sincK * sincK;
         }
     }
 

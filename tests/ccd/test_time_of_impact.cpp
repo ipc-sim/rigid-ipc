@@ -2,9 +2,9 @@
 
 #include <catch2/catch.hpp>
 
-#include <finitediff.hpp>
 #include <ccd/collision_detection.hpp>
 #include <ccd/time_of_impact.hpp>
+#include <finitediff.hpp>
 
 #include "collision_generator.hpp"
 
@@ -18,10 +18,23 @@ using namespace ccd;
 /// against the expected time of impact
 /// Functions:
 ///     - ccd::compute_edge_vertex_time_of_impact(...)
-void check_toi(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
-    const Eigen::Vector2d& Vk, const Eigen::Vector2d& Ui,
-    const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk,
-    const double toi_expected);
+void check_toi(
+    const Eigen::Vector2d& Vi,
+    const Eigen::Vector2d& Vj,
+    const Eigen::Vector2d& Vk,
+    const Eigen::Vector2d& Ui,
+    const Eigen::Vector2d& Uj,
+    const Eigen::Vector2d& Uk,
+    const double toi_expected)
+{
+    double toi_actual;
+    // check autodiff code
+    toi_actual = -1.0;
+    bool has_collision = ccd::autodiff::compute_edge_vertex_time_of_impact(
+        Vi, Vj, Vk, Ui, Uj, Uk, toi_actual);
+    CHECK(has_collision);
+    CHECK(toi_expected == Approx(toi_actual));
+}
 
 // ---------------------------------------------------
 // Tests
@@ -82,7 +95,6 @@ TEST_CASE("TimeOfImpact", "[collision_detection][toi][no-grad]")
     }
 }
 
-
 TEST_CASE("TimeOfImpactRandom", "[collision_detection][toi][random]")
 {
 
@@ -91,16 +103,17 @@ TEST_CASE("TimeOfImpactRandom", "[collision_detection][toi][random]")
         using namespace ccd::unittests;
 
         auto impact = GENERATE(random_impacts(100, /*rigid=*/true));
-        check_toi(impact.Vi, impact.Vj, impact.Vk, impact.Ui, impact.Uj,
-            impact.Uk, impact.toi);
+        check_toi(
+            impact.Vi, impact.Vj, impact.Vk, impact.Ui, impact.Uj, impact.Uk,
+            impact.toi);
 
         SECTION("flipped")
         {
-            check_toi(impact.Vj, impact.Vi, impact.Vk, impact.Uj, impact.Ui,
+            check_toi(
+                impact.Vj, impact.Vi, impact.Vk, impact.Uj, impact.Ui,
                 impact.Uk, impact.toi);
         }
     }
-
 }
 
 TEST_CASE("TimeOfImpactBadCases", "[collision_detection][toi]")
@@ -146,19 +159,3 @@ TEST_CASE("TimeOfImpactBadCases", "[collision_detection][toi]")
         }
     }
 }
-
-void check_toi(const Eigen::Vector2d& Vi, const Eigen::Vector2d& Vj,
-    const Eigen::Vector2d& Vk, const Eigen::Vector2d& Ui,
-    const Eigen::Vector2d& Uj, const Eigen::Vector2d& Uk,
-    const double toi_expected)
-{
-    double toi_actual;
-    // check autodiff code
-    toi_actual = -1.0;
-    bool has_collision = ccd::autodiff::compute_edge_vertex_time_of_impact(
-        Vi, Vj, Vk, Ui, Uj, Uk, toi_actual);
-    CHECK(has_collision);
-    CHECK(toi_expected == Approx(toi_actual));
-
-}
-

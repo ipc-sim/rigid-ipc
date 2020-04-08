@@ -81,7 +81,7 @@ endfunction()
 function(fixing_collisions_download_ccd_wrapper)
   fixing_collisions_download_project(ccd-wrapper
     GIT_REPOSITORY https://github.com/zfergus/ccd-wrapper.git
-    GIT_TAG        2ca865f2c3526ca2fb6e713cdfdbaa62ed1e2912
+    GIT_TAG        4e86dea1a37b5899c01a9bd2cbf2744769885097
   )
 endfunction()
 
