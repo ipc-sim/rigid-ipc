@@ -118,9 +118,9 @@ bool SimState::init(const nlohmann::json& args_in)
         "distance_barrier_constraint":{
             "detection_method": "hash_grid",
             "trajectory_type": "screwing",
-            "custom_initial_epsilon":0.5,
+            "custom_initial_epsilon":1e-2,
             "min_distance":1e-10,
-            "active_constraint_scale" : 1.5,
+            "active_constraint_scale" : 1.01,
             "barrier_type": "poly_log"
        },
        "volume_constraint":{
@@ -158,7 +158,7 @@ bool SimState::init(const nlohmann::json& args_in)
     args.merge_patch(args_in);
     m_max_simulation_steps = args["max_iterations"].get<int>();
     m_timestep_size = args["timestep_size"].get<double>();
-    double max_time = args["max_time"].get<int>();
+    double max_time = args["max_time"].get<double>();
     if (max_time >= 0) {
         assert(m_max_simulation_steps == -1);
         m_max_simulation_steps = int(ceil(max_time / m_timestep_size));

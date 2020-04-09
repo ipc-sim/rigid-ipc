@@ -71,8 +71,8 @@ namespace physics {
         for (size_t i = 0; i < m_assembler.m_rbs.size(); ++i) {
             auto& rb = m_assembler.m_rbs[i];
             spdlog::info(
-                "rb={} mass={} innertia={}", i, rb.mass,
-                logger::fmt_eigen(rb.moment_of_inertia));
+                "rb={} group_id={} mass={} innertia={}", i, rb.group_id,
+                rb.mass, logger::fmt_eigen(rb.moment_of_inertia));
         }
     }
 

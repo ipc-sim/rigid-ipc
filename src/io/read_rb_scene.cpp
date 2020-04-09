@@ -4,6 +4,7 @@
 #include <boost/filesystem.hpp>
 #include <igl/edges.h>
 #include <igl/read_triangle_mesh.h>
+#include <tbb/parallel_sort.h>
 
 #include <io/read_obj.hpp>
 #include <io/serialize_json.hpp>
@@ -36,21 +37,22 @@ namespace io {
             // force: applied to center of mass
             // torque: world coordinates in degrees
             json args = R"({
-                  "mesh": "",
-                  "vertices":[],
-                  "faces":[],
-                  "edges":[],
-                  "density":1.0,
-                  "is_dof_fixed":[false,false,false, false,false,false],
-                  "oriented":false,
-                  "position":[0.0,0.0,0.0],
-                  "rotation":[0.0,0.0,0.0],
-                  "scale":[1.0,1.0,1.0],
-                  "linear_velocity":[0.0,0.0,0.0],
-                  "angular_velocity":[0.0,0.0,0.0],
-                  "force":[0.0,0.0,0.0],
-                  "torque":[0.0,0.0,0.0]
-                  })"_json;
+                "mesh": "",
+                "vertices": [],
+                "faces": [],
+                "edges": [],
+                "density": 1.0,
+                "is_dof_fixed": [false, false, false, false, false, false],
+                "oriented": false,
+                "group_id": -1,
+                "position": [0.0, 0.0, 0.0],
+                "rotation": [0.0, 0.0, 0.0],
+                "scale": [1.0, 1.0, 1.0],
+                "linear_velocity": [0.0, 0.0, 0.0],
+                "angular_velocity": [0.0, 0.0, 0.0],
+                "force": [0.0, 0.0, 0.0],
+                "torque": [0.0, 0.0, 0.0]
+            })"_json;
             args.merge_patch(jrb);
 
             Eigen::MatrixXd vertices;
@@ -124,9 +126,13 @@ namespace io {
             }
 
             Eigen::VectorX3d scale;
-            from_json<double>(args["scale"], scale);
-            assert(scale.size() >= angular_dim);
-            scale.conservativeResize(dim);
+            if (args["scale"].is_number()) {
+                scale.setConstant(dim, args["scale"].get<double>());
+            } else {
+                from_json<double>(args["scale"], scale);
+                assert(scale.size() >= angular_dim);
+                scale.conservativeResize(dim);
+            }
             for (int i = 0; i < dim; i++) {
                 vertices.col(i) *= scale(i);
             }
@@ -156,22 +162,54 @@ namespace io {
             torque *= M_PI / 180.0;
 
             Eigen::VectorXb is_dof_fixed;
-            from_json<bool>(args["is_dof_fixed"], is_dof_fixed);
-            assert(is_dof_fixed.size() >= ndof);
-            is_dof_fixed.conservativeResize(ndof);
+            if (args["is_dof_fixed"].is_boolean()) {
+                is_dof_fixed.setConstant(
+                    ndof, args["is_dof_fixed"].get<bool>());
+            } else {
+                from_json<bool>(args["is_dof_fixed"], is_dof_fixed);
+                assert(is_dof_fixed.size() >= ndof);
+                is_dof_fixed.conservativeResize(ndof);
+            }
 
             double density = args["density"].get<double>();
             bool is_oriented = args["oriented"].get<bool>();
+
+            int group_id = args["group_id"].get<int>();
 
             auto rb = physics::RigidBody::from_points(
                 vertices, edges, faces,
                 physics::Pose<double>(position, rotation),
                 physics::Pose<double>(linear_velocity, angular_velocity),
                 physics::Pose<double>(force, torque), density, is_dof_fixed,
-                is_oriented);
+                is_oriented, group_id);
 
             rbs.push_back(rb);
         }
+
+        // Adjust the group ids, so the default ones are unique.
+        std::vector<int> taken_ids;
+        for (const physics::RigidBody& rb : rbs) {
+            if (rb.group_id >= 0) {
+                taken_ids.push_back(rb.group_id);
+            }
+        }
+        tbb::parallel_sort(taken_ids.begin(), taken_ids.end());
+        int taken_id_i = 0;
+        int id = 0;
+        for (physics::RigidBody& rb : rbs) {
+            if (rb.group_id < 0) {
+                // Find the next free id
+                while (taken_id_i < taken_ids.size()
+                       && id >= taken_ids[taken_id_i]) {
+                    if (id == taken_ids[taken_id_i]) {
+                        id++;
+                    }
+                    taken_id_i++;
+                }
+                rb.group_id = id++;
+            }
+        }
+
         return dim;
     }
 

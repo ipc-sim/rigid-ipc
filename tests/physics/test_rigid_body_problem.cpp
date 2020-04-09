@@ -18,6 +18,7 @@ RigidBody rb_from_displacements(
     const Eigen::MatrixXi& edges,
     Pose<double> pose_t1)
 {
+    static int id = 0;
     // move vertices so they center of mass is at 0,0
     Eigen::RowVectorXd x = compute_center_of_mass(vertices, edges);
     Eigen::MatrixXd centered_vertices = vertices.rowwise() - x;
@@ -29,15 +30,15 @@ RigidBody rb_from_displacements(
     // set previous_step position to:
     pose_t1.position += pose_t0.position;
 
-    // set velocity to zero
-    Pose<double> velocity = Pose<double>::Zero(vertices.cols());
-
     int ndof = pose_t0.ndof();
     auto rb = RigidBody::from_points(
-        vertices, edges, pose_t0, velocity,
+        vertices, edges, pose_t0,
+        /*velocity=*/Pose<double>::Zero(vertices.cols()),
+        /*force=*/Pose<double>::Zero(vertices.cols()),
         /*density=*/1,
         /*dof=*/Eigen::VectorXb::Zero(ndof),
-        /*oriented=*/false);
+        /*oriented=*/false,
+        /*group=*/id++);
     rb.pose = pose_t1;
     return rb;
 }

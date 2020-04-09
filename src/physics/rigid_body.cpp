@@ -23,7 +23,8 @@ namespace physics {
         const Pose<double>& force,
         const double density,
         const Eigen::VectorX6b& is_dof_fixed,
-        const bool oriented)
+        const bool oriented,
+        const int group_id)
     {
         int dim = vertices.cols();
         assert(dim == pose.dim());
@@ -51,7 +52,7 @@ namespace physics {
         assert(is_dof_fixed.size() == pose.ndof());
         return RigidBody(
             centered_vertices, edges, faces, adjusted_pose, velocity, force,
-            density, is_dof_fixed, oriented);
+            density, is_dof_fixed, oriented, group_id);
     }
 
     RigidBody::RigidBody(
@@ -63,8 +64,10 @@ namespace physics {
         const Pose<double>& force,
         const double density,
         const Eigen::VectorX6b& is_dof_fixed,
-        const bool oriented)
-        : vertices(vertices)
+        const bool oriented,
+        const int group_id)
+        : group_id(group_id)
+        , vertices(vertices)
         , edges(edges)
         , faces(faces)
         , is_dof_fixed(is_dof_fixed)

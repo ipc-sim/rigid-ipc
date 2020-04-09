@@ -123,7 +123,7 @@ namespace physics {
 
         inline const Eigen::VectorXi& group_ids() const
         {
-            return m_vertex_to_body_map;
+            return m_vertex_group_ids;
         }
 
         std::vector<RigidBody> m_rbs;
@@ -138,13 +138,13 @@ namespace physics {
         /// @brief indexes for vertices
         Eigen::VectorXi m_vertex_to_body_map;
 
-        /// @brief  re-indexed edges of the whole system
+        /// @brief re-indexed edges of the whole system
         Eigen::MatrixXi m_edges;
 
-        /// @brief  re-indexed faces of the whole system
+        /// @brief re-indexed faces of the whole system
         Eigen::MatrixXi m_faces;
 
-        /// @brief  mass_matrix of the rigid bodies dof
+        /// @brief mass_matrix of the rigid bodies dof
         Eigen::SparseMatrix<double> m_rb_mass_matrix;
 
         /// @brief transforms dof to poses
@@ -158,6 +158,10 @@ namespace physics {
 
         /// @brief flag for vertices degrees of freedom (used for visualization)
         Eigen::MatrixXb is_dof_fixed;
+
+    protected:
+        /// @brief Group ids per vertex
+        Eigen::VectorXi m_vertex_group_ids;
     };
 
 } // namespace physics

@@ -19,11 +19,13 @@ using namespace ccd::physics;
 RigidBody simple_rigid_body(
     Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Pose<double> velocity)
 {
+    static int id = 0;
     int ndof = Pose<double>::dim_to_ndof(vertices.cols());
     return RigidBody::from_points(
         vertices, edges, /*pose=*/Pose<double>::Zero(vertices.cols()), velocity,
-        /*density=*/1.0, /*is_dof_fixed=*/Eigen::VectorXb::Zero(ndof),
-        /*oriented=*/false);
+        /*force=*/Pose<double>::Zero(vertices.cols()), /*density=*/1.0,
+        /*is_dof_fixed=*/Eigen::VectorXb::Zero(ndof), /*oriented=*/false,
+        /*group=*/id++);
 }
 
 } // namespace test_utils

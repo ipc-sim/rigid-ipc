@@ -54,6 +54,13 @@ namespace physics {
                 .segment(m_body_vertex_id[i], rb.vertices.rows())
                 .setConstant(int(i));
         }
+        // vertex to group id map
+        m_vertex_group_ids.resize(m_body_vertex_id.back());
+        for (size_t i = 0; i < num_bodies; ++i) {
+            auto& rb = rigid_bodies[i];
+            m_vertex_group_ids.segment(m_body_vertex_id[i], rb.vertices.rows())
+                .setConstant(rb.group_id);
+        }
 
         // rigid body mass-matrix
         int rb_ndof = num_bodies ? rigid_bodies[0].ndof() : 0;

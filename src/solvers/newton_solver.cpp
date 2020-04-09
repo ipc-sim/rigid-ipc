@@ -89,6 +89,10 @@ namespace opt {
             direction.setZero();
             igl::slice_into(direction_free, free_dof, direction);
 
+            spdlog::debug(
+                "solver=newton iter={:d} f(x)={:g} |dᵀg|={:g}",
+                iteration_number, fx, abs(direction_free.dot(gradient_free)));
+
             // check for newton termination
             if (abs(direction_free.dot(gradient_free)) <= tolerance) {
                 exit_reason = "found a local optimum with newton dir";

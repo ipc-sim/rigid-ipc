@@ -1,0 +1,39 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "timestep_size": 0.01,
+    "max_time": 3.0,
+    "distance_barrier_constraint": {
+        "detection_method": "hash_grid",
+        "trajectory_type": "screwing"
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.81, 0],
+        "time_stepper": "dmv",
+        "rigid_bodies": [{
+            "mesh": "plane.obj",
+            "position": [0, -0.5, 0],
+            "is_dof_fixed": true,
+            "group_id": 0
+        }, {
+            "mesh": "cube.obj",
+            "position": [-1, 0, 0],
+            "is_dof_fixed": true,
+            "group_id": 0
+        }, {
+            "mesh": "cube.obj",
+            "position": [0, 0, -1],
+            "is_dof_fixed": true,
+            "group_id": 0
+        }, {
+            "mesh": "cube.obj",
+            "position": [1, 0, 0],
+            "is_dof_fixed": true,
+            "group_id": 0
+        }, {
+            "mesh": "tet-corner.obj",
+            "position": [-0.495, 0.6, -0.495],
+            "scale": 0.99
+        }]
+    }
+}

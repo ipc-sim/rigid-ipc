@@ -35,7 +35,8 @@ namespace physics {
             const Pose<double>& force,
             const double density,
             const Eigen::VectorX6b& is_dof_fixed,
-            const bool oriented);
+            const bool oriented,
+            const int group_id);
 
     public:
         static RigidBody from_points(
@@ -47,23 +48,8 @@ namespace physics {
             const Pose<double>& force,
             const double density,
             const Eigen::VectorX6b& is_dof_fixed,
-            const bool oriented);
-
-        static RigidBody from_points(
-            const Eigen::MatrixXd& vertices,
-            const Eigen::MatrixXi& edges,
-            const Eigen::MatrixXi& faces,
-            const Pose<double>& pose,
-            const Pose<double>& velocity,
-            const double density,
-            const Eigen::VectorX6b& is_dof_fixed,
-            const bool oriented)
-        {
-            return from_points(
-                vertices, edges, faces, pose, velocity,
-                Pose<double>::Zero(velocity.dim()), density, is_dof_fixed,
-                oriented);
-        }
+            const bool oriented,
+            const int group_id);
 
         // Faceless version for convienence (useful for 2D)
         static RigidBody from_points(
@@ -71,13 +57,15 @@ namespace physics {
             const Eigen::MatrixXi& edges,
             const Pose<double>& pose,
             const Pose<double>& velocity,
+            const Pose<double>& force,
             const double density,
             const Eigen::VectorX6b& is_dof_fixed,
-            const bool oriented)
+            const bool oriented,
+            const int group_id)
         {
             return from_points(
-                vertices, edges, Eigen::MatrixXi(), pose, velocity, density,
-                is_dof_fixed, oriented);
+                vertices, edges, Eigen::MatrixXi(), pose, velocity, force,
+                density, is_dof_fixed, oriented, group_id);
         }
 
         enum Step { PREVIOUS_STEP = 0, CURRENT_STEP };
@@ -154,6 +142,9 @@ namespace physics {
         int ndof() const { return pose.ndof(); }
         int pos_ndof() const { return pose.pos_ndof(); }
         int rot_ndof() const { return pose.rot_ndof(); }
+
+        /// @brief Group id of this body
+        int group_id;
 
         // --------------------------------------------------------------------
         // Geometry

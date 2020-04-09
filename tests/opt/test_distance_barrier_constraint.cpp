@@ -91,10 +91,16 @@ TEST_CASE(
     // use brute force so we know the order
     RigidBody bodyA = RigidBody::from_points(
         vertices.topRows(2), edges.topRows(1), Pose<double>::Zero(/*dim=*/2),
-        Pose<double>::Zero(/*dim=*/2), 1.0, Eigen::VectorXb::Zero(3), false);
+        /*velocity=*/Pose<double>::Zero(/*dim=*/2),
+        /*force=*/Pose<double>::Zero(/*dim=*/2), /*density=*/1.0,
+        /*is_dof_fixed=*/Eigen::VectorXb::Zero(3), /*is_oriented=*/false,
+        /*group=*/0);
     RigidBody bodyB = RigidBody::from_points(
         vertices.bottomRows(2), edges.bottomRows(1), Pose<double>(0, 0.75, 0),
-        Pose<double>::Zero(/*dim=*/2), 1.0, Eigen::VectorXb::Zero(3), false);
+        /*velocity=*/Pose<double>::Zero(/*dim=*/2),
+        /*force=*/Pose<double>::Zero(/*dim=*/2), /*density=*/1.0,
+        /*is_dof_fixed=*/Eigen::VectorXb::Zero(3), /*is_oriented=*/false,
+        /*group=*/1);
 
     RigidBodyAssembler rbs;
     rbs.init({ { bodyA, bodyB } });

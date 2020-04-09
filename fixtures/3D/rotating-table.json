@@ -1,0 +1,28 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "max_iterations": 1000,
+    "timestep_size": 0.01,
+    "distance_barrier_constraint": {
+        "detection_method": "hash_grid",
+        "trajectory_type": "screwing"
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "time_stepper": "dmv",
+        "rigid_bodies": [{
+            "mesh": "cylinder.obj",
+            "position": [0, 0, 0],
+            "scale": [2, 0.08333333333, 2],
+            "density": 1.0,
+            "angular_velocity": [0, 45, 0],
+            "torque": [0, 300, 0],
+            "is_dof_fixed": [true, true, true, true, false, true]
+        }, {
+            "mesh": "cube.obj",
+            "position": [1.5, 0.3, 0],
+            "scale": [0.25, 0.25, 0.25],
+            "density": 1.0
+        }]
+    }
+}

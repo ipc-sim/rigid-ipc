@@ -11,6 +11,7 @@ ccd::physics::RigidBody create_body(
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces)
 {
+    static int id = 0;
     int dim = vertices.cols();
     ccd::physics::Pose<double> pose = ccd::physics::Pose<double>::Zero(dim);
     return ccd::physics::RigidBody::from_points(
@@ -19,7 +20,8 @@ ccd::physics::RigidBody create_body(
         /*force=*/ccd::physics::Pose<double>::Zero(pose.dim()),
         /*denisty=*/1.0,
         /*is_dof_fixed=*/Eigen::VectorX6b::Zero(pose.ndof()),
-        /*oriented=*/false);
+        /*oriented=*/false,
+        /*group_id=*/id++);
 }
 
 ccd::physics::RigidBody

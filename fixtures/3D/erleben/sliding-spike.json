@@ -1,13 +1,13 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "max_iterations": 1000,
     "timestep_size": 0.01,
+    "max_time": 1.5,
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
                 "mesh": "erleben/spike.obj",
-                "position": [0, 0.6, 0],
+                "position": [-4.9, 0.525, 0],
                 "rotation": [0, 0, 180],
                 "linear_velocity": [10, 0, 0],
                 "angular_velocity": [0, 0, 0]
@@ -15,7 +15,7 @@
             {
                 "mesh": "plane.obj",
                 "is_dof_fixed": [true, true, true, true, true, true],
-                "position": [1, -1.0, -1]
+                "position": [0, -1.0, 0]
             }
         ]
     }
