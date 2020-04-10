@@ -21,6 +21,17 @@ int main(int argc, char* argv[])
             return json_to_mjcf(argv[2]);
         }
 
+        case 2: { // process bullet output
+            spdlog::info("generating bullet output geometry from transformation");
+
+            if (argc < 4) {
+                spdlog::error("need input json file and bullet output file path!");
+                return -1;
+            }
+
+            return generate_bullet_results(argv[2], argv[3]);
+        }
+
         case 0: // simulation
         default:
             break;
