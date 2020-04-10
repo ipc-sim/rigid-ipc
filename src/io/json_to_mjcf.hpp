@@ -5,6 +5,8 @@ using nlohmann::json;
 
 #include <tinyxml2.h>
 
+#include <sys/stat.h> // for mkdir
+
 int json_to_mjcf(const char* jsonFilePath) 
 {
     std::ifstream input(jsonFilePath);
@@ -120,6 +122,11 @@ int generate_bullet_results(
             input.close();
             return -1;
         }
+        mkdir("output", 0777);
+        std::string jsonFilePathStr(jsonFilePath);
+        int lastSlash = jsonFilePathStr.find_last_of('/');
+        std::string folderPath = "output/" + jsonFilePathStr.substr(lastSlash, jsonFilePathStr.find_last_of('.') - lastSlash) + "/";
+        mkdir(folderPath.c_str(), 0777);
 
         std::vector<Eigen::MatrixXd> V;
         std::vector<Eigen::MatrixXi> F;
@@ -147,7 +154,7 @@ int generate_bullet_results(
                 if (objFile) {
                     fclose(objFile);
                 }
-                objFile = fopen((std::to_string(frameI) + ".obj").c_str(), "w");
+                objFile = fopen((folderPath + std::to_string(frameI) + ".obj").c_str(), "w");
             }
 
             Eigen::Vector3d trans;
