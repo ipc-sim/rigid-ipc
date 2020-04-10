@@ -161,7 +161,7 @@ int generate_bullet_results(
                 Eigen::Vector3d v = swapYZ * (rotMtr * V[objI].row(vI).transpose() + trans); // center of mass?
                 fprintf(objFile, "v %le %le %le\n", v[0], v[1], v[2]);
             }
-            fprintf(objFile, "g obj%d", objI);
+            fprintf(objFile, "g obj%d\n", objI);
             for (int fI = 0; fI < F[objI].rows(); ++fI) {
                 fprintf(objFile, "f %d %d %d\n", 
                     F[objI].row(fI)[0] + 1 + VStart, 
