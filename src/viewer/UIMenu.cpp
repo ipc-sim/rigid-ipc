@@ -106,6 +106,19 @@ void UISimState::draw_io()
             std::string fname = igl::file_dialog_save();
             save(fname);
         }
+
+        if (ImGui::Button("Save screenshot", ImVec2(-1, 0))) {
+            std::string fname = igl::file_dialog_save();
+            save_screenshot(fname);
+        }
+        if (m_is_gif_recording) {
+            if (ImGui::Button("End recording", ImVec2(-1, 0))) {
+                end_recording();
+            }
+        } else if (ImGui::Button("Start recording", ImVec2(-1, 0))) {
+            std::string fname = igl::file_dialog_save();
+            start_recording(fname);
+        }
     }
 }
 
@@ -119,6 +132,7 @@ void UISimState::draw_simulation_player()
 
     if (ImGui::Button("Step##SimPlayer", ImVec2(-1, 0))) {
         simulation_step();
+        m_scene_changed = true;
     }
     // --------------------------------------------------------------------
     ImGui::Checkbox("pause if intersecting", &m_bkp_has_intersections);

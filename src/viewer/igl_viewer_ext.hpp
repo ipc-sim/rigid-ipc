@@ -80,6 +80,13 @@ namespace opengl {
         void update_vertex_data() override;
         void update_vertices(const Eigen::MatrixXd& V);
 
+        virtual bool visibility() override { return data().show_overlay; }
+        virtual void visibility(const bool show) override
+        {
+            data().show_overlay = show;
+            data().show_lines = show;
+        }
+
         void recolor() override;
         inline bool is_mesh() override { return true; }
         Eigen::MatrixXd mV;

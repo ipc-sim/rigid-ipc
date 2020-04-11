@@ -39,8 +39,8 @@ namespace io {
             json args = R"({
                 "mesh": "",
                 "vertices": [],
-                "faces": [],
                 "edges": [],
+                "faces": [],
                 "density": 1.0,
                 "is_dof_fixed": [false, false, false, false, false, false],
                 "oriented": false,
@@ -81,9 +81,10 @@ namespace io {
                     }
                 }
             } else {
+                // Assumes that edges contains the edges of the faces too.
                 from_json<double>(args["vertices"], vertices);
-                from_json<int>(args["faces"], faces);
                 from_json<int>(args["edges"], edges);
+                from_json<int>(args["faces"], faces);
             }
 
             if (dim == -1) {

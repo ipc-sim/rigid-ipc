@@ -90,8 +90,10 @@ namespace opt {
             igl::slice_into(direction_free, free_dof, direction);
 
             spdlog::debug(
-                "solver=newton iter={:d} f(x)={:g} |dᵀg|={:g}",
-                iteration_number, fx, abs(direction_free.dot(gradient_free)));
+                "solver=newton iter={:d} f(x)={:g} |dᵀg|={:g} max(|d|)={:g} "
+                "tolerance={:g}",
+                iteration_number, fx, abs(direction_free.dot(gradient_free)),
+                direction.array().abs().maxCoeff(), tolerance);
 
             // check for newton termination
             if (abs(direction_free.dot(gradient_free)) <= tolerance) {

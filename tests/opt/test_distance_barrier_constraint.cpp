@@ -43,48 +43,40 @@ TEST_CASE(
     vertices.row(2) << 0.0, -0.25;
     vertices.row(3) << 0.0, 0.25;
 
+    auto expected_barrier_func = [&](double d) {
+#ifdef USE_DISTANCE_SQUARED
+        return barrier.distance_barrier<double>(d * d, barrier_epsilon);
+#else
+        return barrier.distance_barrier<double>(d, barrier_epsilon);
+#endif
+    };
+
     Eigen::VectorXd expected_barrier = Eigen::VectorXd(4);
     SECTION("No displacements")
     {
         poses_t1[1].position << 0.0, 0.75;
-        // clang-format off
-        // loop over edges then vertices
-        expected_barrier <<
-            barrier.distance_barrier<double>(0.5, barrier_epsilon),
-            barrier.distance_barrier<double>(1.0, barrier_epsilon),
-            barrier.distance_barrier<double>(0.5 * sqrt(2),barrier_epsilon),
-            barrier.distance_barrier<double>(0.5 * sqrt(2), barrier_epsilon);
-        // clang-format on
+        expected_barrier << expected_barrier_func(0.5),
+            expected_barrier_func(1.0), expected_barrier_func(0.5 * sqrt(2)),
+            expected_barrier_func(0.5 * sqrt(2));
     }
 
     SECTION("Left displacements")
     {
         poses_t1[1].position << -0.5, 0.75;
 
-        // clang-format off
-        // loop over edges then vertices
-        expected_barrier <<
-            barrier.distance_barrier<double>(0.5, barrier_epsilon),
-            barrier.distance_barrier<double>(1.0, barrier_epsilon),
-            barrier.distance_barrier<double>(0.5, barrier_epsilon),
-            barrier.distance_barrier<double>(sqrt(0.5 * 0.5 + 1),
-            barrier_epsilon);
-        // clang-format on
+        expected_barrier << expected_barrier_func(0.5),
+            expected_barrier_func(1.0), expected_barrier_func(0.5),
+            expected_barrier_func(sqrt(0.5 * 0.5 + 1));
     }
 
     SECTION("Farther Left displacements")
     {
         poses_t1[1].position << -1.0, 0.75;
 
-        // clang-format off
-        // loop over edges then vertices
-        expected_barrier <<
-            barrier.distance_barrier<double>(0.5 * sqrt(2), barrier_epsilon),
-            barrier.distance_barrier<double>(sqrt(0.5*0.5 + 1.0),
-            barrier_epsilon), barrier.distance_barrier<double>(0.5 * sqrt(2),
-            barrier_epsilon), barrier.distance_barrier<double>(sqrt(0.5 * 0.5
-            + 1.5 * 1.5), barrier_epsilon);
-        // clang-format on
+        expected_barrier << expected_barrier_func(0.5 * sqrt(2)),
+            expected_barrier_func(sqrt(0.5 * 0.5 + 1.0)),
+            expected_barrier_func(0.5 * sqrt(2)),
+            expected_barrier_func(sqrt(0.5 * 0.5 + 1.5 * 1.5));
     }
 
     Eigen::VectorXd actual_barrier;

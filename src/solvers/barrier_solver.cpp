@@ -67,10 +67,7 @@ namespace opt {
 
     void BarrierSolver::init_solve()
     {
-        num_outer_iterations_ = 0;
         assert(general_problem_ptr != nullptr);
-        barrier_problem_ptr.reset();
-
         barrier_problem_ptr =
             std::make_unique<BarrierProblem>(*general_problem_ptr);
 
@@ -86,16 +83,15 @@ namespace opt {
         Eigen::VectorXd grad_B = barrier_problem_ptr->eval_grad_B(
             barrier_problem_ptr->x0, num_active_barriers);
         if (false /*num_active_barriers > 0*/) {
-            //            Eigen::VectorXd grad_E
-            //                =
-            //                barrier_problem_ptr->eval_grad_E(barrier_problem_ptr->x0);
-            //            t = tinit = -grad_B.dot(grad_E) / grad_E.dot(grad_E);
+            // Eigen::VectorXd grad_E =
+            //     barrier_problem_ptr->eval_grad_E(barrier_problem_ptr->x0);
+            // t = tinit = -grad_B.dot(grad_E) / grad_E.dot(grad_E);
         } else {
             t = tinit;
         }
 
         spdlog::debug(
-            "solver_init eps_barrier={} m={} t={} e_b={} c={} t_inc={}",
+            "solver=barrier eps_barrier={} m={} t={} e_b={} c={} t_inc={}",
             barrier_epsilon(), m, t, e_b, c, t_inc);
         barrier_problem_ptr->t = t;
 
@@ -108,11 +104,10 @@ namespace opt {
         assert(general_problem_ptr != nullptr);
         assert(barrier_problem_ptr != nullptr);
 
-        OptimizationResults results;
         IBarrierOptimizationSolver& inner_solver = get_inner_solver();
 
         spdlog::debug(
-            "\tsolve_step BEGIN it={} eps_barrier={} m={} t={} e_b={} c={}",
+            "solver=barrier it={} eps_barrier={} m={} t={} e_b={} c={}",
             num_outer_iterations_, barrier_epsilon(), m, t, e_b, c);
 
         // propagate variables
@@ -128,35 +123,7 @@ namespace opt {
         debug_max_constraints =
             std::max(debug_max_constraints, num_constraints);
 
-        results = inner_solver.solve(*barrier_problem_ptr);
-
-#ifdef DEBUG_LINESEARCH
-        Eigen::VectorXd xdiff = barrier_problem_ptr->x0 - results.x;
-        Eigen::MatrixXd vdiff =
-            barrier_problem_ptr->debug_vertices(barrier_problem_ptr->x0)
-            - barrier_problem_ptr->debug_vertices(results.x);
-
-        double min_dist = barrier_problem_ptr->debug_min_distance(results.x);
-        double min_dist_diff;
-        if (min_dist > -1) {
-            min_dist_diff =
-                barrier_problem_ptr->debug_min_distance(barrier_problem_ptr->x0)
-                - min_dist;
-        } else {
-            min_dist_diff = -1;
-        }
-        std::string min_dist_str =
-            min_dist > -1 ? fmt::format("{:.10e}", min_dist) : "NA";
-        std::string min_dist_diff_str =
-            min_dist_diff > -1 ? fmt::format("{:.10e}", min_dist_diff) : "NA";
-
-        double Ex = general_problem_ptr->eval_f(results.x);
-        double Bx = general_problem_ptr->eval_g(results.x).sum();
-        debug << fmt::format(
-            "{},{},{:.10e},{:.10e},{},{},{:.10e}\n", num_outer_iterations_, t,
-            xdiff.norm(), vdiff.norm(), min_dist_str, min_dist_diff_str, Ex,
-            Bx);
-#endif
+        OptimizationResults results = inner_solver.solve(*barrier_problem_ptr);
 
         results.minf = general_problem_ptr->eval_f(results.x);
         // Start next iteration from the ending optimal position
@@ -164,9 +131,6 @@ namespace opt {
         t *= t_inc;
 
         num_outer_iterations_ += 1;
-        spdlog::debug(
-            "\tsolve_step END it={} epsilon={} m / t ={} e_b={}",
-            num_outer_iterations_, barrier_epsilon(), m / t, e_b);
         return results;
     }
 

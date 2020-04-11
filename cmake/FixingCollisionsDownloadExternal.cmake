@@ -92,3 +92,11 @@ function(fixing_collisions_download_tinyxml2)
     GIT_TAG        bfbcc0333d1a24ec8d9e10d14116d00dbdedf043
   )
 endfunction()
+
+# GIF writer
+function(fixing_collisions_download_gif_h)
+   fixing_collisions_download_project(gif-h
+    GIT_REPOSITORY https://github.com/charlietangora/gif-h.git
+    GIT_TAG        606168840bff429a894dd470e36fb9956cbb07c0
+  )
+endfunction()

@@ -4,10 +4,11 @@ project(FixingCollisions)
 ################################################################################
 
 # libigl-options
-option(LIBIGL_USE_STATIC_LIBRARY        "Use libigl as static library" OFF)
-option(LIBIGL_WITH_OPENGL               "Use OpenGL"                   ON)
-option(LIBIGL_WITH_OPENGL_GLFW          "Use GLFW"                     ON)
-option(LIBIGL_WITH_OPENGL_GLFW_IMGUI    "Use IMGUI"                    ON)
+option(LIBIGL_USE_STATIC_LIBRARY     "Use libigl as static library" OFF)
+option(LIBIGL_WITH_OPENGL            "Use OpenGL"                    ON)
+option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"                      ON)
+option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use IMGUI"                     ON)
+option(LIBIGL_WITH_PNG               "Use PNG"                       ON)
 
 # project-options
 option(FIXING_COLLISIONS_BUILD_UNIT_TESTS         "Build unit-tests"      ON)
@@ -157,7 +158,8 @@ endif()
 ################################################################################
 
 # libigl
-target_link_libraries(${PROJECT_NAME} PUBLIC igl::core igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  igl::core igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
 
 # Extra warnings
 target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
@@ -236,6 +238,9 @@ add_executable(${PROJECT_NAME}_sim
 
 target_include_directories(${PROJECT_NAME}_sim PRIVATE src)
 target_link_libraries(${PROJECT_NAME}_sim PUBLIC ${PROJECT_NAME})
+
+# Charlie Tangora's gif-h library
+target_link_libraries(${PROJECT_NAME}_sim PRIVATE gif_h::gif_h)
 
 # Fixtures folder --------------------------------------------------------------
 add_custom_command(TARGET ${PROJECT_NAME}_sim POST_BUILD

@@ -27,7 +27,11 @@ TEST_CASE("Point-point distance", "[distance]")
         p1 *= expected_distance;
     }
     double distance = point_point_distance<double>(p0, p1);
+#ifdef USE_DISTANCE_SQUARED
+    CHECK(distance == Approx(expected_distance * expected_distance));
+#else
     CHECK(distance == Approx(abs(expected_distance)));
+#endif
 }
 
 TEST_CASE("Point-segment distance", "[distance]")
@@ -42,7 +46,11 @@ TEST_CASE("Point-segment distance", "[distance]")
     s1.x() = 10;
 
     double distance = point_segment_distance<double>(p, s0, s1);
+#ifdef USE_DISTANCE_SQUARED
+    CHECK(distance == Approx(expected_distance * expected_distance));
+#else
     CHECK(distance == Approx(abs(expected_distance)));
+#endif
 }
 
 TEST_CASE("Segment-segment distance", "[distance]")
@@ -100,7 +108,11 @@ TEST_CASE("Segment-segment distance degenerate case", "[distance]")
     }
 
     double distance = segment_segment_distance(s00, s01, s10, s11);
+#ifdef USE_DISTANCE_SQUARED
+    CHECK(distance == Approx(s0y * s0y).margin(1e-12));
+#else
     CHECK(distance == Approx(abs(s0y)).margin(1e-12));
+#endif
 }
 
 TEST_CASE(

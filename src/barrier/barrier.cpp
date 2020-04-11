@@ -40,7 +40,8 @@ namespace opt {
         // b(d) = -(d - d̂)²ln(d / d̂)
         // b'(d) = -2(d - d̂)ln(d / d̂) - (d-d̂)²(1 / d)
         //       = (d - d̂) * (-2ln(d/d̂) - (d - d̂) / d)
-        return (d - dhat) * (-2 * log(d / dhat) - (d - dhat) / d);
+        //       = (d̂ - d) * (2ln(d/d̂) - d̂/d + 1)
+        return (dhat - d) * (2 * log(d / dhat) - dhat / d + 1);
     }
 
     double poly_log_barrier_gradient(double x, double s)

@@ -10,7 +10,7 @@
 /// Triangle: A triangle in 3D
 
 // Uncomment this line to switch to distance squared
-//#define USE_DISTANCE_SQUARED
+// #define USE_DISTANCE_SQUARED
 
 namespace ccd {
 namespace geometry {

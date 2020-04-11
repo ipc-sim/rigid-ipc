@@ -3,6 +3,8 @@
 #include <fstream>
 #include <iostream>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <nlohmann/json.hpp>
 
 #include <io/read_rb_scene.hpp>
@@ -20,6 +22,7 @@ SimState::SimState()
     : m_timestep_size(0.1)
     , m_step_had_collision(false)
     , m_step_has_collision(false)
+    , m_step_has_intersections(false)
     , m_solve_collisions(true)
     , m_num_simulation_steps(0)
     , m_max_simulation_steps(-1)
@@ -29,22 +32,41 @@ SimState::SimState()
 
 bool SimState::load_scene(const std::string& filename)
 {
-    using nlohmann::json;
-    std::ifstream input(filename);
     PROFILER_CLEAR()
 
-    if (input.good()) {
-        scene_file = filename;
-        json scene = json::parse(input, nullptr, false);
-        if (scene.is_discarded()) {
-            spdlog::error("Invalid Json file");
+    std::string ext = boost::filesystem::extension(filename);
+    boost::algorithm::to_lower(ext); // modifies ext
+
+    nlohmann::json scene;
+    if (ext == ".mjcf") {
+        // TODO: Add converter from MCJF to JSON
+        // scene = ...
+        spdlog::error("MuJoCo file format not supported yet", ext);
+        return false;
+    } else if (ext == ".json") {
+        std::ifstream input(filename);
+        if (input.good()) {
+            scene = nlohmann::json::parse(input, nullptr, false);
+        } else {
+            spdlog::error("Unable to open json file: {}", filename);
             return false;
         }
-        if (scene.find("args") != scene.end()) {
-            return load_simulation(scene);
-        } else {
-            return init(scene);
-        }
+    } else {
+        spdlog::error("Unknown scene file format: {}", ext);
+        return false;
+    }
+
+    scene_file = filename;
+    if (scene.is_discarded()) {
+        spdlog::error("Invalid Json file");
+        return false;
+    }
+
+    // Check if this is a saved simulation file
+    if (scene.find("args") != scene.end()) {
+        return load_simulation(scene);
+    } else {
+        return init(scene);
     }
     return false;
 }
@@ -77,7 +99,7 @@ bool SimState::init(const nlohmann::json& args_in)
 {
     using namespace nlohmann;
 
-    // clang-format off
+    // Default args
     args = R"({
         "max_iterations":-1,
         "max_time":-1,
@@ -132,27 +154,19 @@ bool SimState::init(const nlohmann::json& args_in)
        },
        "viewport_bbox": {"min":[0,0],"max":[0,0]}
     })"_json;
-    // clang-format on
 
     // check that incomming json doesn't have any unkown keys to avoid stupid
     // bugs
     auto patch = json::diff(args, args_in);
-    bool valid = true;
     for (auto& op : patch) {
         if (op["op"].get<std::string>().compare("add") == 0) {
             auto new_path = json::json_pointer(op["path"].get<std::string>());
-            if (args_in[new_path.parent_pointer()].is_array()) {
-                valid = true;
-            } else {
-                valid = false;
+            if (!args_in[new_path.parent_pointer()].is_array()) {
                 spdlog::error(
                     "Unknown key in json path={}",
                     op["path"].get<std::string>());
             }
         }
-    }
-    if (!valid) {
-        return false;
     }
 
     args.merge_patch(args_in);
@@ -165,7 +179,6 @@ bool SimState::init(const nlohmann::json& args_in)
     }
 
     auto problem_name = args["scene_type"].get<std::string>();
-
     problem_ptr = ProblemFactory::factory().get_problem(problem_name);
     problem_ptr->settings(args);
 
@@ -202,7 +215,6 @@ nlohmann::json SimState::get_active_config()
 
 void SimState::run_simulation(const std::string& fout)
 {
-
     PROFILE_MAIN_POINT("run_simulation")
     PROFILE_START()
 
@@ -226,6 +238,8 @@ void SimState::simulation_step()
 {
     m_num_simulation_steps += 1;
     m_step_has_collision = false;
+    m_step_has_intersections = false;
+    // Take unconstrained step
     m_step_had_collision = problem_ptr->simulation_step(m_timestep_size);
     m_dirty_constraints = true;
 
@@ -234,7 +248,8 @@ void SimState::simulation_step()
     }
 
     if (m_solve_collisions && m_step_had_collision) {
-        solve_collision();
+        // Solve with collision constraints
+        this->solve_collision();
     }
 }
 
@@ -261,20 +276,24 @@ bool SimState::solve_collision()
 
     PROFILE_END();
 
+    // TODO: Check for intersections here instead of collision along the entire
+    // time-step.
+    m_step_has_intersections = false; // ...
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
 
-    if (m_step_has_collision) {
-        spdlog::warn(
+    if (m_step_has_intersections) {
+        spdlog::error(
             "sim_state action=solve_collisions sim_it={} "
-            "status=linearized_collisions_unsolved",
-            m_num_simulation_steps);
-    } else {
-        spdlog::debug(
-            "sim_state action=solve_collisions sim_it={} "
-            "status=collisions_solved",
+            "status=has_intersections",
             m_num_simulation_steps);
     }
-    return m_step_has_collision;
+    spdlog::debug(
+        "sim_state action=solve_collisions sim_it={} "
+        "status={}",
+        m_num_simulation_steps,
+        m_step_has_collision ? "linearized_collisions_unsolved"
+                             : "collisions_solved");
+    return m_step_has_intersections;
 }
 
 void SimState::collision_resolution_step()
@@ -289,10 +308,15 @@ void SimState::collision_resolution_step()
     result = problem_ptr->step_solve();
 
     // TODO: use results.finished
+    // TODO: Check for intersections here instead of collision along the entire
+    // time-step.
+    m_step_has_intersections = false; // ...
     m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
     spdlog::debug(
-        "sim_state action=collision_resolution_step status=collisions_{}",
-        m_step_has_collision ? "unsolved" : "solved");
+        "sim_state action=collision_resolution_step collisions={} "
+        "intersections={}",
+        m_step_has_collision ? "unsolved" : "solved",
+        m_step_has_intersections ? "unsolved" : "solved");
 }
 
 void SimState::save_simulation(const std::string& filename)
@@ -308,6 +332,7 @@ void SimState::save_simulation(const std::string& filename)
     results["animation"]["vertices_sequence"] = vs;
     results["animation"]["state_sequence"] = state_sequence;
     results["animation"]["edges"] = io::to_json(problem_ptr->edges());
+    // TODO: Consider adding faces
     results["animation"]["group_id"] = io::to_json(problem_ptr->group_ids());
 
     std::ofstream o(filename);

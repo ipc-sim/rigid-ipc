@@ -196,7 +196,7 @@ namespace physics {
     {
         // This need to be done BEFORE updating poses
         // -------------------------------------
-        if (coefficient_restitution > -1) {
+        if (coefficient_restitution >= 0) {
             solve_velocities();
         }
 
@@ -228,7 +228,10 @@ namespace physics {
             });
         }
 
-        return detect_collisions(poses_t0, poses_q1, CollisionCheck::EXACT);
+        // TODO: Check for intersections instead of collision along the entire
+        // step. We only guarentee a piecewise collision-free trajectory.
+        // return detect_collisions(poses_t0, poses_q1, CollisionCheck::EXACT);
+        return detect_intersections(poses_q1);
     }
 
     void RigidBodyProblem::solve_velocities()
@@ -458,6 +461,13 @@ namespace physics {
             m_assembler, poses_q0, scaled_pose_q1, impacts);
 
         return impacts.size();
+    }
+
+    bool
+    RigidBodyProblem::detect_intersections(const Poses<double>& poses) const
+    {
+        // TODO: Check if the geometry is intersecting
+        return false;
     }
 
     ////////////////////////////////////////////////////////////////////////////

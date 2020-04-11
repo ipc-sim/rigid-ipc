@@ -130,6 +130,8 @@ namespace physics {
             const Poses<double>& poses_t1,
             const CollisionCheck check_type) const;
 
+        bool detect_intersections(const Poses<double>& poses) const;
+
         void update_dof();
 
         int num_vars_;

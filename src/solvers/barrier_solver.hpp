@@ -20,14 +20,16 @@ namespace opt {
 
         Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override;
 
-        Eigen::SparseMatrix<double> eval_hessian_f(
-            const Eigen::VectorXd& x) override;
+        Eigen::SparseMatrix<double>
+        eval_hessian_f(const Eigen::VectorXd& x) override;
 
-        void eval_f_and_fdiff(const Eigen::VectorXd& x,
+        void eval_f_and_fdiff(
+            const Eigen::VectorXd& x,
             double& f_uk,
             Eigen::VectorXd& f_uk_jacobian) override;
 
-        void eval_f_and_fdiff(const Eigen::VectorXd& x,
+        void eval_f_and_fdiff(
+            const Eigen::VectorXd& x,
             double& f_uk,
             Eigen::VectorXd& f_uk_jacobian,
             Eigen::SparseMatrix<double>& f_uk_hessian) override;
@@ -43,7 +45,8 @@ namespace opt {
 
         Multiprecision eval_mp_f(const Eigen::VectorXd& x) override;
 
-        bool has_collisions(const Eigen::VectorXd& sigma_i,
+        bool has_collisions(
+            const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) const override;
 
         // new functions for termiantion criteria
@@ -56,8 +59,8 @@ namespace opt {
         {
             return general_problem->debug_edges();
         }
-        Eigen::MatrixXd debug_vertices(
-            const Eigen::VectorXd& sigma) const override
+        Eigen::MatrixXd
+        debug_vertices(const Eigen::VectorXd& sigma) const override
         {
             return general_problem->debug_vertices(sigma);
         }
@@ -114,7 +117,7 @@ namespace opt {
         /// result will be ~ m/t (in terms of how close it is to the solution of
         /// the original inequality constrained problem).  It is possible to run
         /// Newton solve to a fixed high precision (say 1e-12) to get this
-        /// approximate solution, but this si wasteful.  On the other hand,
+        /// approximate solution, but this is wasteful.  On the other hand,
         /// running it at the same precision as the current error due to finite
         /// t is somewhat risky, especially for low values of t -- this may lead
         /// to a substantial deviation from the true solution.    So a possible
@@ -123,7 +126,7 @@ namespace opt {
         /// especially hitting the limits of double accuracy.  It is reasonable
         /// to limit how high we set Newton accuracy. We can try either  max(
         /// c*m/t,  e_b)  or max( c*m/t, e_max)  with e_max being the max
-        /// accuracy we hope to achieve with doubles in the Neuton solve (say
+        /// accuracy we hope to achieve with doubles in the Newton solve (say
         /// 1e-12 or 1e-11)."
         ///
         double tinit;
