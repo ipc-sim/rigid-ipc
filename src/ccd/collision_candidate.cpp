@@ -49,6 +49,25 @@ bool EdgeEdgeCandidate::operator<(const EdgeEdgeCandidate& other) const
     return this_min < other_min;
 }
 
+EdgeFaceCandidate::EdgeFaceCandidate(long edge_index, long face_index)
+    : edge_index(edge_index)
+    , face_index(face_index)
+{
+}
+
+bool EdgeFaceCandidate::operator==(const EdgeFaceCandidate& other) const
+{
+    return edge_index == other.edge_index && face_index == other.face_index;
+}
+
+bool EdgeFaceCandidate::operator<(const EdgeFaceCandidate& other) const
+{
+    if (edge_index == other.edge_index) {
+        return face_index < other.face_index;
+    }
+    return edge_index < other.edge_index;
+}
+
 FaceVertexCandidate::FaceVertexCandidate(long face_index, long vertex_index)
     : face_index(face_index)
     , vertex_index(vertex_index)

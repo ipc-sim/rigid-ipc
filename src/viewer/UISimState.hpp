@@ -135,8 +135,8 @@ private:
     bool m_reloading_scene;
 
     GifWriter m_gif_writer;
-    uint32_t m_gif_delay = 10; //*10ms
-    double m_gif_scale = 0.6;
+    uint32_t m_gif_delay = 1; //*10ms
+    double m_gif_scale = 0.25;
     bool m_is_gif_recording = false;
     bool m_scene_changed;
 };

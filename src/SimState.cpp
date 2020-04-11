@@ -250,6 +250,8 @@ void SimState::simulation_step()
     if (m_solve_collisions && m_step_had_collision) {
         // Solve with collision constraints
         this->solve_collision();
+    } else {
+        m_step_has_intersections = problem_ptr->has_intersections();
     }
 }
 
@@ -276,15 +278,21 @@ bool SimState::solve_collision()
 
     PROFILE_END();
 
-    // TODO: Check for intersections here instead of collision along the entire
-    // time-step.
-    m_step_has_intersections = false; // ...
-    m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
+    // Check for intersections at the final poses.
+    m_step_has_intersections =
+        problem_ptr->take_step(result.x, m_timestep_size);
+    // TODO: Check for collisions along the entire trajectory
+    m_step_has_collision = false; // ...
 
     if (m_step_has_intersections) {
         spdlog::error(
             "sim_state action=solve_collisions sim_it={} "
             "status=has_intersections",
+            m_num_simulation_steps);
+    } else {
+        spdlog::debug(
+            "sim_state action=solve_collisions sim_it={} "
+            "status=no_intersections",
             m_num_simulation_steps);
     }
     spdlog::debug(
@@ -308,10 +316,11 @@ void SimState::collision_resolution_step()
     result = problem_ptr->step_solve();
 
     // TODO: use results.finished
-    // TODO: Check for intersections here instead of collision along the entire
-    // time-step.
-    m_step_has_intersections = false; // ...
-    m_step_has_collision = problem_ptr->take_step(result.x, m_timestep_size);
+    // Check for intersections here
+    m_step_has_intersections =
+        problem_ptr->take_step(result.x, m_timestep_size);
+    // TODO: Check for collisions along the entire time-step.
+    m_step_has_collision = false; // ...
     spdlog::debug(
         "sim_state action=collision_resolution_step collisions={} "
         "intersections={}",

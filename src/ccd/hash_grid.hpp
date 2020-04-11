@@ -147,6 +147,13 @@ public:
         const Eigen::VectorXi& group_ids,
         std::vector<EdgeEdgeCandidate>& ee_candidates);
 
+    /// @brief Compute the candidate edge-face candidate intersections.
+    void getEdgeFacePairs(
+        const Eigen::MatrixXi& edges,
+        const Eigen::MatrixXi& faces,
+        const Eigen::VectorXi& group_ids,
+        std::vector<EdgeFaceCandidate>& ef_candidates);
+
     /// @brief Compute the candidate edge-edge candidate collisions.
     void getFaceVertexPairs(
         const Eigen::MatrixXi& faces,

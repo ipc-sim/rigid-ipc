@@ -210,7 +210,7 @@ void UISimState::start_recording(const std::string& filename)
 
 bool UISimState::post_draw_loop()
 {
-    if (m_scene_changed) {
+    if (m_scene_changed && m_is_gif_recording) {
         int width, height;
         get_window_dimensions(width, height);
         width = static_cast<int>(m_gif_scale * width);
@@ -236,9 +236,8 @@ bool UISimState::post_draw_loop()
             }
         }
         GifWriteFrame(&m_gif_writer, img.data(), width, height, m_gif_delay);
-
-        m_scene_changed = false;
     }
+    m_scene_changed = false;
     return false;
 }
 

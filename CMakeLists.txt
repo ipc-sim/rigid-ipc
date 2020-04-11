@@ -9,6 +9,7 @@ option(LIBIGL_WITH_OPENGL            "Use OpenGL"                    ON)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"                      ON)
 option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use IMGUI"                     ON)
 option(LIBIGL_WITH_PNG               "Use PNG"                       ON)
+option(LIBIGL_WITH_PREDICATES        "Use exact predicates"          ON)
 
 # project-options
 option(FIXING_COLLISIONS_BUILD_UNIT_TESTS         "Build unit-tests"      ON)
@@ -159,7 +160,8 @@ endif()
 
 # libigl
 target_link_libraries(${PROJECT_NAME} PUBLIC
-  igl::core igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
+  igl::core igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui igl::png
+  igl::predicates)
 
 # Extra warnings
 target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
@@ -198,6 +200,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
 
 # Etienne Vouga's CTCD Library for the floating point root finding algorithm
 target_link_libraries(${PROJECT_NAME} PUBLIC EVCTCD)
+
+# Teseo's Exact CCD library for exact segment-triangle intersection check
+target_link_libraries(${PROJECT_NAME} PUBLIC RationalCCD)
 
 # tinyxml2
 target_link_libraries(${PROJECT_NAME} PUBLIC tinyxml2::tinyxml2)

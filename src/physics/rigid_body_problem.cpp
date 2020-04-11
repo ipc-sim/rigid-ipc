@@ -3,7 +3,9 @@
 #include <iostream>
 
 #include <finitediff.hpp>
+#include <igl/predicates/segment_segment_intersect.h>
 
+#include <geometry/intersection.hpp>
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
 #include <logger.hpp>
@@ -463,10 +465,70 @@ namespace physics {
         return impacts.size();
     }
 
+    // Check if the geometry is intersecting
     bool
     RigidBodyProblem::detect_intersections(const Poses<double>& poses) const
     {
-        // TODO: Check if the geometry is intersecting
+        if (m_assembler.num_bodies() <= 1) {
+            return false;
+        }
+
+        HashGrid hashgrid;
+        double inflation_radius = 1e-15; // Conservative broad phase
+        const Eigen::MatrixXd vertices = m_assembler.world_vertices(poses);
+        const Eigen::MatrixXi& edges = m_assembler.m_edges;
+        const Eigen::MatrixXi& faces = m_assembler.m_faces;
+        hashgrid.resize(
+            /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, edges,
+            inflation_radius);
+        if (dim() == 2) {
+            assert(vertices.cols() == 2);
+            // Need to check segment-segment intersections in 2D
+            hashgrid.addEdges(
+                /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, edges,
+                inflation_radius);
+
+            std::vector<EdgeEdgeCandidate> ee_candidates;
+            hashgrid.getEdgeEdgePairs(edges, group_ids(), ee_candidates);
+
+            for (const EdgeEdgeCandidate& ee_candidate : ee_candidates) {
+                if (igl::predicates::segment_segment_intersect(
+                        vertices.row(edges(ee_candidate.edge0_index, 0))
+                            .head<2>(),
+                        vertices.row(edges(ee_candidate.edge0_index, 1))
+                            .head<2>(),
+                        vertices.row(edges(ee_candidate.edge1_index, 0))
+                            .head<2>(),
+                        vertices.row(edges(ee_candidate.edge1_index, 1))
+                            .head<2>())) {
+                    return true;
+                }
+            }
+        } else {
+            assert(dim() == 3);
+            // Need to check segment-triangle intersections in 2D
+            hashgrid.addEdges(
+                /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, edges,
+                inflation_radius);
+            hashgrid.addFaces(
+                /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, faces,
+                inflation_radius);
+
+            std::vector<EdgeFaceCandidate> ef_candidates;
+            hashgrid.getEdgeFacePairs(edges, faces, group_ids(), ef_candidates);
+
+            for (const EdgeFaceCandidate& ef_candidate : ef_candidates) {
+                if (geometry::segment_triangle_intersect(
+                        vertices.row(edges(ef_candidate.edge_index, 0)),
+                        vertices.row(edges(ef_candidate.edge_index, 1)),
+                        vertices.row(faces(ef_candidate.face_index, 0)),
+                        vertices.row(faces(ef_candidate.face_index, 1)),
+                        vertices.row(faces(ef_candidate.face_index, 2)))) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 

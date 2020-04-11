@@ -56,5 +56,6 @@ namespace Eigen {
 typedef Vector2<ccd::Interval> Vector2I;
 typedef Vector3<ccd::Interval> Vector3I;
 typedef VectorX<ccd::Interval> VectorXI;
+typedef VectorX3<ccd::Interval> VectorX3I;
 typedef Matrix3<ccd::Interval> Matrix3I;
 } // namespace Eigen

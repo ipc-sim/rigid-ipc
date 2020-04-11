@@ -35,6 +35,9 @@ namespace physics {
         virtual bool
         take_step(const Eigen::VectorXd& positions, const double time_step) = 0;
 
+        /// @brief Check for intersections at the end of the time-step.
+        virtual bool has_intersections() const = 0;
+
         /// \brief update optimization problem using current status.
         virtual void update_constraint() = 0;
         virtual opt::OptimizationResults solve_constraints() = 0;

@@ -390,6 +390,34 @@ void HashGrid::getEdgeEdgePairs(
     getPairs(is_endpoint, is_same_group, m_edgeItems, ee_candidates);
 }
 
+void HashGrid::getEdgeFacePairs(
+    const Eigen::MatrixXi& edges,
+    const Eigen::MatrixXi& faces,
+    const Eigen::VectorXi& group_ids,
+    std::vector<EdgeFaceCandidate>& ef_candidates)
+{
+    auto is_endpoint = [&](int ei, int fi) {
+        // Check if the edge and face have a common end-point
+        return edges(ei, 0) == faces(fi, 0) || edges(ei, 0) == faces(fi, 1)
+            || edges(ei, 0) == faces(fi, 2) || edges(ei, 1) == faces(fi, 0)
+            || edges(ei, 1) == faces(fi, 1) || edges(ei, 1) == faces(fi, 2);
+    };
+
+    bool check_groups = group_ids.size() > 0;
+    auto is_same_group = [&](int ei, int fi) {
+        return check_groups
+            && (group_ids(edges(ei, 0)) == group_ids(faces(fi, 0))
+                || group_ids(edges(ei, 0)) == group_ids(faces(fi, 1))
+                || group_ids(edges(ei, 0)) == group_ids(faces(fi, 2))
+                || group_ids(edges(ei, 1)) == group_ids(faces(fi, 0))
+                || group_ids(edges(ei, 1)) == group_ids(faces(fi, 1))
+                || group_ids(edges(ei, 1)) == group_ids(faces(fi, 2)));
+    };
+
+    getPairs(
+        is_endpoint, is_same_group, m_edgeItems, m_faceItems, ef_candidates);
+}
+
 void HashGrid::getFaceVertexPairs(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,

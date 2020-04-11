@@ -45,7 +45,7 @@ endfunction()
 function(fixing_collisions_download_libigl)
      fixing_collisions_download_project(libigl
        GIT_REPOSITORY https://github.com/libigl/libigl.git
-       GIT_TAG        aea868bd1fc64f71afecd2c51e51507a99d8e3e5
+       GIT_TAG        v2.2.0
     )
 endfunction()
 
@@ -81,7 +81,7 @@ endfunction()
 function(fixing_collisions_download_ccd_wrapper)
   fixing_collisions_download_project(ccd-wrapper
     GIT_REPOSITORY https://github.com/zfergus/ccd-wrapper.git
-    GIT_TAG        4e86dea1a37b5899c01a9bd2cbf2744769885097
+    GIT_TAG        3e1eada7ae6e04fdbe4572417fc05c0b4f698cd6
   )
 endfunction()
 

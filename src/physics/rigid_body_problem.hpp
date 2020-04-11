@@ -36,6 +36,12 @@ namespace physics {
         virtual bool
         take_step(const Eigen::VectorXd& dof, const double time_step) override;
 
+        /// @brief Check for intersections at the end of the time-step.
+        virtual bool has_intersections() const override
+        {
+            return detect_intersections(this->poses_t1);
+        }
+
         /// @brief update problem using current status of bodies.
         void update_constraint() override;
         opt::OptimizationResults solve_constraints() override;
