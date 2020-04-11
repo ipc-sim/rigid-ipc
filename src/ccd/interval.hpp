@@ -58,4 +58,18 @@ typedef Vector3<ccd::Interval> Vector3I;
 typedef VectorX<ccd::Interval> VectorXI;
 typedef VectorX3<ccd::Interval> VectorX3I;
 typedef Matrix3<ccd::Interval> Matrix3I;
+
+namespace internal {
+    template <typename X, typename S, typename P>
+    struct is_convertible<X, boost::numeric::interval<S, P>> {
+        enum { value = is_convertible<X, S>::value };
+    };
+
+    template <typename S, typename P1, typename P2>
+    struct is_convertible<
+        boost::numeric::interval<S, P1>,
+        boost::numeric::interval<S, P2>> {
+        enum { value = true };
+    };
+} // namespace internal
 } // namespace Eigen

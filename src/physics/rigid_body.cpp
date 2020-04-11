@@ -159,7 +159,7 @@ namespace physics {
         Pose<Diff::DDouble1> dpose(
             Diff::d1vars(0, _pose.position),
             Diff::d1vars(_pose.pos_ndof(), _pose.rotation));
-        dpose.rotation /= Diff::DDouble1(r_max);
+        dpose.rotation = dpose.rotation / Diff::DDouble1(r_max);
 
         Diff::D1MatrixXd dx = world_vertices<Diff::DDouble1>(dpose);
 
