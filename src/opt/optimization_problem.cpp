@@ -12,7 +12,7 @@ namespace opt {
         auto f = [&](const Eigen::VectorXd& xk) -> double {
             return problem.eval_f(xk);
         };
-        Eigen::VectorXd grad;
+        Eigen::VectorXd grad(x.size());
         fd::finite_gradient(x, f, grad);
         return grad;
     }

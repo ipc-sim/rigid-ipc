@@ -149,9 +149,9 @@ bool detect_edge_vertex_collisions_narrow_phase(
         // Compute the impact parameter along the edge
         alpha = geometry::project_point_to_line(
             vertex, edge_vertex0, (edge_vertex1 - edge_vertex0).eval());
-        assert(
-            alpha > -Constants::PARAMETER_ASSERTION_TOL
-            && alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
+        // assert(
+        //     alpha > -Constants::PARAMETER_ASSERTION_TOL
+        //     && alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
     }
     return is_colliding;
 }
@@ -223,12 +223,12 @@ bool detect_edge_edge_collisions_narrow_phase(
             edgeA_vertex0_toi, edgeA_vertex1_toi, //
             edgeB_vertex0_toi, edgeB_vertex1_toi, //
             edge0_alpha, edge1_alpha);
-        assert(
-            edge0_alpha > -Constants::PARAMETER_ASSERTION_TOL
-            && edge0_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
-        assert(
-            edge1_alpha > -Constants::PARAMETER_ASSERTION_TOL
-            && edge1_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
+        // assert(
+        //     edge0_alpha > -Constants::PARAMETER_ASSERTION_TOL
+        //     && edge0_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
+        // assert(
+        //     edge1_alpha > -Constants::PARAMETER_ASSERTION_TOL
+        //     && edge1_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
     }
     return is_colliding;
 }

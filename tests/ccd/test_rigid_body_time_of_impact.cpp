@@ -223,17 +223,18 @@ TEST_CASE("Rigid face-vertex time of impact", "[ccd][rigid_toi][face_vertex]")
     //     bodyB_velocity.rotation.z() = ;
     // }
 
+    CAPTURE(
+        y, bodyB.vertices.row(0), bodyB_pose_t0.position.transpose(),
+        bodyB_pose_t1.position.transpose(),
+        bodyB.world_vertex(bodyB_pose_t0, 0).transpose(),
+        bodyB.world_vertex(bodyB_pose_t1, 0).transpose());
     double toi;
     bool is_impacting = compute_face_vertex_time_of_impact(
         bodyB, bodyB_pose_t0, bodyB_pose_t1, /*vertex_id=*/0, // Vertex body
         bodyA, bodyA_pose_t0, bodyA_pose_t1, /*face_id=*/0,   // Face body
         // Output time of impact
         toi);
-    CAPTURE(
-        bodyB.vertices.row(0), bodyB_pose_t0.position.transpose(),
-        bodyB_pose_t1.position.transpose(),
-        bodyB.world_vertex(bodyB_pose_t0, 0).transpose(),
-        bodyB.world_vertex(bodyB_pose_t1, 0).transpose(), toi, expected_toi);
+    CAPTURE(toi, expected_toi);
     CHECK(is_impacting == is_impact_expected);
     if (is_impacting) {
         CHECK(

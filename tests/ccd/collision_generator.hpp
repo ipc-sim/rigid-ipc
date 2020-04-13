@@ -14,24 +14,29 @@ namespace unittests {
         Eigen::Vector2d Ui, Uj, Uk, Ul;
         double toi, alpha;
     };
-    std::ostream& operator << (std::ostream& o, const TestImpact& p);
+    std::ostream& operator<<(std::ostream& o, const TestImpact& p);
 
-    TestImpact generate_random_impacts(const bool rigid);
+    TestImpact generate_random_impact(const bool rigid);
 
     class TestImpactGenerator
         : public Catch::Generators::IGenerator<TestImpact> {
+
+        TestImpact current;
         bool rigid;
+        size_t current_i, max_i;
 
     public:
-        TestImpactGenerator(bool rigid);
+        TestImpactGenerator(size_t value, bool rigid);
 
-        auto get(size_t index) const -> TestImpact override;
+        bool next() override;
+
+        TestImpact const& get() const override;
     };
 
-    Catch::Generators::Generator<TestImpact> random_impacts(
-        size_t value, bool rigid);
+    Catch::Generators::GeneratorWrapper<TestImpact>
+    random_impacts(size_t value, bool rigid);
 
-}
+} // namespace unittests
 
-}
+} // namespace ccd
 #endif // COLLISION_GENERATOR_H

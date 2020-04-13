@@ -110,32 +110,32 @@ namespace geometry {
             return point_point_distance(point, triangle_vertex0);
         }
         if (u < 0 && v >= 0 && w < 0) {
-            // vertex 0 is the closest
+            // vertex 1 is the closest
             return point_point_distance(point, triangle_vertex1);
         }
         if (u < 0 && v < 0 && w >= 0) {
-            // vertex 0 is the closest
+            // vertex 2 is the closest
             return point_point_distance(point, triangle_vertex2);
         }
 
         // Check if an edge is the closest point on the triangle
         if (u >= 0 && v >= 0 && w < 0) {
-            // vertex 0 is the closest
+            // edge 0 is the closest
             return point_segment_distance(
                 point, triangle_vertex0, triangle_vertex1);
         }
         if (u >= 0 && v < 0 && w >= 0) {
-            // vertex 0 is the closest
+            // edge 2 is the closest
             return point_segment_distance(
                 point, triangle_vertex2, triangle_vertex0);
         }
         if (u < 0 && v >= 0 && w >= 0) {
-            // vertex 0 is the closest
+            // edge 1 is the closest
             return point_segment_distance(
                 point, triangle_vertex1, triangle_vertex2);
         }
 
-        // This should never happen.because u + v + w = 1.
+        // This should never happen because u + v + w = 1.
         throw NotImplementedError(
             "point_triangle_distance is not implemented correctly!");
     }

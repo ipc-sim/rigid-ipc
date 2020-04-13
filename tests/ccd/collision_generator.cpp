@@ -19,27 +19,32 @@ namespace unittests {
                  << " toi = " << p.toi << ";\n"
                  << " alpha = " << p.alpha  << ";\n"
                  << std::endl;
-       // clang-format on
+        // clang-format on
     }
 
-    TestImpactGenerator::TestImpactGenerator(bool rigid)
+    TestImpactGenerator::TestImpactGenerator(size_t value, bool rigid)
         : rigid(rigid)
+        , current_i(0)
+        , max_i(value)
     {
+        current = generate_random_impact(rigid);
     }
 
-    TestImpact TestImpactGenerator::get(size_t) const
+    bool TestImpactGenerator::next()
     {
-        return generate_random_impacts(rigid);
+        current = generate_random_impact(rigid);
+        return ++current_i < max_i;
+    }
+    TestImpact const& TestImpactGenerator::get() const { return current; }
+
+    Catch::Generators::GeneratorWrapper<TestImpact>
+    random_impacts(size_t value, bool rigid)
+    {
+        return Catch::Generators::GeneratorWrapper<TestImpact>(
+            std::make_unique<TestImpactGenerator>(value, rigid));
     }
 
-    Catch::Generators::Generator<TestImpact> random_impacts(
-        size_t value, bool rigid)
-    {
-        return Catch::Generators::Generator<TestImpact>(
-            value, std::make_unique<TestImpactGenerator>(rigid));
-    }
-
-    TestImpact generate_random_impacts(const bool rigid)
+    TestImpact generate_random_impact(const bool rigid)
     {
         static const double kEPSILON = 1E-8;
         static const double kSCALE = 10.0;
@@ -71,7 +76,8 @@ namespace unittests {
             if (len_ij < kEPSILON) {
                 impact.Uj += (impact.Vj + impact.Uj - impact.Vi - impact.Ui)
                     / len_ij * kEPSILON;
-                assert((impact.Vj + impact.Uj - impact.Vi - impact.Ui).norm()
+                assert(
+                    (impact.Vj + impact.Uj - impact.Vi - impact.Ui).norm()
                     >= kEPSILON);
             }
         }
@@ -106,7 +112,8 @@ namespace unittests {
             if (len_kl < kEPSILON) {
                 impact.Ul += (impact.Vl + impact.Ul - impact.Vk - impact.Uk)
                     / len_kl * kEPSILON;
-                assert((impact.Vl + impact.Ul - impact.Vk - impact.Uk).norm()
+                assert(
+                    (impact.Vl + impact.Ul - impact.Vk - impact.Uk).norm()
                     >= kEPSILON);
             }
         }
@@ -116,5 +123,5 @@ namespace unittests {
 
         return impact;
     }
-}
-}
+} // namespace unittests
+} // namespace ccd

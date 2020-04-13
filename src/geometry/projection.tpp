@@ -55,7 +55,7 @@ namespace geometry {
 
         // Project the points of segment 0 to the plane orthogonal to segment 1
         T s1_len_sqr = s1_dir.squaredNorm();
-        if (is_zero(s1_len_sqr)) {
+        if (is_zero(s1_len_sqr)) { // Check if the segment is degenerate
             // Halfway so the gradient of an endpoints does not become zero.
             alpha1 = T(0.5);
             // The second segment is degenerate
@@ -64,8 +64,10 @@ namespace geometry {
             return;
         }
 
+        // Project segment0_start to the orthogonal plane of segment1
         Eigen::Vector3<T> s00_plane = project_point_to_plane(
             segment0_start, segment1_start, s1_dir, s1_len_sqr);
+        // Project segment0_end to the orthogonal plane of segment1
         Eigen::Vector3<T> s01_plane = project_point_to_plane(
             segment0_end, segment1_start, s1_dir, s1_len_sqr);
 
@@ -78,7 +80,7 @@ namespace geometry {
         // segment 1.
         Eigen::Vector3<T> seg0_to_line1 = segment0_start + alpha0 * s0_dir;
 
-        // Compute the closesty point from seg1 to seg 0
+        // Compute the closest point from segment 1 to segment 0
         alpha1 =
             project_point_to_segment(seg0_to_line1, segment1_start, s1_dir);
         Eigen::Vector3<T> seg1_to_seg0 = s1_dir * alpha1 + segment1_start;

@@ -163,6 +163,7 @@ TEST_CASE(
     CHECK(fd::compare_gradient(grad_fx, grad_fx_approx));
 }
 
+/*
 TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
 {
     using namespace test_utils;
@@ -214,6 +215,7 @@ TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
 
     CHECK(fd::compare_jacobian(hess_fx, hess_fx_approx));
 }
+*/
 
 TEST_CASE("dof -> poses -> dof", "[RB][RB-Problem]")
 {

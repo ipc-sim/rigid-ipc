@@ -24,21 +24,21 @@ endfunction()
 function(fixing_collisions_download_catch2)
      fixing_collisions_download_project(Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v2.5.0
+        GIT_TAG        v2.11.3
     )
 endfunction()
 
 function(fixing_collisions_download_fmt)
      fixing_collisions_download_project(fmt
         GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-        GIT_TAG        5.3.0
+        GIT_TAG        6.2.0
     )
 endfunction()
 
 function(fixing_collisions_download_spdlog)
      fixing_collisions_download_project(spdlog
        GIT_REPOSITORY https://github.com/gabime/spdlog.git
-       GIT_TAG        v1.3.1
+       GIT_TAG        v1.5.0
     )
 endfunction()
 
@@ -51,8 +51,8 @@ endfunction()
 
 function(fixing_collisions_download_json)
      fixing_collisions_download_project(json
-        GIT_REPOSITORY https://github.com/nlohmann/json
-        GIT_TAG v3.7.0
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.7.3
     )
 endfunction()
 

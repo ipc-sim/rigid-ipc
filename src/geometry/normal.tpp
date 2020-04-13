@@ -24,7 +24,11 @@ namespace geometry {
     {
         Eigen::Vector3<T> normal =
             (face_vertex1 - face_vertex0).cross(face_vertex2 - face_vertex0);
-        return normalized ? normal.normalized() : normal;
+        if (normalized) {
+            // .normalized() has an inequality check that breaks with Intervals
+            normal = normal / normal.norm();
+        }
+        return normal;
     }
 
 } // namespace geometry
