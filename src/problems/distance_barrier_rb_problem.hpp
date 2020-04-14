@@ -17,6 +17,11 @@ namespace opt {
         long vertex_local_id;
         long edge_vertex0_local_id;
         long edge_vertex1_local_id;
+
+        inline std::array<long, 2> get_body_ids()
+        {
+            return { { vertex_body_id, edge_body_id } };
+        }
     };
     struct RigidBodyEdgeEdgeCandidate {
         long edge0_body_id;
@@ -25,6 +30,11 @@ namespace opt {
         long edge0_vertex1_local_id;
         long edge1_vertex0_local_id;
         long edge1_vertex1_local_id;
+
+        inline std::array<long, 2> get_body_ids()
+        {
+            return { { edge0_body_id, edge1_body_id } };
+        }
     };
     struct RigidBodyFaceVertexCandidate {
         long vertex_body_id;
@@ -33,6 +43,11 @@ namespace opt {
         long face_vertex0_local_id;
         long face_vertex1_local_id;
         long face_vertex2_local_id;
+
+        inline std::array<long, 2> get_body_ids()
+        {
+            return { { vertex_body_id, face_body_id } };
+        }
     };
 
     /// This class is both a simulation and optimization problem.
@@ -162,25 +177,42 @@ namespace opt {
             const Eigen::VectorXd& sigma,
             const RigidBodyFaceVertexCandidate& rbc);
 
-        Eigen::MatrixXd eval_jac_g_full(
-            const Eigen::VectorXd& sigma, const Candidates& candidates);
-
-        Eigen::MatrixXd
-        eval_jac_g_core(const Eigen::VectorXd& sigma, const Candidates&);
-
-        std::vector<Eigen::SparseMatrix<double>>
-        eval_hessian_g_core(const Eigen::VectorXd& sigma, const Candidates&);
-
         template <typename Candidate, typename RigidBodyCandidate>
-        bool compare_fd(
+        void add_constraint_barrier(
             const Eigen::VectorXd& sigma,
             const Candidate& candidate,
-            const Eigen::VectorXd& grad);
+            double& Bx,
+            Eigen::VectorXd& grad_Bx,
+            std::vector<Eigen::Triplet<double>>& hess_Bx_triplets,
+            bool compute_grad,
+            bool compute_hess);
 
-        bool compare_jac_g(
+        /// Computes the barrier term value, gradient, and hessiand
+        void compute_barrier_term(
+            const Eigen::VectorXd& sigma,
+            const Candidates& distance_candidates,
+            double& Bx,
+            Eigen::VectorXd& grad_Bx,
+            Eigen::SparseMatrix<double>& hess_Bx,
+            bool compute_grad,
+            bool compute_hess);
+
+#ifdef WITH_DERIVATIVE_CHECK
+        // The following functions are used exclusivly to check that the
+        // gradient and hessian match a finite difference version.
+
+        Eigen::VectorXd compute_full_grad_barrier(
+            const Eigen::VectorXd& sigma, const Candidates& candidates);
+
+        template <typename Candidate, typename RigidBodyCandidate>
+        void check_distance_finite_diff(
+            const Eigen::VectorXd& sigma, const Candidate& candidate);
+
+        void check_grad_barrier(
             const Eigen::VectorXd& sigma,
             const Candidates& candidates,
-            const Eigen::MatrixXd& jac_g);
+            const Eigen::VectorXd& grad_Bx);
+#endif
 
         double min_distance;
         opt::DistanceBarrierConstraint constraint_;

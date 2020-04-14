@@ -126,10 +126,8 @@ namespace opt {
         bool compute_grad,
         bool compute_hess)
     {
+        // Start by updating the constraint set
         NAMED_PROFILE_POINT("compute_barrier__update_constraints", UPDATE)
-        NAMED_PROFILE_POINT("compute_barrier__compute_grad", COMPUTE_GRAD)
-        NAMED_PROFILE_POINT("compute_barrier__compute_hess", COMPUTE_HESS)
-
         PROFILE_START(UPDATE)
         physics::Poses<double> poses = this->dofs_to_poses(x);
         Candidates candidates;
@@ -137,133 +135,60 @@ namespace opt {
             m_assembler, poses, candidates);
         PROFILE_END(UPDATE)
 
-        Eigen::VectorXd gx;
-        constraint_.compute_candidates_constraints(
-            m_assembler, poses, candidates, gx);
-        Bx = gx.sum();
+        // if we want a derivative we use the autodiff version
+        if (compute_grad || compute_hess) {
+            compute_barrier_term(
+                x, candidates, Bx, grad_Bx, hess_Bx, //
+                compute_grad, compute_hess);
+        } else {
+            // TODO: This can be remove in favor of using the autodiff version
+            // with double
+            Eigen::VectorXd gx;
+            constraint_.compute_candidates_constraints(
+                m_assembler, poses, candidates, gx);
+            Bx = gx.sum();
+        }
 
-        if (compute_grad) {
-            PROFILE_START(COMPUTE_GRAD)
-            Eigen::MatrixXd gx_jacobian = eval_jac_g_core(x, candidates);
-            grad_Bx = gx_jacobian.colwise().sum().transpose();
-            PROFILE_END(COMPUTE_GRAD)
 #ifdef WITH_DERIVATIVE_CHECK
-            compare_jac_g(x, candidates, gx_jacobian);
+        if (compute_grad) {
+            check_grad_barrier(x, candidates, grad_Bx);
+        }
+        // if (compute_hess) {
+        //     check_hess_barrier(x, candidates, grad_Bx);
+        // }
 #endif
-        }
-
-        if (compute_hess) {
-            PROFILE_START(COMPUTE_HESS)
-            std::vector<Eigen::SparseMatrix<double>> gx_hessian =
-                eval_hessian_g_core(x, candidates);
-            hess_Bx.resize(x.rows(), x.rows());
-            hess_Bx.setZero();
-            for (const auto& gx_hessian_i : gx_hessian) {
-                hess_Bx += gx_hessian_i;
-            }
-            PROFILE_END(COMPUTE_HESS)
-        }
-        return gx.size();
-    }
-
-    Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_full(
-        const Eigen::VectorXd& sigma, const Candidates& candidates)
-    {
-        typedef AutodiffType<Eigen::Dynamic> Diff;
-        Diff::activate(num_vars_);
-        assert(sigma.size() == num_vars_);
-
-        Diff::D1VectorXd d_sigma = Diff::d1vars(0, sigma);
-
-        physics::Poses<Diff::DDouble1> d_poses_t0 =
-            physics::cast<double, Diff::DDouble1>(poses_t0);
-        physics::Poses<Diff::DDouble1> d_poses = this->dofs_to_poses(d_sigma);
-        Diff::D1VectorXd d_g_uk;
-        constraint_.compute_candidates_constraints<Diff::DDouble1>(
-            m_assembler, d_poses, candidates, d_g_uk);
-
-        assert(candidates.size() == d_g_uk.rows());
-        return Diff::get_gradient(d_g_uk);
-    }
-
-    Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_core(
-        const Eigen::VectorXd& sigma, const Candidates& distance_candidates)
-    {
-        // ∇²g: Rⁿ ↦ Rᵐˣⁿ
-        Eigen::MatrixXd jac_g =
-            Eigen::MatrixXd::Zero(distance_candidates.size(), num_vars_);
-
-        typedef AutodiffType<Eigen::Dynamic, /*maxN=2*6=*/12> Diff;
-        int ndof = physics::Pose<double>::dim_to_ndof(dim());
-        Diff::activate(2 * ndof);
-
-        // TODO: Parallelize
-        for (size_t i = 0; i < distance_candidates.ev_candidates.size(); ++i) {
-            const auto& ev_candidate = distance_candidates.ev_candidates[i];
-
-            RigidBodyEdgeVertexCandidate rbc;
-            extract_local_system(ev_candidate, rbc);
-
-            Eigen::VectorXd gradient =
-                distance_barrier<Diff::DDouble1>(sigma, rbc).getGradient();
-
-            size_t cstr_id = i;
-            jac_g.block(int(cstr_id), ndof* rbc.vertex_body_id, 1, ndof) =
-                gradient.head(ndof).transpose();
-            jac_g.block(int(cstr_id), ndof* rbc.edge_body_id, 1, ndof) =
-                gradient.tail(ndof).transpose();
-        }
-
-        for (size_t i = 0; i < distance_candidates.ee_candidates.size(); ++i) {
-            const auto& ee_candidate = distance_candidates.ee_candidates[i];
-
-            RigidBodyEdgeEdgeCandidate rbc;
-            extract_local_system(ee_candidate, rbc);
-
-            Eigen::VectorXd gradient =
-                distance_barrier<Diff::DDouble1>(sigma, rbc).getGradient();
-
-            size_t cstr_id = i + distance_candidates.ev_candidates.size();
-            jac_g.block(int(cstr_id), ndof* rbc.edge0_body_id, 1, ndof) =
-                gradient.head(ndof).transpose();
-            jac_g.block(int(cstr_id), ndof* rbc.edge1_body_id, 1, ndof) =
-                gradient.tail(ndof).transpose();
-        }
-
-        for (size_t i = 0; i < distance_candidates.fv_candidates.size(); ++i) {
-            const auto& fv_candidate = distance_candidates.fv_candidates[i];
-
-            RigidBodyFaceVertexCandidate rbc;
-            extract_local_system(fv_candidate, rbc);
-
-            Eigen::VectorXd gradient =
-                distance_barrier<Diff::DDouble1>(sigma, rbc).getGradient();
-
-            size_t cstr_id = i + distance_candidates.ev_candidates.size()
-                + distance_candidates.ee_candidates.size();
-            jac_g.block(int(cstr_id), ndof* rbc.vertex_body_id, 1, ndof) =
-                gradient.head(ndof).transpose();
-            jac_g.block(int(cstr_id), ndof* rbc.face_body_id, 1, ndof) =
-                gradient.tail(ndof).transpose();
-        }
 
 #ifndef NDEBUG
-        for (int i = 0; i < jac_g.size(); i++) {
-            assert(std::isfinite(jac_g(i)));
+        // Make sure nothing went wrong
+        if (compute_grad) {
+            for (int i = 0; i < grad_Bx.size(); i++) {
+                assert(std::isfinite(grad_Bx(i)));
+            }
+        }
+        if (compute_hess) {
+            typedef Eigen::SparseMatrix<double>::InnerIterator Iterator;
+            for (int k = 0; k < hess_Bx.outerSize(); ++k) {
+                for (Iterator it(hess_Bx, k); it; ++it) {
+                    assert(std::isfinite(it.value()));
+                }
+            }
         }
 #endif
 
-        return jac_g;
+        // Return the number of constraints
+        return candidates.size();
     }
 
+    // Convert from a local hessian to the triplets in the global hessian
     void local_hessian_to_global_triplets(
         const Eigen::MatrixXd& local_hessian,
         const std::array<long, 2>& body_ids,
         int ndof,
         std::vector<Eigen::Triplet<double>>& triplets)
     {
-        triplets.clear();
-        triplets.reserve(/*(2 * ndof) x (2 * ndof) = */ 4 * ndof * ndof);
+        assert(local_hessian.rows() == 2 * ndof);
+        assert(local_hessian.cols() == 2 * ndof);
+        triplets.reserve(triplets.size() + local_hessian.size());
         for (int b_i = 0; b_i < body_ids.size(); b_i++) {
             for (int b_j = 0; b_j < body_ids.size(); b_j++) {
                 for (int dof_i = 0; dof_i < ndof; dof_i++) {
@@ -279,88 +204,108 @@ namespace opt {
         }
     }
 
-    std::vector<Eigen::SparseMatrix<double>>
-    DistanceBarrierRBProblem::eval_hessian_g_core(
-        const Eigen::VectorXd& sigma, const Candidates& distance_candidates)
+    // Compute the derivatives of a single constraint
+    template <typename Candidate, typename RigidBodyCandidate>
+    void DistanceBarrierRBProblem::add_constraint_barrier(
+        const Eigen::VectorXd& sigma,
+        const Candidate& candidate,
+        double& Bx,
+        Eigen::VectorXd& grad_Bx,
+        std::vector<Eigen::Triplet<double>>& hess_Bx_triplets,
+        bool compute_grad,
+        bool compute_hess)
     {
-        // ∇²g: Rⁿ ↦ Rᵐˣᵐˣⁿ
-        std::vector<Eigen::SparseMatrix<double>> gx_hessian;
-        gx_hessian.resize(distance_candidates.size());
-
+        // Activate autodiff with the correct number of variables
         typedef AutodiffType<Eigen::Dynamic, /*maxN=2*6=*/12> Diff;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         Diff::activate(2 * ndof);
 
-        std::vector<Eigen::Triplet<double>> triplets;
+        RigidBodyCandidate rbc;
+        extract_local_system(candidate, rbc);
+        std::array<long, 2> body_ids = rbc.get_body_ids();
+
+        // Local gradient for a single constraint
+        Eigen::VectorXd grad_Bxi;
+        if (compute_hess) {
+            NAMED_PROFILE_POINT("compute_barrier__compute_hess", COMPUTE_HESS)
+            PROFILE_START(COMPUTE_HESS)
+
+            Diff::DDouble2 dBxi = distance_barrier<Diff::DDouble2>(sigma, rbc);
+            Bx += dBxi.getValue();
+            grad_Bxi = dBxi.getGradient();
+            Eigen::MatrixXd hess_Bxi = dBxi.getHessian();
+
+            // Add global triplets of the local values
+            local_hessian_to_global_triplets(
+                hess_Bxi, body_ids, ndof, hess_Bx_triplets);
+
+            PROFILE_END(COMPUTE_HESS)
+        } else if (compute_grad) {
+            NAMED_PROFILE_POINT("compute_barrier__compute_grad", COMPUTE_GRAD)
+            PROFILE_START(COMPUTE_GRAD)
+
+            Diff::DDouble1 dBxi = distance_barrier<Diff::DDouble1>(sigma, rbc);
+            Bx += dBxi.getValue();
+            grad_Bxi = dBxi.getGradient();
+
+            PROFILE_END(COMPUTE_GRAD)
+        } else {
+            Bx += distance_barrier<double>(sigma, rbc);
+        }
+
+        if (compute_grad) {
+            assert(grad_Bxi.size() == 2 * ndof);
+            grad_Bx.segment(ndof * body_ids[0], ndof) += grad_Bxi.head(ndof);
+            grad_Bx.segment(ndof * body_ids[1], ndof) += grad_Bxi.tail(ndof);
+        }
+    }
+
+    void DistanceBarrierRBProblem::compute_barrier_term(
+        const Eigen::VectorXd& sigma,
+        const Candidates& distance_candidates,
+        double& Bx,
+        Eigen::VectorXd& grad_Bx,
+        Eigen::SparseMatrix<double>& hess_Bx,
+        bool compute_grad = true,
+        bool compute_hess = true)
+    {
+        // B: Rⁿ ↦ R
+        Bx = 0;
+        // ∇B: Rⁿ ↦ Rⁿ
+        grad_Bx = Eigen::VectorXd::Zero(num_vars_);
+        // ∇²B: Rⁿ ↦ Rⁿˣⁿ
+        std::vector<Eigen::Triplet<double>> hess_Bx_triplets;
 
         // Compute EV constraint hessian
-        for (size_t i = 0; i < distance_candidates.ev_candidates.size(); ++i) {
-            const auto& ev_candidate = distance_candidates.ev_candidates[i];
-
-            RigidBodyEdgeVertexCandidate rbc;
-            extract_local_system(ev_candidate, rbc);
-
-            local_hessian_to_global_triplets(
-                distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian(),
-                { { rbc.vertex_body_id, rbc.edge_body_id } }, ndof, triplets);
-
-            Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
-            global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
-
-            size_t cstr_id = i;
-            gx_hessian[cstr_id] = global_el_hessian;
+        for (const auto& ev_candidate : distance_candidates.ev_candidates) {
+            add_constraint_barrier<
+                EdgeVertexCandidate, RigidBodyEdgeVertexCandidate>(
+                sigma, ev_candidate, Bx, grad_Bx, hess_Bx_triplets,
+                compute_grad, compute_hess);
         }
 
         // Compute EE constraint hessian
-        for (size_t i = 0; i < distance_candidates.ee_candidates.size(); ++i) {
-            const auto& ee_candidate = distance_candidates.ee_candidates[i];
-
-            RigidBodyEdgeEdgeCandidate rbc;
-            extract_local_system(ee_candidate, rbc);
-
-            local_hessian_to_global_triplets(
-                distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian(),
-                { { rbc.edge0_body_id, rbc.edge1_body_id } }, ndof, triplets);
-
-            Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
-            global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
-
-            size_t cstr_id = i + distance_candidates.ev_candidates.size();
-            gx_hessian[cstr_id] = global_el_hessian;
+        for (const auto& ee_candidate : distance_candidates.ee_candidates) {
+            add_constraint_barrier<
+                EdgeEdgeCandidate, RigidBodyEdgeEdgeCandidate>(
+                sigma, ee_candidate, Bx, grad_Bx, hess_Bx_triplets,
+                compute_grad, compute_hess);
         }
 
         // Compute FV constraint hessian
-        for (size_t i = 0; i < distance_candidates.fv_candidates.size(); ++i) {
-            const auto& fv_candidate = distance_candidates.fv_candidates[i];
-
-            RigidBodyFaceVertexCandidate rbc;
-            extract_local_system(fv_candidate, rbc);
-
-            local_hessian_to_global_triplets(
-                distance_barrier<Diff::DDouble2>(sigma, rbc).getHessian(),
-                { { rbc.vertex_body_id, rbc.face_body_id } }, ndof, triplets);
-
-            Eigen::SparseMatrix<double> global_el_hessian(num_vars_, num_vars_);
-            global_el_hessian.setFromTriplets(triplets.begin(), triplets.end());
-
-            size_t cstr_id = i + distance_candidates.ev_candidates.size()
-                + distance_candidates.ee_candidates.size();
-            gx_hessian[cstr_id] = global_el_hessian;
+        for (const auto& fv_candidate : distance_candidates.fv_candidates) {
+            add_constraint_barrier<
+                FaceVertexCandidate, RigidBodyFaceVertexCandidate>(
+                sigma, fv_candidate, Bx, grad_Bx, hess_Bx_triplets,
+                compute_grad, compute_hess);
         }
 
-#ifndef NDEBUG
-        // Make sure nothing went wrong
-        for (const auto& Hi : gx_hessian) {
-            for (int k = 0; k < Hi.outerSize(); ++k) {
-                for (Eigen::SparseMatrix<double>::InnerIterator it(Hi, k); it;
-                     ++it) {
-                    assert(std::isfinite(it.value()));
-                }
-            }
+        if (compute_hess) {
+            // ∇²B: Rⁿ ↦ Rⁿˣⁿ
+            hess_Bx.resize(num_vars_, num_vars_);
+            hess_Bx.setFromTriplets(
+                hess_Bx_triplets.begin(), hess_Bx_triplets.end());
         }
-#endif
-
-        return gx_hessian;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -606,24 +551,31 @@ namespace opt {
         rbc.face_vertex2_local_id = lf_v2_id;
     }
 
-    inline std::array<long, 2> get_body_ids(RigidBodyEdgeVertexCandidate rbc)
+#ifdef WITH_DERIVATIVE_CHECK
+    // The following functions are used exclusivly to check that the
+    // gradient and hessian match a finite difference version.
+
+    Eigen::VectorXd DistanceBarrierRBProblem::compute_full_grad_barrier(
+        const Eigen::VectorXd& sigma, const Candidates& candidates)
     {
-        return { { rbc.vertex_body_id, rbc.edge_body_id } };
-    }
-    inline std::array<long, 2> get_body_ids(RigidBodyEdgeEdgeCandidate rbc)
-    {
-        return { { rbc.edge0_body_id, rbc.edge1_body_id } };
-    }
-    inline std::array<long, 2> get_body_ids(RigidBodyFaceVertexCandidate rbc)
-    {
-        return { { rbc.vertex_body_id, rbc.face_body_id } };
+        typedef AutodiffType<Eigen::Dynamic> Diff;
+        Diff::activate(num_vars_);
+        assert(sigma.size() == num_vars_);
+
+        Diff::D1VectorXd d_sigma = Diff::d1vars(0, sigma);
+
+        physics::Poses<Diff::DDouble1> d_poses = this->dofs_to_poses(d_sigma);
+        Diff::D1VectorXd dBxi;
+        constraint_.compute_candidates_constraints<Diff::DDouble1>(
+            m_assembler, d_poses, candidates, dBxi);
+
+        assert(candidates.size() == dBxi.rows());
+        return dBxi.sum().getGradient();
     }
 
     template <typename Candidate, typename RigidBodyCandidate>
-    bool DistanceBarrierRBProblem::compare_fd(
-        const Eigen::VectorXd& sigma,
-        const Candidate& candidate,
-        const Eigen::VectorXd& grad)
+    void DistanceBarrierRBProblem::check_distance_finite_diff(
+        const Eigen::VectorXd& sigma, const Candidate& candidate)
     {
         typedef AutodiffType<Eigen::Dynamic> Diff;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
@@ -635,70 +587,57 @@ namespace opt {
 
         // distance finite diff
         auto f = [&](const Eigen::VectorXd& sigma_k) -> double {
-            double dk = distance<double>(sigma_k, rbc);
-            return dk;
+            return distance<double>(sigma_k, rbc);
         };
 
-        std::array<long, 2> body_ids = get_body_ids(rbc);
+        std::array<long, 2> body_ids = rbc.get_body_ids();
 
         // distance finite diff
-        Eigen::VectorXd approx_grad;
-        Eigen::VectorXd exact_grad(sigma.rows());
+        Eigen::VectorXd exact_grad = Eigen::VectorXd::Zero(sigma.rows());
         Eigen::VectorXd local_exact_grad = d.getGradient();
-        exact_grad.setZero();
         exact_grad.segment(ndof * body_ids[0], ndof) =
             local_exact_grad.head(ndof);
         exact_grad.segment(ndof * body_ids[1], ndof) =
             local_exact_grad.tail(ndof);
 
+        Eigen::VectorXd approx_grad;
         finite_gradient(
             sigma, f, approx_grad, fd::AccuracyOrder::SECOND,
             Constants::FINITE_DIFF_H);
-        return fd::compare_gradient(
+        fd::compare_gradient(
             approx_grad, exact_grad, Constants::FINITE_DIFF_TEST,
             fmt::format(
                 "check_finite_diff DISTANCE barrier_eps={:3e} d={:3e}",
                 constraint_.get_barrier_epsilon(), d.getValue()));
     }
 
-    bool DistanceBarrierRBProblem::compare_jac_g(
+    void DistanceBarrierRBProblem::check_grad_barrier(
         const Eigen::VectorXd& sigma,
         const Candidates& candidates,
-        const Eigen::MatrixXd& jac_g)
+        const Eigen::VectorXd& grad_Bx)
     {
-        auto jac_full = eval_jac_g_full(sigma, candidates);
+        // Compute the gradient using full autodiff
+        fd::compare_jacobian(
+            compute_full_grad_barrier(sigma, candidates), grad_Bx,
+            /*test_eps=*/Constants::FULL_GRADIENT_TEST,
+            "autodiff gradients do not match ∇B(x)");
 
-        bool pass = fd::compare_jacobian(
-            jac_full, jac_g, /*test_eps=*/Constants::FULL_GRADIENT_TEST);
-        if (!pass) {
-            spdlog::error("autodiff gradients do not match");
+        // Compute the finite difference of a single constraint
+        for (const auto& ev : candidates.ev_candidates) {
+            check_distance_finite_diff<
+                EdgeVertexCandidate, RigidBodyEdgeVertexCandidate>(sigma, ev);
         }
-
-        for (size_t i = 0; i < candidates.ev_candidates.size(); ++i) {
-            const auto& ev = candidates.ev_candidates[i];
-            compare_fd<EdgeVertexCandidate, RigidBodyEdgeVertexCandidate>(
-                sigma, ev, jac_full.row(int(i)));
-            compare_fd<EdgeVertexCandidate, RigidBodyEdgeVertexCandidate>(
-                sigma, ev, jac_g.row(int(i)));
+        for (const auto& ee : candidates.ee_candidates) {
+            check_distance_finite_diff<
+                EdgeEdgeCandidate, RigidBodyEdgeEdgeCandidate>(sigma, ee);
         }
-        for (size_t i = 0; i < candidates.ee_candidates.size(); ++i) {
-            const auto& ee = candidates.ee_candidates[i];
-            compare_fd<EdgeEdgeCandidate, RigidBodyEdgeEdgeCandidate>(
-                sigma, ee, jac_full.row(int(i)));
-            compare_fd<EdgeEdgeCandidate, RigidBodyEdgeEdgeCandidate>(
-                sigma, ee, jac_g.row(int(i)));
+        for (const auto& fv : candidates.fv_candidates) {
+            check_distance_finite_diff<
+                FaceVertexCandidate, RigidBodyFaceVertexCandidate>(sigma, fv);
         }
-        for (size_t i = 0; i < candidates.fv_candidates.size(); ++i) {
-            const auto& fv = candidates.fv_candidates[i];
-            compare_fd<FaceVertexCandidate, RigidBodyFaceVertexCandidate>(
-                sigma, fv, jac_full.row(int(i)));
-            compare_fd<FaceVertexCandidate, RigidBodyFaceVertexCandidate>(
-                sigma, fv, jac_g.row(int(i)));
-        }
-
-        assert(pass);
-        return pass;
     }
+
+#endif
 
 } // namespace opt
 } // namespace ccd

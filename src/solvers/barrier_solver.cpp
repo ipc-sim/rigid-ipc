@@ -21,6 +21,7 @@ namespace opt {
         , c(0.01)
         , e_b(1e-5)
         , t_inc(2)
+        , max_num_constraints(0)
         , num_outer_iterations(0)
     {
     }
@@ -132,11 +133,11 @@ namespace opt {
 
         double min_dist = problem_ptr->compute_min_distance(results.x);
         spdlog::critical(
-            "GREP_ME t={} min_dist={} max_num_constraints={}", //
+            "GREP_ME t={:g} min_dist={:g} max_num_constraints={:d}", //
             t_used, min_dist, max_num_constraints);
 
         spdlog::info(
-            "BARRIER_STATS c={} tinit={} tinc={} num_iterations={} {}", //
+            "BARRIER_STATS c={:g} tinit={:g} tinc={:g} num_iterations={:g} {}",
             c, tinit, t_inc, num_outer_iterations, inner_solver_ptr->stats());
 
         return results;

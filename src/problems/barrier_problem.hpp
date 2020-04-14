@@ -7,7 +7,7 @@
 namespace ccd {
 namespace opt {
 
-    class BarrierProblem : public OptimizationProblem {
+    class BarrierProblem : public virtual OptimizationProblem {
     public:
         virtual ~BarrierProblem() = default;
 
@@ -105,10 +105,10 @@ namespace opt {
     eval_grad_energy_approx(BarrierProblem& problem, const Eigen::VectorXd& x);
     Eigen::MatrixXd
     eval_hess_energy_approx(BarrierProblem& problem, const Eigen::VectorXd& x);
-    Eigen::VectorXd
-    eval_grad_barrier_approx(BarrierProblem& problem, const Eigen::VectorXd& x);
-    Eigen::MatrixXd
-    eval_hess_barrier_approx(BarrierProblem& problem, const Eigen::VectorXd& x);
+
+    // WARNING: You cannot create a eval_*_barrier_approx because barrier term
+    // eval re-computes the constraint set which can lead to poor performance
+    // and discontiuties when using finite differences.
 
 } // namespace opt
 } // namespace ccd

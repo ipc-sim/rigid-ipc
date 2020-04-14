@@ -53,7 +53,7 @@ namespace opt {
                 /*compute_grad=*/true, /*compute_hess=*/false);
         }
 
-        virtual bool is_constrained_problem() const { return false; }
+        virtual bool is_constrained_problem() const { return true; }
     };
 
 } // namespace opt

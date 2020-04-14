@@ -9,30 +9,33 @@ namespace ccd {
 
 namespace opt {
     class VolumeRBProblem : public physics::RigidBodyProblem,
-                            public virtual opt::INCPProblem {
+                            public virtual ConstrainedProblem {
     public:
         VolumeRBProblem(const std::string& name);
 
         void settings(const nlohmann::json& params) override;
 
         ////////////////////////////////////////////////////////////////
-        /// INCPProblem
+        /// Constrained Problem
 
         /// @brief eval_g evaluates constraints at point x
-        Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
-
-        virtual void eval_g(const Eigen::VectorXd& x,
+        virtual void compute_constraints(
+            const Eigen::VectorXd& x,
             Eigen::VectorXd& gx,
-            Eigen::MatrixXd& gx_jacobian) override;
+            Eigen::MatrixXd& jac_gx,
+            std::vector<Eigen::SparseMatrix<double>> hess_gx,
+            bool compute_grad = true,
+            bool compute_hess = true) override;
 
-        virtual void eval_g_normal(const Eigen::VectorXd& x,
+        using ConstrainedProblem::compute_constraints;
+
+        virtual void compute_constraints_using_normal(
+            const Eigen::VectorXd& x,
             Eigen::VectorXd& gx,
-            Eigen::MatrixXd& gx_jacobian) override;
-
-
-        void eval_jac_g_core(const Eigen::VectorXd& x,
-            const EdgeEdgeImpacts&,
-            Eigen::MatrixXd& jac_gx);
+            Eigen::MatrixXd& jac_gx,
+            std::vector<Eigen::SparseMatrix<double>> hess_gx,
+            bool compute_grad = true,
+            bool compute_hess = true) override;
 
         const Eigen::VectorXb& is_dof_fixed() override
         {
@@ -42,9 +45,14 @@ namespace opt {
         ////////////////////////////////////////////////////////////////
         /// ISimulationProblem
         opt::CollisionConstraint& constraint() override { return constraint_; }
-        opt::IStateOptimizationSolver& solver() override { return opt_solver_; }
+        opt::OptimizationSolver& solver() override { return opt_solver_; }
 
     protected:
+        void eval_jac_g_core(
+            const Eigen::VectorXd& x,
+            const EdgeEdgeImpacts&,
+            Eigen::MatrixXd& jac_gx);
+
         opt::VolumeConstraint constraint_;
         opt::NCPSolver opt_solver_;
     };
