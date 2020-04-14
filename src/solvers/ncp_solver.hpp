@@ -4,21 +4,14 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+#include <opt/constrained_problem.hpp>
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
-
 #include <solvers/lcp_solver.hpp>
 #include <solvers/optimization_solver.hpp>
 
-#include <memory>
-
 namespace ccd {
 namespace opt {
-
-    typedef std::function<void(const Eigen::VectorXd& x,
-        const Eigen::VectorXd& alpha,
-        const double gamma)>
-        callback_intermediate_ncp;
 
     /**
      * @brief Method for updating candidate solution during NCP iterations
@@ -32,36 +25,37 @@ namespace opt {
         LINEARIZED
     };
 
-    class NCPSolver : public virtual IStateOptimizationSolver {
+    class NCPSolver : public OptimizationSolver {
     public:
         NCPSolver();
-        NCPSolver(const std::string& name);
-        ~NCPSolver() override;
+        virtual ~NCPSolver() = default;
 
-        void set_problem(INCPProblem& problem);
+        /// Initialize the state of the solver using the settings saved in JSON
+        virtual void settings(const nlohmann::json& json) override;
+        /// Export the state of the solver using the settings saved in JSON
+        virtual nlohmann::json settings() const override;
 
-        OptimizationResults solve() override;
-        OptimizationResults solve(const bool use_grad);
+        /// An identifier for the solver class
+        static std::string solver_name() { return "ncp_solver"; }
+        /// An identifier for this solver
+        virtual std::string name() const override
+        {
+            return NCPSolver::solver_name();
+        }
 
+        void set_problem(OptimizationProblem& problem) override
+        {
+            assert(problem.is_constrained_problem());
+            problem_ptr = dynamic_cast<ConstrainedProblem*>(&problem);
+        }
+
+        /// Initialize the solver state for a new solve
         void init_solve() override;
-
-        void settings(const nlohmann::json& json) override;
-        nlohmann::json settings() const override;
-        const std::string& name() const override { return name_; }
-
-        bool has_inner_solver() override { return false; }
-        const IBarrierOptimizationSolver& inner_solver() override
-        {
-            throw NotImplementedError("inner_solver NCPSolver not implemented");
-        }
-
-        OptimizationResults step_solve() override;
-
-        int num_outer_iterations() const override
-        {
-            return num_outer_iterations_;
-        }
-        Eigen::VectorXd get_grad_kkt() const override;
+        /// Solve the saved optimization problem to completion
+        virtual OptimizationResults solve() override;
+        OptimizationResults solve(const bool use_grad);
+        /// Perform a single step of solving the optimization problem
+        virtual OptimizationResults step_solve() override;
 
         // --------------------------------------------------------------------
         // Configuration
@@ -78,9 +72,7 @@ namespace opt {
         // --------------------------------------------------------------------
         std::shared_ptr<Eigen::SparseLU<Eigen::SparseMatrix<double>>> Asolver;
         Eigen::VectorXd g_xi;
-        // Eigen::VectorXi g_active;
         Eigen::MatrixXd jac_g_xi;
-        // Eigen::SparseMatrix<double> jac_g_xi;
 
         // --------------------------------------------------------------------
         // Optimization results
@@ -89,7 +81,7 @@ namespace opt {
         Eigen::VectorXd lambda_i;
 
     protected:
-        void compute_linear_system(INCPProblem& problem_ptr_);
+        void compute_linear_system(ConstrainedProblem& problem_ptr_);
         void compute_initial_solution();
 
         /**
@@ -139,7 +131,7 @@ namespace opt {
         // --------------------------------------------------------------------
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd b;
-        INCPProblem* problem_ptr_;
+        ConstrainedProblem* problem_ptr;
 
         /// @brief Current number of outer iterations completed.
         int num_outer_iterations_;
@@ -147,7 +139,7 @@ namespace opt {
         bool m_use_gradient = true;
     };
 
-    void zero_out_fixed_dof(
-        const Eigen::VectorXb& is_fixed, Eigen::MatrixXd& jac);
+    void
+    zero_out_fixed_dof(const Eigen::VectorXb& is_fixed, Eigen::MatrixXd& jac);
 } // namespace opt
 } // namespace ccd

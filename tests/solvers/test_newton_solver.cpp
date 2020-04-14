@@ -11,12 +11,9 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
 {
     int num_vars = GENERATE(1, 10, 100);
 
-    NewtonSolver solver;
-    solver.init_free_dof(Eigen::VectorXb::Zero(num_vars));
-
     // Setup problem
     // -----------------------------------------------------------------
-    class AdHocProblem : public virtual IBarrierProblem {
+    class AdHocProblem : public virtual OptimizationProblem {
     public:
         AdHocProblem(int num_vars)
         {
@@ -25,54 +22,39 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
             x0.setRandom();
             is_dof_fixed_ = Eigen::VectorXb::Zero(num_vars);
         }
-        double eval_f(const Eigen::VectorXd& x) override
+
+        void compute_objective(
+            const Eigen::VectorXd& x,
+            double& fx,
+            Eigen::VectorXd& grad_fx,
+            Eigen::SparseMatrix<double>& hess_fx,
+            bool compute_grad = true,
+            bool compute_hess = true) override
         {
-            return x.squaredNorm() / 2.0;
+            fx = x.squaredNorm() / 2.0;
+            if (compute_grad) {
+                grad_fx = x;
+            }
+            if (compute_hess) {
+                hess_fx =
+                    Eigen::MatrixXd::Identity(x.rows(), x.rows()).sparseView();
+            }
         }
 
-        Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override
-        {
-            return x;
-        }
-        Eigen::SparseMatrix<double> eval_hessian_f(
-            const Eigen::VectorXd& x) override
-        {
-            return Eigen::MatrixXd::Identity(x.rows(), x.rows()).sparseView();
-        }
-        void eval_f_and_fdiff(const Eigen::VectorXd& x,
-            double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian) override
-        {
-            f_uk = eval_f(x);
-            f_uk_jacobian = eval_grad_f(x);
-        }
-        void eval_f_and_fdiff(const Eigen::VectorXd& x,
-            double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian,
-            Eigen::SparseMatrix<double>& f_uk_hessian) override
-        {
-            f_uk = eval_f(x);
-            f_uk_jacobian = eval_grad_f(x);
-            f_uk_hessian = eval_hessian_f(x);
-        }
         bool has_collisions(
             const Eigen::VectorXd&, const Eigen::VectorXd&) const override
         {
             return false;
         }
-        Eigen::VectorXd eval_grad_E(const Eigen::VectorXd& x) override{
-            return eval_grad_f(x);
-        }
-        Eigen::VectorXd eval_grad_B(const Eigen::VectorXd& /*x*/, int& i) override{
-            i = 0;
-            return Eigen::VectorXd::Zero(num_vars());
-        }
 
-        double get_termination_threshold() const override {return 1.0;}
-        double get_barrier_epsilon() override { return 1.0; }
         const Eigen::VectorXd& starting_point() override { return x0; }
-        const int& num_vars() override { return num_vars_; }
+        int num_vars() const override { return num_vars_; }
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
+
+        double compute_min_distance(const Eigen::VectorXd& x) const override
+        {
+            return -1;
+        };
 
         int num_vars_;
         Eigen::VectorXb is_dof_fixed_;
@@ -81,7 +63,10 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
 
     AdHocProblem problem(num_vars);
 
-    OptimizationResults results = solver.solve(problem);
+    NewtonSolver solver;
+    solver.set_problem(problem);
+    solver.init_solve();
+    OptimizationResults results = solver.solve(problem.starting_point());
     REQUIRE(results.success);
     CHECK(results.x.squaredNorm() == Approx(0).margin(1e-6));
     CHECK(results.minf == Approx(0).margin(1e-6));
@@ -94,8 +79,8 @@ TEST_CASE("Test Newton direction solve", "[opt][newtons_method][newton_dir]")
     x.setRandom();
     // f = x^2
     Eigen::VectorXd gradient = 2 * x;
-    Eigen::SparseMatrix<double> hessian
-        = Eigen::SparseDiagonal<double>(2 * Eigen::VectorXd::Ones(num_vars));
+    Eigen::SparseMatrix<double> hessian =
+        Eigen::SparseDiagonal<double>(2 * Eigen::VectorXd::Ones(num_vars));
     Eigen::VectorXd delta_x;
     ccd::opt::NewtonSolver solver;
     solver.compute_direction(gradient, hessian, delta_x);
@@ -104,8 +89,8 @@ TEST_CASE("Test Newton direction solve", "[opt][newtons_method][newton_dir]")
 
 TEST_CASE("Test making a matrix SPD", "[opt][make_spd]")
 {
-    Eigen::SparseMatrix<double> A
-        = Eigen::MatrixXd::Random(100, 100).sparseView();
+    Eigen::SparseMatrix<double> A =
+        Eigen::MatrixXd::Random(100, 100).sparseView();
     double mu = ccd::opt::make_matrix_positive_definite(A);
     CAPTURE(mu);
     auto eig_vals = Eigen::MatrixXd(A).eigenvalues();

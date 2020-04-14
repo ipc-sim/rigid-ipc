@@ -10,50 +10,44 @@
 
 #include <nlohmann/json.hpp>
 
+#include <logger.hpp>
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
+#include <utils/not_implemented_error.hpp>
 
 namespace ccd {
 namespace opt {
 
-    // Interface class for optimization solvers used by BarrierSolver
-    class IBarrierOptimizationSolver {
+    class OptimizationSolver {
     public:
-        virtual ~IBarrierOptimizationSolver() = default;
-        virtual OptimizationResults solve(IBarrierProblem& problem) = 0;
-        virtual const std::string& name() const = 0;
-        virtual void settings(const nlohmann::json& json) = 0;
+        virtual ~OptimizationSolver() {};
+
+        /// Initialize the state of the solver using the settings saved in JSON
+        virtual void settings(const nlohmann::json& params) = 0;
+        /// Export the state of the solver using the settings saved in JSON
         virtual nlohmann::json settings() const = 0;
-        virtual void init_free_dof(Eigen::VectorXb is_dof_fixed) = 0;
 
-        virtual void c(const double) {}
-        virtual void e_b(const double) {}
-        virtual void t(const double) {}
-        virtual void m(const double) {}
+        /// An identifier for this solver
+        virtual std::string name() const = 0;
 
-        virtual std::string debug_stats() { return ""; }
-        virtual void debug_reset_stats() {};
-    };
+        /// Initialize the solver with a problem to solve
+        virtual void set_problem(OptimizationProblem& problem) = 0;
 
-    // Interface class for optimizatino solvers used by State
-    class IStateOptimizationSolver {
-    public:
-        virtual ~IStateOptimizationSolver() = default;
-
-        virtual OptimizationResults solve() = 0;
+        /// Initialize the solver state for a new solve
         virtual void init_solve() = 0;
+        /// Solve the saved optimization problem to completion
+        virtual OptimizationResults solve() = 0;
+        /// Perform a single step of solving the optimization problem
         virtual OptimizationResults step_solve() = 0;
 
-        virtual void settings(const nlohmann::json& json) = 0;
-        virtual nlohmann::json settings() const = 0;
-        virtual const std::string& name() const = 0;
+        virtual std::string stats() { return ""; }
 
-        virtual bool has_inner_solver() = 0;
-        virtual const IBarrierOptimizationSolver& inner_solver() = 0;
-
-        // UI debugging
-        virtual Eigen::VectorXd get_grad_kkt() const = 0;
-        virtual int num_outer_iterations() const = 0;
+        virtual bool has_inner_solver() const { return false; }
+        virtual OptimizationSolver& inner_solver()
+        {
+            throw NotImplementedError(
+                fmt::format("{} does not have and inner_solver", name()));
+        }
     };
 
 } // namespace opt

@@ -14,29 +14,31 @@ namespace ccd {
 
 namespace opt {
 
-    DistanceBarrierRBProblem::DistanceBarrierRBProblem(const std::string& name)
-        : RigidBodyProblem(name)
+    DistanceBarrierRBProblem::DistanceBarrierRBProblem()
+        : min_distance(-1)
+        , barrier_stiffness(1)
     {
     }
 
     void DistanceBarrierRBProblem::settings(const nlohmann::json& params)
     {
         constraint_.settings(params["distance_barrier_constraint"]);
+        // TODO: Select the optimization solver
         opt_solver_.settings(params["barrier_solver"]);
         opt_solver_.set_problem(*this);
         nlohmann::json inner_solver_settings =
             params[params["barrier_solver"]["inner_solver"].get<std::string>()];
-        opt_solver_.inner_solver_settings(inner_solver_settings);
+        opt_solver_.inner_solver().settings(inner_solver_settings);
         RigidBodyProblem::settings(params["rigid_body_problem"]);
     }
 
     nlohmann::json DistanceBarrierRBProblem::state() const
     {
         nlohmann::json json = RigidBodyProblem::state();
-        if (debug_min_distance_ < 0) {
+        if (min_distance < 0) {
             json["min_distance"] = nullptr;
         } else {
-            json["min_distance"] = debug_min_distance_;
+            json["min_distance"] = min_distance;
         }
         return json;
     }
@@ -46,17 +48,15 @@ namespace opt {
         // Take an unconstrained step
         bool has_collision = RigidBodyProblem::simulation_step(time_step);
 
-        // Update the optimization dof (arclength for rotations)
-        Eigen::VectorXd sigma = this->poses_to_dofs(m_assembler.rb_poses_t0());
-        debug_min_distance_ = debug_min_distance(sigma);
-        if (debug_min_distance_ >= 0) {
-            spdlog::info(
-                "candidate_step min_distance={:.8e}", debug_min_distance_);
+        // Check if minimum distance is violated
+        min_distance = compute_min_distance(
+            this->poses_to_dofs(m_assembler.rb_poses_t0()));
+        if (min_distance >= 0) {
+            spdlog::info("candidate_step min_distance={:.8e}", min_distance);
 
-            // our constraint is really d > min_d, we want to run
-            // the optimization when we end the step with small
-            // distances
-            if (debug_min_distance_ <= constraint_.min_distance) {
+            // our constraint is really d > min_d, we want to run the
+            // optimization when we end the step with small distances
+            if (min_distance <= constraint_.min_distance) {
                 has_collision = true;
             }
         }
@@ -67,91 +67,103 @@ namespace opt {
     bool DistanceBarrierRBProblem::take_step(
         const Eigen::VectorXd& sigma, const double time_step)
     {
-        debug_min_distance_ = debug_min_distance(sigma);
-        if (debug_min_distance_ < 0) {
+        min_distance = compute_min_distance(sigma);
+        if (min_distance < 0) {
             spdlog::info("final_step min_distance=N/A");
         } else {
-            spdlog::info("final_step min_distance={:.8e}", debug_min_distance_);
+            spdlog::info("final_step min_distance={:.8e}", min_distance);
         }
 
         return RigidBodyProblem::take_step(sigma, time_step);
     }
 
-    void DistanceBarrierRBProblem::eval_f_and_fdiff(
-        const Eigen::VectorXd& sigma,
-        double& f_uk,
-        Eigen::VectorXd& f_uk_grad,
-        Eigen::SparseMatrix<double>& f_uk_hessian)
-    {
-        f_uk = eval_f(sigma);
-        f_uk_grad = eval_grad_f(sigma);
-        f_uk_hessian = eval_hessian_f(sigma);
-    }
+    ////////////////////////////////////////////////////////////
+    /// Barrier Problem
 
-    void DistanceBarrierRBProblem::eval_f_and_fdiff(
-        const Eigen::VectorXd& sigma, double& f_uk, Eigen::VectorXd& f_uk_grad)
+    // Compute E(x) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
+    void DistanceBarrierRBProblem::compute_energy_term(
+        const Eigen::VectorXd& x,
+        double& Ex,
+        Eigen::VectorXd& grad_Ex,
+        Eigen::SparseMatrix<double>& hess_Ex,
+        bool compute_grad,
+        bool compute_hess)
     {
-        f_uk = eval_f(sigma);
-        f_uk_grad = eval_grad_f(sigma);
-    }
+        Eigen::VectorXd diff = x - this->poses_to_dofs(poses_t1);
 
-#if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
-    Eigen::MatrixXd
-    DistanceBarrierRBProblem::debug_vertices(const Eigen::VectorXd& sigma) const
-    {
-        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
-        return m_assembler.world_vertices(qk);
-    }
+        Eigen::SparseMatrix<double> M = m_assembler.m_dof_to_pose.transpose()
+            * m_assembler.m_rb_mass_matrix * m_assembler.m_dof_to_pose;
+
+        Ex = 0.5 * diff.transpose() * M * diff;
+
+        if (compute_grad) {
+            grad_Ex = M * diff;
+#ifdef WITH_DERIVATIVE_CHECK
+            Eigen::VectorXd grad_Ex_approx = eval_grad_energy_approx(*this, x);
+            if (!fd::compare_gradient(grad_Ex, grad_Ex_approx)) {
+                spdlog::error("finite gradient check failed for E(x)");
+            }
 #endif
-    double DistanceBarrierRBProblem::debug_min_distance(
-        const Eigen::VectorXd& sigma) const
-    {
-        physics::Poses<double> poses = this->dofs_to_poses(sigma);
-        Eigen::VectorXd d;
-        constraint_.debug_compute_distances(m_assembler, poses, d);
-        if (d.rows() > 0) {
-            return d.minCoeff();
         }
-        return -1;
+
+        if (compute_hess) {
+            hess_Ex = M;
+#ifdef WITH_DERIVATIVE_CHECK
+            Eigen::MatrixXd hess_Ex_approx = eval_hess_energy_approx(*this, x);
+            if (!fd::compare_jacobian(hess_Ex, hess_Ex_approx)) {
+                spdlog::error("finite hessian check failed for E(x)");
+            }
+#endif
+        }
     }
 
-    Eigen::VectorXd
-    DistanceBarrierRBProblem::eval_g(const Eigen::VectorXd& sigma)
+    // Compute B(x) = ∑_{k ∈ C} b(d(x_k)) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
+    int DistanceBarrierRBProblem::compute_barrier_term(
+        const Eigen::VectorXd& x,
+        double& Bx,
+        Eigen::VectorXd& grad_Bx,
+        Eigen::SparseMatrix<double>& hess_Bx,
+        bool compute_grad,
+        bool compute_hess)
     {
-        Eigen::VectorXd g_uk;
-        constraint_.compute_constraints(
-            m_assembler, this->dofs_to_poses(sigma), g_uk);
-        return g_uk;
-    }
-
-    bool DistanceBarrierRBProblem::has_collisions(
-        const Eigen::VectorXd& sigma_i, const Eigen::VectorXd& sigma_j) const
-    {
-        physics::Poses<double> poses_i = this->dofs_to_poses(sigma_i);
-        physics::Poses<double> poses_j = this->dofs_to_poses(sigma_j);
-        return constraint_.has_active_collisions(m_assembler, poses_i, poses_j);
-    }
-
-    Eigen::MatrixXd
-    DistanceBarrierRBProblem::eval_jac_g(const Eigen::VectorXd& sigma)
-    {
-        NAMED_PROFILE_POINT("eval_jac_g__update_constraints", UPDATE)
-        NAMED_PROFILE_POINT("eval_jac_g__eval_jac", EVAL)
+        NAMED_PROFILE_POINT("compute_barrier__update_constraints", UPDATE)
+        NAMED_PROFILE_POINT("compute_barrier__compute_grad", COMPUTE_GRAD)
+        NAMED_PROFILE_POINT("compute_barrier__compute_hess", COMPUTE_HESS)
 
         PROFILE_START(UPDATE)
+        physics::Poses<double> poses = this->dofs_to_poses(x);
         Candidates candidates;
         constraint_.construct_active_barrier_set(
-            m_assembler, this->dofs_to_poses(sigma), candidates);
+            m_assembler, poses, candidates);
         PROFILE_END(UPDATE)
 
-        PROFILE_START(EVAL)
-        Eigen::MatrixXd gx_jacobian = eval_jac_g_core(sigma, candidates);
-        PROFILE_END(EVAL)
+        Eigen::VectorXd gx;
+        constraint_.compute_candidates_constraints(
+            m_assembler, poses, candidates, gx);
+        Bx = gx.sum();
 
+        if (compute_grad) {
+            PROFILE_START(COMPUTE_GRAD)
+            Eigen::MatrixXd gx_jacobian = eval_jac_g_core(x, candidates);
+            grad_Bx = gx_jacobian.colwise().sum().transpose();
+            PROFILE_END(COMPUTE_GRAD)
 #ifdef WITH_DERIVATIVE_CHECK
-        compare_jac_g(sigma, candidates, gx_jacobian);
+            compare_jac_g(x, candidates, gx_jacobian);
 #endif
-        return gx_jacobian;
+        }
+
+        if (compute_hess) {
+            PROFILE_START(COMPUTE_HESS)
+            std::vector<Eigen::SparseMatrix<double>> gx_hessian =
+                eval_hessian_g_core(x, candidates);
+            hess_Bx.resize(x.rows(), x.rows());
+            hess_Bx.setZero();
+            for (const auto& gx_hessian_i : gx_hessian) {
+                hess_Bx += gx_hessian_i;
+            }
+            PROFILE_END(COMPUTE_HESS)
+        }
+        return gx.size();
     }
 
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_full(
@@ -172,59 +184,6 @@ namespace opt {
 
         assert(candidates.size() == d_g_uk.rows());
         return Diff::get_gradient(d_g_uk);
-    }
-
-    std::vector<Eigen::SparseMatrix<double>>
-    DistanceBarrierRBProblem::eval_hessian_g(const Eigen::VectorXd& sigma)
-    {
-        NAMED_PROFILE_POINT("eval_hess_g__update_constraints", UPDATE)
-        NAMED_PROFILE_POINT("eval_hess_g__eval", EVAL)
-
-        PROFILE_START(UPDATE)
-        Candidates candidates;
-        constraint_.construct_active_barrier_set(
-            m_assembler, this->dofs_to_poses(sigma), candidates);
-        PROFILE_END(UPDATE)
-
-        std::vector<Eigen::SparseMatrix<double>> gx_hessian;
-        PROFILE_START(EVAL)
-        gx_hessian = eval_hessian_g_core(sigma, candidates);
-        PROFILE_END(EVAL)
-
-        return gx_hessian;
-    }
-
-    void DistanceBarrierRBProblem::eval_g_and_gdiff(
-        const Eigen::VectorXd& sigma,
-        Eigen::VectorXd& gx,
-        Eigen::MatrixXd& gx_jacobian,
-        std::vector<Eigen::SparseMatrix<double>>& gx_hessian)
-    {
-        NAMED_PROFILE_POINT("eval_g_and_gdiff__update_constraints", UPDATE)
-        NAMED_PROFILE_POINT("eval_hess_g__eval_grad", EVAL_GRAD)
-        NAMED_PROFILE_POINT("eval_hess_g__eval_hess", EVAL_HESS)
-
-        PROFILE_START(UPDATE)
-        physics::Poses<double> poses = this->dofs_to_poses(sigma);
-        Candidates candidates;
-        constraint_.construct_active_barrier_set(
-            m_assembler, poses, candidates);
-        PROFILE_END(UPDATE)
-
-        constraint_.compute_candidates_constraints(
-            m_assembler, poses, candidates, gx);
-
-        PROFILE_START(EVAL_GRAD)
-        gx_jacobian = eval_jac_g_core(sigma, candidates);
-        PROFILE_END(EVAL_GRAD)
-
-        PROFILE_START(EVAL_HESS)
-        gx_hessian = eval_hessian_g_core(sigma, candidates);
-        PROFILE_END(EVAL_HESS)
-
-#ifdef WITH_DERIVATIVE_CHECK
-        compare_jac_g(sigma, candidates, gx_jacobian);
-#endif
     }
 
     Eigen::MatrixXd DistanceBarrierRBProblem::eval_jac_g_core(
@@ -402,6 +361,28 @@ namespace opt {
 #endif
 
         return gx_hessian;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    double DistanceBarrierRBProblem::compute_min_distance(
+        const Eigen::VectorXd& sigma) const
+    {
+        physics::Poses<double> poses = this->dofs_to_poses(sigma);
+        Eigen::VectorXd d;
+        constraint_.compute_distances(m_assembler, poses, d);
+        if (d.rows() > 0) {
+            return d.minCoeff();
+        }
+        return -1;
+    }
+
+    bool DistanceBarrierRBProblem::has_collisions(
+        const Eigen::VectorXd& sigma_i, const Eigen::VectorXd& sigma_j) const
+    {
+        physics::Poses<double> poses_i = this->dofs_to_poses(sigma_i);
+        physics::Poses<double> poses_j = this->dofs_to_poses(sigma_j);
+        return constraint_.has_active_collisions(m_assembler, poses_i, poses_j);
     }
 
     template <typename T, typename RigidBodyCandidate>

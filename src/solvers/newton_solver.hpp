@@ -1,15 +1,9 @@
-/**
- * Functions for optimizing functions.
- * Includes Newton's method.
- */
-
 #pragma once
 
 #include <Eigen/Core>
 
-#include <opt/optimization_problem.hpp>
-#include <opt/optimization_results.hpp>
-#include <solvers/optimization_solver.hpp>
+#include <solvers/barrier_solver.hpp>
+#include <utils/not_implemented_error.hpp>
 
 namespace ccd {
 
@@ -19,14 +13,33 @@ namespace ccd {
  */
 namespace opt {
 
-    class NewtonSolver : public virtual IBarrierOptimizationSolver {
+    class NewtonSolver : public virtual BarrierInnerSolver {
     public:
         NewtonSolver();
-        NewtonSolver(const std::string& name);
-        virtual ~NewtonSolver() override;
+        virtual ~NewtonSolver() = default;
 
-        // From IOptimizationSolver
-        // -------------------------------------------------
+        /// Initialize the state of the solver using the settings saved in JSON
+        void settings(const nlohmann::json& params) override;
+        /// Export the state of the solver using the settings saved in JSON
+        nlohmann::json settings() const override;
+
+        /// An identifier for the solver class
+        static std::string solver_name() { return "newton_solver"; }
+        /// An identifier for this solver
+        virtual std::string name() const override
+        {
+            return NewtonSolver::solver_name();
+        }
+
+        /// Initialize the solver with a problem to solve
+        virtual void set_problem(OptimizationProblem& problem) override
+        {
+            this->problem_ptr = &problem;
+        }
+
+        /// Initialize the solver state for a new solve
+        virtual void init_solve() override;
+
         /**
          * @brief Perform Newton's Method to minimize the objective, \f$f(x)\f$,
          * of the problem unconstrained.
@@ -37,16 +50,15 @@ namespace opt {
          * @return The results of the optimization including the minimizer,
          * minimum, and if the optimization was successful.
          */
-        virtual OptimizationResults solve(IBarrierProblem& problem) override;
+        virtual OptimizationResults solve(const Eigen::VectorXd& x0) override;
 
-        // From IBarrierOptimizationSolver
-        // -------------------------------------------------
-        const std::string& name() const override { return name_; }
-        void settings(const nlohmann::json& /*json*/) override;
-        nlohmann::json settings() const override;
-        void init_free_dof(Eigen::VectorXb is_dof_fixed) override;
+        /// Perform a single step of solving the optimization problem
+        virtual OptimizationResults step_solve() override
+        {
+            throw NotImplementedError(
+                "Taking a single newton step is not implemented!");
+        };
 
-        // -------------------------------------------------
         /**
          * @brief Solve for the Newton direction
          *        (\f$\Delta x = -H^{-1} \nabla f \f$).
@@ -59,35 +71,20 @@ namespace opt {
          *
          * @return Returns true if the solve was successful.
          */
-        bool compute_direction(const Eigen::VectorXd& gradient,
+        bool compute_direction(
+            const Eigen::VectorXd& gradient,
             const Eigen::SparseMatrix<double>& hessian,
             Eigen::VectorXd& delta_x,
             bool make_psd = false);
 
-        void c(const double value) override { c_ = value; }
-        void e_b(const double value) override { e_b_ = value; }
-        void t(const double value) override { t_ = value; }
-        void m(const double value) override { m_ = value; }
+        std::string stats() override;
 
         int max_iterations;
 
-        double c_;
-        double e_b_;
-        double t_;
-        double m_;
-
-        std::string debug_stats() override;
-        void debug_reset_stats() override;
-
-        int debug_num_fx = 0;
-        int debug_num_grad_fx = 0;
-        int debug_num_hessian_fx = 0;
-        int debug_num_collision_check = 0;
-        int debug_ls_iterations = 0;
-        int debug_newton_iterations = 0;
-
     protected:
-        bool line_search(IBarrierProblem& problem,
+        void reset_stats();
+
+        bool line_search(
             const Eigen::VectorXd& x,
             const Eigen::VectorXd& dir,
             const double fx,
@@ -98,7 +95,15 @@ namespace opt {
         Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
         int iteration_number;     ///< @brief The current iteration number.
 
-        std::string name_;
+        OptimizationProblem* problem_ptr;
+
+    private:
+        int num_fx = 0;
+        int num_grad_fx = 0;
+        int num_hessian_fx = 0;
+        int num_collision_check = 0;
+        int ls_iterations = 0;
+        int newton_iterations = 0;
     };
 
     /**
@@ -109,6 +114,9 @@ namespace opt {
      * @return The scale of the update to the diagonal.
      */
     double make_matrix_positive_definite(Eigen::SparseMatrix<double>& A);
+
+    /// Construct indicies of free DoF
+    Eigen::VectorXi init_free_dof(const Eigen::VectorXb& is_dof_fixed);
 
 } // namespace opt
 } // namespace ccd

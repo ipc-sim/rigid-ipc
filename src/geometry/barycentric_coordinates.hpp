@@ -1,4 +1,4 @@
-/// Copied this function from libigl and templated it.
+// Copied this function from libigl and templated it.
 #pragma once
 
 #include <Eigen/Core>

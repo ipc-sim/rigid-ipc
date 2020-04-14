@@ -76,6 +76,8 @@ add_library(${PROJECT_NAME}
     src/opt/optimization_results.cpp
     # src/opt/volume_constraint.cpp
 
+    src/problems/barrier_problem.cpp
+
     src/solvers/barrier_solver.cpp
     src/solvers/fischer_newton.cpp
     src/solvers/lcp_solver.cpp

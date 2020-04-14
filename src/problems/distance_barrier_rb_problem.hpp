@@ -35,71 +35,99 @@ namespace opt {
         long face_vertex2_local_id;
     };
 
-    class DistanceBarrierRBProblem
-        : public physics::RigidBodyProblem,
-          public virtual opt::IBarrierGeneralProblem {
+    /// This class is both a simulation and optimization problem.
+    class DistanceBarrierRBProblem : public physics::RigidBodyProblem,
+                                     public virtual BarrierProblem {
     public:
-        DistanceBarrierRBProblem(const std::string& name);
+        DistanceBarrierRBProblem();
+        virtual ~DistanceBarrierRBProblem() = default;
 
         void settings(const nlohmann::json& params) override;
         nlohmann::json state() const override;
+
+        static std::string problem_name()
+        {
+            return "distance_barrier_rb_problem";
+        }
+
+        virtual std::string name() const override
+        {
+            return DistanceBarrierRBProblem::problem_name();
+        }
+
+        ////////////////////////////////////////////////////////////
+        /// Rigid Body Problem
 
         bool simulation_step(const double time_step) override;
         bool take_step(
             const Eigen::VectorXd& sigma, const double time_step) override;
 
-        ////////////////////////////////////////////////////////////////
-        /// IConstrainedProblem
+        ////////////////////////////////////////////////////////////
+        /// Optimization Problem
 
-        /// @brief eval_g evaluates constraints at point x
-        Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override;
+        /// @returns the number of variables
+        int num_vars() const override { return num_vars_; }
 
-        /// @brief eval_jac_g evaluates constraints jacobian at point x
-        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) override;
+        /// @returns \f$x_0\f$: the starting point for the optimization.
+        const Eigen::VectorXd& starting_point() override { return x0; }
 
-        // @brief eval_hessian_g evaluates constraints hessian at point x
-        std::vector<Eigen::SparseMatrix<double>>
-        eval_hessian_g(const Eigen::VectorXd& x) override;
-
-        const int& num_constraints() override
+        /// @returns A vector of booleans indicating if a DoF is fixed.
+        const Eigen::VectorXb& is_dof_fixed() override
         {
-            throw NotImplementedError(
-                "DistanceBarrierRBProblemnon-const num_constraints");
+            return m_assembler.is_rb_dof_fixed;
         }
 
+        /// Determine if there is a collision between two configurations
+        bool has_collisions(
+            const Eigen::VectorXd& sigma_i,
+            const Eigen::VectorXd& sigma_j) const override;
+
         ////////////////////////////////////////////////////////////
-        /// IBarrierProblem
+        /// Barrier Problem
 
-        void eval_f_and_fdiff(
+        /// Compute E(x) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
+        void compute_energy_term(
             const Eigen::VectorXd& x,
-            double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian,
-            Eigen::SparseMatrix<double>& f_uk_hessian) override;
+            double& Ex,
+            Eigen::VectorXd& grad_Ex,
+            Eigen::SparseMatrix<double>& hess_Ex,
+            bool compute_grad = true,
+            bool compute_hess = true) override;
 
-        void eval_f_and_fdiff(
+        /// Compute ∑_{k ∈ C} b(d(x_k)) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
+        int compute_barrier_term(
             const Eigen::VectorXd& x,
-            double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian) override;
+            double& Bx,
+            Eigen::VectorXd& grad_Bx,
+            Eigen::SparseMatrix<double>& hess_Bx,
+            bool compute_grad = true,
+            bool compute_hess = true) override;
 
-        void eval_g_and_gdiff(
-            const Eigen::VectorXd& x,
-            Eigen::VectorXd& gx,
-            Eigen::MatrixXd& gx_jacobian,
-            std::vector<Eigen::SparseMatrix<double>>& gx_hessian) override;
+        // Include thes lines to avoid issues with overriding inherited
+        // functions with the same name.
+        // (http://www.cplusplus.com/forum/beginner/24978/)
+        using BarrierProblem::compute_barrier_term;
+        using BarrierProblem::compute_energy_term;
 
-        double get_barrier_epsilon() override
+        double
+        compute_min_distance(const Eigen::VectorXd& sigma) const override;
+
+        double get_barrier_homotopy() const override
         {
             return constraint_.get_barrier_epsilon();
         }
-
-        void set_barrier_epsilon(const double eps) override
+        void set_barrier_homotopy(const double eps) override
         {
             constraint_.set_barrier_epsilon(eps);
         }
 
-        const Eigen::VectorXb& is_dof_fixed() override
+        double get_barrier_stiffness() const override
         {
-            return m_assembler.is_rb_dof_fixed;
+            return barrier_stiffness;
+        }
+        void set_barrier_stiffness(const double kappa) override
+        {
+            barrier_stiffness = kappa;
         }
 
         opt::CollisionConstraint& constraint() override { return constraint_; }
@@ -107,34 +135,7 @@ namespace opt {
         {
             return constraint_;
         }
-        opt::IStateOptimizationSolver& solver() override { return opt_solver_; }
-
-        Eigen::MatrixXd eval_jac_g_full(
-            const Eigen::VectorXd& sigma, const Candidates& candidates);
-
-        bool compare_jac_g(
-            const Eigen::VectorXd& x,
-            const Candidates& candidates,
-            const Eigen::MatrixXd& jac_g);
-
-        bool has_collisions(
-            const Eigen::VectorXd& sigma_i,
-            const Eigen::VectorXd& sigma_j) const override;
-
-#if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
-        Eigen::MatrixXi debug_edges() const override
-        {
-            return m_assembler.m_edges;
-        }
-
-        Eigen::MatrixXd
-        debug_vertices(const Eigen::VectorXd& sigma) const override;
-        Eigen::MatrixXd debug_vertices_t0() const override
-        {
-            return m_assembler.world_vertices(poses_t0);
-        }
-#endif
-        double debug_min_distance(const Eigen::VectorXd& sigma) const override;
+        opt::OptimizationSolver& solver() override { return opt_solver_; }
 
     protected:
         void extract_local_system(
@@ -161,6 +162,9 @@ namespace opt {
             const Eigen::VectorXd& sigma,
             const RigidBodyFaceVertexCandidate& rbc);
 
+        Eigen::MatrixXd eval_jac_g_full(
+            const Eigen::VectorXd& sigma, const Candidates& candidates);
+
         Eigen::MatrixXd
         eval_jac_g_core(const Eigen::VectorXd& sigma, const Candidates&);
 
@@ -173,9 +177,17 @@ namespace opt {
             const Candidate& candidate,
             const Eigen::VectorXd& grad);
 
-        double debug_min_distance_ = -1;
+        bool compare_jac_g(
+            const Eigen::VectorXd& sigma,
+            const Candidates& candidates,
+            const Eigen::MatrixXd& jac_g);
+
+        double min_distance;
         opt::DistanceBarrierConstraint constraint_;
         opt::BarrierSolver opt_solver_;
+
+        // double barrier_homotopy; ///< \f$\hat{d}\f$
+        double barrier_stiffness; ///< \f$\kappa\f$
     };
 
 } // namespace opt

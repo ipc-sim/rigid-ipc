@@ -1,209 +1,79 @@
 #pragma once
 
-#include <Eigen/Core>
-#include <Eigen/SparseCore>
 #include <vector>
 
-#include <utils/eigen_ext.hpp>
-#include <utils/not_implemented_error.hpp>
+#include <Eigen/Core>
+#include <Eigen/SparseCore>
 
-#include <multiprecision.hpp>
+#include <utils/eigen_ext.hpp>
 
 namespace ccd {
 namespace opt {
 
-    /// @brief default value for no upper bound
-    static const double NO_UPPER_BOUND = 2e19;
-    /// @brief default value for no lower bound
-    static const double NO_LOWER_BOUND = -2e19;
-
-    /// @brief function type for functional f(x)
-    typedef std::function<double(const Eigen::VectorXd&)> callback_f;
-
-    class IUnconstraintedProblem {
+    class OptimizationProblem {
     public:
-        virtual ~IUnconstraintedProblem() = default;
+        virtual ~OptimizationProblem() = default;
 
-        /// @brief Evaulate the objective function.
-        virtual double eval_f(const Eigen::VectorXd& x) = 0;
+        /// Compute the objective function f(x)
+        virtual void compute_objective(
+            const Eigen::VectorXd& x,
+            double& fx,
+            Eigen::VectorXd& grad_fx,
+            Eigen::SparseMatrix<double>& hess_fx,
+            bool compute_grad = true,
+            bool compute_hess = true) = 0;
 
-        /// @brief Evaulate the gradient of the objective function.
-        virtual Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) = 0;
+        // --------------------------------------------------------------------
+        // Convience functions
+        // --------------------------------------------------------------------
 
-        /// @brief Evaluate the hessian of the objective as a sparse matrix.
-        virtual Eigen::SparseMatrix<double> eval_hessian_f(
-            const Eigen::VectorXd& x)
-            = 0;
+        virtual void
+        compute_objective(const Eigen::VectorXd& x, double& fx) final
+        {
+            Eigen::VectorXd grad_fx;
+            Eigen::SparseMatrix<double> hess_fx;
+            return compute_objective(
+                x, fx, grad_fx, hess_fx,
+                /*compute_grad=*/false, /*compute_hess=*/false);
+        }
 
-        virtual const int& num_vars() = 0;
+        virtual void compute_objective(
+            const Eigen::VectorXd& x,
+            double& fx,
+            Eigen::VectorXd& grad_fx) final
+        {
+            Eigen::SparseMatrix<double> hess_fx;
+            return compute_objective(
+                x, fx, grad_fx, hess_fx,
+                /*compute_grad=*/true, /*compute_hess=*/false);
+        }
+
+        /// @returns the number of variables
+        virtual int num_vars() const = 0;
+
+        /// @returns \f$x_0\f$: the starting point for the optimization.
         virtual const Eigen::VectorXd& starting_point() = 0;
 
-        /// @brief Evaulate the objective function.
-        virtual Multiprecision eval_mp_f(const Eigen::VectorXd& x)
-        {
-            throw NotImplementedError("eval_mp_f");
-        }
-    };
-
-    /// Defines  optimization problems of the form
-    ///  minₓ     f(x)       x ∈ Rⁿ
-    ///           g(x) >= 0
-    ///
-
-    class IConstraintedProblem : public virtual IUnconstraintedProblem {
-    public:
-        virtual ~IConstraintedProblem() = default;
-
-        /// @brief eval_g evaluates constraints at point x
-        virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) = 0;
-
-        /// @brief eval_jac_g evaluates constraints jacobian at point x
-        virtual Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x) = 0;
-
-        // @brief eval_hessian_g evaluates constraints hessian at point x
-        virtual std::vector<Eigen::SparseMatrix<double>> eval_hessian_g(
-            const Eigen::VectorXd& x)
-            = 0;
-
-        virtual const int& num_constraints() = 0;
-    };
-
-    //  Used for the Volume Constraint Solvers (i.e just NCP)
-    class INCPProblem : public virtual IUnconstraintedProblem {
-    public:
-        virtual ~INCPProblem() = default;
-
-        /// @brief eval_g evaluates constraints at point x
-        virtual Eigen::VectorXd eval_g(const Eigen::VectorXd& x) = 0;
-        virtual void eval_g(const Eigen::VectorXd& x,
-            Eigen::VectorXd& gx,
-            Eigen::MatrixXd& gx_jacobian)
-            = 0;
-
-        virtual void eval_g_normal(const Eigen::VectorXd& x,
-            Eigen::VectorXd& gx,
-            Eigen::MatrixXd& gx_jacobian)
-        {
-            throw NotImplementedError("eval_g_normal not implemented");
-        }
-
-        //        virtual void eval_g(const Eigen::VectorXd& x,
-        //            Eigen::VectorXd& gx,
-        //            Eigen::SparseMatrix<double>& gx_jacobian,
-        //            Eigen::VectorXi& gx_active)
-        //            = 0;
-
-        virtual const Eigen::VectorXb& is_dof_fixed() = 0;
-    };
-
-    class IBarrierGeneralProblem : public virtual IConstraintedProblem {
-    public:
-        virtual ~IBarrierGeneralProblem() = default;
-
-        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
-            double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian,
-            Eigen::SparseMatrix<double>& f_uk_hessian)
-            = 0;
-        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
-            double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian)
-            = 0;
-
-        virtual void eval_g_and_gdiff(const Eigen::VectorXd& x,
-            Eigen::VectorXd& gx,
-            Eigen::MatrixXd& gx_jacobian,
-            std::vector<Eigen::SparseMatrix<double>>& gx_hessian)
-            = 0;
-
-        virtual double get_barrier_epsilon() = 0;
-        virtual void set_barrier_epsilon(const double eps) = 0;
+        /// @returns A vector of booleans indicating if a DoF is fixed.
         virtual const Eigen::VectorXb& is_dof_fixed() = 0;
 
-        virtual Eigen::Matrix<Multiprecision, Eigen::Dynamic, 1> eval_mp_g(
-            const Eigen::VectorXd& x)
-        {
-            throw NotImplementedError("eval_mp_g");
-        }
+        /// Determine if there is a collision between two configurations
+        virtual bool has_collisions(
+            const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) const = 0;
 
-        virtual bool has_collisions(const Eigen::VectorXd& sigma_i,
-            const Eigen::VectorXd& sigma_j) const = 0;
+        /// Compute the minimum distance among geometry
+        virtual double compute_min_distance(const Eigen::VectorXd& x) const = 0;
 
-#if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
-        virtual Eigen::MatrixXi debug_edges() const
-        {
-            throw NotImplementedError("debug_edges");
-        }
-        virtual Eigen::MatrixXd debug_vertices(
-            const Eigen::VectorXd& sigma) const
-        {
-            throw NotImplementedError("debug_vertices");
-        }
-        virtual Eigen::MatrixXd debug_vertices_t0() const
-        {
-            throw NotImplementedError("debug_vertices_t0");
-        }
-#endif
-        virtual double debug_min_distance(const Eigen::VectorXd& sigma) const
-        {
-            throw NotImplementedError("debug_min_distance");
-        }
-    };
-
-    class IBarrierProblem : public virtual IUnconstraintedProblem {
-    public:
-        virtual ~IBarrierProblem() = default;
-
-        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
-            double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian)
-            = 0;
-
-        virtual void eval_f_and_fdiff(const Eigen::VectorXd& x,
-            double& f_uk,
-            Eigen::VectorXd& f_uk_jacobian,
-            Eigen::SparseMatrix<double>& f_uk_hessian)
-            = 0;
-
-        virtual double get_barrier_epsilon() = 0;
-        virtual const Eigen::VectorXb& is_dof_fixed() = 0;
-
-        virtual bool has_collisions(const Eigen::VectorXd& sigma_i,
-            const Eigen::VectorXd& sigma_j) const = 0;
-
-#if defined(DEBUG_LINESEARCH) || defined(DEBUG_COLLISIONS)
-        virtual Eigen::MatrixXi debug_edges() const
-        {
-            throw NotImplementedError("debug_edges");
-        }
-        virtual Eigen::MatrixXd debug_vertices(
-            const Eigen::VectorXd& sigma) const
-        {
-            throw NotImplementedError("debug_vertices");
-        }
-        virtual Eigen::MatrixXd debug_vertices_t0() const
-        {
-            throw NotImplementedError("debug_vertices_t0");
-        }
-
-#endif
-        virtual double debug_min_distance(const Eigen::VectorXd& sigma) const
-        {
-            throw NotImplementedError("debug_min_distance");
-        }
-
-        virtual double get_termination_threshold() const = 0;
-        virtual Eigen::VectorXd eval_grad_E(const Eigen::VectorXd& xk) = 0;
-        virtual Eigen::VectorXd eval_grad_B(const Eigen::VectorXd& xk, int&)
-            = 0;
+        virtual bool is_barrier_problem() const { return false; }
+        virtual bool is_constrained_problem() const { return false; }
     };
 
     /// Helper Functions for checking finite differences
     /// ------------------------------------------------
-    Eigen::VectorXd eval_grad_f_approx(
-        IUnconstraintedProblem& problem, const Eigen::VectorXd& x);
-    Eigen::MatrixXd eval_hess_f_approx(
-        IUnconstraintedProblem& problem, const Eigen::VectorXd& x);
+    Eigen::VectorXd eval_grad_objective_approx(
+        OptimizationProblem& problem, const Eigen::VectorXd& x);
+    Eigen::MatrixXd eval_hess_objective_approx(
+        OptimizationProblem& problem, const Eigen::VectorXd& x);
 
 } // namespace opt
 } // namespace ccd

@@ -10,31 +10,37 @@ namespace ccd {
 
 namespace physics {
 
-    class RigidBodyProblem : public virtual ISimulationProblem,
-                             public virtual opt::IUnconstraintedProblem {
+    class RigidBodyProblem : public virtual SimulationProblem {
     public:
-        RigidBodyProblem(const std::string& name);
         RigidBodyProblem();
 
-        virtual ~RigidBodyProblem() override = default;
+        void init(const std::vector<RigidBody> rbs);
+
+        virtual ~RigidBodyProblem() = default;
+
+        static std::string problem_name() { return "rigid_body_problem"; }
+        virtual std::string name() const override
+        {
+            return RigidBodyProblem::problem_name();
+        }
 
         ////////////////////////////////////////////////////////////////////////
-        /// I-SIMULATION
+        /// Simulation Problem
         ////////////////////////////////////////////////////////////////////////
 
-        std::string name() override { return name_; }
         virtual void settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
+
         virtual nlohmann::json state() const override;
         void state(const nlohmann::json& s) override;
 
-        /// @brief take a single simulation step
+        /// @brief Compute the step but does not take it
         /// @returns true if there is a collision
         bool simulation_step(const double time_step) override;
 
         /// @brief moves status to given configuration vector
         virtual bool
-        take_step(const Eigen::VectorXd& dof, const double time_step) override;
+        take_step(const Eigen::VectorXd& x, const double time_step) override;
 
         /// @brief Check for intersections at the end of the time-step.
         virtual bool has_intersections() const override
@@ -54,11 +60,6 @@ namespace physics {
             return m_assembler.world_vertices_t1();
         }
 
-        Eigen::MatrixXd velocities() const override
-        {
-            return m_assembler.world_velocities();
-        }
-
         const Eigen::MatrixXi& edges() const override
         {
             return m_assembler.m_edges;
@@ -69,7 +70,12 @@ namespace physics {
             return m_assembler.m_faces;
         }
 
-        Eigen::VectorXi group_ids() const override
+        Eigen::MatrixXd velocities() const override
+        {
+            return m_assembler.world_velocities();
+        }
+
+        const Eigen::VectorXi& group_ids() const override
         {
             return m_assembler.group_ids();
         }
@@ -78,7 +84,6 @@ namespace physics {
         {
             return m_assembler.is_dof_fixed;
         }
-        void init(const std::vector<RigidBody> rbs);
 
         Pose<double>
         rb_next_pose(const RigidBody& rb, const double time_step) const;
@@ -99,23 +104,7 @@ namespace physics {
                 m_assembler.m_dof_to_pose.cast<T>() * dofs, dim());
         }
 
-        ////////////////////////////////////////////////////////////////////////
-        /// IUnconstraintedProblem
-        ////////////////////////////////////////////////////////////////////////
-
-        /// @brief eval_f evaluates functional at point x
-        double eval_f(const Eigen::VectorXd& sigma) override;
-
-        /// @brief eval_grad_f evaluates gradient of functional at point x
-        Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& sigma) override;
-
-        /// @brief Evaluate the hessian of the objective as a sparse matrix.
-        Eigen::SparseMatrix<double>
-        eval_hessian_f(const Eigen::VectorXd& sigma) override;
-
-        const int& num_vars() override { return num_vars_; }
-        const Eigen::VectorXd& starting_point() override { return x0; }
-        int dim() const { return m_assembler.dim(); }
+        int dim() const override { return m_assembler.dim(); }
 
         virtual bool is_rb_problem() const override { return true; };
 
@@ -123,7 +112,7 @@ namespace physics {
         // Settings
         // ------------------------------------------------------------------------
         double coefficient_restitution;
-        Eigen::VectorXd gravity_;
+        Eigen::VectorXd gravity;
         double collision_eps;
 
         physics::RigidBodyAssembler m_assembler;
@@ -141,6 +130,7 @@ namespace physics {
         void update_dof();
 
         int num_vars_;
+        /// Initial variable for optimization
         Eigen::VectorXd x0;
 
         /// Used during collision resolution
@@ -152,8 +142,6 @@ namespace physics {
         /// Used for velocity restoration
         /// TODO: Replace this with the std::vector version
         ConcurrentImpacts original_impacts;
-
-        std::string name_;
 
         std::shared_ptr<time_stepper::TimeStepper> m_time_stepper;
     };

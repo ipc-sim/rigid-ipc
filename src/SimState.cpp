@@ -101,17 +101,17 @@ bool SimState::init(const nlohmann::json& args_in)
 
     // Default args
     args = R"({
-        "max_iterations":-1,
-        "max_time":-1,
+        "max_iterations": -1,
+        "max_time": -1,
         "timestep_size": 0.1,
-        "scene_type":"distance_barrier_rb_problem",
-        "rigid_body_problem":{
+        "scene_type": "distance_barrier_rb_problem",
+        "rigid_body_problem": {
             "rigid_bodies": [],
-            "coefficient_restitution":0.0,
-            "gravity":[0.0,0.0,0.0],
+            "coefficient_restitution": 0.0,
+            "gravity": [0.0, 0.0, 0.0],
             "collision_eps": 0.0,
             "time_stepper": "default"
-         },
+        },
         "barrier_solver": {
             "inner_solver": "newton_solver",
             "e_b": 1e-6,
@@ -120,39 +120,42 @@ bool SimState::init(const nlohmann::json& args_in)
             "m": 1,
             "c": 0.1
         },
-        "gradient_descent_solver":{
+        "gradient_descent_solver": {
             "absolute_tolerance": 1e-5,
             "min_step_length": 1e-12,
             "max_iterations": 3000
         },
-        "newton_solver":{
+        "newton_solver": {
             "absolute_tolerance": 1e-5,
             "max_iterations": 3000
         },
-        "ncp_solver":{
+        "ncp_solver": {
             "max_iterations": 1000,
             "do_line_search": false,
             "solve_for_active_cstr": true,
-            "convergence_tolerance":1e-6,
+            "convergence_tolerance": 1e-6,
             "update_type": "linearized",
             "lcp_solver": "lcp_gauss_seidel"
         },
-        "distance_barrier_constraint":{
+        "distance_barrier_constraint": {
             "detection_method": "hash_grid",
             "trajectory_type": "screwing",
-            "custom_initial_epsilon":1e-2,
-            "min_distance":1e-10,
-            "active_constraint_scale" : 1.01,
+            "custom_initial_epsilon": 1e-2,
+            "min_distance": 1e-10,
+            "active_constraint_scale": 1.01,
             "barrier_type": "poly_log"
-       },
-       "volume_constraint":{
+        },
+        "volume_constraint": {
             "detection_method": "hash_grid",
             "trajectory_type": "screwing",
             "volume_epsilon": 1e-6,
-            "custom_hashgrid_cellsize":-1,
-            "time_epsilon":1e-4
-       },
-       "viewport_bbox": {"min":[0,0],"max":[0,0]}
+            "custom_hashgrid_cellsize": -1,
+            "time_epsilon": 1e-4
+        },
+        "viewport_bbox": {
+            "min": [0, 0],
+            "max": [0, 0]
+        }
     })"_json;
 
     // check that incomming json doesn't have any unkown keys to avoid stupid

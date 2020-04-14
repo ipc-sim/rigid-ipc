@@ -17,15 +17,13 @@ const ProblemFactory& ProblemFactory::factory()
 ProblemFactory::ProblemFactory()
 {
     problems_.emplace(
-        "distance_barrier_rb_problem",
-        std::make_shared<opt::DistanceBarrierRBProblem>(
-            "distance_barrier_rb_problem"));
+        opt::DistanceBarrierRBProblem::problem_name(),
+        std::make_shared<opt::DistanceBarrierRBProblem>());
     // problems_.emplace(
-    //     "volume_rb_problem",
-    //     std::make_shared<opt::VolumeRBProblem>("volume_rb_problem"));
+    //     "volume_rb_problem", std::make_shared<opt::VolumeRBProblem>());
 }
 
-std::shared_ptr<physics::ISimulationProblem>
+std::shared_ptr<physics::SimulationProblem>
 ProblemFactory::get_problem(const std::string& name) const
 {
     auto it = problems_.find(name);

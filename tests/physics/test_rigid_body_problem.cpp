@@ -94,18 +94,21 @@ TEST_CASE(
           rb_from_displacements(vertices, edges, rb2_pose_t1) }
     };
 
-    DistanceBarrierRBProblem rbp("rb_problem");
+    DistanceBarrierRBProblem rbp;
     rbp.init(rbs);
 
     // displacement cases
 
     Eigen::VectorXd x =
         rbp.poses_to_dofs<double>({ { rb1_pose_t1, rb2_pose_t1 } });
-    double fx = rbp.eval_f(x);
+    double fx;
+    Eigen::VectorXd grad_fx;
+    Eigen::SparseMatrix<double> hess_fx;
+    rbp.compute_energy_term(x, fx);
     CHECK(fx == Approx(0.0));
 
     x = rbp.poses_to_dofs<double>({ { 2 * rb1_pose_t1, 2 * rb2_pose_t1 } });
-    fx = rbp.eval_f(x);
+    rbp.compute_energy_term(x, fx);
     CHECK(fx == Approx(dx));
 }
 
@@ -151,14 +154,16 @@ TEST_CASE(
     rbs.push_back(rb_from_displacements(vertices, edges, vel_1));
     rbs.push_back(rb_from_displacements(vertices, edges, vel_2));
 
-    DistanceBarrierRBProblem rbp("rb_problem");
+    DistanceBarrierRBProblem rbp;
     rbp.init(rbs);
 
     // displacement cases
     Eigen::VectorXd x(2 * Pose<double>::dim_to_ndof(dim));
     x << vel_1.dof(), vel_2.dof();
-    Eigen::VectorXd grad_fx = rbp.eval_grad_f(x);
-    Eigen::VectorXd grad_fx_approx = eval_grad_f_approx(rbp, x);
+    double fx;
+    Eigen::VectorXd grad_fx;
+    rbp.compute_energy_term(x, fx, grad_fx);
+    Eigen::VectorXd grad_fx_approx = eval_grad_energy_approx(rbp, x);
 
     CHECK(fd::compare_gradient(grad_fx, grad_fx_approx));
 }
@@ -258,7 +263,7 @@ TEST_CASE("dof -> poses -> dof", "[RB][RB-Problem]")
           rb_from_displacements(vertices, edges, vel_2) }
     };
 
-    DistanceBarrierRBProblem rbp("rb_problem");
+    DistanceBarrierRBProblem rbp;
     rbp.init(rbs);
 
     for (int i = 0; i < 100; i++) {

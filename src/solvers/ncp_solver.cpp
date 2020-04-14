@@ -1,36 +1,30 @@
 #include "ncp_solver.hpp"
 
-#include <iostream>
-
 #include <igl/slice.h>
 #include <igl/slice_into.h>
 
-#include <solvers/lcp_solver.hpp>
-#include <solvers/line_search.hpp>
-
 #include <constants.hpp>
 #include <logger.hpp>
+#include <solvers/lcp_solver.hpp>
+#include <solvers/line_search.hpp>
+#include <utils/not_implemented_error.hpp>
 
 namespace ccd {
 namespace opt {
 
     // !important: this needs to be define in the enum namespace
-    NLOHMANN_JSON_SERIALIZE_ENUM(NCPUpdate,
+    NLOHMANN_JSON_SERIALIZE_ENUM(
+        NCPUpdate,
         { { NCPUpdate::LINEARIZED, "linearized" },
-            { NCPUpdate::G_GRADIENT, "g_gradient" } })
+          { NCPUpdate::G_GRADIENT, "g_gradient" } })
 
-    NLOHMANN_JSON_SERIALIZE_ENUM(LCPSolver,
+    NLOHMANN_JSON_SERIALIZE_ENUM(
+        LCPSolver,
         { { LCPSolver::LCP_NEWTON, "lcp_newton" },
-            { LCPSolver::LCP_MOSEK, "lcp_mosek" },
-            { LCPSolver::LCP_GAUSS_SEIDEL, "lcp_gauss_seidel" } })
+          { LCPSolver::LCP_MOSEK, "lcp_mosek" },
+          { LCPSolver::LCP_GAUSS_SEIDEL, "lcp_gauss_seidel" } })
 
-    NCPSolver::~NCPSolver() {}
     NCPSolver::NCPSolver()
-        : NCPSolver("ncp_solver")
-    {
-    }
-
-    NCPSolver::NCPSolver(const std::string& name)
         : do_line_search(true)
         , solve_for_active_cstr(true)
         , convergence_tolerance(1e-6)
@@ -38,11 +32,9 @@ namespace opt {
         , lcp_solver(LCPSolver::LCP_GAUSS_SEIDEL)
         , max_iterations(1000)
         , num_outer_iterations_(0)
-        , name_(name)
-
     {
-        Asolver
-            = std::make_shared<Eigen::SparseLU<Eigen::SparseMatrix<double>>>();
+        Asolver =
+            std::make_shared<Eigen::SparseLU<Eigen::SparseMatrix<double>>>();
     }
 
     void NCPSolver::settings(const nlohmann::json& json)
@@ -67,9 +59,12 @@ namespace opt {
         return json;
     }
 
-    void NCPSolver::set_problem(INCPProblem& problem)
+    void NCPSolver::init_solve()
     {
-        problem_ptr_ = &problem;
+        assert(problem_ptr != nullptr);
+        num_outer_iterations_ = 0;
+        compute_linear_system(*problem_ptr);
+        compute_initial_solution();
     }
 
     // Solve the internal problem
@@ -99,27 +94,21 @@ namespace opt {
         if (results.finished) {
             spdlog::debug("solver=ncp_solver action=solve status=success");
         } else {
-            spdlog::error("solver=ncp_solver action=solve status=failed "
-                          "message='max_iterations reached' it={}",
+            spdlog::error(
+                "solver=ncp_solver action=solve status=failed "
+                "message='max_iterations reached' it={}",
                 num_outer_iterations_);
         }
 
         return results;
     }
 
-    void NCPSolver::init_solve()
-    {
-        assert(problem_ptr_ != nullptr);
-        num_outer_iterations_ = 0;
-        compute_linear_system(*problem_ptr_);
-        compute_initial_solution();
-    }
-
-    void NCPSolver::compute_linear_system(INCPProblem& opt_problem)
+    void NCPSolver::compute_linear_system(ConstrainedProblem& opt_problem)
     {
         Eigen::VectorXd x0 = Eigen::VectorXd::Zero(opt_problem.num_vars());
-        A = opt_problem.eval_hessian_f(x0);
-        b = -opt_problem.eval_grad_f(x0);
+        double fx;
+        opt_problem.compute_objective(x0, fx, b, A);
+        b *= -1;
     }
 
     void NCPSolver::compute_initial_solution()
@@ -134,12 +123,12 @@ namespace opt {
         // Solve assumming constraints are not violated
         xi = Ainv(b);
         if (m_use_gradient) {
-            problem_ptr_->eval_g(xi, g_xi, jac_g_xi);
+            problem_ptr->compute_constraints(xi, g_xi, jac_g_xi);
         } else {
-            problem_ptr_->eval_g_normal(xi, g_xi, jac_g_xi);
+            problem_ptr->compute_constraints_using_normals(xi, g_xi, jac_g_xi);
         }
 
-        zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
+        zero_out_fixed_dof(problem_ptr->is_dof_fixed(), jac_g_xi);
 
         // Initialize slack variables to zero to satisfy complementarity
         lambda_i.resize(g_xi.rows());
@@ -161,7 +150,8 @@ namespace opt {
         if (do_line_search) {
             while (step_norm >= convergence_tolerance) {
                 Eigen::VectorXd x_next = xi + alpha * delta_xi;
-                Eigen::VectorXd g_next = problem_ptr_->eval_g(x_next);
+                Eigen::VectorXd g_next;
+                problem_ptr->compute_constraints(x_next, g_next);
 
                 bool in_infeasible = (g_next.array() < 0.0).any();
                 double total_vol_next = g_next.sum();
@@ -191,7 +181,8 @@ namespace opt {
 
         while ((alpha * delta_xi).norm() > 1e-10) {
             Eigen::VectorXd x_next = xi + alpha * delta_xi;
-            Eigen::VectorXd g_next = problem_ptr_->eval_g(x_next);
+            Eigen::VectorXd g_next;
+            problem_ptr->compute_constraints(x_next, g_next);
             if (g_next.sum() > g_xi.sum()) {
                 break;
             }
@@ -204,23 +195,25 @@ namespace opt {
             spdlog::warn(
                 "solver=ncp_solver it={:d} "
                 "message='starting to use normal instead of gradients'",
-                num_outer_iterations());
+                num_outer_iterations_);
         }
         if (!m_use_gradient
-            || num_outer_iterations() > Constants::NCP_FALLBACK_ITERATIONS) {
-            problem_ptr_->eval_g_normal(xi, g_xi, jac_g_xi);
+            || num_outer_iterations_ > Constants::NCP_FALLBACK_ITERATIONS) {
+            problem_ptr->compute_constraints_using_normals(xi, g_xi, jac_g_xi);
         } else {
-            problem_ptr_->eval_g(xi, g_xi, jac_g_xi);
+            problem_ptr->compute_constraints(xi, g_xi, jac_g_xi);
         }
 
-        zero_out_fixed_dof(problem_ptr_->is_dof_fixed(), jac_g_xi);
-        if(g_xi.size() != 0){
-            spdlog::debug("solve=ncp_solver it={:d} abs_tol={:g} min(g(x))={:g}",
-                num_outer_iterations(), Constants::NCP_ABS_TOL, g_xi.minCoeff());
+        zero_out_fixed_dof(problem_ptr->is_dof_fixed(), jac_g_xi);
+        if (g_xi.size() != 0) {
+            spdlog::debug(
+                "solve=ncp_solver it={:d} abs_tol={:g} min(g(x))={:g}",
+                num_outer_iterations_, Constants::NCP_ABS_TOL, g_xi.minCoeff());
         }
         bool success = (g_xi.array() >= -Constants::NCP_ABS_TOL).all();
-        return OptimizationResults(
-            xi, problem_ptr_->eval_f(xi), success, success);
+        double fxi;
+        problem_ptr->compute_objective(xi, fxi);
+        return OptimizationResults(xi, fxi, success, success);
     }
 
     Eigen::VectorXd NCPSolver::solve_lcp()
@@ -280,19 +273,18 @@ namespace opt {
         auto y = Asolver->solve(x);
         if (Asolver->info() != Eigen::Success) {
             spdlog::error("Linear solve failed - ncp_solver.cpp");
-            std::cerr << "Linear solve failed - ncp_solver.cpp" << std::endl;
             assert(0);
         }
         return y;
     }
 
-    Eigen::VectorXd NCPSolver::get_grad_kkt() const
-    {
-        return A * xi - (b + jac_g_xi.transpose() * lambda_i);
-    }
+    // Eigen::VectorXd NCPSolver::get_grad_kkt() const
+    // {
+    //     return A * xi - (b + jac_g_xi.transpose() * lambda_i);
+    // }
 
-    void zero_out_fixed_dof(
-        const Eigen::VectorXb& is_fixed, Eigen::MatrixXd& jac)
+    void
+    zero_out_fixed_dof(const Eigen::VectorXb& is_fixed, Eigen::MatrixXd& jac)
     {
         assert(jac.cols() == is_fixed.rows());
         for (int i = 0; i < is_fixed.rows(); ++i) {

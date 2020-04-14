@@ -187,7 +187,7 @@ namespace opt {
         PROFILE_END(NARROW_PHASE)
     }
 
-    void DistanceBarrierConstraint::debug_compute_distances(
+    void DistanceBarrierConstraint::compute_distances(
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses,
         Eigen::VectorXd& distances) const

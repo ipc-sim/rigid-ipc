@@ -1,4 +1,4 @@
-/// An interval object.
+// An interval object.
 #pragma once
 
 #include <string>

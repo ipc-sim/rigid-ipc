@@ -1,4 +1,4 @@
-/// A root finder using interval arithmetic.
+// A root finder using interval arithmetic.
 #pragma once
 
 #include <functional>

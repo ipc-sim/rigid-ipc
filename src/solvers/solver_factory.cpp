@@ -2,7 +2,6 @@
 
 #include <solvers/barrier_solver.hpp>
 #include <solvers/gradient_descent_solver.hpp>
-#include <solvers/ncp_solver.hpp>
 #include <solvers/newton_solver.hpp>
 
 namespace ccd {
@@ -17,18 +16,18 @@ namespace opt {
 
     SolverFactory::SolverFactory()
     {
-        barrier_inner_solvers_.emplace(
-            "newton_solver", std::make_shared<NewtonSolver>("newton_solver"));
-        barrier_inner_solvers_.emplace(
-            "gradient_descent_solver",
-            std::make_shared<GradientDescentSolver>("gradient_descent_solver"));
+        barrier_inner_solvers.emplace(
+            NewtonSolver::solver_name(), std::make_shared<NewtonSolver>());
+        barrier_inner_solvers.emplace(
+            GradientDescentSolver::solver_name(),
+            std::make_shared<GradientDescentSolver>());
     }
 
-    std::shared_ptr<IBarrierOptimizationSolver>
+    std::shared_ptr<BarrierInnerSolver>
     SolverFactory::get_barrier_inner_solver(const std::string& problem) const
     {
-        auto it = barrier_inner_solvers_.find(problem);
-        assert(it != barrier_inner_solvers_.end());
+        auto it = barrier_inner_solvers.find(problem);
+        assert(it != barrier_inner_solvers.end());
         return it->second;
     }
 

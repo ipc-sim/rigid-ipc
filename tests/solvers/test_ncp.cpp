@@ -4,6 +4,7 @@
 #include <catch2/catch.hpp>
 
 #include <autodiff/autodiff_types.hpp>
+#include <opt/constrained_problem.hpp>
 #include <solvers/ncp_solver.hpp>
 
 #include <logger.hpp>
@@ -98,9 +99,10 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         expected << 0.0, 1.5;
     }
 
-    class AdHocProblem : public virtual INCPProblem {
+    class AdHocProblem : public virtual ConstrainedProblem {
     public:
-        AdHocProblem(Eigen::SparseMatrix<double>& _A,
+        AdHocProblem(
+            Eigen::SparseMatrix<double>& _A,
             Eigen::VectorXd& _b,
             std::function<DVector(const Eigen::VectorXd& x)>& _gdiff)
             : A(_A)
@@ -110,61 +112,67 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
             is_dof_fixed_ = Eigen::VectorXb::Zero(NUM_VARS);
         }
 
-        double eval_f(const Eigen::VectorXd& x) override
+        virtual void compute_objective(
+            const Eigen::VectorXd& x,
+            double& fx,
+            Eigen::VectorXd& grad_fx,
+            Eigen::SparseMatrix<double>& hess_fx,
+            bool compute_grad = true,
+            bool compute_hess = true) override
         {
-            return (A * x - b).squaredNorm() / 2.0;
+            grad_fx = A * x - b;
+            fx = (grad_fx).squaredNorm() / 2.0;
+            if (compute_hess) {
+                hess_fx = A;
+            }
         }
 
-        Eigen::VectorXd eval_grad_f(const Eigen::VectorXd& x) override
+        virtual void compute_constraints(
+            const Eigen::VectorXd& x,
+            Eigen::VectorXd& gx,
+            Eigen::MatrixXd& jac_gx,
+            std::vector<Eigen::SparseMatrix<double>>& hess_gx,
+            bool compute_grad = true,
+            bool compute_hess = true) override
         {
-            return (A * x - b);
-        }
-        Eigen::SparseMatrix<double> eval_hessian_f(
-            const Eigen::VectorXd& /*x*/) override
-        {
-            return A;
-        }
-
-        Eigen::VectorXd eval_g(const Eigen::VectorXd& x) override
-        {
-            DVector gx = gdiff(x);
-            Eigen::VectorXd g(gx.rows());
-            for (int i = 0; i < gx.rows(); ++i) {
-                g(i) = gx(i).getValue();
+            DVector g = gdiff(x);
+            gx = Eigen::VectorXd(g.rows());
+            jac_gx = Eigen::MatrixXd(gx.rows(), NUM_VARS);
+            for (int i = 0; i < g.rows(); ++i) {
+                gx(i) = g(i).getValue();
+                jac_gx.row(i) = g(i).getGradient();
             }
 
-            return g;
-        }
-
-        void eval_g_normal(const Eigen::VectorXd& x,
-            Eigen::VectorXd& gx,
-            Eigen::MatrixXd& gx_jacobian) override
-        {
-            gx = eval_g(x);
-            gx_jacobian = eval_jac_g(x);
-        }
-
-        Eigen::MatrixXd eval_jac_g(const Eigen::VectorXd& x)
-        {
-            DVector gx = gdiff(x);
-            Eigen::MatrixXd jac_gx(gx.rows(), NUM_VARS);
-            for (int i = 0; i < gx.rows(); ++i) {
-                jac_gx.row(i) = gx(i).getGradient();
+            if (compute_hess) {
+                throw "not computing hess_gx";
             }
-            return jac_gx;
         }
 
-        void eval_g(const Eigen::VectorXd& x,
+        using ConstrainedProblem::compute_constraints;
+
+        void compute_constraints_using_normals(
+            const Eigen::VectorXd& x,
             Eigen::VectorXd& gx,
-            Eigen::MatrixXd& gx_jacobian) override
+            Eigen::MatrixXd& jac_gx) override
         {
-            gx = eval_g(x);
-            gx_jacobian = eval_jac_g(x);
+            return compute_constraints(x, gx, jac_gx);
         }
+
         const Eigen::VectorXd& starting_point() override { return b; }
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
 
-        virtual const int& num_vars() override { return NUM_VARS; }
+        virtual int num_vars() const override { return NUM_VARS; }
+
+        virtual bool has_collisions(
+            const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) const override
+        {
+            return false;
+        }
+        virtual double
+        compute_min_distance(const Eigen::VectorXd& x) const override
+        {
+            return -1;
+        };
 
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd b;

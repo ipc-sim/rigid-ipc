@@ -32,7 +32,7 @@ public:
 
     // CCD
     // ----------------------------------------------
-    std::shared_ptr<physics::ISimulationProblem> problem_ptr;
+    std::shared_ptr<physics::SimulationProblem> problem_ptr;
     double m_timestep_size;
 
     bool m_step_had_collision;     ///< last step had a collision

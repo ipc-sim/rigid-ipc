@@ -1,4 +1,4 @@
-/// Time-of-impact computation for rigid bodies with angular trajectories.
+// Time-of-impact computation for rigid bodies with angular trajectories.
 #pragma once
 
 #include <physics/rigid_body.hpp>

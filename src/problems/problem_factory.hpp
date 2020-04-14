@@ -11,12 +11,12 @@ class ProblemFactory {
 public:
     static const ProblemFactory& factory();
 
-    std::shared_ptr<physics::ISimulationProblem> get_problem(
-        const std::string& name) const;
+    std::shared_ptr<physics::SimulationProblem>
+    get_problem(const std::string& name) const;
 
 private:
     ProblemFactory();
-    std::map<std::string, std::shared_ptr<physics::ISimulationProblem>>
+    std::map<std::string, std::shared_ptr<physics::SimulationProblem>>
         problems_;
 };
 

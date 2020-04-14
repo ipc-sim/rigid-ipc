@@ -20,14 +20,8 @@ namespace ccd {
 namespace physics {
 
     RigidBodyProblem::RigidBodyProblem()
-        : RigidBodyProblem("rigid_body_problem")
-    {
-    }
-
-    RigidBodyProblem::RigidBodyProblem(const std::string& name)
         : coefficient_restitution(0)
         , collision_eps(2)
-        , name_(name)
     {
     }
 
@@ -41,11 +35,10 @@ namespace physics {
         io::read_rb_scene(params, rbs);
 
         init(rbs);
-        m_assembler.init(rbs);
 
-        io::from_json(params["gravity"], gravity_);
-        assert(gravity_.size() >= dim());
-        gravity_.conservativeResize(dim());
+        io::from_json(params["gravity"], gravity);
+        assert(gravity.size() >= dim());
+        gravity.conservativeResize(dim());
 
         auto time_stepper_name = params["time_stepper"].get<std::string>();
         m_time_stepper = time_stepper_name == "default"
@@ -59,7 +52,7 @@ namespace physics {
 
         json["collision_eps"] = collision_eps;
         json["coefficient_restitution"] = coefficient_restitution;
-        json["gravity"] = io::to_json(gravity_);
+        json["gravity"] = io::to_json(gravity);
         json["time_stepper"] = m_time_stepper->name();
         return json;
     }
@@ -108,7 +101,7 @@ namespace physics {
                 * rb.moment_of_inertia.asDiagonal() * rb.velocity.rotation;
 
             if (!rb.is_dof_fixed[0] && !rb.is_dof_fixed[1]) {
-                G -= rb.mass * gravity_.dot(rb.pose.position);
+                G -= rb.mass * gravity.dot(rb.pose.position);
             }
         }
 
@@ -149,7 +142,7 @@ namespace physics {
     bool RigidBodyProblem::simulation_step(const double time_step)
     {
         // Take an unconstrained time-step
-        m_time_stepper->step(m_assembler, gravity_, time_step);
+        m_time_stepper->step(m_assembler, gravity, time_step);
 
         update_dof();
 
@@ -530,54 +523,6 @@ namespace physics {
         }
 
         return false;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// Functional
-    ////////////////////////////////////////////////////////////////////////////
-
-    double RigidBodyProblem::eval_f(const Eigen::VectorXd& sigma)
-    {
-        Eigen::VectorXd diff = sigma - this->poses_to_dofs(poses_t1);
-        const Eigen::SparseMatrix<double>& invS = m_assembler.m_dof_to_pose;
-        const Eigen::SparseMatrix<double>& M = m_assembler.m_rb_mass_matrix;
-        return 0.5 * diff.transpose() * invS.transpose() * M * invS * diff;
-    }
-
-    Eigen::VectorXd RigidBodyProblem::eval_grad_f(const Eigen::VectorXd& sigma)
-    {
-        Eigen::VectorXd diff = sigma - this->poses_to_dofs(poses_t1);
-
-        const Eigen::SparseMatrix<double>& invS = m_assembler.m_dof_to_pose;
-        const Eigen::SparseMatrix<double>& M = m_assembler.m_rb_mass_matrix;
-
-        Eigen::VectorXd grad_f = invS.transpose() * M * invS * diff;
-
-#ifdef WITH_DERIVATIVE_CHECK
-        Eigen::VectorXd grad_f_approx = eval_grad_f_approx(*this, sigma);
-        if (!fd::compare_gradient(grad_f, grad_f_approx)) {
-            spdlog::trace("finite gradient check failed for f");
-        }
-#endif
-        return grad_f;
-    }
-
-    Eigen::SparseMatrix<double>
-    RigidBodyProblem::eval_hessian_f(const Eigen::VectorXd& sigma)
-    {
-        const Eigen::SparseMatrix<double>& invS = m_assembler.m_dof_to_pose;
-        const Eigen::SparseMatrix<double>& M = m_assembler.m_rb_mass_matrix;
-
-        Eigen::SparseMatrix<double> hessian_f;
-        hessian_f = invS.transpose() * M * invS.transpose();
-
-#ifdef WITH_DERIVATIVE_CHECK
-        Eigen::MatrixXd hessian_f_approx = eval_hess_f_approx(*this, sigma);
-        if (!fd::compare_jacobian(hessian_f, hessian_f_approx)) {
-            spdlog::trace("finite hessian check failed for f");
-        }
-#endif
-        return hessian_f;
     }
 
 } // namespace physics

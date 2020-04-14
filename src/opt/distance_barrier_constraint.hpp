@@ -23,7 +23,7 @@ namespace opt {
 
         virtual void initialize() override;
 
-        double get_barrier_epsilon() { return m_barrier_epsilon; }
+        double get_barrier_epsilon() const { return m_barrier_epsilon; }
         void set_barrier_epsilon(const double eps) { m_barrier_epsilon = eps; }
 
         bool has_active_collisions(
@@ -56,7 +56,7 @@ namespace opt {
             return distance_barrier(distance, m_barrier_epsilon);
         }
 
-        void debug_compute_distances(
+        void compute_distances(
             const physics::RigidBodyAssembler& bodies,
             const physics::Poses<double>& poses,
             Eigen::VectorXd& distances) const;

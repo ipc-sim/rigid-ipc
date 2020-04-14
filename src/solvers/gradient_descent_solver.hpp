@@ -2,7 +2,7 @@
 
 #include <opt/optimization_problem.hpp>
 #include <opt/optimization_results.hpp>
-#include <solvers/optimization_solver.hpp>
+#include <solvers/barrier_solver.hpp>
 
 namespace ccd {
 
@@ -12,22 +12,32 @@ namespace ccd {
  */
 namespace opt {
 
-    class GradientDescentSolver : public virtual IBarrierOptimizationSolver {
+    class GradientDescentSolver : public virtual BarrierInnerSolver {
     public:
         GradientDescentSolver();
-        GradientDescentSolver(const std::string& name);
+        virtual ~GradientDescentSolver() = default;
 
-        virtual ~GradientDescentSolver() override;
-
-        // From IBarrierOptimizationSolver
-        // --------------------------------
-        const std::string& name() const override { return name_; }
-        void settings(const nlohmann::json& /*json*/) override;
+        /// Initialize the state of the solver using the settings saved in JSON
+        void settings(const nlohmann::json& params) override;
+        /// Export the state of the solver using the settings saved in JSON
         nlohmann::json settings() const override;
-        void init_free_dof(Eigen::VectorXb is_dof_fixed) override;
 
-        // From IOptimizationSolver
-        // --------------------------------
+        static std::string solver_name() { return "gradient_descent_solver"; }
+        /// An identifier for this solver
+        virtual std::string name() const override
+        {
+            return GradientDescentSolver::solver_name();
+        }
+
+        /// Initialize the solver with a problem to solve
+        virtual void set_problem(OptimizationProblem& problem) override
+        {
+            this->problem_ptr = &problem;
+        }
+
+        /// Initialize the solver state for a new solve
+        virtual void init_solve() override;
+
         /**
          * @brief Perform gradient descent to minimize the objective,
          * \f$f(x)\f$, of the problem unconstrained.
@@ -38,12 +48,19 @@ namespace opt {
          * @return The results of the optimization including the minimizer,
          * minimum, and if the optimization was successful.
          */
-        virtual OptimizationResults solve(
-            IBarrierProblem& problem) override;
+        virtual OptimizationResults solve(const Eigen::VectorXd& x0) override;
+
+        /// Perform a single step of solving the optimization problem
+        virtual OptimizationResults step_solve() override
+        {
+            throw NotImplementedError(
+                "Taking a single newton step is not implemented!");
+        };
 
         double absolute_tolerance; ///< @brief Convergence tolerance.
         double min_step_length;    ///< @brief Minimum step length.
         int max_iterations;
+
     protected:
         /**
          * @brief Compute the direction for the limited degrees of freedom.
@@ -70,14 +87,14 @@ namespace opt {
         static bool compute_direction(
             const Eigen::VectorXd& gradient, Eigen::VectorXd& delta_x);
 
-        bool line_search(IBarrierProblem& problem,
+        bool line_search(
             const Eigen::VectorXd& x,
             const Eigen::VectorXd& dir,
             const double fx,
             double& step_length);
 
+        OptimizationProblem* problem_ptr;
         Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
-        std::string name_;
     };
 
 } // namespace opt
