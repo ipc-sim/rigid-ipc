@@ -78,12 +78,23 @@ int json_to_mjcf(const char* jsonFilePath)
             printer.OpenElement("geom");
             printer.PushAttribute("mesh", meshNames[rbId].c_str());
             printer.PushAttribute("type", "mesh");
+            if (rbI.find("scale") != rbI.end()) {
+                double scale = rbI["scale"].get<double>();
+                std::string sizeStr(std::to_string(scale));
+                sizeStr += " " + sizeStr + " " + sizeStr;
+                printer.PushAttribute("size", sizeStr.c_str());
+            }
             printer.CloseElement(); // geom
 
             if (rbI.find("is_dof_fixed") != rbI.end()) {
                 bool isFixed = false;
-                for (bool i : rbI["is_dof_fixed"].get<std::vector<bool>>()) {
-                    isFixed |= i;
+                try {
+                    for (bool i : rbI["is_dof_fixed"].get<std::vector<bool>>()) {
+                        isFixed |= i;
+                    }
+                }
+                catch (...) {
+                    isFixed = rbI["is_dof_fixed"].get<bool>();
                 }
                 if (isFixed) {
                     printer.OpenElement("inertial");
@@ -135,6 +146,10 @@ int generate_bullet_results(
             V.resize(V.size() + 1);
             F.resize(F.size() + 1);
             igl::readOBJ("meshes/" + meshFilePath, V.back(), F.back());
+            if (rbI.find("scale") != rbI.end()) {
+                double scale = rbI["scale"].get<double>();
+                V.back() *= scale;
+            }
         }
         input.close();
 
