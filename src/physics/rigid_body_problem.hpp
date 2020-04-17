@@ -129,6 +129,9 @@ namespace physics {
 
         void update_dof();
 
+        /// @returns \f$x_0\f$: the starting point for the optimization.
+        const Eigen::VectorXd& starting_point() const { return x0; }
+
         int num_vars_;
         /// Initial variable for optimization
         Eigen::VectorXd x0;

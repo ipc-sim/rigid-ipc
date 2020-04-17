@@ -24,6 +24,8 @@ namespace opt {
         , max_num_constraints(0)
         , num_outer_iterations(0)
     {
+        // inner solver to solve the unconstrained barrier problem
+        inner_solver_ptr = std::make_unique<InnerNewtonSolver>();
     }
 
     void BarrierSolver::settings(const nlohmann::json& params)
@@ -34,10 +36,6 @@ namespace opt {
         t_inc = params["t_inc"].get<double>();
         m = params["m"].get<double>();
         c = params["c"].get<double>();
-
-        // inner solver to solve the unconstrained barrier problem
-        inner_solver_ptr = SolverFactory::factory().get_barrier_inner_solver(
-            params["inner_solver"].get<std::string>());
     }
 
     nlohmann::json BarrierSolver::settings() const
@@ -52,28 +50,27 @@ namespace opt {
         return json;
     }
 
-    void BarrierSolver::init_solve()
+    void BarrierSolver::init_solve(const Eigen::VectorXd& x0)
     {
         assert(inner_solver_ptr != nullptr);
         assert(problem_ptr != nullptr);
 
         // Initialize the starting point as the starting point of the problem
-        x0_i = problem_ptr->starting_point();
+        x0_i = x0;
 
         // Convert from the boolean vector to a vector of free dof indices
-        inner_solver_ptr->init_solve();
+        inner_solver_ptr->init_solve(x0);
 
         // Reset the number of outer iterations
         num_outer_iterations = 0;
 
         // Find a good initial value for `t`
-        double _fval;
         Eigen::VectorXd grad_B;
-        int num_active_barriers =
-            problem_ptr->compute_barrier_term(x0_i, _fval, grad_B);
+        int num_active_barriers;
+        problem_ptr->compute_barrier_term(x0_i, grad_B, num_active_barriers);
         if (false /*num_active_barriers > 0*/) {
             Eigen::VectorXd grad_E;
-            problem_ptr->compute_energy_term(x0_i, _fval, grad_E);
+            problem_ptr->compute_energy_term(x0_i, grad_E);
             t = tinit = 1 / (-grad_B.dot(grad_E) / grad_B.squaredNorm());
         } else {
             t = tinit;
@@ -104,7 +101,7 @@ namespace opt {
 
         OptimizationResults results = inner_solver_ptr->solve(x0_i);
 
-        problem_ptr->compute_energy_term(results.x, results.minf);
+        results.minf = problem_ptr->compute_energy_term(results.x);
         // Start next iteration from the ending optimal position
         x0_i = results.x;
         t *= t_inc;
@@ -113,17 +110,17 @@ namespace opt {
         return results;
     }
 
-    OptimizationResults BarrierSolver::solve()
+    OptimizationResults BarrierSolver::solve(const Eigen::VectorXd& x0)
     {
-        init_solve();
+        init_solve(x0);
 
         OptimizationResults results;
         do {
             results = step_solve();
         } while (m / t > e_b);
 
-        double _Bx;
-        int num_constraints = problem_ptr->compute_barrier_term(x0_i, _Bx);
+        int num_constraints;
+        problem_ptr->compute_barrier_term(x0_i, num_constraints);
         max_num_constraints = std::max(max_num_constraints, num_constraints);
 
         // make one last iteration with exactly eb

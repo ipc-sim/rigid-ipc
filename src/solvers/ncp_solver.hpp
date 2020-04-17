@@ -50,10 +50,11 @@ namespace opt {
         }
 
         /// Initialize the solver state for a new solve
-        void init_solve() override;
+        void init_solve(const Eigen::VectorXd& x0) override;
         /// Solve the saved optimization problem to completion
-        virtual OptimizationResults solve() override;
-        OptimizationResults solve(const bool use_grad);
+        virtual OptimizationResults solve(const Eigen::VectorXd& x0) override;
+        OptimizationResults
+        solve(const Eigen::VectorXd& x0, const bool use_grad);
         /// Perform a single step of solving the optimization problem
         virtual OptimizationResults step_solve() override;
 

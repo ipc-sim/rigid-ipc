@@ -3,36 +3,12 @@
 #include <memory>
 
 #include <problems/barrier_problem.hpp>
+#include <solvers/newton_solver.hpp>
 #include <solvers/optimization_solver.hpp>
 #include <utils/not_implemented_error.hpp>
 
 namespace ccd {
 namespace opt {
-
-    class BarrierInnerSolver : public virtual OptimizationSolver {
-    public:
-        virtual ~BarrierInnerSolver() = default;
-
-        virtual void c(const double value) { c_ = value; }
-        virtual void e_b(const double value) { e_b_ = value; }
-        virtual void t(const double value) { t_ = value; }
-        virtual void m(const double value) { m_ = value; }
-
-        /// Solve the saved optimization problem to completion
-        virtual OptimizationResults solve()
-        {
-            throw NotImplementedError(
-                "Must provide a starting point to BarrierInnerSolvers!");
-        }
-
-        virtual OptimizationResults solve(const Eigen::VectorXd& x0) = 0;
-
-    protected:
-        double c_;
-        double e_b_;
-        double t_;
-        double m_;
-    };
 
     /**
      * @brief Solve the optimization problem using
@@ -72,9 +48,9 @@ namespace opt {
         }
 
         /// Initialize the solver state for a new solve
-        virtual void init_solve() override;
+        virtual void init_solve(const Eigen::VectorXd& x0) override;
         /// Solve the saved optimization problem to completion
-        virtual OptimizationResults solve() override;
+        virtual OptimizationResults solve(const Eigen::VectorXd& x0) override;
         /// Perform a single step of solving the optimization problem
         virtual OptimizationResults step_solve() override;
 
@@ -103,7 +79,41 @@ namespace opt {
         double t_inc;
 
     protected:
-        std::shared_ptr<BarrierInnerSolver> inner_solver_ptr;
+        /// The interior newton solver of the barrier solver.
+        class InnerNewtonSolver : public virtual NewtonSolver {
+        public:
+            InnerNewtonSolver()
+                : NewtonSolver()
+            {
+            }
+            virtual ~InnerNewtonSolver() = default;
+
+            virtual void c(const double value) { c_ = value; }
+            virtual void e_b(const double value) { e_b_ = value; }
+            virtual void t(const double value) { t_ = value; }
+            virtual void m(const double value) { m_ = value; }
+
+        protected:
+            double line_search_lower_bound() const override
+            {
+                return std::min(
+                    NewtonSolver::line_search_lower_bound(), c_ * e_b_ / 10.0);
+            }
+
+            bool converged(
+                const Eigen::VectorXd& grad,
+                const Eigen::VectorXd& dir) const override
+            {
+                return abs(dir.dot(grad)) <= std::max(e_b_, c_ * m_ / t_);
+            }
+
+            double c_;
+            double e_b_;
+            double t_;
+            double m_;
+        };
+
+        std::unique_ptr<InnerNewtonSolver> inner_solver_ptr;
         BarrierProblem* problem_ptr;
         Eigen::VectorXd x0_i; ///< starting_point for each inner iteration
         int max_num_constraints;

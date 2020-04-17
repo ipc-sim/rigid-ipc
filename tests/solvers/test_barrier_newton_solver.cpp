@@ -27,15 +27,13 @@ TEST_CASE(
         {
         }
 
-        void compute_energy_term(
+        double compute_energy_term(
             const Eigen::VectorXd& x,
-            double& Ex,
             Eigen::VectorXd& grad_Ex,
             Eigen::SparseMatrix<double>& hess_Ex,
             bool compute_grad = true,
             bool compute_hess = true) override
         {
-            Ex = x.squaredNorm() / 2.0;
             if (compute_grad) {
                 grad_Ex = x;
             }
@@ -43,16 +41,19 @@ TEST_CASE(
                 hess_Ex =
                     Eigen::MatrixXd::Identity(x.rows(), x.rows()).sparseView();
             }
+            return x.squaredNorm() / 2.0;
         }
 
-        int compute_barrier_term(
+        double compute_barrier_term(
             const Eigen::VectorXd& x,
-            double& Bx,
             Eigen::VectorXd& grad_Bx,
             Eigen::SparseMatrix<double>& hess_Bx,
+            int& num_constraints,
             bool compute_grad = true,
             bool compute_hess = true) override
         {
+            num_constraints = 1;
+
             // 1/2||x||² ≥ 1 → 1/2||x||² - 1 ≥ 0
             typedef AutodiffType<Eigen::Dynamic> Diff;
             Diff::activate(x.size());
@@ -62,11 +63,10 @@ TEST_CASE(
             Diff::DDouble2 b =
                 poly_log_barrier(dx.squaredNorm() / 2.0 - 1, barrier_epsilon);
 
-            Bx = b.getValue();
             grad_Bx = b.getGradient();
             hess_Bx = b.getHessian().sparseView();
 
-            return 1;
+            return b.getValue();
         }
 
         double get_barrier_homotopy() const override { return barrier_epsilon; }
@@ -92,7 +92,7 @@ TEST_CASE(
 
         int num_vars() const override { return num_vars_; }
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
-        const Eigen::VectorXd& starting_point() override { return x0; }
+        const Eigen::VectorXd& starting_point() const { return x0; }
 
         double compute_min_distance(const Eigen::VectorXd& x) const override
         {
@@ -112,10 +112,9 @@ TEST_CASE(
     Eigen::VectorXd x(num_vars);
     x.setConstant(GENERATE(-1.0, 1.0) * GENERATE(1e-1, 1.0, 2.0 - 1e-3, 4.0));
 
-    double fx;
     Eigen::VectorXd grad_fx;
     Eigen::SparseMatrix<double> hess_fx;
-    problem.compute_objective(x, fx, grad_fx, hess_fx);
+    double fx = problem.compute_objective(x, grad_fx, hess_fx);
     // If the function evaluates to infinity then the finite differences will
     // not work. I assume in the definition of the barrier gradient that
     // d/dx ∞ = 0.

@@ -15,11 +15,10 @@ namespace opt {
         virtual ~OptimizationProblem() = default;
 
         /// Compute the objective function f(x)
-        virtual void compute_objective(
+        virtual double compute_objective(
             const Eigen::VectorXd& x,
-            double& fx,
-            Eigen::VectorXd& grad_fx,
-            Eigen::SparseMatrix<double>& hess_fx,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
             bool compute_grad = true,
             bool compute_hess = true) = 0;
 
@@ -27,32 +26,26 @@ namespace opt {
         // Convience functions
         // --------------------------------------------------------------------
 
-        virtual void
-        compute_objective(const Eigen::VectorXd& x, double& fx) final
+        virtual double compute_objective(const Eigen::VectorXd& x) final
         {
-            Eigen::VectorXd grad_fx;
-            Eigen::SparseMatrix<double> hess_fx;
+            Eigen::VectorXd grad;
+            Eigen::SparseMatrix<double> hess;
             return compute_objective(
-                x, fx, grad_fx, hess_fx,
+                x, grad, hess,
                 /*compute_grad=*/false, /*compute_hess=*/false);
         }
 
-        virtual void compute_objective(
-            const Eigen::VectorXd& x,
-            double& fx,
-            Eigen::VectorXd& grad_fx) final
+        virtual double
+        compute_objective(const Eigen::VectorXd& x, Eigen::VectorXd& grad) final
         {
-            Eigen::SparseMatrix<double> hess_fx;
+            Eigen::SparseMatrix<double> hess;
             return compute_objective(
-                x, fx, grad_fx, hess_fx,
+                x, grad, hess,
                 /*compute_grad=*/true, /*compute_hess=*/false);
         }
 
         /// @returns the number of variables
         virtual int num_vars() const = 0;
-
-        /// @returns \f$x_0\f$: the starting point for the optimization.
-        virtual const Eigen::VectorXd& starting_point() = 0;
 
         /// @returns A vector of booleans indicating if a DoF is fixed.
         virtual const Eigen::VectorXb& is_dof_fixed() = 0;

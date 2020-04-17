@@ -12,11 +12,10 @@ namespace opt {
         virtual ~BarrierProblem() = default;
 
         /// Compute the objective function f(x)
-        virtual void compute_objective(
+        virtual double compute_objective(
             const Eigen::VectorXd& x,
-            double& fx,
-            Eigen::VectorXd& grad_fx,
-            Eigen::SparseMatrix<double>& hess_fx,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
             bool compute_grad = true,
             bool compute_hess = true) override;
 
@@ -26,21 +25,20 @@ namespace opt {
         using OptimizationProblem::compute_objective;
 
         /// Compute E(x) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
-        virtual void compute_energy_term(
+        virtual double compute_energy_term(
             const Eigen::VectorXd& x,
-            double& Ex,
-            Eigen::VectorXd& grad_Ex,
-            Eigen::SparseMatrix<double>& hess_Ex,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
             bool compute_grad = true,
             bool compute_hess = true) = 0;
 
         /// Compute ∑_{k ∈ C} b(d(x_k)) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
         /// @returns number of active barriers
-        virtual int compute_barrier_term(
+        virtual double compute_barrier_term(
             const Eigen::VectorXd& x,
-            double& Bx,
-            Eigen::VectorXd& grad_Bx,
-            Eigen::SparseMatrix<double>& hess_Bx,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
+            int& num_constraints,
             bool compute_grad = true,
             bool compute_hess = true) = 0;
 
@@ -48,45 +46,42 @@ namespace opt {
         // Convience functions
         // --------------------------------------------------------------------
 
-        virtual void
-        compute_energy_term(const Eigen::VectorXd& x, double& Ex) final
+        virtual double compute_energy_term(const Eigen::VectorXd& x) final
         {
-            Eigen::VectorXd grad_Ex;
-            Eigen::SparseMatrix<double> hess_Ex;
+            Eigen::VectorXd grad;
+            Eigen::SparseMatrix<double> hess;
             return compute_energy_term(
-                x, Ex, grad_Ex, hess_Ex,
+                x, grad, hess,
                 /*compute_grad=*/false, /*compute_hess=*/false);
         }
 
-        virtual void compute_energy_term(
-            const Eigen::VectorXd& x,
-            double& Ex,
-            Eigen::VectorXd& grad_Ex) final
+        virtual double compute_energy_term(
+            const Eigen::VectorXd& x, Eigen::VectorXd& grad) final
         {
-            Eigen::SparseMatrix<double> hess_Ex;
+            Eigen::SparseMatrix<double> hess;
             return compute_energy_term(
-                x, Ex, grad_Ex, hess_Ex,
+                x, grad, hess,
                 /*compute_grad=*/true, /*compute_hess=*/false);
         }
 
-        virtual int
-        compute_barrier_term(const Eigen::VectorXd& x, double& Bx) final
+        virtual double compute_barrier_term(
+            const Eigen::VectorXd& x, int& num_constraints) final
         {
-            Eigen::VectorXd grad_Bx;
-            Eigen::SparseMatrix<double> hess_Bx;
+            Eigen::VectorXd grad;
+            Eigen::SparseMatrix<double> hess;
             return compute_barrier_term(
-                x, Bx, grad_Bx, hess_Bx,
+                x, grad, hess, num_constraints,
                 /*compute_grad=*/false, /*compute_hess=*/false);
         }
 
-        virtual int compute_barrier_term(
+        virtual double compute_barrier_term(
             const Eigen::VectorXd& x,
-            double& Bx,
-            Eigen::VectorXd& grad_Bx) final
+            Eigen::VectorXd& grad,
+            int& num_constraints) final
         {
-            Eigen::SparseMatrix<double> hess_Bx;
+            Eigen::SparseMatrix<double> hess;
             return compute_barrier_term(
-                x, Bx, grad_Bx, hess_Bx,
+                x, grad, hess, num_constraints,
                 /*compute_grad=*/true, /*compute_hess=*/false);
         }
 

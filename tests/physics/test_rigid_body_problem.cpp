@@ -101,14 +101,11 @@ TEST_CASE(
 
     Eigen::VectorXd x =
         rbp.poses_to_dofs<double>({ { rb1_pose_t1, rb2_pose_t1 } });
-    double fx;
-    Eigen::VectorXd grad_fx;
-    Eigen::SparseMatrix<double> hess_fx;
-    rbp.compute_energy_term(x, fx);
+    double fx = rbp.compute_energy_term(x);
     CHECK(fx == Approx(0.0));
 
     x = rbp.poses_to_dofs<double>({ { 2 * rb1_pose_t1, 2 * rb2_pose_t1 } });
-    rbp.compute_energy_term(x, fx);
+    fx = rbp.compute_energy_term(x);
     CHECK(fx == Approx(dx));
 }
 
@@ -160,9 +157,8 @@ TEST_CASE(
     // displacement cases
     Eigen::VectorXd x(2 * Pose<double>::dim_to_ndof(dim));
     x << vel_1.dof(), vel_2.dof();
-    double fx;
     Eigen::VectorXd grad_fx;
-    rbp.compute_energy_term(x, fx, grad_fx);
+    double fx = rbp.compute_energy_term(x, grad_fx);
     Eigen::VectorXd grad_fx_approx = eval_grad_energy_approx(rbp, x);
 
     CHECK(fd::compare_gradient(grad_fx, grad_fx_approx));

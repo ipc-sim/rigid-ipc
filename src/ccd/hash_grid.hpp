@@ -57,7 +57,7 @@ public:
     int id;    /// @brief The value of the item.
     AABB aabb; /// @brief The axis-aligned bounding box of the element
 
-    /// @breif Construct a hash item as a (key, value) pair.
+    /// @brief Construct a hash item as a (key, value) pair.
     HashItem(int key, int id, const AABB aabb)
         : key(key)
         , id(id)

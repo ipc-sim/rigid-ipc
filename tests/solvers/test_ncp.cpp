@@ -112,19 +112,18 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
             is_dof_fixed_ = Eigen::VectorXb::Zero(NUM_VARS);
         }
 
-        virtual void compute_objective(
+        virtual double compute_objective(
             const Eigen::VectorXd& x,
-            double& fx,
             Eigen::VectorXd& grad_fx,
             Eigen::SparseMatrix<double>& hess_fx,
             bool compute_grad = true,
             bool compute_hess = true) override
         {
             grad_fx = A * x - b;
-            fx = (grad_fx).squaredNorm() / 2.0;
             if (compute_hess) {
                 hess_fx = A;
             }
+            return (grad_fx).squaredNorm() / 2.0;
         }
 
         virtual void compute_constraints(
@@ -158,7 +157,7 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
             return compute_constraints(x, gx, jac_gx);
         }
 
-        const Eigen::VectorXd& starting_point() override { return b; }
+        const Eigen::VectorXd& starting_point() const { return b; }
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
 
         virtual int num_vars() const override { return NUM_VARS; }
@@ -195,14 +194,14 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
 
     // Solve using Guass-Seidel
     solver.lcp_solver = LCPSolver::LCP_GAUSS_SEIDEL;
-    results = solver.solve();
+    results = solver.solve(x);
     CHECK(results.finished);
     CHECK(results.success);
     CHECK((expected - results.x).squaredNorm() < 1E-6);
 
     // Solve using Fischer-Newton
     solver.lcp_solver = LCPSolver::LCP_NEWTON;
-    results = solver.solve();
+    results = solver.solve(x);
     CHECK(results.finished);
     CHECK(results.success);
     CHECK((expected - results.x).squaredNorm() < 1E-6);
@@ -210,7 +209,7 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
 #ifdef BUILD_WITH_MOSEK
     // Solve using Mosek QP
     solver.lcp_solver = LCPSolver::LCP_MOSEK;
-    results = solver.solve();
+    results = solver.solve(x);
     CHECK(results.finished);
     CHECK(results.success);
     CHECK((expected - results.x).squaredNorm() < 1E-6);

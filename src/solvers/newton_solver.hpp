@@ -2,7 +2,8 @@
 
 #include <Eigen/Core>
 
-#include <solvers/barrier_solver.hpp>
+#include <constants.hpp>
+#include <solvers/optimization_solver.hpp>
 #include <utils/not_implemented_error.hpp>
 
 namespace ccd {
@@ -13,7 +14,7 @@ namespace ccd {
  */
 namespace opt {
 
-    class NewtonSolver : public virtual BarrierInnerSolver {
+    class NewtonSolver : public virtual OptimizationSolver {
     public:
         NewtonSolver();
         virtual ~NewtonSolver() = default;
@@ -38,7 +39,7 @@ namespace opt {
         }
 
         /// Initialize the solver state for a new solve
-        virtual void init_solve() override;
+        virtual void init_solve(const Eigen::VectorXd& x0) override;
 
         /**
          * @brief Perform Newton's Method to minimize the objective, \f$f(x)\f$,
@@ -82,22 +83,39 @@ namespace opt {
         int max_iterations;
 
     protected:
-        void reset_stats();
+        virtual bool
+        converged(const Eigen::VectorXd& grad, const Eigen::VectorXd& dir) const
+        {
+            return abs(dir.dot(grad)) <= Constants::NEWTON_ABSOLUTE_TOLERANCE;
+        }
+
+        virtual void
+        post_step_update(const Eigen::VectorXd& xi, const Eigen::VectorXd& xj)
+        {
+            // Maybe a child might want to do something here
+        }
 
         bool line_search(
             const Eigen::VectorXd& x,
             const Eigen::VectorXd& dir,
             const double fx,
             const Eigen::VectorXd& grad_fx,
-            double& step_length,
-            bool log_failure = false);
+            double& step_length);
 
-        Eigen::VectorXi free_dof; ///< @breif Indices of the free degrees.
-        int iteration_number;     ///< @brief The current iteration number.
+        virtual double line_search_lower_bound() const
+        {
+            return Constants::LINE_SEARCH_LOWER_BOUND;
+        }
 
+        /// @brief Pointer to the problem to solve.
         OptimizationProblem* problem_ptr;
 
+        Eigen::VectorXi free_dof; ///< @brief Indices of the free degrees.
+        int iteration_number;     ///< @brief The current iteration number.
+
     private:
+        void reset_stats();
+
         int num_fx = 0;
         int num_grad_fx = 0;
         int num_hessian_fx = 0;

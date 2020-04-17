@@ -30,7 +30,8 @@ struct EdgeEdgeCandidate {
     long edge1_index;
 };
 
-/// @brief Candidate for <b>intersection</b> between edge and face
+/// @brief Candidate for <b>intersection</b> between edge and face.
+///
 /// Not included in Candidates because it is not a collision candidate.
 struct EdgeFaceCandidate {
     EdgeFaceCandidate(long edge_index, long face_index);

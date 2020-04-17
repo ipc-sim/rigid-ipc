@@ -34,9 +34,9 @@ namespace opt {
         virtual void set_problem(OptimizationProblem& problem) = 0;
 
         /// Initialize the solver state for a new solve
-        virtual void init_solve() = 0;
+        virtual void init_solve(const Eigen::VectorXd& x0) = 0;
         /// Solve the saved optimization problem to completion
-        virtual OptimizationResults solve() = 0;
+        virtual OptimizationResults solve(const Eigen::VectorXd& x0) = 0;
         /// Perform a single step of solving the optimization problem
         virtual OptimizationResults step_solve() = 0;
 

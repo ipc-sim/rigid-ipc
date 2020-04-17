@@ -157,7 +157,7 @@ namespace physics {
 
         /// @brief total mass (M) of the rigid body
         double mass;
-        /// @breif moment of inertia measured with respect to the principal axes
+        /// @brief moment of inertia measured with respect to the principal axes
         Eigen::VectorX3d moment_of_inertia;
         /// @brief rotation from the principal axes to the input orientation
         Eigen::MatrixXX3d R0;

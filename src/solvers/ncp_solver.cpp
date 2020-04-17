@@ -59,7 +59,7 @@ namespace opt {
         return json;
     }
 
-    void NCPSolver::init_solve()
+    void NCPSolver::init_solve(const Eigen::VectorXd& x0)
     {
         assert(problem_ptr != nullptr);
         num_outer_iterations_ = 0;
@@ -68,23 +68,24 @@ namespace opt {
     }
 
     // Solve the internal problem
-    OptimizationResults NCPSolver::solve()
+    OptimizationResults NCPSolver::solve(const Eigen::VectorXd& x0)
     {
-        auto results = solve(/*use_grad=*/true);
+        auto results = solve(x0, /*use_grad=*/true);
         bool valid = std::isfinite(results.x.maxCoeff());
         if (!results.finished || !valid) {
             spdlog::info("solver=ncp_solver action=solve "
                          "message='fallback to use normals'");
-            results = solve(/*use_grad=*/false);
+            results = solve(x0, /*use_grad=*/false);
         }
         return results;
     }
 
     // Solve the internal problem using either gradient or normal
-    OptimizationResults NCPSolver::solve(const bool use_grad)
+    OptimizationResults
+    NCPSolver::solve(const Eigen::VectorXd& x0, const bool use_grad)
     {
         m_use_gradient = use_grad;
-        init_solve();
+        init_solve(x0);
 
         OptimizationResults results;
         for (int i = 0; i < max_iterations && !results.finished; ++i) {
@@ -106,8 +107,7 @@ namespace opt {
     void NCPSolver::compute_linear_system(ConstrainedProblem& opt_problem)
     {
         Eigen::VectorXd x0 = Eigen::VectorXd::Zero(opt_problem.num_vars());
-        double fx;
-        opt_problem.compute_objective(x0, fx, b, A);
+        opt_problem.compute_objective(x0, b, A);
         b *= -1;
     }
 
@@ -211,9 +211,8 @@ namespace opt {
                 num_outer_iterations_, Constants::NCP_ABS_TOL, g_xi.minCoeff());
         }
         bool success = (g_xi.array() >= -Constants::NCP_ABS_TOL).all();
-        double fxi;
-        problem_ptr->compute_objective(xi, fxi);
-        return OptimizationResults(xi, fxi, success, success);
+        return OptimizationResults(
+            xi, problem_ptr->compute_objective(xi), success, success);
     }
 
     Eigen::VectorXd NCPSolver::solve_lcp()

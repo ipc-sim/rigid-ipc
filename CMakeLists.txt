@@ -84,7 +84,7 @@ add_library(${PROJECT_NAME}
     src/solvers/ncp_solver.cpp
     src/solvers/line_search.cpp
     src/solvers/newton_solver.cpp
-    src/solvers/gradient_descent_solver.cpp
+    src/solvers/ipc_solver.cpp
     src/solvers/solver_factory.cpp
 
     src/problems/distance_barrier_rb_problem.cpp

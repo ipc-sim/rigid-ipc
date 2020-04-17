@@ -5,12 +5,11 @@
 namespace ccd {
 namespace Constants {
 
-    /// \brief Value used to break newton solver ||grad|| < tolerance indicates
-    /// we found minimum. Configurable with json file.
+    /// \brief Value used to break newton solver
     static const double NEWTON_ABSOLUTE_TOLERANCE = 1E-5;
 
     /// \brief Value used to break linesearch.
-    static const double LINESEARCH_MIN_STEP_NORM = 0;
+    static const double LINE_SEARCH_LOWER_BOUND = 1e-12;
 
     /// \brief Value used to decide when a coeff (a,b,c) is zero.
     static const double TOI_COEFF_EPSILON = 1E-12;
@@ -31,7 +30,7 @@ namespace Constants {
     /// \brief ETA used in Etienne Vouga's CCD as an activation distance.
     static const double LINEARIZED_CCD_ETA = 1e-8;
 
-    /// \breif Tolerance of the length of the screwing trajectory in CCD.
+    /// \brief Tolerance of the length of the screwing trajectory in CCD.
     static const double SCREWING_CCD_LENGTH_TOL = 1e-6;
 
     /// \brief Default tolerance used for interval root finding.

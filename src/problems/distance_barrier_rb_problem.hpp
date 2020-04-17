@@ -83,9 +83,6 @@ namespace opt {
         /// @returns the number of variables
         int num_vars() const override { return num_vars_; }
 
-        /// @returns \f$x_0\f$: the starting point for the optimization.
-        const Eigen::VectorXd& starting_point() override { return x0; }
-
         /// @returns A vector of booleans indicating if a DoF is fixed.
         const Eigen::VectorXb& is_dof_fixed() override
         {
@@ -101,20 +98,19 @@ namespace opt {
         /// Barrier Problem
 
         /// Compute E(x) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
-        void compute_energy_term(
+        double compute_energy_term(
             const Eigen::VectorXd& x,
-            double& Ex,
-            Eigen::VectorXd& grad_Ex,
-            Eigen::SparseMatrix<double>& hess_Ex,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
             bool compute_grad = true,
             bool compute_hess = true) override;
 
         /// Compute ∑_{k ∈ C} b(d(x_k)) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
-        int compute_barrier_term(
+        double compute_barrier_term(
             const Eigen::VectorXd& x,
-            double& Bx,
-            Eigen::VectorXd& grad_Bx,
-            Eigen::SparseMatrix<double>& hess_Bx,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
+            int& num_constraints,
             bool compute_grad = true,
             bool compute_hess = true) override;
 
@@ -182,18 +178,17 @@ namespace opt {
             const Eigen::VectorXd& sigma,
             const Candidate& candidate,
             double& Bx,
-            Eigen::VectorXd& grad_Bx,
-            std::vector<Eigen::Triplet<double>>& hess_Bx_triplets,
+            Eigen::VectorXd& grad,
+            std::vector<Eigen::Triplet<double>>& hess_triplets,
             bool compute_grad,
             bool compute_hess);
 
-        /// Computes the barrier term value, gradient, and hessiand
-        void compute_barrier_term(
+        /// Computes the barrier term value, gradient, and hessian
+        double compute_barrier_term(
             const Eigen::VectorXd& sigma,
             const Candidates& distance_candidates,
-            double& Bx,
-            Eigen::VectorXd& grad_Bx,
-            Eigen::SparseMatrix<double>& hess_Bx,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
             bool compute_grad,
             bool compute_hess);
 
@@ -211,7 +206,7 @@ namespace opt {
         void check_grad_barrier(
             const Eigen::VectorXd& sigma,
             const Candidates& candidates,
-            const Eigen::VectorXd& grad_Bx);
+            const Eigen::VectorXd& grad);
 #endif
 
         double min_distance;

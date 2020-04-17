@@ -10,9 +10,7 @@ namespace opt {
         OptimizationProblem& problem, const Eigen::VectorXd& x)
     {
         auto f = [&](const Eigen::VectorXd& xk) -> double {
-            double fx;
-            problem.compute_objective(xk, fx);
-            return fx;
+            return problem.compute_objective(xk);
         };
         Eigen::VectorXd grad(x.size());
         fd::finite_gradient(x, f, grad);
@@ -24,10 +22,9 @@ namespace opt {
     {
         Eigen::MatrixXd hess;
         auto func_grad_f = [&](const Eigen::VectorXd& xk) -> Eigen::VectorXd {
-            double fx;
-            Eigen::VectorXd grad_fx;
-            problem.compute_objective(xk, fx, grad_fx);
-            return grad_fx;
+            Eigen::VectorXd grad;
+            problem.compute_objective(xk, grad);
+            return grad;
         };
 
         fd::finite_jacobian(x, func_grad_f, hess, fd::AccuracyOrder::SECOND);

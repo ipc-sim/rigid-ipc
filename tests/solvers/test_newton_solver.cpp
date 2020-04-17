@@ -23,15 +23,13 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
             is_dof_fixed_ = Eigen::VectorXb::Zero(num_vars);
         }
 
-        void compute_objective(
+        double compute_objective(
             const Eigen::VectorXd& x,
-            double& fx,
             Eigen::VectorXd& grad_fx,
             Eigen::SparseMatrix<double>& hess_fx,
             bool compute_grad = true,
             bool compute_hess = true) override
         {
-            fx = x.squaredNorm() / 2.0;
             if (compute_grad) {
                 grad_fx = x;
             }
@@ -39,6 +37,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
                 hess_fx =
                     Eigen::MatrixXd::Identity(x.rows(), x.rows()).sparseView();
             }
+            return x.squaredNorm() / 2.0;
         }
 
         bool has_collisions(
@@ -47,7 +46,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
             return false;
         }
 
-        const Eigen::VectorXd& starting_point() override { return x0; }
+        const Eigen::VectorXd& starting_point() const { return x0; }
         int num_vars() const override { return num_vars_; }
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
 
@@ -65,7 +64,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
 
     NewtonSolver solver;
     solver.set_problem(problem);
-    solver.init_solve();
+    solver.init_solve(problem.starting_point());
     OptimizationResults results = solver.solve(problem.starting_point());
     REQUIRE(results.success);
     CHECK(results.x.squaredNorm() == Approx(0).margin(1e-6));

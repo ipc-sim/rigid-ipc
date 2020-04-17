@@ -176,10 +176,13 @@ namespace physics {
 
     opt::OptimizationResults RigidBodyProblem::solve_constraints()
     {
-        return solver().solve();
+        return solver().solve(starting_point());
     }
 
-    void RigidBodyProblem::init_solve() { return solver().init_solve(); }
+    void RigidBodyProblem::init_solve()
+    {
+        return solver().init_solve(starting_point());
+    }
 
     opt::OptimizationResults RigidBodyProblem::step_solve()
     {
