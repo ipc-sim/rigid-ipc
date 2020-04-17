@@ -4,7 +4,7 @@
 
 #include <constants.hpp>
 #include <geometry/distance.hpp>
-#include <multiprecision.hpp>
+#include <solvers/solver_factory.hpp>
 #include <utils/tensor.hpp>
 
 #include <logger.hpp>
@@ -22,13 +22,16 @@ namespace opt {
 
     void DistanceBarrierRBProblem::settings(const nlohmann::json& params)
     {
-        constraint_.settings(params["distance_barrier_constraint"]);
-        // TODO: Select the optimization solver
-        opt_solver_.settings(params["barrier_solver"]);
-        opt_solver_.set_problem(*this);
-        nlohmann::json inner_solver_settings =
-            params[params["barrier_solver"]["inner_solver"].get<std::string>()];
-        opt_solver_.inner_solver().settings(inner_solver_settings);
+        m_constraint.settings(params["distance_barrier_constraint"]);
+        // Select the optimization solver
+        std::string solver_name = params["solver"].get<std::string>();
+        m_opt_solver = SolverFactory::factory().get_barrier_solver(solver_name);
+        m_opt_solver->settings(params[solver_name]);
+        m_opt_solver->set_problem(*this);
+        if (m_opt_solver->has_inner_solver()) {
+            m_opt_solver->inner_solver().settings(
+                params[m_opt_solver->inner_solver().name()]);
+        }
         RigidBodyProblem::settings(params["rigid_body_problem"]);
     }
 
@@ -56,7 +59,7 @@ namespace opt {
 
             // our constraint is really d > min_d, we want to run the
             // optimization when we end the step with small distances
-            if (min_distance <= constraint_.min_distance) {
+            if (min_distance <= m_constraint.min_distance) {
                 has_collision = true;
             }
         }
@@ -130,7 +133,7 @@ namespace opt {
         PROFILE_START(UPDATE)
         physics::Poses<double> poses = this->dofs_to_poses(x);
         Candidates candidates;
-        constraint_.construct_active_barrier_set(
+        m_constraint.construct_active_barrier_set(
             m_assembler, poses, candidates);
         num_constraints = candidates.size();
         PROFILE_END(UPDATE)
@@ -145,7 +148,7 @@ namespace opt {
             // TODO: This can be remove in favor of using the autodiff version
             // with double
             Eigen::VectorXd gx;
-            constraint_.compute_candidates_constraints(
+            m_constraint.compute_candidates_constraints(
                 m_assembler, poses, candidates, gx);
             Bx = gx.sum();
         }
@@ -314,7 +317,7 @@ namespace opt {
     {
         physics::Poses<double> poses = this->dofs_to_poses(sigma);
         Eigen::VectorXd d;
-        constraint_.compute_distances(m_assembler, poses, d);
+        m_constraint.compute_distances(m_assembler, poses, d);
         if (d.rows() > 0) {
             return d.minCoeff();
         }
@@ -326,7 +329,8 @@ namespace opt {
     {
         physics::Poses<double> poses_i = this->dofs_to_poses(sigma_i);
         physics::Poses<double> poses_j = this->dofs_to_poses(sigma_j);
-        return constraint_.has_active_collisions(m_assembler, poses_i, poses_j);
+        return m_constraint.has_active_collisions(
+            m_assembler, poses_i, poses_j);
     }
 
     template <typename T, typename RigidBodyCandidate>
@@ -334,7 +338,7 @@ namespace opt {
         const Eigen::VectorXd& sigma, const RigidBodyCandidate& rbc)
     {
         T d = distance<T>(sigma, rbc);
-        T barrier = constraint_.distance_barrier<T>(d);
+        T barrier = m_constraint.distance_barrier<T>(d);
         return barrier;
     }
 
@@ -565,7 +569,7 @@ namespace opt {
 
         physics::Poses<Diff::DDouble1> d_poses = this->dofs_to_poses(d_sigma);
         Diff::D1VectorXd dBxi;
-        constraint_.compute_candidates_constraints<Diff::DDouble1>(
+        m_constraint.compute_candidates_constraints<Diff::DDouble1>(
             m_assembler, d_poses, candidates, dBxi);
 
         assert(candidates.size() == dBxi.rows());
@@ -607,7 +611,7 @@ namespace opt {
             approx_grad, exact_grad, Constants::FINITE_DIFF_TEST,
             fmt::format(
                 "check_finite_diff DISTANCE barrier_eps={:3e} d={:3e}",
-                constraint_.get_barrier_epsilon(), d.getValue()));
+                m_constraint.get_barrier_epsilon(), d.getValue()));
     }
 
     void DistanceBarrierRBProblem::check_grad_barrier(

@@ -136,7 +136,7 @@ private:
 
     GifWriter m_gif_writer;
     uint32_t m_gif_delay = 1; //*10ms
-    double m_gif_scale = 0.25;
+    double m_gif_scale = 0.5;
     bool m_is_gif_recording = false;
     bool m_scene_changed;
 };

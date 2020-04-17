@@ -10,12 +10,6 @@ namespace ccd {
 
 namespace opt {
 
-    // template spetialization
-    template <> double spline_barrier<double>(double x, double s)
-    {
-        return barrier_horner_compensated(x, s);
-    }
-
     double barrier_gradient(double x, double s, BarrierType barrier_type)
     {
         switch (barrier_type) {
@@ -47,17 +41,34 @@ namespace opt {
     double poly_log_barrier_gradient(double x, double s)
     {
         // (6x/s² - 6x²/s³)log(x/s) + (-1 + 3x²/s² - 2x³/s³)/x
-        if (x <= 0)
-            return 0;
-
-        if (x >= s)
+        if (x <= 0.0 || x >= s) {
             return 0.0;
+        }
 
         double x2 = x * x, s2 = s * s;
         double x3 = x2 * x, s3 = s2 * s;
 
         return (6 * x / s2 - 6 * x2 / s3) * log(x / s)
             + (-1 + 3 * x2 / s2 - 2 * x3 / s3) / x;
+    }
+
+    double poly_log_barrier_hessian(double x, double s)
+    {
+        if (x <= 0.0 || x >= s) {
+            return 0.0;
+        }
+
+        double x2 = x * x, s2 = s * s;
+        double s3 = s2 * s;
+
+        return (6 / s2 - 6 * x / s3) * log(x / s)
+            + (1 / x2 + 9 / s2 - 10 * x / s3);
+    }
+
+    // template spetialization
+    template <> double spline_barrier<double>(double x, double s)
+    {
+        return barrier_horner_compensated(x, s);
     }
 
     // Derivative of the spline_barrier function with respect to x.

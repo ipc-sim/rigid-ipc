@@ -30,9 +30,19 @@ namespace opt {
      */
     template <typename T> T barrier(T x, double s, BarrierType barrier_type);
 
+    double barrier_gradient(double x, double s, BarrierType barrier_type);
+
+    /// b(d) = -(d-d̂)²ln(d / d̂)
     template <typename T> T ipc_barrier(T d, double dhat);
 
+    double ipc_barrier_gradient(double d, double dhat);
+
+    /// y := x/eps; b(x, ϵ) = -log(y)*(2*y^3-3*y^2+1)
     template <typename T> T poly_log_barrier(T x, double s);
+
+    double poly_log_barrier_gradient(double x, double s);
+
+    double poly_log_barrier_hessian(double x, double s);
 
     /**
      * @brief Function that grows to infinity as x approaches 0 from the right.
@@ -53,12 +63,6 @@ namespace opt {
      * @return The value of the barrier function at x.
      */
     template <typename T> T spline_barrier(T x, double s);
-
-    double barrier_gradient(double x, double s, BarrierType barrier_type);
-
-    double ipc_barrier_gradient(double d, double dhat);
-
-    double poly_log_barrier_gradient(double x, double s);
 
     /**
      * @brief Derivative of the spline_barrier function with respect to x.

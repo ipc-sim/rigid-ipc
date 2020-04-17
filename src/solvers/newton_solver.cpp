@@ -50,8 +50,8 @@ namespace opt {
     std::string NewtonSolver::stats()
     {
         return fmt::format(
-            "total_newton_steps,{},total_ls_steps,{},count_fx,{}"
-            ",count_grad,{},count_hess,{},count_ccd,{}",
+            "total_newton_steps={:d} total_ls_steps={:d} count_fx={:d} "
+            "count_grad={:d} count_hess={:d} count_ccd={:d}",
             newton_iterations, ls_iterations, num_fx, num_grad_fx,
             num_hessian_fx, num_collision_check);
     }
@@ -172,7 +172,7 @@ namespace opt {
             x = xk;
         } // end for loop
 
-        spdlog::debug(
+        spdlog::info(
             "solver={} action=END total_iter={:d} exit_reason=\"{}\"", name(),
             iteration_number, exit_reason);
 
@@ -223,8 +223,9 @@ namespace opt {
         PROFILE_END(LINE_SEARCH);
 
         if (!success) {
-            spdlog::debug(
-                "solver={:} line_search \"α ≤ {:g}\"", name(), lower_bound);
+            spdlog::warn(
+                "solver={} iter={:d} failure=\"line-search α ≤ {:g}\"", name(),
+                iteration_number, lower_bound);
         }
 
         return success;

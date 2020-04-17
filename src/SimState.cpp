@@ -105,6 +105,7 @@ bool SimState::init(const nlohmann::json& args_in)
         "max_time": -1,
         "timestep_size": 0.1,
         "scene_type": "distance_barrier_rb_problem",
+        "solver": "barrier_solver",
         "rigid_body_problem": {
             "rigid_bodies": [],
             "coefficient_restitution": 0.0,

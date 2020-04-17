@@ -195,44 +195,47 @@ namespace opt {
         Candidates candidates;
         construct_active_barrier_set(bodies, poses, candidates);
 
-        typedef double T;
+        distances.setZero(candidates.size());
 
-        distances.resize(candidates.size(), 1);
-        distances.setConstant(T(0.0));
-
+        size_t offset = 0;
         for (size_t i = 0; i < candidates.ev_candidates.size(); i++) {
             const auto& ev_candidate = candidates.ev_candidates[i];
-            distances(int(i)) = ccd::geometry::point_segment_distance<T>(
-                bodies.world_vertex(poses, ev_candidate.vertex_index),
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ev_candidate.edge_index, 0)),
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ev_candidate.edge_index, 1)));
+            distances(i + offset) =
+                ccd::geometry::point_segment_distance<double>(
+                    bodies.world_vertex(poses, ev_candidate.vertex_index),
+                    bodies.world_vertex(
+                        poses, bodies.m_edges(ev_candidate.edge_index, 0)),
+                    bodies.world_vertex(
+                        poses, bodies.m_edges(ev_candidate.edge_index, 1)));
         }
 
+        offset += candidates.ev_candidates.size();
         for (size_t i = 0; i < candidates.ee_candidates.size(); i++) {
             const auto& ee_candidate = candidates.ee_candidates[i];
-            distances(int(i)) = ccd::geometry::segment_segment_distance<double>(
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ee_candidate.edge0_index, 0)),
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ee_candidate.edge0_index, 1)),
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ee_candidate.edge1_index, 0)),
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ee_candidate.edge1_index, 1)));
+            distances(i + offset) =
+                ccd::geometry::segment_segment_distance<double>(
+                    bodies.world_vertex(
+                        poses, bodies.m_edges(ee_candidate.edge0_index, 0)),
+                    bodies.world_vertex(
+                        poses, bodies.m_edges(ee_candidate.edge0_index, 1)),
+                    bodies.world_vertex(
+                        poses, bodies.m_edges(ee_candidate.edge1_index, 0)),
+                    bodies.world_vertex(
+                        poses, bodies.m_edges(ee_candidate.edge1_index, 1)));
         }
 
+        offset += candidates.ee_candidates.size();
         for (size_t i = 0; i < candidates.fv_candidates.size(); i++) {
             const auto& fv_candidate = candidates.fv_candidates[i];
-            distances(int(i)) = ccd::geometry::point_triangle_distance<double>(
-                bodies.world_vertex(poses, fv_candidate.vertex_index),
-                bodies.world_vertex(
-                    poses, bodies.m_faces(fv_candidate.face_index, 0)),
-                bodies.world_vertex(
-                    poses, bodies.m_faces(fv_candidate.face_index, 1)),
-                bodies.world_vertex(
-                    poses, bodies.m_faces(fv_candidate.face_index, 2)));
+            distances(i + offset) =
+                ccd::geometry::point_triangle_distance<double>(
+                    bodies.world_vertex(poses, fv_candidate.vertex_index),
+                    bodies.world_vertex(
+                        poses, bodies.m_faces(fv_candidate.face_index, 0)),
+                    bodies.world_vertex(
+                        poses, bodies.m_faces(fv_candidate.face_index, 1)),
+                    bodies.world_vertex(
+                        poses, bodies.m_faces(fv_candidate.face_index, 2)));
         }
     }
 

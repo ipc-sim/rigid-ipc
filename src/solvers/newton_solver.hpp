@@ -20,9 +20,9 @@ namespace opt {
         virtual ~NewtonSolver() = default;
 
         /// Initialize the state of the solver using the settings saved in JSON
-        void settings(const nlohmann::json& params) override;
+        virtual void settings(const nlohmann::json& params) override;
         /// Export the state of the solver using the settings saved in JSON
-        nlohmann::json settings() const override;
+        virtual nlohmann::json settings() const override;
 
         /// An identifier for the solver class
         static std::string solver_name() { return "newton_solver"; }
@@ -72,13 +72,13 @@ namespace opt {
          *
          * @return Returns true if the solve was successful.
          */
-        bool compute_direction(
+        virtual bool compute_direction(
             const Eigen::VectorXd& gradient,
             const Eigen::SparseMatrix<double>& hessian,
             Eigen::VectorXd& delta_x,
             bool make_psd = false);
 
-        std::string stats() override;
+        virtual std::string stats() override;
 
         int max_iterations;
 
@@ -95,7 +95,7 @@ namespace opt {
             // Maybe a child might want to do something here
         }
 
-        bool line_search(
+        virtual bool line_search(
             const Eigen::VectorXd& x,
             const Eigen::VectorXd& dir,
             const double fx,

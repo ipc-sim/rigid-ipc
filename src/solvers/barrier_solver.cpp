@@ -46,7 +46,7 @@ namespace opt {
         json["t_init"] = tinit;
         json["m"] = m;
         json["c"] = c;
-        json["inner_solver"] = inner_solver_ptr->name();
+        // json["inner_solver"] = inner_solver_ptr->name();
         return json;
     }
 
@@ -129,13 +129,16 @@ namespace opt {
         results = step_solve();
 
         double min_dist = problem_ptr->compute_min_distance(results.x);
-        spdlog::critical(
-            "GREP_ME t={:g} min_dist={:g} max_num_constraints={:d}", //
-            t_used, min_dist, max_num_constraints);
+        std::cout
+            << fmt::format(
+                   "GREP_ME t={:g} min_dist={:g} max_num_constraints={:d}",
+                   t_used, min_dist, max_num_constraints)
+            << std::endl;
 
         spdlog::info(
-            "BARRIER_STATS c={:g} tinit={:g} tinc={:g} num_iterations={:g} {}",
-            c, tinit, t_inc, num_outer_iterations, inner_solver_ptr->stats());
+            "solver={} c={:g} tinit={:g} tinc={:g} num_iterations={:d} {}",
+            name(), c, tinit, t_inc, num_outer_iterations,
+            inner_solver_ptr->stats());
 
         return results;
     }

@@ -125,11 +125,11 @@ namespace opt {
 
         double get_barrier_homotopy() const override
         {
-            return constraint_.get_barrier_epsilon();
+            return m_constraint.get_barrier_epsilon();
         }
         void set_barrier_homotopy(const double eps) override
         {
-            constraint_.set_barrier_epsilon(eps);
+            m_constraint.set_barrier_epsilon(eps);
         }
 
         double get_barrier_stiffness() const override
@@ -141,12 +141,12 @@ namespace opt {
             barrier_stiffness = kappa;
         }
 
-        opt::CollisionConstraint& constraint() override { return constraint_; }
+        opt::CollisionConstraint& constraint() override { return m_constraint; }
         const opt::CollisionConstraint& constraint() const override
         {
-            return constraint_;
+            return m_constraint;
         }
-        opt::OptimizationSolver& solver() override { return opt_solver_; }
+        opt::OptimizationSolver& solver() override { return *m_opt_solver; }
 
     protected:
         void extract_local_system(
@@ -210,8 +210,8 @@ namespace opt {
 #endif
 
         double min_distance;
-        opt::DistanceBarrierConstraint constraint_;
-        opt::BarrierSolver opt_solver_;
+        DistanceBarrierConstraint m_constraint;
+        std::shared_ptr<opt::OptimizationSolver> m_opt_solver;
 
         // double barrier_homotopy; ///< \f$\hat{d}\f$
         double barrier_stiffness; ///< \f$\kappa\f$
