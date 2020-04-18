@@ -1,4 +1,6 @@
-#include <igl/opengl/glfw/Viewer.h>
+// Launch simulation GUI
+
+#include <Eigen/Core>
 
 #include <logger.hpp>
 #include <viewer/UISimState.hpp>
@@ -7,6 +9,10 @@
 
 int main(int argc, char* argv[])
 {
+    spdlog::info(
+        "Using Eigen {}.{}.{}", EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION,
+        EIGEN_MINOR_VERSION);
+
     if (argc > 1) {
         int mode = std::stoi(argv[1]);
         switch (mode) {
@@ -22,10 +28,12 @@ int main(int argc, char* argv[])
         }
 
         case 2: { // process bullet output
-            spdlog::info("generating bullet output geometry from transformation");
+            spdlog::info(
+                "generating bullet output geometry from transformation");
 
             if (argc < 4) {
-                spdlog::error("need input json file and bullet output file path!");
+                spdlog::error(
+                    "need input json file and bullet output file path!");
                 return -1;
             }
 

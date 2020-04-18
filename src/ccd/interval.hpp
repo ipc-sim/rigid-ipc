@@ -59,6 +59,7 @@ typedef VectorX<ccd::Interval> VectorXI;
 typedef VectorX3<ccd::Interval> VectorX3I;
 typedef Matrix3<ccd::Interval> Matrix3I;
 
+#if EIGEN_MAJOR_VERSION >= 3
 namespace internal {
     template <typename X, typename S, typename P>
     struct is_convertible<X, boost::numeric::interval<S, P>> {
@@ -72,4 +73,5 @@ namespace internal {
         enum { value = true };
     };
 } // namespace internal
+#endif
 } // namespace Eigen

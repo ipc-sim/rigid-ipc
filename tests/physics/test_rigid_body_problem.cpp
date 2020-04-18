@@ -164,7 +164,6 @@ TEST_CASE(
     CHECK(fd::compare_gradient(grad_fx, grad_fx_approx));
 }
 
-/*
 TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
 {
     using namespace test_utils;
@@ -205,18 +204,20 @@ TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
     rbs.push_back(rb_from_displacements(vertices, edges, vel_1));
     rbs.push_back(rb_from_displacements(vertices, edges, vel_2));
 
-    DistanceBarrierRBProblem rbp("rb_problem");
+    DistanceBarrierRBProblem rbp;
     rbp.init(rbs);
 
     // displacement cases
     Eigen::VectorXd x(2 * Pose<double>::dim_to_ndof(dim));
     x << vel_1.dof(), vel_2.dof();
-    Eigen::MatrixXd hess_fx = rbp.eval_hessian_f(x).toDense();
-    Eigen::MatrixXd hess_fx_approx = eval_hess_f_approx(rbp, x);
 
-    CHECK(fd::compare_jacobian(hess_fx, hess_fx_approx));
+    Eigen::VectorXd grad_fx;
+    Eigen::SparseMatrix<double> hess_fx;
+    rbp.compute_energy_term(x, grad_fx, hess_fx);
+    Eigen::MatrixXd hess_fx_approx = eval_hess_energy_approx(rbp, x);
+
+    CHECK(fd::compare_jacobian(hess_fx.toDense(), hess_fx_approx));
 }
-*/
 
 TEST_CASE("dof -> poses -> dof", "[RB][RB-Problem]")
 {

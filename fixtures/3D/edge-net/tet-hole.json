@@ -3,47 +3,34 @@
     "timestep_size": 0.01,
     "max_time": 10,
     "distance_barrier_constraint": {
-        "detection_method": "brute_force",
-        "trajectory_type": "screwing",
-        "custom_initial_epsilon": 0.01,
-        "active_constraint_scale": 1.01
-    },
-    "barrier_solver": {
-        "e_b": 1e-06,
-        "m": 1,
-        "t_init": 100,
-        "t_inc": 100,
-        "c": 0.1,
-        "inner_solver": "newton_solver"
+        "custom_initial_epsilon": 1e-2
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],
         "time_stepper": "dmv",
         "rigid_bodies": [{
-                "mesh": "tet-pyramid.obj",
-                "position": [0, 1, 0],
-                "rotation": [0, 0, 180],
-                "linear_velocity": [0, 0, 0],
-                "angular_velocity": [0, 0, 0]
-            },
-            {
-                "vertices": [
-                    [0.25, 0, -0.25],
-                    [-0.25, 0, -0.25],
-                    [-0.25, 0, 0.25],
-                    [0.25, 0, 0.25]
-                ],
-                "edges": [
-                    [0, 1],
-                    [1, 2],
-                    [2, 3],
-                    [3, 0]
-                ],
-                "position": [0, 0, 0],
-                "rotation": [0, 0, 0],
-                "is_dof_fixed": [true, true, true, true, true, true]
-            }
-        ]
+            "mesh": "tet-pyramid.obj",
+            "position": [0, 1, 0],
+            "rotation": [0, 0, 180],
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [0, 0, 0]
+        }, {
+            "vertices": [
+                [0.25, 0, -0.25],
+                [-0.25, 0, -0.25],
+                [-0.25, 0, 0.25],
+                [0.25, 0, 0.25]
+            ],
+            "edges": [
+                [0, 1],
+                [1, 2],
+                [2, 3],
+                [3, 0]
+            ],
+            "position": [0, 0, 0],
+            "rotation": [0, 0, 0],
+            "is_dof_fixed": [true, true, true, true, true, true]
+        }]
     }
 }

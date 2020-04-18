@@ -57,7 +57,6 @@ add_library(${PROJECT_NAME}
 
     src/geometry/intersection.cpp
 
-    src/io/opt_results.cpp
     src/io/serialize_json.cpp
     src/io/read_rb_scene.cpp
     src/io/read_obj.cpp

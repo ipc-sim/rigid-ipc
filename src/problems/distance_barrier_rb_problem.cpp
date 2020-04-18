@@ -59,7 +59,7 @@ namespace opt {
 
             // our constraint is really d > min_d, we want to run the
             // optimization when we end the step with small distances
-            if (min_distance <= m_constraint.min_distance) {
+            if (min_distance <= get_barrier_homotopy()) {
                 has_collision = true;
             }
         }

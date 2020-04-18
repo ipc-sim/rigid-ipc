@@ -34,10 +34,10 @@ namespace opt {
         NewtonSolver::init_solve(x0);
 
         // Find a good initial value for κ
-        double min_barrier_stiffness = 1e-2; // TODO: Compute this value
-        double bbox_diagonal = 1;
+        // double min_barrier_stiffness = 1;
+        double bbox_diagonal = 1; // TODO Replace this
         double d0 = 1e-8 * bbox_diagonal;
-        min_barrier_stiffness = poly_log_barrier_hessian(d0, 1e-3);
+        double min_barrier_stiffness = poly_log_barrier_hessian(d0, 1e-3);
         min_barrier_stiffness = 1.0e11 * /*average mass=*/1
             / (2e-8 * bbox_diagonal * min_barrier_stiffness);
         max_barrier_stiffness = 100 * min_barrier_stiffness;

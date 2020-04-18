@@ -226,8 +226,8 @@ namespace physics {
             });
         }
 
-        // TODO: Check for intersections instead of collision along the entire
-        // step. We only guarentee a piecewise collision-free trajectory.
+        // Check for intersections instead of collision along the entire step.
+        // We only guarentee a piecewise collision-free trajectory.
         // return detect_collisions(poses_t0, poses_q1, CollisionCheck::EXACT);
         return detect_intersections(poses_q1);
     }
