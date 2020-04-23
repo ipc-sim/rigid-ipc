@@ -3,6 +3,9 @@
     "solver": "barrier_solver",
     "max_iterations": 1000,
     "timestep_size": 0.01,
+    "distance_barrier_constraint": {
+        "trajectory_type": "linearized"
+    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],
@@ -19,7 +22,7 @@
             "mesh": "cube.obj",
             "position": [1.5, 0.3, 0],
             "scale": [0.25, 0.25, 0.25],
-            "density": 1.0
+            "density": 0.01
         }]
     }
 }

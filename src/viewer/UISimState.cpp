@@ -270,6 +270,12 @@ bool UISimState::custom_key_pressed(unsigned int unicode_key, int modifiers)
         m_viewer.core().toggle(mesh_data->data().show_faces);
         return true;
     }
+    case ' ': {
+        m_player_state = m_player_state == PlayerState::Playing
+            ? PlayerState::Paused
+            : PlayerState::Playing;
+        return true;
+    }
     default:
         break; // do nothing
     }

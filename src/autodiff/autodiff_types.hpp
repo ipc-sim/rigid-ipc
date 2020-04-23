@@ -68,6 +68,17 @@ public:
         }
         return vec;
     }
+
+    template <typename DVectorXd>
+    inline static Eigen::VectorXd get_value(const DVectorXd& x)
+    {
+        Eigen::VectorXd val(x.rows());
+        for (int i = 0; i < x.rows(); ++i) {
+            val(i) = x(i).getValue();
+        }
+        return val;
+    }
+
     inline static Eigen::MatrixXd get_gradient(const D1VectorXd& x)
     {
         Eigen::MatrixXd grad(x.rows(), DiffScalarBase::getVariableCount());

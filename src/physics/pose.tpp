@@ -128,29 +128,31 @@ namespace physics {
         select_dof(is_dof_zero, Pose<T>::Zero(dim()), R);
     }
 
+    template <typename T> T sinc(const T& x)
+    {
+        if (x == 0.0) {
+            return T(1.0);
+        }
+        // else if (abs(x) < 1e-7) {
+        //     T y(1.0);
+        //     for (int i = 1; i < 5; i++) {
+        //         T fact(1.0);
+        //         for (int j = 2; j <= 2 * n + 1; j++) {
+        //             fact *= j;
+        //         }
+        //         y += pow(-1, n) * pow(x, 2 * i) / fact;
+        //     }
+        //     return y;
+        // }
+        return sin(x) / x;
+    }
+
     template <typename T>
     Eigen::MatrixXX3<T> Pose<T>::construct_rotation_matrix() const
     {
         if (dim() == 2) {
             return Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
         } else {
-            auto sinc = [](const T& x) {
-                if (x == 0.0) {
-                    return T(1.0);
-                }
-                // else if (abs(x) < 1e-7) {
-                //     T y(1.0);
-                //     for (int i = 1; i < 5; i++) {
-                //         T fact(1.0);
-                //         for (int j = 2; j <= 2 * n + 1; j++) {
-                //             fact *= j;
-                //         }
-                //         y += pow(-1, n) * pow(x, 2 * i) / fact;
-                //     }
-                //     return y;
-                // }
-                return sin(x) / x;
-            };
             T angle = rotation.norm();
             Eigen::Matrix3<T> K = Eigen::Hat(rotation);
             Eigen::Matrix3<T> sincK = sinc(angle / T(2.0)) * K;

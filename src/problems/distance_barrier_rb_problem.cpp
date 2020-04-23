@@ -1,5 +1,6 @@
 #include "distance_barrier_rb_problem.hpp"
 
+#include <Eigen/Eigenvalues>
 #include <finitediff.hpp>
 
 #include <constants.hpp>
@@ -206,6 +207,34 @@ namespace opt {
         }
     }
 
+    // Matrix Projection onto Positive Semi-Definite Cone
+    Eigen::MatrixXd project_to_psd(const Eigen::MatrixXd& A)
+    {
+        // https://math.stackexchange.com/q/2776803
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(A);
+        if (eigensolver.info() != Eigen::Success) {
+            spdlog::error(
+                "unable to project matrix onto positive semi-definite cone");
+        }
+        // Check if all eigen values are zero or positive.
+        // The eigenvalues are sorted in increasing order.
+        if (eigensolver.eigenvalues()[0] >= 0.0) {
+            return A;
+        }
+        Eigen::DiagonalMatrix<double, Eigen::Dynamic> D(
+            eigensolver.eigenvalues());
+        // Save a little time and only project the negative values
+        for (int i = 0; i < A.rows(); i++) {
+            if (D.diagonal()[i] < 0.0) {
+                D.diagonal()[i] = 0.0;
+            } else {
+                break;
+            }
+        }
+        return eigensolver.eigenvectors() * D
+            * eigensolver.eigenvectors().transpose();
+    }
+
     // Compute the derivatives of a single constraint
     template <typename Candidate, typename RigidBodyCandidate>
     void DistanceBarrierRBProblem::add_constraint_barrier(
@@ -236,7 +265,8 @@ namespace opt {
             Bx += dBxi.getValue();
             gradi = dBxi.getGradient();
             Eigen::MatrixXd hessi = dBxi.getHessian();
-
+            // Project dense block to make assembled matrix PSD
+            hessi = project_to_psd(hessi);
             // Add global triplets of the local values
             local_hessian_to_global_triplets(
                 hessi, body_ids, ndof, hess_triplets);
@@ -276,6 +306,10 @@ namespace opt {
         grad = Eigen::VectorXd::Zero(num_vars_);
         // ∇²B: Rⁿ ↦ Rⁿˣⁿ
         std::vector<Eigen::Triplet<double>> hess_triplets;
+        if (compute_hess) {
+            int ndof = physics::Pose<double>::dim_to_ndof(dim());
+            hess_triplets.reserve(distance_candidates.size() * 4 * ndof * ndof);
+        }
 
         // Compute EV constraint hessian
         for (const auto& ev_candidate : distance_candidates.ev_candidates) {

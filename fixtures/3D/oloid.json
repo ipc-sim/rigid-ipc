@@ -1,0 +1,26 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "barrier_solver",
+    "max_time": 10,
+    "timestep_size": 0.01,
+    "distance_barrier_constraint": {
+        "custom_initial_epsilon": 1e-3
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "time_stepper": "dmv",
+        "rigid_bodies": [{
+            "mesh": "oloid.obj",
+            "position": [-5, -0.05, 0],
+            "rotation": [90, 0, 0],
+            "linear_velocity": [10, 0, 0],
+            "#torque": [0, 45, 0]
+        }, {
+            "mesh": "plane.obj",
+            "is_dof_fixed": true,
+            "position": [0, -0.6, 0],
+            "scale": 2
+        }]
+    }
+}

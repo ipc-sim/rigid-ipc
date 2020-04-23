@@ -20,11 +20,6 @@ option(FIXING_COLLISIONS_CODE_COVERAGE            "Builds targets with code cove
 option(FIXING_COLLISIONS_ENABLE_MOSEK             "Enable Mosek Library" OFF)
 mark_as_advanced(FIXING_COLLISIONS_ENABLE_MOSEK)
 
-# debug-options
-option(FIXING_COLLISIONS_DEBUG_COLLISIONS  "Extra logs in newton"       OFF)
-option(FIXING_COLLISIONS_DEBUG_LINESEARCH  "Extra logs in linesearch"   OFF)
-option(FIXING_COLLISIONS_DEBUG_COR         "Extra logs in restitution"  OFF)
-
 ################################################################################
 
 ### Configuration
@@ -42,6 +37,7 @@ include(${PROJECT_NAME}Dependencies)
 
 add_library(${PROJECT_NAME}
     src/autodiff/autodiff.cpp
+    ${FIXING_COLLISIONS_EXTERNAL}/finite-diff/finitediff.cpp
 
     src/ccd/impact.cpp
     src/ccd/collision_candidate.cpp
@@ -140,16 +136,6 @@ if(FIXING_COLLISIONS_ENABLE_DERIVATIVE_CHECK)
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DWITH_DERIVATIVE_CHECK)
 endif()
 
-if(FIXING_COLLISIONS_DEBUG_LINESEARCH)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DDEBUG_LINESEARCH)
-endif()
-if(FIXING_COLLISIONS_DEBUG_COR)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DDEBUG_COR)
-endif()
-if(FIXING_COLLISIONS_DEBUG_COLLISIONS)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DDEBUG_COLLISIONS)
-endif()
-
 if(FIXING_COLLISIONS_ENABLE_PROFILING)
     message(STATUS "Profiling Enabled")
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DPROFILE_FUNCTIONS)
@@ -174,7 +160,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog)
 
 # Finite Differences
-target_link_libraries(${PROJECT_NAME} PUBLIC FiniteDiff::FiniteDiff)
+# target_link_libraries(${PROJECT_NAME} PUBLIC FiniteDiff::FiniteDiff)
+target_include_directories(${PROJECT_NAME} PUBLIC ${FIXING_COLLISIONS_EXTERNAL}/finite-diff)
 
 # GMP
 #find_package(GMP)

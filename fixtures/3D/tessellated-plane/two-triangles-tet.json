@@ -15,9 +15,9 @@
             "position": [0, -0.5, 0],
             "is_dof_fixed": true
         }, {
-            "mesh": "cube.obj",
+            "mesh": "tet-corner.obj",
             "position": [0, 1, 0],
-            "rotation": [0, 90, 0],
+            "rotation": [0, 180, 0],
             "is_dof_fixed": false
         }]
     }

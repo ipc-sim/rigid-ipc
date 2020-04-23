@@ -1,8 +1,10 @@
 #include <catch2/catch.hpp>
 
 #include <Eigen/Geometry>
+#include <finitediff.hpp>
 #include <igl/PI.h>
 
+#include <autodiff/autodiff_types.hpp>
 #include <geometry/distance.hpp>
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -80,6 +82,55 @@ TEST_CASE("Segment-segment distance", "[distance]")
     CHECK(
         distance
         == Approx(point_point_distance(s0_closest, s1_closest)).margin(1e-12));
+}
+
+TEST_CASE("Segment-segment distance gradient", "[distance][gradient]")
+{
+    using namespace ccd;
+    typedef AutodiffType<12> Diff;
+    Diff::activate();
+
+    // Generate a geometric space of
+    double angle = 0;
+    SECTION("Almost parallel")
+    {
+        double exponent = GENERATE(range(-10, 3));
+        angle = pow(10, exponent) * igl::PI / 180.0;
+    }
+    // SECTION("Parallel") { angle = 0; }
+
+    Diff::D2Vector3d s00 = Diff::d2vars(0, Eigen::Vector3d(-1.0, 0, 0));
+    Diff::D2Vector3d s01 = Diff::d2vars(3, Eigen::Vector3d(+1.0, 0, 0));
+    Diff::D2Vector3d s10 =
+        Diff::d2vars(6, Eigen::Vector3d(cos(angle), 1, sin(angle)));
+    Diff::D2Vector3d s11 = Diff::d2vars(
+        9, Eigen::Vector3d(cos(angle + igl::PI), 1, sin(angle + igl::PI)));
+
+    Diff::DDouble2 distance = segment_segment_distance(s00, s01, s10, s11);
+
+    // Compute the gradient using finite differences
+    Eigen::VectorXd x(12);
+    x.segment<3>(0) = Diff::get_value(s00);
+    x.segment<3>(3) = Diff::get_value(s01);
+    x.segment<3>(6) = Diff::get_value(s10);
+    x.segment<3>(9) = Diff::get_value(s11);
+    auto f = [](const Eigen::VectorXd& x) {
+        return segment_segment_distance(
+            Eigen::Vector3d(x.segment<3>(0)), Eigen::Vector3d(x.segment<3>(3)),
+            Eigen::Vector3d(x.segment<3>(6)), Eigen::Vector3d(x.segment<3>(9)));
+    };
+    Eigen::VectorXd fgrad;
+    fd::finite_gradient(x, f, fgrad);
+
+    CAPTURE(
+        angle, logger::fmt_eigen(distance.getGradient()),
+        logger::fmt_eigen(fgrad));
+    CHECK(distance.getValue() == Approx(1.0));
+    CHECK(
+        (distance.getGradient() - fgrad).squaredNorm()
+        == Approx(0.0).margin(1e-8));
+
+    CHECK(distance.getHessian().squaredNorm() != Approx(0.0));
 }
 
 TEST_CASE("Segment-segment distance degenerate case", "[distance]")

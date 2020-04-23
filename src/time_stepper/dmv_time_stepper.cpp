@@ -34,8 +34,8 @@ namespace time_stepper {
             cm1 = calpha * am1i + fac1 * cm2 * cm3;
             cm2 = calpha * am2i + fac2 * cm1 * cm3;
             cm3 = calpha * am3i + fac3 * cm1 * cm2;
-            spdlog::debug(
-                "solver=dmv iter={} err={} eps={}", dmv_itr + 1, err, eps);
+            // spdlog::debug(
+            //     "solver=dmv iter={} err={} eps={}", dmv_itr + 1, err, eps);
             err = fabs(cm1b - cm1) + fabs(cm2b - cm2) + fabs(cm3b - cm3);
             if (!std::isfinite(err)) { // The fixed-point iteration diverged
                 spdlog::error(
