@@ -257,3 +257,5 @@ erleben.blend
 meshes/tennis-racket.obj
 
 **/*.bak
+
+output/

@@ -86,6 +86,11 @@ namespace opt {
         case ConvergenceCriteria::ENERGY:
             return abs(gradient_free.dot(direction_free))
                 <= Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
+
+        default:
+            spdlog::error("unknown convergence criteria!");
+            exit(-1);
+            return false;
         }
     }
 
