@@ -92,6 +92,7 @@ namespace opt {
             exit(-1);
             return false;
         }
+        throw NotImplementedError("Invalid convergence criteria option!");
     }
 
     OptimizationResults NewtonSolver::solve(const Eigen::VectorXd& x0)
@@ -134,7 +135,7 @@ namespace opt {
             igl::slice_into(direction_free, free_dof, direction);
 
             // check for newton termination
-            if (converged()) {
+            if (iteration_number > 0 && converged()) {
                 exit_reason = "found a local optimum with newton dir";
                 success = true;
                 break;
@@ -160,7 +161,7 @@ namespace opt {
                 direction = -grad_direction;
 
                 // check for newton termination again
-                if (converged()) {
+                if (iteration_number > 0 && converged()) {
                     exit_reason = "found a local optimum with -grad dir";
                     success = true;
                     break;
@@ -210,9 +211,8 @@ namespace opt {
         bool success = false;
         int num_it = 0;
         double lower_bound = line_search_lower_bound() / -grad_fx.dot(dir);
-        assert(std::isfinite(lower_bound));
 
-        while (step_length > lower_bound) {
+        while (std::isfinite(lower_bound) && step_length > lower_bound) {
             num_it++;        // Count the number of iterations
             ls_iterations++; // Count the gloabal number of iterations
 
@@ -240,9 +240,15 @@ namespace opt {
         PROFILE_END(LINE_SEARCH);
 
         if (!success) {
-            spdlog::warn(
-                "solver={} iter={:d} failure=\"line-search α ≤ {:g}\"", name(),
-                iteration_number, lower_bound);
+            if (!std::isfinite(lower_bound)) {
+                spdlog::warn(
+                    "solver={} iter={:d} failure=\"line-search ∇f(x)⋅dir=0\"",
+                    name(), iteration_number + 1, lower_bound);
+            } else {
+                spdlog::warn(
+                    "solver={} iter={:d} failure=\"line-search α ≤ {:g}\"",
+                    name(), iteration_number + 1, lower_bound);
+            }
         }
 
         return success;
