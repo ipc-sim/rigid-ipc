@@ -122,7 +122,8 @@ bool SimState::init(const nlohmann::json& args_in)
             "c": 0.1
         },
         "newton_solver": {
-            "max_iterations": 3000
+            "max_iterations": 3000,
+            "convergence_criteria": "energy"
         },
         "ipc_solver": {
             "max_iterations": 3000,

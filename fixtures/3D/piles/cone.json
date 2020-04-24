@@ -1,12 +1,15 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "solver": "barrier_solver",
-    "max_time": 10,
+    "max_time": 4,
     "timestep_size": 0.01,
     "distance_barrier_constraint": {
         "trajectory_type": "linearized",
         "active_constraint_scale": 1.1,
         "custom_initial_epsilon": 1e-3
+    },
+    "newton_solver": {
+        "convergence_criteria": "energy"
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
@@ -17,61 +20,61 @@
             "position": [1.5, 1, 0],
             "rotation": [359, 49, 352],
             "scale": 0.25,
-            "density": 10
+            "density": 1
         }, {
             "mesh": "cube.obj",
             "position": [-1.5, 3, 0],
             "rotation": [260, 64, 11],
             "scale": 0.25,
-            "density": 10
+            "density": 1
         }, {
             "mesh": "cube.obj",
             "position": [0, 5, 1.5],
             "rotation": [83, 1, 62],
             "scale": 0.25,
-            "density": 10
+            "density": 1
         }, {
             "mesh": "cube.obj",
             "position": [0, 7, -1.5],
             "rotation": [25, 217, 278],
             "scale": 0.25,
-            "density": 10
+            "density": 1
         }, {
             "mesh": "cube.obj",
             "position": [0, 9, 0],
             "rotation": [82, 50, 47],
             "scale": 0.25,
-            "density": 10
+            "density": 1
         }, {
             "mesh": "cube.obj",
             "position": [1.5, 11, 0],
             "rotation": [359, 49, 352],
             "scale": 0.25,
-            "density": 10
+            "density": 1
         }, {
             "mesh": "cube.obj",
             "position": [-1.5, 13, 0],
             "rotation": [260, 64, 11],
             "scale": 0.25,
-            "density": 10
+            "density": 1
         }, {
             "mesh": "cube.obj",
             "position": [0, 15, 1.5],
             "rotation": [83, 1, 62],
             "scale": 0.25,
-            "density": 10
+            "density": 1
         }, {
             "mesh": "cube.obj",
             "position": [0, 17, -1.5],
             "rotation": [25, 217, 278],
             "scale": 0.25,
-            "density": 10
+            "density": 1
         }, {
             "mesh": "cube.obj",
             "position": [0, 19, 0],
             "rotation": [82, 50, 47],
             "scale": 0.25,
-            "density": 10
+            "density": 1
         }, {
             "mesh": "cone.obj",
             "is_dof_fixed": true,

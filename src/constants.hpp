@@ -6,7 +6,8 @@ namespace ccd {
 namespace Constants {
 
     /// \brief Value used to break newton solver
-    static const double NEWTON_ABSOLUTE_TOLERANCE = 1E-5;
+    static const double NEWTON_ENERGY_CONVERGENCE_TOL = 1E-5;
+    static const double NEWTON_VELOCITY_CONVERGENCE_TOL = 1E-2;
 
     /// \brief Value used to break linesearch.
     static const double LINE_SEARCH_LOWER_BOUND = 1e-12;

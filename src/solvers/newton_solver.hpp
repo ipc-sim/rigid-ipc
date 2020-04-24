@@ -14,6 +14,15 @@ namespace ccd {
  */
 namespace opt {
 
+    enum ConvergenceCriteria {
+        VELOCITY, ///< Change in position of a newton direction
+        ENERGY    ///< Change in energy of a newton direction
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(
+        ConvergenceCriteria,
+        { { VELOCITY, "velocity" }, { ENERGY, "energy" } });
+
     class NewtonSolver : public virtual OptimizationSolver {
     public:
         NewtonSolver();
@@ -83,17 +92,9 @@ namespace opt {
         int max_iterations;
 
     protected:
-        virtual bool
-        converged(const Eigen::VectorXd& grad, const Eigen::VectorXd& dir) const
-        {
-            return abs(dir.dot(grad)) <= Constants::NEWTON_ABSOLUTE_TOLERANCE;
-        }
+        virtual bool converged() const;
 
-        virtual void
-        post_step_update(const Eigen::VectorXd& xi, const Eigen::VectorXd& xj)
-        {
-            // Maybe a child might want to do something here
-        }
+        virtual void post_step_update() {}
 
         virtual bool line_search(
             const Eigen::VectorXd& x,
@@ -112,6 +113,14 @@ namespace opt {
 
         Eigen::VectorXi free_dof; ///< @brief Indices of the free degrees.
         int iteration_number;     ///< @brief The current iteration number.
+        ConvergenceCriteria convergence_criteria;
+
+        // State variables
+        Eigen::VectorXd x, x_prev;
+        Eigen::VectorXd gradient, gradient_free;
+        Eigen::VectorXd direction, direction_free;
+        Eigen::VectorXd grad_direction; ///< Gradient with fixed DoF set to zero
+        Eigen::SparseMatrix<double> hessian, hessian_free;
 
     private:
         void reset_stats();

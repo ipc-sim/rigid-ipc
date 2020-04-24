@@ -147,6 +147,9 @@ namespace physics {
         ConcurrentImpacts original_impacts;
 
         std::shared_ptr<time_stepper::TimeStepper> m_time_stepper;
+
+        /// Initial length of the bounding box diagonal
+        double init_bbox_diagonal;
     };
 
     void assemble_hessian(

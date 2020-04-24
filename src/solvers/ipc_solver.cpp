@@ -9,12 +9,15 @@ namespace opt {
     IPCSolver::IPCSolver()
         : NewtonSolver()
     {
+        convergence_criteria = ConvergenceCriteria::VELOCITY;
     }
 
     // Initialize the state of the solver using the settings saved in JSON
     void IPCSolver::settings(const nlohmann::json& json)
     {
-        NewtonSolver::settings(json);
+        nlohmann::json edited_json = json;
+        edited_json["convergence_criteria"] = "velocity";
+        NewtonSolver::settings(edited_json);
         dhat_epsilon = json["dhat_epsilon"].get<double>();
     }
 
@@ -22,6 +25,7 @@ namespace opt {
     nlohmann::json IPCSolver::settings() const
     {
         nlohmann::json json = NewtonSolver::settings();
+        json.erase("convergence_criteria");
         json["dhat_epsilon"] = dhat_epsilon;
         return json;
     }
@@ -35,7 +39,7 @@ namespace opt {
 
         // Find a good initial value for κ
         // double min_barrier_stiffness = 1;
-        double bbox_diagonal = 1; // TODO Replace this
+        double bbox_diagonal = problem_ptr->world_bbox_diagonal();
         double d0 = 1e-8 * bbox_diagonal;
         double min_barrier_stiffness = poly_log_barrier_hessian(d0, 1e-3);
         min_barrier_stiffness = 1.0e11 * /*average mass=*/1
@@ -65,12 +69,11 @@ namespace opt {
             barrier_problem_ptr()->get_barrier_stiffness());
     }
 
-    void IPCSolver::post_step_update(
-        const Eigen::VectorXd& xi, const Eigen::VectorXd& xj)
+    void IPCSolver::post_step_update()
     {
         // Adaptive κ
-        double min_disti = problem_ptr->compute_min_distance(xi);
-        double min_distj = problem_ptr->compute_min_distance(xj);
+        double min_disti = problem_ptr->compute_min_distance(x_prev);
+        double min_distj = problem_ptr->compute_min_distance(x);
         // Is the barrier having a difficulty pushing the bodies apart?
         if (min_disti < dhat_epsilon && min_distj < dhat_epsilon
             && min_distj < min_disti) {

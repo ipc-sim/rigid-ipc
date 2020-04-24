@@ -100,11 +100,15 @@ namespace opt {
                     NewtonSolver::line_search_lower_bound(), c_ * e_b_ / 10.0);
             }
 
-            bool converged(
-                const Eigen::VectorXd& grad,
-                const Eigen::VectorXd& dir) const override
+            bool converged() const override
             {
-                return abs(dir.dot(grad)) <= std::max(e_b_, c_ * m_ / t_);
+                switch (convergence_criteria) {
+                case ConvergenceCriteria::ENERGY:
+                    return abs(direction_free.dot(gradient_free))
+                        <= std::max(e_b_, c_ * m_ / t_);
+                default:
+                    return NewtonSolver::converged();
+                }
             }
 
             double c_;

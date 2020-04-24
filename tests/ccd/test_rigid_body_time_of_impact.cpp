@@ -165,8 +165,7 @@ TEST_CASE("Rigid edge-edge time of impact", "[ccd][rigid_toi][edge_edge]")
     if (is_impacting) {
         CHECK(
             toi
-            == Approx(expected_toi)
-                   .margin(Constants::INTERVAL_ROOT_FINDER_TOL));
+            == Approx(expected_toi).margin(Constants::SCREWING_CCD_LENGTH_TOL));
     }
 }
 
@@ -239,7 +238,6 @@ TEST_CASE("Rigid face-vertex time of impact", "[ccd][rigid_toi][face_vertex]")
     if (is_impacting) {
         CHECK(
             toi
-            == Approx(expected_toi)
-                   .margin(Constants::INTERVAL_ROOT_FINDER_TOL));
+            == Approx(expected_toi).margin(Constants::SCREWING_CCD_LENGTH_TOL));
     }
 }

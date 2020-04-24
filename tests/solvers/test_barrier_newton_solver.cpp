@@ -7,6 +7,7 @@
 #include <barrier/barrier.hpp>
 #include <solvers/barrier_solver.hpp>
 #include <solvers/newton_solver.hpp>
+#include <utils/not_implemented_error.hpp>
 
 #include <logger.hpp>
 
@@ -97,7 +98,19 @@ TEST_CASE(
         double compute_min_distance(const Eigen::VectorXd& x) const override
         {
             return -1;
-        };
+        }
+
+        /// Get the world coordinates of the vertices
+        Eigen::MatrixXd world_vertices(const Eigen::VectorXd& x) const override
+        {
+            throw NotImplementedError("no vertices");
+        }
+
+        /// Get the length of the diagonal of the worlds bounding box
+        double world_bbox_diagonal() const override
+        {
+            throw NotImplementedError("no world bbox diagonal");
+        }
 
         int num_vars_;
         double barrier_epsilon;

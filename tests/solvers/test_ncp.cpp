@@ -6,6 +6,7 @@
 #include <autodiff/autodiff_types.hpp>
 #include <opt/constrained_problem.hpp>
 #include <solvers/ncp_solver.hpp>
+#include <utils/not_implemented_error.hpp>
 
 #include <logger.hpp>
 
@@ -171,7 +172,19 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         compute_min_distance(const Eigen::VectorXd& x) const override
         {
             return -1;
-        };
+        }
+
+        /// Get the world coordinates of the vertices
+        Eigen::MatrixXd world_vertices(const Eigen::VectorXd& x) const override
+        {
+            throw ccd::NotImplementedError("no vertices");
+        }
+
+        /// Get the length of the diagonal of the worlds bounding box
+        double world_bbox_diagonal() const override
+        {
+            throw ccd::NotImplementedError("no world bbox diagonal");
+        }
 
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd b;

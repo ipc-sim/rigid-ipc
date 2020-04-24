@@ -141,11 +141,11 @@ namespace physics {
 
         // mass
         mass = integral[0];
-        if (mass == 0) {
+        if (mass <= 0) {
             throw NotImplementedError(
                 "3D mass computation only works for closed meshes!");
         }
-        assert(mass != 0);
+        assert(mass > 0);
 
         // center of mass
         center = Eigen::Vector3d(integral[1], integral[2], integral[3]) / mass;

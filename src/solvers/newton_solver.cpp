@@ -14,18 +14,22 @@ namespace opt {
     NewtonSolver::NewtonSolver()
         : max_iterations(1000)
         , iteration_number(0)
+        , convergence_criteria(ConvergenceCriteria::ENERGY)
     {
     }
 
     void NewtonSolver::settings(const nlohmann::json& json)
     {
         max_iterations = json["max_iterations"].get<int>();
+        convergence_criteria =
+            json["convergence_criteria"].get<ConvergenceCriteria>();
     }
 
     nlohmann::json NewtonSolver::settings() const
     {
         nlohmann::json json;
         json["max_iterations"] = max_iterations;
+        json["convergence_criteria"] = convergence_criteria;
         return json;
     }
 
@@ -66,13 +70,31 @@ namespace opt {
         newton_iterations = 0;
     }
 
+    bool NewtonSolver::converged() const
+    {
+        switch (convergence_criteria) {
+        case ConvergenceCriteria::VELOCITY: {
+            Eigen::MatrixXd V_prev = problem_ptr->world_vertices(x_prev);
+            Eigen::MatrixXd V = problem_ptr->world_vertices(x_prev + direction);
+            double bbox_diagonal =
+                (V_prev.colwise().maxCoeff() - V_prev.colwise().minCoeff())
+                    .norm();
+            double timestep = 0.01; // TODO: Replace this
+            return (V - V_prev).array().abs().maxCoeff() / timestep
+                <= Constants::NEWTON_VELOCITY_CONVERGENCE_TOL * bbox_diagonal;
+        }
+        case ConvergenceCriteria::ENERGY:
+            return abs(gradient_free.dot(direction_free))
+                <= Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
+        }
+    }
+
     OptimizationResults NewtonSolver::solve(const Eigen::VectorXd& x0)
     {
         assert(problem_ptr != nullptr);
         // Initalize the working variables
-        Eigen::VectorXd x = x0;
-        Eigen::VectorXd gradient, gradient_free;
-        Eigen::SparseMatrix<double> hessian, hessian_free;
+        x_prev = x0;
+        x = x0;
 
         double step_length = 1.0;
 
@@ -80,15 +102,13 @@ namespace opt {
 
         std::string exit_reason = "exceeded the maximum allowable iterations";
 
-        Eigen::VectorXd direction(problem_ptr->num_vars());
-        Eigen::VectorXd grad_direction(problem_ptr->num_vars());
-        Eigen::VectorXd direction_free(free_dof.size());
+        direction.setZero(problem_ptr->num_vars());
+        grad_direction.setZero(problem_ptr->num_vars());
 
         bool success = false;
 
         for (iteration_number = 0; iteration_number < max_iterations;
              iteration_number++) {
-
             double fx = problem_ptr->compute_objective(x, gradient, hessian);
 
             newton_iterations++;
@@ -105,13 +125,11 @@ namespace opt {
             ///////////////////////////////////////////////////////////////////
             // Line search over newton direction
             // get grad direction for lineseach
-            grad_direction.setZero();
             igl::slice_into(gradient_free, free_dof, grad_direction);
-            direction.setZero();
             igl::slice_into(direction_free, free_dof, direction);
 
             // check for newton termination
-            if (converged(gradient_free, direction_free)) {
+            if (converged()) {
                 exit_reason = "found a local optimum with newton dir";
                 success = true;
                 break;
@@ -133,12 +151,11 @@ namespace opt {
                 ///////////////////////////////////////////////////////////////
                 // Line search over -gradient direction
                 // replace delta_x by gradient direction
-                direction.setZero();
                 direction_free = -gradient_free;
-                igl::slice_into(direction_free, free_dof, 1, direction);
+                direction = -grad_direction;
 
                 // check for newton termination again
-                if (converged(gradient_free, direction_free)) {
+                if (converged()) {
                     exit_reason = "found a local optimum with -grad dir";
                     success = true;
                     break;
@@ -160,16 +177,11 @@ namespace opt {
             }
             ///////////////////////////////////////////////////////////////////
 
-            spdlog::debug(
-                "solver={} iter={:d} step_length={:g}", name(),
-                iteration_number, step_length);
+            x_prev = x;
+            x += step_length * direction;
+            assert(!problem_ptr->has_collisions(x_prev, x));
 
-            Eigen::VectorXd xk = x + step_length * direction;
-            assert(!problem_ptr->has_collisions(x, xk));
-
-            post_step_update(x, xk);
-
-            x = xk;
+            post_step_update();
         } // end for loop
 
         spdlog::info(
@@ -185,7 +197,7 @@ namespace opt {
         const Eigen::VectorXd& dir,
         const double fx,
         const Eigen::VectorXd& grad_fx,
-        double& alpha)
+        double& step_length)
     {
         NAMED_PROFILE_POINT("line_search", LINE_SEARCH);
         PROFILE_START(LINE_SEARCH);
@@ -195,12 +207,12 @@ namespace opt {
         double lower_bound = line_search_lower_bound() / -grad_fx.dot(dir);
         assert(std::isfinite(lower_bound));
 
-        while (alpha > lower_bound) {
+        while (step_length > lower_bound) {
             num_it++;        // Count the number of iterations
             ls_iterations++; // Count the gloabal number of iterations
 
             // Compute the next variable
-            Eigen::VectorXd xi = x + alpha * dir;
+            Eigen::VectorXd xi = x + step_length * dir;
 
             // Check for collisions between newton updates
             num_collision_check++; // Count the number of collision checks
@@ -212,8 +224,8 @@ namespace opt {
                 }
             }
 
-            // Try again with a smaller alpha
-            alpha /= 2.0;
+            // Try again with a smaller step_length
+            step_length /= 2.0;
         }
 
         PROFILE_MESSAGE(

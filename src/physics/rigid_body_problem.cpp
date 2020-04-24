@@ -69,6 +69,12 @@ namespace physics {
                 "rb={} group_id={} mass={} innertia={}", i, rb.group_id,
                 rb.mass, logger::fmt_eigen(rb.moment_of_inertia));
         }
+
+        // Compute world diagonal
+        Eigen::MatrixXd V = vertices();
+        init_bbox_diagonal =
+            (V.colwise().maxCoeff() - V.colwise().minCoeff()).norm();
+        spdlog::info("init_bbox_diagonal={:g}", init_bbox_diagonal);
     }
 
     nlohmann::json RigidBodyProblem::state() const

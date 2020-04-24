@@ -31,16 +31,14 @@ namespace opt {
         virtual OptimizationResults solve(const Eigen::VectorXd& x0) override;
 
     protected:
-        bool converged(const Eigen::VectorXd& grad, const Eigen::VectorXd& dir)
-            const override
+        bool converged() const override
         {
-            return dir.array().abs().maxCoeff()
-                <= Constants::NEWTON_ABSOLUTE_TOLERANCE;
+            assert(convergence_criteria == ConvergenceCriteria::VELOCITY);
+            return NewtonSolver::converged();
         }
 
         /// Adaptivly update the barrier stiffness at the end of each step
-        void post_step_update(
-            const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) override;
+        void post_step_update() override;
 
         BarrierProblem* barrier_problem_ptr()
         {
