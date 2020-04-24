@@ -22,6 +22,7 @@ double compute_edge_vertex_tolerance(
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     const size_t& edge_id)                 // In bodyB
 {
+    /*
     double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
     double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
 
@@ -36,6 +37,8 @@ double compute_edge_vertex_tolerance(
         dl = std::max(dl, sqrt(sB_sqr + arc_len_sqr));
     }
     return Constants::SCREWING_CCD_LENGTH_TOL / dl;
+    */
+    return Constants::SCREWING_CCD_LENGTH_TOL;
 }
 
 /// Find time-of-impact between two rigid bodies
@@ -174,6 +177,7 @@ bool compute_edge_edge_time_of_impact(
         return (edgeB_vertex - edgeA_vertex).eval();
     };
 
+    /*
     double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
     double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
     Eigen::Matrix3d RA = PA * RA_t0;
@@ -189,6 +193,8 @@ bool compute_edge_edge_time_of_impact(
         dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
     }
     double tol = Constants::SCREWING_CCD_LENGTH_TOL / dl;
+    */
+    double tol = Constants::SCREWING_CCD_LENGTH_TOL;
 
     Eigen::VectorXI toi_interval;
     // TODO: Set tolerance dynamically
