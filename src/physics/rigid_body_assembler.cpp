@@ -64,41 +64,14 @@ namespace physics {
 
         // rigid body mass-matrix
         int rb_ndof = num_bodies ? rigid_bodies[0].ndof() : 0;
-        int rb_pos_ndof = num_bodies ? rigid_bodies[0].pos_ndof() : 0;
-        int rb_rot_ndof = num_bodies ? rigid_bodies[0].rot_ndof() : 0;
-        typedef Eigen::Triplet<double> Triplet;
-        std::vector<Triplet> mass_matrix_triplets;
-        mass_matrix_triplets.reserve(
-            int(num_bodies) * (rb_pos_ndof + rb_rot_ndof * rb_rot_ndof));
-        Eigen::VectorXd scaling_vector(int(num_bodies) * rb_ndof);
+        m_rb_mass_matrix.resize(num_bodies * rb_ndof);
         for (int i = 0; i < int(num_bodies); ++i) {
-            auto& rb = rigid_bodies[size_t(i)];
-            for (int pos_dofi = 0; pos_dofi < rb.pos_ndof(); pos_dofi++) {
-                mass_matrix_triplets.emplace_back(
-                    rb_ndof * i + pos_dofi, rb_ndof * i + pos_dofi, rb.mass);
-            }
-            for (int Ii = 0; Ii < rb.moment_of_inertia.size(); Ii++) {
-                mass_matrix_triplets.emplace_back(
-                    rb_ndof * i + rb.pos_ndof() + Ii,
-                    rb_ndof * i + rb.pos_ndof() + Ii, rb.moment_of_inertia(Ii));
-            }
-
-            // scale rigid body pose to dof
-            // set postion scaling to 1
-            scaling_vector.segment(rb_ndof * i, rb.pos_ndof()).setOnes();
-            // set rotation scaling to r_max
-            scaling_vector.segment(rb_ndof * i + rb.pos_ndof(), rb.rot_ndof())
-                .setOnes();
-            // .setConstant(rb.r_max);
+            m_rb_mass_matrix.diagonal().segment(i * rb_ndof, rb_ndof) =
+                rigid_bodies[i].mass_matrix.diagonal();
         }
-        m_rb_mass_matrix.resize(num_bodies * rb_ndof, num_bodies * rb_ndof);
-        m_rb_mass_matrix.setFromTriplets(
-            mass_matrix_triplets.begin(), mass_matrix_triplets.end());
-        m_pose_to_dof = Eigen::SparseDiagonal<double>(scaling_vector);
-        m_dof_to_pose = m_pose_to_dof.cwiseInverse();
 
         // rigid_body dof_fixed flag
-        is_rb_dof_fixed.resize(int(num_bodies) * rb_ndof);
+        is_rb_dof_fixed.resize(num_bodies * rb_ndof);
         for (int i = 0; i < int(num_bodies); ++i) {
             auto& rb = rigid_bodies[size_t(i)];
             is_rb_dof_fixed.segment(rb_ndof * i, rb_ndof) = rb.is_dof_fixed;
@@ -118,6 +91,9 @@ namespace physics {
             average_edge_length += body.edges.rows() * body.average_edge_length;
         }
         average_edge_length /= m_edges.rows();
+
+        average_mass = m_rb_mass_matrix.diagonal().sum()
+            / m_rb_mass_matrix.diagonal().size();
     }
 
     void RigidBodyAssembler::global_to_local_vertex(

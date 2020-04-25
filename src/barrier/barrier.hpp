@@ -20,6 +20,9 @@ namespace opt {
         SPLINE,
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Choose your barrier!
+
     /**
      * @brief Function that grows to infinity as x approaches 0 from the right.
      *
@@ -32,10 +35,20 @@ namespace opt {
 
     double barrier_gradient(double x, double s, BarrierType barrier_type);
 
+    double barrier_hessian(double x, double s, BarrierType barrier_type);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // IPC Barrier
+
     /// b(d) = -(d-d̂)²ln(d / d̂)
     template <typename T> T ipc_barrier(T d, double dhat);
 
     double ipc_barrier_gradient(double d, double dhat);
+
+    double ipc_barrier_hessian(double d, double dhat);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Poly-Log Barrier
 
     /// y := x/eps; b(x, ϵ) = -log(y)*(2*y^3-3*y^2+1)
     template <typename T> T poly_log_barrier(T x, double s);
@@ -43,6 +56,9 @@ namespace opt {
     double poly_log_barrier_gradient(double x, double s);
 
     double poly_log_barrier_hessian(double x, double s);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Spline Barrier
 
     /**
      * @brief Function that grows to infinity as x approaches 0 from the right.

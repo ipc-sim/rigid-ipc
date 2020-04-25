@@ -13,22 +13,22 @@ TEST_CASE("Center of Mass", "[physics][mass]")
     // Test vertices positions for given rb position
     Eigen::MatrixXd vertices = Eigen::MatrixXd::Random(num_vertices, dim);
 
-    Eigen::MatrixXi edges
-        = Eigen::VectorXd::LinSpaced(num_vertices, 0, num_vertices - 1)
-              .cast<int>();
+    Eigen::MatrixXi edges =
+        Eigen::VectorXd::LinSpaced(num_vertices, 0, num_vertices - 1)
+            .cast<int>();
     edges = Eigen::MatrixXi(
         Eigen::Map<Eigen::MatrixXi>(edges.data(), num_vertices / dim, dim));
 
     double total_mass1;
-    Eigen::VectorXd center_of_mass1;
-    Eigen::MatrixXd moment_of_inertia1;
+    Eigen::VectorX3d center_of_mass1;
+    Eigen::MatrixXX3d moment_of_inertia1;
     compute_mass_properties(
         vertices, edges, total_mass1, center_of_mass1, moment_of_inertia1);
 
     double total_mass2 = compute_total_mass(vertices, edges);
-    Eigen::VectorXd center_of_mass2 = compute_center_of_mass(vertices, edges);
-    Eigen::MatrixXd moment_of_inertia2
-        = compute_moment_of_inertia(vertices, edges);
+    Eigen::VectorX3d center_of_mass2 = compute_center_of_mass(vertices, edges);
+    Eigen::MatrixXX3d moment_of_inertia2 =
+        compute_moment_of_inertia(vertices, edges);
 
     CAPTURE(dim, num_vertices);
     CHECK(total_mass1 == total_mass2);

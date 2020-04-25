@@ -49,11 +49,17 @@ namespace opt {
             Eigen::Matrix<T, Eigen::Dynamic, 1>& barriers);
 
         template <typename T>
-        T distance_barrier(const T distance, const double eps);
+        T distance_barrier(const T& distance, const double eps) const;
 
-        template <typename T> T distance_barrier(const T distance)
+        template <typename T> T distance_barrier(const T& distance) const
         {
             return distance_barrier(distance, m_barrier_epsilon);
+        }
+
+        double distance_barrier_hessian(double distance) const
+        {
+            return barrier_hessian(
+                distance - min_distance, m_barrier_epsilon, barrier_type);
         }
 
         void compute_distances(

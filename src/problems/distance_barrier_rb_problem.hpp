@@ -107,6 +107,12 @@ namespace opt {
             return init_bbox_diagonal;
         }
 
+        /// Get the length of the diagonal of the worlds bounding box
+        double average_mass() const override
+        {
+            return m_assembler.average_mass;
+        }
+
         ////////////////////////////////////////////////////////////
         /// Barrier Problem
 
@@ -135,6 +141,12 @@ namespace opt {
 
         double
         compute_min_distance(const Eigen::VectorXd& sigma) const override;
+
+        /// Compute the value of the barrier at a distance x
+        double barrier_hessian(double x) const override
+        {
+            return m_constraint.distance_barrier_hessian(x);
+        }
 
         double get_barrier_homotopy() const override
         {

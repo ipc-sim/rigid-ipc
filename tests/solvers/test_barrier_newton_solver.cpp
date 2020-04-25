@@ -70,6 +70,11 @@ TEST_CASE(
             return b.getValue();
         }
 
+        double barrier_hessian(double x) const override
+        {
+            return poly_log_barrier_hessian(x, barrier_epsilon);
+        }
+
         double get_barrier_homotopy() const override { return barrier_epsilon; }
         void set_barrier_homotopy(const double eps) override
         {
@@ -111,6 +116,8 @@ TEST_CASE(
         {
             throw NotImplementedError("no world bbox diagonal");
         }
+
+        double average_mass() const override { return 1; }
 
         int num_vars_;
         double barrier_epsilon;

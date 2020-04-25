@@ -23,7 +23,7 @@ namespace opt {
 
     Eigen::VectorXd VolumeRBProblem::eval_g(const Eigen::VectorXd& sigma)
     {
-        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
+        Eigen::VectorXd qk = sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
 
         Eigen::VectorXd g_uk;
@@ -36,7 +36,7 @@ namespace opt {
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
-        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
+        Eigen::VectorXd qk = sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         auto ee_impacts = constraint_.get_ee_collision_set(uk);
 
@@ -49,7 +49,7 @@ namespace opt {
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
-        Eigen::VectorXd qk = m_assembler.m_dof_to_pose * sigma;
+        Eigen::VectorXd qk = sigma;
         Eigen::MatrixXd uk = m_assembler.world_vertices(qk) - vertices_t0;
         auto ee_impacts = constraint_.get_ee_collision_set(uk);
 
@@ -96,17 +96,9 @@ namespace opt {
 
             Diff::D1Vector3d pose_ij, pose_kl;
 
-            pose_ij = sigma_ij.array()
-                * m_assembler.m_dof_to_pose.diagonal()
-                      .segment(3 * body_ij_id, 3)
-                      .cast<Diff::DDouble1>()
-                      .array();
+            pose_ij = sigma_ij;
 
-            pose_kl = sigma_kl.array()
-                * m_assembler.m_dof_to_pose.diagonal()
-                      .segment(3 * body_kl_id, 3)
-                      .cast<Diff::DDouble1>()
-                      .array();
+            pose_kl = sigma_kl;
 
             const auto& rbs = m_assembler.m_rbs;
             // _differentiable_ final poses

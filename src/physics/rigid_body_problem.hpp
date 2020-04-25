@@ -92,16 +92,14 @@ namespace physics {
         template <typename T>
         Eigen::VectorX<T> poses_to_dofs(const Poses<T>& poses) const
         {
-            return m_assembler.m_pose_to_dof.cast<T>()
-                * Pose<T>::poses_to_dofs(poses);
+            return Pose<T>::poses_to_dofs(poses);
         }
 
         /// Convert from poses to dof expressed in distances
         template <typename T>
         Poses<T> dofs_to_poses(const Eigen::VectorX<T>& dofs) const
         {
-            return Pose<T>::dofs_to_poses(
-                m_assembler.m_dof_to_pose.cast<T>() * dofs, dim());
+            return Pose<T>::dofs_to_poses(dofs, dim());
         }
 
         int dim() const override { return m_assembler.dim(); }

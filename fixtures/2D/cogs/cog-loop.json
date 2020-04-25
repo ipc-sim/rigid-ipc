@@ -5,7 +5,7 @@
     "distance_barrier_constraint": {
         "custom_initial_epsilon": 0.1,
         "detection_method": "hash_grid",
-        "trajectory_type": "linearized",
+        "trajectory_type": "screwing",
         "active_constraint_scale": 1.01
     },
     "barrier_solver": {

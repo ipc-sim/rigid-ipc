@@ -19,6 +19,7 @@ namespace opt {
         edited_json["convergence_criteria"] = "velocity";
         NewtonSolver::settings(edited_json);
         dhat_epsilon = json["dhat_epsilon"].get<double>();
+        num_kappa_updates = 0;
     }
 
     // Export the state of the solver using the settings saved in JSON
@@ -38,12 +39,15 @@ namespace opt {
         NewtonSolver::init_solve(x0);
 
         // Find a good initial value for κ
-        // double min_barrier_stiffness = 1;
         double bbox_diagonal = problem_ptr->world_bbox_diagonal();
-        double d0 = 1e-8 * bbox_diagonal;
-        double min_barrier_stiffness = poly_log_barrier_hessian(d0, 1e-3);
-        min_barrier_stiffness = 1.0e11 * /*average mass=*/1
-            / (2e-8 * bbox_diagonal * min_barrier_stiffness);
+        double d0 = Constants::MIN_BARRIER_STIFFNESS_SCALE * bbox_diagonal;
+        double min_barrier_stiffness =
+            barrier_problem_ptr()->barrier_hessian(d0);
+        min_barrier_stiffness =
+            1e8 * problem_ptr->average_mass() / min_barrier_stiffness;
+#ifdef USE_DISTANCE_SQUARED
+        min_barrier_stiffness /= 4 * d0 * d0;
+#endif
         max_barrier_stiffness = 100 * min_barrier_stiffness;
 
         Eigen::VectorXd grad_B;
@@ -56,8 +60,14 @@ namespace opt {
             barrier_problem_ptr()->compute_energy_term(x0, grad_E);
 
             kappa = -grad_B.dot(grad_E) / grad_B.squaredNorm();
-            barrier_problem_ptr()->set_barrier_stiffness(std::min(
-                max_barrier_stiffness, std::max(min_barrier_stiffness, kappa)));
+            if (isfinite(kappa)) {
+                barrier_problem_ptr()->set_barrier_stiffness(std::min(
+                    max_barrier_stiffness,
+                    std::max(min_barrier_stiffness, kappa)));
+            } else {
+                barrier_problem_ptr()->set_barrier_stiffness(
+                    min_barrier_stiffness);
+            }
         } else {
             barrier_problem_ptr()->set_barrier_stiffness(kappa = 1.0);
         }
@@ -85,6 +95,7 @@ namespace opt {
                 "solver={} iter={:d} msg=\"updated κ to {:g}\"", name(),
                 iteration_number,
                 barrier_problem_ptr()->get_barrier_stiffness());
+            num_kappa_updates++;
         }
     }
 
@@ -92,7 +103,14 @@ namespace opt {
     OptimizationResults IPCSolver::solve(const Eigen::VectorXd& x0)
     {
         init_solve(x0);
-        return NewtonSolver::solve(x0);
+        OptimizationResults results = NewtonSolver::solve(x0);
+        std::cout
+            << fmt::format(
+                   "GREP_ME solver={} min_dist={:g} num_kappa_updates={:d} {}",
+                   name(), problem_ptr->compute_min_distance(results.x),
+                   num_kappa_updates, NewtonSolver::stats())
+            << std::endl;
+        return results;
     }
 
 } // namespace opt

@@ -135,6 +135,9 @@ namespace physics {
 
         double average_edge_length; ///< Average edge length
 
+        /// @brief average value of mass matrix diagonal (including inertia)
+        double average_mass;
+
         /// @brief indexes for vertices
         Eigen::VectorXi m_vertex_to_body_map;
 
@@ -145,13 +148,7 @@ namespace physics {
         Eigen::MatrixXi m_faces;
 
         /// @brief mass_matrix of the rigid bodies dof
-        Eigen::SparseMatrix<double> m_rb_mass_matrix;
-
-        /// @brief transforms dof to poses
-        Eigen::SparseMatrix<double> m_dof_to_pose;
-
-        /// @brief transforms poses to dof
-        Eigen::SparseMatrix<double> m_pose_to_dof;
+        Eigen::DiagonalMatrixXd m_rb_mass_matrix;
 
         /// @brief flags for rb degrees of freedom
         Eigen::VectorXb is_rb_dof_fixed;

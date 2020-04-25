@@ -3,10 +3,10 @@
 #include <iostream>
 
 #include <catch2/catch.hpp>
-
+#include <finitediff.hpp>
 #include <igl/PI.h>
 
-#include <finitediff.hpp>
+#include <physics/mass.hpp>
 #include <problems/distance_barrier_rb_problem.hpp>
 #include <utils/not_implemented_error.hpp>
 
@@ -20,8 +20,8 @@ RigidBody rb_from_displacements(
 {
     static int id = 0;
     // move vertices so they center of mass is at 0,0
-    Eigen::RowVectorXd x = compute_center_of_mass(vertices, edges);
-    Eigen::MatrixXd centered_vertices = vertices.rowwise() - x;
+    Eigen::VectorX3d x = compute_center_of_mass(vertices, edges);
+    Eigen::MatrixXd centered_vertices = vertices.rowwise() - x.transpose();
 
     // set position so current vertices match input
     Pose<double> pose_t0 = Pose<double>::Zero(vertices.cols());

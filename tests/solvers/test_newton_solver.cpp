@@ -68,6 +68,8 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
             throw NotImplementedError("no world bbox diagonal");
         }
 
+        double average_mass() const override { return 1; }
+
         int num_vars_;
         Eigen::VectorXb is_dof_fixed_;
         Eigen::VectorXd x0;

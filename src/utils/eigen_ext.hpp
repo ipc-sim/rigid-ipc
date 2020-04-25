@@ -26,15 +26,19 @@ template <typename T> using VectorX3 = Vector<T, Eigen::Dynamic, 3>;
 using VectorX3d = VectorX3<double>;
 /// @brief A dynamic size matrix with a fixed maximum size of 6 x 1
 template <typename T> using VectorX6 = Vector<T, Eigen::Dynamic, 6>;
-/// @brief A dynamic size matrix with a fixed maximum size of 3 x 1
+/// @brief A dynamic size matrix with a fixed maximum size of 6 x 1
 using VectorX6d = VectorX6<double>;
-/// @brief A dynamic size matrix with a fixed maximum size of 3 x 1
+/// @brief A dynamic size matrix with a fixed maximum size of 6 x 1
 using VectorX6b = VectorX6<bool>;
 /// @brief A dynamic size matrix with a fixed maximum size of 3 x 3
 template <typename T>
 using MatrixXX3 = Matrix<T, Eigen::Dynamic, Eigen::Dynamic, ColMajor, 3, 3>;
 /// @brief A dynamic size matrix with a fixed maximum size of 3 x 3
 using MatrixXX3d = MatrixXX3<double>;
+/// @brief A dynamic size diagonal matrix
+using DiagonalMatrixXd = DiagonalMatrix<double, Eigen::Dynamic>;
+/// @brief A dynamic size diagonal matrix with a fixed maximum size of 6 x 6
+using DiagonalMatrixX6d = DiagonalMatrix<double, Eigen::Dynamic, 6>;
 
 template <typename T> SparseMatrix<T> SparseDiagonal(const VectorX<T>& x);
 

@@ -1,6 +1,7 @@
 #include "UISimState.hpp"
 #include <logger.hpp>
 
+#include <igl/Timer.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <physics/rigid_body_problem.hpp>
@@ -17,6 +18,7 @@ UISimState::UISimState()
     , m_show_vertex_data(false)
     , m_reloading_scene(false)
     , m_scene_changed(false)
+    , m_simulation_time(0)
 {
 }
 
@@ -105,6 +107,8 @@ void UISimState::load_scene()
     m_player_state = PlayerState::Paused;
     m_interval_time = 0.0;
 
+    m_simulation_time = 0;
+
     // Do not change the view setting upon reload
     if (m_reloading_scene) {
         return;
@@ -157,7 +161,12 @@ void UISimState::redraw_scene()
 bool UISimState::pre_draw_loop()
 {
     if (m_player_state == PlayerState::Playing) {
+        igl::Timer timer;
+        timer.start();
         simulation_step();
+        timer.stop();
+        m_simulation_time += timer.getElapsedTime();
+
         bool breakpoint = m_bkp_had_collision && m_state.m_step_had_collision;
         breakpoint |=
             m_bkp_has_intersections && m_state.m_step_has_intersections;
@@ -167,6 +176,7 @@ bool UISimState::pre_draw_loop()
         }
         if (breakpoint) {
             m_player_state = PlayerState::Paused;
+            log_simulation_time();
         }
         m_scene_changed = true;
     }
@@ -175,22 +185,36 @@ bool UISimState::pre_draw_loop()
 
 void UISimState::save_screenshot(const std::string& filename)
 {
+    if (filename == "") {
+        return;
+    }
+
     int width, height;
     get_window_dimensions(width, height);
-    // using MatrixXuc =
-    //     Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>;
-    // // Allocate temporary buffers for image
-    // MatrixXuc R(width, height), G(width, height), B(width, height),
-    //     A(width, height);
-    //
-    // // Draw the scene in the buffers
+    using MatrixXuc =
+        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>;
+    // Allocate temporary buffers for image
+    MatrixXuc R(width, height), G(width, height), B(width, height),
+        A(width, height);
+
+    // Draw the scene in the buffers
     // m_viewer.core().draw_buffer(mesh_data->data(), false, R, G, B, A);
     // m_viewer.core().draw_buffer(velocity_data->data(), true, R, G, B, A);
     // m_viewer.core().draw_buffer(com_data->data(), true, R, G, B, A);
-    //
-    // igl::png::writePNG(R, G, B, A, filename);
 
-    bool success = igl::png::render_to_png(filename, width, height);
+    std::vector<unsigned char> data(4 * width * height);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+    // img->flip();
+    for (int i = 0; i < width; i++) {
+        for (int j = 0; j < height; j++) {
+            R(i, j) = data[4 * (i + j * width) + 0];
+            G(i, j) = data[4 * (i + j * width) + 1];
+            B(i, j) = data[4 * (i + j * width) + 2];
+            A(i, j) = data[4 * (i + j * width) + 3];
+        }
+    }
+    bool success = igl::png::writePNG(R, G, B, A, filename);
+
     if (!success) {
         spdlog::error("Unable to save screenshot to {}", filename);
     }
@@ -274,6 +298,7 @@ bool UISimState::custom_key_pressed(unsigned int unicode_key, int modifiers)
         m_player_state = m_player_state == PlayerState::Playing
             ? PlayerState::Paused
             : PlayerState::Playing;
+        log_simulation_time();
         return true;
     }
     default:

@@ -6,6 +6,7 @@
 #include <autodiff/autodiff_types.hpp>
 #include <finitediff.hpp>
 #include <logger.hpp>
+#include <physics/mass.hpp>
 #include <utils/eigen_ext.hpp>
 #include <utils/flatten.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -38,8 +39,8 @@ namespace physics {
         vertices_.rowwise() += pose.position.transpose();
 
         double m;
-        Eigen::VectorXd center_of_mass;
-        Eigen::MatrixXd I;
+        Eigen::VectorX3d center_of_mass;
+        Eigen::MatrixXX3d I;
         compute_mass_properties(
             vertices_, dim == 2 || faces.size() == 0 ? edges : faces, m,
             center_of_mass, I);
@@ -81,8 +82,8 @@ namespace physics {
         assert(edges.size() == 0 || edges.cols() == 2);
         assert(faces.size() == 0 || faces.cols() == 3);
 
-        Eigen::VectorXd center_of_mass;
-        Eigen::MatrixXd I;
+        Eigen::VectorX3d center_of_mass;
+        Eigen::MatrixXX3d I;
         compute_mass_properties(
             vertices, dim() == 2 || faces.size() == 0 ? edges : faces, mass,
             center_of_mass, I);
@@ -104,6 +105,17 @@ namespace physics {
             }
             assert(R0.isUnitary(1e-9));
             assert(fabs(R0.determinant() - 1.0) <= 1.0e-9);
+            Eigen::VectorX3<bool> is_rot_dof_fixed =
+                is_dof_fixed.tail(Pose<double>::dim_to_rot_ndof(dim()));
+            if (is_rot_dof_fixed.count() == 2) {
+                // Convert moment of inertia to world coordinates
+                // https://physics.stackexchange.com/a/268812
+                moment_of_inertia = -I.diagonal().array() + I.diagonal().sum();
+                R0.setIdentity();
+            } else if (is_rot_dof_fixed.count() == 1) {
+                spdlog::warn("Rigid body dynamics with two rotational DoF has "
+                             "not been tested thoroughly.");
+            }
             // R = RᵢR₀
             Eigen::AngleAxisd r = Eigen::AngleAxisd(
                 Eigen::Matrix3d(this->pose.construct_rotation_matrix() * R0));
@@ -124,10 +136,9 @@ namespace physics {
         this->force.zero_dof(is_dof_fixed, R0);
 
         // Compute and construct some useful constants
-        mass_matrix = Eigen::MatrixXd(ndof(), ndof());
+        mass_matrix.resize(ndof());
         mass_matrix.diagonal().head(pos_ndof()).setConstant(mass);
         mass_matrix.diagonal().tail(rot_ndof()) = moment_of_inertia;
-        inv_mass_matrix = mass_matrix.cwiseInverse();
 
         r_max = vertices.rowwise().squaredNorm().maxCoeff();
 

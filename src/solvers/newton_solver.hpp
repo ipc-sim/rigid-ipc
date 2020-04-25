@@ -131,6 +131,8 @@ namespace opt {
         int num_collision_check = 0;
         int ls_iterations = 0;
         int newton_iterations = 0;
+        int num_newton_ls_fails = 0;
+        int num_grad_ls_fails = 0;
     };
 
     /**

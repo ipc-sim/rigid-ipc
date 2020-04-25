@@ -87,6 +87,9 @@ namespace opt {
 
         virtual bool is_barrier_problem() const override { return true; }
 
+        /// Compute the value of the barrier hessian at a value x
+        virtual double barrier_hessian(double x) const = 0;
+
         virtual double get_barrier_homotopy() const = 0;
         virtual void set_barrier_homotopy(const double eps) = 0;
 

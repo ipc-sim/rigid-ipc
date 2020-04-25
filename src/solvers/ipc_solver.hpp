@@ -52,6 +52,9 @@ namespace opt {
         /// @brief max value for adaptive barrier stiffness
         double max_barrier_stiffness;
         double dhat_epsilon;
+
+    private:
+        int num_kappa_updates = 0;
     };
 
 } // namespace opt

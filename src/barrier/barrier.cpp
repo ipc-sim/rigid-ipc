@@ -10,6 +10,9 @@ namespace ccd {
 
 namespace opt {
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Choose your barrier!
+
     double barrier_gradient(double x, double s, BarrierType barrier_type)
     {
         switch (barrier_type) {
@@ -26,6 +29,25 @@ namespace opt {
         }
     }
 
+    double barrier_hessian(double x, double s, BarrierType barrier_type)
+    {
+        switch (barrier_type) {
+        case BarrierType::IPC:
+            return ipc_barrier_hessian(x, s);
+        case BarrierType::POLY_LOG:
+            return poly_log_barrier_hessian(x, s);
+        case BarrierType::SPLINE:
+            return spline_barrier_hessian(x, s);
+        default:
+            throw NotImplementedError(
+                fmt::format("Invalid barrier type: {:d}", int(barrier_type))
+                    .c_str());
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // IPC Barrier
+
     double ipc_barrier_gradient(double d, double dhat)
     {
         if (d <= 0.0 || d >= dhat) {
@@ -37,6 +59,23 @@ namespace opt {
         //       = (d̂ - d) * (2ln(d/d̂) - d̂/d + 1)
         return (dhat - d) * (2 * log(d / dhat) - dhat / d + 1);
     }
+
+    double ipc_barrier_hessian(double d, double dhat)
+    {
+        if (d <= 0.0 || d >= dhat) {
+            return 0.0;
+        }
+        // b'(d) = (d̂ - d) * (2ln(d/d̂) - d̂/d + 1)
+        // b"(d) = -(2ln(d/d̂) - d̂/d + 1) + (d̂ - d) * (2/d + d̂/d²)
+        //       = -(2ln(d/d̂) - d̂/d + 1) + (d̂/d + d̂²/d² - 2)
+        //       = -2ln(d/d̂) + d̂/d - 1 + d̂/d + d̂²/d² - 2
+        //       = -2ln(d/d̂) + 2d̂/d + d̂²/d² - 3
+        //       = -2ln(d/d̂) + ((2 + d̂)*d̂)/d - 3
+        return -2 * log(d / dhat) + ((2 + dhat) * dhat) / d - 3;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Poly-Log Barrier
 
     double poly_log_barrier_gradient(double x, double s)
     {
@@ -65,7 +104,10 @@ namespace opt {
             + (1 / x2 + 9 / s2 - 10 * x / s3);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Spline Barrier
     // template spetialization
+
     template <> double spline_barrier<double>(double x, double s)
     {
         return barrier_horner_compensated(x, s);

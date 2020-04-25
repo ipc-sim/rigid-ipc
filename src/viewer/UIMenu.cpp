@@ -128,6 +128,10 @@ void UISimState::draw_simulation_player()
 
     ImGui::RadioButton("play##SimPlayer", &player_state, PlayerState::Playing);
     ImGui::RadioButton("pause##SimPlayer", &player_state, PlayerState::Paused);
+    if (m_player_state == PlayerState::Playing
+        && player_state == PlayerState::Paused) {
+        log_simulation_time();
+    }
     m_player_state = static_cast<PlayerState>(player_state);
 
     if (ImGui::Button("Step##SimPlayer", ImVec2(-1, 0))) {

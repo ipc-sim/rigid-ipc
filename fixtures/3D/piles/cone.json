@@ -1,10 +1,10 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "solver": "barrier_solver",
+    "solver": "ipc_solver",
     "max_time": 4,
     "timestep_size": 0.01,
     "distance_barrier_constraint": {
-        "trajectory_type": "linearized",
+        "trajectory_type": "screwing",
         "active_constraint_scale": 1.1,
         "custom_initial_epsilon": 1e-3
     },

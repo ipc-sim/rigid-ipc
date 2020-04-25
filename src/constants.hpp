@@ -2,6 +2,8 @@
 
 #include <limits>
 
+#include <geometry/distance.hpp>
+
 namespace ccd {
 namespace Constants {
 
@@ -36,6 +38,13 @@ namespace Constants {
 
     /// \brief Default tolerance used for interval root finding.
     static const double INTERVAL_ROOT_FINDER_TOL = 1e-8;
+
+    /// \breif Scaling of κ_min to better condition the system
+#ifdef USE_DISTANCE_SQUARED
+    static const double MIN_BARRIER_STIFFNESS_SCALE = 1e11;
+#else
+    static const double MIN_BARRIER_STIFFNESS_SCALE = 1e7;
+#endif
 
     // ------------------------------------------------------------------------
     // Nonlinear Complementarity Problem

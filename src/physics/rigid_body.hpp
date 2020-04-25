@@ -1,17 +1,9 @@
 #pragma once
 
-#include <vector>
-
 #include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <utils/eigen_ext.hpp>
 
-#include <physics/mass.hpp>
 #include <physics/pose.hpp>
-
-#include <autodiff/autodiff.h>
-
-#include <iostream>
+#include <utils/eigen_ext.hpp>
 
 namespace ccd {
 namespace physics {
@@ -133,11 +125,6 @@ namespace physics {
 
         Eigen::MatrixXd world_vertices_gradient(const Pose<double>& pose) const;
 
-        Eigen::MatrixXd
-        world_vertices_gradient_exact(const Pose<double>& pose) const;
-        std::vector<Eigen::MatrixXd>
-        world_vertices_hessian_exact(const Pose<double>& velocity) const;
-
         int dim() const { return vertices.cols(); }
         int ndof() const { return pose.ndof(); }
         int pos_ndof() const { return pose.pos_ndof(); }
@@ -163,13 +150,14 @@ namespace physics {
         Eigen::MatrixXX3d R0;
         /// @brief maximum distance from CM to a vertex
         double r_max;
+        /// @brief the mass matrix of the rigid body
+        Eigen::DiagonalMatrixX6d mass_matrix;
 
         /// @brief Flag to indicate if dof is fixed (doesnt' change)
         Eigen::VectorX6b is_dof_fixed;
-        Eigen::MatrixXd mass_matrix;
-        Eigen::MatrixXd inv_mass_matrix;
 
-        bool is_oriented; ///< use edge orientation for normals
+        /// @brief Use edge orientation for normal in 2D restitution
+        bool is_oriented;
 
         // --------------------------------------------------------------------
         // State

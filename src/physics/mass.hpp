@@ -3,32 +3,38 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+#include <utils/eigen_ext.hpp>
+
 namespace ccd {
 namespace physics {
 
     /// @brief Compute the total mass, center of mass, and moment of intertia
-    void compute_mass_properties(const Eigen::MatrixXd& vertices,
+    void compute_mass_properties(
+        const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& facets,
         double& total_mass,
-        Eigen::VectorXd& center_of_mass,
-        Eigen::MatrixXd& moment_of_inertia);
+        Eigen::VectorX3d& center_of_mass,
+        Eigen::MatrixXX3d& moment_of_inertia);
 
     /// @brief Compute the 2D total mass, center of mass, and moment of intertia
-    void compute_mass_properties_2D(const Eigen::MatrixXd& vertices,
+    void compute_mass_properties_2D(
+        const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& edges,
         double& mass,
-        Eigen::VectorXd& center,
-        Eigen::MatrixXd& intertia);
+        Eigen::VectorX3d& center,
+        Eigen::MatrixXX3d& intertia);
 
     /// @brief Compute the 3D total mass, center of mass, and moment of intertia
-    void compute_mass_properties_3D(const Eigen::MatrixXd& vertices,
+    void compute_mass_properties_3D(
+        const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& faces,
         double& mass,
-        Eigen::VectorXd& center,
-        Eigen::MatrixXd& intertia);
+        Eigen::VectorX3d& center,
+        Eigen::MatrixXX3d& intertia);
 
     /// @brief Construct the sparse mass matrix for the given mesh (V, E).
-    void construct_mass_matrix(const Eigen::MatrixXd& vertices,
+    void construct_mass_matrix(
+        const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& facets,
         Eigen::SparseMatrix<double>& mass_matrix);
 
@@ -38,9 +44,10 @@ namespace physics {
     /// @brief Computes the total mass from the mass matrix
     double compute_total_mass(const Eigen::SparseMatrix<double>& mass_matrix);
 
-    Eigen::VectorXd compute_center_of_mass(
+    Eigen::VectorX3d compute_center_of_mass(
         const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& facets);
-    Eigen::VectorXd compute_center_of_mass(const Eigen::MatrixXd& vertices,
+    Eigen::VectorX3d compute_center_of_mass(
+        const Eigen::MatrixXd& vertices,
         const Eigen::SparseMatrix<double>& mass_matrix);
 
     /**
@@ -48,9 +55,10 @@ namespace physics {
      *
      * Assumes vertices are given in body space (i.e centered of mass at 0,0).
      */
-    Eigen::MatrixXd compute_moment_of_inertia(
+    Eigen::MatrixXX3d compute_moment_of_inertia(
         const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& facets);
-    Eigen::MatrixXd compute_moment_of_inertia(const Eigen::MatrixXd& vertices,
+    Eigen::MatrixXX3d compute_moment_of_inertia(
+        const Eigen::MatrixXd& vertices,
         const Eigen::SparseMatrix<double>& mass_matrix);
 
 } // namespace physics

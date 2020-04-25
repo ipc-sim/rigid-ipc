@@ -13,8 +13,8 @@ namespace physics {
         const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& facets,
         double& mass,
-        Eigen::VectorXd& center,
-        Eigen::MatrixXd& inertia)
+        Eigen::VectorX3d& center,
+        Eigen::MatrixXX3d& inertia)
     {
         if (vertices.cols() == 2) {
             compute_mass_properties_2D(vertices, facets, mass, center, inertia);
@@ -34,8 +34,8 @@ namespace physics {
         const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& edges,
         double& mass,
-        Eigen::VectorXd& center,
-        Eigen::MatrixXd& inertia)
+        Eigen::VectorX3d& center,
+        Eigen::MatrixXX3d& inertia)
     {
         Eigen::SparseMatrix<double> M;
         construct_mass_matrix(vertices, edges, M);
@@ -55,8 +55,8 @@ namespace physics {
         const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& faces,
         double& mass,
-        Eigen::VectorXd& center,
-        Eigen::MatrixXd& inertia)
+        Eigen::VectorX3d& center,
+        Eigen::MatrixXX3d& inertia)
     {
         if (faces.size() == 0 || faces.cols() != 3) {
             throw NotImplementedError("compute_mass_properties_3D() not "
@@ -221,7 +221,7 @@ namespace physics {
         return mass_matrix.sum();
     }
 
-    Eigen::VectorXd compute_center_of_mass(
+    Eigen::VectorX3d compute_center_of_mass(
         const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& facets)
     {
         Eigen::SparseMatrix<double> M;
@@ -229,14 +229,14 @@ namespace physics {
         return compute_center_of_mass(vertices, M);
     }
 
-    Eigen::VectorXd compute_center_of_mass(
+    Eigen::VectorX3d compute_center_of_mass(
         const Eigen::MatrixXd& vertices,
         const Eigen::SparseMatrix<double>& mass_matrix)
     {
         return (mass_matrix * vertices).colwise().sum() / mass_matrix.sum();
     }
 
-    Eigen::MatrixXd compute_moment_of_inertia(
+    Eigen::MatrixXX3d compute_moment_of_inertia(
         const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& facets)
     {
         // NOTE: this assumes center of mass is at 0,0
@@ -253,14 +253,14 @@ namespace physics {
             return I;
         } else {
             double mass;
-            Eigen::VectorXd center;
-            Eigen::MatrixXd inertia;
+            Eigen::VectorX3d center;
+            Eigen::MatrixXX3d inertia;
             compute_mass_properties_3D(vertices, facets, mass, center, inertia);
             return inertia;
         }
     }
 
-    Eigen::MatrixXd compute_moment_of_inertia(
+    Eigen::MatrixXX3d compute_moment_of_inertia(
         const Eigen::MatrixXd& vertices,
         const Eigen::SparseMatrix<double>& mass_matrix)
     {

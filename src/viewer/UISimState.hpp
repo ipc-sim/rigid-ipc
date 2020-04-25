@@ -35,7 +35,7 @@ public:
     // virtual bool mouse_down(int button, int modifier) override;
     // virtual bool key_pressed(unsigned int key, int modifiers) override;
 
-    inline const std::vector<std::string>& get_data_names() const
+    const std::vector<std::string>& get_data_names() const
     {
         return data_names_;
     }
@@ -50,7 +50,7 @@ public:
 
     bool custom_key_pressed(unsigned int unicode_key, int modifiers);
 
-    inline bool load(std::string scene_filename) override
+    bool load(std::string scene_filename) override
     {
         if (m_state.load_scene(scene_filename)) {
             load_scene();
@@ -58,7 +58,7 @@ public:
         }
         return false;
     }
-    inline bool save(std::string scene_filename) override
+    bool save(std::string scene_filename) override
     {
         m_state.save_simulation(scene_filename);
         return true;
@@ -74,7 +74,7 @@ public:
     void start_recording(const std::string& filename);
     void end_recording();
 
-    inline void reload()
+    void reload()
     {
         m_reloading_scene = true;
         m_state.reload_scene();
@@ -82,7 +82,7 @@ public:
         m_reloading_scene = false;
     }
 
-    inline void simulation_step()
+    void simulation_step()
     {
         // PROFILE_MAIN_POINT("simulation_step")
         // PROFILE_START()
@@ -93,17 +93,22 @@ public:
         redraw_scene();
     }
 
-    inline void solve_collisions()
+    void solve_collisions()
     {
         m_state.solve_collision();
         m_state.save_simulation_step();
         redraw_scene();
     }
-    inline void step_solve_collisions()
+    void step_solve_collisions()
     {
         m_state.collision_resolution_step();
         m_state.save_simulation_step();
         redraw_scene();
+    }
+
+    void log_simulation_time()
+    {
+        spdlog::info("total_simulation_time={:g}s", m_simulation_time);
     }
 
     igl::opengl::glfw::Viewer m_viewer;
@@ -139,6 +144,8 @@ private:
     double m_gif_scale = 0.5;
     bool m_is_gif_recording = false;
     bool m_scene_changed;
+
+    double m_simulation_time;
 };
 
 } // namespace ccd

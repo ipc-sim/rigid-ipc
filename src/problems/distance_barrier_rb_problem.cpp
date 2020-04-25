@@ -93,9 +93,7 @@ namespace opt {
         bool compute_hess)
     {
         Eigen::VectorXd diff = x - this->poses_to_dofs(poses_t1);
-
-        Eigen::SparseMatrix<double> M = m_assembler.m_dof_to_pose.transpose()
-            * m_assembler.m_rb_mass_matrix * m_assembler.m_dof_to_pose;
+        Eigen::DiagonalMatrixXd M = m_assembler.m_rb_mass_matrix;
 
         if (compute_grad) {
             grad = M * diff;
@@ -108,7 +106,7 @@ namespace opt {
         }
 
         if (compute_hess) {
-            hess = M;
+            hess = Eigen::SparseDiagonal(M.diagonal());
 #ifdef WITH_DERIVATIVE_CHECK
             Eigen::MatrixXd hess_approx = eval_hess_energy_approx(*this, x);
             if (!fd::compare_jacobian(hess, hess_approx)) {
@@ -408,33 +406,21 @@ namespace opt {
     T DistanceBarrierRBProblem::distance(
         const Eigen::VectorXd& sigma, const RigidBodyEdgeVertexCandidate& rbc)
     {
-        Eigen::VectorX6<T> sigma_V, sigma_E, pose_V, pose_E;
+        Eigen::VectorX6<T> sigma_V, sigma_E;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         init_body_sigmas(
             sigma, rbc.vertex_body_id, rbc.edge_body_id, ndof, //
             sigma_V, sigma_E);
 
-        // Convert body dof (rotation in arclength) to a ndof pose vector
-        pose_V = sigma_V.array()
-            * m_assembler.m_dof_to_pose.diagonal()
-                  .segment(ndof * rbc.vertex_body_id, ndof)
-                  .template cast<T>()
-                  .array();
-        pose_E = sigma_E.array()
-            * m_assembler.m_dof_to_pose.diagonal()
-                  .segment(ndof * rbc.edge_body_id, ndof)
-                  .template cast<T>()
-                  .array();
-
         const auto& rbs = m_assembler.m_rbs;
         Eigen::VectorX<T> d_vertex = rbs[rbc.vertex_body_id].world_vertex<T>(
-            pose_V, rbc.vertex_local_id);
+            sigma_V, rbc.vertex_local_id);
         Eigen::VectorX<T> d_edge_vertex0 =
             rbs[rbc.edge_body_id].world_vertex<T>(
-                pose_E, rbc.edge_vertex0_local_id);
+                sigma_E, rbc.edge_vertex0_local_id);
         Eigen::VectorX<T> d_edge_vertex1 =
             rbs[rbc.edge_body_id].world_vertex<T>(
-                pose_E, rbc.edge_vertex1_local_id);
+                sigma_E, rbc.edge_vertex1_local_id);
 
         // T distance = sqrt(point_to_edge_sq_distance<T>(da, db, dc));
         T distance = ccd::geometry::point_segment_distance<T>(
@@ -446,37 +432,25 @@ namespace opt {
     T DistanceBarrierRBProblem::distance(
         const Eigen::VectorXd& sigma, const RigidBodyEdgeEdgeCandidate& rbc)
     {
-        Eigen::VectorX6<T> sigma_E0, sigma_E1, pose_E0, pose_E1;
+        Eigen::VectorX6<T> sigma_E0, sigma_E1;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         init_body_sigmas(
             sigma, rbc.edge0_body_id, rbc.edge1_body_id, ndof, //
             sigma_E0, sigma_E1);
 
-        // Convert body dof (rotation in arclength) to a ndof pose vector
-        pose_E0 = sigma_E0.array()
-            * m_assembler.m_dof_to_pose.diagonal()
-                  .segment(ndof * rbc.edge0_body_id, ndof)
-                  .template cast<T>()
-                  .array();
-        pose_E1 = sigma_E1.array()
-            * m_assembler.m_dof_to_pose.diagonal()
-                  .segment(ndof * rbc.edge1_body_id, ndof)
-                  .template cast<T>()
-                  .array();
-
         const auto& rbs = m_assembler.m_rbs;
         Eigen::VectorX<T> d_edge0_vertex0 =
             rbs[rbc.edge0_body_id].world_vertex<T>(
-                pose_E0, rbc.edge0_vertex0_local_id);
+                sigma_E0, rbc.edge0_vertex0_local_id);
         Eigen::VectorX<T> d_edge0_vertex1 =
             rbs[rbc.edge0_body_id].world_vertex<T>(
-                pose_E0, rbc.edge0_vertex1_local_id);
+                sigma_E0, rbc.edge0_vertex1_local_id);
         Eigen::VectorX<T> d_edge1_vertex0 =
             rbs[rbc.edge1_body_id].world_vertex<T>(
-                pose_E1, rbc.edge1_vertex0_local_id);
+                sigma_E1, rbc.edge1_vertex0_local_id);
         Eigen::VectorX<T> d_edge1_vertex1 =
             rbs[rbc.edge1_body_id].world_vertex<T>(
-                pose_E1, rbc.edge1_vertex1_local_id);
+                sigma_E1, rbc.edge1_vertex1_local_id);
 
         T distance = ccd::geometry::segment_segment_distance<T>(
             d_edge0_vertex0, d_edge0_vertex1, d_edge1_vertex0, d_edge1_vertex1);
@@ -487,36 +461,24 @@ namespace opt {
     T DistanceBarrierRBProblem::distance(
         const Eigen::VectorXd& sigma, const RigidBodyFaceVertexCandidate& rbc)
     {
-        Eigen::VectorX6<T> sigma_V, sigma_F, pose_V, pose_F;
+        Eigen::VectorX6<T> sigma_V, sigma_F;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
         init_body_sigmas(
             sigma, rbc.vertex_body_id, rbc.face_body_id, ndof, //
             sigma_V, sigma_F);
 
-        // Convert body dof (rotation in arclength) to a ndof pose vector
-        pose_V = sigma_V.array()
-            * m_assembler.m_dof_to_pose.diagonal()
-                  .segment(ndof * rbc.vertex_body_id, ndof)
-                  .template cast<T>()
-                  .array();
-        pose_F = sigma_F.array()
-            * m_assembler.m_dof_to_pose.diagonal()
-                  .segment(ndof * rbc.face_body_id, ndof)
-                  .template cast<T>()
-                  .array();
-
         const auto& rbs = m_assembler.m_rbs;
         Eigen::VectorX3<T> d_vertex = rbs[rbc.vertex_body_id].world_vertex<T>(
-            pose_V, rbc.vertex_local_id);
+            sigma_V, rbc.vertex_local_id);
         Eigen::VectorX3<T> d_face_vertex0 =
             rbs[rbc.face_body_id].world_vertex<T>(
-                pose_F, rbc.face_vertex0_local_id);
+                sigma_F, rbc.face_vertex0_local_id);
         Eigen::VectorX3<T> d_face_vertex1 =
             rbs[rbc.face_body_id].world_vertex<T>(
-                pose_F, rbc.face_vertex1_local_id);
+                sigma_F, rbc.face_vertex1_local_id);
         Eigen::VectorX3<T> d_face_vertex2 =
             rbs[rbc.face_body_id].world_vertex<T>(
-                pose_F, rbc.face_vertex2_local_id);
+                sigma_F, rbc.face_vertex2_local_id);
 
         T distance = ccd::geometry::point_triangle_distance<T>(
             d_vertex, d_face_vertex0, d_face_vertex1, d_face_vertex2);

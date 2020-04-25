@@ -10,7 +10,7 @@ namespace opt {
 
     template <typename T>
     T DistanceBarrierConstraint::distance_barrier(
-        const T distance, const double eps)
+        const T& distance, const double eps) const
     {
         return barrier(distance - min_distance, eps, barrier_type);
     }

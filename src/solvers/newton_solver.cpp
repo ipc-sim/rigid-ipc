@@ -5,6 +5,7 @@
 #include <igl/slice_into.h>
 
 #include <constants.hpp>
+#include <geometry/distance.hpp>
 #include <logger.hpp>
 #include <profiler.hpp>
 
@@ -23,6 +24,7 @@ namespace opt {
         max_iterations = json["max_iterations"].get<int>();
         convergence_criteria =
             json["convergence_criteria"].get<ConvergenceCriteria>();
+        reset_stats();
     }
 
     nlohmann::json NewtonSolver::settings() const
@@ -36,7 +38,6 @@ namespace opt {
     void NewtonSolver::init_solve(const Eigen::VectorXd& x0)
     {
         assert(problem_ptr != nullptr);
-        reset_stats();
         free_dof = init_free_dof(problem_ptr->is_dof_fixed());
     }
 
@@ -54,10 +55,12 @@ namespace opt {
     std::string NewtonSolver::stats()
     {
         return fmt::format(
-            "total_newton_steps={:d} total_ls_steps={:d} count_fx={:d} "
+            "total_newton_steps={:d} total_ls_steps={:d} "
+            "num_newton_ls_fails={:d} num_grad_ls_fails={:d} count_fx={:d} "
             "count_grad={:d} count_hess={:d} count_ccd={:d}",
-            newton_iterations, ls_iterations, num_fx, num_grad_fx,
-            num_hessian_fx, num_collision_check);
+            newton_iterations, ls_iterations, num_newton_ls_fails,
+            num_grad_ls_fails, num_fx, num_grad_fx, num_hessian_fx,
+            num_collision_check);
     }
 
     void NewtonSolver::reset_stats()
@@ -68,6 +71,8 @@ namespace opt {
         num_collision_check = 0;
         ls_iterations = 0;
         newton_iterations = 0;
+        num_newton_ls_fails = 0;
+        num_grad_ls_fails = 0;
     }
 
     bool NewtonSolver::converged() const
@@ -86,11 +91,6 @@ namespace opt {
         case ConvergenceCriteria::ENERGY:
             return abs(gradient_free.dot(direction_free))
                 <= Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
-
-        default:
-            spdlog::error("unknown convergence criteria!");
-            exit(-1);
-            return false;
         }
         throw NotImplementedError("Invalid convergence criteria option!");
     }
@@ -149,10 +149,14 @@ namespace opt {
             ///////////////////////////////////////////////////////////////////
             // When newton direction fails, revert to gradient descent
             if (!found_newton_step) {
-                spdlog::warn(
-                    "solver={} iter={:d} failure=\"newton line-search\" "
-                    "failsafe=\"gradient descent\"",
-                    name(), iteration_number + 1);
+                // If I forced it to take a step when it should have converged
+                if (iteration_number > 0) {
+                    num_newton_ls_fails++;
+                    spdlog::warn(
+                        "solver={} iter={:d} failure=\"newton line-search\" "
+                        "failsafe=\"gradient descent\"",
+                        name(), iteration_number + 1);
+                }
 
                 ///////////////////////////////////////////////////////////////
                 // Line search over -gradient direction
@@ -173,6 +177,18 @@ namespace opt {
 
                 // When gradient direction fails, exit
                 if (!found_gradient_step) {
+                    // If I forced it to take a step when it should have
+                    // converged
+                    if (iteration_number == 0 && converged()) {
+                        // Do not consider this a failure
+                        spdlog::error(
+                            "solver={} failure=\"converged on without taking a "
+                            "step\"",
+                            name());
+                        exit_reason = "found a local optimum with -grad dir";
+                        break;
+                    }
+                    num_grad_ls_fails++;
                     spdlog::error(
                         "solver={} iter={:d} failure=\"gradient line-search\" "
                         "failsafe=\"none\"",
@@ -211,6 +227,7 @@ namespace opt {
         bool success = false;
         int num_it = 0;
         double lower_bound = line_search_lower_bound() / -grad_fx.dot(dir);
+        // double lower_bound = line_search_lower_bound();
 
         while (std::isfinite(lower_bound) && step_length > lower_bound) {
             num_it++;        // Count the number of iterations
@@ -239,15 +256,17 @@ namespace opt {
                 "success,{},it,{},dir,{:10e}", success, num_it, dir.norm()))
         PROFILE_END(LINE_SEARCH);
 
-        if (!success) {
+        if (!success && iteration_number > 0) {
             if (!std::isfinite(lower_bound)) {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"line-search ∇f(x)⋅dir=0\"",
                     name(), iteration_number + 1, lower_bound);
             } else {
                 spdlog::warn(
-                    "solver={} iter={:d} failure=\"line-search α ≤ {:g}\"",
-                    name(), iteration_number + 1, lower_bound);
+                    "solver={} iter={:d} failure=\"line-search α ≤ {:g} / "
+                    "{:g}\"",
+                    name(), iteration_number + 1, line_search_lower_bound(),
+                    -grad_fx.dot(dir));
             }
         }
 
@@ -275,13 +294,13 @@ namespace opt {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"sparse solve for newton "
                     "direction\" failsafe=\"gradient descent\"",
-                    name(), iteration_number);
+                    name(), iteration_number + 1);
             }
         } else {
             spdlog::warn(
                 "solver={} iter={:d} failure=\"sparse decomposition of the "
                 "hessian\" failsafe=\"gradient descent\"",
-                name(), iteration_number);
+                name(), iteration_number + 1);
         }
 
         if (!solve_success) {
@@ -298,7 +317,7 @@ namespace opt {
             spdlog::debug(
                 "solver={} iter={:d} failure=\"newton direction not descent "
                 "direction\" failsafe=\"H += μI\" μ={:g}",
-                name(), iteration_number, mu);
+                name(), iteration_number + 1, mu);
             solve_success =
                 compute_direction(gradient, psd_hessian, direction, false);
             double dir_dot_grad = direction.dot(gradient);
@@ -307,7 +326,7 @@ namespace opt {
                     "solver={} iter={:d} failure=\"adjusted newton "
                     "direction not descent direction\" failsafe=\"gradient "
                     "descent\" dir_dot_grad={:g}",
-                    name(), iteration_number, dir_dot_grad);
+                    name(), iteration_number + 1, dir_dot_grad);
                 direction = -gradient;
             }
         }

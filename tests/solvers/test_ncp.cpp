@@ -186,6 +186,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
             throw ccd::NotImplementedError("no world bbox diagonal");
         }
 
+        double average_mass() const override { return 1; }
+
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd b;
         std::function<DVector(const Eigen::VectorXd& x)> gdiff;
