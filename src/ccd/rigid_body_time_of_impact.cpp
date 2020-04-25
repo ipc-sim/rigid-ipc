@@ -12,7 +12,10 @@
 
 namespace ccd {
 
-double compute_edge_vertex_tolerance(
+////////////////////////////////////////////////////////////////////////////////
+// Edge-Vertex
+
+Eigen::Vector2d compute_edge_vertex_tolerance(
     const physics::RigidBody& bodyA,       // Body of the vertex
     const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
     const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
@@ -22,13 +25,13 @@ double compute_edge_vertex_tolerance(
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     const size_t& edge_id)                 // In bodyB
 {
-    /*
     double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
     double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
 
     double omegaA_sqr = (poseA_t1.rotation - poseA_t0.rotation).squaredNorm();
     double omegaB_sqr = (poseB_t1.rotation - poseB_t0.rotation).squaredNorm();
 
+    // Compute the maximum arc length of all the vertices
     double dl =
         sqrt(sA_sqr + omegaA_sqr * bodyA.vertices.row(vertex_id).squaredNorm());
     for (int i = 0; i < 2; i++) {
@@ -36,9 +39,10 @@ double compute_edge_vertex_tolerance(
             * bodyB.vertices.row(bodyB.edges(edge_id, i)).squaredNorm();
         dl = std::max(dl, sqrt(sB_sqr + arc_len_sqr));
     }
-    return Constants::SCREWING_CCD_LENGTH_TOL / dl;
-    */
-    return Constants::SCREWING_CCD_LENGTH_TOL;
+
+    return Eigen::Vector2d(
+        Constants::SCREWING_CCD_LENGTH_TOL / dl,
+        Constants::SCREWING_CCD_LENGTH_TOL / bodyB.edge_length(edge_id));
 }
 
 /// Find time-of-impact between two rigid bodies
@@ -92,14 +96,14 @@ bool compute_edge_vertex_time_of_impact(
         return (vertex - edge_vertex).eval();
     };
 
-    double tol = compute_edge_vertex_tolerance(
+    Eigen::Vector2d tol = compute_edge_vertex_tolerance(
         bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
         edge_id);
 
     Eigen::VectorXI toi_interval;
     bool is_impacting = interval_root_finder(
-        distance, Eigen::VectorXI::Constant(2, Interval(0, 1)), toi_interval,
-        tol);
+        distance, Eigen::VectorXI::Constant(2, Interval(0, 1)), tol,
+        toi_interval);
 
     // Return a conservative time-of-impact
     if (is_impacting) {
@@ -109,6 +113,45 @@ bool compute_edge_vertex_time_of_impact(
     // This time of impact is very dangerous for convergence
     // assert(!is_impacting || toi > 0);
     return is_impacting;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Edge-Edge
+
+Eigen::Vector3d compute_edge_edge_tolerance(
+    const physics::RigidBody& bodyA,       // Body of the first edge
+    const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
+    const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
+    double omegaA,
+    const Eigen::Matrix3d& RA,
+    const size_t& edgeA_id,                // In bodyA
+    const physics::RigidBody& bodyB,       // Body of the second edge
+    const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
+    const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
+    double omegaB,
+    const Eigen::Matrix3d& RB,
+    const size_t& edgeB_id) // In bodyB
+{
+    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
+    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
+
+    double dl = -std::numeric_limits<double>::infinity();
+    Eigen::Vector3d v;
+    double radius_sqr;
+    for (int i = 0; i < 2; i++) {
+        v = bodyA.vertices.row(bodyA.edges(edgeA_id, i));
+        radius_sqr = (RA * v).head<2>().squaredNorm();
+        dl = std::max(dl, sqrt(sA_sqr + omegaA * omegaA * radius_sqr));
+
+        v = bodyB.vertices.row(bodyB.edges(edgeB_id, i));
+        radius_sqr = (RB * v).head<2>().squaredNorm();
+        dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
+    }
+
+    return Eigen::Vector3d(
+        Constants::SCREWING_CCD_LENGTH_TOL / dl,
+        Constants::SCREWING_CCD_LENGTH_TOL / bodyA.edge_length(edgeA_id),
+        Constants::SCREWING_CCD_LENGTH_TOL / bodyB.edge_length(edgeB_id));
 }
 
 // Find time-of-impact between two rigid bodies
@@ -177,30 +220,14 @@ bool compute_edge_edge_time_of_impact(
         return (edgeB_vertex - edgeA_vertex).eval();
     };
 
-    /*
-    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-    Eigen::Matrix3d RA = PA * RA_t0;
-    Eigen::Matrix3d RB = PB * RB_t0;
-    double dl = -std::numeric_limits<double>::infinity();
-    for (int i = 0; i < 2; i++) {
-        Eigen::Vector3d v = bodyA.vertices.row(bodyA.edges(edgeA_id, i));
-        double radius_sqr = (RA * v).head<2>().squaredNorm();
-        dl = std::max(dl, sqrt(sA_sqr + omegaA * omegaA * radius_sqr));
-
-        v = bodyB.vertices.row(bodyB.edges(edgeB_id, i));
-        radius_sqr = (RB * v).head<2>().squaredNorm();
-        dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
-    }
-    double tol = Constants::SCREWING_CCD_LENGTH_TOL / dl;
-    */
-    double tol = Constants::SCREWING_CCD_LENGTH_TOL;
+    Eigen::Vector3d tol = compute_edge_edge_tolerance(
+        bodyA, poseA_t0, poseA_t1, omegaA, PA * RA_t0, edgeA_id, //
+        bodyB, poseB_t0, poseB_t1, omegaB, PB * RB_t0, edgeB_id);
 
     Eigen::VectorXI toi_interval;
-    // TODO: Set tolerance dynamically
     bool is_impacting = interval_root_finder(
-        distance, Eigen::VectorXI::Constant(3, Interval(0, 1)), toi_interval,
-        tol);
+        distance, Eigen::VectorXI::Constant(3, Interval(0, 1)), tol,
+        toi_interval);
     // Return a conservative time-of-impact
     if (is_impacting) {
         toi = toi_interval(0).lower();
@@ -208,6 +235,39 @@ bool compute_edge_edge_time_of_impact(
     // This time of impact is very dangerous for convergence
     // assert(!is_impacting || toi > 0);
     return is_impacting;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Face-Vertex
+
+double compute_face_vertex_tolerance(
+    const physics::RigidBody& bodyA,       // Body of the vertex
+    const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
+    const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
+    double omegaA,
+    const Eigen::Matrix3d& RA,
+    const size_t& vertex_id,               // In bodyA
+    const physics::RigidBody& bodyB,       // Body of the triangle
+    const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
+    const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
+    double omegaB,
+    const Eigen::Matrix3d& RB,
+    const size_t& face_id) // In bodyB
+{
+    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
+    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
+
+    Eigen::Vector3d v = bodyA.vertices.row(vertex_id);
+    double radius_sqr = (RA * v).head<2>().squaredNorm();
+    double dl = sqrt(sA_sqr + omegaA * omegaA * v.squaredNorm());
+
+    for (int i = 0; i < 3; i++) {
+        v = bodyB.vertices.row(bodyB.faces(face_id, i));
+        radius_sqr = (RB * v).head<2>().squaredNorm();
+        dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
+    }
+
+    return Constants::SCREWING_CCD_LENGTH_TOL / dl;
 }
 
 // Find time-of-impact between two rigid bodies
@@ -286,23 +346,13 @@ bool compute_face_vertex_time_of_impact(
             vertex, face_vertex0, face_vertex1, face_vertex2);
     };
 
-    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-    Eigen::Matrix3d RA_T = (PA * RA_t0).transpose();
-    Eigen::Matrix3d RB_T = (PB * RB_t0).transpose();
-
-    Eigen::Vector2d r = (bodyA.vertices.row(vertex_id) * RA_T).head<2>();
-    double dl = sqrt(sA_sqr + omegaA * omegaA * r.squaredNorm());
-    for (int i = 0; i < 3; i++) {
-        r = (bodyB.vertices.row(bodyB.faces(face_id, i)) * RB_T).head<2>();
-        dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * r.squaredNorm()));
-    }
-    double tol = Constants::SCREWING_CCD_LENGTH_TOL / dl;
+    double tol = compute_face_vertex_tolerance(
+        bodyA, poseA_t0, poseA_t1, omegaA, PA * RA_t0, vertex_id, //
+        bodyB, poseB_t0, poseB_t1, omegaB, PB * RB_t0, face_id);
 
     Interval toi_interval;
-    // TODO: Set tolerance dynamically
     bool is_impacting = interval_root_finder(
-        distance, is_point_inside_triangle, Interval(0, 1), toi_interval, tol);
+        distance, is_point_inside_triangle, Interval(0, 1), tol, toi_interval);
     // Return a conservative time-of-impact
     toi = toi_interval.lower();
     // This time of impact is very dangerous for convergence

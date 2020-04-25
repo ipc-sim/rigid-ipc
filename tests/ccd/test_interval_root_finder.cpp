@@ -13,7 +13,7 @@ TEST_CASE("Root of simple function", "[ccd][interval]")
     auto f = [&](const ccd::Interval& x) { return a * x * x + b * x + c; };
     ccd::Interval sol;
     bool found_root = ccd::interval_root_finder(
-        f, ccd::Interval(0, 1), sol, ccd::Constants::INTERVAL_ROOT_FINDER_TOL);
+        f, ccd::Interval(0, 1), ccd::Constants::INTERVAL_ROOT_FINDER_TOL, sol);
     CHECK(found_root == (yshift >= -1.0 && yshift <= 0.0));
     if (found_root) {
         double actual_sol = (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
@@ -32,7 +32,7 @@ TEST_CASE("Root of trig function", "[ccd][interval]")
     auto f = [&](const ccd::Interval& x) { return cos(2 * M_PI * x) + yshift; };
     ccd::Interval sol;
     bool found_root = ccd::interval_root_finder(
-        f, ccd::Interval(0, 1), sol, ccd::Constants::INTERVAL_ROOT_FINDER_TOL);
+        f, ccd::Interval(0, 1), ccd::Constants::INTERVAL_ROOT_FINDER_TOL, sol);
     CHECK(found_root);
     if (found_root) {
         double actual_sol = 0.25;
@@ -53,8 +53,8 @@ TEST_CASE("Root of simple function with constraints", "[ccd][interval]")
     };
     ccd::Interval sol;
     bool found_root = ccd::interval_root_finder(
-        f, constraint_predicate, ccd::Interval(0, 1), sol,
-        ccd::Constants::INTERVAL_ROOT_FINDER_TOL);
+        f, constraint_predicate, ccd::Interval(0, 1),
+        ccd::Constants::INTERVAL_ROOT_FINDER_TOL, sol);
     CHECK(found_root == (yshift >= -1.0 && yshift <= 0.0));
     if (found_root) {
         double actual_sol = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);

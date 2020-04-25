@@ -125,6 +125,13 @@ namespace physics {
 
         Eigen::MatrixXd world_vertices_gradient(const Pose<double>& pose) const;
 
+        double edge_length(int edge_id) const
+        {
+            return (vertices.row(edges(edge_id, 1))
+                    - vertices.row(edges(edge_id, 0)))
+                .norm();
+        }
+
         int dim() const { return vertices.cols(); }
         int ndof() const { return pose.ndof(); }
         int pos_ndof() const { return pose.pos_ndof(); }

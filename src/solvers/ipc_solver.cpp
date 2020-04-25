@@ -54,23 +54,15 @@ namespace opt {
         int num_active_barriers;
         barrier_problem_ptr()->compute_barrier_term(
             x0, grad_B, num_active_barriers);
-        double kappa;
-        if (num_active_barriers > 0) {
+        double kappa = 1.0;
+        if (num_active_barriers > 0 && grad_B.squaredNorm() > 0) {
             Eigen::VectorXd grad_E;
             barrier_problem_ptr()->compute_energy_term(x0, grad_E);
-
             kappa = -grad_B.dot(grad_E) / grad_B.squaredNorm();
-            if (isfinite(kappa)) {
-                barrier_problem_ptr()->set_barrier_stiffness(std::min(
-                    max_barrier_stiffness,
-                    std::max(min_barrier_stiffness, kappa)));
-            } else {
-                barrier_problem_ptr()->set_barrier_stiffness(
-                    min_barrier_stiffness);
-            }
-        } else {
-            barrier_problem_ptr()->set_barrier_stiffness(kappa = 1.0);
+            assert(isfinite(kappa));
         }
+        barrier_problem_ptr()->set_barrier_stiffness(std::min(
+            max_barrier_stiffness, std::max(min_barrier_stiffness, kappa)));
         spdlog::info(
             "solver={} initial_num_active_barriers={:d} κ_min={:g} κ_max={:g} "
             "κ_g={:g} κ₀={:g}",
