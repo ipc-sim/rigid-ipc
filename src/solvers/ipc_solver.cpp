@@ -40,11 +40,11 @@ namespace opt {
 
         // Find a good initial value for κ
         double bbox_diagonal = problem_ptr->world_bbox_diagonal();
-        double d0 = Constants::MIN_BARRIER_STIFFNESS_SCALE * bbox_diagonal;
+        double d0 = 1e-8 * bbox_diagonal;
         double min_barrier_stiffness =
             barrier_problem_ptr()->barrier_hessian(d0);
-        min_barrier_stiffness =
-            1e8 * problem_ptr->average_mass() / min_barrier_stiffness;
+        min_barrier_stiffness = Constants::MIN_BARRIER_STIFFNESS_SCALE
+            * problem_ptr->average_mass() / min_barrier_stiffness;
 #ifdef USE_DISTANCE_SQUARED
         min_barrier_stiffness /= 4 * d0 * d0;
 #endif
