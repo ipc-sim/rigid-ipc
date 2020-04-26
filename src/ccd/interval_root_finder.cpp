@@ -1,6 +1,8 @@
 // A root finder using interval arithmetic.
 #include "interval_root_finder.hpp"
 
+#include <stack>
+
 #include <logger.hpp>
 
 namespace ccd {
