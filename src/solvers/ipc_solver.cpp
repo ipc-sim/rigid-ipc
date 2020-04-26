@@ -59,7 +59,7 @@ namespace opt {
             Eigen::VectorXd grad_E;
             barrier_problem_ptr()->compute_energy_term(x0, grad_E);
             kappa = -grad_B.dot(grad_E) / grad_B.squaredNorm();
-            assert(isfinite(kappa));
+            assert(std::isfinite(kappa));
         }
         barrier_problem_ptr()->set_barrier_stiffness(std::min(
             max_barrier_stiffness, std::max(min_barrier_stiffness, kappa)));
