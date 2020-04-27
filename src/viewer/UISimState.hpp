@@ -35,10 +35,6 @@ public:
     // virtual bool mouse_down(int button, int modifier) override;
     // virtual bool key_pressed(unsigned int key, int modifiers) override;
 
-    const std::vector<std::string>& get_data_names() const
-    {
-        return data_names_;
-    }
     std::shared_ptr<igl::opengl::ViewerDataExt>
     get_data(const std::string& data) const;
 
@@ -134,8 +130,9 @@ private:
     std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
     std::shared_ptr<igl::opengl::CoMData> com_data;
 
-    std::map<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>> datas_;
-    std::vector<std::string> data_names_;
+    std::vector<
+        std::pair<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>>>
+        datas_;
 
     bool m_reloading_scene;
 

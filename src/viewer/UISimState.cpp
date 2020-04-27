@@ -63,24 +63,13 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
         Eigen::RowVector3d(0xF1, 0xC4, 0x0F) / 0xFF); // #F1C40F - SUN FLOWER
     velocity_data->visibility(false);
 
+    viewer->append_mesh();
     com_data = std::make_unique<igl::opengl::CoMData>(_viewer);
-    velocity_data->visibility(true);
+    com_data->visibility(true);
 
-    datas_.emplace("edges", mesh_data);
-    datas_.emplace("velocity", velocity_data);
-    datas_.emplace("body-frame", com_data);
-
-    for (auto it = datas_.begin(); it != datas_.end(); ++it) {
-        data_names_.push_back(it->first);
-    }
-}
-
-std::shared_ptr<igl::opengl::ViewerDataExt>
-UISimState::get_data(const std::string& dataname) const
-{
-    auto it = datas_.find(dataname);
-    assert(it != datas_.end());
-    return it->second;
+    datas_.emplace_back("edges", mesh_data);
+    datas_.emplace_back("velocity", velocity_data);
+    datas_.emplace_back("body-frame", com_data);
 }
 
 void UISimState::load_scene()

@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.1)
 
 add_executable(${PROJECT_NAME}_tests
     main.cpp
+    
+    barrier/test_barriers.cpp
 
     # Test CCD
     ccd/collision_generator.cpp
@@ -25,7 +27,6 @@ add_executable(${PROJECT_NAME}_tests
     solvers/test_barrier_displacements_opt.cpp
     solvers/test_line_search.cpp
 
-    opt/test_barriers.cpp
     # opt/test_volume_constraint.cpp
     opt/test_distance_barrier_constraint.cpp
 

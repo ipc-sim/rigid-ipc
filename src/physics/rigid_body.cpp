@@ -89,9 +89,7 @@ namespace physics {
             center_of_mass, I);
         assert(center_of_mass.squaredNorm() < 1e-8);
 
-        // TODO: Not sure why this is times based on Chrono
-        // (https://bit.ly/2TVjJVm). Might be because mass above is actually
-        // volume.
+        // Mass above is actually volume.
         mass *= density;
         if (dim() == 3) {
             // Got this from Chrono: https://bit.ly/2RpbTl1

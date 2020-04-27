@@ -5,10 +5,7 @@
 
 namespace ccd {
 
-template <typename T> inline bool is_zero(T x)
-{
-    return x == 0.0; // TODO: Consider adding a tolerance here.
-}
+template <typename T> inline bool is_zero(T x) { return x == 0.0; }
 
 template <> inline bool is_zero(Interval x)
 {

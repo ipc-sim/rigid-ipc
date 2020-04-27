@@ -1,8 +1,12 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "solver": "barrier_solver",
+    "solver": "ipc_solver",
     "max_iterations": 1000,
     "timestep_size": 0.01,
+    "distance_barrier_constraint": {
+        "barrier_type": "poly_log",
+        "custom_initial_epsilon": 1e-4
+    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],

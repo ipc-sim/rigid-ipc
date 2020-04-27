@@ -26,9 +26,9 @@ namespace opt {
     DistanceBarrierConstraint::DistanceBarrierConstraint(
         const std::string& name)
         : CollisionConstraint(name)
-        , custom_inital_epsilon(1.0)
-        , min_distance(1E-10)
-        , active_constraint_scale(1.5)
+        , custom_inital_epsilon(1e-2)
+        , min_distance(0.0)
+        , active_constraint_scale(1.01)
         , barrier_type(BarrierType::POLY_LOG)
         , m_barrier_epsilon(0.0)
     {
@@ -137,52 +137,74 @@ namespace opt {
 
         barriers.clear();
 
-        // Compute the edge-vertex distance candidates
-        // TODO: Parallelize
+        // Compute the distance candidates
+        // TODO: Consider skipping this step
         // TODO: Store these distance for use later
-        for (const auto& ev_candidate : candidates.ev_candidates) {
-            double distance = ccd::geometry::point_segment_distance<double>(
-                bodies.world_vertex(poses, ev_candidate.vertex_index),
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ev_candidate.edge_index, 0)),
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ev_candidate.edge_index, 1)));
+        double activation_distance =
+            active_constraint_scale * m_barrier_epsilon;
+        tbb::parallel_invoke(
+            [&] {
+                // TODO: Consider parallelizing this loop
+                for (const auto& ev_candidate : candidates.ev_candidates) {
+                    double distance =
+                        ccd::geometry::point_segment_distance<double>(
+                            bodies.world_vertex(
+                                poses, ev_candidate.vertex_index),
+                            bodies.world_vertex(
+                                poses,
+                                bodies.m_edges(ev_candidate.edge_index, 0)),
+                            bodies.world_vertex(
+                                poses,
+                                bodies.m_edges(ev_candidate.edge_index, 1)));
 
-            if (distance < active_constraint_scale * m_barrier_epsilon) {
-                barriers.ev_candidates.push_back(ev_candidate);
-            }
-        }
+                    if (distance < activation_distance) {
+                        barriers.ev_candidates.push_back(ev_candidate);
+                    }
+                }
+            },
+            [&] {
+                for (const auto& ee_candidate : candidates.ee_candidates) {
+                    double distance =
+                        ccd::geometry::segment_segment_distance<double>(
+                            bodies.world_vertex(
+                                poses,
+                                bodies.m_edges(ee_candidate.edge0_index, 0)),
+                            bodies.world_vertex(
+                                poses,
+                                bodies.m_edges(ee_candidate.edge0_index, 1)),
+                            bodies.world_vertex(
+                                poses,
+                                bodies.m_edges(ee_candidate.edge1_index, 0)),
+                            bodies.world_vertex(
+                                poses,
+                                bodies.m_edges(ee_candidate.edge1_index, 1)));
 
-        for (const auto& ee_candidate : candidates.ee_candidates) {
-            double distance = ccd::geometry::segment_segment_distance<double>(
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ee_candidate.edge0_index, 0)),
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ee_candidate.edge0_index, 1)),
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ee_candidate.edge1_index, 0)),
-                bodies.world_vertex(
-                    poses, bodies.m_edges(ee_candidate.edge1_index, 1)));
+                    if (distance < activation_distance) {
+                        barriers.ee_candidates.push_back(ee_candidate);
+                    }
+                }
+            },
+            [&] {
+                for (const auto& fv_candidate : candidates.fv_candidates) {
+                    double distance =
+                        ccd::geometry::point_triangle_distance<double>(
+                            bodies.world_vertex(
+                                poses, fv_candidate.vertex_index),
+                            bodies.world_vertex(
+                                poses,
+                                bodies.m_faces(fv_candidate.face_index, 0)),
+                            bodies.world_vertex(
+                                poses,
+                                bodies.m_faces(fv_candidate.face_index, 1)),
+                            bodies.world_vertex(
+                                poses,
+                                bodies.m_faces(fv_candidate.face_index, 2)));
 
-            if (distance < active_constraint_scale * m_barrier_epsilon) {
-                barriers.ee_candidates.push_back(ee_candidate);
-            }
-        }
-
-        for (const auto& fv_candidate : candidates.fv_candidates) {
-            double distance = ccd::geometry::point_triangle_distance<double>(
-                bodies.world_vertex(poses, fv_candidate.vertex_index),
-                bodies.world_vertex(
-                    poses, bodies.m_faces(fv_candidate.face_index, 0)),
-                bodies.world_vertex(
-                    poses, bodies.m_faces(fv_candidate.face_index, 1)),
-                bodies.world_vertex(
-                    poses, bodies.m_faces(fv_candidate.face_index, 2)));
-
-            if (distance < active_constraint_scale * m_barrier_epsilon) {
-                barriers.fv_candidates.push_back(fv_candidate);
-            }
-        }
+                    if (distance < activation_distance) {
+                        barriers.fv_candidates.push_back(fv_candidate);
+                    }
+                }
+            });
 
         PROFILE_END(NARROW_PHASE)
     }
@@ -195,7 +217,7 @@ namespace opt {
         Candidates candidates;
         construct_active_barrier_set(bodies, poses, candidates);
 
-        distances.setZero(candidates.size());
+        distances.resize(candidates.size());
 
         size_t offset = 0;
         for (size_t i = 0; i < candidates.ev_candidates.size(); i++) {

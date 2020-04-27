@@ -65,13 +65,10 @@ namespace opt {
         if (d <= 0.0 || d >= dhat) {
             return 0.0;
         }
-        // b'(d) = (d̂ - d) * (2ln(d/d̂) - d̂/d + 1)
-        // b"(d) = -(2ln(d/d̂) - d̂/d + 1) + (d̂ - d) * (2/d + d̂/d²)
-        //       = -(2ln(d/d̂) - d̂/d + 1) + (d̂/d + d̂²/d² - 2)
-        //       = -2ln(d/d̂) + d̂/d - 1 + d̂/d + d̂²/d² - 2
-        //       = -2ln(d/d̂) + 2d̂/d + d̂²/d² - 3
-        //       = -2ln(d/d̂) + ((2 + d̂)*d̂)/d - 3
-        return -2 * log(d / dhat) + ((2 + dhat) * dhat) / d - 3;
+
+        double dhat_d = dhat / d;
+
+        return (dhat_d + 2) * dhat_d - 2 * log(d / dhat) - 3;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -100,8 +97,8 @@ namespace opt {
         double x2 = x * x, s2 = s * s;
         double s3 = s2 * s;
 
-        return (6 / s2 - 6 * x / s3) * log(x / s)
-            + (1 / x2 + 9 / s2 - 10 * x / s3);
+        return (-10 * x + (6 * (s - 2 * x) * log(x / s))) / s3 + 9 / s2
+            + 1 / x2;
     }
 
     ///////////////////////////////////////////////////////////////////////////

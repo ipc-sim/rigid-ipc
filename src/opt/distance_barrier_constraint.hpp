@@ -78,8 +78,9 @@ namespace opt {
         /// @brief active constraints have distances < scale * barrier_epsilon
         double active_constraint_scale;
 
-    protected:
         BarrierType barrier_type;
+
+    protected:
         double m_barrier_epsilon;
     };
 

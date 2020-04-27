@@ -283,8 +283,8 @@ namespace opt {
         // Return true if the solve was successful.
         bool solve_success = false;
 
-        // TODO: Can we use a better solver than LU?
-        Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+        // TODO: Can we use a better solver than Eigen's LDLT?
+        Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
         solver.compute(hessian);
         if (solver.info() == Eigen::Success) {
             direction = solver.solve(-gradient);

@@ -20,6 +20,7 @@ template <typename T> using Matrix2 = Matrix<T, 2, 2>;
 template <typename T> using Matrix3 = Matrix<T, 3, 3>;
 template <typename T> using MatrixX = Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
+using Vector1d = Vector1<double>;
 /// @brief A dynamic size matrix with a fixed maximum size of 3 x 1
 template <typename T> using VectorX3 = Vector<T, Eigen::Dynamic, 3>;
 /// @brief A dynamic size matrix with a fixed maximum size of 3 x 1

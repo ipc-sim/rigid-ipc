@@ -1,5 +1,7 @@
 #include "UISimState.hpp"
 
+#include <igl/Timer.h>
+
 #include <viewer/imgui_ext.hpp>
 
 #include <logger.hpp>
@@ -135,7 +137,11 @@ void UISimState::draw_simulation_player()
     m_player_state = static_cast<PlayerState>(player_state);
 
     if (ImGui::Button("Step##SimPlayer", ImVec2(-1, 0))) {
+        igl::Timer timer;
+        timer.start();
         simulation_step();
+        timer.stop();
+        m_simulation_time += timer.getElapsedTime();
         m_scene_changed = true;
     }
     // --------------------------------------------------------------------
@@ -181,8 +187,9 @@ void UISimState::draw_legends()
 {
     static float second_col = 100;
     float slider_width = ImGui::GetWindowWidth() * 0.2f;
-    for (auto& label : get_data_names()) {
-        auto ptr = get_data(label);
+    for (auto& data : datas_) {
+        const std::string& label = data.first;
+        const auto& ptr = data.second;
 
         /// visibility checkbox
         bool tmp = ptr->visibility();

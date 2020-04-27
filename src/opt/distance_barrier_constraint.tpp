@@ -27,7 +27,6 @@ namespace opt {
 
         int num_barriers = candidates.size();
         barriers.resize(num_barriers);
-        barriers.setConstant(T(0.0));
 
         // Add edge-vertex barriers
         size_t start_i = 0;

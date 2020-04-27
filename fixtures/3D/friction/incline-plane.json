@@ -1,0 +1,23 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "max_time": 2.5,
+    "timestep_size": 0.01,
+    "distance_barrier_constraint": {
+        "barrier_type": "ipc",
+        "custom_initial_epsilon": 1e-2
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "cube.obj",
+            "position": [0, 2, 0]
+        }, {
+            "mesh": "plane.obj",
+            "is_dof_fixed": true,
+            "position": [0, -1, 0],
+            "rotation": [0, 0, -30]
+        }]
+    }
+}
