@@ -1,10 +1,10 @@
 {
     "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
     "timestep_size": 0.01,
     "max_time": 3.0,
     "distance_barrier_constraint": {
-        "detection_method": "hash_grid",
-        "trajectory_type": "screwing",
+        "barrier_type": "poly_log",
         "custom_initial_epsilon": 1e-4
     },
     "rigid_body_problem": {
@@ -33,8 +33,8 @@
             "group_id": 0
         }, {
             "mesh": "tet-corner.obj",
-            "position": [-0.495, 0.6, -0.495],
-            "scale": 0.99
+            "position": [-0.499995, 0.6, -0.499995],
+            "scale": 0.99999
         }]
     }
 }

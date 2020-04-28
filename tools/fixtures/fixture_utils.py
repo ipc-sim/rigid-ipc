@@ -195,6 +195,10 @@ def save_fixture(fixture, fname):
         json.dump(fixture, outfile, indent=4)
 
 
+def get_fixture_dir_path() -> pathlib.Path:
+    return pathlib.Path(__file__).resolve().parents[2] / "fixtures"
+
+
 def is_polygon_ccw(vertices):
     """
     Check if a polygon's vertices are in counter-clockwise order.

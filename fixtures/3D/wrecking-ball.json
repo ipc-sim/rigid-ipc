@@ -1,0 +1,49 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep_size": 0.01,
+    "max_time": 10.0,
+    "distance_barrier_constraint": {
+        "trajectory_type": "linearized"
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.81, 0],
+        "time_stepper": "exponential_euler",
+        "rigid_bodies": [{
+            "mesh": "wrecking-ball/link.obj",
+            "position": [2.755455298081545e-16, 4.5, 0.0],
+            "rotation": [0.0, 0.0, 0.0],
+            "density": 1,
+            "is_dof_fixed": true
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [2.2043642384652358e-16, 3.6, 0.0],
+            "rotation": [0.0, 90.0, 0.0],
+            "density": 1,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [1.6532731788489269e-16, 2.7, 0.0],
+            "rotation": [0.0, 0.0, 0.0],
+            "density": 1,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [1.1021821192326179e-16, 1.8, 0.0],
+            "rotation": [0.0, 90.0, 0.0],
+            "density": 1,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "wrecking-ball/ball.obj",
+            "position": [5.5109105961630896e-17, 0.9, 0.0],
+            "rotation": [0.0, 0.0, 0.0],
+            "density": 1,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "plane.obj",
+            "position": [0, -4.1, 0],
+            "is_dof_fixed": true
+        }]
+    }
+}

@@ -1,12 +1,11 @@
 {
     "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
     "timestep_size": 0.01,
     "max_time": 10,
     "distance_barrier_constraint": {
         "detection_method": "brute_force",
-        "trajectory_type": "screwing",
-        "custom_initial_epsilon": 0.01,
-        "active_constraint_scale": 1.01
+        "custom_initial_epsilon": 1e-2
     },
     "barrier_solver": {
         "e_b": 1e-06,

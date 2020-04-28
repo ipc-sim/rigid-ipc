@@ -1,8 +1,8 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "solver": "barrier_solver",
-    "max_time": 10,
+    "solver": "ipc_solver",
     "timestep_size": 0.01,
+    "max_time": 10,
     "distance_barrier_constraint": {
         "active_constraint_scale": 1.1,
         "custom_initial_epsilon": 1e-3

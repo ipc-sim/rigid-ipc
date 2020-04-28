@@ -1,7 +1,10 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "timestep_size": 0.01,
-    "max_time": 10,
+    "timestep_size": 1e-2,
+    "max_time": 1.0,
+    "distance_barrier_constraint": {
+        "custom_initial_epsilon": 1e-2
+    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, 0, 0],
@@ -13,7 +16,7 @@
         }, {
             "mesh": "cube.obj",
             "position": [-5, 0, 0],
-            "linear_velocity": [1000, 0, 0],
+            "linear_velocity": [1e3, 0, 0],
             "rotation": [32, 247, 53]
         }]
     }

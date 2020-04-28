@@ -1,6 +1,6 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "solver": "barrier_solver",
+    "solver": "ipc_solver",
     "timestep_size": 0.01,
     "max_time": 5,
     "distance_barrier_constraint": {

@@ -7,7 +7,7 @@
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
                 "mesh": "erleben/wedge.obj",
-                "position": [0, 1.1, 0],
+                "position": [0, 3.05, 0],
                 "rotation": [0, 0, 180],
                 "linear_velocity": [0, 0, 0],
                 "angular_velocity": [0, 0, 0]

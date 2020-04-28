@@ -1,38 +1,27 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "max_iterations": 1000,
+    "solver": "ipc_solver",
     "timestep_size": 0.01,
+    "max_time": 10,
     "distance_barrier_constraint": {
-        "custom_initial_epsilon": 0.01,
-        "detection_method": "hash_grid",
-        "trajectory_type": "linearized",
-        "active_constraint_scale": 1.01
-    },
-    "barrier_solver": {
-        "e_b": 1e-06,
-        "m": 1,
-        "t_init": 100,
-        "t_inc": 100,
-        "c": 0.1,
-        "inner_solver": "newton_solver"
+        "custom_initial_epsilon": 1e-4,
+        "trajectory_type": "linearized"
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, 0, 0],
         "rigid_bodies": [{
-                "mesh": "75mm-nut.stl",
-                "position": [0, 0, 0],
-                "rotation": [0, 0, 0],
-                "scale": [1e-2, 1e-2, 1e-2],
-                "linear_velocity": [0, 0, 0],
-                "angular_velocity": [0, 0, 0]
-            },
-            {
-                "mesh": "75mm-screw.stl",
-                "position": [0, 0, 0],
-                "scale": [1e-2, 1e-2, 1e-2],
-                "is_dof_fixed": [true, true, true, true, true, true]
-            }
-        ]
+            "mesh": "75mm-nut.stl",
+            "position": [0, 0, 0],
+            "rotation": [0, 0, 0],
+            "scale": 1e-2,
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [0, 0, 0]
+        }, {
+            "mesh": "75mm-screw.stl",
+            "position": [0, 0, 0],
+            "scale": 1e-2,
+            "is_dof_fixed": true
+        }]
     }
 }

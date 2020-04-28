@@ -40,11 +40,21 @@ namespace opt {
 
         // Find a good initial value for κ
         double bbox_diagonal = problem_ptr->world_bbox_diagonal();
+        double dhat = barrier_problem_ptr()->get_barrier_homotopy();
         double d0 = 1e-8 * bbox_diagonal;
+        if (d0 >= dhat) {
+            d0 = 0.5 * dhat; // TODO: this is untested
+        }
         double min_barrier_stiffness =
             barrier_problem_ptr()->barrier_hessian(d0);
         min_barrier_stiffness = Constants::MIN_BARRIER_STIFFNESS_SCALE
             * problem_ptr->average_mass() / min_barrier_stiffness;
+        if (!std::isfinite(min_barrier_stiffness)) {
+            spdlog::error(
+                "κ_min is not finite using a distance d₀={:g} with d̂={:g}", d0,
+                dhat);
+            throw NotImplementedError("κ_min is not finite");
+        }
 #ifdef USE_DISTANCE_SQUARED
         min_barrier_stiffness /= 4 * d0 * d0;
 #endif

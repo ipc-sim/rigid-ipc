@@ -30,7 +30,7 @@ namespace io {
         for (auto& jrb : scene["rigid_bodies"]) {
             // NOTE:
             // position: position of the model origin
-            // rotation: degrees as xyz euler angles in the body's frame
+            // rotation: degrees as xyz euler angles around the model origin
             // scale: scale the vertices around the model origin
             // linear_velocity: velocity of the body's center
             // angular_velocity: world coordinates in degrees
@@ -111,20 +111,26 @@ namespace io {
             assert(position.size() >= dim);
             position.conservativeResize(dim);
 
+            // Rotate around the models origin NOT the rigid bodies center of
+            // mass
             Eigen::VectorX3d rotation;
             from_json<double>(args["rotation"], rotation);
             assert(rotation.size() >= angular_dim);
             rotation.conservativeResize(angular_dim);
             // Convert to radians for easy use later
             rotation *= M_PI / 180.0;
+            Eigen::MatrixXX3d R;
             if (rotation.size() == 3) {
-                Eigen::AngleAxisd aa(
-                    Eigen::AngleAxisd(rotation.z(), Eigen::Vector3d::UnitZ())
-                    * Eigen::AngleAxisd(rotation.y(), Eigen::Vector3d::UnitY())
-                    * Eigen::AngleAxisd(
-                          rotation.x(), Eigen::Vector3d::UnitX()));
-                rotation = aa.angle() * aa.axis();
+                R = (Eigen::AngleAxisd(rotation.z(), Eigen::Vector3d::UnitZ())
+                     * Eigen::AngleAxisd(rotation.y(), Eigen::Vector3d::UnitY())
+                     * Eigen::AngleAxisd(
+                           rotation.x(), Eigen::Vector3d::UnitX()))
+                        .toRotationMatrix();
+            } else {
+                R = Eigen::Rotation2Dd(rotation(0)).toRotationMatrix();
             }
+            vertices = vertices * R.transpose();
+            rotation.setZero(angular_dim); // Zero initial body rotation
 
             Eigen::VectorX3d scale;
             if (args["scale"].is_number()) {
@@ -134,9 +140,7 @@ namespace io {
                 assert(scale.size() >= angular_dim);
                 scale.conservativeResize(dim);
             }
-            for (int i = 0; i < dim; i++) {
-                vertices.col(i) *= scale(i);
-            }
+            vertices = vertices * scale.asDiagonal();
 
             Eigen::VectorX3d linear_velocity;
             from_json<double>(args["linear_velocity"], linear_velocity);
