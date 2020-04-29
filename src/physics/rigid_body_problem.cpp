@@ -163,21 +163,26 @@ namespace physics {
         // Compute the collisions
         original_impacts.clear();
         constraint().initialize();
-        constraint().construct_collision_set(
-            m_assembler, poses_t0, poses_t1, original_impacts);
 
-        tbb::parallel_sort(
-            original_impacts.ev_impacts.begin(),
-            original_impacts.ev_impacts.end(),
-            ccd::compare_impacts_by_time<ccd::EdgeVertexImpact>);
-        tbb::parallel_sort(
-            original_impacts.ee_impacts.begin(),
-            original_impacts.ee_impacts.end(),
-            ccd::compare_impacts_by_time<ccd::EdgeEdgeImpact>);
-        tbb::parallel_sort(
-            original_impacts.fv_impacts.begin(),
-            original_impacts.fv_impacts.end(),
-            ccd::compare_impacts_by_time<ccd::FaceVertexImpact>);
+        // TODO: original_impacts is only used in the 2D restitution code
+        // if this changes remove this if
+        if (dim() == 2) {
+            constraint().construct_collision_set(
+                m_assembler, poses_t0, poses_t1, original_impacts);
+
+            tbb::parallel_sort(
+                original_impacts.ev_impacts.begin(),
+                original_impacts.ev_impacts.end(),
+                ccd::compare_impacts_by_time<ccd::EdgeVertexImpact>);
+            tbb::parallel_sort(
+                original_impacts.ee_impacts.begin(),
+                original_impacts.ee_impacts.end(),
+                ccd::compare_impacts_by_time<ccd::EdgeEdgeImpact>);
+            tbb::parallel_sort(
+                original_impacts.fv_impacts.begin(),
+                original_impacts.fv_impacts.end(),
+                ccd::compare_impacts_by_time<ccd::FaceVertexImpact>);
+        }
     }
 
     opt::OptimizationResults RigidBodyProblem::solve_constraints()

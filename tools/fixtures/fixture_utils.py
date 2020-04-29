@@ -192,7 +192,7 @@ def print_args(args: argparse.Namespace) -> None:
 
 def save_fixture(fixture, fname):
     with open(fname, "w") as outfile:
-        json.dump(fixture, outfile, indent=4)
+        json.dump(fixture, outfile, indent=None, separators=(',', ':'))
 
 
 def get_fixture_dir_path() -> pathlib.Path:

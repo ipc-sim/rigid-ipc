@@ -68,6 +68,7 @@ namespace opt {
         if (num_active_barriers > 0 && grad_B.squaredNorm() > 0) {
             Eigen::VectorXd grad_E;
             barrier_problem_ptr()->compute_energy_term(x0, grad_E);
+            // If this value is negative it will be clamped to κ_min anyways
             kappa = -grad_B.dot(grad_E) / grad_B.squaredNorm();
             assert(std::isfinite(kappa));
         }
