@@ -104,7 +104,7 @@ void UISimState::load_scene()
     }
 
     int dim = q.cols();
-    m_viewer.core().trackball_angle = Eigen::Quaternionf::Identity();
+    m_viewer.core().trackball_angle.setIdentity();
     m_viewer.core().set_rotation_type(
         dim == 2 ? igl::opengl::ViewerCore::ROTATION_TYPE_NO_ROTATION
                  : igl::opengl::ViewerCore::
@@ -113,22 +113,14 @@ void UISimState::load_scene()
     m_viewer.core().lighting_factor = 0.0; // dim == 2 ? 0.0 : 1.0;
     // mesh_data->data().set_face_based(true);
     m_viewer.core().align_camera_center(
-        mesh_data->mV, dim == 2.0 ? mesh_data->mE : mesh_data->mF);
+        q, dim == 2.0 ? mesh_data->mE : mesh_data->mF);
 
     // Default colors
     // background_color << 0.3f, 0.3f, 0.5f, 1.0f;
 
     // Camera parameters
-    if (dim == 3) {
-        m_viewer.core().camera_base_zoom = 1.0f;
-        m_viewer.core().camera_zoom = 1.0f;
-        m_viewer.core().camera_view_angle = 45.0;
-        m_viewer.core().camera_base_translation << 0, 0, 0;
-        m_viewer.core().camera_translation << 0, 0, 0;
-        m_viewer.core().camera_eye << 0, 0, 5;
-        m_viewer.core().camera_center << 0, 0, 0;
-        m_viewer.core().camera_up << 0, 1, 0;
-    }
+    m_viewer.core().camera_zoom = 1.0f;
+    m_viewer.core().camera_translation << 0, 0, 0;
 }
 
 void UISimState::redraw_scene()
