@@ -80,6 +80,7 @@ namespace io {
                         igl::edges(faces, edges);
                     }
                 }
+                assert(faces.size() == 0 || faces.cols() == 3);
             } else {
                 // Assumes that edges contains the edges of the faces too.
                 from_json<double>(args["vertices"], vertices);
