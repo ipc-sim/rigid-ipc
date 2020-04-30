@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.1)
 
 add_executable(${PROJECT_NAME}_tests
     main.cpp
-    
+
     barrier/test_barriers.cpp
 
     # Test CCD
@@ -45,6 +45,8 @@ add_executable(${PROJECT_NAME}_tests
 
 target_link_libraries(${PROJECT_NAME}_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)
 target_link_libraries(${PROJECT_NAME}_tests PUBLIC FiniteDiff::FiniteDiff)
+
+target_compile_definitions(${PROJECT_NAME}_tests PUBLIC CATCH_CONFIG_ENABLE_BENCHMARKING)
 
 if(FIXING_COLLISIONS_CODE_COVERAGE)
     target_code_coverage(${PROJECT_NAME}_tests AUTO ALL)

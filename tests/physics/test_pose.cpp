@@ -1,7 +1,10 @@
 // Test Pose
-
 #include <catch2/catch.hpp>
 
+#include <Eigen/Geometry>
+#include <igl/PI.h>
+
+#include <autodiff/autodiff_types.hpp>
 #include <physics/pose.hpp>
 
 TEST_CASE("Poses to dofs", "[physics][pose]")
@@ -15,39 +18,6 @@ TEST_CASE("Poses to dofs", "[physics][pose]")
     Eigen::VectorXd returned_dofs = Pose<double>::poses_to_dofs(poses);
     CHECK((dofs - returned_dofs).squaredNorm() == Approx(0));
 }
-
-// TEST_CASE("Operations on poses", "[physics][pose]")
-// {
-//     using namespace ccd::physics;
-//     int dim = GENERATE(2, 3);
-//     int num_bodies = GENERATE(0, 1, 2, 3, 10, 1000);
-//
-//     Eigen::VectorXd sigma_t0 =
-//         Eigen::VectorXd::Random(num_bodies * Pose<double>::dim_to_ndof(dim));
-//     Eigen::VectorXd sigma_t1 =
-//         Eigen::VectorXd::Random(num_bodies * Pose<double>::dim_to_ndof(dim));
-//     Eigen::VectorXd delta_sigma = sigma_t1 - sigma_t0;
-//
-//     Poses<double> poses_t0 = Pose<double>::dofs_to_poses(sigma_t0, dim);
-//     Poses<double> poses_t1 = Pose<double>::dofs_to_poses(sigma_t1, dim);
-//     Poses<double> delta_poses = poses_t1 - poses_t0;
-//     CHECK(
-//         Pose<double>::poses_to_dofs(poses_t0 + delta_poses - poses_t1)
-//             .squaredNorm()
-//         == Approx(0.0).margin(1e-8));
-//
-//     CHECK(
-//         (delta_sigma -
-//         Pose<double>::poses_to_dofs(delta_poses)).squaredNorm()
-//         == Approx(0.0));
-//
-//     double t = GENERATE(-1.0, 0.0, 0.5, 0.72, 1.0, 1.24, 3.14);
-//     CHECK(
-//         (sigma_t0 + delta_sigma * t
-//          - Pose<double>::poses_to_dofs(poses_t0 + delta_poses * t))
-//             .squaredNorm()
-//         == Approx(0.0));
-// }
 
 TEST_CASE("Cast poses", "[physics][pose]")
 {
@@ -67,4 +37,55 @@ TEST_CASE("Cast poses", "[physics][pose]")
          - Pose<float>::poses_to_dofs(actual_posesf))
             .squaredNorm()
         == Approx(0.0));
+}
+
+TEST_CASE("SE(3) ↦ SO(3)", "[physics][pose]")
+{
+    using namespace ccd::physics;
+    double angle;
+    Eigen::Vector3d axis;
+
+    SECTION("zero")
+    {
+        angle = 0;
+        axis = Eigen::Vector3d::Random();
+    }
+    SECTION("random")
+    {
+        angle = GENERATE(take(100, random(0.0, 2 * igl::PI)));
+        axis = Eigen::Vector3d::Random();
+    }
+    axis.normalize();
+
+    Pose<double> p = Pose<double>::Zero(3);
+    p.rotation = angle * axis;
+    Eigen::Matrix3d R_actual = p.construct_rotation_matrix();
+    Eigen::Matrix3d R_expected =
+        Eigen::AngleAxisd(angle, axis).toRotationMatrix();
+    CHECK((R_actual - R_expected).norm() == Approx(0).margin(1e-12));
+}
+
+TEST_CASE("∇²(SE(3) ↦ SO(3))", "[!benchmark][physics][pose]")
+{
+    using namespace ccd::physics;
+    typedef ccd::AutodiffType<Eigen::Dynamic, 12> Diff;
+    Diff::activate(12);
+
+    Pose<double> p;
+    p.position = Eigen::Vector3d::Zero();
+    p.rotation = Eigen::Vector3d(0, igl::PI, 0);
+
+    BENCHMARK("Compute R") { return p.construct_rotation_matrix(); };
+
+    Pose<Diff::DDouble1> d1p;
+    d1p.position = Diff::d1vars(0, Eigen::Vector3d::Zero());
+    d1p.rotation = Diff::d1vars(3, Eigen::Vector3d(0, igl::PI, 0));
+
+    BENCHMARK("Compute R DDouble1") { return d1p.construct_rotation_matrix(); };
+
+    Pose<Diff::DDouble2> d2p;
+    d2p.position = Diff::d2vars(0, Eigen::Vector3d::Zero());
+    d2p.rotation = Diff::d2vars(3, Eigen::Vector3d(0, igl::PI, 0));
+
+    BENCHMARK("Compute R DDouble2") { return d2p.construct_rotation_matrix(); };
 }

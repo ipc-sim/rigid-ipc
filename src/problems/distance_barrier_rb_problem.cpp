@@ -137,6 +137,18 @@ namespace opt {
         num_constraints = candidates.size();
         PROFILE_END(UPDATE)
 
+        if (dim() == 2) {
+            spdlog::info(
+                "problem={} num_edge_vertex_constraints={:d}", name(),
+                candidates.ev_candidates.size());
+        } else {
+            spdlog::info(
+                "problem={} num_edge_edge_constraints={:d} "
+                "num_face_vertex_constraints={:d}",
+                name(), candidates.ee_candidates.size(),
+                candidates.fv_candidates.size());
+        }
+
         double Bx;
 
         // if we want a derivative we use the autodiff version

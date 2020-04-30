@@ -79,7 +79,8 @@ public:
         return val;
     }
 
-    inline static Eigen::MatrixXd get_gradient(const D1VectorXd& x)
+    template <typename DVectorXd>
+    inline static Eigen::MatrixXd get_gradient(const DVectorXd& x)
     {
         Eigen::MatrixXd grad(x.rows(), DiffScalarBase::getVariableCount());
         for (int i = 0; i < x.rows(); ++i) {

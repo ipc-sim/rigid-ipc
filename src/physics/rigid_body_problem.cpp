@@ -488,12 +488,12 @@ namespace physics {
         hashgrid.resize(
             /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, edges,
             inflation_radius);
+        hashgrid.addEdges(
+            /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, edges,
+            inflation_radius);
         if (dim() == 2) {
             assert(vertices.cols() == 2);
             // Need to check segment-segment intersections in 2D
-            hashgrid.addEdges(
-                /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, edges,
-                inflation_radius);
 
             std::vector<EdgeEdgeCandidate> ee_candidates;
             hashgrid.getEdgeEdgePairs(edges, group_ids(), ee_candidates);
@@ -513,10 +513,7 @@ namespace physics {
             }
         } else {
             assert(dim() == 3);
-            // Need to check segment-triangle intersections in 2D
-            hashgrid.addEdges(
-                /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, edges,
-                inflation_radius);
+            // Need to check segment-triangle intersections in 3D
             hashgrid.addFaces(
                 /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, faces,
                 inflation_radius);

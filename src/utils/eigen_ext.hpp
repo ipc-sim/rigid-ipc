@@ -43,9 +43,9 @@ using DiagonalMatrixX6d = DiagonalMatrix<double, Eigen::Dynamic, 6>;
 
 template <typename T> SparseMatrix<T> SparseDiagonal(const VectorX<T>& x);
 
-template <typename T> Matrix2<T> Hat(T x);
-template <typename T> Matrix3<T> Hat(Eigen::Vector3<T> x);
-template <typename T> MatrixXX3<T> Hat(Eigen::VectorX3<T> x);
+template <typename T> inline Matrix2<T> Hat(T x);
+template <typename T> inline Matrix3<T> Hat(Eigen::Vector3<T> x);
+template <typename T> inline MatrixXX3<T> Hat(Eigen::VectorX3<T> x);
 
 } // namespace Eigen
 

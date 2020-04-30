@@ -128,7 +128,7 @@ namespace physics {
         select_dof(is_dof_zero, Pose<T>::Zero(dim()), R);
     }
 
-    template <typename T> T sinc(const T& x)
+    template <typename T> inline T sinc(const T& x)
     {
         if (x == 0.0) {
             return T(1.0);
@@ -155,9 +155,9 @@ namespace physics {
         } else {
             T angle = rotation.norm();
             Eigen::Matrix3<T> K = Eigen::Hat(rotation);
-            Eigen::Matrix3<T> sincK = sinc(angle / T(2.0)) * K;
+            T sinc_half_angle = sinc(angle / 2.0);
             return Eigen::Matrix3<T>::Identity() + sinc(angle) * K
-                + T(0.5) * sincK * sincK;
+                + 0.5 * sinc_half_angle * sinc_half_angle * K * K;
         }
     }
 

@@ -203,6 +203,10 @@ void UISimState::save_screenshot(const std::string& filename)
 
 void UISimState::start_recording(const std::string& filename)
 {
+    if (filename == "") {
+        return;
+    }
+
     int width, height;
     get_window_dimensions(width, height);
     width = static_cast<int>(m_gif_scale * width);
