@@ -33,14 +33,13 @@ public:
     // CCD
     // ----------------------------------------------
     std::shared_ptr<physics::SimulationProblem> problem_ptr;
-    double m_timestep_size;
 
     bool m_step_had_collision;     ///< last step had a collision
     bool m_step_has_collision;     ///< last step failed to solve collisions
     bool m_step_has_intersections; ///< last step resulted in intersections
     bool m_solve_collisions;    ///< solve collisions automatically on the step
     int m_num_simulation_steps; ///< counts simulation steps
-    int m_max_simulation_steps;
+    int m_max_simulation_steps; ///< maximum number of time-steps to take
 
     std::string scene_file;
 

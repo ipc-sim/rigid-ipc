@@ -22,6 +22,7 @@ namespace physics {
     RigidBodyProblem::RigidBodyProblem()
         : coefficient_restitution(0)
         , collision_eps(2)
+        , m_timestep(0.01)
     {
     }
 
@@ -145,10 +146,10 @@ namespace physics {
         num_vars_ = x0.size();
     }
 
-    bool RigidBodyProblem::simulation_step(const double time_step)
+    bool RigidBodyProblem::simulation_step()
     {
         // Take an unconstrained time-step
-        m_time_stepper->step(m_assembler, gravity, time_step);
+        m_time_stepper->step(m_assembler, gravity, timestep());
 
         update_dof();
 
@@ -200,8 +201,7 @@ namespace physics {
         return solver().step_solve();
     }
 
-    bool RigidBodyProblem::take_step(
-        const Eigen::VectorXd& dof, const double time_step)
+    bool RigidBodyProblem::take_step(const Eigen::VectorXd& dof)
     {
         // This need to be done BEFORE updating poses
         // -------------------------------------
@@ -219,10 +219,10 @@ namespace physics {
             tbb::parallel_for_each(m_assembler.m_rbs, [&](RigidBody& rb) {
                 // Assume linear velocity through the time-step.
                 rb.velocity.position =
-                    (rb.pose.position - rb.pose_prev.position) / time_step;
+                    (rb.pose.position - rb.pose_prev.position) / timestep();
                 if (dim() == 2) {
                     rb.velocity.rotation =
-                        (rb.pose.rotation - rb.pose_prev.rotation) / time_step;
+                        (rb.pose.rotation - rb.pose_prev.rotation) / timestep();
                 } else {
                     // Compute the rotation R s.t.
                     // R * Rᵗ = Rᵗ⁺¹ → R = Rᵗ⁺¹[Rᵗ]ᵀ
@@ -232,7 +232,7 @@ namespace physics {
                     // ω = rotation_vector(R)
                     Eigen::AngleAxisd omega(R);
                     rb.velocity.rotation =
-                        omega.angle() * omega.axis() / time_step;
+                        omega.angle() * omega.axis() / timestep();
                 }
             });
         }

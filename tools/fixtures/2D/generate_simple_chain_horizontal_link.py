@@ -58,7 +58,7 @@ def main(args=None):
                  is_dof_fixed=dof_fixed))
     data = {
         "max_iterations": args.iterations,
-        "timestep_size": 0.1,
+        "timestep": 0.1,
         "scene_type": "rigid_body_problem",
         "distance_barrier_constraint": {
             "custom_initial_epsilon": 0.1,

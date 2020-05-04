@@ -75,7 +75,7 @@ def generate_video(fin, sim_secs, frames, bbox, scaling, flip_cmap, framerate, l
         edges = np.array(results["edges"], dtype=np.int32)
         group_ids = np.array(results["group_id"], dtype=np.int32)
         sim_args = j["args"]
-        dt = j["args"]["timestep_size"]
+        dt = j["args"]["timestep"]
     
     imagedir = fin.parent.joinpath("images")
     if imagedir.exists():

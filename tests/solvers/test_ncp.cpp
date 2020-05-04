@@ -188,6 +188,8 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
 
         double average_mass() const override { return 1; }
 
+        double timestep() const override { return 1; }
+
         Eigen::SparseMatrix<double> A;
         Eigen::VectorXd b;
         std::function<DVector(const Eigen::VectorXd& x)> gdiff;

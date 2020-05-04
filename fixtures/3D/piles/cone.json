@@ -2,11 +2,14 @@
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
     "max_time": 4,
-    "timestep_size": 0.01,
+    "timestep": 0.01,
     "distance_barrier_constraint": {
-        "trajectory_type": "screwing",
+        "trajectory_type": "linearized",
         "active_constraint_scale": 1.1,
         "custom_initial_epsilon": 1e-3
+    },
+    "ipc_solver": {
+        "min_barrier_stiffness_scale": 1e11
     },
     "newton_solver": {
         "convergence_criteria": "energy"

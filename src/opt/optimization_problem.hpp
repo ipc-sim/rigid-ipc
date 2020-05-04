@@ -67,6 +67,9 @@ namespace opt {
         /// Get the average mass
         virtual double average_mass() const = 0;
 
+        /// Get the time-step
+        virtual double timestep() const = 0;
+
         virtual bool is_barrier_problem() const { return false; }
         virtual bool is_constrained_problem() const { return false; }
     };

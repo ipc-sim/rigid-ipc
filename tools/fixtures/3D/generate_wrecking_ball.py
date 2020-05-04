@@ -18,7 +18,7 @@ link_width = 1
 scene = {
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
-    "timestep_size": 0.01,
+    "timestep": 0.01,
     "max_time": 10.0,
     "distance_barrier_constraint": {
         "trajectory_type": "linearized"

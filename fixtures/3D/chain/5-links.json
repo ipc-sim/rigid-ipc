@@ -1,35 +1,38 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
-    "timestep_size": 0.01,
+    "timestep": 0.01,
     "max_time": 10.0,
     "distance_barrier_constraint": {
         "trajectory_type": "linearized"
     },
+    "ipc_solver": {
+        "min_barrier_stiffness_scale": 1e11
+    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
-        "time_stepper": "dmv",
+        "time_stepper": "exponential_euler",
         "rigid_bodies": [{
             "mesh": "torus.obj",
-            "position": [0, 1.5, 0],
+            "position": [1.5, 0, 0],
             "rotation": [0, 0, 0],
             "is_dof_fixed": true
         }, {
             "mesh": "torus.obj",
-            "position": [0, 0.95, 0],
-            "rotation": [0, 90, 0]
+            "position": [0.95, 0, 0],
+            "rotation": [90, 0, 0]
         }, {
             "mesh": "torus.obj",
-            "position": [0, 0.4, 0],
+            "position": [0.4, 0, 0],
             "rotation": [0, 0, 0]
         }, {
             "mesh": "torus.obj",
-            "position": [0, -0.15, 0],
-            "rotation": [0, 90, 0]
+            "position": [-0.15, 0, 0],
+            "rotation": [90, 0, 0]
         }, {
             "mesh": "torus.obj",
-            "position": [0, -0.7, 0],
+            "position": [-0.7, 0, 0],
             "rotation": [0, 0, 0]
         }]
     }

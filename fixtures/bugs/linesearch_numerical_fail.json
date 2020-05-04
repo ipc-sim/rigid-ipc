@@ -1,6 +1,6 @@
 {
     "max_iterations": 300,
-    "timestep_size": 1,
+    "timestep": 1,
     "scene_type": "distance_barrier_rb_problem",
     "distance_barrier_constraint": {
         "custom_initial_epsilon": 0.1,

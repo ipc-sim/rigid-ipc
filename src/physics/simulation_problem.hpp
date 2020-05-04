@@ -25,19 +25,21 @@ namespace physics {
         virtual const opt::CollisionConstraint& constraint() const = 0;
         virtual opt::OptimizationSolver& solver() = 0;
 
-        virtual void settings(const nlohmann::json& params) = 0;
         virtual nlohmann::json settings() const = 0;
+        virtual void settings(const nlohmann::json& params) = 0;
 
         virtual nlohmann::json state() const = 0;
         virtual void state(const nlohmann::json& s) = 0;
 
+        virtual double timestep() const = 0;
+        virtual void timestep(double timestep) = 0;
+
         /// @brief Compute the step but does not take it
         /// @returns true if there is a collision
-        virtual bool simulation_step(const double time_step) = 0;
+        virtual bool simulation_step() = 0;
 
         /// @brief moves status to given positions
-        virtual bool
-        take_step(const Eigen::VectorXd& x, const double time_step) = 0;
+        virtual bool take_step(const Eigen::VectorXd& x) = 0;
 
         /// @brief Check for intersections at the end of the time-step.
         virtual bool has_intersections() const = 0;

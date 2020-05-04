@@ -30,7 +30,7 @@
             "max_iterations": 3000
         },
         "scene_type": "distance_barrier_rb_problem",
-        "timestep_size": 0.01
+        "timestep": 0.01
     },
     "animation": {
         "edges": [
@@ -4728,7 +4728,7 @@
             "time_stepper": "default"
         },
         "scene_type": "distance_barrier_rb_problem",
-        "timestep_size": 0.01,
+        "timestep": 0.01,
         "viewport_bbox": {
             "max": [
                 0,

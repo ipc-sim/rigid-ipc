@@ -1,5 +1,7 @@
 #include "dmv_time_stepper.hpp"
 
+#include <igl/PI.h>
+
 #include <logger.hpp>
 #include <time_stepper/exponential_euler_time_stepper.hpp>
 #include <time_stepper/time_stepper_factory.hpp>
@@ -159,7 +161,24 @@ namespace time_stepper {
             return;
         }
         Eigen::AngleAxisd r1 = Eigen::AngleAxisd(R1);
-        body.pose.rotation = r1.angle() * r1.axis();
+        // According to Eigen documentation θ ∈ [0,π].
+        // If the axis is flipped from the previous axis, negate it and subtract
+        // the angle from 2π
+        double angle = r1.angle();
+        Eigen::Vector3d axis = r1.axis();
+        if (axis.dot(body.pose_prev.rotation) < 0) {
+            angle = 2 * igl::PI - angle; // ∈ [π, 2π]
+            axis *= -1;
+        }
+        if ((body.pose_prev.rotation.norm() > 3 * igl::PI / 2
+             && angle < igl::PI / 2)
+            || (body.pose_prev.rotation.norm() < igl::PI / 2
+                && angle > 3 * igl::PI / 2)) {
+            spdlog::warn(
+                "r0={} r1={}", logger::fmt_eigen(body.pose_prev.rotation),
+                logger::fmt_eigen(angle * axis));
+        }
+        body.pose.rotation = angle * axis;
 
         // TODO: Compute forces at end of time_step
         // Hamiltonian so there shouldn't be velocity dependent forces

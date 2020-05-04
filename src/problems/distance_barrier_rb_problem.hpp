@@ -73,9 +73,8 @@ namespace opt {
         ////////////////////////////////////////////////////////////
         /// Rigid Body Problem
 
-        bool simulation_step(const double time_step) override;
-        bool take_step(
-            const Eigen::VectorXd& sigma, const double time_step) override;
+        bool simulation_step() override;
+        bool take_step(const Eigen::VectorXd& sigma) override;
 
         ////////////////////////////////////////////////////////////
         /// Optimization Problem
@@ -111,6 +110,12 @@ namespace opt {
         double average_mass() const override
         {
             return m_assembler.average_mass;
+        }
+
+        /// Get the time-step
+        double timestep() const override
+        {
+            return RigidBodyProblem::timestep();
         }
 
         ////////////////////////////////////////////////////////////
@@ -225,10 +230,17 @@ namespace opt {
             const Eigen::VectorXd& sigma, const Candidates& candidates);
 
         template <typename Candidate, typename RigidBodyCandidate>
-        void check_distance_finite_diff(
+        void check_distance_finite_gradient(
+            const Eigen::VectorXd& sigma, const Candidate& candidate);
+        template <typename Candidate, typename RigidBodyCandidate>
+        void check_distance_finite_hessian(
             const Eigen::VectorXd& sigma, const Candidate& candidate);
 
         void check_grad_barrier(
+            const Eigen::VectorXd& sigma,
+            const Candidates& candidates,
+            const Eigen::VectorXd& grad);
+        void check_hess_barrier(
             const Eigen::VectorXd& sigma,
             const Candidates& candidates,
             const Eigen::VectorXd& grad);

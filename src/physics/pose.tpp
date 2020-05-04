@@ -170,12 +170,9 @@ namespace physics {
         } else {
             T angle = rotation.norm();
             Eigen::Vector3<T> axis = rotation;
-            if (is_zero(angle)) {
-                // The error of doing this will be on the order of the
-                // adjustment.
-                angle += T(1e-16);
+            if (!is_zero(angle)) {
+                axis /= angle;
             }
-            axis /= angle;
             return Eigen::Quaternion<T>(Eigen::AngleAxis<T>(angle, axis));
         }
     }

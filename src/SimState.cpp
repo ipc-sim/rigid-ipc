@@ -7,20 +7,19 @@
 #include <boost/filesystem.hpp>
 #include <nlohmann/json.hpp>
 
+#include <constants.hpp>
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
-#include <logger.hpp>
-
 #include <problems/problem_factory.hpp>
-
-#include <profiler.hpp>
 #include <utils/regular_2d_grid.hpp>
+
+#include <logger.hpp>
+#include <profiler.hpp>
 
 namespace ccd {
 
 SimState::SimState()
-    : m_timestep_size(0.1)
-    , m_step_had_collision(false)
+    : m_step_had_collision(false)
     , m_step_has_collision(false)
     , m_step_has_intersections(false)
     , m_solve_collisions(true)
@@ -103,7 +102,7 @@ bool SimState::init(const nlohmann::json& args_in)
     args = R"({
         "max_iterations": -1,
         "max_time": -1,
-        "timestep_size": 0.1,
+        "timestep": 0.1,
         "scene_type": "distance_barrier_rb_problem",
         "solver": "barrier_solver",
         "rigid_body_problem": {
@@ -127,7 +126,8 @@ bool SimState::init(const nlohmann::json& args_in)
         },
         "ipc_solver": {
             "max_iterations": 3000,
-            "dhat_epsilon": 1e-9
+            "dhat_epsilon": 1e-9,
+            "min_barrier_stiffness_scale": "default"
         },
         "ncp_solver": {
             "max_iterations": 1000,
@@ -173,17 +173,25 @@ bool SimState::init(const nlohmann::json& args_in)
     }
 
     args.merge_patch(args_in);
-    m_max_simulation_steps = args["max_iterations"].get<int>();
-    m_timestep_size = args["timestep_size"].get<double>();
-    double max_time = args["max_time"].get<double>();
-    if (max_time >= 0) {
-        assert(m_max_simulation_steps == -1);
-        m_max_simulation_steps = int(ceil(max_time / m_timestep_size));
+
+    if (args["min_barrier_stiffness_scale"].is_string()
+        && args["min_barrier_stiffness_scale"].get<std::string>()
+            == "default") {
+        args["min_barrier_stiffness_scale"] =
+            Constants::MIN_BARRIER_STIFFNESS_SCALE;
     }
 
     auto problem_name = args["scene_type"].get<std::string>();
     problem_ptr = ProblemFactory::factory().get_problem(problem_name);
     problem_ptr->settings(args);
+
+    m_max_simulation_steps = args["max_iterations"].get<int>();
+    problem_ptr->timestep(args["timestep"].get<double>());
+    double max_time = args["max_time"].get<double>();
+    if (max_time >= 0) {
+        assert(m_max_simulation_steps == -1); // is default value?
+        m_max_simulation_steps = int(ceil(max_time / problem_ptr->timestep()));
+    }
 
     m_num_simulation_steps = 0;
     m_dirty_constraints = true;
@@ -200,7 +208,7 @@ bool SimState::init(const nlohmann::json& args_in)
 nlohmann::json SimState::get_active_config()
 {
     nlohmann::json active_args;
-    active_args["timestep_size"] = m_timestep_size;
+    active_args["timestep"] = problem_ptr->timestep();
     active_args["scene_type"] = problem_ptr->name();
 
     active_args[problem_ptr->name()] = problem_ptr->settings();
@@ -243,7 +251,7 @@ void SimState::simulation_step()
     m_step_has_collision = false;
     m_step_has_intersections = false;
     // Take unconstrained step
-    m_step_had_collision = problem_ptr->simulation_step(m_timestep_size);
+    m_step_had_collision = problem_ptr->simulation_step();
     m_dirty_constraints = true;
 
     if (m_step_had_collision) {
@@ -282,8 +290,7 @@ bool SimState::solve_collision()
     PROFILE_END();
 
     // Check for intersections at the final poses.
-    m_step_has_intersections =
-        problem_ptr->take_step(result.x, m_timestep_size);
+    m_step_has_intersections = problem_ptr->take_step(result.x);
     // TODO: Check for collisions along the entire trajectory
     m_step_has_collision = false; // ...
 
@@ -320,8 +327,7 @@ void SimState::collision_resolution_step()
 
     // TODO: use results.finished
     // Check for intersections here
-    m_step_has_intersections =
-        problem_ptr->take_step(result.x, m_timestep_size);
+    m_step_has_intersections = problem_ptr->take_step(result.x);
     // TODO: Check for collisions along the entire time-step.
     m_step_has_collision = false; // ...
     spdlog::debug(

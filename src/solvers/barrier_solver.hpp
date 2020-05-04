@@ -104,6 +104,11 @@ namespace opt {
             {
                 switch (convergence_criteria) {
                 case ConvergenceCriteria::ENERGY:
+                    spdlog::debug(
+                        "solve={} iter={:d} step_energy={:g} tol={:g}", //
+                        name(), iteration_number,
+                        abs(gradient_free.dot(direction_free)),
+                        std::max(e_b_, c_ * m_ / t_));
                     return abs(direction_free.dot(gradient_free))
                         <= std::max(e_b_, c_ * m_ / t_);
                 default:

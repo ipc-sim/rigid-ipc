@@ -47,14 +47,13 @@ namespace opt {
         return json;
     }
 
-    bool DistanceBarrierRBProblem::simulation_step(const double time_step)
+    bool DistanceBarrierRBProblem::simulation_step()
     {
         // Take an unconstrained step
-        bool has_collision = RigidBodyProblem::simulation_step(time_step);
+        bool has_collision = RigidBodyProblem::simulation_step();
 
         // Check if minimum distance is violated
-        min_distance = compute_min_distance(
-            this->poses_to_dofs(m_assembler.rb_poses_t0()));
+        min_distance = compute_min_distance(this->poses_to_dofs(poses_t1));
         if (min_distance >= 0) {
             spdlog::info("candidate_step min_distance={:.8e}", min_distance);
 
@@ -68,8 +67,7 @@ namespace opt {
         return has_collision;
     }
 
-    bool DistanceBarrierRBProblem::take_step(
-        const Eigen::VectorXd& sigma, const double time_step)
+    bool DistanceBarrierRBProblem::take_step(const Eigen::VectorXd& sigma)
     {
         min_distance = compute_min_distance(sigma);
         if (min_distance < 0) {
@@ -78,7 +76,7 @@ namespace opt {
             spdlog::info("final_step min_distance={:.8e}", min_distance);
         }
 
-        return RigidBodyProblem::take_step(sigma, time_step);
+        return RigidBodyProblem::take_step(sigma);
     }
 
     ////////////////////////////////////////////////////////////
@@ -138,11 +136,11 @@ namespace opt {
         PROFILE_END(UPDATE)
 
         if (dim() == 2) {
-            spdlog::info(
+            spdlog::debug(
                 "problem={} num_edge_vertex_constraints={:d}", name(),
                 candidates.ev_candidates.size());
         } else {
-            spdlog::info(
+            spdlog::debug(
                 "problem={} num_edge_edge_constraints={:d} "
                 "num_face_vertex_constraints={:d}",
                 name(), candidates.ee_candidates.size(),
@@ -168,9 +166,9 @@ namespace opt {
         if (compute_grad) {
             check_grad_barrier(x, candidates, grad);
         }
-        // if (compute_hess) {
-        //     check_hess_barrier(x, candidates, grad);
-        // }
+        if (compute_hess) {
+            check_hess_barrier(x, candidates, grad);
+        }
 #endif
 
 #ifndef NDEBUG
@@ -585,7 +583,7 @@ namespace opt {
     }
 
     template <typename Candidate, typename RigidBodyCandidate>
-    void DistanceBarrierRBProblem::check_distance_finite_diff(
+    void DistanceBarrierRBProblem::check_distance_finite_gradient(
         const Eigen::VectorXd& sigma, const Candidate& candidate)
     {
         typedef AutodiffType<Eigen::Dynamic> Diff;
@@ -618,7 +616,51 @@ namespace opt {
         fd::compare_gradient(
             approx_grad, exact_grad, Constants::FINITE_DIFF_TEST,
             fmt::format(
-                "check_finite_diff DISTANCE barrier_eps={:3e} d={:3e}",
+                "check_finite_gradient DISTANCE barrier_eps={:3e} d={:3e}",
+                m_constraint.get_barrier_epsilon(), d.getValue()));
+    }
+
+    template <typename Candidate, typename RigidBodyCandidate>
+    void DistanceBarrierRBProblem::check_distance_finite_hessian(
+        const Eigen::VectorXd& sigma, const Candidate& candidate)
+    {
+        typedef AutodiffType<Eigen::Dynamic> Diff;
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        Diff::activate(2 * ndof);
+
+        RigidBodyCandidate rbc;
+        extract_local_system(candidate, rbc);
+        Diff::DDouble2 d = distance<Diff::DDouble2>(sigma, rbc);
+
+        std::array<long, 2> body_ids = rbc.get_body_ids();
+
+        // distance finite diff
+        std::vector<Eigen::Triplet<double>> exact_hessian_triplets;
+        local_hessian_to_global_triplets(
+            d.getHessian(), body_ids, ndof, exact_hessian_triplets);
+        Eigen::SparseMatrix<double> exact_hessian(sigma.rows(), sigma.rows());
+        exact_hessian.setFromTriplets(
+            exact_hessian_triplets.begin(), exact_hessian_triplets.end());
+
+        // distance finite diff
+        auto f = [&](const Eigen::VectorXd& sigma_k) {
+            Eigen::VectorXd grad = Eigen::VectorXd::Zero(sigma_k.rows());
+            Eigen::VectorXd local_grad =
+                distance<Diff::DDouble1>(sigma_k, rbc).getGradient();
+            grad.segment(ndof * body_ids[0], ndof) = local_grad.head(ndof);
+            grad.segment(ndof * body_ids[1], ndof) = local_grad.tail(ndof);
+            return grad;
+        };
+        Eigen::MatrixXd approx_hessian;
+        finite_jacobian(
+            sigma, f, approx_hessian, fd::AccuracyOrder::SECOND,
+            Constants::FINITE_DIFF_H);
+
+        fd::compare_jacobian(
+            approx_hessian, exact_hessian.toDense(),
+            Constants::FINITE_DIFF_TEST,
+            fmt::format(
+                "check_finite_hessian DISTANCE barrier_eps={:3e} d={:3e}",
                 m_constraint.get_barrier_epsilon(), d.getValue()));
     }
 
@@ -635,19 +677,38 @@ namespace opt {
 
         // Compute the finite difference of a single constraint
         for (const auto& ev : candidates.ev_candidates) {
-            check_distance_finite_diff<
+            check_distance_finite_gradient<
                 EdgeVertexCandidate, RigidBodyEdgeVertexCandidate>(sigma, ev);
         }
         for (const auto& ee : candidates.ee_candidates) {
-            check_distance_finite_diff<
+            check_distance_finite_gradient<
                 EdgeEdgeCandidate, RigidBodyEdgeEdgeCandidate>(sigma, ee);
         }
         for (const auto& fv : candidates.fv_candidates) {
-            check_distance_finite_diff<
+            check_distance_finite_gradient<
                 FaceVertexCandidate, RigidBodyFaceVertexCandidate>(sigma, fv);
         }
     }
 
+    void DistanceBarrierRBProblem::check_hess_barrier(
+        const Eigen::VectorXd& sigma,
+        const Candidates& candidates,
+        const Eigen::VectorXd& grad)
+    {
+        // Compute the finite difference of a single constraint
+        for (const auto& ev : candidates.ev_candidates) {
+            check_distance_finite_hessian<
+                EdgeVertexCandidate, RigidBodyEdgeVertexCandidate>(sigma, ev);
+        }
+        for (const auto& ee : candidates.ee_candidates) {
+            check_distance_finite_hessian<
+                EdgeEdgeCandidate, RigidBodyEdgeEdgeCandidate>(sigma, ee);
+        }
+        for (const auto& fv : candidates.fv_candidates) {
+            check_distance_finite_hessian<
+                FaceVertexCandidate, RigidBodyFaceVertexCandidate>(sigma, fv);
+        }
+    }
 #endif
 
 } // namespace opt

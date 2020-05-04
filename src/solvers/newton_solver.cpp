@@ -79,18 +79,28 @@ namespace opt {
     {
         switch (convergence_criteria) {
         case ConvergenceCriteria::VELOCITY: {
-            Eigen::MatrixXd V_prev = problem_ptr->world_vertices(x_prev);
-            Eigen::MatrixXd V = problem_ptr->world_vertices(x_prev + direction);
-            double bbox_diagonal =
-                (V_prev.colwise().maxCoeff() - V_prev.colwise().minCoeff())
-                    .norm();
-            double timestep = 0.01; // TODO: Replace this
-            return (V - V_prev).array().abs().maxCoeff() / timestep
-                <= Constants::NEWTON_VELOCITY_CONVERGENCE_TOL * bbox_diagonal;
+            Eigen::MatrixXd V_prev = problem_ptr->world_vertices(x);
+            Eigen::MatrixXd V = problem_ptr->world_vertices(x + direction);
+            double step_max_speed = (V - V_prev).lpNorm<Eigen::Infinity>()
+                / problem_ptr->timestep();
+
+            double tol = Constants::NEWTON_VELOCITY_CONVERGENCE_TOL
+                * problem_ptr->world_bbox_diagonal();
+
+            spdlog::info(
+                "solve={} iter={:d} step_max_speed={:g} tol={:g}", //
+                name(), iteration_number, step_max_speed, tol);
+            return step_max_speed <= tol;
         }
-        case ConvergenceCriteria::ENERGY:
+        case ConvergenceCriteria::ENERGY: {
+            spdlog::debug(
+                "solve={} iter={:d} step_energy={:g} tol={:g}", //
+                name(), iteration_number,
+                abs(gradient_free.dot(direction_free)),
+                Constants::NEWTON_ENERGY_CONVERGENCE_TOL);
             return abs(gradient_free.dot(direction_free))
                 <= Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
+        }
         }
         throw NotImplementedError("Invalid convergence criteria option!");
     }
@@ -182,7 +192,7 @@ namespace opt {
                     if (iteration_number == 0 && converged()) {
                         // Do not consider this a failure
                         spdlog::error(
-                            "solver={} failure=\"converged on without taking a "
+                            "solver={} failure=\"converged without taking a "
                             "step\"",
                             name());
                         exit_reason = "found a local optimum with -grad dir";
@@ -198,6 +208,10 @@ namespace opt {
                 }
             }
             ///////////////////////////////////////////////////////////////////
+
+            spdlog::debug(
+                "solver={} iter={:d} step_length={:g}", name(),
+                iteration_number, step_length);
 
             x_prev = x;
             x += step_length * direction;

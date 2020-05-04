@@ -23,7 +23,7 @@ def generate_default_fixture() -> dict:
     return {
         "scene_type": "distance_barrier_rb_problem",
         "max_iterations": DEFAULT_NUM_STEPS,
-        "timestep_size": DEFAULT_TIMESTEP,
+        "timestep": DEFAULT_TIMESTEP,
         "distance_barrier_constraint": {
             "custom_initial_epsilon": DEFAULT_INITIAL_EPSILON,
             "detection_method": "hash_grid",
@@ -47,7 +47,7 @@ def generate_default_fixture() -> dict:
 
 def generate_custom_fixture(args: argparse.Namespace) -> dict:
     fixture = generate_default_fixture()
-    fixture["timestep_size"] = args.timestep
+    fixture["timestep"] = args.timestep
     fixture["max_iterations"] = args.num_steps
     fixture["distance_barrier_constraint"]["custom_initial_epsilon"] = (
         args.init_epsilon)

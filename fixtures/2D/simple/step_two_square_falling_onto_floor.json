@@ -1,6 +1,6 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "timestep_size": 1.0,
+    "timestep": 1.0,
     "rigid_body_problem": {
         "gravity": [0.0, 0.0],
         "rigid_bodies": [{

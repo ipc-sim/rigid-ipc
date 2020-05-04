@@ -12,7 +12,7 @@ DEFAULT_BARRIER_EPS = 0.1
 def generate_scene(yvel, xpos) -> dict:
     return {
         "max_iterations": 4,
-        "timestep_size": DEFAULT_TIMESTEP,
+        "timestep": DEFAULT_TIMESTEP,
         "scene_type": "distance_barrier_rb_problem",
         "distance_barrier_constraint": {
             "custom_initial_epsilon": DEFAULT_BARRIER_EPS,

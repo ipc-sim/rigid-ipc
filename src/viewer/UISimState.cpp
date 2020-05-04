@@ -76,7 +76,7 @@ void UISimState::load_scene()
 {
     Eigen::MatrixXd q = m_state.problem_ptr->vertices();
     Eigen::MatrixXd v =
-        m_state.problem_ptr->velocities() * m_state.m_timestep_size;
+        m_state.problem_ptr->velocities() * m_state.problem_ptr->timestep();
 
     mesh_data->data().show_vertid = false;
     mesh_data->set_mesh(
@@ -127,7 +127,7 @@ void UISimState::redraw_scene()
 {
     Eigen::MatrixXd q1 = m_state.problem_ptr->vertices();
     Eigen::MatrixXd v1 =
-        m_state.problem_ptr->velocities() * m_state.m_timestep_size;
+        m_state.problem_ptr->velocities() * m_state.problem_ptr->timestep();
 
     mesh_data->update_vertices(q1);
     velocity_data->update_vector_field(q1, v1);
@@ -151,7 +151,7 @@ bool UISimState::pre_draw_loop()
         bool breakpoint = m_bkp_had_collision && m_state.m_step_had_collision;
         breakpoint |=
             m_bkp_has_intersections && m_state.m_step_has_intersections;
-        if (m_state.m_max_simulation_steps > -1) {
+        if (m_state.m_max_simulation_steps >= 0) {
             breakpoint |= m_state.m_num_simulation_steps
                 >= m_state.m_max_simulation_steps;
         }

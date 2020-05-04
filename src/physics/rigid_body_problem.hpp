@@ -34,13 +34,18 @@ namespace physics {
         virtual nlohmann::json state() const override;
         void state(const nlohmann::json& s) override;
 
+        virtual double timestep() const override { return m_timestep; }
+        virtual void timestep(double timestep) override
+        {
+            m_timestep = timestep;
+        }
+
         /// @brief Compute the step but does not take it
         /// @returns true if there is a collision
-        bool simulation_step(const double time_step) override;
+        bool simulation_step() override;
 
         /// @brief moves status to given configuration vector
-        virtual bool
-        take_step(const Eigen::VectorXd& x, const double time_step) override;
+        virtual bool take_step(const Eigen::VectorXd& x) override;
 
         /// @brief Check for intersections at the end of the time-step.
         virtual bool has_intersections() const override
@@ -85,9 +90,6 @@ namespace physics {
             return m_assembler.is_dof_fixed;
         }
 
-        Pose<double>
-        rb_next_pose(const RigidBody& rb, const double time_step) const;
-
         /// Convert from dof expressed in distances to poses
         template <typename T>
         Eigen::VectorX<T> poses_to_dofs(const Poses<T>& poses) const
@@ -129,6 +131,9 @@ namespace physics {
 
         /// @returns \f$x_0\f$: the starting point for the optimization.
         const Eigen::VectorXd& starting_point() const { return x0; }
+
+        /// Time-step
+        double m_timestep;
 
         int num_vars_;
         /// Initial variable for optimization

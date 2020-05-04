@@ -103,7 +103,11 @@ void TreeNodeJson(const nlohmann::json json)
             ImGui::Bullet();
             ImGui::TextColored(label_color, "%s: ", j.key().c_str());
             ImGui::SameLine();
-            ImGui::Text("%s", j.value().dump().c_str());
+            if (j.value().is_number_float()) {
+                ImGui::Text("%g", j.value().get<double>());
+            } else {
+                ImGui::Text("%s", j.value().dump().c_str());
+            }
         }
     }
     ImGui::PopStyleVar();

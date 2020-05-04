@@ -1,6 +1,6 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "timestep_size": 1.0,
+    "timestep": 1.0,
     "viewport_bbox": {
         "min": [
             -12,

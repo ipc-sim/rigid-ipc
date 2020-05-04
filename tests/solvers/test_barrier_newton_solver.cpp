@@ -119,6 +119,8 @@ TEST_CASE(
 
         double average_mass() const override { return 1; }
 
+        double timestep() const override { return 1; }
+
         int num_vars_;
         double barrier_epsilon;
         double barrier_stiffness;

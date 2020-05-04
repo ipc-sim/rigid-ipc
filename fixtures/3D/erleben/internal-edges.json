@@ -1,7 +1,7 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
-    "timestep_size": 0.01,
+    "timestep": 0.01,
     "max_time": 5,
     "distance_barrier_constraint": {
         "custom_initial_epsilon": 1e-2

@@ -94,7 +94,13 @@ namespace physics {
         if (dim() == 3) {
             // Got this from Chrono: https://bit.ly/2RpbTl1
             Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> es;
+            double threshold = I.lpNorm<Eigen::Infinity>() * 1e-16;
+            I = (threshold < I.array().abs()).select(I, 0.0);
             es.compute(I);
+            if (es.info() != Eigen::Success) {
+                spdlog::error(
+                    "Eigen decompostion of the inertia tensor failed!");
+            }
             moment_of_inertia = density * es.eigenvalues();
             R0 = es.eigenvectors();
             // Ensure that we have an orientation preserving transform
@@ -103,14 +109,14 @@ namespace physics {
             }
             assert(R0.isUnitary(1e-9));
             assert(fabs(R0.determinant() - 1.0) <= 1.0e-9);
-            Eigen::VectorX3<bool> is_rot_dof_fixed =
-                is_dof_fixed.tail(Pose<double>::dim_to_rot_ndof(dim()));
-            if (is_rot_dof_fixed.count() == 2) {
+            int num_rot_dof_fixed =
+                is_dof_fixed.tail(Pose<double>::dim_to_rot_ndof(dim())).count();
+            if (num_rot_dof_fixed == 2) {
                 // Convert moment of inertia to world coordinates
                 // https://physics.stackexchange.com/a/268812
                 moment_of_inertia = -I.diagonal().array() + I.diagonal().sum();
                 R0.setIdentity();
-            } else if (is_rot_dof_fixed.count() == 1) {
+            } else if (num_rot_dof_fixed == 1) {
                 spdlog::warn("Rigid body dynamics with two rotational DoF has "
                              "not been tested thoroughly.");
             }

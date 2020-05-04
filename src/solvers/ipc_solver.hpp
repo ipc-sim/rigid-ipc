@@ -49,9 +49,23 @@ namespace opt {
             return dynamic_cast<BarrierProblem*>(problem_ptr);
         }
 
-        /// @brief max value for adaptive barrier stiffness
-        double max_barrier_stiffness;
+        ///////////////////////////////////////////////////////////////////////
+        // User simulation parameters
+
+        /// @brief Minimum barrier stiffness scale.
+        double min_barrier_stiffness_scale;
+
+        /// @brief Activation distance of adaptive barrier stiffness.
         double dhat_epsilon;
+
+        ///////////////////////////////////////////////////////////////////////
+        // Computed values
+
+        /// @brief The max value for adaptive barrier stiffness.
+        double max_barrier_stiffness;
+
+        /// @brief The minimum distance of the previous iteration.
+        double prev_min_distance;
 
     private:
         int num_kappa_updates = 0;

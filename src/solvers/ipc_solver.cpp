@@ -19,6 +19,8 @@ namespace opt {
         edited_json["convergence_criteria"] = "velocity";
         NewtonSolver::settings(edited_json);
         dhat_epsilon = json["dhat_epsilon"].get<double>();
+        min_barrier_stiffness_scale =
+            json["min_barrier_stiffness_scale"].get<double>();
         num_kappa_updates = 0;
     }
 
@@ -28,6 +30,7 @@ namespace opt {
         nlohmann::json json = NewtonSolver::settings();
         json.erase("convergence_criteria");
         json["dhat_epsilon"] = dhat_epsilon;
+        json["min_barrier_stiffness_scale"] = min_barrier_stiffness_scale;
         return json;
     }
 
@@ -47,7 +50,7 @@ namespace opt {
         }
         double min_barrier_stiffness =
             barrier_problem_ptr()->barrier_hessian(d0);
-        min_barrier_stiffness = Constants::MIN_BARRIER_STIFFNESS_SCALE
+        min_barrier_stiffness = min_barrier_stiffness_scale
             * problem_ptr->average_mass() / min_barrier_stiffness;
         if (!std::isfinite(min_barrier_stiffness)) {
             spdlog::error(
@@ -80,16 +83,21 @@ namespace opt {
             name(), num_active_barriers, min_barrier_stiffness,
             max_barrier_stiffness, kappa,
             barrier_problem_ptr()->get_barrier_stiffness());
+
+        // Compute the inital minimum distance
+        prev_min_distance = problem_ptr->compute_min_distance(x0);
     }
 
     void IPCSolver::post_step_update()
     {
         // Adaptive κ
-        double min_disti = problem_ptr->compute_min_distance(x_prev);
-        double min_distj = problem_ptr->compute_min_distance(x);
+        double min_distance = problem_ptr->compute_min_distance(x);
+        spdlog::debug(
+            "solver={} iter={:d} min_distance={:g}", name(), iteration_number,
+            min_distance);
         // Is the barrier having a difficulty pushing the bodies apart?
-        if (min_disti < dhat_epsilon && min_distj < dhat_epsilon
-            && min_distj < min_disti) {
+        if (prev_min_distance < dhat_epsilon && min_distance < dhat_epsilon
+            && min_distance < prev_min_distance) {
             // Then increase the barrier stiffness.
             barrier_problem_ptr()->set_barrier_stiffness(std::min(
                 max_barrier_stiffness,
@@ -100,6 +108,7 @@ namespace opt {
                 barrier_problem_ptr()->get_barrier_stiffness());
             num_kappa_updates++;
         }
+        prev_min_distance = min_distance;
     }
 
     // Solve the saved optimization problem to completion
