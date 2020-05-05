@@ -18,7 +18,7 @@ namespace opt {
         long edge_vertex0_local_id;
         long edge_vertex1_local_id;
 
-        inline std::array<long, 2> get_body_ids()
+        inline std::array<long, 2> body_ids()
         {
             return { { vertex_body_id, edge_body_id } };
         }
@@ -31,7 +31,7 @@ namespace opt {
         long edge1_vertex0_local_id;
         long edge1_vertex1_local_id;
 
-        inline std::array<long, 2> get_body_ids()
+        inline std::array<long, 2> body_ids()
         {
             return { { edge0_body_id, edge1_body_id } };
         }
@@ -44,7 +44,7 @@ namespace opt {
         long face_vertex1_local_id;
         long face_vertex2_local_id;
 
-        inline std::array<long, 2> get_body_ids()
+        inline std::array<long, 2> body_ids()
         {
             return { { vertex_body_id, face_body_id } };
         }
@@ -71,13 +71,13 @@ namespace opt {
         }
 
         ////////////////////////////////////////////////////////////
-        /// Rigid Body Problem
+        // Rigid Body Problem
 
         bool simulation_step() override;
         bool take_step(const Eigen::VectorXd& sigma) override;
 
         ////////////////////////////////////////////////////////////
-        /// Optimization Problem
+        // Optimization Problem
 
         /// @returns the number of variables
         int num_vars() const override { return num_vars_; }
@@ -119,7 +119,7 @@ namespace opt {
         }
 
         ////////////////////////////////////////////////////////////
-        /// Barrier Problem
+        // Barrier Problem
 
         /// Compute E(x) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
         double compute_energy_term(
@@ -153,22 +153,22 @@ namespace opt {
             return m_constraint.distance_barrier_hessian(x);
         }
 
-        double get_barrier_homotopy() const override
+        double barrier_activation_distance() const override
         {
-            return m_constraint.get_barrier_epsilon();
+            return m_constraint.barrier_activation_distance();
         }
-        void set_barrier_homotopy(const double eps) override
+        void barrier_activation_distance(double dhat) override
         {
-            m_constraint.set_barrier_epsilon(eps);
+            m_constraint.barrier_activation_distance(dhat);
         }
 
-        double get_barrier_stiffness() const override
+        double barrier_stiffness() const override
         {
-            return barrier_stiffness;
+            return m_barrier_stiffness;
         }
-        void set_barrier_stiffness(const double kappa) override
+        void barrier_stiffness(double kappa) override
         {
-            barrier_stiffness = kappa;
+            m_barrier_stiffness = kappa;
         }
 
         opt::CollisionConstraint& constraint() override { return m_constraint; }
@@ -189,6 +189,25 @@ namespace opt {
         template <typename T, typename RigidBodyCandidate>
         T distance_barrier(
             const Eigen::VectorXd& sigma, const RigidBodyCandidate& rbc);
+
+        template <typename T>
+        T constraint_mollifier(
+            const Eigen::VectorXd& sigma,
+            const RigidBodyEdgeVertexCandidate& rbc)
+        {
+            return T(1.0);
+        }
+        template <typename T>
+        T constraint_mollifier(
+            const Eigen::VectorXd& sigma,
+            const RigidBodyEdgeEdgeCandidate& rbc);
+        template <typename T>
+        T constraint_mollifier(
+            const Eigen::VectorXd& sigma,
+            const RigidBodyFaceVertexCandidate& rbc)
+        {
+            return T(1.0);
+        }
 
         template <typename T>
         T distance(
@@ -213,7 +232,8 @@ namespace opt {
             bool compute_grad,
             bool compute_hess);
 
-        /// Computes the barrier term value, gradient, and hessian
+        /// Computes the barrier term value, gradient, and hessian from
+        /// distance candidates.
         double compute_barrier_term(
             const Eigen::VectorXd& sigma,
             const Candidates& distance_candidates,
@@ -246,12 +266,19 @@ namespace opt {
             const Eigen::VectorXd& grad);
 #endif
 
-        double min_distance;
+        /// @brief Constraint helper for active set and collision detection.
         DistanceBarrierConstraint m_constraint;
+
+        /// @brief Solver for solving this optimization problem.
         std::shared_ptr<opt::OptimizationSolver> m_opt_solver;
 
-        // double barrier_homotopy; ///< \f$\hat{d}\f$
-        double barrier_stiffness; ///< \f$\kappa\f$
+        /// @brief Multiplier of barrier term in objective, \f$\kappa\f$.
+        double m_barrier_stiffness;
+
+        /// @brief Current minimum distance between bodies.
+        /// Negative values indicate a minimum distance greater than the
+        /// activation distance.
+        double min_distance;
     };
 
 } // namespace opt

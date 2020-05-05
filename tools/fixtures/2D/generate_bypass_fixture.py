@@ -15,7 +15,7 @@ def generate_scene(yvel, xpos) -> dict:
         "timestep": DEFAULT_TIMESTEP,
         "scene_type": "distance_barrier_rb_problem",
         "distance_barrier_constraint": {
-            "custom_initial_epsilon": DEFAULT_BARRIER_EPS,
+            "initial_barrier_activation_distance": DEFAULT_BARRIER_EPS,
             "detection_method": "hash_grid",
             "use_distance_hashgrid": True,
             "active_constraint_scale": 1.01,

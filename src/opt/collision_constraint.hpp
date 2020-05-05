@@ -16,7 +16,7 @@ namespace opt {
         virtual void settings(const nlohmann::json& json);
         virtual nlohmann::json settings() const;
 
-        inline const std::string& name() const { return name_; }
+        inline const std::string& name() const { return m_name; }
 
         virtual void initialize() {};
 
@@ -39,7 +39,7 @@ namespace opt {
                 : (CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX);
         }
 
-        std::string name_;
+        std::string m_name;
     };
 
 } // namespace opt

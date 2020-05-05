@@ -4,7 +4,7 @@
     "max_time": 10.0,
     "timestep": 0.01,
     "distance_barrier_constraints": {
-        "custom_initial_epsilon": 1e-4
+        "initial_barrier_activation_distance": 1e-4
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,

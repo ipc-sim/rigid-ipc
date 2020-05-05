@@ -25,7 +25,7 @@ namespace opt {
         double Bx = compute_barrier_term(
             x, grad_Bx, hess_Bx, num_constraints, compute_grad, compute_hess);
 
-        double kappa = get_barrier_stiffness();
+        double kappa = barrier_stiffness();
 
         if (compute_grad) {
             grad = grad_Ex + kappa * grad_Bx;

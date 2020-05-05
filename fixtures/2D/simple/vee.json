@@ -2,7 +2,7 @@
     "scene_type": "distance_barrier_rb_problem",
     "timestep": 0.01,
     "distance_barrier_constraint": {
-        "custom_initial_epsilon": 0.1,
+        "initial_barrier_activation_distance": 0.1,
         "detection_method": "brute_force",
         "use_distance_hashgrid": true,
         "active_constraint_scale": 1.01,

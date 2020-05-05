@@ -24,7 +24,7 @@ TEST_CASE(
     public:
         AdHocProblem(int num_vars, double epsilon)
             : num_vars_(num_vars)
-            , barrier_epsilon(epsilon)
+            , m_barrier_epsilon(epsilon)
         {
         }
 
@@ -62,7 +62,7 @@ TEST_CASE(
             Eigen::Matrix<Diff::DDouble2, Eigen::Dynamic, 1> dx;
 
             Diff::DDouble2 b =
-                poly_log_barrier(dx.squaredNorm() / 2.0 - 1, barrier_epsilon);
+                poly_log_barrier(dx.squaredNorm() / 2.0 - 1, m_barrier_epsilon);
 
             grad_Bx = b.getGradient();
             hess_Bx = b.getHessian().sparseView();
@@ -72,22 +72,25 @@ TEST_CASE(
 
         double barrier_hessian(double x) const override
         {
-            return poly_log_barrier_hessian(x, barrier_epsilon);
+            return poly_log_barrier_hessian(x, m_barrier_epsilon);
         }
 
-        double get_barrier_homotopy() const override { return barrier_epsilon; }
-        void set_barrier_homotopy(const double eps) override
+        double barrier_activation_distance() const override
         {
-            barrier_epsilon = eps;
+            return m_barrier_epsilon;
+        }
+        void barrier_activation_distance(const double eps) override
+        {
+            m_barrier_epsilon = eps;
         }
 
-        double get_barrier_stiffness() const override
+        double barrier_stiffness() const override
         {
-            return barrier_stiffness;
+            return m_barrier_stiffness;
         }
-        void set_barrier_stiffness(const double kappa) override
+        void barrier_stiffness(const double kappa) override
         {
-            barrier_stiffness = kappa;
+            m_barrier_stiffness = kappa;
         }
 
         bool has_collisions(
@@ -122,8 +125,8 @@ TEST_CASE(
         double timestep() const override { return 1; }
 
         int num_vars_;
-        double barrier_epsilon;
-        double barrier_stiffness;
+        double m_barrier_epsilon;
+        double m_barrier_stiffness;
         Eigen::VectorXd x0;
         Eigen::VectorXb is_dof_fixed_;
     };

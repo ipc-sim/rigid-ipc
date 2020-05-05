@@ -90,11 +90,11 @@ namespace opt {
         /// Compute the value of the barrier hessian at a value x
         virtual double barrier_hessian(double x) const = 0;
 
-        virtual double get_barrier_homotopy() const = 0;
-        virtual void set_barrier_homotopy(const double eps) = 0;
+        virtual double barrier_activation_distance() const = 0;
+        virtual void barrier_activation_distance(const double dhat) = 0;
 
-        virtual double get_barrier_stiffness() const = 0;
-        virtual void set_barrier_stiffness(const double kappa) = 0;
+        virtual double barrier_stiffness() const = 0;
+        virtual void barrier_stiffness(const double kappa) = 0;
     };
 
     /// Helper Functions for checking finite differences

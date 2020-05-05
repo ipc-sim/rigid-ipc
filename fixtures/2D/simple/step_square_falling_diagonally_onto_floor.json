@@ -2,7 +2,7 @@
     "scene_type": "distance_barrier_rb_problem",
     "timestep": 1.0,
     "distance_barrier_constraint": {
-        "custom_initial_epsilon": 0.5,
+        "initial_barrier_activation_distance": 0.5,
         "detection_method": "hash_grid",
         "use_distance_hashgrid": false,
         "extend_collision_set": false

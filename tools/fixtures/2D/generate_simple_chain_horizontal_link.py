@@ -61,7 +61,7 @@ def main(args=None):
         "timestep": 0.1,
         "scene_type": "rigid_body_problem",
         "distance_barrier_constraint": {
-            "custom_initial_epsilon": 0.1,
+            "initial_barrier_activation_distance": 0.1,
             "detection_method": "hash_grid",
             "use_distance_hashgrid": True,
             "active_constraint_scale": 1.01,

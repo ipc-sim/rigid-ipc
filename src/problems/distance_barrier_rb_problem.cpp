@@ -16,8 +16,8 @@ namespace ccd {
 namespace opt {
 
     DistanceBarrierRBProblem::DistanceBarrierRBProblem()
-        : min_distance(-1)
-        , barrier_stiffness(1)
+        : m_barrier_stiffness(1)
+        , min_distance(-1)
     {
     }
 
@@ -47,6 +47,9 @@ namespace opt {
         return json;
     }
 
+    ////////////////////////////////////////////////////////////
+    // Rigid Body Problem
+
     bool DistanceBarrierRBProblem::simulation_step()
     {
         // Take an unconstrained step
@@ -59,7 +62,7 @@ namespace opt {
 
             // our constraint is really d > min_d, we want to run the
             // optimization when we end the step with small distances
-            if (min_distance <= get_barrier_homotopy()) {
+            if (min_distance <= barrier_activation_distance()) {
                 has_collision = true;
             }
         }
@@ -80,7 +83,7 @@ namespace opt {
     }
 
     ////////////////////////////////////////////////////////////
-    /// Barrier Problem
+    // Barrier Problem
 
     // Compute E(x) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
     double DistanceBarrierRBProblem::compute_energy_term(
@@ -149,18 +152,8 @@ namespace opt {
 
         double Bx;
 
-        // if we want a derivative we use the autodiff version
-        if (compute_grad || compute_hess) {
-            Bx = compute_barrier_term(
-                x, candidates, grad, hess, compute_grad, compute_hess);
-        } else {
-            // TODO: This can be remove in favor of using the autodiff version
-            // with double
-            Eigen::VectorXd gx;
-            m_constraint.compute_candidates_constraints(
-                m_assembler, poses, candidates, gx);
-            Bx = gx.sum();
-        }
+        Bx = compute_barrier_term(
+            x, candidates, grad, hess, compute_grad, compute_hess);
 
 #ifdef WITH_DERIVATIVE_CHECK
         if (compute_grad) {
@@ -261,7 +254,7 @@ namespace opt {
 
         RigidBodyCandidate rbc;
         extract_local_system(candidate, rbc);
-        std::array<long, 2> body_ids = rbc.get_body_ids();
+        std::array<long, 2> body_ids = rbc.body_ids();
 
         // Local gradient for a single constraint
         Eigen::VectorXd gradi;
@@ -380,7 +373,8 @@ namespace opt {
         const Eigen::VectorXd& sigma, const RigidBodyCandidate& rbc)
     {
         T d = distance<T>(sigma, rbc);
-        T barrier = m_constraint.distance_barrier<T>(d);
+        T mollifier = constraint_mollifier<T>(sigma, rbc);
+        T barrier = mollifier * m_constraint.distance_barrier<T>(d);
         return barrier;
     }
 
@@ -410,6 +404,43 @@ namespace opt {
     {
         sigma0 = sigma.segment(ndof * body_id0, ndof);
         sigma1 = sigma.segment(ndof * body_id1, ndof);
+    }
+
+    template <typename T>
+    T DistanceBarrierRBProblem::constraint_mollifier(
+        const Eigen::VectorXd& sigma, const RigidBodyEdgeEdgeCandidate& rbc)
+    {
+        Eigen::VectorX6<T> sigma_E0, sigma_E1;
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        init_body_sigmas(
+            sigma, rbc.edge0_body_id, rbc.edge1_body_id, ndof, //
+            sigma_E0, sigma_E1);
+
+        const auto& rbs = m_assembler.m_rbs;
+        Eigen::Vector3<T> edge0_vertex0 =
+            rbs[rbc.edge0_body_id].world_vertex<T>(
+                sigma_E0, rbc.edge0_vertex0_local_id);
+        Eigen::Vector3<T> edge0_vertex1 =
+            rbs[rbc.edge0_body_id].world_vertex<T>(
+                sigma_E0, rbc.edge0_vertex1_local_id);
+
+        Eigen::Vector3<T> edge1_vertex0 =
+            rbs[rbc.edge1_body_id].world_vertex<T>(
+                sigma_E1, rbc.edge1_vertex0_local_id);
+        Eigen::Vector3<T> edge1_vertex1 =
+            rbs[rbc.edge1_body_id].world_vertex<T>(
+                sigma_E1, rbc.edge1_vertex1_local_id);
+
+        T c = (edge0_vertex1 - edge0_vertex0)
+                  .cross(edge1_vertex1 - edge1_vertex0)
+                  .squaredNorm();
+        T e_x = 1e-3 * (edge0_vertex1 - edge0_vertex0).squaredNorm()
+            * (edge1_vertex1 - edge1_vertex0).squaredNorm();
+        if (c < e_x) {
+            return -1 / (e_x * e_x) * c * c + 2 / e_x * c;
+        } else {
+            return T(1.0);
+        }
     }
 
     template <typename T>
@@ -599,7 +630,7 @@ namespace opt {
             return distance<double>(sigma_k, rbc);
         };
 
-        std::array<long, 2> body_ids = rbc.get_body_ids();
+        std::array<long, 2> body_ids = rbc.body_ids();
 
         // distance finite diff
         Eigen::VectorXd exact_grad = Eigen::VectorXd::Zero(sigma.rows());
@@ -617,7 +648,7 @@ namespace opt {
             approx_grad, exact_grad, Constants::FINITE_DIFF_TEST,
             fmt::format(
                 "check_finite_gradient DISTANCE barrier_eps={:3e} d={:3e}",
-                m_constraint.get_barrier_epsilon(), d.getValue()));
+                m_constraint.barrier_activation_distance(), d.getValue()));
     }
 
     template <typename Candidate, typename RigidBodyCandidate>
@@ -632,7 +663,7 @@ namespace opt {
         extract_local_system(candidate, rbc);
         Diff::DDouble2 d = distance<Diff::DDouble2>(sigma, rbc);
 
-        std::array<long, 2> body_ids = rbc.get_body_ids();
+        std::array<long, 2> body_ids = rbc.body_ids();
 
         // distance finite diff
         std::vector<Eigen::Triplet<double>> exact_hessian_triplets;
@@ -661,7 +692,7 @@ namespace opt {
             Constants::FINITE_DIFF_TEST,
             fmt::format(
                 "check_finite_hessian DISTANCE barrier_eps={:3e} d={:3e}",
-                m_constraint.get_barrier_epsilon(), d.getValue()));
+                m_constraint.barrier_activation_distance(), d.getValue()));
     }
 
     void DistanceBarrierRBProblem::check_grad_barrier(

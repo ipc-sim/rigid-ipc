@@ -108,7 +108,7 @@ namespace opt {
     OptimizationResults NewtonSolver::solve(const Eigen::VectorXd& x0)
     {
         assert(problem_ptr != nullptr);
-        // Initalize the working variables
+        // Initialize the working variables
         x_prev = x0;
         x = x0;
 

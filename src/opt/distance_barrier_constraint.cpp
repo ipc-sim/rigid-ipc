@@ -18,26 +18,22 @@ namespace opt {
           { BarrierType::POLY_LOG, "poly_log" },
           { BarrierType::SPLINE, "spline" } })
 
-    DistanceBarrierConstraint::DistanceBarrierConstraint()
-        : DistanceBarrierConstraint("distance_barrier_constraint")
-    {
-    }
-
     DistanceBarrierConstraint::DistanceBarrierConstraint(
         const std::string& name)
         : CollisionConstraint(name)
-        , custom_inital_epsilon(1e-2)
+        , initial_barrier_activation_distance(1e-2)
         , min_distance(0.0)
         , active_constraint_scale(1.01)
         , barrier_type(BarrierType::POLY_LOG)
-        , m_barrier_epsilon(0.0)
+        , m_barrier_activation_distance(0.0)
     {
     }
 
     void DistanceBarrierConstraint::settings(const nlohmann::json& json)
     {
         CollisionConstraint::settings(json);
-        custom_inital_epsilon = json["custom_initial_epsilon"].get<double>();
+        initial_barrier_activation_distance =
+            json["initial_barrier_activation_distance"].get<double>();
         active_constraint_scale = json["active_constraint_scale"].get<double>();
         min_distance = json["min_distance"].get<double>();
         barrier_type = json["barrier_type"].get<BarrierType>();
@@ -46,17 +42,17 @@ namespace opt {
     nlohmann::json DistanceBarrierConstraint::settings() const
     {
         nlohmann::json json = CollisionConstraint::settings();
-        json["custom_inital_epsilon"] = custom_inital_epsilon;
+        json["initial_barrier_activation_distance"] =
+            initial_barrier_activation_distance;
         json["active_constraint_scale"] = active_constraint_scale;
         json["min_distance"] = min_distance;
         json["barrier_type"] = barrier_type;
-
         return json;
     }
 
     void DistanceBarrierConstraint::initialize()
     {
-        m_barrier_epsilon = custom_inital_epsilon;
+        m_barrier_activation_distance = initial_barrier_activation_distance;
         CollisionConstraint::initialize();
     }
 
@@ -102,16 +98,6 @@ namespace opt {
         return false;
     }
 
-    void DistanceBarrierConstraint::compute_constraints(
-        const physics::RigidBodyAssembler& bodies,
-        const physics::Poses<double>& poses,
-        Eigen::VectorXd& barriers)
-    {
-        Candidates candidates;
-        construct_active_barrier_set(bodies, poses, candidates);
-        compute_candidates_constraints(bodies, poses, candidates, barriers);
-    }
-
     void DistanceBarrierConstraint::construct_active_barrier_set(
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses,
@@ -129,7 +115,8 @@ namespace opt {
         detect_collision_candidates(
             bodies, poses, poses, dim_to_collision_type(bodies.dim()),
             candidates, detection_method, trajectory_type,
-            /*inflation_radius=*/active_constraint_scale * m_barrier_epsilon);
+            /*inflation_radius=*/active_constraint_scale
+                * m_barrier_activation_distance);
 
         PROFILE_END(BROAD_PHASE)
 
@@ -141,7 +128,7 @@ namespace opt {
         // TODO: Consider skipping this step
         // TODO: Store these distance for use later
         double activation_distance =
-            active_constraint_scale * m_barrier_epsilon;
+            active_constraint_scale * m_barrier_activation_distance;
         tbb::parallel_invoke(
             [&] {
                 // TODO: Consider parallelizing this loop

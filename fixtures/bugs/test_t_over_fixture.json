@@ -3,7 +3,7 @@
     "max_iterations": 1000,
     "timestep": 0.01,
     "distance_barrier_constraint": {
-        "custom_initial_epsilon": 0.001,
+        "initial_barrier_activation_distance": 0.001,
         "detection_method": "hash_grid",
         "use_distance_hashgrid": true,
         "active_constraint_scale": 1.01,

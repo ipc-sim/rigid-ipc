@@ -4,7 +4,7 @@
     "max_time": 10,
     "distance_barrier_constraint": {
         "detection_method": "hash_grid",
-        "custom_initial_epsilon": 0.01,
+        "initial_barrier_activation_distance": 0.01,
         "active_constraint_scale": 1.01
     },
     "barrier_solver": {

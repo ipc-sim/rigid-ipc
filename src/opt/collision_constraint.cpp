@@ -6,9 +6,9 @@ namespace ccd {
 namespace opt {
 
     CollisionConstraint::CollisionConstraint(const std::string& name)
-        : detection_method(HASH_GRID)
-        , trajectory_type(SCREWING)
-        , name_(name)
+        : detection_method(DetectionMethod::HASH_GRID)
+        , trajectory_type(TrajectoryType::SCREWING)
+        , m_name(name)
     {
     }
 

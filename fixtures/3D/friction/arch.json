@@ -6,7 +6,7 @@
     "distance_barrier_constraint": {
         "barrier_type": "poly_log",
         "trajectory_type": "linearized",
-        "custom_initial_epsilon": 1e-2
+        "initial_barrier_activation_distance": 1e-2
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,

@@ -5,7 +5,7 @@
     "max_time": 10.0,
     "distance_barrier_constraint": {
         "trajectory_type": "linearized",
-        "custom_initial_epsilon": 1e-2
+        "initial_barrier_activation_distance": 1e-2
     },
     "ipc_solver": {
         "min_barrier_stiffness_scale": 1e11

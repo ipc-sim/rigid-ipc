@@ -43,7 +43,7 @@ namespace opt {
 
         // Find a good initial value for κ
         double bbox_diagonal = problem_ptr->world_bbox_diagonal();
-        double dhat = barrier_problem_ptr()->get_barrier_homotopy();
+        double dhat = barrier_problem_ptr()->barrier_activation_distance();
         double d0 = 1e-8 * bbox_diagonal;
         if (d0 >= dhat) {
             d0 = 0.5 * dhat; // TODO: this is untested
@@ -75,16 +75,16 @@ namespace opt {
             kappa = -grad_B.dot(grad_E) / grad_B.squaredNorm();
             assert(std::isfinite(kappa));
         }
-        barrier_problem_ptr()->set_barrier_stiffness(std::min(
+        barrier_problem_ptr()->barrier_stiffness(std::min(
             max_barrier_stiffness, std::max(min_barrier_stiffness, kappa)));
         spdlog::info(
             "solver={} initial_num_active_barriers={:d} κ_min={:g} κ_max={:g} "
             "κ_g={:g} κ₀={:g}",
             name(), num_active_barriers, min_barrier_stiffness,
             max_barrier_stiffness, kappa,
-            barrier_problem_ptr()->get_barrier_stiffness());
+            barrier_problem_ptr()->barrier_stiffness());
 
-        // Compute the inital minimum distance
+        // Compute the initial minimum distance
         prev_min_distance = problem_ptr->compute_min_distance(x0);
     }
 
@@ -99,13 +99,12 @@ namespace opt {
         if (prev_min_distance < dhat_epsilon && min_distance < dhat_epsilon
             && min_distance < prev_min_distance) {
             // Then increase the barrier stiffness.
-            barrier_problem_ptr()->set_barrier_stiffness(std::min(
+            barrier_problem_ptr()->barrier_stiffness(std::min(
                 max_barrier_stiffness,
-                2 * barrier_problem_ptr()->get_barrier_stiffness()));
+                2 * barrier_problem_ptr()->barrier_stiffness()));
             spdlog::info(
                 "solver={} iter={:d} msg=\"updated κ to {:g}\"", name(),
-                iteration_number,
-                barrier_problem_ptr()->get_barrier_stiffness());
+                iteration_number, barrier_problem_ptr()->barrier_stiffness());
             num_kappa_updates++;
         }
         prev_min_distance = min_distance;

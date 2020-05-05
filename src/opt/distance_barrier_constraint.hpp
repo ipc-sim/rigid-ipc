@@ -15,16 +15,22 @@ namespace opt {
 
     class DistanceBarrierConstraint : public CollisionConstraint {
     public:
-        DistanceBarrierConstraint();
-        DistanceBarrierConstraint(const std::string& name);
+        DistanceBarrierConstraint(
+            const std::string& name = "distance_barrier_constraint");
 
-        void settings(const nlohmann::json& json) override;
         nlohmann::json settings() const override;
+        void settings(const nlohmann::json& json) override;
 
         virtual void initialize() override;
 
-        double get_barrier_epsilon() const { return m_barrier_epsilon; }
-        void set_barrier_epsilon(const double eps) { m_barrier_epsilon = eps; }
+        double barrier_activation_distance() const
+        {
+            return m_barrier_activation_distance;
+        }
+        void barrier_activation_distance(const double dhat)
+        {
+            m_barrier_activation_distance = dhat;
+        }
 
         bool has_active_collisions(
             const physics::RigidBodyAssembler& bodies,
@@ -42,24 +48,20 @@ namespace opt {
             Candidates& barriers) const;
 
         template <typename T>
-        void compute_candidates_constraints(
-            const physics::RigidBodyAssembler& bodies,
-            const physics::Poses<T>& poses,
-            const Candidates& candidates,
-            Eigen::Matrix<T, Eigen::Dynamic, 1>& barriers);
-
-        template <typename T>
-        T distance_barrier(const T& distance, const double eps) const;
+        T distance_barrier(const T& distance, const double dhat) const;
 
         template <typename T> T distance_barrier(const T& distance) const
         {
-            return distance_barrier(distance, m_barrier_epsilon);
+            return distance_barrier(distance, m_barrier_activation_distance);
         }
+
+        // TODO: Add distance_barrier_gradient if necessary
 
         double distance_barrier_hessian(double distance) const
         {
             return barrier_hessian(
-                distance - min_distance, m_barrier_epsilon, barrier_type);
+                distance - min_distance, m_barrier_activation_distance,
+                barrier_type);
         }
 
         void compute_distances(
@@ -69,19 +71,21 @@ namespace opt {
 
         // Settings
         // ----------
-        /// @brief initial epsilon to use in barrier function
-        double custom_inital_epsilon;
+        /// @brief Initial d̂ to use in the barrier function.
+        double initial_barrier_activation_distance;
 
-        /// @brief displace barrier evaluation by this value
+        /// @brief Minimum allowable distance between any pair of primitives.
         double min_distance;
 
-        /// @brief active constraints have distances < scale * barrier_epsilon
+        /// @brief Active constraints have distances < scale * d̂.
         double active_constraint_scale;
 
+        /// @brief Choice of barrier function (see barrier/barrier.hpp).
         BarrierType barrier_type;
 
     protected:
-        double m_barrier_epsilon;
+        /// @brief Max distance, d̂, at which the barrier forces are activate.
+        double m_barrier_activation_distance;
     };
 
 } // namespace opt

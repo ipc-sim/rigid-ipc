@@ -25,7 +25,7 @@ def generate_default_fixture() -> dict:
         "max_iterations": DEFAULT_NUM_STEPS,
         "timestep": DEFAULT_TIMESTEP,
         "distance_barrier_constraint": {
-            "custom_initial_epsilon": DEFAULT_INITIAL_EPSILON,
+            "initial_barrier_activation_distance": DEFAULT_INITIAL_EPSILON,
             "detection_method": "hash_grid",
             "active_constraint_scale": 1.01
         },
@@ -49,7 +49,7 @@ def generate_custom_fixture(args: argparse.Namespace) -> dict:
     fixture = generate_default_fixture()
     fixture["timestep"] = args.timestep
     fixture["max_iterations"] = args.num_steps
-    fixture["distance_barrier_constraint"]["custom_initial_epsilon"] = (
+    fixture["distance_barrier_constraint"]["initial_barrier_activation_distance"] = (
         args.init_epsilon)
     fixture["rigid_body_problem"]["gravity"] = (args.gravity + 3 * [0])[:3]
     fixture["rigid_body_problem"]["coefficient_restitution"] = (
@@ -87,7 +87,7 @@ def create_argument_parser(
     parser.add_argument("--init-epsilon",
                         type=float,
                         default=default_initial_epsilon,
-                        help="inital ϵ for the barrier")
+                        help="initial d̂ for the barrier")
     parser.add_argument("--gravity",
                         type=float,
                         nargs=2,

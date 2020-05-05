@@ -77,9 +77,9 @@ namespace opt {
         }
 
         spdlog::debug(
-            "solver={} eps_barrier={} m={} t={} e_b={} c={} t_inc={}", name(),
-            problem_ptr->get_barrier_homotopy(), m, t, e_b, c, t_inc);
-        problem_ptr->set_barrier_stiffness(1 / t);
+            "solver={} d̂={} m={} t={} e_b={} c={} t_inc={}", name(),
+            problem_ptr->barrier_activation_distance(), m, t, e_b, c, t_inc);
+        problem_ptr->barrier_stiffness(1 / t);
     }
 
     OptimizationResults BarrierSolver::step_solve()
@@ -88,12 +88,12 @@ namespace opt {
         assert(inner_solver_ptr != nullptr);
 
         spdlog::debug(
-            "solver={} it={} eps_barrier={} m={} t={} e_b={} c={}", name(),
-            num_outer_iterations, problem_ptr->get_barrier_homotopy(), m, t,
-            e_b, c);
+            "solver={} it={} d̂={} m={} t={} e_b={} c={}", name(),
+            num_outer_iterations, problem_ptr->barrier_activation_distance(), m,
+            t, e_b, c);
 
         // propagate variables
-        problem_ptr->set_barrier_stiffness(1 / t);
+        problem_ptr->barrier_stiffness(1 / t);
         inner_solver_ptr->e_b(e_b);
         inner_solver_ptr->c(c);
         inner_solver_ptr->t(t);

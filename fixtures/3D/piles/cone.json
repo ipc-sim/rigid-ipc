@@ -6,7 +6,7 @@
     "distance_barrier_constraint": {
         "trajectory_type": "linearized",
         "active_constraint_scale": 1.1,
-        "custom_initial_epsilon": 1e-3
+        "initial_barrier_activation_distance": 1e-3
     },
     "ipc_solver": {
         "min_barrier_stiffness_scale": 1e11
