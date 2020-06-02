@@ -33,8 +33,8 @@
             "group_id": 0
         }, {
             "mesh": "tet-corner.obj",
-            "position": [-0.499995, 0.6, -0.499995],
-            "scale": 0.99999
+            "position": [-0.4995, 0.6, -0.4995],
+            "scale": 0.999
         }]
     }
 }

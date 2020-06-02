@@ -246,9 +246,6 @@ namespace opt {
         // The following functions are used exclusivly to check that the
         // gradient and hessian match a finite difference version.
 
-        Eigen::VectorXd compute_full_grad_barrier(
-            const Eigen::VectorXd& sigma, const Candidates& candidates);
-
         template <typename Candidate, typename RigidBodyCandidate>
         void check_distance_finite_gradient(
             const Eigen::VectorXd& sigma, const Candidate& candidate);

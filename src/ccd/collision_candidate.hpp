@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-// #include <tbb/concurrent_vector.h>
 #include <vector>
 
 namespace ccd {
@@ -75,24 +74,5 @@ struct Candidates {
         fv_candidates.clear();
     }
 };
-
-// struct ConcurrentCandidates {
-//     tbb::concurrent_vector<EdgeVertexCandidate> ev_candidates;
-//     tbb::concurrent_vector<EdgeEdgeCandidate> ee_candidates;
-//     tbb::concurrent_vector<FaceVertexCandidate> fv_candidates;
-//
-//     size_t size() const
-//     {
-//         return ev_candidates.size() + ee_candidates.size()
-//             + fv_candidates.size();
-//     }
-//
-//     void clear()
-//     {
-//         ev_candidates.clear();
-//         ee_candidates.clear();
-//         fv_candidates.clear();
-//     }
-// };
 
 } // namespace ccd

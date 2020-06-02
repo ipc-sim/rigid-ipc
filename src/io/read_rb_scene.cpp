@@ -112,6 +112,16 @@ namespace io {
             assert(position.size() >= dim);
             position.conservativeResize(dim);
 
+            Eigen::VectorX3d scale;
+            if (args["scale"].is_number()) {
+                scale.setConstant(dim, args["scale"].get<double>());
+            } else {
+                from_json<double>(args["scale"], scale);
+                assert(scale.size() >= angular_dim);
+                scale.conservativeResize(dim);
+            }
+            vertices = vertices * scale.asDiagonal();
+
             // Rotate around the models origin NOT the rigid bodies center of
             // mass
             Eigen::VectorX3d rotation;
@@ -132,16 +142,6 @@ namespace io {
             }
             vertices = vertices * R.transpose();
             rotation.setZero(angular_dim); // Zero initial body rotation
-
-            Eigen::VectorX3d scale;
-            if (args["scale"].is_number()) {
-                scale.setConstant(dim, args["scale"].get<double>());
-            } else {
-                from_json<double>(args["scale"], scale);
-                assert(scale.size() >= angular_dim);
-                scale.conservativeResize(dim);
-            }
-            vertices = vertices * scale.asDiagonal();
 
             Eigen::VectorX3d linear_velocity;
             from_json<double>(args["linear_velocity"], linear_velocity);

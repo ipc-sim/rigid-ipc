@@ -13,8 +13,15 @@
 namespace ccd {
 namespace logger {
 
-    static const Eigen::IOFormat
-        CleanFmt(Eigen::FullPrecision, 0, ", ", "\n", "", "");
+    static const Eigen::IOFormat CleanFmt(
+        Eigen::FullPrecision,
+        Eigen::DontAlignCols,
+        ", ",
+        "\n",
+        "[",
+        "]",
+        "[",
+        "]");
     std::string fmt_eigen(const Eigen::MatrixXd& x, const int precision)
     {
         std::stringstream ssx;

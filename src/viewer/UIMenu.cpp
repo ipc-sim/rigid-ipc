@@ -134,6 +134,11 @@ void UISimState::draw_simulation_player()
         && player_state == PlayerState::Paused) {
         log_simulation_time();
     }
+    if (m_state.m_num_simulation_steps >= m_state.m_max_simulation_steps
+        && m_player_state == PlayerState::Paused
+        && player_state == PlayerState::Playing) {
+        m_state.m_max_simulation_steps = -1; // Turn off breaking
+    }
     m_player_state = static_cast<PlayerState>(player_state);
 
     if (ImGui::Button("Step##SimPlayer", ImVec2(-1, 0))) {

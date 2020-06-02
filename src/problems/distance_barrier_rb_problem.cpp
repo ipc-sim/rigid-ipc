@@ -595,24 +595,6 @@ namespace opt {
     // The following functions are used exclusivly to check that the
     // gradient and hessian match a finite difference version.
 
-    Eigen::VectorXd DistanceBarrierRBProblem::compute_full_grad_barrier(
-        const Eigen::VectorXd& sigma, const Candidates& candidates)
-    {
-        typedef AutodiffType<Eigen::Dynamic> Diff;
-        Diff::activate(num_vars_);
-        assert(sigma.size() == num_vars_);
-
-        Diff::D1VectorXd d_sigma = Diff::d1vars(0, sigma);
-
-        physics::Poses<Diff::DDouble1> d_poses = this->dofs_to_poses(d_sigma);
-        Diff::D1VectorXd dBxi;
-        m_constraint.compute_candidates_constraints<Diff::DDouble1>(
-            m_assembler, d_poses, candidates, dBxi);
-
-        assert(candidates.size() == dBxi.rows());
-        return dBxi.sum().getGradient();
-    }
-
     template <typename Candidate, typename RigidBodyCandidate>
     void DistanceBarrierRBProblem::check_distance_finite_gradient(
         const Eigen::VectorXd& sigma, const Candidate& candidate)
@@ -700,12 +682,6 @@ namespace opt {
         const Candidates& candidates,
         const Eigen::VectorXd& grad)
     {
-        // Compute the gradient using full autodiff
-        fd::compare_jacobian(
-            compute_full_grad_barrier(sigma, candidates), grad,
-            /*test_eps=*/Constants::FULL_GRADIENT_TEST,
-            "autodiff gradients do not match ∇B(x)");
-
         // Compute the finite difference of a single constraint
         for (const auto& ev : candidates.ev_candidates) {
             check_distance_finite_gradient<

@@ -38,24 +38,18 @@ namespace time_stepper {
         R1 += time_step * R1 * Eigen::Hat(body.velocity.rotation);
         project_orientation(R1);
         Eigen::AngleAxisd r1 = Eigen::AngleAxisd(R1);
-        // According to Eigen documentation θ ∈ [0,π].
-        // If the axis is flipped from the previous axis, negate it and subtract
-        // the angle from 2π
         double angle = r1.angle();
         Eigen::Vector3d axis = r1.axis();
-        if (axis.dot(body.pose_prev.rotation) < 0) {
-            angle = 2 * igl::PI - angle; // ∈ [π, 2π]
-            axis *= -1;
-        }
-        if ((body.pose_prev.rotation.norm() > 3 * igl::PI / 2
-             && angle < igl::PI / 2)
-            || (body.pose_prev.rotation.norm() < igl::PI / 2
-                && angle > 3 * igl::PI / 2)) {
+        const Eigen::Vector3d& r0 = body.pose_prev.rotation;
+        // Find a closer rotation vector
+        int k = round((axis.dot(r0) - angle) / (2 * igl::PI));
+        if (k != 0) {
+            const Eigen::Vector3d r1_star = (angle + 2 * igl::PI * k) * axis;
             spdlog::warn(
-                "r0={} r1={}", logger::fmt_eigen(body.pose_prev.rotation),
-                logger::fmt_eigen(angle * axis));
+                "r0={} r1={} k={} r1'={}", logger::fmt_eigen(r0),
+                logger::fmt_eigen(angle * axis), k, logger::fmt_eigen(r1_star));
         }
-        body.pose.rotation = angle * axis;
+        body.pose.rotation = (angle + 2 * igl::PI * k) * axis;
 
         // Compute the acceleration at ( q0, v0 )
         physics::Pose<double> acceleration(

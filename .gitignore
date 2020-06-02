@@ -255,6 +255,7 @@ temp-plot.html
 *.blend[123456789]
 erleben.blend
 wrecking-ball.blend
+screw-and-nut.blend
 meshes/tennis-racket.obj
 
 **/*.bak

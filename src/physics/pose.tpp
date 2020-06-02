@@ -281,7 +281,7 @@ void decompose_to_z_screwing(
     // Decompose the inbetween rotation as a rotation around the z-axis:
     //     R = Pᵀ R_z P
     // Where R = R₁R₀ᵀ, P is a rotation from n̂ to ẑ, and R_z is a rotation
-    // of θ around the z-axis.
+    // of ω around the z-axis.
     R0 = pose_t0.construct_rotation_matrix();
     Eigen::Matrix3<T> R1 = pose_t1.construct_rotation_matrix();
     Eigen::AngleAxis<T> r(R1 * R0.transpose());

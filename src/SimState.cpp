@@ -81,15 +81,9 @@ bool SimState::load_simulation(const nlohmann::json& input_args)
     }
 
     // now reload simulation history
-    vertices_sequence.clear();
-    for (auto& jv : input_args["animation"]["vertices_sequence"]) {
-        Eigen::MatrixXd v;
-        io::from_json(jv, v);
-        vertices_sequence.push_back(v);
-    };
     state_sequence = input_args["animation"]["state_sequence"]
                          .get<std::vector<nlohmann::json>>();
-    m_num_simulation_steps = int(state_sequence.size());
+    m_num_simulation_steps = int(state_sequence.size()) - 1;
     problem_ptr->state(state_sequence.back());
     return true;
 }
@@ -174,10 +168,8 @@ bool SimState::init(const nlohmann::json& args_in)
 
     args.merge_patch(args_in);
 
-    if (args["min_barrier_stiffness_scale"].is_string()
-        && args["min_barrier_stiffness_scale"].get<std::string>()
-            == "default") {
-        args["min_barrier_stiffness_scale"] =
+    if (!args["ipc_solver"]["min_barrier_stiffness_scale"].is_number()) {
+        args["ipc_solver"]["min_barrier_stiffness_scale"] =
             Constants::MIN_BARRIER_STIFFNESS_SCALE;
     }
 
@@ -195,9 +187,6 @@ bool SimState::init(const nlohmann::json& args_in)
 
     m_num_simulation_steps = 0;
     m_dirty_constraints = true;
-
-    vertices_sequence.clear();
-    vertices_sequence.push_back(problem_ptr->vertices());
 
     state_sequence.clear();
     state_sequence.push_back(problem_ptr->state());
@@ -268,7 +257,6 @@ void SimState::simulation_step()
 
 void SimState::save_simulation_step()
 {
-    vertices_sequence.push_back(problem_ptr->vertices());
     state_sequence.push_back(problem_ptr->state());
 }
 
@@ -341,20 +329,10 @@ void SimState::save_simulation(const std::string& filename)
 {
     nlohmann::json results;
     results["args"] = args;
-    results["active_args"] = get_active_config();
-    std::vector<nlohmann::json> vs;
-    for (auto& v : vertices_sequence) {
-        vs.push_back(io::to_json(v));
-    }
     results["animation"] = nlohmann::json();
-    results["animation"]["vertices_sequence"] = vs;
     results["animation"]["state_sequence"] = state_sequence;
-    results["animation"]["edges"] = io::to_json(problem_ptr->edges());
-    // TODO: Consider adding faces
-    results["animation"]["group_id"] = io::to_json(problem_ptr->group_ids());
 
-    std::ofstream o(filename);
-    o << std::setw(4) << results << std::endl;
+    std::ofstream(filename) << results.dump();
 }
 
 } // namespace ccd

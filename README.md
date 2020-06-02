@@ -71,24 +71,26 @@ conditions for each body. The `fixtures` directory contains example scenes.
 
 ## Algorithm
 
+### 2D
+
 ```
-x_0^{t+1} = x^{t} + h * v^{t} + h^2 * g
-v_0^{t+1} = (x_0^{t+1} - x^{t}) / h
-if (collision_between(x^{t}, x_0^{t+1})) {
-    original_collisions = CCD(x^{t}, x_0^{t+1})
-    x^{t+1} = barrier_newton_solve(x^{t}, x_0^{t+1})
+x₀ᵗ⁺¹ = xᵗ + h * vᵗ + h^2 * g
+v₀ᵗ⁺¹ = (x₀ᵗ⁺¹ - xᵗ) / h
+if (collision_between(xᵗ, x₀ᵗ⁺¹)) {
+    original_collisions = CCD(xᵗ, x₀ᵗ⁺¹)
+    xᵗ⁺¹ = IPC_solve(xᵗ, x₀ᵗ⁺¹)
     if (using sequential impulses for restitution) {
          // Apply the restitution model in the above write-up
-        v^{t+1} = solve_velocities(
-            x^{t}, x_0^{t+1},
-            v^{t}, v_0^{t+1},
+        vᵗ⁺¹ = solve_velocities(
+            xᵗ, x₀ᵗ⁺¹,
+            vᵗ, v₀ᵗ⁺¹,
             original_collisions,
             coefficient_of_restitution)
     } else {
-        v^{t+1} = x^{t+1} - x^{t} / h
+        vᵗ⁺¹ = xᵗ⁺¹ - xᵗ / h
     }
 } else {
-    x^{t+1} = x_0^{t+1}
-    v^{t+1} = v_0^{t+1}
+    xᵗ⁺¹ = x₀ᵗ⁺¹
+    vᵗ⁺¹ = v₀ᵗ⁺¹
 }
 ```

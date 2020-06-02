@@ -26,7 +26,7 @@
             "angular_velocity": [0, 0, 0]
         }, {
             "mesh": "plane.obj",
-            "is_dof_fixed": [true, true, true, true, true, true],
+            "is_dof_fixed": true,
             "position": [0, -1, 0]
         }]
     }

@@ -4,24 +4,25 @@
     "timestep": 0.01,
     "max_time": 10,
     "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 1e-4,
+        "#initial_barrier_activation_distance": 1e-4,
         "trajectory_type": "linearized"
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "gravity": [0, 0, 0],
+        "gravity": [0, -9.81, 0],
         "rigid_bodies": [{
-            "mesh": "75mm-nut.stl",
+            "mesh": "screw-and-nut/nut-big.obj",
             "position": [0, 0, 0],
             "rotation": [0, 0, 0],
-            "scale": 1e-2,
-            "linear_velocity": [0, 0, 0],
-            "angular_velocity": [0, 0, 0]
-        }, {
-            "mesh": "75mm-screw.stl",
-            "position": [0, 0, 0],
-            "scale": 1e-2,
+            "scale": 1,
             "is_dof_fixed": true
+        }, {
+            "mesh": "screw-and-nut/screw-big.obj",
+            "position": [0, 0, 0],
+            "scale": 1,
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [0, 0, 0],
+            "torque": [0, -100, 0]
         }]
     }
 }

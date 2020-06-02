@@ -47,7 +47,6 @@ public:
 
 protected:
     bool m_dirty_constraints;
-    std::vector<Eigen::MatrixXd> vertices_sequence;
     std::vector<nlohmann::json> state_sequence;
 };
 

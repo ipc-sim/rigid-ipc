@@ -274,10 +274,25 @@ namespace physics {
             I << (mass_matrix * vertices.rowwise().squaredNorm()).sum();
             return I;
         } else {
-            // throw NotImplementedError(
-            spdlog::error("3D moment of interia from the mass matrix is not "
-                          "implemented!");
-            return Eigen::Matrix3d::Identity();
+            // https://images.app.goo.gl/DZ1bAcGwtitvCjSs7
+            Eigen::VectorXd vertex_masses = mass_matrix.diagonal();
+
+            Eigen::Matrix<double, 3, 3> I = Eigen::Matrix<double, 3, 3>::Zero();
+            for (long i = 0; i < vertices.rows(); i++) {
+                const Eigen::Vector3d& v = vertices.row(i);
+                const Eigen::Vector3d v_sqr = v.array().pow(2);
+                I(0, 0) += vertex_masses(i) * (v_sqr(1) + v_sqr(2));
+                I(0, 1) += -vertex_masses(i) * v(0) * v(1);
+                I(0, 2) += -vertex_masses(i) * v(0) * v(2);
+                I(1, 1) += vertex_masses(i) * (v_sqr(0) + v_sqr(2));
+                I(1, 2) += -vertex_masses(i) * v(1) * v(2);
+                I(2, 2) += vertex_masses(i) * (v_sqr(0) + v_sqr(1));
+            }
+            I(1, 0) = I(0, 1);
+            I(2, 0) = I(0, 2);
+            I(2, 1) = I(1, 2);
+
+            return I;
         }
     }
 

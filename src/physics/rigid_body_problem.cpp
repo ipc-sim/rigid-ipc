@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <finitediff.hpp>
+#include <igl/PI.h>
 #include <igl/predicates/segment_segment_intersect.h>
 
 #include <geometry/intersection.hpp>
@@ -67,8 +68,8 @@ namespace physics {
         for (size_t i = 0; i < m_assembler.m_rbs.size(); ++i) {
             auto& rb = m_assembler.m_rbs[i];
             spdlog::info(
-                "rb={} group_id={} mass={} innertia={}", i, rb.group_id,
-                rb.mass, logger::fmt_eigen(rb.moment_of_inertia));
+                "rb={} group_id={} mass={} inertia={}", i, rb.group_id, rb.mass,
+                logger::fmt_eigen(rb.moment_of_inertia));
         }
 
         // Compute world diagonal
@@ -92,7 +93,18 @@ namespace physics {
         for (auto& rb : m_assembler.m_rbs) {
             nlohmann::json jrb;
             jrb["position"] = io::to_json(Eigen::VectorXd(rb.pose.position));
-            jrb["rotation"] = io::to_json(Eigen::VectorXd(rb.pose.rotation));
+            // Cancel out the local frame rotation since we do not save the
+            // transformed vertices.
+            Eigen::VectorX3d rotation;
+            if (dim() == 2) {
+                rotation = rb.pose.rotation;
+            } else {
+                rotation =
+                    Eigen::Matrix3d(
+                        rb.pose.construct_rotation_matrix() * rb.R0.transpose())
+                        .eulerAngles(0, 1, 2);
+            }
+            jrb["rotation"] = io::to_json(Eigen::VectorXd(rotation));
             jrb["linear_velocity"] =
                 io::to_json(Eigen::VectorXd(rb.velocity.position));
             jrb["angular_velocity"] =
@@ -150,6 +162,15 @@ namespace physics {
     {
         // Take an unconstrained time-step
         m_time_stepper->step(m_assembler, gravity, timestep());
+        // RigidBody& body = m_assembler.m_rbs[0];
+        // body.pose = body.pose_prev;
+        // body.pose.rotation.y() += 2;
+
+        spdlog::debug(
+            "r0={} r1={} ω={}",
+            logger::fmt_eigen(m_assembler.m_rbs[0].pose_prev.rotation),
+            logger::fmt_eigen(m_assembler.m_rbs[0].pose.rotation),
+            logger::fmt_eigen(m_assembler.m_rbs[0].velocity.rotation));
 
         update_dof();
 
@@ -228,11 +249,13 @@ namespace physics {
                     // R * Rᵗ = Rᵗ⁺¹ → R = Rᵗ⁺¹[Rᵗ]ᵀ
                     Eigen::Matrix3d R = rb.pose.construct_rotation_matrix()
                         * rb.pose_prev.construct_rotation_matrix().transpose();
-                    // TODO: Convert R from world to body coordinates
+                    // TODO: Make sure we did not loose momentum do to π modulus
                     // ω = rotation_vector(R)
                     Eigen::AngleAxisd omega(R);
-                    rb.velocity.rotation =
-                        omega.angle() * omega.axis() / timestep();
+                    rb.velocity.rotation = omega.angle() / timestep()
+                        * rb.R0.transpose() * omega.axis();
+                    spdlog::debug(
+                        "ω_IPC={}", logger::fmt_eigen(rb.velocity.rotation));
                 }
             });
         }
