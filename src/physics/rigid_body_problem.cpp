@@ -93,18 +93,7 @@ namespace physics {
         for (auto& rb : m_assembler.m_rbs) {
             nlohmann::json jrb;
             jrb["position"] = io::to_json(Eigen::VectorXd(rb.pose.position));
-            // Cancel out the local frame rotation since we do not save the
-            // transformed vertices.
-            Eigen::VectorX3d rotation;
-            if (dim() == 2) {
-                rotation = rb.pose.rotation;
-            } else {
-                rotation =
-                    Eigen::Matrix3d(
-                        rb.pose.construct_rotation_matrix() * rb.R0.transpose())
-                        .eulerAngles(0, 1, 2);
-            }
-            jrb["rotation"] = io::to_json(Eigen::VectorXd(rotation));
+            jrb["rotation"] = io::to_json(Eigen::VectorXd(rb.pose.rotation));
             jrb["linear_velocity"] =
                 io::to_json(Eigen::VectorXd(rb.velocity.position));
             jrb["angular_velocity"] =
@@ -257,6 +246,7 @@ namespace physics {
                     spdlog::debug(
                         "ω_IPC={}", logger::fmt_eigen(rb.velocity.rotation));
                 }
+                rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
             });
         }
 
