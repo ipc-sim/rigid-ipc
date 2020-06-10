@@ -24,14 +24,14 @@ bool interval_root_finder(
     double tol,
     Interval& x)
 {
-    Eigen::VectorXI x0_vec = Eigen::VectorXI::Constant(1, x0), x_vec;
-    Eigen::VectorXd tol_vec = Eigen::VectorXd::Constant(1, tol);
+    Eigen::VectorX3I x0_vec = Eigen::VectorX3I::Constant(1, x0), x_vec;
+    Eigen::VectorX3d tol_vec = Eigen::VectorX3d::Constant(1, tol);
     bool found_root = interval_root_finder(
-        [&](const Eigen::VectorXI& x) {
+        [&](const Eigen::VectorX3I& x) {
             assert(x.size() == 1);
-            return Eigen::VectorXI::Constant(1, f(x(0)));
+            return Eigen::VectorX3I::Constant(1, f(x(0)));
         },
-        [&](const Eigen::VectorXI& x) {
+        [&](const Eigen::VectorX3I& x) {
             assert(x.size() == 1);
             return constraint_predicate(x(0));
         },
@@ -44,18 +44,18 @@ bool interval_root_finder(
 }
 
 bool interval_root_finder(
-    const std::function<Eigen::VectorXI(const Eigen::VectorXI&)>& f,
-    const Eigen::VectorXI& x0,
-    const Eigen::VectorXd& tol,
-    Eigen::VectorXI& x)
+    const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
+    const Eigen::VectorX3I& x0,
+    const Eigen::VectorX3d& tol,
+    Eigen::VectorX3I& x)
 {
     return interval_root_finder(
-        f, [](const Eigen::VectorXI&) { return true; }, x0, tol, x);
+        f, [](const Eigen::VectorX3I&) { return true; }, x0, tol, x);
 }
 
-Eigen::ArrayXd width(const Eigen::VectorXI& x)
+inline Eigen::VectorX3d width(const Eigen::VectorX3I& x)
 {
-    Eigen::ArrayXd w(x.size());
+    Eigen::VectorX3d w(x.size());
     for (int i = 0; i < x.size(); i++) {
         w(i) = width(x(i));
     }
@@ -75,28 +75,28 @@ inline bool zero_in(Eigen::Vector<Interval, dim, max_dim> X)
 }
 
 bool interval_root_finder(
-    const std::function<Eigen::VectorXI(const Eigen::VectorXI&)>& f,
-    const std::function<bool(const Eigen::VectorXI&)>& constraint_predicate,
-    const Eigen::VectorXI& x0,
-    const Eigen::VectorXd& tol,
-    Eigen::VectorXI& x)
+    const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
+    const std::function<bool(const Eigen::VectorX3I&)>& constraint_predicate,
+    const Eigen::VectorX3I& x0,
+    const Eigen::VectorX3d& tol,
+    Eigen::VectorX3I& x)
 {
     // Stack of intervals and the last split dimension
-    std::stack<std::pair<Eigen::VectorXI, int>> xs;
+    std::stack<std::pair<Eigen::VectorX3I, int>> xs;
     xs.emplace(x0, -1);
     while (!xs.empty()) {
         x = xs.top().first;
         int last_split = xs.top().second;
         xs.pop();
 
-        Eigen::VectorXI y = f(x);
+        Eigen::VectorX3I y = f(x);
 
         if (!zero_in(y)) {
             continue;
         }
 
-        Eigen::ArrayXd widths = width(x);
-        if ((widths <= tol.array()).all()) {
+        Eigen::VectorX3d widths = width(x);
+        if ((widths.array() <= tol.array()).all()) {
             if (constraint_predicate(x)) {
                 return true;
             }
@@ -112,7 +112,7 @@ bool interval_root_finder(
             }
         }
         std::pair<Interval, Interval> halves = bisect(x(split_i));
-        Eigen::VectorXI x1 = x;
+        Eigen::VectorX3I x1 = x;
         // Push the second half on first so it is examined after the first half
         x(split_i) = halves.second;
         xs.emplace(x, split_i);

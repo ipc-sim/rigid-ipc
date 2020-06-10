@@ -147,26 +147,6 @@ namespace physics {
         num_vars_ = x0.size();
     }
 
-    bool RigidBodyProblem::simulation_step()
-    {
-        // Take an unconstrained time-step
-        m_time_stepper->step(m_assembler, gravity, timestep());
-        // RigidBody& body = m_assembler.m_rbs[0];
-        // body.pose = body.pose_prev;
-        // body.pose.rotation.y() += 2;
-
-        spdlog::debug(
-            "r0={} r1={} ω={}",
-            logger::fmt_eigen(m_assembler.m_rbs[0].pose_prev.rotation),
-            logger::fmt_eigen(m_assembler.m_rbs[0].pose.rotation),
-            logger::fmt_eigen(m_assembler.m_rbs[0].velocity.rotation));
-
-        update_dof();
-
-        return detect_collisions(
-            poses_t0, poses_t1, CollisionCheck::CONSERVATIVE);
-    }
-
     void RigidBodyProblem::update_constraint()
     {
         update_dof();

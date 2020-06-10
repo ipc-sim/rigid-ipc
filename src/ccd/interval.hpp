@@ -58,6 +58,7 @@ typedef Vector3<ccd::Interval> Vector3I;
 typedef VectorX<ccd::Interval> VectorXI;
 typedef VectorX3<ccd::Interval> VectorX3I;
 typedef Matrix3<ccd::Interval> Matrix3I;
+typedef MatrixXX3<ccd::Interval> MatrixXX3I;
 
 #if EIGEN_MAJOR_VERSION >= 3
 namespace internal {

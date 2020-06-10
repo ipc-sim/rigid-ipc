@@ -19,8 +19,6 @@ public:
     bool init(const nlohmann::json& args);
 
     void simulation_step();
-    bool solve_collision();
-    void collision_resolution_step();
 
     void save_simulation(const std::string& filename);
     void save_simulation_step();

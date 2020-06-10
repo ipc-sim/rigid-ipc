@@ -241,3 +241,107 @@ TEST_CASE("Rigid face-vertex time of impact", "[ccd][rigid_toi][face_vertex]")
             == Approx(expected_toi).margin(Constants::SCREWING_CCD_LENGTH_TOL));
     }
 }
+
+TEST_CASE("Long EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
+{
+    using namespace ccd;
+    using namespace ccd::physics;
+
+    Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
+    Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
+
+    Eigen::MatrixXi bodyA_edges(1, 2);
+    bodyA_edges.row(0) << 0, 1;
+    Eigen::MatrixXi bodyB_edges(1, 2);
+    bodyB_edges.row(0) << 0, 1;
+
+    RigidBody bodyA = create_body(bodyA_vertices, bodyA_edges);
+    RigidBody bodyB = create_body(bodyB_vertices, bodyB_edges);
+
+    // clang-format off
+    bodyA.vertices.row(0) << -1.45054325721069, 2.29538642849017, 0.461193969193908;
+    bodyA.vertices.row(1) << -1.12537372801783, 1.78188213954136, 1.12303701209507;
+
+    bodyB.vertices.row(0) << -8.63773122773594, 0.523601125992661, 1.91725528075351;
+    bodyB.vertices.row(1) << -8.00096703934998, 1.01814387645424, 2.44728456523133;
+
+    Pose<double> bodyA_pose_t0(
+        Eigen::Vector3d(-0.0743518262648221, 2.0045466941596, -7.30362621222097e-05),
+        Eigen::Vector3d(1.56635729875648, 0.00484560212950006, -0.00477941835507233)
+    );
+    Pose<double> bodyA_pose_t1(
+        Eigen::Vector3d(-0.0743518262648221, 2.0045466941596, -7.30362621222097e-05),
+        Eigen::Vector3d(1.56635729875648, 0.00484560212950006, -0.00477941835507233)
+    );
+    Pose<double> bodyB_pose_t0(
+        Eigen::Vector3d(-0.0625913211582116, 9.53281795832003, -0.0276191274028154),
+        Eigen::Vector3d(-0.142589758121075, -0.142468016151593, 1.56466991422561)
+    );
+    Pose<double> bodyB_pose_t1(
+        Eigen::Vector3d(-0.0625913211582116, 9.52447945832003, -0.0276191274028154),
+        Eigen::Vector3d(-0.156274624583429, -0.156172306264317, 1.56372038452934)
+    );
+    // clang-format on
+
+    // BENCHMARK("Long EE Case")
+    // {
+    double toi;
+    bool is_impacting = compute_edge_edge_time_of_impact(
+        bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
+        bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
+        toi);
+    std::cout << (is_impacting ? "impacting" : "not impacting") << std::endl;
+    // };
+}
+
+TEST_CASE("Short EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
+{
+    using namespace ccd;
+    using namespace ccd::physics;
+
+    Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
+    Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
+
+    Eigen::MatrixXi bodyA_edges(1, 2);
+    bodyA_edges.row(0) << 0, 1;
+    Eigen::MatrixXi bodyB_edges(1, 2);
+    bodyB_edges.row(0) << 0, 1;
+
+    RigidBody bodyA = create_body(bodyA_vertices, bodyA_edges);
+    RigidBody bodyB = create_body(bodyB_vertices, bodyB_edges);
+
+    // clang-format off
+    bodyA.vertices.row(0) << 2.66473512640082, 0.622074238426736, 0.0506824409538513;
+    bodyA.vertices.row(1) << 2.11663114018755, 0.24694623070118, 0.689392835886464;
+
+    bodyB.vertices.row(0) << -8.23540431483827, -2.00204356583054, -0.0850398676470792;
+    bodyB.vertices.row(1) << -7.59698634143846, -2.65778542381018, 0.220598272033643;
+
+    Pose<double> bodyA_pose_t0(
+        Eigen::Vector3d(-0.0743518262648221, 2.0045466941596, -7.30362621222097e-05),
+        Eigen::Vector3d(1.56635729875648, 0.00484560212950007, -0.00477941835507233)
+    );
+    Pose<double> bodyA_pose_t1(
+        Eigen::Vector3d(-0.0743518262648221, 2.0045466941596, -7.30362621222097e-05),
+        Eigen::Vector3d(1.56635729875648, 0.00484560212950007, -0.00477941835507233)
+    );
+    Pose<double> bodyB_pose_t0(
+        Eigen::Vector3d(-0.0625913211582116, 9.56420995832003, -0.0276191274028154),
+        Eigen::Vector3d(-0.0330556101141157, -0.0327790458706025, 1.56913520538901)
+    );
+    Pose<double> bodyB_pose_t1(
+        Eigen::Vector3d(-0.0625913211582116, 9.56371945832003, -0.0276191274028154),
+        Eigen::Vector3d(-0.0467509876415133, -0.0464937186371367, 1.56888122389168)
+    );
+    // clang-format on
+
+    // BENCHMARK("Short EE case")
+    // {
+    double toi;
+    bool is_impacting = compute_edge_edge_time_of_impact(
+        bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
+        bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
+        toi);
+    std::cout << (is_impacting ? "impacting" : "not impacting") << std::endl;
+    // };
+}

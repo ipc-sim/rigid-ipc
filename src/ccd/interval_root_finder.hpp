@@ -25,17 +25,17 @@ bool interval_root_finder(
 
 /// Find if the origin is in the range of a function f: Iⁿ ↦ Iⁿ
 bool interval_root_finder(
-    const std::function<Eigen::VectorXI(const Eigen::VectorXI&)>& f,
-    const Eigen::VectorXI& x0,
-    const Eigen::VectorXd& tol,
-    Eigen::VectorXI& x);
+    const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
+    const Eigen::VectorX3I& x0,
+    const Eigen::VectorX3d& tol,
+    Eigen::VectorX3I& x);
 
 /// Find if the origin is in the range of a function f: Iⁿ ↦ Iⁿ
 bool interval_root_finder(
-    const std::function<Eigen::VectorXI(const Eigen::VectorXI&)>& f,
-    const std::function<bool(const Eigen::VectorXI&)>& constraint_predicate,
-    const Eigen::VectorXI& x0,
-    const Eigen::VectorXd& tol,
-    Eigen::VectorXI& x);
+    const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
+    const std::function<bool(const Eigen::VectorX3I&)>& constraint_predicate,
+    const Eigen::VectorX3I& x0,
+    const Eigen::VectorX3d& tol,
+    Eigen::VectorX3I& x);
 
 } // namespace ccd

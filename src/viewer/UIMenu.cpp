@@ -48,11 +48,6 @@ void UISimState::draw_menu()
                 draw_simulation_player();
             }
             if (ImGui::CollapsingHeader(
-                    "Collisions", &collisions_menu,
-                    ImGuiTreeNodeFlags_DefaultOpen)) {
-                draw_collision_menu();
-            }
-            if (ImGui::CollapsingHeader(
                     "Settings", &settings_menu, ImGuiTreeNodeFlags_DefaultOpen))
                 draw_settings();
         }
@@ -154,7 +149,7 @@ void UISimState::draw_simulation_player()
     ImGui::SameLine();
     ImGui::HelpMarker("yes - stop playing if step has intersections.");
 
-    ImGui::Checkbox("auto. solve collisions", &m_state.m_solve_collisions);
+    ImGui::Checkbox("solve collisions", &m_state.m_solve_collisions);
     ImGui::SameLine();
     ImGui::HelpMarker("yes - solve collisions automatically on each step.");
 
@@ -164,16 +159,6 @@ void UISimState::draw_simulation_player()
 
     // --------------------------------------------------------------------
     ImGui::Text("Step %i", m_state.m_num_simulation_steps);
-}
-
-void UISimState::draw_collision_menu()
-{
-    if (ImGui::Button("Solve Collisions", ImVec2(-1, 0))) {
-        solve_collisions();
-    }
-    if (ImGui::Button("Step Solve Col. ", ImVec2(-1, 0))) {
-        step_solve_collisions();
-    }
 }
 
 void UISimState::draw_settings()

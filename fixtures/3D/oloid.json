@@ -1,8 +1,8 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "solver": "barrier_solver",
+    "solver": "ipc_solver",
     "max_time": 10,
-    "timestep": 0.01,
+    "timestep": 1e-4,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-3
     },
@@ -12,7 +12,7 @@
         "time_stepper": "dmv",
         "rigid_bodies": [{
             "mesh": "oloid.obj",
-            "position": [-4.5, 0.05, 0],
+            "position": [-4.5, 0.01, 0],
             "rotation": [90, 0, 0],
             "linear_velocity": [10, 0, 0],
             "#torque": [0, 45, 0]

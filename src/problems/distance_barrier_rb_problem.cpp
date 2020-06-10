@@ -50,10 +50,16 @@ namespace opt {
     ////////////////////////////////////////////////////////////
     // Rigid Body Problem
 
-    bool DistanceBarrierRBProblem::simulation_step()
+    void DistanceBarrierRBProblem::simulation_step(
+        bool& had_collision, bool& _has_intersections, bool solve_collision)
     {
-        // Take an unconstrained step
-        bool has_collision = RigidBodyProblem::simulation_step();
+        // Take an unconstrained time-step
+        m_time_stepper->step(m_assembler, gravity, timestep());
+
+        update_dof();
+
+        had_collision =
+            detect_collisions(poses_t0, poses_t1, CollisionCheck::CONSERVATIVE);
 
         // Check if minimum distance is violated
         min_distance = compute_min_distance(this->poses_to_dofs(poses_t1));
@@ -63,11 +69,17 @@ namespace opt {
             // our constraint is really d > min_d, we want to run the
             // optimization when we end the step with small distances
             if (min_distance <= barrier_activation_distance()) {
-                has_collision = true;
+                had_collision = true;
             }
         }
 
-        return has_collision;
+        if (solve_collision && had_collision) {
+            update_constraint();
+            opt::OptimizationResults result = solve_constraints();
+            _has_intersections = take_step(result.x);
+        } else {
+            _has_intersections = has_intersections();
+        }
     }
 
     bool DistanceBarrierRBProblem::take_step(const Eigen::VectorXd& sigma)

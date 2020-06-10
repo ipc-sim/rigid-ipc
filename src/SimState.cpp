@@ -239,90 +239,36 @@ void SimState::simulation_step()
     m_num_simulation_steps += 1;
     m_step_has_collision = false;
     m_step_has_intersections = false;
-    // Take unconstrained step
-    m_step_had_collision = problem_ptr->simulation_step();
-    m_dirty_constraints = true;
+
+    problem_ptr->simulation_step(
+        m_step_had_collision, m_step_has_intersections, m_solve_collisions);
 
     if (m_step_had_collision) {
         spdlog::debug("sim_state action=simulation_step status=had_collision");
     }
 
-    if (m_solve_collisions && m_step_had_collision) {
-        // Solve with collision constraints
-        this->solve_collision();
+    if (m_step_has_intersections) {
+        spdlog::error(
+            "sim_state action=simulation_step sim_it={} "
+            "status=has_intersections",
+            m_num_simulation_steps);
     } else {
-        m_step_has_intersections = problem_ptr->has_intersections();
+        spdlog::debug(
+            "sim_state action=simulation_step sim_it={} "
+            "status=no_intersections",
+            m_num_simulation_steps);
     }
+    // spdlog::debug(
+    //     "sim_state action=solve_collisions sim_it={} "
+    //     "status={}",
+    //     m_num_simulation_steps,
+    //     m_step_has_collision ? "linearized_collisions_unsolved"
+    //                          : "collisions_solved");
 }
 
 void SimState::save_simulation_step()
 {
     state_sequence.push_back(problem_ptr->state());
-}
-
-bool SimState::solve_collision()
-{
-    PROFILE_POINT("sim_state_solve_collisions");
-
-    if (m_dirty_constraints) {
-        problem_ptr->update_constraint();
-        m_dirty_constraints = false;
-    }
-
-    ccd::opt::OptimizationResults result;
-
-    PROFILE_START();
-
-    result = problem_ptr->solve_constraints();
-
-    PROFILE_END();
-
-    // Check for intersections at the final poses.
-    m_step_has_intersections = problem_ptr->take_step(result.x);
-    // TODO: Check for collisions along the entire trajectory
-    m_step_has_collision = false; // ...
-
-    if (m_step_has_intersections) {
-        spdlog::error(
-            "sim_state action=solve_collisions sim_it={} "
-            "status=has_intersections",
-            m_num_simulation_steps);
-    } else {
-        spdlog::debug(
-            "sim_state action=solve_collisions sim_it={} "
-            "status=no_intersections",
-            m_num_simulation_steps);
-    }
-    spdlog::debug(
-        "sim_state action=solve_collisions sim_it={} "
-        "status={}",
-        m_num_simulation_steps,
-        m_step_has_collision ? "linearized_collisions_unsolved"
-                             : "collisions_solved");
-    return m_step_has_intersections;
-}
-
-void SimState::collision_resolution_step()
-{
-    if (m_dirty_constraints) {
-        problem_ptr->update_constraint();
-        problem_ptr->init_solve();
-        m_dirty_constraints = false;
-    }
-
-    ccd::opt::OptimizationResults result;
-    result = problem_ptr->step_solve();
-
-    // TODO: use results.finished
-    // Check for intersections here
-    m_step_has_intersections = problem_ptr->take_step(result.x);
-    // TODO: Check for collisions along the entire time-step.
-    m_step_has_collision = false; // ...
-    spdlog::debug(
-        "sim_state action=collision_resolution_step collisions={} "
-        "intersections={}",
-        m_step_has_collision ? "unsolved" : "solved",
-        m_step_has_intersections ? "unsolved" : "solved");
 }
 
 void SimState::save_simulation(const std::string& filename)

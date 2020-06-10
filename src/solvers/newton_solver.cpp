@@ -3,10 +3,12 @@
 
 #include <igl/slice.h>
 #include <igl/slice_into.h>
+#include <igl/writeOBJ.h>
 
 #include <constants.hpp>
 #include <geometry/distance.hpp>
 #include <logger.hpp>
+#include <physics/simulation_problem.hpp>
 #include <profiler.hpp>
 
 namespace ccd {
@@ -81,6 +83,10 @@ namespace opt {
         case ConvergenceCriteria::VELOCITY: {
             Eigen::MatrixXd V_prev = problem_ptr->world_vertices(x);
             Eigen::MatrixXd V = problem_ptr->world_vertices(x + direction);
+            // igl::writeOBJ(
+            //     fmt::format("x{:04d}.obj", iteration_number), V,
+            //     dynamic_cast<physics::SimulationProblem*>(problem_ptr)
+            //         ->faces());
             double step_max_speed = (V - V_prev).lpNorm<Eigen::Infinity>()
                 / problem_ptr->timestep();
 
@@ -111,6 +117,10 @@ namespace opt {
         // Initialize the working variables
         x_prev = x0;
         x = x0;
+
+        // igl::writeOBJ(
+        //     fmt::format("x{:04d}.obj", 0), problem_ptr->world_vertices(x),
+        //     dynamic_cast<physics::SimulationProblem*>(problem_ptr)->faces());
 
         double step_length = 1.0;
 

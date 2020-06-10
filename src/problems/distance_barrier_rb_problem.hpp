@@ -73,7 +73,10 @@ namespace opt {
         ////////////////////////////////////////////////////////////
         // Rigid Body Problem
 
-        bool simulation_step() override;
+        void simulation_step(
+            bool& had_collision,
+            bool& has_intersections,
+            bool solve_collision = true) override;
         bool take_step(const Eigen::VectorXd& sigma) override;
 
         ////////////////////////////////////////////////////////////

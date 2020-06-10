@@ -89,19 +89,6 @@ public:
         redraw_scene();
     }
 
-    void solve_collisions()
-    {
-        m_state.solve_collision();
-        m_state.save_simulation_step();
-        redraw_scene();
-    }
-    void step_solve_collisions()
-    {
-        m_state.collision_resolution_step();
-        m_state.save_simulation_step();
-        redraw_scene();
-    }
-
     void log_simulation_time()
     {
         spdlog::info("total_simulation_time={:g}s", m_simulation_time);
@@ -122,7 +109,6 @@ protected:
     void draw_io();
     void draw_simulation_player();
     void draw_settings();
-    void draw_collision_menu();
     void draw_legends();
 
 private:

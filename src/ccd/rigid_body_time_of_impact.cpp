@@ -69,7 +69,7 @@ bool compute_edge_vertex_time_of_impact(
     const PoseI poseIB_t0 = poseB_t0.cast<Interval>();
     const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
 
-    const auto distance = [&](const Eigen::VectorXI& params) {
+    const auto distance = [&](const Eigen::VectorX3I& params) {
         assert(params.size() == 2);
         Interval t = params(0);
         Interval alpha = params(1);
@@ -100,9 +100,9 @@ bool compute_edge_vertex_time_of_impact(
         bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
         edge_id);
 
-    Eigen::VectorXI toi_interval;
+    Eigen::VectorX3I toi_interval;
     bool is_impacting = interval_root_finder(
-        distance, Eigen::VectorXI::Constant(2, Interval(0, 1)), tol,
+        distance, Eigen::VectorX3I::Constant(2, Interval(0, 1)), tol,
         toi_interval);
 
     // Return a conservative time-of-impact
@@ -187,19 +187,19 @@ bool compute_edge_edge_time_of_impact(
     Eigen::Matrix3I RB_t0_I = RB_t0.cast<Interval>();
     Eigen::Matrix3I PB_I = PB.cast<Interval>();
 
-    const auto distance = [&](const Eigen::VectorXI& params) {
+    const auto distance = [&](const Eigen::VectorX3I& params) {
         assert(params.size() == 3);
         Interval t = params(0);
         Interval edgeA_alpha = params(1);
         Interval edgeB_alpha = params(2);
 
         // Compute the poses at time t
-        Eigen::VectorX3<Interval> posA_t = (posA_t1 - posA_t0) * t + posA_t0;
-        Eigen::MatrixXX3<Interval> RA_t =
+        Eigen::VectorX3I posA_t = (posA_t1 - posA_t0) * t + posA_t0;
+        Eigen::MatrixXX3I RA_t =
             PA_I.transpose() * rotate_around_z(omegaA * t) * PA_I * RA_t0_I;
 
-        Eigen::VectorX3<Interval> posB_t = (posB_t1 - posB_t0) * t + posB_t0;
-        Eigen::MatrixXX3<Interval> RB_t =
+        Eigen::VectorX3I posB_t = (posB_t1 - posB_t0) * t + posB_t0;
+        Eigen::MatrixXX3I RB_t =
             PB_I.transpose() * rotate_around_z(omegaB * t) * PB_I * RB_t0_I;
 
         // Get the world vertex of the edges at time t
@@ -224,9 +224,9 @@ bool compute_edge_edge_time_of_impact(
         bodyA, poseA_t0, poseA_t1, omegaA, PA * RA_t0, edgeA_id, //
         bodyB, poseB_t0, poseB_t1, omegaB, PB * RB_t0, edgeB_id);
 
-    Eigen::VectorXI toi_interval;
+    Eigen::VectorX3I toi_interval;
     bool is_impacting = interval_root_finder(
-        distance, Eigen::VectorXI::Constant(3, Interval(0, 1)), tol,
+        distance, Eigen::VectorX3I::Constant(3, Interval(0, 1)), tol,
         toi_interval);
     // Return a conservative time-of-impact
     if (is_impacting) {
@@ -303,30 +303,29 @@ bool compute_face_vertex_time_of_impact(
     Eigen::Matrix3I RB_t0_I = RB_t0.cast<Interval>();
     Eigen::Matrix3I PB_I = PB.cast<Interval>();
 
-    const auto vertex_positions = [&](const Interval& t,
-                                      Eigen::Vector3I& vertex,
-                                      Eigen::Vector3I& face_vertex0,
-                                      Eigen::Vector3I& face_vertex1,
-                                      Eigen::Vector3I& face_vertex2) {
-        // Compute the poses at time t
-        Eigen::VectorX3<Interval> posA_t = (posA_t1 - posA_t0) * t + posA_t0;
-        Eigen::MatrixXX3<Interval> RA_t =
-            PA_I.transpose() * rotate_around_z(omegaA * t) * PA_I * RA_t0_I;
+    const auto vertex_positions =
+        [&](const Interval& t, Eigen::Vector3I& vertex,
+            Eigen::Vector3I& face_vertex0, Eigen::Vector3I& face_vertex1,
+            Eigen::Vector3I& face_vertex2) {
+            // Compute the poses at time t
+            Eigen::VectorX3I posA_t = (posA_t1 - posA_t0) * t + posA_t0;
+            Eigen::MatrixXX3I RA_t =
+                PA_I.transpose() * rotate_around_z(omegaA * t) * PA_I * RA_t0_I;
 
-        Eigen::VectorX3<Interval> posB_t = (posB_t1 - posB_t0) * t + posB_t0;
-        Eigen::MatrixXX3<Interval> RB_t =
-            PB_I.transpose() * rotate_around_z(omegaB * t) * PB_I * RB_t0_I;
+            Eigen::VectorX3I posB_t = (posB_t1 - posB_t0) * t + posB_t0;
+            Eigen::MatrixXX3I RB_t =
+                PB_I.transpose() * rotate_around_z(omegaB * t) * PB_I * RB_t0_I;
 
-        // Get the world vertex of the point at time t
-        vertex = bodyA.world_vertex(RA_t, posA_t, vertex_id);
-        // Get the world vertex of the edge at time t
-        face_vertex0 =
-            bodyB.world_vertex(RB_t, posB_t, bodyB.faces(face_id, 0));
-        face_vertex1 =
-            bodyB.world_vertex(RB_t, posB_t, bodyB.faces(face_id, 1));
-        face_vertex2 =
-            bodyB.world_vertex(RB_t, posB_t, bodyB.faces(face_id, 2));
-    };
+            // Get the world vertex of the point at time t
+            vertex = bodyA.world_vertex(RA_t, posA_t, vertex_id);
+            // Get the world vertex of the edge at time t
+            face_vertex0 =
+                bodyB.world_vertex(RB_t, posB_t, bodyB.faces(face_id, 0));
+            face_vertex1 =
+                bodyB.world_vertex(RB_t, posB_t, bodyB.faces(face_id, 1));
+            face_vertex2 =
+                bodyB.world_vertex(RB_t, posB_t, bodyB.faces(face_id, 2));
+        };
 
     const auto distance = [&](const Interval& t) {
         // Get the world vertex and face of the point at time t

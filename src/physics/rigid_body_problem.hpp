@@ -40,26 +40,22 @@ namespace physics {
             m_timestep = timestep;
         }
 
-        /// @brief Compute the step but does not take it
-        /// @returns true if there is a collision
-        bool simulation_step() override;
+        /// Moves status to given configuration vector.
+        virtual bool take_step(const Eigen::VectorXd& x);
 
-        /// @brief moves status to given configuration vector
-        virtual bool take_step(const Eigen::VectorXd& x) override;
-
-        /// @brief Check for intersections at the end of the time-step.
+        /// Check for intersections at the end of the time-step.
         virtual bool has_intersections() const override
         {
             return detect_intersections(this->poses_t1);
         }
 
-        /// @brief update problem using current status of bodies.
-        void update_constraint() override;
-        opt::OptimizationResults solve_constraints() override;
-        void init_solve() override;
-        opt::OptimizationResults step_solve() override;
+        /// Update problem using current status of bodies.
+        void update_constraint();
+        opt::OptimizationResults solve_constraints();
+        void init_solve();
+        opt::OptimizationResults step_solve();
 
-        /// @brief returns world vertices at the END of step (current)
+        /// World vertices at the END of step (current).
         Eigen::MatrixXd vertices() const override
         {
             return m_assembler.world_vertices_t1();
@@ -108,23 +104,25 @@ namespace physics {
 
         virtual bool is_rb_problem() const override { return true; };
 
-        // ------------------------------------------------------------------------
+        // --------------------------------------------------------------------
         // Settings
-        // ------------------------------------------------------------------------
-        double coefficient_restitution;
-        Eigen::VectorXd gravity;
-        double collision_eps;
+        // --------------------------------------------------------------------
+        double coefficient_restitution; ///< Coefficent of resitution
+        Eigen::VectorXd gravity;        ///< Acceleration due to gravity
+        double collision_eps; ///< Scale trajectory for early collision
 
         physics::RigidBodyAssembler m_assembler;
 
     protected:
         void solve_velocities();
 
+        /// Detect collisions between poses_t0 and poses_t1.
         bool detect_collisions(
             const Poses<double>& poses_t0,
             const Poses<double>& poses_t1,
             const CollisionCheck check_type) const;
 
+        /// Detect intersections between rigid bodies with given poses.
         bool detect_intersections(const Poses<double>& poses) const;
 
         void update_dof();
@@ -132,35 +130,25 @@ namespace physics {
         /// @returns \f$x_0\f$: the starting point for the optimization.
         const Eigen::VectorXd& starting_point() const { return x0; }
 
-        /// Time-step
-        double m_timestep;
+        double m_timestep; ///< The time-step size
 
-        int num_vars_;
-        /// Initial variable for optimization
-        Eigen::VectorXd x0;
+        Eigen::VectorXd x0; ///< Initial variable for optimization
+        int num_vars_;      ///< The number of variables
 
-        /// Used during collision resolution
-        /// Rigid body poses at start of time-step
-        Poses<double> poses_t0;
-        /// Rigid body poses at end of time-step
-        Poses<double> poses_t1;
+        // Used during collision resolution
+        Poses<double> poses_t0; ///< Rigid body poses at start of time-step
+        Poses<double> poses_t1; ///< Rigid body poses at end of time-step
 
-        /// Used for velocity restoration
-        /// TODO: Replace this with the std::vector version
+        /// @brief Original impacts used for velocity resitution
+        /// @todo Replace this with the std::vector version
         ConcurrentImpacts original_impacts;
 
+        /// Unconstrained time-stepping method
         std::shared_ptr<time_stepper::TimeStepper> m_time_stepper;
 
         /// Initial length of the bounding box diagonal
         double init_bbox_diagonal;
     };
-
-    void assemble_hessian(
-        const Eigen::SparseMatrix<double>& jac_xk_sigma,
-        const std::vector<Eigen::SparseMatrix<double>>& hess_xk_sigma,
-        const Eigen::MatrixXd& jac_g_uk,
-        const std::vector<Eigen::SparseMatrix<double>>& hessian_g_uk,
-        std::vector<Eigen::SparseMatrix<double>>& gx_hessian);
 
 } // namespace physics
 } // namespace ccd

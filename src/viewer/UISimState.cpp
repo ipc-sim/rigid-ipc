@@ -148,13 +148,11 @@ bool UISimState::pre_draw_loop()
         timer.stop();
         m_simulation_time += timer.getElapsedTime();
 
-        bool breakpoint = m_bkp_had_collision && m_state.m_step_had_collision;
-        breakpoint |=
-            m_bkp_has_intersections && m_state.m_step_has_intersections;
-        if (m_state.m_max_simulation_steps >= 0) {
-            breakpoint |= m_state.m_num_simulation_steps
-                >= m_state.m_max_simulation_steps;
-        }
+        bool breakpoint = (m_bkp_had_collision && m_state.m_step_had_collision)
+            || (m_bkp_has_intersections && m_state.m_step_has_intersections)
+            || (m_state.m_max_simulation_steps >= 0
+                && m_state.m_num_simulation_steps
+                    >= m_state.m_max_simulation_steps);
         if (breakpoint) {
             m_player_state = PlayerState::Paused;
             log_simulation_time();
