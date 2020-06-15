@@ -3,6 +3,7 @@
 #include <solvers/barrier_solver.hpp>
 
 #include <problems/distance_barrier_rb_problem.hpp>
+#include <problems/split_distance_barrier_rb_problem.hpp>
 // #include <problems/volume_rb_problem.hpp>
 
 namespace ccd {
@@ -19,6 +20,9 @@ ProblemFactory::ProblemFactory()
     problems_.emplace(
         opt::DistanceBarrierRBProblem::problem_name(),
         std::make_shared<opt::DistanceBarrierRBProblem>());
+    problems_.emplace(
+        opt::SplitDistanceBarrierRBProblem::problem_name(),
+        std::make_shared<opt::SplitDistanceBarrierRBProblem>());
     // problems_.emplace(
     //     "volume_rb_problem", std::make_shared<opt::VolumeRBProblem>());
 }

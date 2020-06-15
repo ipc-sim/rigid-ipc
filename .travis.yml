@@ -63,7 +63,7 @@ install:
 script:
 - mkdir build
 - cd build
-- cmake -DCMAKE_BUILD_TYPE=$CONFIG ${EXTRA_FLAGS} ..
+- cmake -DCMAKE_BUILD_TYPE=$CONFIG -DFIXING_COLLISIONS_ENABLE_DERIVATIVE_CHECK=ON -DFIXING_COLLISIONS_ENABLE_PROFILING=ON ${EXTRA_FLAGS} ..
 - make -j2
 - if [[ "$CONFIG" == "Release" ]]; then make test; fi
 # - ccache --show-stats

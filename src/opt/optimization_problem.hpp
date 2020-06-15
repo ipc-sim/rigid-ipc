@@ -52,7 +52,7 @@ namespace opt {
 
         /// Determine if there is a collision between two configurations
         virtual bool has_collisions(
-            const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) const = 0;
+            const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) = 0;
 
         /// Compute the minimum distance among geometry
         virtual double compute_min_distance(const Eigen::VectorXd& x) const = 0;

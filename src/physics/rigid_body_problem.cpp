@@ -25,6 +25,7 @@ namespace physics {
         , collision_eps(2)
         , m_timestep(0.01)
     {
+        gravity = Eigen::VectorXd::Zero(3);
     }
 
     void RigidBodyProblem::settings(const nlohmann::json& params)
@@ -77,6 +78,9 @@ namespace physics {
         init_bbox_diagonal =
             (V.colwise().maxCoeff() - V.colwise().minCoeff()).norm();
         spdlog::info("init_bbox_diagonal={:g}", init_bbox_diagonal);
+
+        // Ensure the dimension of gravity matches the dimension of the problem.
+        gravity = gravity.head(dim());
     }
 
     nlohmann::json RigidBodyProblem::state() const

@@ -7,7 +7,7 @@
 #include <igl/PI.h>
 
 #include <physics/mass.hpp>
-#include <problems/distance_barrier_rb_problem.hpp>
+#include <problems/split_distance_barrier_rb_problem.hpp>
 #include <utils/not_implemented_error.hpp>
 
 namespace test_utils {
@@ -94,7 +94,7 @@ TEST_CASE(
           rb_from_displacements(vertices, edges, rb2_pose_t1) }
     };
 
-    DistanceBarrierRBProblem rbp;
+    SplitDistanceBarrierRBProblem rbp;
     rbp.init(rbs);
 
     // displacement cases
@@ -151,7 +151,7 @@ TEST_CASE(
     rbs.push_back(rb_from_displacements(vertices, edges, vel_1));
     rbs.push_back(rb_from_displacements(vertices, edges, vel_2));
 
-    DistanceBarrierRBProblem rbp;
+    SplitDistanceBarrierRBProblem rbp;
     rbp.init(rbs);
 
     // displacement cases
@@ -204,7 +204,7 @@ TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
     rbs.push_back(rb_from_displacements(vertices, edges, vel_1));
     rbs.push_back(rb_from_displacements(vertices, edges, vel_2));
 
-    DistanceBarrierRBProblem rbp;
+    SplitDistanceBarrierRBProblem rbp;
     rbp.init(rbs);
 
     // displacement cases
@@ -260,7 +260,7 @@ TEST_CASE("dof -> poses -> dof", "[RB][RB-Problem]")
           rb_from_displacements(vertices, edges, vel_2) }
     };
 
-    DistanceBarrierRBProblem rbp;
+    SplitDistanceBarrierRBProblem rbp;
     rbp.init(rbs);
 
     for (int i = 0; i < 100; i++) {

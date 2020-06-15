@@ -91,13 +91,33 @@ if(NOT TARGET TBB::tbb)
   add_library(TBB::tbb ALIAS tbb_static)
 endif()
 
-if(NOT TARGET CCDWrapper::CCDWrapper)
-  fixing_collisions_download_ccd_wrapper()
-  set(CCD_WRAPPER_WITH_UNIT_TESTS OFF CACHE BOOL " " FORCE)
+# if(NOT TARGET CCDWrapper::CCDWrapper)
+#   fixing_collisions_download_ccd_wrapper()
+#   set(CCD_WRAPPER_WITH_UNIT_TESTS OFF CACHE BOOL " " FORCE)
+#   # Set Eigen directory environment variable (needed for EVCTCD)
+#   set(ENV{EIGEN3_INCLUDE_DIR} "${FIXING_COLLISIONS_EXTERNAL}/libigl/external/eigen/")
+#   add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/ccd-wrapper)
+#   add_library(CCDWrapper::CCDWrapper ALIAS CCDWrapper)
+# endif()
+
+# Etienne Vouga's CTCD Library
+if(NOT TARGET EVCTCD)
+  fixing_collisions_download_evctcd()
   # Set Eigen directory environment variable (needed for EVCTCD)
   set(ENV{EIGEN3_INCLUDE_DIR} "${FIXING_COLLISIONS_EXTERNAL}/libigl/external/eigen/")
-  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/ccd-wrapper)
-  add_library(CCDWrapper::CCDWrapper ALIAS CCDWrapper)
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/EVCTCD)
+  # These includes are PRIVATE for some reason
+  target_include_directories(collisiondetection PUBLIC "${FIXING_COLLISIONS_EXTERNAL}/EVCTCD/include")
+  # Turn off floating point contraction for CCD robustness
+  target_compile_options(collisiondetection PUBLIC "-ffp-contract=off")
+  # Rename for convenience
+  add_library(EVCTCD ALIAS collisiondetection)
+endif()
+
+# Rational implmentation of Brochu et al. [2012]
+if(NOT TARGET RationalCCD)
+  fixing_collisions_download_rational_ccd()
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/rational_ccd)
 endif()
 
 if(NOT TARGET tinyxml2::tinyxml2)

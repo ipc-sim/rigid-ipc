@@ -43,15 +43,15 @@ namespace physics {
 
         /**
          * @brief Takes a step in the simulation
-         * @param had_collision True if the step had collisions.
+         * @param had_collisions True if the step had collisions.
          * @param has_intersections True if the resulting bodies are
          *                          intersecting.
-         * @param solve_collision True if collisions should be solved.
+         * @param solve_collisions True if collisions should be solved.
          */
         virtual void simulation_step(
-            bool& had_collision,
+            bool& had_collisions,
             bool& has_intersections,
-            bool solve_collision = true) = 0;
+            bool solve_collisions = true) = 0;
 
         /// @brief Check for intersections at the end of the time-step.
         virtual bool has_intersections() const = 0;

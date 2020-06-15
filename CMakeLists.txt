@@ -83,6 +83,7 @@ add_library(${PROJECT_NAME}
     src/solvers/solver_factory.cpp
 
     src/problems/distance_barrier_rb_problem.cpp
+    src/problems/split_distance_barrier_rb_problem.cpp
     # src/problems/volume_rb_problem.cpp
     src/problems/problem_factory.cpp
 
@@ -93,6 +94,7 @@ add_library(${PROJECT_NAME}
     src/time_stepper/time_stepper_factory.cpp
 
     src/utils/tensor.cpp
+    src/utils/eigen_ext.cpp
     src/utils/regular_2d_grid.cpp
 
     src/SimState.cpp

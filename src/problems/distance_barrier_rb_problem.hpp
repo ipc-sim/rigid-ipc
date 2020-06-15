@@ -74,9 +74,9 @@ namespace opt {
         // Rigid Body Problem
 
         void simulation_step(
-            bool& had_collision,
+            bool& had_collisions,
             bool& has_intersections,
-            bool solve_collision = true) override;
+            bool solve_collisions = true) override;
         bool take_step(const Eigen::VectorXd& sigma) override;
 
         ////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ namespace opt {
         /// Determine if there is a collision between two configurations
         bool has_collisions(
             const Eigen::VectorXd& sigma_i,
-            const Eigen::VectorXd& sigma_j) const override;
+            const Eigen::VectorXd& sigma_j) override;
 
         /// Get the world coordinates of the vertices
         Eigen::MatrixXd world_vertices(const Eigen::VectorXd& x) const override
@@ -225,6 +225,10 @@ namespace opt {
             const Eigen::VectorXd& sigma,
             const RigidBodyFaceVertexCandidate& rbc);
 
+        template <typename T>
+        T compute_body_energy(
+            const physics::RigidBody& body, const physics::Pose<T>& pose);
+
         template <typename Candidate, typename RigidBodyCandidate>
         void add_constraint_barrier(
             const Eigen::VectorXd& sigma,
@@ -279,6 +283,9 @@ namespace opt {
         /// Negative values indicate a minimum distance greater than the
         /// activation distance.
         double min_distance;
+
+        /// @brief Did the step have collisions?
+        bool m_had_collisions;
     };
 
 } // namespace opt

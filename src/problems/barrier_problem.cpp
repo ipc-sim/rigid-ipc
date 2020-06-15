@@ -15,12 +15,18 @@ namespace opt {
         bool compute_grad,
         bool compute_hess)
     {
-        Eigen::VectorXd grad_Ex, grad_Bx;
-        Eigen::SparseMatrix<double> hess_Ex, hess_Bx;
-
         // Compute each term
-        double Ex = compute_energy_term(
-            x, grad_Ex, hess_Ex, compute_grad, compute_hess);
+        double Ex =
+            compute_energy_term(x, grad, hess, compute_grad, compute_hess);
+
+        // The following is used to disable constraints if desired
+        // (useful for testing).
+        if (!m_use_barriers) {
+            return Ex;
+        }
+
+        Eigen::VectorXd grad_Bx;
+        Eigen::SparseMatrix<double> hess_Bx;
         int num_constraints;
         double Bx = compute_barrier_term(
             x, grad_Bx, hess_Bx, num_constraints, compute_grad, compute_hess);
@@ -28,10 +34,10 @@ namespace opt {
         double kappa = barrier_stiffness();
 
         if (compute_grad) {
-            grad = grad_Ex + kappa * grad_Bx;
+            grad += kappa * grad_Bx;
         }
         if (compute_hess) {
-            hess = hess_Ex + kappa * hess_Bx;
+            hess += kappa * hess_Bx;
         }
         return Ex + kappa * Bx;
     }

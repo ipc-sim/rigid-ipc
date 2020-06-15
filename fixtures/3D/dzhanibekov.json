@@ -7,14 +7,6 @@
         "initial_barrier_activation_distance": 0.01,
         "active_constraint_scale": 1.01
     },
-    "barrier_solver": {
-        "e_b": 1e-06,
-        "m": 1,
-        "t_init": 100,
-        "t_inc": 100,
-        "c": 0.1,
-        "inner_solver": "newton_solver"
-    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, 0, 0],

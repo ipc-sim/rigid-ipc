@@ -93,8 +93,8 @@ TEST_CASE(
             m_barrier_stiffness = kappa;
         }
 
-        bool has_collisions(
-            const Eigen::VectorXd&, const Eigen::VectorXd&) const override
+        bool
+        has_collisions(const Eigen::VectorXd&, const Eigen::VectorXd&) override
         {
             return false;
         }

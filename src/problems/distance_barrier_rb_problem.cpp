@@ -1,12 +1,11 @@
 #include "distance_barrier_rb_problem.hpp"
 
-#include <Eigen/Eigenvalues>
 #include <finitediff.hpp>
 
 #include <constants.hpp>
 #include <geometry/distance.hpp>
 #include <solvers/solver_factory.hpp>
-#include <utils/tensor.hpp>
+#include <utils/not_implemented_error.hpp>
 
 #include <logger.hpp>
 #include <profiler.hpp>
@@ -18,6 +17,7 @@ namespace opt {
     DistanceBarrierRBProblem::DistanceBarrierRBProblem()
         : m_barrier_stiffness(1)
         , min_distance(-1)
+        , m_had_collisions(false)
     {
     }
 
@@ -51,35 +51,25 @@ namespace opt {
     // Rigid Body Problem
 
     void DistanceBarrierRBProblem::simulation_step(
-        bool& had_collision, bool& _has_intersections, bool solve_collision)
+        bool& had_collisions, bool& _has_intersections, bool solve_collisions)
     {
-        // Take an unconstrained time-step
-        m_time_stepper->step(m_assembler, gravity, timestep());
+        // Advance the poses, but leave the current pose unchanged for now.
+        tbb::parallel_for(size_t(0), m_assembler.num_bodies(), [&](size_t i) {
+            m_assembler.m_rbs[i].pose_prev = m_assembler.m_rbs[i].pose;
+        });
 
-        update_dof();
+        update_dof(); // TODO: Update this code
 
-        had_collision =
-            detect_collisions(poses_t0, poses_t1, CollisionCheck::CONSERVATIVE);
+        // Reset m_had_collision which will be filled in by has_collisions().
+        m_had_collisions = false;
 
-        // Check if minimum distance is violated
-        min_distance = compute_min_distance(this->poses_to_dofs(poses_t1));
-        if (min_distance >= 0) {
-            spdlog::info("candidate_step min_distance={:.8e}", min_distance);
+        // Disable barriers if solve_collision == false
+        this->m_use_barriers = solve_collisions;
 
-            // our constraint is really d > min_d, we want to run the
-            // optimization when we end the step with small distances
-            if (min_distance <= barrier_activation_distance()) {
-                had_collision = true;
-            }
-        }
-
-        if (solve_collision && had_collision) {
-            update_constraint();
-            opt::OptimizationResults result = solve_constraints();
-            _has_intersections = take_step(result.x);
-        } else {
-            _has_intersections = has_intersections();
-        }
+        update_constraint();
+        opt::OptimizationResults result = solve_constraints();
+        _has_intersections = take_step(result.x);
+        had_collisions = m_had_collisions;
     }
 
     bool DistanceBarrierRBProblem::take_step(const Eigen::VectorXd& sigma)
@@ -105,30 +95,141 @@ namespace opt {
         bool compute_grad,
         bool compute_hess)
     {
-        Eigen::VectorXd diff = x - this->poses_to_dofs(poses_t1);
-        Eigen::DiagonalMatrixXd M = m_assembler.m_rb_mass_matrix;
+        typedef AutodiffType<Eigen::Dynamic, /*maxN=*/6> Diff;
 
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+
+        Eigen::VectorXd energies(x.size());
         if (compute_grad) {
-            grad = M * diff;
+            grad.resize(x.size());
+        }
+        tbb::concurrent_vector<Eigen::Triplet<double>> hess_triplets;
+        if (compute_hess) {
+            // Hessian is a block diagonal with (ndof x ndof) blocks
+            hess_triplets.reserve(m_assembler.num_bodies() * ndof * ndof);
+        }
+
+        const std::vector<physics::Pose<double>> poses = this->dofs_to_poses(x);
+        assert(poses.size() == m_assembler.num_bodies());
+
+        tbb::parallel_for(size_t(0), poses.size(), [&](size_t i) {
+            // Activate autodiff with the correct number of variables
+            Diff::activate(ndof);
+
+            const physics::Pose<double>& pose = poses[i];
+            const physics::RigidBody& body = m_assembler.m_rbs[i];
+
+            Eigen::VectorX6d gradi;
+
+            if (compute_hess) {
+                // Initialize autodiff variables
+                physics::Pose<Diff::DDouble2> pose_diff(
+                    Diff::dTvars<Diff::DDouble2>(0, pose.dof()));
+
+                Diff::DDouble2 dExi =
+                    compute_body_energy<Diff::DDouble2>(body, pose_diff);
+
+                energies[i] = dExi.getValue();
+                gradi = dExi.getGradient();
+                Eigen::MatrixXX6d hessi = dExi.getHessian();
+
+                // Project dense block to make assembled matrix PSD
+                hessi = Eigen::project_to_psd(hessi);
+
+                // Add the local hessian as triplets in the global hessian
+                for (int r = 0; r < hessi.rows(); r++) {
+                    for (int c = 0; c < hessi.cols(); c++) {
+                        hess_triplets.emplace_back(
+                            i * ndof + r, i * ndof + c, hessi(r, c));
+                    }
+                }
+            } else if (compute_grad) {
+                // Initialize autodiff variables
+                physics::Pose<Diff::DDouble1> pose_diff(
+                    Diff::dTvars<Diff::DDouble1>(0, pose.dof()));
+
+                Diff::DDouble1 dExi =
+                    compute_body_energy<Diff::DDouble1>(body, pose_diff);
+
+                energies[i] = dExi.getValue();
+                gradi = dExi.getGradient();
+            } else {
+                energies[i] = compute_body_energy<double>(body, pose);
+            }
+
+            if (compute_grad) {
+                grad.segment(i * ndof, ndof) = gradi;
+            }
+        });
+
+        if (compute_hess) {
+            // ∇²E: Rⁿ ↦ Rⁿˣⁿ
+            hess.resize(x.size(), x.size());
+            hess.setFromTriplets(hess_triplets.begin(), hess_triplets.end());
+        }
+
 #ifdef WITH_DERIVATIVE_CHECK
+        if (compute_grad) {
             Eigen::VectorXd grad_approx = eval_grad_energy_approx(*this, x);
             if (!fd::compare_gradient(grad, grad_approx)) {
                 spdlog::error("finite gradient check failed for E(x)");
             }
-#endif
         }
-
         if (compute_hess) {
-            hess = Eigen::SparseDiagonal(M.diagonal());
-#ifdef WITH_DERIVATIVE_CHECK
             Eigen::MatrixXd hess_approx = eval_hess_energy_approx(*this, x);
             if (!fd::compare_jacobian(hess, hess_approx)) {
                 spdlog::error("finite hessian check failed for E(x)");
             }
+        }
 #endif
+
+        return energies.sum();
+    }
+
+    // Compute the energy term for a single rigid body
+    template <typename T>
+    T DistanceBarrierRBProblem::compute_body_energy(
+        const physics::RigidBody& body, const physics::Pose<T>& pose)
+    {
+        // NOTE: t0 suffix indicates the current value not the inital value
+        double h = timestep();
+
+        // Linear energy
+        Eigen::VectorX3<T> q = pose.position;
+        Eigen::VectorX3d q_t0 = body.pose.position;
+        Eigen::VectorX3d qdot_t0 = body.velocity.position;
+        Eigen::VectorX3d qdotdot_t0 = gravity + body.force.position / body.mass;
+
+        // ½mqᵀq - mqᵀ(qᵗ + h(q̇ᵗ + h(g + f/m)))
+        T energy = 0.5 * body.mass * q.dot(q)
+            - body.mass
+                * q.dot((q_t0 + h * (qdot_t0 + h * (qdotdot_t0))).cast<T>());
+
+        // Rotational energy
+        if (dim() == 3) {
+            Eigen::Matrix3<T> Q = pose.construct_rotation_matrix();
+            Eigen::Matrix3d Q_t0 = body.pose.construct_rotation_matrix();
+
+            Eigen::Matrix3d Qdot_t0 = Q_t0 * Eigen::Hat(body.velocity.rotation);
+
+            const Eigen::VectorX3d& I = body.moment_of_inertia;
+            Eigen::DiagonalMatrix<T, 3> J(
+                T(0.5 * (-I.x() + I.y() + I.z())),
+                T(0.5 * (I.x() - I.y() + I.z())),
+                T(0.5 * (I.x() + I.y() - I.z())));
+
+            // ½tr(QJQᵀ) - tr(QJ(Qᵗ + hQ̇ᵗ)ᵀ)
+            // TODO: Add torque
+            energy += 0.5 * (Q * J * Q.transpose()).trace()
+                - (Q * J * (Q_t0 + h * Qdot_t0).transpose().cast<T>()).trace();
+        } else {
+            assert(pose.rotation.size() == 1);
+            // ½Iθ² - Iθ(θᵗ + hθ̇ᵗ)
+            throw NotImplementedError(
+                "DistanceBarrierRBProblem energy not implmented for 2D!");
         }
 
-        return 0.5 * diff.transpose() * M * diff;
+        return energy;
     }
 
     // Compute B(x) = ∑_{k ∈ C} b(d(x_k)) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
@@ -162,9 +263,7 @@ namespace opt {
                 candidates.fv_candidates.size());
         }
 
-        double Bx;
-
-        Bx = compute_barrier_term(
+        double Bx = compute_barrier_term(
             x, candidates, grad, hess, compute_grad, compute_hess);
 
 #ifdef WITH_DERIVATIVE_CHECK
@@ -220,34 +319,6 @@ namespace opt {
         }
     }
 
-    // Matrix Projection onto Positive Semi-Definite Cone
-    Eigen::MatrixXd project_to_psd(const Eigen::MatrixXd& A)
-    {
-        // https://math.stackexchange.com/q/2776803
-        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(A);
-        if (eigensolver.info() != Eigen::Success) {
-            spdlog::error(
-                "unable to project matrix onto positive semi-definite cone");
-        }
-        // Check if all eigen values are zero or positive.
-        // The eigenvalues are sorted in increasing order.
-        if (eigensolver.eigenvalues()[0] >= 0.0) {
-            return A;
-        }
-        Eigen::DiagonalMatrix<double, Eigen::Dynamic> D(
-            eigensolver.eigenvalues());
-        // Save a little time and only project the negative values
-        for (int i = 0; i < A.rows(); i++) {
-            if (D.diagonal()[i] < 0.0) {
-                D.diagonal()[i] = 0.0;
-            } else {
-                break;
-            }
-        }
-        return eigensolver.eigenvectors() * D
-            * eigensolver.eigenvectors().transpose();
-    }
-
     // Compute the derivatives of a single constraint
     template <typename Candidate, typename RigidBodyCandidate>
     void DistanceBarrierRBProblem::add_constraint_barrier(
@@ -279,7 +350,7 @@ namespace opt {
             gradi = dBxi.getGradient();
             Eigen::MatrixXd hessi = dBxi.getHessian();
             // Project dense block to make assembled matrix PSD
-            hessi = project_to_psd(hessi);
+            hessi = Eigen::project_to_psd(hessi);
             // Add global triplets of the local values
             local_hessian_to_global_triplets(
                 hessi, body_ids, ndof, hess_triplets);
@@ -372,12 +443,14 @@ namespace opt {
     }
 
     bool DistanceBarrierRBProblem::has_collisions(
-        const Eigen::VectorXd& sigma_i, const Eigen::VectorXd& sigma_j) const
+        const Eigen::VectorXd& sigma_i, const Eigen::VectorXd& sigma_j)
     {
         physics::Poses<double> poses_i = this->dofs_to_poses(sigma_i);
         physics::Poses<double> poses_j = this->dofs_to_poses(sigma_j);
-        return m_constraint.has_active_collisions(
-            m_assembler, poses_i, poses_j);
+        bool collisions =
+            m_constraint.has_active_collisions(m_assembler, poses_i, poses_j);
+        m_had_collisions |= collisions;
+        return collisions;
     }
 
     template <typename T, typename RigidBodyCandidate>

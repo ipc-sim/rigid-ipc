@@ -233,6 +233,10 @@ namespace physics {
         const Eigen::MatrixXd& vertices,
         const Eigen::SparseMatrix<double>& mass_matrix)
     {
+        double total_mass = mass_matrix.sum();
+        if (total_mass == 0) {
+            return Eigen::VectorX3d::Zero(vertices.cols());
+        }
         return (mass_matrix * vertices).colwise().sum() / mass_matrix.sum();
     }
 

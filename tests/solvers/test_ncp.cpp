@@ -164,7 +164,7 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         virtual int num_vars() const override { return NUM_VARS; }
 
         virtual bool has_collisions(
-            const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) const override
+            const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) override
         {
             return false;
         }

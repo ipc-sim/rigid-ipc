@@ -41,8 +41,8 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
             return x.squaredNorm() / 2.0;
         }
 
-        bool has_collisions(
-            const Eigen::VectorXd&, const Eigen::VectorXd&) const override
+        bool
+        has_collisions(const Eigen::VectorXd&, const Eigen::VectorXd&) override
         {
             return false;
         }

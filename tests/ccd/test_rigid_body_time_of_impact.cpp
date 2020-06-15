@@ -6,25 +6,32 @@
 
 #include <constants.hpp>
 
-ccd::physics::RigidBody create_body(
+using namespace ccd;
+using namespace ccd::physics;
+
+RigidBody create_body(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces)
 {
     static int id = 0;
     int dim = vertices.cols();
-    ccd::physics::Pose<double> pose = ccd::physics::Pose<double>::Zero(dim);
-    return ccd::physics::RigidBody::from_points(
+    Pose<double> pose = Pose<double>::Zero(dim);
+    RigidBody rb = RigidBody::from_points(
         vertices, edges, faces, pose,
-        /*velocity=*/ccd::physics::Pose<double>::Zero(pose.dim()),
-        /*force=*/ccd::physics::Pose<double>::Zero(pose.dim()),
+        /*velocity=*/Pose<double>::Zero(pose.dim()),
+        /*force=*/Pose<double>::Zero(pose.dim()),
         /*denisty=*/1.0,
         /*is_dof_fixed=*/Eigen::VectorX6b::Zero(pose.ndof()),
         /*oriented=*/false,
         /*group_id=*/id++);
+    rb.vertices = vertices; // Cancel out the inertial rotation for testing
+    rb.pose.position.setZero();
+    rb.pose.rotation.setZero();
+    return rb;
 }
 
-ccd::physics::RigidBody
+RigidBody
 create_body(const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& edges)
 {
     return create_body(vertices, edges, Eigen::MatrixXi());
@@ -32,9 +39,6 @@ create_body(const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& edges)
 
 TEST_CASE("Rigid edge-vertex time of impact", "[ccd][rigid_toi][edge_vertex]")
 {
-    using namespace ccd;
-    using namespace ccd::physics;
-
     int dim = GENERATE(2);
     int ndof = Pose<double>::dim_to_ndof(dim);
     int pos_ndof = Pose<double>::dim_to_pos_ndof(dim);
@@ -108,8 +112,6 @@ TEST_CASE("Rigid edge-vertex time of impact", "[ccd][rigid_toi][edge_vertex]")
 
 TEST_CASE("Rigid edge-edge time of impact", "[ccd][rigid_toi][edge_edge]")
 {
-    using namespace ccd;
-    using namespace ccd::physics;
     int dim = 3;
     int ndof = Pose<double>::dim_to_ndof(dim);
     int pos_ndof = Pose<double>::dim_to_pos_ndof(dim);
@@ -171,8 +173,6 @@ TEST_CASE("Rigid edge-edge time of impact", "[ccd][rigid_toi][edge_edge]")
 
 TEST_CASE("Rigid face-vertex time of impact", "[ccd][rigid_toi][face_vertex]")
 {
-    using namespace ccd;
-    using namespace ccd::physics;
     int dim = 3;
     int ndof = Pose<double>::dim_to_ndof(dim);
     int pos_ndof = Pose<double>::dim_to_pos_ndof(dim);
@@ -244,9 +244,6 @@ TEST_CASE("Rigid face-vertex time of impact", "[ccd][rigid_toi][face_vertex]")
 
 TEST_CASE("Long EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
 {
-    using namespace ccd;
-    using namespace ccd::physics;
-
     Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
     Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
 
@@ -283,22 +280,18 @@ TEST_CASE("Long EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
     );
     // clang-format on
 
-    // BENCHMARK("Long EE Case")
-    // {
-    double toi;
-    bool is_impacting = compute_edge_edge_time_of_impact(
-        bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
-        bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
-        toi);
-    std::cout << (is_impacting ? "impacting" : "not impacting") << std::endl;
-    // };
+    BENCHMARK("Long EE Case")
+    {
+        double toi;
+        bool is_impacting = compute_edge_edge_time_of_impact(
+            bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
+            bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
+            toi);
+    };
 }
 
 TEST_CASE("Short EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
 {
-    using namespace ccd;
-    using namespace ccd::physics;
-
     Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
     Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
 
@@ -335,13 +328,12 @@ TEST_CASE("Short EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
     );
     // clang-format on
 
-    // BENCHMARK("Short EE case")
-    // {
-    double toi;
-    bool is_impacting = compute_edge_edge_time_of_impact(
-        bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
-        bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
-        toi);
-    std::cout << (is_impacting ? "impacting" : "not impacting") << std::endl;
-    // };
+    BENCHMARK("Short EE case")
+    {
+        double toi;
+        bool is_impacting = compute_edge_edge_time_of_impact(
+            bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
+            bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
+            toi);
+    };
 }
