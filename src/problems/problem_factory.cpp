@@ -1,6 +1,6 @@
 #include "problem_factory.hpp"
 
-#include <solvers/barrier_solver.hpp>
+#include <solvers/homotopy_solver.hpp>
 
 #include <problems/distance_barrier_rb_problem.hpp>
 #include <problems/split_distance_barrier_rb_problem.hpp>

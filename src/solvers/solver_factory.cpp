@@ -1,6 +1,6 @@
 #include "solver_factory.hpp"
 
-#include <solvers/barrier_solver.hpp>
+#include <solvers/homotopy_solver.hpp>
 #include <solvers/ipc_solver.hpp>
 
 namespace ccd {
@@ -16,7 +16,7 @@ namespace opt {
     SolverFactory::SolverFactory()
     {
         barrier_solvers.emplace(
-            BarrierSolver::solver_name(), std::make_shared<BarrierSolver>());
+            HomotopySolver::solver_name(), std::make_shared<HomotopySolver>());
         barrier_solvers.emplace(
             IPCSolver::solver_name(), std::make_shared<IPCSolver>());
     }

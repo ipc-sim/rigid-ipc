@@ -73,7 +73,7 @@ add_library(${PROJECT_NAME}
 
     src/problems/barrier_problem.cpp
 
-    src/solvers/barrier_solver.cpp
+    src/solvers/homotopy_solver.cpp
     src/solvers/fischer_newton.cpp
     src/solvers/lcp_solver.cpp
     src/solvers/ncp_solver.cpp

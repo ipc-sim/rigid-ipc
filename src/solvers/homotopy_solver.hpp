@@ -14,10 +14,10 @@ namespace opt {
      * @brief Solve the optimization problem using
      * Newton's Method with barriers for the constraints.
      */
-    class BarrierSolver : public virtual OptimizationSolver {
+    class HomotopySolver : public virtual OptimizationSolver {
     public:
-        BarrierSolver();
-        virtual ~BarrierSolver() = default;
+        HomotopySolver();
+        virtual ~HomotopySolver() = default;
 
         /// Initialize the state of the solver using the settings saved in JSON
         virtual void settings(const nlohmann::json& json) override;
@@ -25,11 +25,11 @@ namespace opt {
         virtual nlohmann::json settings() const override;
 
         /// An identifier for the solver class
-        static std::string solver_name() { return "barrier_solver"; }
+        static std::string solver_name() { return "homotopy_solver"; }
         /// An identifier for this solver
         virtual std::string name() const override
         {
-            return BarrierSolver::solver_name();
+            return HomotopySolver::solver_name();
         }
 
         virtual bool has_inner_solver() const override { return true; }

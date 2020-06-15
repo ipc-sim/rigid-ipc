@@ -9,7 +9,7 @@
         "active_constraint_scale": 1.01,
         "custom_hashgrid_cellsize": -1
     },
-    "barrier_solver": {
+    "homotopy_solver": {
         "inner_solver": "newton_solver",
         "min_barrier_epsilon": 0.0001
     },

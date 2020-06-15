@@ -8,7 +8,7 @@
         "active_constraint_scale": 1.01,
         "barrier_type": "poly_log"
     },
-    "barrier_solver": {
+    "homotopy_solver": {
         "min_barrier_epsilon": 0.0001
     },
     "rigid_body_problem": {

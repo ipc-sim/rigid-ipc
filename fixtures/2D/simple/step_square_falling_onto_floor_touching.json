@@ -6,7 +6,7 @@
         "detection_method": "hash_grid",
         "extend_collision_set": false
     },
-    "barrier_solver": {
+    "homotopy_solver": {
         "inner_solver": "newton_solver",
         "min_barrier_epsilon": 0.0001
     },

@@ -5,7 +5,7 @@
 
 #include <autodiff/autodiff_types.hpp>
 #include <barrier/barrier.hpp>
-#include <solvers/barrier_solver.hpp>
+#include <solvers/homotopy_solver.hpp>
 #include <solvers/newton_solver.hpp>
 #include <utils/not_implemented_error.hpp>
 

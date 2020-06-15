@@ -8,7 +8,7 @@
         "active_constraint_scale": 1.01,
         "use_log_barrier": true
     },
-    "barrier_solver": {
+    "homotopy_solver": {
         "e_b": 1e-05,
         "m": 1,
         "t_init": 1,

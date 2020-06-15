@@ -5,7 +5,7 @@
 #include <opt/distance_barrier_constraint.hpp>
 #include <opt/optimization_problem.hpp>
 #include <physics/rigid_body_problem.hpp>
-#include <solvers/barrier_solver.hpp>
+#include <solvers/homotopy_solver.hpp>
 
 namespace ccd {
 

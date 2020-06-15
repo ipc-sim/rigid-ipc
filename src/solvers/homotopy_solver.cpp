@@ -1,7 +1,7 @@
 // Solve the optimization general_problem using Newton's Method with barriers
 // for the constraints.
 
-#include "barrier_solver.hpp"
+#include "homotopy_solver.hpp"
 
 #include <barrier/barrier.hpp>
 #include <utils/eigen_ext.hpp>
@@ -14,7 +14,7 @@
 namespace ccd {
 namespace opt {
 
-    BarrierSolver::BarrierSolver()
+    HomotopySolver::HomotopySolver()
         : tinit(1.0)
         , t(1.0)
         , m(1.0)
@@ -28,7 +28,7 @@ namespace opt {
         inner_solver_ptr = std::make_unique<InnerNewtonSolver>();
     }
 
-    void BarrierSolver::settings(const nlohmann::json& params)
+    void HomotopySolver::settings(const nlohmann::json& params)
     {
         // termination criteria variables
         e_b = params["e_b"].get<double>();
@@ -38,7 +38,7 @@ namespace opt {
         c = params["c"].get<double>();
     }
 
-    nlohmann::json BarrierSolver::settings() const
+    nlohmann::json HomotopySolver::settings() const
     {
         nlohmann::json json;
         json["e_b"] = e_b;
@@ -50,7 +50,7 @@ namespace opt {
         return json;
     }
 
-    void BarrierSolver::init_solve(const Eigen::VectorXd& x0)
+    void HomotopySolver::init_solve(const Eigen::VectorXd& x0)
     {
         assert(inner_solver_ptr != nullptr);
         assert(problem_ptr != nullptr);
@@ -82,7 +82,7 @@ namespace opt {
         problem_ptr->barrier_stiffness(1 / t);
     }
 
-    OptimizationResults BarrierSolver::step_solve()
+    OptimizationResults HomotopySolver::step_solve()
     {
         assert(problem_ptr != nullptr);
         assert(inner_solver_ptr != nullptr);
@@ -110,7 +110,7 @@ namespace opt {
         return results;
     }
 
-    OptimizationResults BarrierSolver::solve(const Eigen::VectorXd& x0)
+    OptimizationResults HomotopySolver::solve(const Eigen::VectorXd& x0)
     {
         init_solve(x0);
 

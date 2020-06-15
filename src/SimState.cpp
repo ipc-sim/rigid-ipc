@@ -106,7 +106,7 @@ bool SimState::init(const nlohmann::json& args_in)
             "collision_eps": 0.0,
             "time_stepper": "default"
         },
-        "barrier_solver": {
+        "homotopy_solver": {
             "inner_solver": "DEPRECATED",
             "e_b": 1e-6,
             "t_inc": 100,

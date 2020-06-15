@@ -1,7 +1,7 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "timestep": 0.01,
-    "barrier_solver": {
+    "homotopy_solver": {
         "inner_solver": "newton_solver",
         "min_barrier_epsilon": 0.001
     },
