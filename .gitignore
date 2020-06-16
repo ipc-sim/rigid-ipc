@@ -261,3 +261,4 @@ meshes/tennis-racket.obj
 **/*.bak
 
 output/
+fixtures/**/*.gif
