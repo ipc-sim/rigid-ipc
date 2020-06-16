@@ -99,7 +99,7 @@ namespace opt {
 
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
 
-        Eigen::VectorXd energies(x.size());
+        Eigen::VectorXd energies(m_assembler.num_bodies());
         if (compute_grad) {
             grad.resize(x.size());
         }
@@ -450,7 +450,8 @@ namespace opt {
         bool collisions =
             m_constraint.has_active_collisions(m_assembler, poses_i, poses_j);
         m_had_collisions |= collisions;
-        return collisions;
+        // m_use_barriers := solve_collisions
+        return m_use_barriers ? collisions : false;
     }
 
     template <typename T, typename RigidBodyCandidate>
