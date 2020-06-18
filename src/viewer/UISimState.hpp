@@ -97,6 +97,7 @@ public:
     igl::opengl::glfw::Viewer m_viewer;
     SimState m_state;
     PlayerState m_player_state;
+    bool replaying = false;
 
     bool m_has_scene;
     bool m_bkp_had_collision;

@@ -141,7 +141,24 @@ void UISimState::redraw_scene()
 
 bool UISimState::pre_draw_loop()
 {
-    if (m_player_state == PlayerState::Playing) {
+    size_t last_save_state = m_state.state_sequence.size() - 1;
+    if (m_state.m_num_simulation_steps >= last_save_state) {
+        replaying = false;
+    }
+    if (replaying) {
+        m_state.problem_ptr->state(
+            m_state.state_sequence[m_state.m_num_simulation_steps]);
+        redraw_scene();
+        m_scene_changed = true;
+        if (m_player_state == PlayerState::Playing) {
+            m_state.m_num_simulation_steps++;
+        }
+        if (m_state.m_num_simulation_steps >= last_save_state) {
+            m_state.m_num_simulation_steps = last_save_state;
+            m_player_state = PlayerState::Paused;
+            replaying = false;
+        }
+    } else if (m_player_state == PlayerState::Playing) {
         igl::Timer timer;
         timer.start();
         simulation_step();

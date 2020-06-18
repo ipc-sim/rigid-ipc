@@ -126,7 +126,7 @@ void UISimState::draw_simulation_player()
     ImGui::RadioButton("play##SimPlayer", &player_state, PlayerState::Playing);
     ImGui::RadioButton("pause##SimPlayer", &player_state, PlayerState::Paused);
     if (m_player_state == PlayerState::Playing
-        && player_state == PlayerState::Paused) {
+        && player_state == PlayerState::Paused && !replaying) {
         log_simulation_time();
     }
     if (m_state.m_num_simulation_steps >= m_state.m_max_simulation_steps
@@ -137,12 +137,9 @@ void UISimState::draw_simulation_player()
     m_player_state = static_cast<PlayerState>(player_state);
 
     if (ImGui::Button("Step##SimPlayer", ImVec2(-1, 0))) {
-        igl::Timer timer;
-        timer.start();
-        simulation_step();
-        timer.stop();
-        m_simulation_time += timer.getElapsedTime();
-        m_scene_changed = true;
+        m_player_state = PlayerState::Playing;
+        pre_draw_loop();
+        m_player_state = PlayerState::Paused;
     }
     // --------------------------------------------------------------------
     ImGui::Checkbox("pause if intersecting", &m_bkp_has_intersections);
@@ -158,7 +155,11 @@ void UISimState::draw_simulation_player()
     ImGui::HelpMarker("yes - stop playing if step had a collision.");
 
     // --------------------------------------------------------------------
-    ImGui::Text("Step %i", m_state.m_num_simulation_steps);
+    if (ImGui::SliderInt(
+            "step##Replay", &m_state.m_num_simulation_steps, 0,
+            m_state.state_sequence.size() - 1)) {
+        replaying = true;
+    }
 }
 
 void UISimState::draw_settings()

@@ -43,9 +43,10 @@ public:
 
     nlohmann::json args;
 
+    std::vector<nlohmann::json> state_sequence;
+
 protected:
     bool m_dirty_constraints;
-    std::vector<nlohmann::json> state_sequence;
 };
 
 } // namespace ccd
