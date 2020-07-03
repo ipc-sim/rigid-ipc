@@ -149,6 +149,10 @@ namespace physics {
 
         // center of mass
         center = Eigen::Vector3d(integral[1], integral[2], integral[3]) / mass;
+        if (center.squaredNorm() > 1e-8) {
+            throw NotImplementedError(
+                "3D mass computation only works for closed meshes!");
+        }
 
         // inertia relative to world origin
         inertia.resize(3, 3);
@@ -278,7 +282,7 @@ namespace physics {
             I << (mass_matrix * vertices.rowwise().squaredNorm()).sum();
             return I;
         } else {
-            // https://images.app.goo.gl/DZ1bAcGwtitvCjSs7
+            // https://i.ytimg.com/vi/9jOrDufoO50/hqdefault.jpg
             Eigen::VectorXd vertex_masses = mass_matrix.diagonal();
 
             Eigen::Matrix<double, 3, 3> I = Eigen::Matrix<double, 3, 3>::Zero();

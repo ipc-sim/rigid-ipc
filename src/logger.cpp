@@ -17,7 +17,7 @@ namespace logger {
         Eigen::FullPrecision,
         Eigen::DontAlignCols,
         ", ",
-        "\n",
+        ",\n",
         "[",
         "]",
         "[",

@@ -134,7 +134,7 @@ namespace opt {
                 Eigen::MatrixXX6d hessi = dExi.getHessian();
 
                 // Project dense block to make assembled matrix PSD
-                hessi = Eigen::project_to_psd(hessi);
+                // hessi = Eigen::project_to_psd(hessi);
 
                 // Add the local hessian as triplets in the global hessian
                 for (int r = 0; r < hessi.rows(); r++) {
@@ -196,8 +196,8 @@ namespace opt {
 
         // Linear energy
         Eigen::VectorX3<T> q = pose.position;
-        Eigen::VectorX3d q_t0 = body.pose.position;
-        Eigen::VectorX3d qdot_t0 = body.velocity.position;
+        const Eigen::VectorX3d& q_t0 = body.pose.position;
+        const Eigen::VectorX3d& qdot_t0 = body.velocity.position;
         Eigen::VectorX3d qdotdot_t0 = gravity + body.force.position / body.mass;
 
         // ½mqᵀq - mqᵀ(qᵗ + h(q̇ᵗ + h(g + f/m)))

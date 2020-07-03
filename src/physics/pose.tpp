@@ -3,9 +3,11 @@
 #include <Eigen/Geometry>
 #include <tbb/tbb.h>
 
+#include <autodiff/autodiff.h>
 #include <logger.hpp>
 #include <utils/is_zero.hpp>
 #include <utils/not_implemented_error.hpp>
+#include <utils/sinc.hpp>
 
 namespace ccd {
 namespace physics {
@@ -128,35 +130,16 @@ namespace physics {
         select_dof(is_dof_zero, Pose<T>::Zero(dim()), R);
     }
 
-    template <typename T> inline T sinc(const T& x)
-    {
-        if (x == 0.0) {
-            return T(1.0);
-        }
-        // else if (abs(x) < 1e-7) {
-        //     T y(1.0);
-        //     for (int i = 1; i < 5; i++) {
-        //         T fact(1.0);
-        //         for (int j = 2; j <= 2 * n + 1; j++) {
-        //             fact *= j;
-        //         }
-        //         y += pow(-1, n) * pow(x, 2 * i) / fact;
-        //     }
-        //     return y;
-        // }
-        return sin(x) / x;
-    }
-
     template <typename T>
     Eigen::MatrixXX3<T> Pose<T>::construct_rotation_matrix() const
     {
         if (dim() == 2) {
             return Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
         } else {
-            T angle = rotation.norm();
+            T sinc_angle = sinc_normx(rotation);
+            T sinc_half_angle = sinc_normx((rotation / T(2.0)).eval());
             Eigen::Matrix3<T> K = Eigen::Hat(rotation);
-            T sinc_half_angle = sinc(angle / 2.0);
-            return Eigen::Matrix3<T>::Identity() + sinc(angle) * K
+            return Eigen::Matrix3<T>::Identity() + sinc_angle * K
                 + 0.5 * sinc_half_angle * sinc_half_angle * K * K;
         }
     }

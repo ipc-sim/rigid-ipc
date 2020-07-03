@@ -242,7 +242,7 @@ TEST_CASE("Rigid face-vertex time of impact", "[ccd][rigid_toi][face_vertex]")
     }
 }
 
-TEST_CASE("Long EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
+TEST_CASE("Long EE case", "[!benchmark][ccd][rigid_toi][edge_edge][slow]")
 {
     Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
     Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
@@ -280,7 +280,7 @@ TEST_CASE("Long EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
     );
     // clang-format on
 
-    BENCHMARK("Long EE Case")
+    // BENCHMARK("Long EE Case")
     {
         double toi;
         bool is_impacting = compute_edge_edge_time_of_impact(
@@ -290,7 +290,7 @@ TEST_CASE("Long EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
     };
 }
 
-TEST_CASE("Short EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
+TEST_CASE("Short EE case", "[!benchmark][ccd][rigid_toi][edge_edge][quick]")
 {
     Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
     Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
@@ -328,7 +328,55 @@ TEST_CASE("Short EE case", "[!benchmark][ccd][rigid_toi][edge_edge]")
     );
     // clang-format on
 
-    BENCHMARK("Short EE case")
+    // BENCHMARK("Short EE case")
+    {
+        double toi;
+        bool is_impacting = compute_edge_edge_time_of_impact(
+            bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
+            bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
+            toi);
+    };
+}
+
+TEST_CASE("EE case1", "[!benchmark][ccd][rigid_toi][edge_edge][case1]")
+{
+    Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
+    Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
+
+    Eigen::MatrixXi bodyA_edges(1, 2);
+    bodyA_edges.row(0) << 0, 1;
+    Eigen::MatrixXi bodyB_edges(1, 2);
+    bodyB_edges.row(0) << 0, 1;
+
+    RigidBody bodyA = create_body(bodyA_vertices, bodyA_edges);
+    RigidBody bodyB = create_body(bodyB_vertices, bodyB_edges);
+
+    // clang-format off
+    bodyA.vertices.row(0) << -1, 0, 0;
+    bodyA.vertices.row(1) << 1, 0, 0;
+
+    bodyB.vertices.row(0) << 0, 0, -1;
+    bodyB.vertices.row(1) << 0, 0, 1;
+
+    Pose<double> bodyA_pose_t0(
+        Eigen::Vector3d(0, 0.5, 0),
+        Eigen::Vector3d(0, 0, 0)
+    );
+    Pose<double> bodyA_pose_t1(
+        Eigen::Vector3d(0, 0.5, 0),
+        Eigen::Vector3d(0, 0, 0)
+    );
+    Pose<double> bodyB_pose_t0(
+        Eigen::Vector3d(0, 1, 0),
+        Eigen::Vector3d(0, 0, 0)
+    );
+    Pose<double> bodyB_pose_t1(
+        Eigen::Vector3d(0, 1, 0),
+        Eigen::Vector3d(91 * 3.14, 0, 0)
+    );
+    // clang-format on
+
+    // BENCHMARK("Short EE case")
     {
         double toi;
         bool is_impacting = compute_edge_edge_time_of_impact(

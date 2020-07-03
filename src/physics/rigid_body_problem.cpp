@@ -69,9 +69,10 @@ namespace physics {
         for (size_t i = 0; i < m_assembler.m_rbs.size(); ++i) {
             auto& rb = m_assembler.m_rbs[i];
             spdlog::info(
-                "rb={} group_id={} mass={} inertia={}", i, rb.group_id, rb.mass,
-                logger::fmt_eigen(rb.moment_of_inertia));
+                "rb={:d} group_id={:d} mass={:g} inertia={}", i, rb.group_id,
+                rb.mass, logger::fmt_eigen(rb.moment_of_inertia));
         }
+        spdlog::info("average_mass={:g}", m_assembler.average_mass);
 
         // Compute world diagonal
         Eigen::MatrixXd V = vertices();
@@ -229,6 +230,18 @@ namespace physics {
                         * rb.R0.transpose() * omega.axis();
                     spdlog::debug(
                         "ω_IPC={}", logger::fmt_eigen(rb.velocity.rotation));
+
+                    // Q̇ = Q[ω]
+                    // Q̇ᵗ = (Qᵗ - Qᵗ⁻¹) / h
+                    // Eigen::Matrix3d Q = rb.pose.construct_rotation_matrix();
+                    // Eigen::Matrix3d Qdot =
+                    //     (Q - rb.pose_prev.construct_rotation_matrix())
+                    //     / timestep();
+                    // Eigen::Matrix3d omega_hat = Q.transpose() * Qdot;
+                    // std::cout << omega_hat << std::endl << std::endl;
+                    // rb.velocity.rotation.x() = omega_hat(2, 1);
+                    // rb.velocity.rotation.y() = omega_hat(0, 2);
+                    // rb.velocity.rotation.z() = omega_hat(1, 0);
                 }
                 rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
             });

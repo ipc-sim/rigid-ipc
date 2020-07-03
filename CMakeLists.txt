@@ -39,6 +39,8 @@ add_library(${PROJECT_NAME}
     src/autodiff/autodiff.cpp
     ${FIXING_COLLISIONS_EXTERNAL}/finite-diff/finitediff.cpp
 
+    src/utils/sinc.cpp
+
     src/ccd/impact.cpp
     src/ccd/collision_candidate.cpp
     src/ccd/hash_grid.cpp
@@ -205,12 +207,18 @@ target_link_libraries(${PROJECT_NAME} PUBLIC tinyxml2::tinyxml2)
 # Figure out SSE level support
 message(STATUS "Seaching for SSE...")
 find_package(SSE)
-# Figure out AVX level support
-message(STATUS "Searching for AVX...")
-find_package(AVX)
-# Figure out FMA level support
-message(STATUS "Searching for FMA...")
-find_package(FMA)
+# Apple broke AVX instructions with clang:
+# https://gitlab.com/libeigen/eigen/-/commit/71aa53dd6dfdc497324d9e87f59c4ba820191856
+if(NOT APPLE)
+  # Figure out AVX level support
+  message(STATUS "Searching for AVX...")
+  find_package(AVX)
+  # Figure out FMA level support
+  message(STATUS "Searching for FMA...")
+  find_package(FMA)
+else()
+  message(WARNING "Disabling AVX support: clang compiler shipped with XCode 11.[012] generates broken assembly with -macosx-version-min=10.15 and AVX enabled.")
+endif()
 # Add SSE, AVX, and FMA flags to compiler flags
 string(REPLACE " " ";" SIMD_FLAGS "${SSE_FLAGS} ${AVX_FLAGS} ${FMA_FLAGS}")
 target_compile_options(${PROJECT_NAME} PUBLIC ${SIMD_FLAGS})

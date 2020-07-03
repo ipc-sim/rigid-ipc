@@ -92,8 +92,17 @@ namespace physics {
         }
         average_edge_length /= m_edges.rows();
 
-        average_mass = m_rb_mass_matrix.diagonal().sum()
-            / m_rb_mass_matrix.diagonal().size();
+        average_mass = 0;
+        int num_free_dof = 0;
+        for (int i = 0; i < is_rb_dof_fixed.size(); i++) {
+            if (!is_rb_dof_fixed[i]) {
+                average_mass += m_rb_mass_matrix.diagonal()[i];
+                num_free_dof++;
+            }
+        }
+        if (num_free_dof) {
+            average_mass /= num_free_dof;
+        }
     }
 
     void RigidBodyAssembler::global_to_local_vertex(

@@ -49,6 +49,8 @@ template <typename T> inline Matrix2<T> Hat(T x);
 template <typename T> inline Matrix3<T> Hat(Vector3<T> x);
 template <typename T> inline MatrixXX3<T> Hat(VectorX3<T> x);
 
+/// Matrix Projection onto Positive Definite Cone
+MatrixXd project_to_pd(const MatrixXd& A);
 /// Matrix Projection onto Positive Semi-Definite Cone
 MatrixXd project_to_psd(const MatrixXd& A);
 

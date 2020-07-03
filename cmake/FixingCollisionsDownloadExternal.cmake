@@ -66,7 +66,7 @@ endfunction()
 function(fixing_collisions_download_finite_diff)
      fixing_collisions_download_project(finite-diff
         GIT_REPOSITORY https://github.com/zfergus/finite-diff.git
-        GIT_TAG        01e16fb39ecf6fe6367b932448028817becfb633
+        GIT_TAG        58d908b3a82b551bc6b237411817da5a8a52d500
     )
 endfunction()
 

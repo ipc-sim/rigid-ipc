@@ -99,13 +99,12 @@ namespace opt {
             return step_max_speed <= tol;
         }
         case ConvergenceCriteria::ENERGY: {
-            spdlog::debug(
+            double step_energy = abs(gradient_free.dot(direction_free));
+            spdlog::info(
                 "solve={} iter={:d} step_energy={:g} tol={:g}", //
-                name(), iteration_number,
-                abs(gradient_free.dot(direction_free)),
+                name(), iteration_number, step_energy,
                 Constants::NEWTON_ENERGY_CONVERGENCE_TOL);
-            return abs(gradient_free.dot(direction_free))
-                <= Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
+            return step_energy <= Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
         }
         }
         throw NotImplementedError("Invalid convergence criteria option!");
@@ -251,6 +250,7 @@ namespace opt {
         bool success = false;
         int num_it = 0;
         double lower_bound = line_search_lower_bound() / -grad_fx.dot(dir);
+        // double lower_bound = line_search_lower_bound() / dir.squaredNorm();
         // double lower_bound = line_search_lower_bound();
 
         while (std::isfinite(lower_bound) && step_length > lower_bound) {
@@ -329,6 +329,7 @@ namespace opt {
 
         if (!solve_success) {
             direction = -gradient;
+            spdlog::warn("hessian=\n{}", logger::fmt_eigen(hessian));
         }
 
         if (solve_success && make_psd && direction.dot(gradient) > 0) {
@@ -353,6 +354,13 @@ namespace opt {
                     name(), iteration_number + 1, dir_dot_grad);
                 direction = -gradient;
             }
+        }
+
+        double solve_residual;
+        if (solve_success
+            && (solve_residual = (hessian * direction + gradient).norm())
+                > 1e-15) {
+            spdlog::warn("newton_solve_residual={:g}", solve_residual);
         }
 
         return solve_success;

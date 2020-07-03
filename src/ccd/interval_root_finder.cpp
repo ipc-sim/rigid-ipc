@@ -74,6 +74,28 @@ inline bool zero_in(Eigen::Vector<Interval, dim, max_dim> X)
     return true;
 }
 
+void log_octree(
+    const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
+    const Eigen::VectorX3I& x0,
+    int levels = 5)
+{
+    if (levels == 1 || !zero_in(f(x0))) {
+        std::cout << "[" << logger::fmt_eigen_intervals(x0) << ", "
+                  << (zero_in(f(x0)) ? "True" : "False") << "]," << std::endl;
+        return;
+    }
+
+    for (Interval t : { bisect(x0(0)).first, bisect(x0(0)).second }) {
+        for (Interval alpha : { bisect(x0(1)).first, bisect(x0(1)).second }) {
+            for (Interval beta :
+                 { bisect(x0(2)).first, bisect(x0(2)).second }) {
+                Eigen::Vector3I x(t, alpha, beta);
+                log_octree(f, x, levels - 1);
+            }
+        }
+    }
+}
+
 bool interval_root_finder(
     const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
     const std::function<bool(const Eigen::VectorX3I&)>& constraint_predicate,
@@ -81,6 +103,8 @@ bool interval_root_finder(
     const Eigen::VectorX3d& tol,
     Eigen::VectorX3I& x)
 {
+    // log_octree(f, x0);
+
     // Stack of intervals and the last split dimension
     std::stack<std::pair<Eigen::VectorX3I, int>> xs;
     xs.emplace(x0, -1);
