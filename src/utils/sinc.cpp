@@ -95,7 +95,7 @@ inline double ddsinc_over_x2_minus_dsinc_over_x3(double x)
     double x2 = x * x;
     double x4 = x2 * x2;
     if (abs(x) > eps) {
-        return ((3 - x2) * sin(x) + 3 * x * cos(x)) / (x4 * x);
+        return ((3 - x2) * sin(x) - 3 * x * cos(x)) / (x4 * x);
     }
 
     // approximation by taylor series in x at 0 up to order 5
