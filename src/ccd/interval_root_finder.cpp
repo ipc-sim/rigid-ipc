@@ -127,14 +127,16 @@ bool interval_root_finder(
             continue;
         }
 
-        // Bisect the next dimension that is greater than its tolerance
-        int split_i;
-        for (int i = 1; i <= x.size(); i++) {
-            split_i = (last_split + i) % x.size();
-            if (widths(split_i) > tol(split_i)) {
-                break;
+        // Bisect the largest dimension divided by its tolerance
+        int split_i = -1;
+        for (int i = 0; i < x.size(); i++) {
+            if (widths(i) > tol(i)
+                && (split_i == -1
+                    || widths(i) * tol(split_i) > widths(split_i) * tol(i))) {
+                split_i = i;
             }
         }
+
         std::pair<Interval, Interval> halves = bisect(x(split_i));
         Eigen::VectorX3I x1 = x;
         // Push the second half on first so it is examined after the first half

@@ -242,55 +242,7 @@ TEST_CASE("Rigid face-vertex time of impact", "[ccd][rigid_toi][face_vertex]")
     }
 }
 
-TEST_CASE("Long EE case", "[!benchmark][ccd][rigid_toi][edge_edge][slow]")
-{
-    Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
-    Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
-
-    Eigen::MatrixXi bodyA_edges(1, 2);
-    bodyA_edges.row(0) << 0, 1;
-    Eigen::MatrixXi bodyB_edges(1, 2);
-    bodyB_edges.row(0) << 0, 1;
-
-    RigidBody bodyA = create_body(bodyA_vertices, bodyA_edges);
-    RigidBody bodyB = create_body(bodyB_vertices, bodyB_edges);
-
-    // clang-format off
-    bodyA.vertices.row(0) << -1.45054325721069, 2.29538642849017, 0.461193969193908;
-    bodyA.vertices.row(1) << -1.12537372801783, 1.78188213954136, 1.12303701209507;
-
-    bodyB.vertices.row(0) << -8.63773122773594, 0.523601125992661, 1.91725528075351;
-    bodyB.vertices.row(1) << -8.00096703934998, 1.01814387645424, 2.44728456523133;
-
-    Pose<double> bodyA_pose_t0(
-        Eigen::Vector3d(-0.0743518262648221, 2.0045466941596, -7.30362621222097e-05),
-        Eigen::Vector3d(1.56635729875648, 0.00484560212950006, -0.00477941835507233)
-    );
-    Pose<double> bodyA_pose_t1(
-        Eigen::Vector3d(-0.0743518262648221, 2.0045466941596, -7.30362621222097e-05),
-        Eigen::Vector3d(1.56635729875648, 0.00484560212950006, -0.00477941835507233)
-    );
-    Pose<double> bodyB_pose_t0(
-        Eigen::Vector3d(-0.0625913211582116, 9.53281795832003, -0.0276191274028154),
-        Eigen::Vector3d(-0.142589758121075, -0.142468016151593, 1.56466991422561)
-    );
-    Pose<double> bodyB_pose_t1(
-        Eigen::Vector3d(-0.0625913211582116, 9.52447945832003, -0.0276191274028154),
-        Eigen::Vector3d(-0.156274624583429, -0.156172306264317, 1.56372038452934)
-    );
-    // clang-format on
-
-    // BENCHMARK("Long EE Case")
-    {
-        double toi;
-        bool is_impacting = compute_edge_edge_time_of_impact(
-            bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
-            bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
-            toi);
-    };
-}
-
-TEST_CASE("Short EE case", "[!benchmark][ccd][rigid_toi][edge_edge][quick]")
+TEST_CASE("Fast EE case", "[!benchmark][ccd][rigid_toi][edge_edge][fast]")
 {
     Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
     Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
@@ -328,7 +280,7 @@ TEST_CASE("Short EE case", "[!benchmark][ccd][rigid_toi][edge_edge][quick]")
     );
     // clang-format on
 
-    // BENCHMARK("Short EE case")
+    BENCHMARK("Fast EE case")
     {
         double toi;
         bool is_impacting = compute_edge_edge_time_of_impact(
@@ -338,7 +290,55 @@ TEST_CASE("Short EE case", "[!benchmark][ccd][rigid_toi][edge_edge][quick]")
     };
 }
 
-TEST_CASE("EE case1", "[!benchmark][ccd][rigid_toi][edge_edge][case1]")
+TEST_CASE("Slow EE case", "[!benchmark][ccd][rigid_toi][edge_edge][slow]")
+{
+    Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
+    Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
+
+    Eigen::MatrixXi bodyA_edges(1, 2);
+    bodyA_edges.row(0) << 0, 1;
+    Eigen::MatrixXi bodyB_edges(1, 2);
+    bodyB_edges.row(0) << 0, 1;
+
+    RigidBody bodyA = create_body(bodyA_vertices, bodyA_edges);
+    RigidBody bodyB = create_body(bodyB_vertices, bodyB_edges);
+
+    // clang-format off
+    bodyA.vertices.row(0) << -1.45054325721069, 2.29538642849017, 0.461193969193908;
+    bodyA.vertices.row(1) << -1.12537372801783, 1.78188213954136, 1.12303701209507;
+
+    bodyB.vertices.row(0) << -8.63773122773594, 0.523601125992661, 1.91725528075351;
+    bodyB.vertices.row(1) << -8.00096703934998, 1.01814387645424, 2.44728456523133;
+
+    Pose<double> bodyA_pose_t0(
+        Eigen::Vector3d(-0.0743518262648221, 2.0045466941596, -7.30362621222097e-05),
+        Eigen::Vector3d(1.56635729875648, 0.00484560212950006, -0.00477941835507233)
+    );
+    Pose<double> bodyA_pose_t1(
+        Eigen::Vector3d(-0.0743518262648221, 2.0045466941596, -7.30362621222097e-05),
+        Eigen::Vector3d(1.56635729875648, 0.00484560212950006, -0.00477941835507233)
+    );
+    Pose<double> bodyB_pose_t0(
+        Eigen::Vector3d(-0.0625913211582116, 9.53281795832003, -0.0276191274028154),
+        Eigen::Vector3d(-0.142589758121075, -0.142468016151593, 1.56466991422561)
+    );
+    Pose<double> bodyB_pose_t1(
+        Eigen::Vector3d(-0.0625913211582116, 9.52447945832003, -0.0276191274028154),
+        Eigen::Vector3d(-0.156274624583429, -0.156172306264317, 1.56372038452934)
+    );
+    // clang-format on
+
+    BENCHMARK("Slow EE Case")
+    {
+        double toi;
+        bool is_impacting = compute_edge_edge_time_of_impact(
+            bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
+            bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
+            toi);
+    };
+}
+
+TEST_CASE("Actual EE Collision", "[!benchmark][ccd][rigid_toi][edge_edge]")
 {
     Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
     Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
@@ -376,7 +376,7 @@ TEST_CASE("EE case1", "[!benchmark][ccd][rigid_toi][edge_edge][case1]")
     );
     // clang-format on
 
-    // BENCHMARK("Short EE case")
+    BENCHMARK("Actually EE Collision")
     {
         double toi;
         bool is_impacting = compute_edge_edge_time_of_impact(

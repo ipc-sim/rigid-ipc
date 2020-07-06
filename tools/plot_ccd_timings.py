@@ -12,7 +12,8 @@ with open("ccd-timings.txt", "r") as file:
         elif stripped_line[:2] == "VF":
             vf_timings.append(float(stripped_line.split()[1]))
 
-ee_timings = [ee_timing for ee_timing in ee_timings if ee_timing < 2e-4]
+# ee_timings = [ee_timing for ee_timing in ee_timings if ee_timing < 2e-4]
+# vf_timings = [vf_timing for vf_timing in vf_timings if vf_timing < 2e-4]
 
 ee_timings_arr = numpy.array(ee_timings)
 vf_timings_arr = numpy.array(vf_timings)
