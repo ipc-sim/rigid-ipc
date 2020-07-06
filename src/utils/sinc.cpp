@@ -2,28 +2,27 @@
 
 namespace ccd {
 
+// We use these bounds because for example 1 + x^2 = 1 for x < sqrt(ϵ).
+static const double taylor_0_bound = std::numeric_limits<double>::epsilon();
+static const double taylor_2_bound = sqrt(taylor_0_bound);
+static const double taylor_n_bound = sqrt(taylor_2_bound);
+
 double sinc(const double& x)
 {
-    // We use these epsilons because for example 1 + x^2 = 1 for x < eps_sqrt.
-    constexpr static const double eps =
-        2.220446049250313080847263336181640625e-16;
-    constexpr static const double eps_sqrt = 1.490116119384765625e-8;
-    constexpr static const double eps_sqrt_sqrt = 1.220703125e-4;
-
-    if (abs(x) > eps_sqrt_sqrt) {
+    if (abs(x) >= taylor_n_bound) {
         return sin(x) / x;
     }
 
     // approximation by taylor series in x at 0 up to order 1
     double result = 1;
 
-    if (abs(x) >= eps) {
+    if (abs(x) >= taylor_0_bound) {
         double x2 = x * x;
 
         // approximation by taylor series in x at 0 up to order 3
         result -= x2 / 6.0;
 
-        if (abs(x) >= eps_sqrt) {
+        if (abs(x) >= taylor_2_bound) {
             // approximation by taylor series in x at 0 up to order 5
             result += (x2 * x2) / 120.0;
         }
@@ -34,39 +33,49 @@ double sinc(const double& x)
 
 Interval sinc(const Interval& x)
 {
-    constexpr static const double eps = 1.220703125e-4; // sqrt(sqrt(ϵ))
+    // Define two regions and use even symmetry of sinc.
+    // A bound on sinc where it is monotonic ([0, ~4.4934])
+    static const double monotonic_bound = 4.4934094579;
 
-    // If the domain does not include the challenging interval, compute the
-    // value directly.
-    if (!overlap(x, Interval(-eps, eps))) {
-        return sin(x) / x;
+    Interval y = Interval::empty(), x_pos = x;
+    if (x.lower() < 0) {
+        if (x.upper() <= 0) {
+            return sinc(-x); // sinc is an even function
+        }
+        // Split
+        y = sinc(Interval(0, -x.lower()));
+        x_pos = Interval(0, x.upper());
     }
 
-    // Split x in to x_{<ϵ}, x_ϵ, x_{>ϵ}, some might be empty.
-    Interval x_lt_eps = Interval(x.lower(), -eps);
-    Interval x_gt_eps = Interval(eps, x.upper());
+    // Split the domain into two interval:
+    // 1. x ∩ [0, monotonic_bound]
+    // 2. x ∩ [monotonic_bound, ∞]
 
-    // Compute x_ϵ and y = sinc(x_{<ϵ}) ∪ sinc(x_{>ϵ})
-    Interval y, x_eps;
-    if (empty(x_lt_eps) && empty(x_lt_eps)) {
-        x_eps = x;
-        y = Interval::empty();
-    } else if (empty(x_lt_eps)) {
-        x_eps = Interval(x.lower(), eps);
-        y = sin(x_gt_eps) / x_gt_eps;
-    } else if (empty(x_gt_eps)) {
-        x_eps = Interval(-eps, x.upper());
-        y = sin(x_lt_eps) / x_lt_eps;
-    } else {
-        // The max range for x_eps is 1
-        return hull(
-            hull(sin(x_lt_eps) / x_lt_eps, sin(x_gt_eps) / x_gt_eps),
-            Interval(1, 1));
+    // Case 1 (Monotonic):
+    // WARNING: The following does not account for rounding properly
+    Interval x_gt_monotonic = x_pos;
+    if (x_pos.lower() <= monotonic_bound) {
+        Interval x_monotonic = x_pos;
+        if (x_monotonic.upper() > monotonic_bound) {
+            x_monotonic = Interval(x_monotonic.lower(), monotonic_bound);
+            x_gt_monotonic = Interval(monotonic_bound, x_pos.upper());
+        } else {
+            x_gt_monotonic = Interval::empty();
+        }
+        // sinc is monotonically decreasing, so flip a and b.
+        // TODO: Set rounding modes here to avoid round off error.
+        y = hull(
+            y, Interval(sinc(x_monotonic.upper()), sinc(x_monotonic.lower())));
     }
 
-    // approximation by taylor series in x at 0 up to order 5
-    Interval x_eps2 = x_eps * x_eps;
-    return hull(y, x_eps2 * (x_eps2 / 120.0 - 1.0 / 6.0) + 1.0);
+    // Case 2 (Not necessarily monotonic):
+    if (!empty(x_gt_monotonic)) {
+        // x_gt_monotonic is larger than one, so the division should be well
+        // behaved.
+        y = hull(y, sin(x_gt_monotonic) / x_gt_monotonic);
+    }
+
+    return y;
 }
 
 inline double dsinc_over_x(double x)

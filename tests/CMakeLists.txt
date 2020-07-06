@@ -41,6 +41,8 @@ add_executable(${PROJECT_NAME}_tests
 
     geometry/test_distance.cpp
     geometry/test_intersection.cpp
+
+    utils/test_sinc.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)
