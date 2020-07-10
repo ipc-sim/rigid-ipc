@@ -3,6 +3,7 @@
 
 #include <stack>
 
+#include <constants.hpp>
 #include <logger.hpp>
 
 namespace ccd {
@@ -60,6 +61,15 @@ inline Eigen::VectorX3d width(const Eigen::VectorX3I& x)
         w(i) = width(x(i));
     }
     return w;
+}
+
+inline double diagonal_width(const Eigen::VectorX3I& x)
+{
+    double w = 0;
+    for (int i = 0; i < x.size(); i++) {
+        w += width(x(i)) * width(x(i));
+    }
+    return sqrt(w);
 }
 
 template <int dim, int max_dim = dim>
@@ -125,6 +135,12 @@ bool interval_root_finder(
                 return true;
             }
             continue;
+        }
+
+        // Check the diagonal of the range box
+        if (diagonal_width(y) <= Constants::INTERVAL_ROOT_FINDER_RANGE_TOL
+            && constraint_predicate(x)) {
+            return true;
         }
 
         // Bisect the largest dimension divided by its tolerance

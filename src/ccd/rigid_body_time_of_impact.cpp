@@ -233,38 +233,7 @@ bool compute_edge_edge_time_of_impact(
         distance, Eigen::VectorX3I::Constant(3, Interval(0, 1)), tol,
         toi_interval);
     // timer.stop();
-    // if (timer.getElapsedTime() < 5e-5) {
-    //     std::cout << fmt::format(
-    //                      "poseA_t0.position: {}\n"
-    //                      "poseA_t0.rotation: {}\n"
-    //                      "poseA_t1.position: {}\n"
-    //                      "poseA_t1.rotation: {}\n"
-    //                      "poseB_t0.position: {}\n"
-    //                      "poseB_t0.rotation: {}\n"
-    //                      "poseB_t1.position: {}\n"
-    //                      "poseB_t1.rotation: {}",
-    //                      logger::fmt_eigen(poseA_t0.position),
-    //                      logger::fmt_eigen(poseA_t0.rotation),
-    //                      logger::fmt_eigen(poseA_t1.position),
-    //                      logger::fmt_eigen(poseA_t1.rotation),
-    //                      logger::fmt_eigen(poseB_t0.position),
-    //                      logger::fmt_eigen(poseB_t0.rotation),
-    //                      logger::fmt_eigen(poseB_t1.position),
-    //                      logger::fmt_eigen(poseB_t1.rotation))
-    //               << std::endl;
-    //
-    //     std::cout << fmt::format(
-    //                      "edgeA: ({}, {})\nedgeB: ({}, {})",
-    //                      logger::fmt_eigen(
-    //                          bodyA.vertices.row(bodyA.edges(edgeA_id, 0))),
-    //                      logger::fmt_eigen(
-    //                          bodyA.vertices.row(bodyA.edges(edgeA_id, 1))),
-    //                      logger::fmt_eigen(
-    //                          bodyB.vertices.row(bodyB.edges(edgeB_id, 0))),
-    //                      logger::fmt_eigen(
-    //                          bodyB.vertices.row(bodyB.edges(edgeB_id, 1))))
-    //               << std::endl;
-    // }
+    // std::cout << "EE " << timer.getElapsedTime() << std::endl;
     // Return a conservative time-of-impact
     if (is_impacting) {
         toi = toi_interval(0).lower();
@@ -386,9 +355,14 @@ bool compute_face_vertex_time_of_impact(
         bodyA, poseA_t0, poseA_t1, omegaA, PA * RA_t0, vertex_id, //
         bodyB, poseB_t0, poseB_t1, omegaB, PB * RB_t0, face_id);
 
+    // igl::Timer timer;
+    // timer.start();
     Interval toi_interval;
     bool is_impacting = interval_root_finder(
         distance, is_point_inside_triangle, Interval(0, 1), tol, toi_interval);
+    // timer.stop();
+    // std::cout << "VF " << timer.getElapsedTime() << std::endl;
+
     // Return a conservative time-of-impact
     toi = toi_interval.lower();
     // This time of impact is very dangerous for convergence

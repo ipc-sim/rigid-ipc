@@ -36,6 +36,9 @@ namespace Constants {
     /// \brief Tolerance of the length of the screwing trajectory in CCD.
     static const double SCREWING_CCD_LENGTH_TOL = 1e-6;
 
+    /// \brief Tolerance on the size of the range of the interval-based CCD.
+    static const double INTERVAL_ROOT_FINDER_RANGE_TOL = 1e-8;
+
     /// \brief Default tolerance used for interval root finding.
     static const double INTERVAL_ROOT_FINDER_TOL = 1e-8;
 

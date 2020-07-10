@@ -4,7 +4,6 @@
 #include <functional>
 
 #include <ccd/interval.hpp>
-#include <constants.hpp>
 
 namespace ccd {
 
