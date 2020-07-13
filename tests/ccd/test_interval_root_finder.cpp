@@ -54,7 +54,8 @@ TEST_CASE("Root of simple function with constraints", "[ccd][interval]")
     ccd::Interval sol;
     bool found_root = ccd::interval_root_finder(
         f, constraint_predicate, ccd::Interval(0, 1),
-        ccd::Constants::INTERVAL_ROOT_FINDER_TOL, sol);
+        ccd::Constants::INTERVAL_ROOT_FINDER_TOL, sol,
+        6 * ccd::Constants::INTERVAL_ROOT_FINDER_MAX_ITERATIONS);
     CHECK(found_root == (yshift >= -1.0 && yshift <= 0.0));
     if (found_root) {
         double actual_sol = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);

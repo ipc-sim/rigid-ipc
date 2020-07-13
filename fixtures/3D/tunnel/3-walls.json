@@ -36,7 +36,7 @@
             "mesh": "cube.obj",
             "position": [0, 0, -4.5],
             "rotation": [0, 0, 0],
-            "linear_velocity": [0, 0, 10],
+            "linear_velocity": [0, 0, 100],
             "is_dof_fixed": [false, false, false, true, true, true]
         }]
     }

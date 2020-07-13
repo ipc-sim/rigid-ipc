@@ -4,7 +4,7 @@
     "timestep": 0.01,
     "max_time": 10.0,
     "distance_barrier_constraint": {
-        "trajectory_type": "linearized"
+        "trajectory_type": "screwing"
     },
     "ipc_solver": {
         "min_barrier_stiffness_scale": 1e11

@@ -98,6 +98,8 @@ namespace opt {
         typedef AutodiffType<Eigen::Dynamic, /*maxN=*/6> Diff;
 
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        int pos_ndof = physics::Pose<double>::dim_to_pos_ndof(dim());
+        int rot_ndof = physics::Pose<double>::dim_to_rot_ndof(dim());
 
         Eigen::VectorXd energies(m_assembler.num_bodies());
         if (compute_grad) {
@@ -134,7 +136,12 @@ namespace opt {
                 Eigen::MatrixXX6d hessi = dExi.getHessian();
 
                 // Project dense block to make assembled matrix PSD
-                // hessi = Eigen::project_to_psd(hessi);
+                hessi.topLeftCorner(pos_ndof, pos_ndof) = Eigen::project_to_psd(
+                    hessi.topLeftCorner(pos_ndof, pos_ndof));
+                // NOTE: This is handled with Tikhonov regularization instead
+                // hessi.bottomRightCorner(rot_ndof, rot_ndof) =
+                //     Eigen::project_to_pd(
+                //         hessi.bottomRightCorner(rot_ndof, rot_ndof));
 
                 // Add the local hessian as triplets in the global hessian
                 for (int r = 0; r < hessi.rows(); r++) {

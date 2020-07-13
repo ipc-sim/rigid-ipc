@@ -14,21 +14,23 @@
         "gravity": [0, 0, 0],
         "rigid_bodies": [{
             "mesh": "plane.obj",
-            "position": [0, -0.5001, 0],
+            "position": [0, -0.501, 0],
             "rotation": [0, 0, 0],
+            "scale": [0.5, 1, 1],
             "is_dof_fixed": true,
             "group_id": 0
         }, {
             "mesh": "plane.obj",
-            "position": [0, 0.5001, 0],
+            "position": [0, 0.501, 0],
             "rotation": [0, 0, 0],
+            "scale": [0.5, 1, 1],
             "is_dof_fixed": true,
             "group_id": 0
         }, {
             "mesh": "cube.obj",
             "position": [0, 0, -4],
-            "rotation": [0, 0, 0],
-            "linear_velocity": [0, 0, 10],
+            "rotation": [0, 90, 0],
+            "linear_velocity": [0, 0, 25],
             "is_dof_fixed": [false, false, false, true, true, true]
         }]
     }

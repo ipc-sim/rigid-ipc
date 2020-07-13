@@ -39,8 +39,7 @@ namespace geometry {
     {
         Eigen::Vector<T, dim, max_dim> segment_dir =
             segment_end - segment_start;
-        T alpha = clamp_to_01(
-            project_point_to_line(point, segment_start, segment_dir));
+        T alpha = project_point_to_segment(point, segment_start, segment_dir);
         return segment_dir * alpha + segment_start;
     }
 
@@ -93,8 +92,8 @@ namespace geometry {
             project_point_to_plane(point, triangle_vertex0, normal);
         T u, v, w;
         barycentric_coordinates(
-            point, triangle_vertex0, triangle_vertex1, triangle_vertex2, //
-            u, v, w);
+            projected_point, triangle_vertex0, triangle_vertex1,
+            triangle_vertex2, u, v, w);
 
         // Find the closest point using the barycentric coordinates
         // https://math.stackexchange.com/a/589362
@@ -124,15 +123,15 @@ namespace geometry {
             return point_segment_distance(
                 point, triangle_vertex0, triangle_vertex1);
         }
-        if (u >= 0 && v < 0 && w >= 0) {
-            // edge 2 is the closest
-            return point_segment_distance(
-                point, triangle_vertex2, triangle_vertex0);
-        }
         if (u < 0 && v >= 0 && w >= 0) {
             // edge 1 is the closest
             return point_segment_distance(
                 point, triangle_vertex1, triangle_vertex2);
+        }
+        if (u >= 0 && v < 0 && w >= 0) {
+            // edge 2 is the closest
+            return point_segment_distance(
+                point, triangle_vertex2, triangle_vertex0);
         }
 
         // This should never happen because u + v + w = 1.
@@ -175,7 +174,6 @@ namespace geometry {
     }
 
     /// Compute the distance between a point and a plane.
-    /// Normal is assumed to be unit length.
     template <typename T>
     inline T point_plane_signed_distance(
         const Eigen::Vector3<T>& point,
