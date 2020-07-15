@@ -530,7 +530,8 @@ namespace opt {
         T e_x = 1e-3 * (edge0_vertex1 - edge0_vertex0).squaredNorm()
             * (edge1_vertex1 - edge1_vertex0).squaredNorm();
         if (c < e_x) {
-            return -1 / (e_x * e_x) * c * c + 2 / e_x * c;
+            T c_div_eps_x = c / e_x;
+            return (-c_div_eps_x + 2) * c_div_eps_x;
         } else {
             return T(1.0);
         }
