@@ -2,8 +2,6 @@
 
 #include <limits>
 
-#include <geometry/distance.hpp>
-
 namespace ccd {
 namespace Constants {
 

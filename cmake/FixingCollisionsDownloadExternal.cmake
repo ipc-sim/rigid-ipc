@@ -116,3 +116,11 @@ function(fixing_collisions_download_gif_h)
     GIT_TAG        606168840bff429a894dd470e36fb9956cbb07c0
   )
 endfunction()
+
+# Linear Solvers
+function(fixing_collisions_download_polysolve)
+  fixing_collisions_download_project(polysolve
+    GIT_REPOSITORY https://github.com/polyfem/polysolve.git
+    GIT_TAG        23ccf9487772ab1b9554a78d8808179d1b3286a0
+  )
+endfunction()

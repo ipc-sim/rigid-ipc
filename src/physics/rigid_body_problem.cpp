@@ -82,6 +82,10 @@ namespace physics {
 
         // Ensure the dimension of gravity matches the dimension of the problem.
         gravity = gravity.head(dim());
+
+        if (has_intersections()) {
+            spdlog::error("The initial state contains intersections!");
+        }
     }
 
     nlohmann::json RigidBodyProblem::state() const
@@ -491,7 +495,7 @@ namespace physics {
         }
 
         HashGrid hashgrid;
-        double inflation_radius = 1e-15; // Conservative broad phase
+        double inflation_radius = 1e-12; // Conservative broad phase
         const Eigen::MatrixXd vertices = m_assembler.world_vertices(poses);
         const Eigen::MatrixXi& edges = m_assembler.m_edges;
         const Eigen::MatrixXi& faces = m_assembler.m_faces;

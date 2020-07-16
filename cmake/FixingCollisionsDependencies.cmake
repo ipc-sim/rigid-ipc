@@ -132,3 +132,9 @@ if(NOT TARGET gif_h::gif_h)
   target_include_directories(gif_h INTERFACE ${FIXING_COLLISIONS_EXTERNAL}/gif-h)
   add_library(gif_h::gif_h ALIAS gif_h)
 endif()
+
+# Linear Solvers
+if(NOT TARGET polysolve)
+  fixing_collisions_download_polysolve()
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/polysolve)
+endif()

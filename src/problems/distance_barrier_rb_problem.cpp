@@ -270,8 +270,11 @@ namespace opt {
                 candidates.fv_candidates.size());
         }
 
+        NAMED_PROFILE_POINT("compute_barrier__compute_constraints", COMPUTE)
+        PROFILE_START(COMPUTE)
         double Bx = compute_barrier_term(
             x, candidates, grad, hess, compute_grad, compute_hess);
+        PROFILE_END(COMPUTE)
 
 #ifdef WITH_DERIVATIVE_CHECK
         if (compute_grad) {
@@ -337,6 +340,9 @@ namespace opt {
         bool compute_grad,
         bool compute_hess)
     {
+        NAMED_PROFILE_POINT("compute_barrier__compute_hess", COMPUTE_HESS)
+        NAMED_PROFILE_POINT("compute_barrier__compute_grad", COMPUTE_GRAD)
+        NAMED_PROFILE_POINT("compute_barrier__compute_val", COMPUTE_VAL)
         // Activate autodiff with the correct number of variables
         typedef AutodiffType<Eigen::Dynamic, /*maxN=2*6=*/12> Diff;
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
@@ -349,7 +355,6 @@ namespace opt {
         // Local gradient for a single constraint
         Eigen::VectorXd gradi;
         if (compute_hess) {
-            NAMED_PROFILE_POINT("compute_barrier__compute_hess", COMPUTE_HESS)
             PROFILE_START(COMPUTE_HESS)
 
             Diff::DDouble2 dBxi = distance_barrier<Diff::DDouble2>(sigma, rbc);
@@ -364,7 +369,6 @@ namespace opt {
 
             PROFILE_END(COMPUTE_HESS)
         } else if (compute_grad) {
-            NAMED_PROFILE_POINT("compute_barrier__compute_grad", COMPUTE_GRAD)
             PROFILE_START(COMPUTE_GRAD)
 
             Diff::DDouble1 dBxi = distance_barrier<Diff::DDouble1>(sigma, rbc);
@@ -373,7 +377,9 @@ namespace opt {
 
             PROFILE_END(COMPUTE_GRAD)
         } else {
+            PROFILE_START(COMPUTE_VAL)
             Bx += distance_barrier<double>(sigma, rbc);
+            PROFILE_END(COMPUTE_VAL)
         }
 
         if (compute_grad) {

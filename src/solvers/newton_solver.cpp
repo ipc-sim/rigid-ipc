@@ -6,9 +6,7 @@
 #include <igl/writeOBJ.h>
 
 #include <constants.hpp>
-#include <geometry/distance.hpp>
 #include <logger.hpp>
-#include <physics/simulation_problem.hpp>
 #include <profiler.hpp>
 
 namespace ccd {
@@ -26,15 +24,28 @@ namespace opt {
         max_iterations = json["max_iterations"].get<int>();
         convergence_criteria =
             json["convergence_criteria"].get<ConvergenceCriteria>();
+        linear_solver_settings = json["linear_solver"];
+        try {
+            linear_solver = polysolve::LinearSolver::create(
+                linear_solver_settings["name"].get<std::string>(), "");
+        } catch (const std::runtime_error& err) {
+            spdlog::error(
+                "{}! Using Eigen::SimplicialLDLT instead.", err.what());
+            linear_solver_settings["name"] = "Eigen::SimplicialLDLT";
+            linear_solver = polysolve::LinearSolver::create(
+                linear_solver_settings["name"].get<std::string>(), "");
+        }
+        linear_solver->setParameters(linear_solver_settings);
         reset_stats();
     }
 
     nlohmann::json NewtonSolver::settings() const
     {
-        nlohmann::json json;
-        json["max_iterations"] = max_iterations;
-        json["convergence_criteria"] = convergence_criteria;
-        return json;
+        nlohmann::json settings;
+        settings["max_iterations"] = max_iterations;
+        settings["convergence_criteria"] = convergence_criteria;
+        settings["linear_solver"] = linear_solver_settings;
+        return settings;
     }
 
     void NewtonSolver::init_solve(const Eigen::VectorXd& x0)
@@ -330,16 +341,25 @@ namespace opt {
         Eigen::VectorXd& direction,
         bool make_psd)
     {
+        NAMED_PROFILE_POINT("newton_linear_solve", SOLVE);
+        PROFILE_START(SOLVE);
+
         // Solve for the Newton direction (Δx = -H⁻⅟∇f).
         // Return true if the solve was successful.
         bool solve_success = false;
 
-        // TODO: Can we use a better solver than Eigen's LDLT?
-        Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
-        solver.compute(hessian);
-        if (solver.info() == Eigen::Success) {
-            direction = solver.solve(-gradient);
-            if (solver.info() == Eigen::Success) {
+        linear_solver->analyzePattern(hessian, hessian.rows());
+        linear_solver->factorize(hessian);
+        nlohmann::json info;
+        linear_solver->getInfo(info);
+        // TODO: This check only works for direct Eigen solvers
+        if (!info.contains("solver_info") || info["solver_info"] == "Success") {
+            // TODO: Do we have a better initial guess for iterative solvers?
+            direction = Eigen::VectorXd::Zero(gradient.size());
+            linear_solver->solve(-gradient, direction);
+            linear_solver->getInfo(info);
+            if (!info.contains("solver_info")
+                || info["solver_info"] == "Success") {
                 solve_success = true;
             } else {
                 spdlog::warn(
@@ -363,6 +383,8 @@ namespace opt {
                 solve_success = false;
             }
         }
+
+        PROFILE_END(SOLVE);
 
         if (!solve_success) {
             direction = -gradient;

@@ -79,13 +79,8 @@ namespace geometry {
             triangle_vertex0, triangle_vertex1, triangle_vertex2,
             segment_vertex1);
 
-        if (ori1 == igl::predicates::Orientation::COPLANAR
-            || ori2 == igl::predicates::Orientation::COPLANAR) {
-            // coplanar, we can detect it by d(EE)=0 or d(PT)=0
-            return false;
-        }
-
-        if (ori1 == ori2) {
+        if (ori1 != igl::predicates::Orientation::COPLANAR
+            && ori2 != igl::predicates::Orientation::COPLANAR && ori1 == ori2) {
             // edge is on one side of the plane that triangle is in
             return false;
         }

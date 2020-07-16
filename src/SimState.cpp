@@ -96,7 +96,7 @@ bool SimState::init(const nlohmann::json& args_in)
     args = R"({
         "max_iterations": -1,
         "max_time": -1,
-        "timestep": 0.1,
+        "timestep": 0.01,
         "scene_type": "distance_barrier_rb_problem",
         "solver": "ipc_solver",
         "rigid_body_problem": {
@@ -116,7 +116,14 @@ bool SimState::init(const nlohmann::json& args_in)
         },
         "newton_solver": {
             "max_iterations": 3000,
-            "convergence_criteria": "energy"
+            "convergence_criteria": "energy",
+            "linear_solver": {
+                "name": "Eigen::SimplicialLDLT",
+                "max_iter": 1000,
+                "tolerance": 1e-10,
+                "pre_max_iter": 1,
+                "mtype": 2
+            }
         },
         "ipc_solver": {
             "max_iterations": 3000,
@@ -172,6 +179,10 @@ bool SimState::init(const nlohmann::json& args_in)
         args["ipc_solver"]["min_barrier_stiffness_scale"] =
             Constants::MIN_BARRIER_STIFFNESS_SCALE;
     }
+
+    // Share the linear solve settings with IPC
+    args["ipc_solver"]["linear_solver"] =
+        args["newton_solver"]["linear_solver"];
 
     auto problem_name = args["scene_type"].get<std::string>();
     problem_ptr = ProblemFactory::factory().get_problem(problem_name);

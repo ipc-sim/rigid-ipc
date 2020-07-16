@@ -196,6 +196,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EVCTCD)
 # Teseo's Exact CCD library for exact segment-triangle intersection check
 target_link_libraries(${PROJECT_NAME} PUBLIC RationalCCD)
 
+# PolySolve for wrapping linear solvers
+target_link_libraries(${PROJECT_NAME} PUBLIC polysolve)
+
 # tinyxml2
 target_link_libraries(${PROJECT_NAME} PUBLIC tinyxml2::tinyxml2)
 
