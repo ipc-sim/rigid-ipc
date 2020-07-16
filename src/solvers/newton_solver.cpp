@@ -17,6 +17,7 @@ namespace opt {
         , iteration_number(0)
         , convergence_criteria(ConvergenceCriteria::ENERGY)
     {
+        linear_solver = polysolve::LinearSolver::create("", "");
     }
 
     void NewtonSolver::settings(const nlohmann::json& json)
