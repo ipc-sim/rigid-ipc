@@ -158,7 +158,6 @@ bool interval_root_finder(
         }
 
         std::pair<Interval, Interval> halves = bisect(x(split_i));
-        Eigen::VectorX3I x1 = x;
         // Push the second half on first so it is examined after the first half
         x(split_i) = halves.second;
         xs.emplace(x, split_i);

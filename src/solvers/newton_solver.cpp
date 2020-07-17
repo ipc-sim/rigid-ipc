@@ -176,10 +176,17 @@ namespace opt {
             } else {
                 // TODO: dump system
                 tikhonov_coeff = std::max(2 * tikhonov_coeff, 1e-8);
+                if (!std::isfinite(tikhonov_coeff)) {
+                    spdlog::error(
+                        "Tikhonov regularization failed (coeff={:g})!",
+                        tikhonov_coeff);
+                    exit_reason = "Tikhonov regularization failed";
+                    break;
+                }
                 spdlog::warn(
-                    "Solve failed; increasing Tikhonov regularization "
-                    "(coeff={:g})",
-                    tikhonov_coeff);
+                    "Solve failed (∇f⋅Δx={:g}); "
+                    "increasing Tikhonov regularization (coeff={:g}) ",
+                    gradient_free.dot(direction_free), tikhonov_coeff);
                 iteration_number--; // Redo this iteration
                 continue;           // Retry the solve with this new coeff
             }
