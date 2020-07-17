@@ -387,7 +387,10 @@ namespace opt {
             //                     ||(  A  )   (   x   ) - (   b   )||
             double solve_residual = (hessian * direction + gradient).norm();
             if (solve_residual > 1e-10) {
-                spdlog::warn("newton_solve_residual={:g}", solve_residual);
+                spdlog::warn(
+                    "solver={} iter={:d} failure=\"large residual ({:g})\" "
+                    "failsafe=\"gradient descent\"",
+                    solve_residual);
                 solve_success = false;
             }
         }
@@ -396,7 +399,6 @@ namespace opt {
 
         if (!solve_success) {
             direction = -gradient;
-            spdlog::warn("hessian=\n{}", logger::fmt_eigen(hessian));
         }
 
         if (solve_success && make_psd && direction.dot(gradient) > 0) {
