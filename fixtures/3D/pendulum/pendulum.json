@@ -4,8 +4,8 @@
     "timestep": 0.01,
     "max_time": 1.08,
     "distance_barrier_constraint": {
-        "barrier_type": "ipc",
-        "trajectory_type": "linearized"
+        "#barrier_type": "ipc",
+        "initial_barrier_activation_distance": 1e-4
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,

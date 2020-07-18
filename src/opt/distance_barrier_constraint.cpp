@@ -61,13 +61,32 @@ namespace opt {
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1) const
     {
-        Candidates candidates;
+        PROFILE_POINT("collisions_detection");
+        NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
 
+        // This function will profile itself
+        Candidates candidates;
         detect_collision_candidates(
             bodies, poses_t0, poses_t1, dim_to_collision_type(bodies.dim()),
             candidates, detection_method, trajectory_type,
             /*inflation_radius=*/0);
 
+        PROFILE_START();
+        PROFILE_START(NARROW_PHASE)
+        bool has_collisions = has_active_collisions_narrow_phase(
+            bodies, poses_t0, poses_t1, candidates);
+        PROFILE_END(NARROW_PHASE)
+        PROFILE_END();
+
+        return has_collisions;
+    }
+
+    bool DistanceBarrierConstraint::has_active_collisions_narrow_phase(
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1,
+        const Candidates& candidates) const
+    {
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double toi, alpha;
             bool are_colliding = detect_edge_vertex_collisions_narrow_phase(

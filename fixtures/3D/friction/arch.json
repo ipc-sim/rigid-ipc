@@ -5,7 +5,6 @@
     "max_time": 30.0,
     "distance_barrier_constraint": {
         "barrier_type": "poly_log",
-        "trajectory_type": "linearized",
         "initial_barrier_activation_distance": 1e-2
     },
     "rigid_body_problem": {

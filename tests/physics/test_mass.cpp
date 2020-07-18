@@ -31,7 +31,7 @@ TEST_CASE("Center of Mass", "[physics][mass]")
         compute_moment_of_inertia(vertices, edges);
 
     CAPTURE(dim, num_vertices);
-    CHECK(total_mass1 == total_mass2);
+    CHECK(total_mass1 == Approx(total_mass2));
     CHECK((center_of_mass1 - center_of_mass2).norm() < 1e-12);
     CHECK((moment_of_inertia1 - moment_of_inertia2).norm() < 1e-12);
 }

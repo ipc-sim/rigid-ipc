@@ -20,6 +20,9 @@ option(FIXING_COLLISIONS_CODE_COVERAGE            "Builds targets with code cove
 option(FIXING_COLLISIONS_ENABLE_MOSEK             "Enable Mosek Library" OFF)
 mark_as_advanced(FIXING_COLLISIONS_ENABLE_MOSEK)
 
+# PolySolve settings
+set(POLYSOLVE_WITH_AMGCL OFF CACHE BOOL "Use AMGCL" FORCE)
+
 ################################################################################
 
 ### Configuration
@@ -247,12 +250,6 @@ target_link_libraries(${PROJECT_NAME}_sim PUBLIC ${PROJECT_NAME})
 
 # Charlie Tangora's gif-h library
 target_link_libraries(${PROJECT_NAME}_sim PRIVATE gif_h::gif_h)
-
-# Fixtures folder --------------------------------------------------------------
-add_custom_command(TARGET ${PROJECT_NAME}_sim POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/fixtures
-        $<TARGET_FILE_DIR:${PROJECT_NAME}_sim>/fixtures)
 
 ################################################################################
 # No UI Executable

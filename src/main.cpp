@@ -9,7 +9,7 @@
 
 int main(int argc, char* argv[])
 {
-    spdlog::info(
+    spdlog::debug(
         "Using Eigen {}.{}.{}", EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION,
         EIGEN_MINOR_VERSION);
 

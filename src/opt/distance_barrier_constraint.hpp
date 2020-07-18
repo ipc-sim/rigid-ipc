@@ -37,6 +37,12 @@ namespace opt {
             const physics::Poses<double>& poses_t0,
             const physics::Poses<double>& poses_t1) const;
 
+        bool has_active_collisions_narrow_phase(
+            const physics::RigidBodyAssembler& bodies,
+            const physics::Poses<double>& poses_t0,
+            const physics::Poses<double>& poses_t1,
+            const Candidates& candidates) const;
+
         void compute_constraints(
             const physics::RigidBodyAssembler& bodies,
             const physics::Poses<double>& poses,

@@ -89,4 +89,4 @@ for i in range(net_rows):
 #     bodies[-1]["position"] = ([1.05 * w, 1.05 * h, 1.05 * d] + shift).tolist()
 
 
-save_fixture(scene, get_fixture_dir_path() / "3D" / "chain-net.json")
+save_fixture(scene, get_fixture_dir_path() / "3D" / "chain" / "chain-net.json")

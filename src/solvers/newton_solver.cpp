@@ -149,46 +149,62 @@ namespace opt {
              iteration_number++) {
             double fx = problem_ptr->compute_objective(x, gradient, hessian);
 
-            if (tikhonov_coeff > 0) {
-                fx += tikhonov_coeff / 2 * (x - x_prev).squaredNorm();
-                gradient += tikhonov_coeff * (x - x_prev);
-                Eigen::SparseMatrix<double> I(hessian.rows(), hessian.cols());
-                I.setIdentity();
-                hessian += tikhonov_coeff * I;
-            }
-
             num_fx++;
             num_grad_fx++;
             num_hessian_fx++;
 
-            // Remove rows and cols of fixed dof
-            igl::slice(gradient, free_dof, gradient_free);
-            igl::slice(hessian, free_dof, free_dof, hessian_free);
-            bool solve_success =
-                compute_direction(
-                    gradient_free, hessian_free, direction_free,
-                    /*make_psd=*/false)
-                && gradient_free.dot(direction_free) <= 0;
+            bool solve_success = false;
+            while (!solve_success) {
+                double tikhonov_fx = fx;
+                Eigen::VectorXd tikhonov_gradient = gradient;
+                Eigen::SparseMatrix<double> tikhonov_hessian = hessian;
 
-            // Update coefficient adaptivly when the solve fails
-            if (solve_success) {
-                tikhonov_coeff /= 2;
-            } else {
-                // TODO: dump system
-                tikhonov_coeff = std::max(2 * tikhonov_coeff, 1e-8);
-                if (!std::isfinite(tikhonov_coeff)) {
-                    spdlog::error(
-                        "Tikhonov regularization failed (coeff={:g})!",
-                        tikhonov_coeff);
-                    exit_reason = "Tikhonov regularization failed";
-                    break;
+                if (tikhonov_coeff > 0) {
+                    tikhonov_fx +=
+                        tikhonov_coeff / 2 * (x - x_prev).squaredNorm();
+                    tikhonov_gradient += tikhonov_coeff * (x - x_prev);
+                    Eigen::SparseMatrix<double> I(
+                        hessian.rows(), hessian.cols());
+                    I.setIdentity();
+                    tikhonov_hessian += tikhonov_coeff * I;
                 }
-                spdlog::warn(
-                    "Solve failed (∇f⋅Δx={:g}); "
-                    "increasing Tikhonov regularization (coeff={:g}) ",
-                    gradient_free.dot(direction_free), tikhonov_coeff);
-                iteration_number--; // Redo this iteration
-                continue;           // Retry the solve with this new coeff
+
+                // Remove rows and cols of fixed dof
+                igl::slice(tikhonov_gradient, free_dof, gradient_free);
+                igl::slice(tikhonov_hessian, free_dof, free_dof, hessian_free);
+
+                solve_success = compute_direction(
+                                    gradient_free, hessian_free, direction_free,
+                                    /*make_psd=*/false)
+                    && gradient_free.dot(direction_free) <= 0;
+
+                // Update coefficient adaptivly when the solve fails
+                if (solve_success) {
+                    tikhonov_coeff /= 2;
+                    fx = tikhonov_fx;
+                    gradient = tikhonov_gradient;
+                    hessian = tikhonov_hessian;
+                } else {
+                    // TODO: dump system
+                    tikhonov_coeff = std::max(2 * tikhonov_coeff, 1e-8);
+                    if (!std::isfinite(tikhonov_coeff)) {
+                        spdlog::error(
+                            "Tikhonov regularization failed (coeff={:g})!",
+                            tikhonov_coeff);
+                        exit_reason = "Tikhonov regularization failed";
+                        break;
+                    }
+                    spdlog::warn(
+                        "Solve failed (∇f⋅Δx={:g}, ||H||_∞={:g}); "
+                        "increasing Tikhonov regularization (coeff={:g}) ",
+                        gradient_free.dot(direction_free),
+                        Eigen::MatrixXd(hessian).lpNorm<Eigen::Infinity>(),
+                        tikhonov_coeff);
+                }
+            }
+
+            if (!solve_success) {
+                break;
             }
 
             newton_iterations++;
@@ -390,7 +406,7 @@ namespace opt {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"large residual ({:g})\" "
                     "failsafe=\"gradient descent\"",
-                    solve_residual);
+                    name(), iteration_number + 1, solve_residual);
                 solve_success = false;
             }
         }
@@ -408,7 +424,7 @@ namespace opt {
             // hessian. This can result in doing a step of gradient descent.
             Eigen::SparseMatrix<double> psd_hessian = hessian;
             double mu = make_matrix_positive_definite(psd_hessian);
-            spdlog::debug(
+            spdlog::warn(
                 "solver={} iter={:d} failure=\"newton direction not descent "
                 "direction\" failsafe=\"H += μI\" μ={:g}",
                 name(), iteration_number + 1, mu);
@@ -416,7 +432,7 @@ namespace opt {
                 compute_direction(gradient, psd_hessian, direction, false);
             double dir_dot_grad = direction.dot(gradient);
             if (dir_dot_grad > 0) {
-                spdlog::warn(
+                spdlog::error(
                     "solver={} iter={:d} failure=\"adjusted newton "
                     "direction not descent direction\" failsafe=\"gradient "
                     "descent\" dir_dot_grad={:g}",

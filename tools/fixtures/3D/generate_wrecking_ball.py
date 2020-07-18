@@ -19,9 +19,9 @@ scene = {
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
     "timestep": 0.01,
-    "max_time": 10.0,
+    "max_time": 5.0,
     "distance_barrier_constraint": {
-        "trajectory_type": "linearized"
+        "trajectory_type": "screwing"
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
@@ -62,7 +62,7 @@ for i in range(num_links):
     else:
         bodies.append(copy.deepcopy(ball))
     bodies[-1]["position"] = [
-        y * math.cos(inclination), y * math.sin(inclination) + 9, 0.0]
+        y * math.cos(inclination), y * math.sin(inclination) + 12, 0.0]
     bodies[-1]["rotation"] = [
         0.0, 90.0 if i % 2 == 1 else 0.0, math.degrees(inclination) - 90]
     if i == 0:

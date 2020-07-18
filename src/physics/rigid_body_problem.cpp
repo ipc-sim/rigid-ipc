@@ -232,8 +232,6 @@ namespace physics {
                     Eigen::AngleAxisd omega(R);
                     rb.velocity.rotation = omega.angle() / timestep()
                         * rb.R0.transpose() * omega.axis();
-                    spdlog::debug(
-                        "ω_IPC={}", logger::fmt_eigen(rb.velocity.rotation));
 
                     // Q̇ = Q[ω]
                     // Q̇ᵗ = (Qᵗ - Qᵗ⁻¹) / h
