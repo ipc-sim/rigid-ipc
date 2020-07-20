@@ -264,8 +264,8 @@ void HashGrid::addElement(const AABB& aabb, const int id, HashItems& items)
 
 template <typename T>
 void getPairs(
-    std::function<bool(int, int)> is_endpoint,
-    std::function<bool(int, int)> is_same_group,
+    const std::function<bool(int, int)>& is_endpoint,
+    const std::function<bool(int, int)>& is_same_group,
     HashItems& items0,
     HashItems& items1,
     T& candidates)
@@ -313,8 +313,8 @@ void getPairs(
 
 template <typename T>
 void getPairs(
-    std::function<bool(int, int)> is_endpoint,
-    std::function<bool(int, int)> is_same_group,
+    const std::function<bool(int, int)>& is_endpoint,
+    const std::function<bool(int, int)>& is_same_group,
     HashItems& items,
     T& candidates)
 {

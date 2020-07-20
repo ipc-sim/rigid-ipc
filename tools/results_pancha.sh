@@ -44,7 +44,7 @@ python tools/results_to_eps.py results/results2.local/bypass//sim_scene_2.json\
 # 	--framerate 3 \
 # 	--frames 12
 
-# chain 
+# chain
 # ----------------------------
 
 # python tools/results_to_eps.py results/results2.local/chain/cor\=0/time_step\=1e-2/Box2D/sim.json \
@@ -66,20 +66,20 @@ python tools/results_to_eps.py results/results2.local/bypass//sim_scene_2.json\
 # 	--scaling 100 \
 # 	--bbox -7.4 33.7 -28.8 26.5\
 # 	--frames 400 \
-# 	--linewidth 1 
+# 	--linewidth 1
 
 
 # [done] pyramid Ours, to show eb
 # --------------
 # python tools/results_to_eps_singles.py results/results.local/pyramid_cor_-1_time_step_1e-2_eb_1e-2_ours/sim.json  \
 # 	--output results/results.local/pyramid_cor_-1_time_step_1e-2_eb_1e-2_ours/  --scaling 100 --linewidth 4 \
-# 	--frames 0 -1  --colormap Set3	
+# 	--frames 0 -1  --colormap Set3
 # python tools/results_to_eps_singles.py results/results.local/pyramid_cor_-1_time_step_1e-2_eb_1e-4_ours/sim.json  \
 # 	--output results/results.local/pyramid_cor_-1_time_step_1e-2_eb_1e-4_ours/  --scaling 100 --linewidth 4 \
-# 	--frames 0 -1  --colormap Set3			
+# 	--frames 0 -1  --colormap Set3
 # python tools/results_to_eps_singles.py results/results.local/pyramid_cor_-1_time_step_1e-2_eb_1e-6_ours/sim.json  \
 # 	--output results/results.local/pyramid_cor_-1_time_step_1e-2_eb_1e-6_ours/  --scaling 100 --linewidth 4 \
-# 	--frames 0 -1  --colormap Set3		
+# 	--frames 0 -1  --colormap Set3
 
 # # mid closeup
 # python tools/results_to_eps_singles.py results/results.local/pyramid_cor_-1_time_step_1e-2_eb_1e-2_ours/sim.json  \
@@ -125,10 +125,10 @@ python tools/results_to_eps.py results/results2.local/bypass//sim_scene_2.json\
 # 	--frames 0 -1  --colormap Set3
 # python tools/results_to_eps_singles.py results/results.local/line_stack_cor_0_timestep_1e-3_ours/ours/sim.json  \
 # 	--output results/results.local/line_stack_cor_0_timestep_1e-3_ours/  --scaling 100 --linewidth 4 \
-# 	--frames 0 -1  --colormap Set3	
+# 	--frames 0 -1  --colormap Set3
 # python tools/results_to_eps_singles.py results/results.local/line_stack_cor_0_timestep_1e-3_box2d/ours/sim.json  \
 # 	--output results/results.local/line_stack_cor_0_timestep_1e-3_box2d/  --scaling 100 --linewidth 4 \
-# 	--frames 0 -1  --colormap Set3		
+# 	--frames 0 -1  --colormap Set3
 
 # python tools/results_to_eps_singles.py results/results.local/line_stack_cor_0_timestep_1e-3_ncp/time_epsilon=1e-16/update_type=g_gradient/sim.json  \
 # 	--output results/results.local/line_stack_cor_0_timestep_1e-3_ncp/time_epsilon=1e-16/update_type=g_gradient/  --scaling 100 --linewidth 0.1 \
@@ -136,7 +136,7 @@ python tools/results_to_eps.py results/results2.local/bypass//sim_scene_2.json\
 
 # python tools/results_to_eps_singles.py results/results.local/line_stack_cor_0_timestep_1e-3_ncp/time_epsilon=1e-16/update_type=g_gradient/sim.json  \
 # 	--output results/results.local/line_stack_cor_0_timestep_1e-3_ncp/time_epsilon=1e-16/update_type=g_gradient/  --scaling 100 --linewidth 0.1 \
-# 	--frames -1 --colormap Set3 --bbox -5.1 -4.9 1.1 1.3 	
+# 	--frames -1 --colormap Set3 --bbox -5.1 -4.9 1.1 1.3
 
 # python tools/results_to_eps_singles.py results/results.local/line_stack_cor_0_timestep_1e-3_ncp/time_epsilon=1e-16/update_type=linearize/sim.json  \
 # 	--output results/results.local/line_stack_cor_0_timestep_1e-3_ncp/time_epsilon=1e-16/update_type=linearize/  --scaling 100 --linewidth 0.1 \
@@ -165,12 +165,12 @@ python tools/results_to_eps.py results/results2.local/bypass//sim_scene_2.json\
 # 	extension="${filename##*.}"
 # 	filename="${filename%.*}"
 # 	echo $filename
-	
+
 # 	$FIXING_COLLISIONS_ROOT/build/Release/FixingCollisions_ngui --scene-path "$INPUT_SCENE" \
 # 		--output-path "$OUTPUT_DIR" \
 # 		-f "$filename".json \
-# 		--num-iterations 1000 \
-# 		--trace \
+# 		--num-steps 1000 \
+# 		--log-level 0 \
 # 	    >> "$OUTPUT_DIR/$filename.log" 2>> "$OUTPUT_DIR/$filename.err.log"
 # 	# python $FIXING_COLLISIONS_ROOT/tools/results_to_vtk_files.py "$OUTPUT_DIR/$filename".json
 # 	python $FIXING_COLLISIONS_ROOT/tools/results_to_eps_singles.py "$OUTPUT_DIR/$filename".json  \
@@ -195,6 +195,6 @@ python tools/results_to_eps.py results/results2.local/bypass//sim_scene_2.json\
 # 	--scaling 100 \
 # 	--framerate 30 \
 # 	--frames 200 \
-# 	--bbox -0.1 3.28 -2.47 0.51	
+# 	--bbox -0.1 3.28 -2.47 0.51
 
 # done

@@ -181,6 +181,9 @@ namespace opt {
                 // Update coefficient adaptivly when the solve fails
                 if (solve_success) {
                     tikhonov_coeff /= 2;
+                    if (tikhonov_coeff < 1e-8) {
+                        tikhonov_coeff = 0;
+                    }
                     fx = tikhonov_fx;
                     gradient = tikhonov_gradient;
                     hessian = tikhonov_hessian;

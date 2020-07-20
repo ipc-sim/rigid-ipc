@@ -38,6 +38,7 @@ public:
     bool m_solve_collisions;    ///< solve collisions automatically on the step
     int m_num_simulation_steps; ///< counts simulation steps
     int m_max_simulation_steps; ///< maximum number of time-steps to take
+    int m_checkpoint_frequency; ///< time-steps between checkpoints
 
     std::string scene_file;
 

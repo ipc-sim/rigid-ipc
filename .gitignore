@@ -244,7 +244,6 @@ results
 
 # Atom beautifier files
 .atom-beautify.*
-distance_AABB.cpp.bak
 
 logs
 core*
@@ -252,11 +251,14 @@ tmp
 hpc-results
 paper
 temp-plot.html
+
 *.blend[123456789]
 erleben.blend
 wrecking-ball.blend
 screw-and-nut.blend
 meshes/tennis-racket.obj
+# UNC Dynamic Scene Benchmarks fracture example that contains intersections
+meshes/fracture/chinese-lion
 
 **/*.bak
 

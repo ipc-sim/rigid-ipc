@@ -34,7 +34,7 @@ mkdir -p "$OUTPUT_DIR/logs"
 # Simulate using our simulation
 echo "Git SHA: $GIT_SHA" > "$OUTPUT_DIR/logs/log.out"
 echo "Git SHA: $GIT_SHA" > "$OUTPUT_DIR/logs/log.err"
-$SIMULATOR --scene-path "$INPUT_SCENE" --output-path "$OUTPUT_DIR" --trace \
+$SIMULATOR --scene-path "$INPUT_SCENE" --output-path "$OUTPUT_DIR" --log-level 0 \
     >> "$OUTPUT_DIR/logs/log.out" 2>> "$OUTPUT_DIR/logs/log.err"
 
 # Process the results

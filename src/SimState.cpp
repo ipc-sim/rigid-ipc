@@ -25,6 +25,7 @@ SimState::SimState()
     , m_solve_collisions(true)
     , m_num_simulation_steps(0)
     , m_max_simulation_steps(-1)
+    , m_checkpoint_frequency(100)
     , m_dirty_constraints(false)
 {
 }
@@ -229,6 +230,10 @@ void SimState::run_simulation(const std::string& fout)
     PROFILE_MAIN_POINT("run_simulation")
     PROFILE_START()
 
+    boost::filesystem::path fout_path(fout);
+    std::string chkpt_base =
+        (fout_path.parent_path() / fout_path.stem()).string();
+
     spdlog::info("Starting simulation {}", scene_file);
     spdlog::info("Running {} iterations", m_max_simulation_steps);
     m_solve_collisions = true;
@@ -237,6 +242,15 @@ void SimState::run_simulation(const std::string& fout)
         save_simulation_step();
         spdlog::info(
             "Finished it={} sim_step={}", i + 1, m_num_simulation_steps);
+
+        // Checkpoint the simulation every m_checkpoint_frequency time-steps
+        if ((i + 1) % m_checkpoint_frequency == 0
+            && (i + 1) < m_max_simulation_steps) {
+            std::string chkpt_fout = fmt::format(
+                "{}-chkpt{:05d}.json", chkpt_base, m_num_simulation_steps);
+            save_simulation(chkpt_fout);
+            spdlog::info("Simulation checkpoint saved to {}", chkpt_fout);
+        }
     }
     save_simulation(fout);
     spdlog::info("Simulation results saved to {}", fout);
