@@ -131,9 +131,12 @@ namespace opt {
         Candidates candidates;
 
         // Use discrete collision detection
+        // There is no trajectory, so use the more efficient linearized version
+        // TODO: Replace all of these duplicate V or poses with a single
+        //       parameter version
         detect_collision_candidates(
             bodies, poses, poses, dim_to_collision_type(bodies.dim()),
-            candidates, detection_method, trajectory_type,
+            candidates, detection_method, TrajectoryType::LINEARIZED,
             /*inflation_radius=*/active_constraint_scale
                 * m_barrier_activation_distance);
 

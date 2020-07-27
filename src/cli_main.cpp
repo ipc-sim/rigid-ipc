@@ -1,8 +1,9 @@
+#include <CLI/CLI.hpp>
+#include <boost/filesystem.hpp>
+
 #include <SimState.hpp>
 #include <logger.hpp>
 #include <profiler.hpp>
-
-#include <CLI/CLI.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -48,6 +49,9 @@ int main(int argc, char* argv[])
 
     spdlog::set_level(static_cast<spdlog::level::level_enum>(args.loglevel));
 
+    // Create the output directory if it does not exist
+    boost::filesystem::create_directories(
+        boost::filesystem::path(args.output_dir));
     PROFILER_OUTDIR(args.output_dir)
     std::string fout = fmt::format("{}/{}", args.output_dir, args.output_name);
 

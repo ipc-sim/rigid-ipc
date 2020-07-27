@@ -81,7 +81,9 @@ void UISimState::draw_io()
 {
     if (ImGui::Button("Load##IO", ImVec2(-1, 0))) {
         std::string fname = igl::file_dialog_open();
-        load(fname);
+        if (fname != "") {
+            load(fname);
+        }
     }
     if (m_has_scene) {
         if (ImGui::Button("Reload##IO", ImVec2(-1, 0))) {

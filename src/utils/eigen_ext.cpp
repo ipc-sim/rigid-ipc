@@ -13,12 +13,15 @@ MatrixXd project_to_pd(const MatrixXd& A)
     SelfAdjointEigenSolver<MatrixXd> eigensolver(A);
     if (eigensolver.info() != Success) {
         spdlog::error("unable to project matrix onto positive definite cone");
+        return A;
     }
     // Check if all eigen values are positive.
     // The eigenvalues are sorted in increasing order.
     if (eigensolver.eigenvalues()[0] > 0.0) {
         return A;
     }
+    spdlog::warn(
+        "projection to PD required (λ_min={:g})", eigensolver.eigenvalues()[0]);
     DiagonalMatrix<double, Dynamic> D(eigensolver.eigenvalues());
     // Save a little time and only project the negative or zero values
     for (int i = 0; i < A.rows(); i++) {
@@ -40,6 +43,7 @@ MatrixXd project_to_psd(const MatrixXd& A)
     if (eigensolver.info() != Success) {
         spdlog::error(
             "unable to project matrix onto positive semi-definite cone");
+        return A;
     }
     // Check if all eigen values are zero or positive.
     // The eigenvalues are sorted in increasing order.

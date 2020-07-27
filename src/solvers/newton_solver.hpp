@@ -88,6 +88,13 @@ namespace opt {
             Eigen::VectorXd& delta_x,
             bool make_psd = false);
 
+        virtual bool compute_regularized_direction(
+            double& fx,
+            Eigen::VectorXd& gradient,
+            Eigen::SparseMatrix<double>& hessian,
+            Eigen::VectorXd& delta_x,
+            double& coeff);
+
         virtual std::string stats() override;
 
         int max_iterations;
@@ -138,6 +145,7 @@ namespace opt {
         int newton_iterations = 0;
         int num_newton_ls_fails = 0;
         int num_grad_ls_fails = 0;
+        int regularization_iterations = 0;
     };
 
     /**

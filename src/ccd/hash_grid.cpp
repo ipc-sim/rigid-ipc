@@ -25,7 +25,10 @@ void HashGrid::resize(
     m_cellSize = cellSize;
     m_domainMin = min;
     m_domainMax = max;
-    m_gridSize = int(std::ceil((max - min).maxCoeff() / m_cellSize));
+    m_gridSize = ((max - min) / m_cellSize).array().ceil().cast<int>().max(1);
+    spdlog::debug(
+        "hash-grid resized with a size of {:d}x{:d}x{:d}", m_gridSize[0],
+        m_gridSize[1], m_gridSize.size() == 3 ? m_gridSize[2] : 1);
 }
 
 /// @brief Compute an AABB around a given 2D mesh.
@@ -241,14 +244,14 @@ void HashGrid::addElement(const AABB& aabb, const int id, HashItems& items)
         ((aabb.getMin() - m_domainMin) / m_cellSize).cast<int>();
     // We can round down to -1, but not less
     assert((int_min.array() >= -1).all());
-    assert((int_min.array() <= m_gridSize).all());
-    int_min = int_min.array().max(0).min(m_gridSize - 1);
+    assert((int_min.array() <= m_gridSize.array()).all());
+    int_min = int_min.array().max(0).min(m_gridSize.array() - 1);
 
     Eigen::VectorX3<int> int_max =
         ((aabb.getMax() - m_domainMin) / m_cellSize).cast<int>();
     assert((int_max.array() >= -1).all());
-    assert((int_max.array() <= m_gridSize).all());
-    int_max = int_max.array().max(0).min(m_gridSize - 1);
+    assert((int_max.array() <= m_gridSize.array()).all());
+    int_max = int_max.array().max(0).min(m_gridSize.array() - 1);
     assert((int_min.array() <= int_max.array()).all());
 
     int min_z = int_min.size() == 3 ? int_min.z() : 0;

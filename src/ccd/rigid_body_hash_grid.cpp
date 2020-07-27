@@ -55,23 +55,30 @@ void RigidBodyHashGrid::resize(
     Eigen::MatrixX<Interval> vertices;
     compute_vertices_intervals(bodies, poses_t0, poses_t1, vertices);
 
+    // Compute the extents of the mesh
     Eigen::VectorX3<Interval> mesh_extents(bodies.dim());
-    double average_displacement_length = 0;
     for (int i = 0; i < vertices.rows(); i++) {
-        double max_side_width = 0;
         for (int j = 0; j < vertices.cols(); j++) {
             mesh_extents(j) = i == 0
                 ? vertices(i, j)
                 : boost::numeric::hull(mesh_extents(j), vertices(i, j));
-            max_side_width =
-                std::max(max_side_width, boost::numeric::width(vertices(i, j)));
         }
-        average_displacement_length += max_side_width;
     }
     Eigen::VectorX3d min(mesh_extents.size()), max(mesh_extents.size());
     for (int i = 0; i < mesh_extents.size(); i++) {
         min(i) = mesh_extents(i).lower() - inflation_radius;
         max(i) = mesh_extents(i).upper() + inflation_radius;
+    }
+
+    // Compute the average displacement length
+    double average_displacement_length = 0;
+    for (int i = 0; i < vertices.rows(); i++) {
+        double max_side_width = 0;
+        for (int j = 0; j < vertices.cols(); j++) {
+            max_side_width =
+                std::max(max_side_width, boost::numeric::width(vertices(i, j)));
+        }
+        average_displacement_length += max_side_width;
     }
 
     average_displacement_length /= vertices.rows();

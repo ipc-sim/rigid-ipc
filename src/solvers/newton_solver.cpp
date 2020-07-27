@@ -71,10 +71,11 @@ namespace opt {
         return fmt::format(
             "total_newton_steps={:d} total_ls_steps={:d} "
             "num_newton_ls_fails={:d} num_grad_ls_fails={:d} count_fx={:d} "
-            "count_grad={:d} count_hess={:d} count_ccd={:d}",
+            "count_grad={:d} count_hess={:d} count_ccd={:d} "
+            "total_regularizations={:d}",
             newton_iterations, ls_iterations, num_newton_ls_fails,
             num_grad_ls_fails, num_fx, num_grad_fx, num_hessian_fx,
-            num_collision_check);
+            num_collision_check, regularization_iterations);
     }
 
     void NewtonSolver::reset_stats()
@@ -87,6 +88,7 @@ namespace opt {
         newton_iterations = 0;
         num_newton_ls_fails = 0;
         num_grad_ls_fails = 0;
+        regularization_iterations = 0;
     }
 
     bool NewtonSolver::converged() const
@@ -106,14 +108,14 @@ namespace opt {
                 * problem_ptr->world_bbox_diagonal();
 
             spdlog::info(
-                "solve={} iter={:d} step_max_speed={:g} tol={:g}", //
+                "solver={} iter={:d} step_max_speed={:g} tol={:g}", //
                 name(), iteration_number, step_max_speed, tol);
             return step_max_speed <= tol;
         }
         case ConvergenceCriteria::ENERGY: {
             double step_energy = abs(gradient_free.dot(direction_free));
             spdlog::info(
-                "solve={} iter={:d} step_energy={:g} tol={:g}", //
+                "solver={} iter={:d} step_energy={:g} tol={:g}", //
                 name(), iteration_number, step_energy,
                 Constants::NEWTON_ENERGY_CONVERGENCE_TOL);
             return step_energy <= Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
@@ -134,7 +136,7 @@ namespace opt {
         //     dynamic_cast<physics::SimulationProblem*>(problem_ptr)->faces());
 
         double step_length = 1.0;
-        double tikhonov_coeff = 0;
+        double regulariztion_coeff = 0;
 
         spdlog::debug("solver={} action=BEGIN", name());
 
@@ -153,60 +155,15 @@ namespace opt {
             num_grad_fx++;
             num_hessian_fx++;
 
-            bool solve_success = false;
-            while (!solve_success) {
-                double tikhonov_fx = fx;
-                Eigen::VectorXd tikhonov_gradient = gradient;
-                Eigen::SparseMatrix<double> tikhonov_hessian = hessian;
+            // Remove rows and cols of fixed DoF
+            igl::slice(gradient, free_dof, gradient_free);
+            igl::slice(hessian, free_dof, free_dof, hessian_free);
 
-                if (tikhonov_coeff > 0) {
-                    tikhonov_fx +=
-                        tikhonov_coeff / 2 * (x - x_prev).squaredNorm();
-                    tikhonov_gradient += tikhonov_coeff * (x - x_prev);
-                    Eigen::SparseMatrix<double> I(
-                        hessian.rows(), hessian.cols());
-                    I.setIdentity();
-                    tikhonov_hessian += tikhonov_coeff * I;
-                }
-
-                // Remove rows and cols of fixed dof
-                igl::slice(tikhonov_gradient, free_dof, gradient_free);
-                igl::slice(tikhonov_hessian, free_dof, free_dof, hessian_free);
-
-                solve_success = compute_direction(
-                                    gradient_free, hessian_free, direction_free,
-                                    /*make_psd=*/false)
-                    && gradient_free.dot(direction_free) <= 0;
-
-                // Update coefficient adaptivly when the solve fails
-                if (solve_success) {
-                    tikhonov_coeff /= 2;
-                    if (tikhonov_coeff < 1e-8) {
-                        tikhonov_coeff = 0;
-                    }
-                    fx = tikhonov_fx;
-                    gradient = tikhonov_gradient;
-                    hessian = tikhonov_hessian;
-                } else {
-                    // TODO: dump system
-                    tikhonov_coeff = std::max(2 * tikhonov_coeff, 1e-8);
-                    if (!std::isfinite(tikhonov_coeff)) {
-                        spdlog::error(
-                            "Tikhonov regularization failed (coeff={:g})!",
-                            tikhonov_coeff);
-                        exit_reason = "Tikhonov regularization failed";
-                        break;
-                    }
-                    spdlog::warn(
-                        "Solve failed (∇f⋅Δx={:g}, ||H||_∞={:g}); "
-                        "increasing Tikhonov regularization (coeff={:g}) ",
-                        gradient_free.dot(direction_free),
-                        Eigen::MatrixXd(hessian).lpNorm<Eigen::Infinity>(),
-                        tikhonov_coeff);
-                }
-            }
-
+            bool solve_success = compute_regularized_direction(
+                fx, gradient_free, hessian_free, direction_free,
+                regulariztion_coeff);
             if (!solve_success) {
+                exit_reason = "regularization failed";
                 break;
             }
 
@@ -239,7 +196,7 @@ namespace opt {
                     spdlog::warn(
                         "solver={} iter={:d} failure=\"newton line-search\" "
                         "failsafe=\"gradient descent\"",
-                        name(), iteration_number + 1);
+                        name(), iteration_number);
                 }
 
                 ///////////////////////////////////////////////////////////////
@@ -276,7 +233,7 @@ namespace opt {
                     spdlog::error(
                         "solver={} iter={:d} failure=\"gradient line-search\" "
                         "failsafe=\"none\"",
-                        name(), iteration_number + 1);
+                        name(), iteration_number);
                     exit_reason = "line-search failed";
                     break;
                 }
@@ -349,16 +306,71 @@ namespace opt {
             if (!std::isfinite(lower_bound)) {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"line-search ∇f(x)⋅dir=0\"",
-                    name(), iteration_number + 1, lower_bound);
+                    name(), iteration_number, lower_bound);
             } else {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"line-search α ≤ {:g} / "
                     "{:g}\"",
-                    name(), iteration_number + 1, line_search_lower_bound(),
+                    name(), iteration_number, line_search_lower_bound(),
                     -grad_fx.dot(dir));
             }
         }
 
+        return success;
+    }
+
+    bool NewtonSolver::compute_regularized_direction(
+        double& fx,
+        Eigen::VectorXd& gradient,
+        Eigen::SparseMatrix<double>& hessian,
+        Eigen::VectorXd& direction,
+        double& coeff)
+    {
+        bool success = false;
+        while (!success) {
+            double regularized_fx = fx;
+            Eigen::VectorXd regularized_gradient = gradient;
+            Eigen::SparseMatrix<double> regularized_hessian = hessian;
+
+            if (coeff > 0) {
+                regularized_fx += coeff / 2 * (x - x_prev).squaredNorm();
+                regularized_gradient += coeff * (x - x_prev);
+                Eigen::SparseMatrix<double> I(hessian.rows(), hessian.cols());
+                I.setIdentity();
+                regularized_hessian += coeff * I;
+                regularization_iterations++;
+            }
+
+            success = compute_direction(
+                regularized_gradient, regularized_hessian, direction,
+                /*make_psd=*/false);
+            success = success && regularized_gradient.dot(direction) <= 0;
+
+            // Update coefficient adaptivly when the solve fails
+            if (success) {
+                coeff /= 2;
+                if (coeff < 1e-8) {
+                    coeff = 0;
+                }
+                fx = regularized_fx;
+                gradient = regularized_gradient;
+                hessian = regularized_hessian;
+            } else {
+                coeff = std::max(2 * coeff, 1e-8);
+                if (!std::isfinite(coeff)) {
+                    spdlog::error(
+                        "solver={} iter={:d} failure=\"regularization failed "
+                        "(coeff={:g})\" failsafe=\"none\"",
+                        name(), iteration_number, coeff);
+                    return false;
+                }
+                spdlog::warn(
+                    "solver={} iter={:d} failure=\"solve failed (∇f⋅Δx={:g}, "
+                    "||H||_∞={:g}); increasing regularization coeff={:g}\"",
+                    name(), iteration_number, gradient_free.dot(direction_free),
+                    Eigen::MatrixXd(hessian).lpNorm<Eigen::Infinity>(), coeff);
+            }
+        }
         return success;
     }
 
@@ -371,7 +383,16 @@ namespace opt {
         NAMED_PROFILE_POINT("newton_linear_solve", SOLVE);
         PROFILE_START(SOLVE);
 
-        // Solve for the Newton direction (Δx = -H⁻⅟∇f).
+        // Check if the hessian is positive semi-definite.
+        // Eigen::LLT<Eigen::MatrixXd> LLT_H((Eigen::MatrixXd(hessian)));
+        // if (LLT_H.info() == Eigen::NumericalIssue) {
+        //     spdlog::warn(
+        //         "solver={} iter={:d} failure=\"possibly non semi-positive "
+        //         "definite Hessian is not PSD\"",
+        //         name(), iteration_number);
+        // }
+
+        // Solve for the Newton direction (Δx = -H⁻¹∇f).
         // Return true if the solve was successful.
         bool solve_success = false;
 
@@ -392,13 +413,13 @@ namespace opt {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"sparse solve for newton "
                     "direction\" failsafe=\"gradient descent\"",
-                    name(), iteration_number + 1);
+                    name(), iteration_number);
             }
         } else {
             spdlog::warn(
                 "solver={} iter={:d} failure=\"sparse decomposition of the "
                 "hessian\" failsafe=\"gradient descent\"",
-                name(), iteration_number + 1);
+                name(), iteration_number);
         }
 
         // Check solve residual
@@ -409,7 +430,7 @@ namespace opt {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"large residual ({:g})\" "
                     "failsafe=\"gradient descent\"",
-                    name(), iteration_number + 1, solve_residual);
+                    name(), iteration_number, solve_residual);
                 solve_success = false;
             }
         }
@@ -430,7 +451,7 @@ namespace opt {
             spdlog::warn(
                 "solver={} iter={:d} failure=\"newton direction not descent "
                 "direction\" failsafe=\"H += μI\" μ={:g}",
-                name(), iteration_number + 1, mu);
+                name(), iteration_number, mu);
             solve_success =
                 compute_direction(gradient, psd_hessian, direction, false);
             double dir_dot_grad = direction.dot(gradient);
@@ -439,7 +460,7 @@ namespace opt {
                     "solver={} iter={:d} failure=\"adjusted newton "
                     "direction not descent direction\" failsafe=\"gradient "
                     "descent\" dir_dot_grad={:g}",
-                    name(), iteration_number + 1, dir_dot_grad);
+                    name(), iteration_number, dir_dot_grad);
                 direction = -gradient;
             }
         }
