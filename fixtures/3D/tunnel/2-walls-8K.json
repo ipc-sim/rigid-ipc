@@ -4,7 +4,7 @@
     "timestep": 0.01,
     "max_time": 10,
     "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 1e-2
+        "initial_barrier_activation_distance": 1e-3
     },
     "ipc_solver": {
         "min_barrier_stiffness_scale": 1e9
@@ -16,14 +16,14 @@
             "mesh": "plane-8K.obj",
             "position": [0, -0.501, 0],
             "rotation": [0, 0, 0],
-            "scale": [0.5, 1, 1],
+            "scale": [1, 1, 1],
             "is_dof_fixed": true,
             "group_id": 0
         }, {
             "mesh": "plane-8K.obj",
             "position": [0, 0.501, 0],
             "rotation": [0, 0, 0],
-            "scale": [0.5, 1, 1],
+            "scale": [1, 1, 1],
             "is_dof_fixed": true,
             "group_id": 0
         }, {
