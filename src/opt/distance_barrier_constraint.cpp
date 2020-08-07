@@ -146,8 +146,8 @@ namespace opt {
 
         barriers.clear();
 
-        // Compute the distance candidates
-        // TODO: Consider skipping this step
+        // Compute the distance candidates. It is faster to do some duplicate
+        // work now and cull some constraints than computing them with autodiff.
         // TODO: Store these distance for use later
         double activation_distance =
             active_constraint_scale * m_barrier_activation_distance;

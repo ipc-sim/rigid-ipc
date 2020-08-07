@@ -30,6 +30,7 @@ void UISimState::launch()
     m_viewer.core().orthographic = true;
     m_viewer.core().is_animating = true;
     m_viewer.core().lighting_factor = 0.0;
+    m_viewer.core().animation_max_fps = 120.0;
     m_viewer.callback_pre_draw = [&](igl::opengl::glfw::Viewer&) {
         return pre_draw_loop();
     };
