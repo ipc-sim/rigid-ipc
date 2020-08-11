@@ -53,7 +53,7 @@ TEST_CASE("interval sinc", "[sinc][interval]")
     CHECK(y.upper() == Approx(expected_y.upper()).margin(1e-8));
 }
 
-TEST_CASE("interval sinc with looser bounds", "[sinc][interval][debug]")
+TEST_CASE("interval sinc with looser bounds", "[sinc][interval]")
 {
     Interval x, expected_y;
 
@@ -85,6 +85,38 @@ TEST_CASE("interval sinc with looser bounds", "[sinc][interval][debug]")
         // Tighter bound if x.lower() > 1
         CHECK(subset(y, Interval(-1 / x.lower(), 1 / x.lower())));
     }
+}
+
+TEST_CASE("interval sinc_normx", "[sinc][interval]")
+{
+    Eigen::VectorX3<Interval> x = Eigen::VectorX3<Interval>::Zero(3);
+    Interval expected_y;
+
+    SECTION("Zero")
+    {
+        // x is already zero
+        expected_y = Interval(1);
+    }
+    SECTION("Positive")
+    {
+        x(1) = Interval(igl::PI);
+        expected_y = Interval(0);
+    }
+    SECTION("Negative")
+    {
+        x(1) = Interval(-igl::PI);
+        expected_y = Interval(0);
+    }
+    SECTION("Mixed")
+    {
+        x(1) = Interval(-igl::PI, igl::PI);
+        expected_y = Interval(0, 1);
+    }
+
+    Interval y = sinc_normx(x);
+    CAPTURE(y.lower(), y.upper(), expected_y.lower(), expected_y.upper());
+    CHECK(expected_y.lower() == Approx(y.lower()).margin(1e-8));
+    CHECK(expected_y.upper() == Approx(y.upper()).margin(1e-8));
 }
 
 TEST_CASE("∇sinc(||x||)", "[sinc][vector][diff]")

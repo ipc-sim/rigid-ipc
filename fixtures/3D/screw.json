@@ -3,6 +3,7 @@
     "solver": "ipc_solver",
     "timestep": 0.01,
     "max_time": 2.5,
+    "#max_iterations": 10,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-4,
         "trajectory_type": "screwing"

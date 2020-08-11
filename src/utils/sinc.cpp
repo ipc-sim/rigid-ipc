@@ -49,7 +49,7 @@ Interval sinc(const Interval& x)
 
     // Split the domain into two interval:
     // 1. x ∩ [0, monotonic_bound]
-    // 2. x ∩ [monotonic_bound, ∞]
+    // 2. x ∩ [monotonic_bound, ∞)
 
     // Case 1 (Monotonic):
     // WARNING: The following does not account for rounding properly

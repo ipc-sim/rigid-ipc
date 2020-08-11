@@ -16,34 +16,21 @@ void compute_vertices_intervals(
     Eigen::MatrixX<Interval>& vertices)
 {
     Interval t(0, 1);
-    std::vector<Eigen::MatrixXX3<Interval>> Rs(bodies.num_bodies());
-    std::vector<Eigen::VectorX3<Interval>> ps(bodies.num_bodies());
 
     physics::Poses<Interval> posesI_t0 =
         physics::cast<double, Interval>(poses_t0);
     physics::Poses<Interval> posesI_t1 =
         physics::cast<double, Interval>(poses_t1);
 
+    physics::Poses<Interval> posesI(bodies.num_bodies());
     tbb::parallel_for(size_t(0), bodies.num_bodies(), [&](size_t i) {
-        ps[i] = (posesI_t1[i].position - posesI_t0[i].position) * t
+        posesI[i].position = (posesI_t1[i].position - posesI_t0[i].position) * t
             + posesI_t0[i].position;
-
-        if (bodies.dim() == 2) {
-            Rs[i] = Eigen::Rotation2D<Interval>(
-                        ((posesI_t1[i].rotation - posesI_t0[i].rotation) * t
-                         + posesI_t0[i].rotation)(0))
-                        .toRotationMatrix();
-        } else {
-            Eigen::Matrix3d R0, P;
-            double omega;
-            decompose_to_z_screwing(poses_t0[i], poses_t1[i], R0, P, omega);
-            Eigen::Matrix3I Rz = rotate_around_z(t * omega);
-            Eigen::Matrix3I P_I = P.template cast<Interval>();
-            Rs[i] = P_I.transpose() * Rz * P_I * R0.cast<Interval>();
-        }
+        posesI[i].rotation = (posesI_t1[i].rotation - posesI_t0[i].rotation) * t
+            + posesI_t0[i].rotation;
     });
 
-    vertices = bodies.world_vertices(Rs, ps);
+    vertices = bodies.world_vertices(posesI);
 }
 
 void RigidBodyHashGrid::resize(

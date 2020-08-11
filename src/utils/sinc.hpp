@@ -12,19 +12,27 @@ double sinc(const double& x);
 
 Interval sinc(const Interval& x);
 
-// Compute sinc(||x||) for x ∈ Rⁿ
+/// Compute the L2 norm (∑|xᵢ|²)
+template <typename T> T norm(const Eigen::VectorX3<T>& x)
+{
+    // Do an explicit abs to avoid possible problems with intervals
+    Eigen::VectorX3<T> absx = x.cwiseAbs();
+    return sqrt(absx.dot(absx));
+}
+
+/// Compute sinc(||x||) for x ∈ Rⁿ
 template <typename T> T sinc_normx(const Eigen::VectorX3<T>& x)
 {
     static_assert(
         !std::is_base_of<DiffScalarBase, T>::value,
         "This version does not work with autodiff!");
-    return sinc(x.norm());
+    return sinc(norm(x));
 }
 
-// Compute ∇sinc(||x||) for x ∈ Rⁿ
+/// Compute ∇sinc(||x||) for x ∈ Rⁿ
 Eigen::VectorX3d sinc_normx_grad(const Eigen::VectorX3d& x);
 
-// Compute ∇²sinc(||x||) for x ∈ Rⁿ
+/// Compute ∇²sinc(||x||) for x ∈ Rⁿ
 Eigen::MatrixXX3d sinc_normx_hess(const Eigen::VectorX3d& x);
 
 template <typename Scalar, typename Gradient>
