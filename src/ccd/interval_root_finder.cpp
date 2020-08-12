@@ -129,6 +129,10 @@ bool interval_root_finder(
 
         Eigen::VectorX3I y = f(x);
 
+        // spdlog::trace(
+        //     "{} ↦ {}", logger::fmt_eigen_intervals(x),
+        //     logger::fmt_eigen_intervals(y));
+
         if (!zero_in(y)) {
             continue;
         }

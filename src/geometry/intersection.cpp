@@ -44,24 +44,29 @@ namespace geometry {
         return is_zero(distance);
     }
 
+    inline bool are_points_on_same_side_of_edge(
+        const Eigen::Vector3I& p1,
+        const Eigen::Vector3I& p2,
+        const Eigen::Vector3I& a,
+        const Eigen::Vector3I& b)
+    {
+        Eigen::Vector3I cp1 = (b - a).cross(p1 - a);
+        Eigen::Vector3I cp2 = (b - a).cross(p2 - a);
+        return cp1.dot(cp2).upper() >= 0;
+    }
+
     bool is_point_inside_triangle(
         const Eigen::Vector3I& point,
         const Eigen::Vector3I& triangle_vertex0,
         const Eigen::Vector3I& triangle_vertex1,
         const Eigen::Vector3I& triangle_vertex2)
     {
-        Eigen::Vector3I normal0 =
-            triangle_normal(triangle_vertex0, triangle_vertex1, point);
-        Eigen::Vector3I normal1 =
-            triangle_normal(triangle_vertex0, point, triangle_vertex2);
-        Eigen::Vector3I normal2 =
-            triangle_normal(triangle_vertex1, triangle_vertex2, point);
-        for (int i = 0; i < normal0.size(); i++) {
-            if (!overlap(intersect(normal0(i), normal1(i)), normal2(i))) {
-                return false;
-            }
-        }
-        return true;
+        return are_points_on_same_side_of_edge(
+                   point, triangle_vertex0, triangle_vertex1, triangle_vertex2)
+            && are_points_on_same_side_of_edge(
+                   point, triangle_vertex1, triangle_vertex0, triangle_vertex2)
+            && are_points_on_same_side_of_edge(
+                   point, triangle_vertex2, triangle_vertex0, triangle_vertex1);
     }
 
     bool segment_triangle_intersect(
