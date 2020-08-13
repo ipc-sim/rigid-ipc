@@ -168,6 +168,11 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         {
             return false;
         }
+        virtual double compute_earliest_toi(
+            const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) override
+        {
+            return std::numeric_limits<double>::infinity();
+        }
         virtual double
         compute_min_distance(const Eigen::VectorXd& x) const override
         {

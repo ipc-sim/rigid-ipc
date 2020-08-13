@@ -467,6 +467,25 @@ namespace opt {
         return m_use_barriers ? collisions : false;
     }
 
+    double DistanceBarrierRBProblem::compute_earliest_toi(
+        const Eigen::VectorXd& sigma_i, const Eigen::VectorXd& sigma_j)
+    {
+        // m_use_barriers := solve_collisions
+        // If we are not solve collisions then just compute if there was a
+        // collision.
+        if (!m_use_barriers) {
+            this->has_collisions(sigma_i, sigma_j); // will set m_had_collisions
+            return std::numeric_limits<double>::infinity();
+        }
+
+        physics::Poses<double> poses_i = this->dofs_to_poses(sigma_i);
+        physics::Poses<double> poses_j = this->dofs_to_poses(sigma_j);
+        double earliest_toi =
+            m_constraint.compute_earliest_toi(m_assembler, poses_i, poses_j);
+        m_had_collisions |= earliest_toi <= 1;
+        return earliest_toi;
+    }
+
     template <typename T, typename RigidBodyCandidate>
     T DistanceBarrierRBProblem::distance_barrier(
         const Eigen::VectorXd& sigma, const RigidBodyCandidate& rbc)

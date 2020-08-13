@@ -80,12 +80,8 @@ bool compute_edge_vertex_time_of_impact(
         Interval alpha = params(1);
 
         // Compute the poses at time t
-        PoseI poseIA(
-            (poseIA_t1.position - poseIA_t0.position) * t + poseIA_t0.position,
-            (poseIA_t1.rotation - poseIA_t0.rotation) * t + poseIA_t0.rotation);
-        PoseI poseIB(
-            (poseIB_t1.position - poseIB_t0.position) * t + poseIB_t0.position,
-            (poseIB_t1.rotation - poseIB_t0.rotation) * t + poseIB_t0.rotation);
+        PoseI poseIA = PoseI::interpolate(poseIA_t0, poseIA_t1, t);
+        PoseI poseIB = PoseI::interpolate(poseIB_t0, poseIB_t1, t);
 
         // Get the world vertex of the edges at time t
         Eigen::Vector2I vertex = bodyA.world_vertex(poseIA, vertex_id);
@@ -134,34 +130,35 @@ Eigen::Vector3d compute_edge_edge_tolerance(
     const size_t& edgeB_id)                // In bodyB
 {
     // TODO: This is not exactly the arc length of the trajectory
-    Eigen::Matrix3d RA_t0, PA;
-    double omegaA;
-    decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
-    Eigen::Matrix3d RA = PA * RA_t0;
-
-    Eigen::Matrix3d RB_t0, PB;
-    double omegaB;
-    decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
-    Eigen::Matrix3d RB = PB * RB_t0;
-
-    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-
-    double dl = -std::numeric_limits<double>::infinity();
-    Eigen::Vector3d v;
-    double radius_sqr;
-    for (int i = 0; i < 2; i++) {
-        v = bodyA.vertices.row(bodyA.edges(edgeA_id, i));
-        radius_sqr = (RA * v).head<2>().squaredNorm();
-        dl = std::max(dl, sqrt(sA_sqr + omegaA * omegaA * radius_sqr));
-
-        v = bodyB.vertices.row(bodyB.edges(edgeB_id, i));
-        radius_sqr = (RB * v).head<2>().squaredNorm();
-        dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
-    }
+    // Eigen::Matrix3d RA_t0, PA;
+    // double omegaA;
+    // decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
+    // Eigen::Matrix3d RA = PA * RA_t0;
+    //
+    // Eigen::Matrix3d RB_t0, PB;
+    // double omegaB;
+    // decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
+    // Eigen::Matrix3d RB = PB * RB_t0;
+    //
+    // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
+    // double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
+    //
+    // double dl = -std::numeric_limits<double>::infinity();
+    // Eigen::Vector3d v;
+    // double radius_sqr;
+    // for (int i = 0; i < 2; i++) {
+    //     v = bodyA.vertices.row(bodyA.edges(edgeA_id, i));
+    //     radius_sqr = (RA * v).head<2>().squaredNorm();
+    //     dl = std::max(dl, sqrt(sA_sqr + omegaA * omegaA * radius_sqr));
+    //
+    //     v = bodyB.vertices.row(bodyB.edges(edgeB_id, i));
+    //     radius_sqr = (RB * v).head<2>().squaredNorm();
+    //     dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
+    // }
 
     return Eigen::Vector3d(
-        Constants::SCREWING_CCD_LENGTH_TOL / dl,
+        // Constants::SCREWING_CCD_LENGTH_TOL / dl,
+        Constants::SCREWING_CCD_LENGTH_TOL,
         Constants::SCREWING_CCD_LENGTH_TOL / bodyA.edge_length(edgeA_id),
         Constants::SCREWING_CCD_LENGTH_TOL / bodyB.edge_length(edgeB_id));
 }
@@ -197,12 +194,8 @@ bool compute_edge_edge_time_of_impact(
         Interval edgeB_alpha = params(2);
 
         // Compute the poses at time t
-        PoseI poseIA(
-            (poseIA_t1.position - poseIA_t0.position) * t + poseIA_t0.position,
-            (poseIA_t1.rotation - poseIA_t0.rotation) * t + poseIA_t0.rotation);
-        PoseI poseIB(
-            (poseIB_t1.position - poseIB_t0.position) * t + poseIB_t0.position,
-            (poseIB_t1.rotation - poseIB_t0.rotation) * t + poseIB_t0.rotation);
+        PoseI poseIA = PoseI::interpolate(poseIA_t0, poseIA_t1, t);
+        PoseI poseIB = PoseI::interpolate(poseIB_t0, poseIB_t1, t);
 
         // Get the world vertex of the edges at time t
         Eigen::Vector3I edgeA_vertex0 =
@@ -261,30 +254,31 @@ double compute_face_vertex_tolerance(
     const size_t& face_id)                 // In bodyB
 {
     // TODO: This is not exactly the arc length of the trajectory
-    Eigen::Matrix3d RA_t0, PA;
-    double omegaA;
-    decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
-    Eigen::Matrix3d RA = PA * RA_t0;
-
-    Eigen::Matrix3d RB_t0, PB;
-    double omegaB;
-    decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
-    Eigen::Matrix3d RB = PB * RB_t0;
-
-    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-
-    Eigen::Vector3d v = bodyA.vertices.row(vertex_id);
-    double radius_sqr = (RA * v).head<2>().squaredNorm();
-    double dl = sqrt(sA_sqr + omegaA * omegaA * v.squaredNorm());
-
-    for (int i = 0; i < 3; i++) {
-        v = bodyB.vertices.row(bodyB.faces(face_id, i));
-        radius_sqr = (RB * v).head<2>().squaredNorm();
-        dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
-    }
-
-    return Constants::SCREWING_CCD_LENGTH_TOL / dl;
+    // Eigen::Matrix3d RA_t0, PA;
+    // double omegaA;
+    // decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
+    // Eigen::Matrix3d RA = PA * RA_t0;
+    //
+    // Eigen::Matrix3d RB_t0, PB;
+    // double omegaB;
+    // decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
+    // Eigen::Matrix3d RB = PB * RB_t0;
+    //
+    // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
+    // double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
+    //
+    // Eigen::Vector3d v = bodyA.vertices.row(vertex_id);
+    // double radius_sqr = (RA * v).head<2>().squaredNorm();
+    // double dl = sqrt(sA_sqr + omegaA * omegaA * v.squaredNorm());
+    //
+    // for (int i = 0; i < 3; i++) {
+    //     v = bodyB.vertices.row(bodyB.faces(face_id, i));
+    //     radius_sqr = (RB * v).head<2>().squaredNorm();
+    //     dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
+    // }
+    //
+    // return Constants::SCREWING_CCD_LENGTH_TOL / dl;
+    return Constants::SCREWING_CCD_LENGTH_TOL;
 }
 
 // Find time-of-impact between two rigid bodies
@@ -311,26 +305,21 @@ bool compute_face_vertex_time_of_impact(
     const PoseI poseIB_t0 = poseB_t0.cast<Interval>();
     const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
 
-    const auto vertex_positions = [&](const Interval& t,
-                                      Eigen::Vector3I& vertex,
-                                      Eigen::Vector3I& face_vertex0,
-                                      Eigen::Vector3I& face_vertex1,
-                                      Eigen::Vector3I& face_vertex2) {
-        // Compute the poses at time t
-        PoseI poseIA(
-            (poseIA_t1.position - poseIA_t0.position) * t + poseIA_t0.position,
-            (poseIA_t1.rotation - poseIA_t0.rotation) * t + poseIA_t0.rotation);
-        PoseI poseIB(
-            (poseIB_t1.position - poseIB_t0.position) * t + poseIB_t0.position,
-            (poseIB_t1.rotation - poseIB_t0.rotation) * t + poseIB_t0.rotation);
+    const auto vertex_positions =
+        [&](const Interval& t, Eigen::Vector3I& vertex,
+            Eigen::Vector3I& face_vertex0, Eigen::Vector3I& face_vertex1,
+            Eigen::Vector3I& face_vertex2) {
+            // Compute the poses at time t
+            PoseI poseIA = PoseI::interpolate(poseIA_t0, poseIA_t1, t);
+            PoseI poseIB = PoseI::interpolate(poseIB_t0, poseIB_t1, t);
 
-        // Get the world vertex of the point at time t
-        vertex = bodyA.world_vertex(poseIA, vertex_id);
-        // Get the world vertex of the edge at time t
-        face_vertex0 = bodyB.world_vertex(poseIB, bodyB.faces(face_id, 0));
-        face_vertex1 = bodyB.world_vertex(poseIB, bodyB.faces(face_id, 1));
-        face_vertex2 = bodyB.world_vertex(poseIB, bodyB.faces(face_id, 2));
-    };
+            // Get the world vertex of the point at time t
+            vertex = bodyA.world_vertex(poseIA, vertex_id);
+            // Get the world vertex of the edge at time t
+            face_vertex0 = bodyB.world_vertex(poseIB, bodyB.faces(face_id, 0));
+            face_vertex1 = bodyB.world_vertex(poseIB, bodyB.faces(face_id, 1));
+            face_vertex2 = bodyB.world_vertex(poseIB, bodyB.faces(face_id, 2));
+        };
 
     const auto distance = [&](const Interval& t) {
         // Get the world vertex and face of the point at time t

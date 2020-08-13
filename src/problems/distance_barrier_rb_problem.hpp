@@ -96,6 +96,11 @@ namespace opt {
             const Eigen::VectorXd& sigma_i,
             const Eigen::VectorXd& sigma_j) override;
 
+        /// Compute the earliest time of impact between two configurations
+        double compute_earliest_toi(
+            const Eigen::VectorXd& sigma_i,
+            const Eigen::VectorXd& sigma_j) override;
+
         /// Get the world coordinates of the vertices
         Eigen::MatrixXd world_vertices(const Eigen::VectorXd& x) const override
         {

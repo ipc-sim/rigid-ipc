@@ -102,12 +102,13 @@ TEST_CASE("Rigid edge-vertex time of impact", "[ccd][rigid_toi][edge_vertex]")
         toi);
     CAPTURE(toi, expected_toi);
     CHECK(is_impacting == is_impact_expected);
-    // if (is_impacting) {
-    //     CHECK(
-    //         toi
-    //         == Approx(expected_toi)
-    //                .margin(Constants::INTERVAL_ROOT_FINDER_TOL));
-    // }
+    if (is_impacting) {
+        // clang-format off
+        CHECK(toi == Approx(expected_toi).margin(
+            Constants::INTERVAL_ROOT_FINDER_TOL));
+        // clang-format on
+        CHECK(toi <= expected_toi);
+    }
 }
 
 TEST_CASE("Rigid edge-edge time of impact", "[ccd][rigid_toi][edge_edge]")
@@ -165,9 +166,11 @@ TEST_CASE("Rigid edge-edge time of impact", "[ccd][rigid_toi][edge_edge]")
         bodyA.world_vertex(bodyA_pose_t1, 0).transpose(), toi, expected_toi);
     CHECK(is_impacting == is_impact_expected);
     if (is_impacting) {
-        CHECK(
-            toi
-            == Approx(expected_toi).margin(Constants::SCREWING_CCD_LENGTH_TOL));
+        // clang-format off
+        CHECK(toi == Approx(expected_toi).margin(
+            Constants::SCREWING_CCD_LENGTH_TOL));
+        // clang-format on
+        CHECK(toi <= expected_toi);
     }
 }
 
@@ -236,9 +239,11 @@ TEST_CASE("Rigid face-vertex time of impact", "[ccd][rigid_toi][face_vertex]")
     CAPTURE(toi, expected_toi);
     CHECK(is_impacting == is_impact_expected);
     if (is_impacting) {
-        CHECK(
-            toi
-            == Approx(expected_toi).margin(Constants::SCREWING_CCD_LENGTH_TOL));
+        // clang-format off
+        CHECK(toi == Approx(expected_toi).margin(
+            Constants::SCREWING_CCD_LENGTH_TOL));
+        // clang-format on
+        CHECK(toi <= expected_toi);
     }
 }
 
@@ -372,7 +377,7 @@ TEST_CASE("Actual EE Collision", "[!benchmark][ccd][rigid_toi][edge_edge]")
     );
     Pose<double> bodyB_pose_t1(
         Eigen::Vector3d(0, 1, 0),
-        Eigen::Vector3d(91 * 3.14, 0, 0)
+        Eigen::Vector3d(2 * 3.14, 0, 0)
     );
     // clang-format on
 
@@ -383,5 +388,58 @@ TEST_CASE("Actual EE Collision", "[!benchmark][ccd][rigid_toi][edge_edge]")
             bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
             bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
             toi);
+    };
+}
+
+TEST_CASE("Actual VF Collision", "[!benchmark][ccd][rigid_toi][face_vertex]")
+{
+    Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(3, 3);
+    Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(3, 3);
+
+    Eigen::MatrixXi bodyA_faces(1, 3);
+    bodyA_faces.row(0) << 0, 1, 2;
+    Eigen::MatrixXi bodyB_faces(1, 3);
+    bodyB_faces.row(0) << 0, 1, 2;
+
+    Eigen::MatrixXi bodyA_edges, bodyB_edges;
+    igl::edges(bodyA_faces, bodyA_edges);
+    igl::edges(bodyB_faces, bodyB_edges);
+
+    RigidBody bodyA = create_body(bodyA_vertices, bodyA_edges, bodyA_faces);
+    RigidBody bodyB = create_body(bodyB_vertices, bodyB_edges, bodyB_faces);
+
+    // clang-format off
+    bodyA.vertices.row(0) << 0.063161123153442, -0.00975209722618602, 0.0246948915619087;
+
+    bodyB.vertices.row(0) << -0.00733894260009082, 0.0199670606490534, 0.000727755816038143;
+    bodyB.vertices.row(1) << -0.0122514761614292, 0.0244249832266042, -0.00566776185395443;
+    bodyB.vertices.row(2) << -0.00945035723923828, 0.025642170175986, -0.00591155842365654;
+
+    Pose<double> bodyA_pose_t0(
+        Eigen::Vector3d(-0.000591328227883731, 0.0888868556875028, -0.000277685809028307),
+        Eigen::Vector3d(1.20966059163976, -1.2107299033619, -1.20913719904179)
+    );
+    Pose<double> bodyA_pose_t1(
+        Eigen::Vector3d(-0.000591328227883731, 0.0879058556875029, -0.000277685809028307),
+        Eigen::Vector3d(1.20966059163976, -1.2107299033619, -1.20913719904179)
+    );
+    Pose<double> bodyB_pose_t0(
+        Eigen::Vector3d(-0.00052287436757153, 0.020051622753965, -4.06061775370095e-06),
+        Eigen::Vector3d(1.21919966781284, -1.19787487380512, 1.19585545343065)
+    );
+    Pose<double> bodyB_pose_t1(
+        Eigen::Vector3d(-0.00052287436757153, 0.020051622753965, -4.06061775370095e-06),
+        Eigen::Vector3d(1.21919966781284, -1.19787487380512, 1.19585545343065)
+    );
+    // clang-format on
+
+    BENCHMARK("Actually VF Collision")
+    {
+        double toi;
+        bool is_impacting = compute_face_vertex_time_of_impact(
+            bodyA, bodyA_pose_t0, bodyA_pose_t1, /*vertex_id=*/0, //
+            bodyB, bodyB_pose_t0, bodyB_pose_t1, /*face_id=*/0,   //
+            toi);
+        // std::cout << toi << std::endl;
     };
 }

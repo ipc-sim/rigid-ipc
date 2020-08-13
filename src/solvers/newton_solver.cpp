@@ -114,11 +114,11 @@ namespace opt {
         }
         case ConvergenceCriteria::ENERGY: {
             double step_energy = abs(gradient_free.dot(direction_free));
+            double tol = Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
             spdlog::info(
                 "solver={} iter={:d} step_energy={:g} tol={:g}", //
-                name(), iteration_number, step_energy,
-                Constants::NEWTON_ENERGY_CONVERGENCE_TOL);
-            return step_energy <= Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
+                name(), iteration_number, step_energy, tol);
+            return step_energy <= tol;
         }
         }
         throw NotImplementedError("Invalid convergence criteria option!");
@@ -272,25 +272,40 @@ namespace opt {
         bool success = false;
         int num_it = 0;
         double lower_bound = line_search_lower_bound() / -grad_fx.dot(dir);
+        lower_bound = std::min(lower_bound, 1e-1);
         // double lower_bound = line_search_lower_bound() / dir.squaredNorm();
         // double lower_bound = line_search_lower_bound();
 
-        while (std::isfinite(lower_bound) && step_length > lower_bound) {
+        // Filter the step length so that x to x + α * Δx is collision free for
+        // α ≤ step_length.
+        num_collision_check++; // Count the number of collision checks
+        step_length = std::min(
+            step_length, problem_ptr->compute_earliest_toi(x, x + dir));
+        assert(!problem_ptr->has_collisions(x, x + step_length * dir));
+        if (step_length < lower_bound) {
+            spdlog::error(
+                "solver={} iter={:d} failure=\"initial step_length ({:g}) is"
+                " less than lower_bound({:g})\"",
+                name(), iteration_number, step_length, lower_bound);
+        }
+
+        while (std::isfinite(lower_bound) && step_length >= lower_bound) {
             num_it++;        // Count the number of iterations
             ls_iterations++; // Count the gloabal number of iterations
 
             // Compute the next variable
             Eigen::VectorXd xi = x + step_length * dir;
 
+            // NOTE: We do not need to check for collisions because we filtered
+            // the step length.
             // Check for collisions between newton updates
-            num_collision_check++; // Count the number of collision checks
-            if (!problem_ptr->has_collisions(x, xi)) {
-                num_fx++; // Count the number of objective computations
-                if (problem_ptr->compute_objective(xi) < fx) {
-                    success = true;
-                    break; // while loop
-                }
+            // if (!problem_ptr->has_collisions(x, xi)) {
+            num_fx++; // Count the number of objective computations
+            if (problem_ptr->compute_objective(xi) < fx) {
+                success = true;
+                break; // while loop
             }
+            // }
 
             // Try again with a smaller step_length
             step_length /= 2.0;
@@ -333,8 +348,8 @@ namespace opt {
             Eigen::SparseMatrix<double> regularized_hessian = hessian;
 
             if (coeff > 0) {
-                regularized_fx += coeff / 2 * (x - x_prev).squaredNorm();
-                regularized_gradient += coeff * (x - x_prev);
+                // regularized_fx += coeff / 2 * (x - x_prev).squaredNorm();
+                // regularized_gradient += coeff * (x - x_prev);
                 Eigen::SparseMatrix<double> I(hessian.rows(), hessian.cols());
                 I.setIdentity();
                 regularized_hessian += coeff * I;

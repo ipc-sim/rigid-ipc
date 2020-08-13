@@ -98,6 +98,11 @@ TEST_CASE(
         {
             return false;
         }
+        virtual double compute_earliest_toi(
+            const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) override
+        {
+            return std::numeric_limits<double>::infinity();
+        }
 
         int num_vars() const override { return num_vars_; }
         const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }

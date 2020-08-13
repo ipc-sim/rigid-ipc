@@ -71,7 +71,6 @@ namespace physics {
         }
 
         Eigen::MatrixXX3<T> construct_rotation_matrix() const;
-        Eigen::Quaternion<T> construct_quaternion() const;
 
         static Pose<T>
         interpolate(const Pose<T>& pose0, const Pose<T>& pose1, T t);

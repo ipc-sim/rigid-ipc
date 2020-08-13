@@ -119,17 +119,27 @@ bool interval_root_finder(
 {
     // log_octree(f, x0);
 
+    // Keep searching for earlier roots (assumes time is first coordinate)
+    Eigen::VectorX3I earliest_root = Eigen::VectorX3I::Constant(
+        x0.size(), Interval(std::numeric_limits<double>::infinity()));
+    bool found_root = false;
+
     // Stack of intervals and the last split dimension
-    std::stack<std::pair<Eigen::VectorX3I, int>> xs;
-    xs.emplace(x0, -1);
-    for (int i = 0; i < max_iterations && !xs.empty(); i++) {
-        x = xs.top().first;
-        int last_split = xs.top().second;
+    std::stack<Eigen::VectorX3I> xs;
+    xs.push(x0);
+    // TODO: Enable max_iterations
+    for (int i = 0; !xs.empty(); i++) {
+        x = xs.top();
         xs.pop();
+
+        // Skip any interval that is not before the earliest root
+        if (x[0].lower() >= earliest_root[0].lower()) {
+            continue;
+        }
 
         Eigen::VectorX3I y = f(x);
 
-        // spdlog::trace(
+        // spdlog::critical(
         //     "{} ↦ {}", logger::fmt_eigen_intervals(x),
         //     logger::fmt_eigen_intervals(y));
 
@@ -140,16 +150,19 @@ bool interval_root_finder(
         Eigen::VectorX3d widths = width(x);
         if ((widths.array() <= tol.array()).all()) {
             if (constraint_predicate(x)) {
-                return true;
+                earliest_root = x;
+                found_root = true;
             }
             continue;
         }
 
         // Check the diagonal of the range box
-        if (diagonal_width(y) <= Constants::INTERVAL_ROOT_FINDER_RANGE_TOL
-            && constraint_predicate(x)) {
-            return true;
-        }
+        // if (diagonal_width(y) <= Constants::INTERVAL_ROOT_FINDER_RANGE_TOL
+        //     && constraint_predicate(x)) {
+        //     earliest_root = x;
+        //     found_root = true;
+        //     continue;
+        // }
 
         // Bisect the largest dimension divided by its tolerance
         int split_i = -1;
@@ -164,23 +177,25 @@ bool interval_root_finder(
         std::pair<Interval, Interval> halves = bisect(x(split_i));
         // Push the second half on first so it is examined after the first half
         x(split_i) = halves.second;
-        xs.emplace(x, split_i);
+        xs.push(x);
         x(split_i) = halves.first;
-        xs.emplace(x, split_i);
+        xs.push(x);
     }
-    if (!xs.empty()) {
-        // Return the earliest possible time of impact
-        x = xs.top().first;
-        xs.pop();
-        while (!xs.empty()) {
-            if (xs.top().first[0].lower() < x[0].lower()) {
-                x = xs.top().first;
-            }
-            xs.pop();
-        }
-        return true; // A conservative answer
-    }
-    return false;
+    // TODO: This is needs to be updated when max_iterations is renabled
+    // if (!xs.empty()) {
+    //     // Return the earliest possible time of impact
+    //     x = xs.top().first;
+    //     xs.pop();
+    //     while (!xs.empty()) {
+    //         if (xs.top().first[0].lower() < x[0].lower()) {
+    //             x = xs.top().first;
+    //         }
+    //         xs.pop();
+    //     }
+    //     return true; // A conservative answer
+    // }
+    x = earliest_root;
+    return found_root;
 }
 
 } // namespace ccd

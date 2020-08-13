@@ -145,42 +145,13 @@ namespace physics {
     }
 
     template <typename T>
-    Eigen::Quaternion<T> Pose<T>::construct_quaternion() const
-    {
-        if (dim() == 2) {
-            return Eigen::Quaternion<T>(
-                Eigen::AngleAxis<T>(rotation(0), Eigen::Vector3<T>::UnitZ()));
-        } else {
-            T angle = rotation.norm();
-            Eigen::Vector3<T> axis = rotation;
-            if (!is_zero(angle)) {
-                axis /= angle;
-            }
-            return Eigen::Quaternion<T>(Eigen::AngleAxis<T>(angle, axis));
-        }
-    }
-
-    template <typename T>
     Pose<T>
     Pose<T>::interpolate(const Pose<T>& pose0, const Pose<T>& pose1, T t)
     {
-        static_assert(
-            !std::is_same<T, Interval>::value,
-            "You cannot use interpolate with Intervals");
         assert(pose0.dim() == pose1.dim());
-        Pose<T> pose;
-        pose.position = (pose1.position - pose0.position) * t + pose0.position;
-        if (pose0.dim() == 2) {
-            pose.rotation =
-                (pose1.rotation - pose0.rotation) * t + pose0.rotation;
-        } else {
-            Eigen::Quaternion<T> q0 = pose0.construct_quaternion();
-            Eigen::Quaternion<T> q1 = pose1.construct_quaternion();
-            Eigen::Quaternion<T> q = q0.slerp(t, q1);
-            Eigen::AngleAxis<T> aa(q);
-            pose.rotation = aa.angle() * aa.axis();
-        }
-        return pose;
+        return Pose<T>(
+            (pose1.position - pose0.position) * t + pose0.position,
+            (pose1.rotation - pose0.rotation) * t + pose0.rotation);
     }
 
     template <typename T> bool Pose<T>::operator==(const Pose<T>& other) const

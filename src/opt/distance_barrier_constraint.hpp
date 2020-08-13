@@ -37,11 +37,10 @@ namespace opt {
             const physics::Poses<double>& poses_t0,
             const physics::Poses<double>& poses_t1) const;
 
-        bool has_active_collisions_narrow_phase(
+        double compute_earliest_toi(
             const physics::RigidBodyAssembler& bodies,
             const physics::Poses<double>& poses_t0,
-            const physics::Poses<double>& poses_t1,
-            const Candidates& candidates) const;
+            const physics::Poses<double>& poses_t1) const;
 
         void compute_constraints(
             const physics::RigidBodyAssembler& bodies,
@@ -90,6 +89,18 @@ namespace opt {
         BarrierType barrier_type;
 
     protected:
+        bool has_active_collisions_narrow_phase(
+            const physics::RigidBodyAssembler& bodies,
+            const physics::Poses<double>& poses_t0,
+            const physics::Poses<double>& poses_t1,
+            const Candidates& candidates) const;
+
+        double compute_earliest_toi_narrow_phase(
+            const physics::RigidBodyAssembler& bodies,
+            const physics::Poses<double>& poses_t0,
+            const physics::Poses<double>& poses_t1,
+            const Candidates& candidates) const;
+
         /// @brief Max distance, d̂, at which the barrier forces are activate.
         double m_barrier_activation_distance;
     };

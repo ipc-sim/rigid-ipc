@@ -96,15 +96,6 @@ namespace opt {
                 return true;
             }
         }
-        for (const auto& ee_candidate : candidates.ee_candidates) {
-            double toi, edge0_alpha, edge1_alpha;
-            bool are_colliding = detect_edge_edge_collisions_narrow_phase(
-                bodies, poses_t0, poses_t1, ee_candidate, toi, edge0_alpha,
-                edge1_alpha, trajectory_type);
-            if (are_colliding) {
-                return true;
-            }
-        }
         for (const auto& fv_candidate : candidates.fv_candidates) {
             double toi, u, v;
             bool are_colliding = detect_face_vertex_collisions_narrow_phase(
@@ -114,7 +105,81 @@ namespace opt {
                 return true;
             }
         }
+        for (const auto& ee_candidate : candidates.ee_candidates) {
+            double toi, edge0_alpha, edge1_alpha;
+            bool are_colliding = detect_edge_edge_collisions_narrow_phase(
+                bodies, poses_t0, poses_t1, ee_candidate, toi, edge0_alpha,
+                edge1_alpha, trajectory_type);
+            if (are_colliding) {
+                return true;
+            }
+        }
         return false;
+    }
+
+    double DistanceBarrierConstraint::compute_earliest_toi(
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1) const
+    {
+        PROFILE_POINT("collisions_detection");
+        NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
+
+        // This function will profile itself
+        Candidates candidates;
+        detect_collision_candidates(
+            bodies, poses_t0, poses_t1, dim_to_collision_type(bodies.dim()),
+            candidates, detection_method, trajectory_type,
+            /*inflation_radius=*/0);
+
+        PROFILE_START();
+        PROFILE_START(NARROW_PHASE)
+        double earliest_toi = compute_earliest_toi_narrow_phase(
+            bodies, poses_t0, poses_t1, candidates);
+        PROFILE_END(NARROW_PHASE)
+        PROFILE_END();
+
+        return earliest_toi;
+    }
+
+    double DistanceBarrierConstraint::compute_earliest_toi_narrow_phase(
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1,
+        const Candidates& candidates) const
+    {
+        double earliest_toi = std::numeric_limits<double>::infinity();
+
+        for (const auto& ev_candidate : candidates.ev_candidates) {
+            double toi = std::numeric_limits<double>::infinity(), alpha;
+            bool are_colliding = detect_edge_vertex_collisions_narrow_phase(
+                bodies, poses_t0, poses_t1, ev_candidate, toi, alpha,
+                trajectory_type);
+            if (are_colliding && toi < earliest_toi) {
+                earliest_toi = toi;
+            }
+        }
+        for (const auto& fv_candidate : candidates.fv_candidates) {
+            double toi = std::numeric_limits<double>::infinity(), u, v;
+            bool are_colliding = detect_face_vertex_collisions_narrow_phase(
+                bodies, poses_t0, poses_t1, fv_candidate, toi, u, v,
+                trajectory_type);
+            if (are_colliding && toi < earliest_toi) {
+                earliest_toi = toi;
+            }
+        }
+        for (const auto& ee_candidate : candidates.ee_candidates) {
+            double toi = std::numeric_limits<double>::infinity(), edge0_alpha,
+                   edge1_alpha;
+            bool are_colliding = detect_edge_edge_collisions_narrow_phase(
+                bodies, poses_t0, poses_t1, ee_candidate, toi, edge0_alpha,
+                edge1_alpha, trajectory_type);
+            if (are_colliding && toi < earliest_toi) {
+                earliest_toi = toi;
+            }
+        }
+
+        return earliest_toi;
     }
 
     void DistanceBarrierConstraint::construct_active_barrier_set(

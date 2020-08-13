@@ -54,6 +54,10 @@ namespace opt {
         virtual bool has_collisions(
             const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) = 0;
 
+        /// Compute the earliest time of impact between two configurations
+        virtual double compute_earliest_toi(
+            const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) = 0;
+
         /// Compute the minimum distance among geometry
         virtual double compute_min_distance(const Eigen::VectorXd& x) const = 0;
 
