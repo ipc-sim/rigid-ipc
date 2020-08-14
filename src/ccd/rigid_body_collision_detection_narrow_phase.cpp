@@ -94,7 +94,8 @@ bool detect_edge_vertex_collisions_narrow_phase(
     const EdgeVertexCandidate& candidate,
     double& toi,
     double& alpha,
-    TrajectoryType trajectory)
+    TrajectoryType trajectory,
+    double earliest_toi)
 {
     if (trajectory == TrajectoryType::LINEARIZED) {
         Eigen::VectorX3d edge_vertex0_t0 = bodies.world_vertex(
@@ -128,7 +129,7 @@ bool detect_edge_vertex_collisions_narrow_phase(
     bool is_colliding = compute_edge_vertex_time_of_impact(
         bodies.m_rbs[bodyA_id], poses_t0[bodyA_id], poses_t1[bodyA_id],
         vertex_id, bodies.m_rbs[bodyB_id], poses_t0[bodyB_id],
-        poses_t1[bodyB_id], edge_id, toi);
+        poses_t1[bodyB_id], edge_id, toi, earliest_toi);
     if (is_colliding) {
         // Compute the poses at time toi
         physics::Pose<double> poseA = physics::Pose<double>::interpolate(
@@ -166,7 +167,8 @@ bool detect_edge_edge_collisions_narrow_phase(
     double& toi,
     double& edge0_alpha,
     double& edge1_alpha,
-    TrajectoryType trajectory)
+    TrajectoryType trajectory,
+    double earliest_toi)
 {
     if (trajectory == TrajectoryType::LINEARIZED) {
         Eigen::VectorX3d edge0_vertex0_t0 = bodies.world_vertex(
@@ -206,7 +208,7 @@ bool detect_edge_edge_collisions_narrow_phase(
     bool is_colliding = compute_edge_edge_time_of_impact(
         bodies.m_rbs[bodyA_id], poses_t0[bodyA_id], poses_t1[bodyA_id],
         edgeA_id, bodies.m_rbs[bodyB_id], poses_t0[bodyB_id],
-        poses_t1[bodyB_id], edgeB_id, toi);
+        poses_t1[bodyB_id], edgeB_id, toi, earliest_toi);
     if (is_colliding) {
         // Compute the poses at time toi
         physics::Pose<double> poseA = physics::Pose<double>::interpolate(
@@ -249,7 +251,8 @@ bool detect_face_vertex_collisions_narrow_phase(
     double& toi,
     double& u,
     double& v,
-    TrajectoryType trajectory)
+    TrajectoryType trajectory,
+    double earliest_toi)
 {
     if (trajectory == TrajectoryType::LINEARIZED) {
         Eigen::VectorX3d face_vertex0_t0 = bodies.world_vertex(
@@ -289,7 +292,7 @@ bool detect_face_vertex_collisions_narrow_phase(
     bool is_colliding = compute_face_vertex_time_of_impact(
         bodies.m_rbs[bodyA_id], poses_t0[bodyA_id], poses_t1[bodyA_id],
         vertex_id, bodies.m_rbs[bodyB_id], poses_t0[bodyB_id],
-        poses_t1[bodyB_id], face_id, toi);
+        poses_t1[bodyB_id], face_id, toi, earliest_toi);
     if (is_colliding) {
         // Compute the poses at time toi
         physics::Pose<double> poseA = physics::Pose<double>::interpolate(

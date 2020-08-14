@@ -148,14 +148,16 @@ namespace opt {
         const physics::Poses<double>& poses_t1,
         const Candidates& candidates) const
     {
-        double earliest_toi = std::numeric_limits<double>::infinity();
+        int collision_count = 0;
+        double earliest_toi = 1;
 
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double toi = std::numeric_limits<double>::infinity(), alpha;
             bool are_colliding = detect_edge_vertex_collisions_narrow_phase(
                 bodies, poses_t0, poses_t1, ev_candidate, toi, alpha,
-                trajectory_type);
+                trajectory_type, earliest_toi);
             if (are_colliding && toi < earliest_toi) {
+                collision_count++;
                 earliest_toi = toi;
             }
         }
@@ -163,8 +165,9 @@ namespace opt {
             double toi = std::numeric_limits<double>::infinity(), u, v;
             bool are_colliding = detect_face_vertex_collisions_narrow_phase(
                 bodies, poses_t0, poses_t1, fv_candidate, toi, u, v,
-                trajectory_type);
+                trajectory_type, earliest_toi);
             if (are_colliding && toi < earliest_toi) {
+                collision_count++;
                 earliest_toi = toi;
             }
         }
@@ -173,13 +176,22 @@ namespace opt {
                    edge1_alpha;
             bool are_colliding = detect_edge_edge_collisions_narrow_phase(
                 bodies, poses_t0, poses_t1, ee_candidate, toi, edge0_alpha,
-                edge1_alpha, trajectory_type);
+                edge1_alpha, trajectory_type, earliest_toi);
             if (are_colliding && toi < earliest_toi) {
+                collision_count++;
                 earliest_toi = toi;
             }
         }
 
-        return earliest_toi;
+        spdlog::info(
+            "num_candidates={:d} num_collisions={:d} percentage={:g}%",
+            candidates.size(), collision_count,
+            candidates.size() == 0
+                ? 0
+                : double(collision_count) / candidates.size() * 100);
+
+        return collision_count ? earliest_toi
+                               : std::numeric_limits<double>::infinity();
     }
 
     void DistanceBarrierConstraint::construct_active_barrier_set(

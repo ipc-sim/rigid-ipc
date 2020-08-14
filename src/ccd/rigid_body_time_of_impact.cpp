@@ -60,7 +60,8 @@ bool compute_edge_vertex_time_of_impact(
     const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     const size_t& edge_id,                 // In bodyB
-    double& toi)
+    double& toi,
+    double earliest_toi) // Only search for collision in [0, earliest_toi]
 {
     int dim = bodyA.dim();
     assert(bodyB.dim() == dim);
@@ -101,10 +102,10 @@ bool compute_edge_vertex_time_of_impact(
         bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
         edge_id);
 
+    Eigen::VectorX3I x0 =
+        Eigen::Vector2I(Interval(0, earliest_toi), Interval(0, 1));
     Eigen::VectorX3I toi_interval;
-    bool is_impacting = interval_root_finder(
-        distance, Eigen::VectorX3I::Constant(2, Interval(0, 1)), tol,
-        toi_interval);
+    bool is_impacting = interval_root_finder(distance, x0, tol, toi_interval);
 
     // Return a conservative time-of-impact
     if (is_impacting) {
@@ -173,7 +174,8 @@ bool compute_edge_edge_time_of_impact(
     const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     const size_t& edgeB_id,                // In bodyB
-    double& toi)
+    double& toi,
+    double earliest_toi) // Only search for collision in [0, earliest_toi]
 {
     int dim = bodyA.dim();
     assert(bodyB.dim() == dim);
@@ -220,13 +222,13 @@ bool compute_edge_edge_time_of_impact(
         bodyB, poseB_t0, poseB_t1, edgeB_id);
 
     Eigen::VectorX3I toi_interval;
+    Eigen::VectorX3I x0 = Eigen::Vector3I(
+        Interval(0, earliest_toi), Interval(0, 1), Interval(0, 1));
 #ifdef TIME_CCD_QUERIES
     igl::Timer timer;
     timer.start();
 #endif
-    bool is_impacting = interval_root_finder(
-        distance, Eigen::VectorX3I::Constant(3, Interval(0, 1)), tol,
-        toi_interval);
+    bool is_impacting = interval_root_finder(distance, x0, tol, toi_interval);
 #ifdef TIME_CCD_QUERIES
     timer.stop();
     std::cout << "EE " << timer.getElapsedTime() << std::endl;
@@ -291,7 +293,8 @@ bool compute_face_vertex_time_of_impact(
     const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     const size_t& face_id,                 // In bodyB
-    double& toi)
+    double& toi,
+    double earliest_toi) // Only search for collision in [0, earliest_toi]
 {
     int dim = bodyA.dim();
     assert(bodyB.dim() == dim);
@@ -349,7 +352,8 @@ bool compute_face_vertex_time_of_impact(
     timer.start();
 #endif
     bool is_impacting = interval_root_finder(
-        distance, is_point_inside_triangle, Interval(0, 1), tol, toi_interval);
+        distance, is_point_inside_triangle, Interval(0, earliest_toi), tol,
+        toi_interval);
 #ifdef TIME_CCD_QUERIES
     timer.stop();
     std::cout << "VF " << timer.getElapsedTime() << std::endl;

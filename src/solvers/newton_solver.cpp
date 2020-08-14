@@ -167,8 +167,6 @@ namespace opt {
                 break;
             }
 
-            newton_iterations++;
-
             ///////////////////////////////////////////////////////////////////
             // Line search over newton direction
             // get grad direction for lineseach
@@ -247,6 +245,7 @@ namespace opt {
             x_prev = x;
             x += step_length * direction;
             assert(!problem_ptr->has_collisions(x_prev, x));
+            newton_iterations++; // Only count complete steps
 
             post_step_update();
         } // end for loop

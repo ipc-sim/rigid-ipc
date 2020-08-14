@@ -72,7 +72,8 @@ bool detect_edge_vertex_collisions_narrow_phase(
     const EdgeVertexCandidate& ev_candidate,
     double& toi,
     double& alpha,
-    TrajectoryType trajectory = TrajectoryType::SCREWING);
+    TrajectoryType trajectory = TrajectoryType::SCREWING,
+    double earliest_toi = 1);
 
 bool detect_edge_edge_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
@@ -82,7 +83,8 @@ bool detect_edge_edge_collisions_narrow_phase(
     double& toi,
     double& edge0_alpha,
     double& edge1_alpha,
-    TrajectoryType trajectory = TrajectoryType::SCREWING);
+    TrajectoryType trajectory = TrajectoryType::SCREWING,
+    double earliest_toi = 1);
 
 bool detect_face_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
@@ -92,6 +94,7 @@ bool detect_face_vertex_collisions_narrow_phase(
     double& toi,
     double& u,
     double& v,
-    TrajectoryType trajectory = TrajectoryType::SCREWING);
+    TrajectoryType trajectory = TrajectoryType::SCREWING,
+    double earliest_toi = 1);
 
 } // namespace ccd
