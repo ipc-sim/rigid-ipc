@@ -64,6 +64,7 @@ namespace opt {
         PROFILE_POINT("collisions_detection");
         NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
 
+        PROFILE_START();
         // This function will profile itself
         Candidates candidates;
         detect_collision_candidates(
@@ -71,7 +72,6 @@ namespace opt {
             candidates, detection_method, trajectory_type,
             /*inflation_radius=*/0);
 
-        PROFILE_START();
         PROFILE_START(NARROW_PHASE)
         bool has_collisions = has_active_collisions_narrow_phase(
             bodies, poses_t0, poses_t1, candidates);
@@ -125,6 +125,7 @@ namespace opt {
         PROFILE_POINT("collisions_detection");
         NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
 
+        PROFILE_START();
         // This function will profile itself
         Candidates candidates;
         detect_collision_candidates(
@@ -132,7 +133,6 @@ namespace opt {
             candidates, detection_method, trajectory_type,
             /*inflation_radius=*/0);
 
-        PROFILE_START();
         PROFILE_START(NARROW_PHASE)
         double earliest_toi = compute_earliest_toi_narrow_phase(
             bodies, poses_t0, poses_t1, candidates);

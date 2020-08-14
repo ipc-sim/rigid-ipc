@@ -55,10 +55,8 @@ void detect_collision_candidates(
         || method == DetectionMethod::HASH_GRID);
     assert(edges.size() == 0 || edges.cols() == 2);
     assert(faces.size() == 0 || faces.cols() == 3);
-    PROFILE_POINT("collisions_detection");
-    NAMED_PROFILE_POINT("collisions_detection__broad_phase", BROAD_PHASE);
 
-    PROFILE_START();
+    NAMED_PROFILE_POINT("collisions_detection__broad_phase", BROAD_PHASE);
     PROFILE_START(BROAD_PHASE);
 
     switch (method) {
@@ -74,7 +72,6 @@ void detect_collision_candidates(
     }
 
     PROFILE_END(BROAD_PHASE);
-    PROFILE_END();
 }
 
 void detect_edge_vertex_collision_candidates_brute_force(

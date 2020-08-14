@@ -82,10 +82,8 @@ void detect_collision_candidates(
     assert(
         method == DetectionMethod::BRUTE_FORCE
         || method == DetectionMethod::HASH_GRID);
-    PROFILE_POINT("collisions_detection");
-    NAMED_PROFILE_POINT("collisions_detection__broad_phase", BROAD_PHASE);
 
-    PROFILE_START();
+    NAMED_PROFILE_POINT("collisions_detection__broad_phase", BROAD_PHASE);
     PROFILE_START(BROAD_PHASE);
 
     switch (method) {
@@ -102,7 +100,6 @@ void detect_collision_candidates(
     }
 
     PROFILE_END(BROAD_PHASE);
-    PROFILE_END();
 }
 
 // Find all edge-vertex collisions in one time step using spatial-hashing to

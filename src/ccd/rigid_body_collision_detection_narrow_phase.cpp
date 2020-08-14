@@ -27,12 +27,9 @@ void detect_collisions_from_candidates(
             V_t0, V_t1, bodies.m_edges, bodies.m_faces, candidates, impacts);
         return;
     }
-
     assert(trajectory == TrajectoryType::SCREWING);
-    PROFILE_POINT("collisions_detection");
-    NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
 
-    PROFILE_START();
+    NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
     PROFILE_START(NARROW_PHASE);
 
     auto detect_ev_collision = [&](const EdgeVertexCandidate& ev_candidate) {
@@ -87,7 +84,6 @@ void detect_collisions_from_candidates(
         });
 
     PROFILE_END(NARROW_PHASE);
-    PROFILE_END();
 }
 
 // Determine if a single edge-vertext pair intersects.
@@ -121,6 +117,9 @@ bool detect_edge_vertex_collisions_narrow_phase(
             edge_vertex0_t1, edge_vertex1_t1, vertex_t1, toi, alpha);
     }
 
+    PROFILE_POINT("detect_edge_vertex_collisions_narrow_phase");
+    PROFILE_START();
+
     assert(trajectory == TrajectoryType::SCREWING);
     long bodyA_id, vertex_id, bodyB_id, edge_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
@@ -153,6 +152,9 @@ bool detect_edge_vertex_collisions_narrow_phase(
         //     alpha > -Constants::PARAMETER_ASSERTION_TOL
         //     && alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
     }
+
+    PROFILE_END();
+
     return is_colliding;
 }
 
@@ -193,6 +195,9 @@ bool detect_edge_edge_collisions_narrow_phase(
             edge1_vertex0_t1, edge1_vertex1_t1, toi, edge0_alpha, edge1_alpha);
     }
 
+    PROFILE_POINT("detect_edge_edge_collisions_narrow_phase");
+    PROFILE_START();
+
     assert(trajectory == TrajectoryType::SCREWING);
     long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
     bodies.global_to_local_edge(candidate.edge0_index, bodyA_id, edgeA_id);
@@ -230,6 +235,9 @@ bool detect_edge_edge_collisions_narrow_phase(
         //     edge1_alpha > -Constants::PARAMETER_ASSERTION_TOL
         //     && edge1_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
     }
+
+    PROFILE_END();
+
     return is_colliding;
 }
 
@@ -270,6 +278,9 @@ bool detect_face_vertex_collisions_narrow_phase(
             toi, u, v);
     }
 
+    PROFILE_POINT("detect_face_vertex_collisions_narrow_phase");
+    PROFILE_START();
+
     assert(trajectory == TrajectoryType::SCREWING);
     long bodyA_id, vertex_id, bodyB_id, face_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
@@ -309,6 +320,9 @@ bool detect_face_vertex_collisions_narrow_phase(
             u + v + w < 1 + Constants::PARAMETER_ASSERTION_TOL
             && u + v + w > 1 - Constants::PARAMETER_ASSERTION_TOL);
     }
+
+    PROFILE_END();
+
     return is_colliding;
 }
 

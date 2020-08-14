@@ -17,16 +17,12 @@ void compute_vertices_intervals(
 {
     Interval t(0, 1);
 
-    typedef physics::Pose<Interval> PoseI;
     typedef physics::Poses<Interval> PosesI;
 
     PosesI posesI_t0 = physics::cast<double, Interval>(poses_t0);
     PosesI posesI_t1 = physics::cast<double, Interval>(poses_t1);
 
-    PosesI posesI(bodies.num_bodies());
-    tbb::parallel_for(size_t(0), bodies.num_bodies(), [&](size_t i) {
-        posesI[i] = PoseI::interpolate(posesI_t0[i], posesI_t1[i], t);
-    });
+    PosesI posesI = physics::interpolate(posesI_t0, posesI_t1, t);
 
     vertices = bodies.world_vertices(posesI);
 }

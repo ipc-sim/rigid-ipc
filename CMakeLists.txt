@@ -33,6 +33,7 @@ include(Autogen)
 include(Warnings)
 include(UseColors)
 include(${PROJECT_NAME}Dependencies)
+mark_as_advanced(CLEAR CMAKE_BUILD_TYPE)
 
 ################################################################################
 # Fixing Collisions Library

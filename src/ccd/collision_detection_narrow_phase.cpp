@@ -26,10 +26,7 @@ void detect_collisions_from_candidates(
     const Candidates& candidates,
     ConcurrentImpacts& impacts)
 {
-    PROFILE_POINT("collisions_detection");
     NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
-
-    PROFILE_START();
     PROFILE_START(NARROW_PHASE);
 
     auto detect_ev_collision = [&](const EdgeVertexCandidate& ev_candidate) {
@@ -113,7 +110,6 @@ void detect_collisions_from_candidates(
         });
 
     PROFILE_END(NARROW_PHASE);
-    PROFILE_END();
 }
 
 // Determine if a single edge-vertext pair intersects.
