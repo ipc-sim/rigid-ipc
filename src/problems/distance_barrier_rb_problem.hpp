@@ -114,7 +114,13 @@ namespace opt {
             return init_bbox_diagonal;
         }
 
-        /// Get the length of the diagonal of the worlds bounding box
+        /// Get the mass matrix
+        Eigen::DiagonalMatrixXd mass_matrix() const override
+        {
+            return m_assembler.m_rb_mass_matrix;
+        }
+
+        /// Get the average mass (average of mass matrix diagonal)
         double average_mass() const override
         {
             return m_assembler.average_mass;

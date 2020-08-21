@@ -43,7 +43,7 @@ namespace Constants {
     /// \brief Default tolerance used for interval root finding.
     static const int INTERVAL_ROOT_FINDER_MAX_ITERATIONS = 10000;
 
-    /// \breif Scaling of κ_min to better condition the system
+    /// \brief Scaling of κ_min to better condition the system
 #ifdef USE_DISTANCE_SQUARED
     static const double MIN_BARRIER_STIFFNESS_SCALE = 1e11;
 #else

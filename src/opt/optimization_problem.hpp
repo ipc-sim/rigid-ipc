@@ -68,6 +68,9 @@ namespace opt {
         /// Get the length of the diagonal of the worlds bounding box
         virtual double world_bbox_diagonal() const = 0;
 
+        /// Get the mass matrix
+        virtual Eigen::DiagonalMatrixXd mass_matrix() const = 0;
+
         /// Get the average mass
         virtual double average_mass() const = 0;
 

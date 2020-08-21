@@ -191,6 +191,12 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
             throw ccd::NotImplementedError("no world bbox diagonal");
         }
 
+        Eigen::DiagonalMatrixXd mass_matrix() const override
+        {
+            Eigen::DiagonalMatrixXd I(NUM_VARS);
+            I.setIdentity();
+            return I;
+        }
         double average_mass() const override { return 1; }
 
         double timestep() const override { return 1; }
