@@ -108,6 +108,7 @@ namespace physics {
         // Settings
         // --------------------------------------------------------------------
         double coefficient_restitution; ///< Coefficent of resitution
+        double coefficient_friction;    ///< Coefficent of friction
         Eigen::VectorXd gravity;        ///< Acceleration due to gravity
         double collision_eps; ///< Scale trajectory for early collision
 

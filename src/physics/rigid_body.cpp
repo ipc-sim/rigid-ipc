@@ -136,6 +136,8 @@ namespace physics {
             this->vertices = this->vertices * R0; // R₀ᵀ * V₀ᵀ = V₀ * R₀
             // ω = R₀ᵀω₀ (ω₀ expressed in body coordinates)
             this->velocity.rotation = R0.transpose() * this->velocity.rotation;
+            Eigen::Matrix3d Q_t0 = this->pose.construct_rotation_matrix();
+            this->Qdot = Q_t0 * Eigen::Hat(this->velocity.rotation);
             // τ = R₀ᵀτ₀ (τ₀ expressed in body coordinates)
             this->force.rotation = R0.transpose() * this->force.rotation;
         } else {

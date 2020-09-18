@@ -179,6 +179,8 @@ namespace physics {
         /// @brief previous timestep velocity of the center of mass
         Pose<double> velocity_prev;
 
+        Eigen::MatrixXX3d Qdot;
+
         /// @brief external force acting on the body
         Pose<double> force;
     };

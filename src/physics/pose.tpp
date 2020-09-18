@@ -139,8 +139,11 @@ namespace physics {
             T sinc_angle = sinc_normx(rotation);
             T sinc_half_angle = sinc_normx((rotation / T(2.0)).eval());
             Eigen::Matrix3<T> K = Eigen::Hat(rotation);
-            return Eigen::Matrix3<T>::Identity() + sinc_angle * K
-                + 0.5 * sinc_half_angle * sinc_half_angle * K * K;
+            Eigen::Matrix3<T> K2 = K * K;
+            Eigen::Matrix3<T> R =
+                sinc_angle * K + 0.5 * sinc_half_angle * sinc_half_angle * K2;
+            R.diagonal().array() += T(1.0);
+            return R;
         }
     }
 

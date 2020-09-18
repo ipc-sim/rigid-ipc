@@ -152,6 +152,20 @@ namespace opt {
             bool compute_grad = true,
             bool compute_hess = true) override;
 
+        Eigen::MatrixXd rigid_dof_to_vertices(
+            const Eigen::VectorXd& x,
+            Eigen::MatrixXd& jac,
+            std::vector<Eigen::MatrixXd>& hess,
+            bool compute_jac,
+            bool compute_hess);
+
+        double compute_friction_term(
+            const Eigen::VectorXd& x,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
+            bool compute_grad = true,
+            bool compute_hess = true);
+
         // Include thes lines to avoid issues with overriding inherited
         // functions with the same name.
         // (http://www.cplusplus.com/forum/beginner/24978/)
@@ -260,6 +274,14 @@ namespace opt {
             bool compute_grad,
             bool compute_hess);
 
+        double compute_friction_term(
+            const Eigen::VectorXd& x,
+            const Candidates& distance_candidates,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
+            bool compute_grad,
+            bool compute_hess);
+
 #ifdef WITH_DERIVATIVE_CHECK
         // The following functions are used exclusivly to check that the
         // gradient and hessian match a finite difference version.
@@ -272,13 +294,18 @@ namespace opt {
             const Eigen::VectorXd& sigma, const Candidate& candidate);
 
         void check_grad_barrier(
-            const Eigen::VectorXd& sigma,
-            const Candidates& candidates,
-            const Eigen::VectorXd& grad);
+            const Eigen::VectorXd& sigma, const Candidates& candidates);
         void check_hess_barrier(
+            const Eigen::VectorXd& sigma, const Candidates& candidates);
+
+        void check_grad_friction(
             const Eigen::VectorXd& sigma,
             const Candidates& candidates,
             const Eigen::VectorXd& grad);
+        void check_hess_friction(
+            const Eigen::VectorXd& sigma,
+            const Candidates& candidates,
+            const Eigen::SparseMatrix<double>& hess);
 #endif
 
         /// @brief Constraint helper for active set and collision detection.
@@ -297,6 +324,10 @@ namespace opt {
 
         /// @brief Did the step have collisions?
         bool m_had_collisions;
+
+        // Friction
+        double static_friction_speed_bound;
+        int friction_iterations;
     };
 
 } // namespace opt

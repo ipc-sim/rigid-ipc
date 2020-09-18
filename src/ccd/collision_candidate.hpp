@@ -1,10 +1,18 @@
 #pragma once
 
+#include <spatial_hash/collision_candidate.hpp>
+
 #include <string>
 #include <vector>
 
 namespace ccd {
 
+using ipc::Candidates;
+using ipc::EdgeEdgeCandidate;
+using ipc::EdgeFaceCandidate;
+using ipc::EdgeVertexCandidate;
+using ipc::FaceVertexCandidate;
+/*
 struct EdgeVertexCandidate {
     EdgeVertexCandidate(long edge_index, long vertex_index);
 
@@ -74,5 +82,5 @@ struct Candidates {
         fv_candidates.clear();
     }
 };
-
+*/
 } // namespace ccd

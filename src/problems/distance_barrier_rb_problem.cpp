@@ -1,5 +1,24 @@
 #include "distance_barrier_rb_problem.hpp"
 
+// IPC Toolkit
+namespace Eigen {
+template <typename DerivedA, typename DerivedB>
+auto cross(const MatrixBase<DerivedA>& a, const MatrixBase<DerivedB>& b)
+{
+    assert(a.size() == 3 && b.size() == 3);
+    Eigen::Matrix<
+        typename DerivedA::Scalar, DerivedA::RowsAtCompileTime,
+        DerivedA::ColsAtCompileTime>
+        c(a.rows(), a.cols());
+    c(0) = a(1) * b(2) - a(2) * b(1);
+    c(1) = a(2) * b(0) - a(0) * b(2);
+    c(2) = a(0) * b(1) - a(1) * b(0);
+    return c;
+}
+} // namespace Eigen
+#include <distance/edge_edge_mollifier.hpp>
+#include <friction/friction.hpp>
+
 #include <finitediff.hpp>
 
 #include <constants.hpp>
@@ -18,6 +37,8 @@ namespace opt {
         : m_barrier_stiffness(1)
         , min_distance(-1)
         , m_had_collisions(false)
+        , static_friction_speed_bound(1e-3)
+        , friction_iterations(1)
     {
     }
 
@@ -33,6 +54,12 @@ namespace opt {
             m_opt_solver->inner_solver().settings(
                 params[m_opt_solver->inner_solver().name()]);
         }
+
+        // Friction
+        static_friction_speed_bound =
+            params["friction_constraints"]["static_friction_speed_bound"];
+        friction_iterations = params["friction_constraints"]["iterations"];
+
         RigidBodyProblem::settings(params["rigid_body_problem"]);
     }
 
@@ -217,7 +244,9 @@ namespace opt {
             Eigen::Matrix3<T> Q = pose.construct_rotation_matrix();
             Eigen::Matrix3d Q_t0 = body.pose.construct_rotation_matrix();
 
-            Eigen::Matrix3d Qdot_t0 = Q_t0 * Eigen::Hat(body.velocity.rotation);
+            // Eigen::Matrix3d Qdot_t0 = Q_t0 *
+            // Eigen::Hat(body.velocity.rotation);
+            Eigen::Matrix3d Qdot_t0 = body.Qdot;
 
             const Eigen::VectorX3d& I = body.moment_of_inertia;
             Eigen::DiagonalMatrix<T, 3> J(
@@ -278,10 +307,10 @@ namespace opt {
 
 #ifdef WITH_DERIVATIVE_CHECK
         if (compute_grad) {
-            check_grad_barrier(x, candidates, grad);
+            check_grad_barrier(x, candidates);
         }
         if (compute_hess) {
-            check_hess_barrier(x, candidates, grad);
+            check_hess_barrier(x, candidates);
         }
 #endif
 
@@ -301,7 +330,20 @@ namespace opt {
             }
         }
 #endif
-        return Bx;
+
+        Eigen::VectorXd grad_f;
+        Eigen::SparseMatrix<double> hess_f;
+        double Fx = compute_friction_term(
+            x, grad_f, hess_f, compute_grad, compute_hess);
+
+        if (compute_grad) {
+            grad += grad_f;
+        }
+        if (compute_hess) {
+            hess += hess_f;
+        }
+
+        return Bx + Fx;
     }
 
     // Convert from a local hessian to the triplets in the global hessian
@@ -439,6 +481,213 @@ namespace opt {
         }
 
         return Bx;
+    }
+
+    // Compute the derivatives of the function that maps from rigid body DOF
+    // to vertex positions.
+    Eigen::MatrixXd DistanceBarrierRBProblem::rigid_dof_to_vertices(
+        const Eigen::VectorXd& x,
+        Eigen::MatrixXd& jac,
+        std::vector<Eigen::MatrixXd>& hess,
+        bool compute_jac,
+        bool compute_hess)
+    {
+        // V: Rᵐ ↦ Rⁿ (vertices flattened rowwise)
+        int m = x.size();
+        int n = m_assembler.num_vertices() * dim();
+
+        // Activate autodiff with the correct number of variables
+        typedef AutodiffType<Eigen::Dynamic> Diff;
+        Diff::activate(m);
+
+        if (compute_hess) {
+            Diff::D2MatrixXd V_diff = m_assembler.world_vertices(
+                this->dofs_to_poses(Diff::d2vars(0, x)));
+
+            Eigen::MatrixXd V(V_diff.rows(), V_diff.cols());
+            // ∇ V(x): Rᵐ ↦ Rⁿˣᵐ
+            jac.resize(n, m);
+            // ∇²V(x): Rᵐ ↦ Rⁿˣᵐˣᵐ
+            hess.reserve(n);
+
+            for (int i = 0; i < V.rows(); i++) {
+                for (int j = 0; j < V.cols(); j++) {
+                    V(i, j) = V_diff(i, j).getValue();
+                    jac.row(i * V.cols() + j) = V_diff(i, j).getGradient();
+                    hess.push_back(V_diff(i, j).getHessian());
+                }
+            }
+
+            return V;
+        } else if (compute_jac) {
+            Diff::D1MatrixXd V_diff = m_assembler.world_vertices(
+                this->dofs_to_poses(Diff::d1vars(0, x)));
+
+            Eigen::MatrixXd V(V_diff.rows(), V_diff.cols());
+            // ∇ V(x): Rᵐ ↦ Rⁿˣᵐ
+            jac.resize(n, m);
+
+            for (int i = 0; i < V.rows(); i++) {
+                for (int j = 0; j < V.cols(); j++) {
+                    V(i, j) = V_diff(i, j).getValue();
+                    jac.row(i * V.cols() + j) = V_diff(i, j).getGradient();
+                }
+            }
+
+            return V;
+        } else {
+            return m_assembler.world_vertices(this->dofs_to_poses(x));
+        }
+    }
+
+    double DistanceBarrierRBProblem::compute_friction_term(
+        const Eigen::VectorXd& x,
+        Eigen::VectorXd& grad,
+        Eigen::SparseMatrix<double>& hess,
+        bool compute_grad,
+        bool compute_hess)
+    {
+        if (coefficient_friction == 0) {
+            grad.setZero(x.size());
+            hess = Eigen::SparseMatrix<double>(x.size(), x.size());
+            return 0;
+        }
+
+        NAMED_PROFILE_POINT("compute_friction__update_constraints", UPDATE)
+        PROFILE_START(UPDATE)
+        physics::Poses<double> poses = this->dofs_to_poses(x);
+        Candidates candidates;
+        m_constraint.construct_active_barrier_set(
+            m_assembler, poses, candidates);
+        PROFILE_END(UPDATE)
+
+        NAMED_PROFILE_POINT("compute_friction__compute_constraints", COMPUTE)
+        PROFILE_START(COMPUTE)
+        double friction_potential = compute_friction_term(
+            x, candidates, grad, hess, compute_grad, compute_hess);
+        PROFILE_END(COMPUTE)
+
+#ifdef WITH_DERIVATIVE_CHECK
+        if (compute_grad) {
+            check_grad_friction(x, candidates, grad);
+        }
+        if (compute_hess) {
+            check_hess_friction(x, candidates, hess);
+        }
+#endif
+
+#ifndef NDEBUG
+        // Make sure nothing went wrong
+        if (compute_grad) {
+            for (int i = 0; i < grad.size(); i++) {
+                assert(std::isfinite(grad(i)));
+            }
+        }
+        if (compute_hess) {
+            typedef Eigen::SparseMatrix<double>::InnerIterator Iterator;
+            for (int k = 0; k < hess.outerSize(); ++k) {
+                for (Iterator it(hess, k); it; ++it) {
+                    assert(std::isfinite(it.value()));
+                }
+            }
+        }
+#endif
+
+        return friction_potential;
+    }
+
+    double DistanceBarrierRBProblem::compute_friction_term(
+        const Eigen::VectorXd& x,
+        const Candidates& distance_candidates,
+        Eigen::VectorXd& grad,
+        Eigen::SparseMatrix<double>& hess,
+        bool compute_grad,
+        bool compute_hess)
+    {
+        Eigen::MatrixXd V0 = m_assembler.world_vertices(poses_t0);
+
+        Eigen::MatrixXd jac_g;
+        std::vector<Eigen::MatrixXd> hess_g;
+        Eigen::MatrixXd V = rigid_dof_to_vertices(
+            x, jac_g, hess_g, compute_grad || compute_hess, compute_hess);
+
+        // Candidates to constraints
+        ipc::Constraints constraints;
+        for (const auto& ev_candidate : distance_candidates.ev_candidates) {
+            constraints.ev_constraints.emplace_back(ev_candidate);
+        }
+        for (const auto& ee_candidate : distance_candidates.ee_candidates) {
+            const auto& e00 =
+                V.row(m_assembler.m_edges(ee_candidate.edge0_index, 0));
+            const auto& e01 =
+                V.row(m_assembler.m_edges(ee_candidate.edge0_index, 1));
+            const auto& e10 =
+                V.row(m_assembler.m_edges(ee_candidate.edge1_index, 0));
+            const auto& e11 =
+                V.row(m_assembler.m_edges(ee_candidate.edge1_index, 1));
+
+            if (Eigen::cross(e01 - e00, e11 - e10).norm() > 1e-4 && false) {
+                double eps_x =
+                    ipc::edge_edge_mollifier_threshold(e00, e01, e10, e11);
+                constraints.ee_constraints.emplace_back(ee_candidate, eps_x);
+            }
+        }
+        for (const auto& fv_candidate : distance_candidates.fv_candidates) {
+            constraints.fv_constraints.emplace_back(fv_candidate);
+        }
+
+        // Contact constraints to friction constraints
+        // TODO: Combine all these varaibles into the constraint set
+        ipc::Constraints friction_constraint_set;
+        std::vector<Eigen::VectorXd> closest_points;
+        std::vector<Eigen::MatrixXd> tangent_bases;
+        Eigen::VectorXd normal_force_magnitudes;
+        ipc::compute_friction_bases(
+            V0, m_assembler.m_edges, m_assembler.m_faces, constraints,
+            barrier_activation_distance(), barrier_stiffness(),
+            friction_constraint_set, closest_points, tangent_bases,
+            normal_force_magnitudes);
+
+        // Compute the surface friction potential
+        double f = compute_friction_potential(
+            V0, V, m_assembler.m_edges, m_assembler.m_faces,
+            friction_constraint_set, closest_points, tangent_bases,
+            normal_force_magnitudes, static_friction_speed_bound * timestep(),
+            coefficient_friction);
+
+        Eigen::VectorXd grad_f;
+        if (compute_grad || compute_hess) {
+            // The gradient is also needed for the full hessian
+            grad_f = compute_friction_potential_gradient(
+                V0, V, m_assembler.m_edges, m_assembler.m_faces,
+                friction_constraint_set, closest_points, tangent_bases,
+                normal_force_magnitudes,
+                static_friction_speed_bound * timestep(), coefficient_friction);
+        }
+
+        Eigen::SparseMatrix<double> hess_f;
+        if (compute_hess) {
+            hess_f = compute_friction_potential_hessian(
+                V0, V, m_assembler.m_edges, m_assembler.m_faces,
+                friction_constraint_set, closest_points, tangent_bases,
+                normal_force_magnitudes,
+                static_friction_speed_bound * timestep(), coefficient_friction);
+        }
+
+        // Apply the chain rule
+        if (compute_grad) {
+            // ∇ₓf(g(x)) = ∇ᵤf(u=g(x)) * ∇ₓg(x)
+            grad = jac_g.transpose() * grad_f; // grad = [∇ₓf(g(x))]ᵀ
+        }
+        if (compute_hess) {
+            Eigen::MatrixXd dense_hess = jac_g.transpose() * hess_f * jac_g;
+            for (int i = 0; i < hess_g.size(); i++) {
+                dense_hess += hess_g[i] * grad_f[i];
+            }
+            hess = dense_hess.sparseView();
+        }
+
+        return f;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -797,9 +1046,7 @@ namespace opt {
     }
 
     void DistanceBarrierRBProblem::check_grad_barrier(
-        const Eigen::VectorXd& sigma,
-        const Candidates& candidates,
-        const Eigen::VectorXd& grad)
+        const Eigen::VectorXd& sigma, const Candidates& candidates)
     {
         // Compute the finite difference of a single constraint
         for (const auto& ev : candidates.ev_candidates) {
@@ -817,9 +1064,7 @@ namespace opt {
     }
 
     void DistanceBarrierRBProblem::check_hess_barrier(
-        const Eigen::VectorXd& sigma,
-        const Candidates& candidates,
-        const Eigen::VectorXd& grad)
+        const Eigen::VectorXd& sigma, const Candidates& candidates)
     {
         // Compute the finite difference of a single constraint
         for (const auto& ev : candidates.ev_candidates) {
@@ -834,6 +1079,101 @@ namespace opt {
             check_distance_finite_hessian<
                 FaceVertexCandidate, RigidBodyFaceVertexCandidate>(sigma, fv);
         }
+    }
+
+    void DistanceBarrierRBProblem::check_grad_friction(
+        const Eigen::VectorXd& sigma,
+        const Candidates& candidates,
+        const Eigen::VectorXd& grad)
+    {
+        auto f = [&](const Eigen::VectorXd& x) {
+            Eigen::VectorXd grad_f;
+            Eigen::SparseMatrix<double> hess_f;
+            return compute_friction_term(
+                x, candidates, grad_f, hess_f,
+                /*compute_grad=*/false, /*compute_hess=*/false);
+        };
+        Eigen::VectorXd grad_approx;
+        fd::finite_gradient(sigma, f, grad_approx);
+        if (!fd::compare_gradient(grad, grad_approx)) {
+            spdlog::error("finite gradient check failed for friction");
+        }
+
+        // TODO: Enable autodiff checks
+        // typedef AutodiffType<Eigen::Dynamic> Diff;
+        // Diff::activate(x.size());
+        // Diff::D1MatrixXd V_diff =
+        //     m_assembler.world_vertices(this->dofs_to_poses(Diff::d1vars(0,
+        //     x)));
+        //
+        // Diff::DDouble1 f_diff = compute_friction_potential(
+        //     V0, V_diff, m_assembler.m_edges, m_assembler.m_faces,
+        //     friction_constraint_set, closest_points, tangent_bases,
+        //     normal_force_magnitudes, epsv * timestep(),
+        //     coefficient_friction);
+        //
+        // if (std::isfinite(f_diff.getGradient().sum())
+        //     && !fd::compare_gradient(grad, f_diff.getGradient())) {
+        //     spdlog::error("autodiff gradient check failed for friction");
+        // }
+    }
+
+    void DistanceBarrierRBProblem::check_hess_friction(
+        const Eigen::VectorXd& sigma,
+        const Candidates& candidates,
+        const Eigen::SparseMatrix<double>& hess)
+    {
+        // Finite differences breaks when the displacements are zero.
+        if ((m_assembler.world_vertices(this->dofs_to_poses(sigma))
+             - m_assembler.world_vertices(poses_t0))
+                .template lpNorm<Eigen::Infinity>()
+            == 0) {
+            return;
+        }
+
+        Eigen::MatrixXd dense_hess(hess);
+
+        auto f = [&](const Eigen::VectorXd& x) {
+            Eigen::VectorXd grad_f;
+            Eigen::SparseMatrix<double> hess_f;
+            return compute_friction_term(
+                x, candidates, grad_f, hess_f,
+                /*compute_grad=*/false, /*compute_hess=*/false);
+        };
+        Eigen::MatrixXd hess_approx;
+        // fd::finite_hessian(sigma, f, hess_approx, 1e-3);
+        // if (!fd::compare_hessian(hess, hess_approx)) {
+        fd::finite_hessian(sigma, f, hess_approx);
+        if (!fd::compare_hessian(hess, hess_approx)) {
+            spdlog::error(
+                "finite hessian check failed for friction "
+                "(hess_L_inf_norm={} diff_L_inf_norm={})",
+                Eigen::MatrixXd(dense_hess).lpNorm<Eigen::Infinity>(),
+                (hess_approx - dense_hess).lpNorm<Eigen::Infinity>());
+        }
+
+        // TODO: Enable autodiff checks
+        // typedef AutodiffType<Eigen::Dynamic> Diff;
+        // Diff::activate(x.size());
+        // Diff::D2MatrixXd V_diff =
+        //     m_assembler.world_vertices(this->dofs_to_poses(Diff::d2vars(0,
+        //     x)));
+        //
+        // Diff::DDouble2 f_diff = compute_friction_potential(
+        //     V0, V_diff, m_assembler.m_edges, m_assembler.m_faces,
+        //     friction_constraint_set, closest_points, tangent_bases,
+        //     normal_force_magnitudes, epsv * timestep(),
+        //     coefficient_friction);
+        //
+        // if (std::isfinite(f_diff.getHessian().sum())
+        //     && fd::compare_hessian(dense_hess, f_diff.getHessian())) {
+        //     spdlog::error(
+        //         "autodiff hessian check failed for friction "
+        //         "(hess_L_inf_norm={} diff_L_inf_norm={})",
+        //         Eigen::MatrixXd(dense_hess).lpNorm<Eigen::Infinity>(),
+        //         (f_diff.getHessian() -
+        //         dense_hess).lpNorm<Eigen::Infinity>());
+        // }
     }
 #endif
 

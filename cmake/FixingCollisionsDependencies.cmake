@@ -133,8 +133,15 @@ if(NOT TARGET gif_h::gif_h)
   add_library(gif_h::gif_h ALIAS gif_h)
 endif()
 
-# Linear Solvers
+# Polysolve for Linear Solver Wrapper
 if(NOT TARGET polysolve)
   fixing_collisions_download_polysolve()
   add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/polysolve)
+endif()
+
+# IPC Toolkit
+if(NOT TARGET IPCToolkit)
+  fixing_collisions_download_ipc_toolkit()
+  set(IPC_TOOLKIT_BUILD_UNIT_TESTS OFF CACHE BOOL " " FORCE)
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/ipc-toolkit)
 endif()

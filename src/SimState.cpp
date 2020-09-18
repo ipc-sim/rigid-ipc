@@ -103,6 +103,7 @@ bool SimState::init(const nlohmann::json& args_in)
         "rigid_body_problem": {
             "rigid_bodies": [],
             "coefficient_restitution": 0.0,
+            "coefficient_friction": 0.0,
             "gravity": [0.0, 0.0, 0.0],
             "collision_eps": 0.0,
             "time_stepper": "default"
@@ -146,6 +147,10 @@ bool SimState::init(const nlohmann::json& args_in)
             "min_distance": 0.0,
             "active_constraint_scale": 1.01,
             "barrier_type": "poly_log"
+        },
+        "friction_constraints": {
+            "static_friction_speed_bound": 1e-3,
+            "iterations": 1
         },
         "volume_constraint": {
             "detection_method": "hash_grid",

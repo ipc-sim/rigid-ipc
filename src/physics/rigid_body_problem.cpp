@@ -22,6 +22,7 @@ namespace physics {
 
     RigidBodyProblem::RigidBodyProblem()
         : coefficient_restitution(0)
+        , coefficient_friction(0)
         , collision_eps(2)
         , m_timestep(0.01)
     {
@@ -33,6 +34,16 @@ namespace physics {
         collision_eps = params["collision_eps"].get<double>();
         coefficient_restitution =
             params["coefficient_restitution"].get<double>();
+        coefficient_friction = params["coefficient_friction"].get<double>();
+        if (coefficient_friction < 0 || coefficient_friction > 1) {
+            spdlog::warn(
+                "coefficient of friction (μ={:g}) is outside the standard "
+                "[0, 1]",
+                coefficient_friction);
+        } else if (coefficient_friction == 0) {
+            spdlog::info(
+                "disabling friction because coefficient of friction is zero");
+        }
 
         std::vector<physics::RigidBody> rbs;
         io::read_rb_scene(params, rbs);
@@ -55,6 +66,7 @@ namespace physics {
 
         json["collision_eps"] = collision_eps;
         json["coefficient_restitution"] = coefficient_restitution;
+        json["coefficient_friction"] = coefficient_friction;
         json["gravity"] = io::to_json(gravity);
         json["time_stepper"] = m_time_stepper->name();
         return json;
@@ -235,15 +247,16 @@ namespace physics {
 
                     // Q̇ = Q[ω]
                     // Q̇ᵗ = (Qᵗ - Qᵗ⁻¹) / h
-                    // Eigen::Matrix3d Q = rb.pose.construct_rotation_matrix();
-                    // Eigen::Matrix3d Qdot =
-                    //     (Q - rb.pose_prev.construct_rotation_matrix())
-                    //     / timestep();
+                    Eigen::Matrix3d Q = rb.pose.construct_rotation_matrix();
+                    Eigen::Matrix3d Qdot =
+                        (Q - rb.pose_prev.construct_rotation_matrix())
+                        / timestep();
                     // Eigen::Matrix3d omega_hat = Q.transpose() * Qdot;
                     // std::cout << omega_hat << std::endl << std::endl;
                     // rb.velocity.rotation.x() = omega_hat(2, 1);
                     // rb.velocity.rotation.y() = omega_hat(0, 2);
                     // rb.velocity.rotation.z() = omega_hat(1, 0);
+                    rb.Qdot = Qdot;
                 }
                 rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
             });

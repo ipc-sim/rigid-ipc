@@ -131,35 +131,35 @@ Eigen::Vector3d compute_edge_edge_tolerance(
     const size_t& edgeB_id)                // In bodyB
 {
     // TODO: This is not exactly the arc length of the trajectory
-    // Eigen::Matrix3d RA_t0, PA;
-    // double omegaA;
-    // decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
-    // Eigen::Matrix3d RA = PA * RA_t0;
-    //
-    // Eigen::Matrix3d RB_t0, PB;
-    // double omegaB;
-    // decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
-    // Eigen::Matrix3d RB = PB * RB_t0;
-    //
-    // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    // double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-    //
-    // double dl = -std::numeric_limits<double>::infinity();
-    // Eigen::Vector3d v;
-    // double radius_sqr;
-    // for (int i = 0; i < 2; i++) {
-    //     v = bodyA.vertices.row(bodyA.edges(edgeA_id, i));
-    //     radius_sqr = (RA * v).head<2>().squaredNorm();
-    //     dl = std::max(dl, sqrt(sA_sqr + omegaA * omegaA * radius_sqr));
-    //
-    //     v = bodyB.vertices.row(bodyB.edges(edgeB_id, i));
-    //     radius_sqr = (RB * v).head<2>().squaredNorm();
-    //     dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
-    // }
+    Eigen::Matrix3d RA_t0, PA;
+    double omegaA;
+    decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
+    Eigen::Matrix3d RA = PA * RA_t0;
+
+    Eigen::Matrix3d RB_t0, PB;
+    double omegaB;
+    decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
+    Eigen::Matrix3d RB = PB * RB_t0;
+
+    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
+    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
+
+    double dl = -std::numeric_limits<double>::infinity();
+    Eigen::Vector3d v;
+    double radius_sqr;
+    for (int i = 0; i < 2; i++) {
+        v = bodyA.vertices.row(bodyA.edges(edgeA_id, i));
+        radius_sqr = (RA * v).head<2>().squaredNorm();
+        dl = std::max(dl, sqrt(sA_sqr + omegaA * omegaA * radius_sqr));
+
+        v = bodyB.vertices.row(bodyB.edges(edgeB_id, i));
+        radius_sqr = (RB * v).head<2>().squaredNorm();
+        dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
+    }
 
     return Eigen::Vector3d(
-        // Constants::SCREWING_CCD_LENGTH_TOL / dl,
-        Constants::SCREWING_CCD_LENGTH_TOL,
+        Constants::SCREWING_CCD_LENGTH_TOL / dl,
+        // 1e-3, //
         Constants::SCREWING_CCD_LENGTH_TOL / bodyA.edge_length(edgeA_id),
         Constants::SCREWING_CCD_LENGTH_TOL / bodyB.edge_length(edgeB_id));
 }
@@ -256,31 +256,31 @@ double compute_face_vertex_tolerance(
     const size_t& face_id)                 // In bodyB
 {
     // TODO: This is not exactly the arc length of the trajectory
-    // Eigen::Matrix3d RA_t0, PA;
-    // double omegaA;
-    // decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
-    // Eigen::Matrix3d RA = PA * RA_t0;
-    //
-    // Eigen::Matrix3d RB_t0, PB;
-    // double omegaB;
-    // decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
-    // Eigen::Matrix3d RB = PB * RB_t0;
-    //
-    // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    // double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-    //
-    // Eigen::Vector3d v = bodyA.vertices.row(vertex_id);
-    // double radius_sqr = (RA * v).head<2>().squaredNorm();
-    // double dl = sqrt(sA_sqr + omegaA * omegaA * v.squaredNorm());
-    //
-    // for (int i = 0; i < 3; i++) {
-    //     v = bodyB.vertices.row(bodyB.faces(face_id, i));
-    //     radius_sqr = (RB * v).head<2>().squaredNorm();
-    //     dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
-    // }
-    //
-    // return Constants::SCREWING_CCD_LENGTH_TOL / dl;
-    return Constants::SCREWING_CCD_LENGTH_TOL;
+    Eigen::Matrix3d RA_t0, PA;
+    double omegaA;
+    decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
+    Eigen::Matrix3d RA = PA * RA_t0;
+
+    Eigen::Matrix3d RB_t0, PB;
+    double omegaB;
+    decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
+    Eigen::Matrix3d RB = PB * RB_t0;
+
+    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
+    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
+
+    Eigen::Vector3d v = bodyA.vertices.row(vertex_id);
+    double radius_sqr = (RA * v).head<2>().squaredNorm();
+    double dl = sqrt(sA_sqr + omegaA * omegaA * v.squaredNorm());
+
+    for (int i = 0; i < 3; i++) {
+        v = bodyB.vertices.row(bodyB.faces(face_id, i));
+        radius_sqr = (RB * v).head<2>().squaredNorm();
+        dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
+    }
+
+    return Constants::SCREWING_CCD_LENGTH_TOL / dl;
+    // return 1e-3;
 }
 
 // Find time-of-impact between two rigid bodies

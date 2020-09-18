@@ -66,7 +66,7 @@ endfunction()
 function(fixing_collisions_download_finite_diff)
      fixing_collisions_download_project(finite-diff
         GIT_REPOSITORY https://github.com/zfergus/finite-diff.git
-        GIT_TAG        58d908b3a82b551bc6b237411817da5a8a52d500
+        GIT_TAG        dac4e629defb0edef050e56050eefb00574ecbaa
     )
 endfunction()
 
@@ -97,7 +97,7 @@ endfunction()
 function(fixing_collisions_download_rational_ccd)
   fixing_collisions_download_project(rational_ccd
     GIT_REPOSITORY https://github.com/teseoch/Exact-CDD.git
-    GIT_TAG        01d933b1a7d215fa8cdcc6998f9e60d9804b7354
+    GIT_TAG        63fdb92b917c8d7349c9403656f1497df6fa6ce5
   )
 endfunction()
 
@@ -117,10 +117,18 @@ function(fixing_collisions_download_gif_h)
   )
 endfunction()
 
-# Linear Solvers
+# Polysolve for Linear Solver Wrapper
 function(fixing_collisions_download_polysolve)
   fixing_collisions_download_project(polysolve
     GIT_REPOSITORY https://github.com/polyfem/polysolve.git
     GIT_TAG        23ccf9487772ab1b9554a78d8808179d1b3286a0
+  )
+endfunction()
+
+# IPC Toolkit
+function(fixing_collisions_download_ipc_toolkit)
+  fixing_collisions_download_project(ipc-toolkit
+    GIT_REPOSITORY https://github.com/ipc-sim/ipc-toolkit.git
+    GIT_TAG        521366a6c6c756e4f92c55d6514654376d9b494e
   )
 endfunction()

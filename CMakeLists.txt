@@ -206,6 +206,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC polysolve)
 # tinyxml2
 target_link_libraries(${PROJECT_NAME} PUBLIC tinyxml2::tinyxml2)
 
+# IPC Toolkit
+target_link_libraries(${PROJECT_NAME} PUBLIC IPCToolkit)
+
 ################################################################################
 # Compiler options
 ################################################################################

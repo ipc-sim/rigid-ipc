@@ -1,7 +1,7 @@
 #include "collision_candidate.hpp"
 
 #include <fmt/format.h>
-
+/*
 namespace ccd {
 
 EdgeVertexCandidate::EdgeVertexCandidate(long edge_index, long vertex_index)
@@ -88,3 +88,4 @@ bool FaceVertexCandidate::operator<(const FaceVertexCandidate& other) const
 }
 
 } // namespace ccd
+*/

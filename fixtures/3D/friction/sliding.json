@@ -9,16 +9,18 @@
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "coefficient_friction": 1,
+        "coefficient_friction": 1.0,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "cube.obj",
-            "position": [-1.5, 2, 0]
+            "position": [-3, 0, 0],
+            "linear_velocity": [10, 0, 0]
         }, {
             "mesh": "plane.obj",
             "is_dof_fixed": true,
-            "position": [0, -1, 0],
-            "rotation": [0, 0, -15]
+            "position": [5, -0.51, -3],
+            "rotation": [0, 0, 0],
+            "scale": [2, 1, 1]
         }]
     }
 }

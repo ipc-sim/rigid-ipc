@@ -110,10 +110,32 @@ namespace opt {
             spdlog::info(
                 "solver={} iter={:d} step_max_speed={:g} tol={:g}", //
                 name(), iteration_number, step_max_speed, tol);
+
+            double newton_step_energy = abs(gradient_free.dot(direction_free));
+            double gradient_step_energy = abs(gradient_free.dot(gradient_free));
+            double gradient_mass_step_energy =
+                abs(grad_direction.transpose() * problem_ptr->mass_matrix()
+                    * grad_direction);
+
+            std::cout << fmt::format(
+                             "{},{:d},{:g},{:g},{:g},{:g},{:g},{:g},{:g}",
+                             step_max_speed <= tol ? "GREP_CONV" : "GREP_NCONV",
+                             iteration_number, step_max_speed,
+                             sqrt(newton_step_energy),
+                             sqrt(gradient_step_energy),
+                             sqrt(gradient_mass_step_energy),
+                             sqrt(direction_free.squaredNorm()),
+                             direction_free.lpNorm<Eigen::Infinity>(),
+                             sqrt(
+                                 abs(direction.transpose()
+                                     * problem_ptr->mass_matrix() * direction)))
+                      << std::endl;
+
             return step_max_speed <= tol;
         }
         case ConvergenceCriteria::ENERGY: {
             double step_energy = abs(gradient_free.dot(direction_free));
+            // double step_energy = abs(gradient_free.dot(gradient_free));
             double tol = Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
             spdlog::info(
                 "solver={} iter={:d} step_energy={:g} tol={:g}", //

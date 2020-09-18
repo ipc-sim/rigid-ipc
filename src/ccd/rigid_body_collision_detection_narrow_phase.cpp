@@ -118,8 +118,9 @@ bool detect_edge_vertex_collisions_narrow_phase(
             edge_vertex0_t1, edge_vertex1_t1, vertex_t1, toi, alpha);
     }
 
-    PROFILE_POINT("detect_edge_vertex_collisions_narrow_phase");
-    PROFILE_START();
+    // TODO: Make this thread safe
+    // PROFILE_POINT("detect_edge_vertex_collisions_narrow_phase");
+    // PROFILE_START();
 
     assert(trajectory == TrajectoryType::SCREWING);
     long bodyA_id, vertex_id, bodyB_id, edge_id;
@@ -154,7 +155,7 @@ bool detect_edge_vertex_collisions_narrow_phase(
         //     && alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
     }
 
-    PROFILE_END();
+    // PROFILE_END();
 
     return is_colliding;
 }
@@ -197,8 +198,9 @@ bool detect_edge_edge_collisions_narrow_phase(
             edge1_vertex0_t1, edge1_vertex1_t1, toi, edge0_alpha, edge1_alpha);
     }
 
-    PROFILE_POINT("detect_edge_edge_collisions_narrow_phase");
-    PROFILE_START();
+    // TODO: Make this thread safe
+    // PROFILE_POINT("detect_edge_edge_collisions_narrow_phase");
+    // PROFILE_START();
 
     assert(trajectory == TrajectoryType::SCREWING);
     long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
@@ -238,7 +240,7 @@ bool detect_edge_edge_collisions_narrow_phase(
         //     && edge1_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
     }
 
-    PROFILE_END();
+    // PROFILE_END();
 
     return is_colliding;
 }
@@ -281,8 +283,9 @@ bool detect_face_vertex_collisions_narrow_phase(
             toi, u, v);
     }
 
-    PROFILE_POINT("detect_face_vertex_collisions_narrow_phase");
-    PROFILE_START();
+    // TODO: Make this thread safe
+    // PROFILE_POINT("detect_face_vertex_collisions_narrow_phase");
+    // PROFILE_START();
 
     assert(trajectory == TrajectoryType::SCREWING);
     long bodyA_id, vertex_id, bodyB_id, face_id;
@@ -324,7 +327,7 @@ bool detect_face_vertex_collisions_narrow_phase(
             && u + v + w > 1 - Constants::PARAMETER_ASSERTION_TOL);
     }
 
-    PROFILE_END();
+    // PROFILE_END();
 
     return is_colliding;
 }
