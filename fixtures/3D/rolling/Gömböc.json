@@ -10,7 +10,7 @@
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
-            "mesh": "Gömböc.stl",
+            "mesh": "gömböc.stl",
             "position": [0, 0.5, 0],
             "rotation": [0, 0, 45],
             "linear_velocity": [0, 0, 0],
