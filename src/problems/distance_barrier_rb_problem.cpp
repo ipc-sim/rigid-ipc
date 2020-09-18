@@ -626,7 +626,7 @@ namespace opt {
             const auto& e11 =
                 V.row(m_assembler.m_edges(ee_candidate.edge1_index, 1));
 
-            if (Eigen::cross(e01 - e00, e11 - e10).norm() > 1e-4 && false) {
+            if (Eigen::cross(e01 - e00, e11 - e10).norm() > 1e-4) {
                 double eps_x =
                     ipc::edge_edge_mollifier_threshold(e00, e01, e10, e11);
                 constraints.ee_constraints.emplace_back(ee_candidate, eps_x);
@@ -1136,14 +1136,13 @@ namespace opt {
         auto f = [&](const Eigen::VectorXd& x) {
             Eigen::VectorXd grad_f;
             Eigen::SparseMatrix<double> hess_f;
-            return compute_friction_term(
+            compute_friction_term(
                 x, candidates, grad_f, hess_f,
-                /*compute_grad=*/false, /*compute_hess=*/false);
+                /*compute_grad=*/true, /*compute_hess=*/false);
+            return grad_f;
         };
         Eigen::MatrixXd hess_approx;
-        // fd::finite_hessian(sigma, f, hess_approx, 1e-3);
-        // if (!fd::compare_hessian(hess, hess_approx)) {
-        fd::finite_hessian(sigma, f, hess_approx);
+        fd::finite_jacobian(sigma, f, hess_approx);
         if (!fd::compare_hessian(hess, hess_approx)) {
             spdlog::error(
                 "finite hessian check failed for friction "
