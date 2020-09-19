@@ -1,23 +1,8 @@
 #include "distance_barrier_rb_problem.hpp"
 
 // IPC Toolkit
-namespace Eigen {
-template <typename DerivedA, typename DerivedB>
-auto cross(const MatrixBase<DerivedA>& a, const MatrixBase<DerivedB>& b)
-{
-    assert(a.size() == 3 && b.size() == 3);
-    Eigen::Matrix<
-        typename DerivedA::Scalar, DerivedA::RowsAtCompileTime,
-        DerivedA::ColsAtCompileTime>
-        c(a.rows(), a.cols());
-    c(0) = a(1) * b(2) - a(2) * b(1);
-    c(1) = a(2) * b(0) - a(0) * b(2);
-    c(2) = a(0) * b(1) - a(1) * b(0);
-    return c;
-}
-} // namespace Eigen
-#include <distance/edge_edge_mollifier.hpp>
-#include <friction/friction.hpp>
+#include <ipc/distance/edge_edge_mollifier.hpp>
+#include <ipc/friction/friction.hpp>
 
 #include <finitediff.hpp>
 
