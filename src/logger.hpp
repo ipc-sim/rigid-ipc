@@ -12,6 +12,8 @@
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
+#include <ipc/utils/logger.hpp>
+
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif

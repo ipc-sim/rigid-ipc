@@ -3,6 +3,8 @@
 
 #include <fmt/format.h>
 
+#include <ipc/barrier/barrier.hpp>
+
 #include <utils/not_implemented_error.hpp>
 
 namespace ccd {
@@ -12,7 +14,7 @@ namespace opt {
     {
         switch (barrier_type) {
         case BarrierType::IPC:
-            return ipc_barrier(x, s);
+            return ipc::barrier(x, s);
         case BarrierType::POLY_LOG:
             return poly_log_barrier(x, s);
         case BarrierType::SPLINE:
@@ -22,19 +24,6 @@ namespace opt {
                 fmt::format("Invalid barrier type: {:d}", int(barrier_type))
                     .c_str());
         }
-    }
-
-    template <typename T> T ipc_barrier(T d, double dhat)
-    {
-        if (d <= T(0)) {
-            return T(std::numeric_limits<double>::infinity());
-        }
-        if (d >= dhat) {
-            return T(0);
-        }
-        // b(d) = -(d-d̂)²ln(d / d̂)
-        T dhat_T = T(dhat);
-        return -(d - dhat_T) * (d - dhat_T) * log(d / dhat_T);
     }
 
     template <typename T> T poly_log_barrier(T x, double s)

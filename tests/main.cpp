@@ -7,7 +7,7 @@
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
 
-#include <spdlog/spdlog.h>
+#include <logger.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
         return returnCode;
 
     spdlog::set_level(static_cast<spdlog::level::level_enum>(log_level));
+    ipc::logger().set_level(static_cast<spdlog::level::level_enum>(log_level));
 
     return session.run();
 }

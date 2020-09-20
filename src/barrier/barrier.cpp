@@ -3,6 +3,8 @@
 // inequlity constraints on a function.
 #include "barrier.hpp"
 
+#include <ipc/barrier/barrier.hpp>
+
 #include <barrier/barrier_chorner.hpp>
 #include <logger.hpp>
 
@@ -17,7 +19,7 @@ namespace opt {
     {
         switch (barrier_type) {
         case BarrierType::IPC:
-            return ipc_barrier_gradient(x, s);
+            return ipc::barrier_gradient(x, s);
         case BarrierType::POLY_LOG:
             return poly_log_barrier_gradient(x, s);
         case BarrierType::SPLINE:
@@ -33,7 +35,7 @@ namespace opt {
     {
         switch (barrier_type) {
         case BarrierType::IPC:
-            return ipc_barrier_hessian(x, s);
+            return ipc::barrier_hessian(x, s);
         case BarrierType::POLY_LOG:
             return poly_log_barrier_hessian(x, s);
         case BarrierType::SPLINE:
@@ -43,32 +45,6 @@ namespace opt {
                 fmt::format("Invalid barrier type: {:d}", int(barrier_type))
                     .c_str());
         }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // IPC Barrier
-
-    double ipc_barrier_gradient(double d, double dhat)
-    {
-        if (d <= 0.0 || d >= dhat) {
-            return 0.0;
-        }
-        // b(d) = -(d - d̂)²ln(d / d̂)
-        // b'(d) = -2(d - d̂)ln(d / d̂) - (d-d̂)²(1 / d)
-        //       = (d - d̂) * (-2ln(d/d̂) - (d - d̂) / d)
-        //       = (d̂ - d) * (2ln(d/d̂) - d̂/d + 1)
-        return (dhat - d) * (2 * log(d / dhat) - dhat / d + 1);
-    }
-
-    double ipc_barrier_hessian(double d, double dhat)
-    {
-        if (d <= 0.0 || d >= dhat) {
-            return 0.0;
-        }
-
-        double dhat_d = dhat / d;
-
-        return (dhat_d + 2) * dhat_d - 2 * log(d / dhat) - 3;
     }
 
     ///////////////////////////////////////////////////////////////////////////

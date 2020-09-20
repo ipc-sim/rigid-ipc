@@ -129,6 +129,6 @@ endfunction()
 function(fixing_collisions_download_ipc_toolkit)
   fixing_collisions_download_project(ipc-toolkit
     GIT_REPOSITORY https://github.com/ipc-sim/ipc-toolkit.git
-    GIT_TAG        e89f5ee351beb38be55a3f0d9d25580b95346e51
+    GIT_TAG        31a37e04abc9ecec325e00be97fd42b89c895b45
   )
 endfunction()

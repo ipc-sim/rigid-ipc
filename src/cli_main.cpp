@@ -8,6 +8,7 @@
 int main(int argc, char* argv[])
 {
     spdlog::set_level(spdlog::level::info);
+    ipc::logger().set_level(spdlog::level::info);
     ccd::SimState sim;
 
     struct {
@@ -48,6 +49,8 @@ int main(int argc, char* argv[])
     }
 
     spdlog::set_level(static_cast<spdlog::level::level_enum>(args.loglevel));
+    ipc::logger().set_level(
+        static_cast<spdlog::level::level_enum>(args.loglevel));
 
     // Create the output directory if it does not exist
     boost::filesystem::create_directories(

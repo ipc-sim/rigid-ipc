@@ -38,6 +38,8 @@ void UISimState::draw_menu()
                 CCD_IM_ARRAYSIZE(level_strings))) {
             spdlog::set_level(
                 static_cast<spdlog::level::level_enum>(m_log_level));
+            ipc::logger().set_level(
+                static_cast<spdlog::level::level_enum>(m_log_level));
         }
 
         draw_io();
