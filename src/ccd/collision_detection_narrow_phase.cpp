@@ -9,9 +9,10 @@
 // Etienne Vouga's CCD using a root finder in floating points
 #include <CTCD.h>
 
+#include <igl/barycentric_coordinates.h>
+
 #include <ccd/time_of_impact.hpp>
 #include <constants.hpp>
-#include <geometry/barycentric_coordinates.hpp>
 #include <geometry/projection.hpp>
 #include <profiler.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -190,17 +191,21 @@ bool detect_face_vertex_collisions_narrow_phase(
         Constants::LINEARIZED_CCD_ETA, toi);
     if (is_colliding) {
         // TODO: Consider moving this computation to an as needed basis
-        Eigen::Vector3d face_vertex0_toi =
+        Eigen::RowVector3d face_vertex0_toi =
             (face_vertex0_t1 - face_vertex0_t0) * toi + face_vertex0_t0;
-        Eigen::Vector3d face_vertex1_toi =
+        Eigen::RowVector3d face_vertex1_toi =
             (face_vertex1_t1 - face_vertex1_t0) * toi + face_vertex1_t0;
-        Eigen::Vector3d face_vertex2_toi =
+        Eigen::RowVector3d face_vertex2_toi =
             (face_vertex2_t1 - face_vertex2_t0) * toi + face_vertex2_t0;
-        Eigen::Vector3d vertex1_toi = (vertex_t1 - vertex_t0) * toi + vertex_t0;
-        double w;
-        geometry::barycentric_coordinates(
+        Eigen::RowVector3d vertex1_toi =
+            (vertex_t1 - vertex_t0) * toi + vertex_t0;
+        Eigen::RowVector3d coords;
+        igl::barycentric_coordinates(
             vertex1_toi, face_vertex0_toi, face_vertex1_toi, face_vertex2_toi,
-            u, v, w);
+            coords);
+        u = coords(0);
+        v = coords(1);
+        double w = coords(2);
         assert(u + v + w < 1 + 1e-12 && u + v + w > 1 - 1e-12);
     }
     return is_colliding;
