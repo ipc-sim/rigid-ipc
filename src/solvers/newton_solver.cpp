@@ -305,11 +305,12 @@ namespace opt {
         assert(!problem_ptr->has_collisions(x, x + step_length * dir));
         if (step_length < lower_bound) {
             spdlog::error(
-                "solver={} iter={:d} failure=\"initial step_length ({:g}) is"
-                " less than lower_bound({:g})\"",
+                "solver={} iter={:d} failure=\"initial step_length (α={:g}) is"
+                " less than lower bound ({:g})\"",
                 name(), iteration_number, step_length, lower_bound);
         }
 
+        double fxi = std::numeric_limits<double>::infinity();
         while (std::isfinite(lower_bound) && step_length >= lower_bound) {
             num_it++;        // Count the number of iterations
             ls_iterations++; // Count the gloabal number of iterations
@@ -321,8 +322,9 @@ namespace opt {
             // the step length.
             // Check for collisions between newton updates
             // if (!problem_ptr->has_collisions(x, xi)) {
+            fxi = problem_ptr->compute_objective(xi);
             num_fx++; // Count the number of objective computations
-            if (problem_ptr->compute_objective(xi) < fx) {
+            if (fxi < fx) {
                 success = true;
                 break; // while loop
             }
@@ -345,10 +347,10 @@ namespace opt {
                     name(), iteration_number, lower_bound);
             } else {
                 spdlog::warn(
-                    "solver={} iter={:d} failure=\"line-search α ≤ {:g} / "
-                    "{:g}\"",
+                    "solver={} iter={:d} failure=\"line-search α ≤ {:g} / {:g} "
+                    "= {:g}; f(x)={:g}; f(x + αΔx)={:g}\"",
                     name(), iteration_number, line_search_lower_bound(),
-                    -grad_fx.dot(dir));
+                    -grad_fx.dot(dir), lower_bound, fx, fxi);
             }
         }
 
