@@ -19,6 +19,7 @@ option(FIXING_COLLISIONS_BUILD_COMPARISONS        "Build comparisons"     ON)
 option(FIXING_COLLISIONS_CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
 option(FIXING_COLLISIONS_ENABLE_MOSEK             "Enable Mosek Library" OFF)
 mark_as_advanced(FIXING_COLLISIONS_ENABLE_MOSEK)
+option(FIXING_COLLISIONS_ENABLE_SIMD              "Enable SIMD" OFF)
 
 # PolySolve settings
 set(POLYSOLVE_WITH_AMGCL OFF CACHE BOOL "Use AMGCL" FORCE)
@@ -211,25 +212,27 @@ target_link_libraries(${PROJECT_NAME} PUBLIC IPCToolkit)
 # Compiler options
 ################################################################################
 
-# ## SIMD support
-# # Figure out SSE level support
-# message(STATUS "Seaching for SSE...")
-# find_package(SSE)
-# # Apple broke AVX instructions with clang:
-# # https://gitlab.com/libeigen/eigen/-/commit/71aa53dd6dfdc497324d9e87f59c4ba820191856
-# if(NOT APPLE)
-#   # Figure out AVX level support
-#   message(STATUS "Searching for AVX...")
-#   find_package(AVX)
-#   # Figure out FMA level support
-#   message(STATUS "Searching for FMA...")
-#   find_package(FMA)
-# else()
-#   message(WARNING "Disabling AVX support: clang compiler shipped with XCode 11.[012] generates broken assembly with -macosx-version-min=10.15 and AVX enabled.")
-# endif()
-# # Add SSE, AVX, and FMA flags to compiler flags
-# string(REPLACE " " ";" SIMD_FLAGS "${SSE_FLAGS} ${AVX_FLAGS} ${FMA_FLAGS}")
-# target_compile_options(${PROJECT_NAME} PUBLIC ${SIMD_FLAGS})
+## SIMD support
+if(FIXING_COLLISIONS_ENABLE_SIMD)
+  # Figure out SSE level support
+  message(STATUS "Seaching for SSE...")
+  find_package(SSE)
+  # Apple broke AVX instructions with clang:
+  # https://gitlab.com/libeigen/eigen/-/commit/71aa53dd6dfdc497324d9e87f59c4ba820191856
+  if(NOT APPLE)
+    # Figure out AVX level support
+    message(STATUS "Searching for AVX...")
+    find_package(AVX)
+    # Figure out FMA level support
+    message(STATUS "Searching for FMA...")
+    find_package(FMA)
+  else()
+    message(WARNING "Disabling AVX support: clang compiler shipped with XCode 11.[012] generates broken assembly with -macosx-version-min=10.15 and AVX enabled.")
+  endif()
+  # Add SSE, AVX, and FMA flags to compiler flags
+  string(REPLACE " " ";" SIMD_FLAGS "${SSE_FLAGS} ${AVX_FLAGS} ${FMA_FLAGS}")
+  target_compile_options(${PROJECT_NAME} PUBLIC ${SIMD_FLAGS})
+endif()
 
 # Use C++14
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_14)
