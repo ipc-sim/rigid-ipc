@@ -6,11 +6,11 @@ namespace ccd {
 namespace Constants {
 
     /// \brief Value used to break newton solver
-    static const double NEWTON_ENERGY_CONVERGENCE_TOL = 1E-5;
-    static const double NEWTON_VELOCITY_CONVERGENCE_TOL = 1E-2;
+    static const double DEFAULT_NEWTON_ENERGY_CONVERGENCE_TOL = 1E-5;
+    static const double DEFAULT_NEWTON_VELOCITY_CONVERGENCE_TOL = 1E-2;
 
     /// \brief Value used to break linesearch.
-    static const double LINE_SEARCH_LOWER_BOUND = 1e-12;
+    static const double DEFAULT_LINE_SEARCH_LOWER_BOUND = 1e-12;
 
     /// \brief Value used to decide when a coeff (a,b,c) is zero.
     static const double TOI_COEFF_EPSILON = 1E-12;
@@ -28,9 +28,6 @@ namespace Constants {
     /// \brief Tolerance when asserting for valid barycentric coordinates.
     static const double PARAMETER_ASSERTION_TOL = 1e-7;
 
-    /// \brief ETA used in Etienne Vouga's CCD as an activation distance.
-    static const double LINEARIZED_CCD_ETA = 1e-8;
-
     /// \brief Tolerance of the length of the screwing trajectory in CCD.
     static const double SCREWING_CCD_LENGTH_TOL = 1e-6;
 
@@ -45,9 +42,9 @@ namespace Constants {
 
     /// \brief Scaling of κ_min to better condition the system
 #ifdef USE_DISTANCE_SQUARED
-    static const double MIN_BARRIER_STIFFNESS_SCALE = 1e11;
+    static const double DEFAULT_MIN_BARRIER_STIFFNESS_SCALE = 1e11;
 #else
-    static const double MIN_BARRIER_STIFFNESS_SCALE = 1e11;
+    static const double DEFAULT_MIN_BARRIER_STIFFNESS_SCALE = 1e11;
 #endif
 
     // ------------------------------------------------------------------------

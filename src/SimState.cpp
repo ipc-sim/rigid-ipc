@@ -93,7 +93,7 @@ bool SimState::init(const nlohmann::json& args_in)
 {
     using namespace nlohmann;
 
-    // Default args
+    // Default args (any null values will be initalized below)
     args = R"({
         "max_iterations": -1,
         "max_time": -1,
@@ -119,6 +119,9 @@ bool SimState::init(const nlohmann::json& args_in)
         "newton_solver": {
             "max_iterations": 3000,
             "convergence_criteria": "velocity",
+            "energy_conv_tol": null,
+            "velocity_conv_tol": null,
+            "line_search_lower_bound": null,
             "linear_solver": {
                 "name": "Eigen::SimplicialLDLT",
                 "max_iter": 1000,
@@ -129,7 +132,7 @@ bool SimState::init(const nlohmann::json& args_in)
         },
         "ipc_solver": {
             "dhat_epsilon": 1e-9,
-            "min_barrier_stiffness_scale": "default"
+            "min_barrier_stiffness_scale": null
         },
         "ncp_solver": {
             "max_iterations": 1000,
@@ -163,6 +166,15 @@ bool SimState::init(const nlohmann::json& args_in)
             "max": [0, 0]
         }
     })"_json;
+    // Fill in default values
+    args["newton_solver"]["energy_conv_tol"] =
+        Constants::DEFAULT_NEWTON_ENERGY_CONVERGENCE_TOL;
+    args["newton_solver"]["velocity_conv_tol"] =
+        Constants::DEFAULT_NEWTON_VELOCITY_CONVERGENCE_TOL;
+    args["newton_solver"]["line_search_lower_bound"] =
+        Constants::DEFAULT_LINE_SEARCH_LOWER_BOUND;
+    args["ipc_solver"]["min_barrier_stiffness_scale"] =
+        Constants::DEFAULT_MIN_BARRIER_STIFFNESS_SCALE;
 
     // check that incomming json doesn't have any unkown keys to avoid stupid
     // bugs
@@ -180,22 +192,10 @@ bool SimState::init(const nlohmann::json& args_in)
 
     args.merge_patch(args_in);
 
-    if (!args["ipc_solver"]["min_barrier_stiffness_scale"].is_number()) {
-        args["ipc_solver"]["min_barrier_stiffness_scale"] =
-            Constants::MIN_BARRIER_STIFFNESS_SCALE;
-    }
-
     // Share the newton solver settings with IPC
-    args["ipc_solver"]["linear_solver"] =
-        args["newton_solver"]["linear_solver"];
-    if (!args["ipc_solver"].contains("max_iterations")) {
-        args["ipc_solver"]["max_iterations"] =
-            args["newton_solver"]["max_iterations"];
-    }
-    if (!args["ipc_solver"].contains("convergence_criteria")) {
-        args["ipc_solver"]["convergence_criteria"] =
-            args["newton_solver"]["convergence_criteria"];
-    }
+    json newton_settings = args["newton_solver"];    // make a copy of newton
+    newton_settings.merge_patch(args["ipc_solver"]); // apply ipc to newton
+    args["ipc_solver"] = newton_settings; // set ipc to updated newton
 
     auto problem_name = args["scene_type"].get<std::string>();
     problem_ptr = ProblemFactory::factory().get_problem(problem_name);

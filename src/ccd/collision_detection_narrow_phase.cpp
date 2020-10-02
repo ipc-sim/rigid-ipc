@@ -6,8 +6,7 @@
 
 #include <cmath>
 
-// Etienne Vouga's CCD using a root finder in floating points
-#include <CTCD.h>
+#include <ipc/ccd/ccd.hpp>
 
 #include <igl/barycentric_coordinates.h>
 
@@ -146,10 +145,10 @@ bool detect_edge_edge_collisions_narrow_phase(
     double& edge1_alpha)
 {
     // TODO: Check if edges are parallel
-    bool is_colliding = CTCD::edgeEdgeCTCD(
+    bool is_colliding = ipc::edge_edge_ccd(
         edge0_vertex0_t0, edge0_vertex1_t0, edge1_vertex0_t0, edge1_vertex1_t0,
         edge0_vertex0_t1, edge0_vertex1_t1, edge1_vertex0_t1, edge1_vertex1_t1,
-        Constants::LINEARIZED_CCD_ETA, toi);
+        toi);
     if (is_colliding) {
         Eigen::Vector3d edge0_vertex0_toi =
             (edge0_vertex0_t1 - edge0_vertex0_t0) * toi + edge0_vertex0_t0;
@@ -185,10 +184,9 @@ bool detect_face_vertex_collisions_narrow_phase(
     double& u,
     double& v)
 {
-    bool is_colliding = CTCD::vertexFaceCTCD(
+    bool is_colliding = ipc::point_triangle_ccd(
         vertex_t0, face_vertex0_t0, face_vertex1_t0, face_vertex2_t0, //
-        vertex_t1, face_vertex0_t1, face_vertex1_t1, face_vertex2_t1,
-        Constants::LINEARIZED_CCD_ETA, toi);
+        vertex_t1, face_vertex0_t1, face_vertex1_t1, face_vertex2_t1, toi);
     if (is_colliding) {
         // TODO: Consider moving this computation to an as needed basis
         Eigen::RowVector3d face_vertex0_toi =

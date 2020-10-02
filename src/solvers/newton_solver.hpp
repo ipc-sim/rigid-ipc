@@ -113,7 +113,7 @@ namespace opt {
 
         virtual double line_search_lower_bound() const
         {
-            return Constants::LINE_SEARCH_LOWER_BOUND;
+            return m_line_search_lower_bound;
         }
 
         /// @brief Pointer to the problem to solve.
@@ -122,6 +122,10 @@ namespace opt {
         Eigen::VectorXi free_dof; ///< @brief Indices of the free degrees.
         int iteration_number;     ///< @brief The current iteration number.
         ConvergenceCriteria convergence_criteria;
+
+        double energy_conv_tol;   ///< @brief Energy convergence tolerance
+        double velocity_conv_tol; ///< @brief Velocity convergence tolerance
+        double m_line_search_lower_bound; ///< @brief Line search lower bound
 
         // State variables
         Eigen::VectorXd x, x_prev;

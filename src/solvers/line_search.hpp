@@ -23,7 +23,8 @@ namespace opt {
      *
      * @return True if the line search was successful, false otherwise.
      */
-    bool line_search(const Eigen::VectorXd& x,
+    bool line_search(
+        const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const std::function<double(const Eigen::VectorXd&)>& f,
         double& step_length,
@@ -43,7 +44,8 @@ namespace opt {
      *
      * @return True if the line search was successful, false otherwise.
      */
-    bool line_search(const Eigen::VectorXd& x,
+    bool line_search(
+        const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const std::function<double(const Eigen::VectorXd&)>& f,
         const Eigen::VectorXd& grad_fx,
@@ -68,7 +70,8 @@ namespace opt {
      *
      * @return True if the line search was successful, false otherwise.
      */
-    bool constrained_line_search(const Eigen::VectorXd& x,
+    bool constrained_line_search(
+        const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const std::function<double(const Eigen::VectorXd&)>& f,
         const Eigen::VectorXd& grad_fx,
@@ -82,13 +85,14 @@ namespace opt {
      *
      * @param[in] x                 Starting point for the line search.
      * @param[in] dir               Direction to search along.
-     * @param[in] f                 Function of x to sample.
-     * @param[in] grad_f            Gradient of f to sample.
+     * @param[in] f_and_gradf       Function of x to sample with gradient.
      */
-    void sample_search_direction(const Eigen::VectorXd& x,
+    void sample_search_direction(
+        const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& grad_f);
+        const std::function<double(const Eigen::VectorXd&, Eigen::VectorXd&)>&
+            f_and_gradf,
+        double max_step);
 
 } // namespace opt
 } // namespace ccd

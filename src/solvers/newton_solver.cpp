@@ -8,6 +8,7 @@
 #include <constants.hpp>
 #include <logger.hpp>
 #include <profiler.hpp>
+#include <solvers/line_search.hpp> // sample_search_direction
 
 namespace ccd {
 namespace opt {
@@ -16,6 +17,9 @@ namespace opt {
         : max_iterations(1000)
         , iteration_number(0)
         , convergence_criteria(ConvergenceCriteria::ENERGY)
+        , energy_conv_tol(Constants::DEFAULT_NEWTON_ENERGY_CONVERGENCE_TOL)
+        , velocity_conv_tol(Constants::DEFAULT_NEWTON_VELOCITY_CONVERGENCE_TOL)
+        , m_line_search_lower_bound(Constants::DEFAULT_LINE_SEARCH_LOWER_BOUND)
     {
         linear_solver = polysolve::LinearSolver::create("", "");
     }
@@ -25,6 +29,11 @@ namespace opt {
         max_iterations = json["max_iterations"].get<int>();
         convergence_criteria =
             json["convergence_criteria"].get<ConvergenceCriteria>();
+        energy_conv_tol = json["energy_conv_tol"].get<double>();
+        velocity_conv_tol = json["velocity_conv_tol"].get<double>();
+        m_line_search_lower_bound =
+            json["line_search_lower_bound"].get<double>();
+
         linear_solver_settings = json["linear_solver"];
         try {
             linear_solver = polysolve::LinearSolver::create(
@@ -37,6 +46,7 @@ namespace opt {
                 linear_solver_settings["name"].get<std::string>(), "");
         }
         linear_solver->setParameters(linear_solver_settings);
+
         reset_stats();
     }
 
@@ -46,6 +56,8 @@ namespace opt {
         settings["max_iterations"] = max_iterations;
         settings["convergence_criteria"] = convergence_criteria;
         settings["linear_solver"] = linear_solver_settings;
+        settings["energy_conv_tol"] = energy_conv_tol;
+        settings["velocity_conv_tol"] = velocity_conv_tol;
         return settings;
     }
 
@@ -104,8 +116,8 @@ namespace opt {
             double step_max_speed = (V - V_prev).lpNorm<Eigen::Infinity>()
                 / problem_ptr->timestep();
 
-            double tol = Constants::NEWTON_VELOCITY_CONVERGENCE_TOL
-                * problem_ptr->world_bbox_diagonal();
+            // TODO: Renable this with a better check for static objects
+            double tol = velocity_conv_tol * problem_ptr->world_bbox_diagonal();
 
             spdlog::info(
                 "solver={} iter={:d} step_max_speed={:g} tol={:g}", //
@@ -137,7 +149,7 @@ namespace opt {
         case ConvergenceCriteria::ENERGY: {
             double step_energy = abs(gradient_free.dot(direction_free));
             // double step_energy = abs(gradient_free.dot(gradient_free));
-            double tol = Constants::NEWTON_ENERGY_CONVERGENCE_TOL;
+            double tol = energy_conv_tol;
             spdlog::info(
                 "solver={} iter={:d} step_energy={:g} tol={:g}", //
                 name(), iteration_number, step_energy, tol);
@@ -303,8 +315,9 @@ namespace opt {
         // Filter the step length so that x to x + α * Δx is collision free for
         // α ≤ step_length.
         num_collision_check++; // Count the number of collision checks
-        step_length = std::min(
-            step_length, problem_ptr->compute_earliest_toi(x, x + dir));
+        double max_step_size =
+            std::min(problem_ptr->compute_earliest_toi(x, x + dir), 1.0);
+        step_length = std::min(step_length, max_step_size);
         assert(!problem_ptr->has_collisions(x, x + step_length * dir));
         if (step_length < lower_bound) {
             spdlog::error(
@@ -351,9 +364,16 @@ namespace opt {
             } else {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"line-search α ≤ {:g} / {:g} "
-                    "= {:g}; f(x)={:g}; f(x + αΔx)={:g}\"",
+                    "= {:g}; f(x)={:g}; f(x + αΔx)={:g}; α_max={:g}\"",
                     name(), iteration_number, line_search_lower_bound(),
-                    -grad_fx.dot(dir), lower_bound, fx, fxi);
+                    sqrt(abs(grad_fx.dot(dir))), lower_bound, fx, fxi,
+                    max_step_size);
+                sample_search_direction(
+                    x, dir,
+                    [&](const Eigen::VectorXd& x, Eigen::VectorXd& grad) {
+                        return problem_ptr->compute_objective(x, grad);
+                    },
+                    max_step_size);
             }
         }
 

@@ -10,19 +10,22 @@ namespace opt {
 
     // Search along a search direction to find a scalar step_length in [0, 1]
     // such that f(x + step_length * dir) ≤ f(x).
-    bool line_search(const Eigen::VectorXd& x,
+    bool line_search(
+        const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const std::function<double(const Eigen::VectorXd&)>& f,
         double& step_length,
         const double min_step_length)
     {
-        return line_search(x, dir, f, Eigen::VectorXd::Zero(dir.size()),
-            step_length, min_step_length, 0.0);
+        return line_search(
+            x, dir, f, Eigen::VectorXd::Zero(dir.size()), step_length,
+            min_step_length, 0.0);
     }
 
     // Search along a search direction to find a scalar step_length in [0, 1]
     // such that f(x + step_length * dir) ≤ f(x).
-    bool line_search(const Eigen::VectorXd& x,
+    bool line_search(
+        const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const std::function<double(const Eigen::VectorXd&)>& f,
         const Eigen::VectorXd& grad_fx,
@@ -30,26 +33,27 @@ namespace opt {
         const double min_step_length,
         const double armijo_rule_coeff)
     {
-        return constrained_line_search(x, dir, f, grad_fx,
-            [](const Eigen::VectorXd&) { return true; }, step_length,
-            min_step_length, armijo_rule_coeff);
+        return constrained_line_search(
+            x, dir, f, grad_fx, [](const Eigen::VectorXd&) { return true; },
+            step_length, min_step_length, armijo_rule_coeff);
     }
 
-    const static char* LS_BEGIN_LOG
-        = "solver=constrainted_line_search action=BEGIN";
-    const static char* LS_ARMIJO_LOG
-        = "solver=constrainted_line_search iter={:d} action=armijo_rule";
-    const static char* LS_MIN_LOG
-        = "solver=constrainted_line_search iter={:d} action=minimization_rule";
-    const static char* LS_BREAK_LOG
-        = "solver=constrainted_line_search iter={:d} action=break_condition";
-    const static char* LS_FAIL_LOG
-        = "solver=constrainted_line_search action=END status=fail";
+    const static char* LS_BEGIN_LOG =
+        "solver=constrainted_line_search action=BEGIN";
+    const static char* LS_ARMIJO_LOG =
+        "solver=constrainted_line_search iter={:d} action=armijo_rule";
+    const static char* LS_MIN_LOG =
+        "solver=constrainted_line_search iter={:d} action=minimization_rule";
+    const static char* LS_BREAK_LOG =
+        "solver=constrainted_line_search iter={:d} action=break_condition";
+    const static char* LS_FAIL_LOG =
+        "solver=constrainted_line_search action=END status=fail";
     // Search along a search direction to find a scalar step_length in [0, 1]
     // such that f(x + step_length * dir) ≤ f(x).
     // TODO: Filter the dof that violate the constraints. These are the indices
     // i where ϕ([g(x)]_i) = ∞.
-    bool constrained_line_search(const Eigen::VectorXd& x,
+    bool constrained_line_search(
+        const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
         const std::function<double(const Eigen::VectorXd&)>& f,
         const Eigen::VectorXd& grad_fx,
@@ -62,9 +66,9 @@ namespace opt {
         PROFILE_POINT("line_search");
         PROFILE_START();
 
-        spdlog::trace("{} step_length={:e} f(x0)={:e} x0={} dir={}",
-            LS_BEGIN_LOG, step_length, fx, logger::fmt_eigen(x),
-            logger::fmt_eigen(dir));
+        spdlog::trace(
+            "{} step_length={:e} f(x0)={:e} x0={} dir={}", LS_BEGIN_LOG,
+            step_length, fx, logger::fmt_eigen(x), logger::fmt_eigen(dir));
 
         int num_it = 1;
         std::function<bool()> minimization_rule;
@@ -85,7 +89,8 @@ namespace opt {
             minimization_rule = [&]() {
                 Eigen::VectorXd xi = x + step_length * dir;
                 auto fxi = f(xi);
-                spdlog::trace("{} step_length={:e} f(xi)={:e} f(x0)={:e} xi={}",
+                spdlog::trace(
+                    "{} step_length={:e} f(xi)={:e} f(x0)={:e} xi={}",
                     fmt::format(LS_MIN_LOG, num_it), step_length, fxi, fx,
                     logger::fmt_eigen(xi));
                 return fxi < fx;
@@ -128,31 +133,49 @@ namespace opt {
                 "{} step_norm={:e} step_length={:e} min_step_length={:e}",
                 LS_FAIL_LOG, step_norm, step_length, min_step_length);
         }
-        PROFILE_MESSAGE(,
+        PROFILE_MESSAGE(
+            ,
             fmt::format(
                 "success,{},it,{},dir,{:10e}", success, num_it, dir.norm()))
         PROFILE_END();
         return success;
     }
 
-
     // Log samples along the search direction.
-    void sample_search_direction(const Eigen::VectorXd& x,
+    void sample_search_direction(
+        const Eigen::VectorXd& x,
         const Eigen::VectorXd& dir,
-        const std::function<double(const Eigen::VectorXd&)>& f,
-        const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& grad_f)
+        const std::function<double(const Eigen::VectorXd&, Eigen::VectorXd&)>&
+            f_and_gradf,
+        double max_step)
     {
-        const auto sampling = Eigen::VectorXd::LinSpaced(51, -1, 1);
+        Eigen::VectorXd grad_fx;
+
+        Eigen::VectorXd sampling;
+        int num_samples = 25;
+        bool use_geometric_sampling = true;
+        if (use_geometric_sampling) {
+            sampling.resize(2 * num_samples + 1);
+            double max_pow = log10(max_step);
+            sampling.tail(num_samples) =
+                pow(10, Eigen::ArrayXd::LinSpaced(num_samples, -16, max_pow));
+            sampling(num_samples) = 0;
+            sampling.head(num_samples) = -sampling.tail(num_samples).reverse();
+        } else {
+            sampling = Eigen::VectorXd::LinSpaced(
+                2 * num_samples + 1, -max_step, max_step);
+        }
+
+        double fx0 = f_and_gradf(x, grad_fx);
         for (int i = 0; i < sampling.size(); i++) {
             double step_length = sampling(i);
+            double fx = f_and_gradf(x + step_length * dir, grad_fx);
             spdlog::debug(
-                "method=line_search step_length={:g} obj={:.16g} sqr_norm_grad={:.16g}",
-                step_length, f(x + step_length * dir),
-                grad_f(x + step_length * dir).squaredNorm());
+                "method=line_search step_length={:+.1e} obj={:018.16g} "
+                "(obj_i-obj_0)={:+.16g} norm_grad={:g}",
+                step_length, fx, fx - fx0, grad_fx.norm());
         }
     }
-
-
 
 } // namespace opt
 } // namespace ccd
