@@ -148,7 +148,7 @@ bool detect_edge_edge_collisions_narrow_phase(
     bool is_colliding = ipc::edge_edge_ccd(
         edge0_vertex0_t0, edge0_vertex1_t0, edge1_vertex0_t0, edge1_vertex1_t0,
         edge0_vertex0_t1, edge0_vertex1_t1, edge1_vertex0_t1, edge1_vertex1_t1,
-        toi);
+        toi, /*conservative_rescaling=*/1.0);
     if (is_colliding) {
         Eigen::Vector3d edge0_vertex0_toi =
             (edge0_vertex0_t1 - edge0_vertex0_t0) * toi + edge0_vertex0_t0;
@@ -186,7 +186,8 @@ bool detect_face_vertex_collisions_narrow_phase(
 {
     bool is_colliding = ipc::point_triangle_ccd(
         vertex_t0, face_vertex0_t0, face_vertex1_t0, face_vertex2_t0, //
-        vertex_t1, face_vertex0_t1, face_vertex1_t1, face_vertex2_t1, toi);
+        vertex_t1, face_vertex0_t1, face_vertex1_t1, face_vertex2_t1, toi,
+        /*conservative_rescaling=*/1.0);
     if (is_colliding) {
         // TODO: Consider moving this computation to an as needed basis
         Eigen::RowVector3d face_vertex0_toi =
