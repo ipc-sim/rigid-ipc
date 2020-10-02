@@ -152,6 +152,10 @@ void UISimState::draw_simulation_player()
     ImGui::SameLine();
     ImGui::HelpMarker("yes - solve collisions automatically on each step.");
 
+    ImGui::Checkbox("pause if optimization failed", &m_bkp_optimization_failed);
+    ImGui::SameLine();
+    ImGui::HelpMarker("yes - stop playing if step optimization failed.");
+
     ImGui::Checkbox("pause on collisions", &m_bkp_had_collision);
     ImGui::SameLine();
     ImGui::HelpMarker("yes - stop playing if step had a collision.");

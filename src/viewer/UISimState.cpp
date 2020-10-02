@@ -13,6 +13,7 @@ UISimState::UISimState()
     , m_has_scene(false)
     , m_bkp_had_collision(false)
     , m_bkp_has_intersections(true)
+    , m_bkp_optimization_failed(true)
     , m_log_level(spdlog::level::info)
     , m_interval_time(0.0)
     , m_show_vertex_data(false)
@@ -168,6 +169,8 @@ bool UISimState::pre_draw_loop()
 
         bool breakpoint = (m_bkp_had_collision && m_state.m_step_had_collision)
             || (m_bkp_has_intersections && m_state.m_step_has_intersections)
+            || (m_bkp_optimization_failed
+                && !m_state.problem_ptr->opt_result.success)
             || (m_state.m_max_simulation_steps >= 0
                 && m_state.m_num_simulation_steps
                     >= m_state.m_max_simulation_steps);

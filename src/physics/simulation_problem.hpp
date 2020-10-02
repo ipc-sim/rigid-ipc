@@ -67,6 +67,8 @@ namespace physics {
         virtual int dim() const = 0; ///< Spatial dimension (e.g. 3 for 3D)
 
         virtual bool is_rb_problem() const { return false; };
+
+        opt::OptimizationResults opt_result;
     };
 
 } // namespace physics

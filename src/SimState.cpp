@@ -176,6 +176,11 @@ bool SimState::init(const nlohmann::json& args_in)
     args["ipc_solver"]["min_barrier_stiffness_scale"] =
         Constants::DEFAULT_MIN_BARRIER_STIFFNESS_SCALE;
 
+    // Share the newton solver settings with IPC
+    json newton_settings = args["newton_solver"];    // make a copy of newton
+    newton_settings.merge_patch(args["ipc_solver"]); // apply ipc to newton
+    args["ipc_solver"] = newton_settings; // set ipc to updated newton
+
     // check that incomming json doesn't have any unkown keys to avoid stupid
     // bugs
     auto patch = json::diff(args, args_in);
@@ -193,7 +198,7 @@ bool SimState::init(const nlohmann::json& args_in)
     args.merge_patch(args_in);
 
     // Share the newton solver settings with IPC
-    json newton_settings = args["newton_solver"];    // make a copy of newton
+    newton_settings = args["newton_solver"];         // make a copy of newton
     newton_settings.merge_patch(args["ipc_solver"]); // apply ipc to newton
     args["ipc_solver"] = newton_settings; // set ipc to updated newton
 

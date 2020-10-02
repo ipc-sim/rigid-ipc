@@ -102,6 +102,7 @@ public:
     bool m_has_scene;
     bool m_bkp_had_collision;
     bool m_bkp_has_intersections;
+    bool m_bkp_optimization_failed;
     int m_log_level;        ///< @brief setup log
     double m_interval_time; ///< @brief time within the interval
     bool m_show_vertex_data;

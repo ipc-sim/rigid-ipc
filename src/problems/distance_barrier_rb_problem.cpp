@@ -79,8 +79,8 @@ namespace opt {
         this->m_use_barriers = solve_collisions;
 
         update_constraint();
-        opt::OptimizationResults result = solve_constraints();
-        _has_intersections = take_step(result.x);
+        opt_result = solve_constraints();
+        _has_intersections = take_step(opt_result.x);
         had_collisions = m_had_collisions;
     }
 

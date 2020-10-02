@@ -132,6 +132,7 @@ namespace opt {
                     * grad_direction));
 
             // GREP_NCONV,1,0.130871,1.02885e-05,1.15864e-06,2.46467e-06,0.00434816,0.00399746,9.82746e-06
+            /*
             std::cout << fmt::format(
                              "{},{:d},{:g},{:g},{:g},{:g},{:g},{:g},{:g}",
                              step_max_speed <= tol ? "GREP_CONV" : "GREP_NCONV",
@@ -143,7 +144,7 @@ namespace opt {
                                  abs(direction.transpose()
                                      * problem_ptr->mass_matrix() * direction)))
                       << std::endl;
-
+            */
             return step_max_speed <= tol;
         }
         case ConvergenceCriteria::ENERGY: {
