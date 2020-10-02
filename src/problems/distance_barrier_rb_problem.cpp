@@ -138,7 +138,7 @@ namespace opt {
             if (compute_hess) {
                 // Initialize autodiff variables
                 physics::Pose<Diff::DDouble2> pose_diff(
-                    Diff::dTvars<Diff::DDouble2>(0, pose.dof()));
+                    Diff::d2vars(0, pose.dof()));
 
                 Diff::DDouble2 dExi =
                     compute_body_energy<Diff::DDouble2>(body, pose_diff);
@@ -165,7 +165,7 @@ namespace opt {
             } else if (compute_grad) {
                 // Initialize autodiff variables
                 physics::Pose<Diff::DDouble1> pose_diff(
-                    Diff::dTvars<Diff::DDouble1>(0, pose.dof()));
+                    Diff::d1vars(0, pose.dof()));
 
                 Diff::DDouble1 dExi =
                     compute_body_energy<Diff::DDouble1>(body, pose_diff);
@@ -188,15 +188,20 @@ namespace opt {
         }
 
 #ifdef WITH_DERIVATIVE_CHECK
+        // A large mass (e.g., from a large ground plane) can affect the
+        // accuracy.
+        double mass_Linf =
+            m_assembler.m_rb_mass_matrix.diagonal().lpNorm<Eigen::Infinity>();
+        double tol = std::max(1e-8 * mass_Linf, 1e-4);
         if (compute_grad) {
             Eigen::VectorXd grad_approx = eval_grad_energy_approx(*this, x);
-            if (!fd::compare_gradient(grad, grad_approx)) {
+            if (!fd::compare_gradient(grad, grad_approx, tol)) {
                 spdlog::error("finite gradient check failed for E(x)");
             }
         }
         if (compute_hess) {
             Eigen::MatrixXd hess_approx = eval_hess_energy_approx(*this, x);
-            if (!fd::compare_jacobian(hess, hess_approx)) {
+            if (!fd::compare_jacobian(hess, hess_approx, tol)) {
                 spdlog::error("finite hessian check failed for E(x)");
             }
         }
@@ -480,49 +485,71 @@ namespace opt {
         // V: Rᵐ ↦ Rⁿ (vertices flattened rowwise)
         int m = x.size();
         int n = m_assembler.num_vertices() * dim();
+        int rb_ndof = physics::Pose<double>::dim_to_ndof(dim());
 
         // Activate autodiff with the correct number of variables
-        typedef AutodiffType<Eigen::Dynamic> Diff;
-        Diff::activate(m);
+        typedef AutodiffType<Eigen::Dynamic, /*maxN=*/6> Diff;
+        Diff::activate(rb_ndof);
 
-        if (compute_hess) {
-            Diff::D2MatrixXd V_diff = m_assembler.world_vertices(
-                this->dofs_to_poses(Diff::d2vars(0, x)));
-
-            Eigen::MatrixXd V(V_diff.rows(), V_diff.cols());
+        if (compute_jac) {
             // ∇ V(x): Rᵐ ↦ Rⁿˣᵐ
-            jac.resize(n, m);
+            jac = Eigen::MatrixXd::Zero(n, m);
+        }
+        if (compute_hess) {
             // ∇²V(x): Rᵐ ↦ Rⁿˣᵐˣᵐ
             hess.reserve(n);
-
-            for (int i = 0; i < V.rows(); i++) {
-                for (int j = 0; j < V.cols(); j++) {
-                    V(i, j) = V_diff(i, j).getValue();
-                    jac.row(i * V.cols() + j) = V_diff(i, j).getGradient();
-                    hess.push_back(V_diff(i, j).getHessian());
-                }
-            }
-
-            return V;
-        } else if (compute_jac) {
-            Diff::D1MatrixXd V_diff = m_assembler.world_vertices(
-                this->dofs_to_poses(Diff::d1vars(0, x)));
-
-            Eigen::MatrixXd V(V_diff.rows(), V_diff.cols());
-            // ∇ V(x): Rᵐ ↦ Rⁿˣᵐ
-            jac.resize(n, m);
-
-            for (int i = 0; i < V.rows(); i++) {
-                for (int j = 0; j < V.cols(); j++) {
-                    V(i, j) = V_diff(i, j).getValue();
-                    jac.row(i * V.cols() + j) = V_diff(i, j).getGradient();
-                }
-            }
-
-            return V;
-        } else {
-            return m_assembler.world_vertices(this->dofs_to_poses(x));
         }
+
+        Eigen::MatrixXd V(m_assembler.num_vertices(), dim());
+        for (int rb_i = 0; rb_i < m_assembler.num_bodies(); rb_i++) {
+            const physics::RigidBody& rb = m_assembler.m_rbs[rb_i];
+            // Index of ribid bodies first vertex in the global vertices
+            long rb_v0_i = m_assembler.m_body_vertex_id[rb_i];
+
+            if (compute_hess) {
+                Diff::D2MatrixXd V_diff =
+                    rb.world_vertices(physics::Pose<Diff::DDouble2>(
+                        Diff::d2vars(0, x.segment(rb_i * rb_ndof, rb_ndof))));
+
+                for (int i = 0; i < V_diff.rows(); i++) {
+                    for (int j = 0; j < V_diff.cols(); j++) {
+                        V(rb_v0_i + i, j) = V_diff(i, j).getValue();
+                        jac.block(
+                            /*i=*/(rb_v0_i + i) * dim() + j,
+                            /*j=*/rb_i * rb_ndof, /*p=*/1, /*q=*/rb_ndof) =
+                            V_diff(i, j).getGradient().transpose();
+                        Eigen::MatrixXd full_hess = Eigen::MatrixXd::Zero(m, m);
+                        full_hess.block(
+                            rb_i * rb_ndof, rb_i * rb_ndof, rb_ndof, rb_ndof) =
+                            V_diff(i, j).getHessian();
+                        // hess[(rb_v0_i + i) * dim() + j] = full_hess;
+                        hess.push_back(full_hess);
+                    }
+                }
+            } else if (compute_jac) {
+                Diff::D1MatrixXd V_diff =
+                    rb.world_vertices(physics::Pose<Diff::DDouble1>(
+                        Diff::d1vars(0, x.segment(rb_i * rb_ndof, rb_ndof))));
+
+                for (int i = 0; i < V_diff.rows(); i++) {
+                    for (int j = 0; j < V_diff.cols(); j++) {
+                        V(rb_v0_i + i, j) = V_diff(i, j).getValue();
+                        jac.block(
+                            /*i=*/(rb_v0_i + i) * dim() + j,
+                            /*j=*/rb_i * rb_ndof, /*p=*/1, /*q=*/rb_ndof) =
+                            V_diff(i, j).getGradient().transpose();
+                    }
+                }
+
+                return V;
+            } else {
+                V.block(rb_v0_i, 0, rb.vertices.rows(), rb.dim()) =
+                    rb.world_vertices(physics::Pose<double>(
+                        x.segment(rb_i * rb_ndof, rb_ndof)));
+            }
+        }
+
+        return V;
     }
 
     double DistanceBarrierRBProblem::compute_friction_term(
@@ -1084,23 +1111,62 @@ namespace opt {
             spdlog::error("finite gradient check failed for friction");
         }
 
-        // TODO: Enable autodiff checks
-        // typedef AutodiffType<Eigen::Dynamic> Diff;
-        // Diff::activate(x.size());
-        // Diff::D1MatrixXd V_diff =
-        //     m_assembler.world_vertices(this->dofs_to_poses(Diff::d1vars(0,
-        //     x)));
-        //
-        // Diff::DDouble1 f_diff = compute_friction_potential(
-        //     V0, V_diff, m_assembler.m_edges, m_assembler.m_faces,
-        //     friction_constraint_set, closest_points, tangent_bases,
-        //     normal_force_magnitudes, epsv * timestep(),
-        //     coefficient_friction);
-        //
-        // if (std::isfinite(f_diff.getGradient().sum())
-        //     && !fd::compare_gradient(grad, f_diff.getGradient())) {
-        //     spdlog::error("autodiff gradient check failed for friction");
-        // }
+        typedef AutodiffType<Eigen::Dynamic> Diff;
+        Diff::activate(sigma.size());
+        Diff::D1MatrixXd V_diff = m_assembler.world_vertices(
+            this->dofs_to_poses(Diff::d1vars(0, sigma)));
+
+        Eigen::MatrixXd V0 = m_assembler.world_vertices(poses_t0);
+        Eigen::MatrixXd V =
+            m_assembler.world_vertices(this->dofs_to_poses(sigma));
+
+        // Candidates to constraints
+        ipc::Constraints constraints;
+        for (const auto& ev_candidate : candidates.ev_candidates) {
+            constraints.ev_constraints.emplace_back(ev_candidate);
+        }
+        for (const auto& ee_candidate : candidates.ee_candidates) {
+            const auto& e00 =
+                V.row(m_assembler.m_edges(ee_candidate.edge0_index, 0));
+            const auto& e01 =
+                V.row(m_assembler.m_edges(ee_candidate.edge0_index, 1));
+            const auto& e10 =
+                V.row(m_assembler.m_edges(ee_candidate.edge1_index, 0));
+            const auto& e11 =
+                V.row(m_assembler.m_edges(ee_candidate.edge1_index, 1));
+
+            if (Eigen::cross(e01 - e00, e11 - e10).norm() > 1e-4) {
+                double eps_x =
+                    ipc::edge_edge_mollifier_threshold(e00, e01, e10, e11);
+                constraints.ee_constraints.emplace_back(ee_candidate, eps_x);
+            }
+        }
+        for (const auto& fv_candidate : candidates.fv_candidates) {
+            constraints.fv_constraints.emplace_back(fv_candidate);
+        }
+
+        // Contact constraints to friction constraints
+        // TODO: Combine all these varaibles into the constraint set
+        ipc::Constraints friction_constraint_set;
+        std::vector<Eigen::VectorXd> closest_points;
+        std::vector<Eigen::MatrixXd> tangent_bases;
+        Eigen::VectorXd normal_force_magnitudes;
+        ipc::compute_friction_bases(
+            V0, m_assembler.m_edges, m_assembler.m_faces, constraints,
+            barrier_activation_distance(), barrier_stiffness(),
+            friction_constraint_set, closest_points, tangent_bases,
+            normal_force_magnitudes);
+
+        Diff::DDouble1 f_diff = compute_friction_potential(
+            V0, V_diff, m_assembler.m_edges, m_assembler.m_faces,
+            friction_constraint_set, closest_points, tangent_bases,
+            normal_force_magnitudes, static_friction_speed_bound * timestep(),
+            coefficient_friction);
+
+        if (std::isfinite(f_diff.getGradient().sum())
+            && !fd::compare_gradient(grad, f_diff.getGradient())) {
+            spdlog::error("autodiff gradient check failed for friction");
+        }
     }
 
     void DistanceBarrierRBProblem::check_hess_friction(
@@ -1121,43 +1187,92 @@ namespace opt {
         auto f = [&](const Eigen::VectorXd& x) {
             Eigen::VectorXd grad_f;
             Eigen::SparseMatrix<double> hess_f;
-            compute_friction_term(
+            return compute_friction_term(
                 x, candidates, grad_f, hess_f,
-                /*compute_grad=*/true, /*compute_hess=*/false);
-            return grad_f;
+                // /*compute_grad=*/true, /*compute_hess=*/false);
+                /*compute_grad=*/false, /*compute_hess=*/false);
+            // return grad_f;
         };
         Eigen::MatrixXd hess_approx;
-        fd::finite_jacobian(sigma, f, hess_approx);
+        fd::finite_hessian(sigma, f, hess_approx);
         if (!fd::compare_hessian(hess, hess_approx)) {
             spdlog::error(
                 "finite hessian check failed for friction "
-                "(hess_L_inf_norm={} diff_L_inf_norm={})",
-                Eigen::MatrixXd(dense_hess).lpNorm<Eigen::Infinity>(),
+                "(hess_L_inf_norm={:g} diff_L_inf_norm={:g})",
+                dense_hess.lpNorm<Eigen::Infinity>(),
                 (hess_approx - dense_hess).lpNorm<Eigen::Infinity>());
+            std::cout << "hess_approx - dense_hess:\n"
+                      << (1e-20 < (hess_approx - dense_hess).array().abs())
+                             .select(hess_approx - dense_hess, 0.0f)
+                      << std::endl;
+        }
+        typedef AutodiffType<Eigen::Dynamic> Diff;
+        Diff::activate(sigma.size());
+        Diff::D2MatrixXd V_diff = m_assembler.world_vertices(
+            this->dofs_to_poses(Diff::d2vars(0, sigma)));
+
+        Eigen::MatrixXd V0 = m_assembler.world_vertices(poses_t0);
+        Eigen::MatrixXd V =
+            m_assembler.world_vertices(this->dofs_to_poses(sigma));
+
+        // Candidates to constraints
+        ipc::Constraints constraints;
+        for (const auto& ev_candidate : candidates.ev_candidates) {
+            constraints.ev_constraints.emplace_back(ev_candidate);
+        }
+        for (const auto& ee_candidate : candidates.ee_candidates) {
+            const auto& e00 =
+                V.row(m_assembler.m_edges(ee_candidate.edge0_index, 0));
+            const auto& e01 =
+                V.row(m_assembler.m_edges(ee_candidate.edge0_index, 1));
+            const auto& e10 =
+                V.row(m_assembler.m_edges(ee_candidate.edge1_index, 0));
+            const auto& e11 =
+                V.row(m_assembler.m_edges(ee_candidate.edge1_index, 1));
+
+            if (Eigen::cross(e01 - e00, e11 - e10).norm() > 1e-4) {
+                double eps_x =
+                    ipc::edge_edge_mollifier_threshold(e00, e01, e10, e11);
+                constraints.ee_constraints.emplace_back(ee_candidate, eps_x);
+            }
+        }
+        for (const auto& fv_candidate : candidates.fv_candidates) {
+            constraints.fv_constraints.emplace_back(fv_candidate);
         }
 
-        // TODO: Enable autodiff checks
-        // typedef AutodiffType<Eigen::Dynamic> Diff;
-        // Diff::activate(x.size());
-        // Diff::D2MatrixXd V_diff =
-        //     m_assembler.world_vertices(this->dofs_to_poses(Diff::d2vars(0,
-        //     x)));
-        //
-        // Diff::DDouble2 f_diff = compute_friction_potential(
-        //     V0, V_diff, m_assembler.m_edges, m_assembler.m_faces,
-        //     friction_constraint_set, closest_points, tangent_bases,
-        //     normal_force_magnitudes, epsv * timestep(),
-        //     coefficient_friction);
-        //
-        // if (std::isfinite(f_diff.getHessian().sum())
-        //     && fd::compare_hessian(dense_hess, f_diff.getHessian())) {
-        //     spdlog::error(
-        //         "autodiff hessian check failed for friction "
-        //         "(hess_L_inf_norm={} diff_L_inf_norm={})",
-        //         Eigen::MatrixXd(dense_hess).lpNorm<Eigen::Infinity>(),
-        //         (f_diff.getHessian() -
-        //         dense_hess).lpNorm<Eigen::Infinity>());
-        // }
+        // Contact constraints to friction constraints
+        // TODO: Combine all these varaibles into the constraint set
+        ipc::Constraints friction_constraint_set;
+        std::vector<Eigen::VectorXd> closest_points;
+        std::vector<Eigen::MatrixXd> tangent_bases;
+        Eigen::VectorXd normal_force_magnitudes;
+        ipc::compute_friction_bases(
+            V0, m_assembler.m_edges, m_assembler.m_faces, constraints,
+            barrier_activation_distance(), barrier_stiffness(),
+            friction_constraint_set, closest_points, tangent_bases,
+            normal_force_magnitudes);
+
+        Diff::DDouble2 f_diff = compute_friction_potential(
+            V0, V_diff, m_assembler.m_edges, m_assembler.m_faces,
+            friction_constraint_set, closest_points, tangent_bases,
+            normal_force_magnitudes, static_friction_speed_bound * timestep(),
+            coefficient_friction);
+
+        if (std::isfinite(f_diff.getHessian().sum())
+            && !fd::compare_hessian(dense_hess, f_diff.getHessian())) {
+            spdlog::error(
+                "autodiff hessian check failed for friction "
+                "(hess_L_inf_norm={:g} diff_L_inf_norm={:g})",
+                dense_hess.lpNorm<Eigen::Infinity>(),
+                (f_diff.getHessian() - dense_hess).lpNorm<Eigen::Infinity>());
+            std::cout << "dense_hess - f_diff.getHessian():\n"
+                      << (1e-20
+                          < (dense_hess - f_diff.getHessian()).array().abs())
+                             .select(dense_hess - f_diff.getHessian(), 0.0f)
+                      << std::endl;
+        } else if (!std::isfinite(f_diff.getHessian().sum())) {
+            spdlog::warn("autodiff hessian failed for friction");
+        }
     }
 #endif
 

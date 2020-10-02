@@ -437,7 +437,7 @@ namespace opt {
         // Return true if the solve was successful.
         bool solve_success = false;
 
-        if (hessian.rows() <= 1200) {
+        if (hessian.rows() <= 1200) { // <= 200 bodies
             Eigen::MatrixXd dense_hessian(hessian);
             direction = dense_hessian.ldlt().solve(-gradient);
             solve_success = true;
