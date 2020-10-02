@@ -15,7 +15,7 @@ namespace opt {
     NewtonSolver::NewtonSolver()
         : max_iterations(1000)
         , iteration_number(0)
-        , convergence_criteria(ConvergenceCriteria::ENERGY)
+        , convergence_criteria(ConvergenceCriteria::VELOCITY)
     {
         linear_solver = polysolve::LinearSolver::create("", "");
     }

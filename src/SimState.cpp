@@ -128,7 +128,6 @@ bool SimState::init(const nlohmann::json& args_in)
             }
         },
         "ipc_solver": {
-            "max_iterations": 3000,
             "dhat_epsilon": 1e-9,
             "min_barrier_stiffness_scale": "default"
         },
@@ -186,9 +185,17 @@ bool SimState::init(const nlohmann::json& args_in)
             Constants::MIN_BARRIER_STIFFNESS_SCALE;
     }
 
-    // Share the linear solve settings with IPC
+    // Share the newton solver settings with IPC
     args["ipc_solver"]["linear_solver"] =
         args["newton_solver"]["linear_solver"];
+    if (!args["ipc_solver"].contains("max_iterations")) {
+        args["ipc_solver"]["max_iterations"] =
+            args["newton_solver"]["max_iterations"];
+    }
+    if (!args["ipc_solver"].contains("convergence_criteria")) {
+        args["ipc_solver"]["convergence_criteria"] =
+            args["newton_solver"]["convergence_criteria"];
+    }
 
     auto problem_name = args["scene_type"].get<std::string>();
     problem_ptr = ProblemFactory::factory().get_problem(problem_name);
