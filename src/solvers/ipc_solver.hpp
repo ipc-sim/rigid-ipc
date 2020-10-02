@@ -31,12 +31,6 @@ namespace opt {
         virtual OptimizationResults solve(const Eigen::VectorXd& x0) override;
 
     protected:
-        bool converged() const override
-        {
-            assert(convergence_criteria == ConvergenceCriteria::VELOCITY);
-            return NewtonSolver::converged();
-        }
-
         /// Adaptivly update the barrier stiffness at the end of each step
         void post_step_update() override;
 

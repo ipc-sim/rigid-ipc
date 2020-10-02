@@ -15,9 +15,7 @@ namespace opt {
     // Initialize the state of the solver using the settings saved in JSON
     void IPCSolver::settings(const nlohmann::json& json)
     {
-        nlohmann::json edited_json = json;
-        edited_json["convergence_criteria"] = "velocity";
-        NewtonSolver::settings(edited_json);
+        NewtonSolver::settings(json);
         dhat_epsilon = json["dhat_epsilon"].get<double>();
         min_barrier_stiffness_scale =
             json["min_barrier_stiffness_scale"].get<double>();

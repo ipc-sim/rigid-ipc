@@ -19,25 +19,24 @@ int main(int argc, char* argv[])
     using namespace Catch::clara;
     auto cli = session.cli()
         | Opt(
-              [&log_level](int const d) {
-                  if (d < 0 || d > spdlog::level::off) {
-                      return ParserResult::runtimeError(
-                          "Log level must be between 0 and 6");
-                  } else {
-                      log_level = d;
-                      return ParserResult::ok(ParseResultType::Matched);
-                  }
-              },
-              "log_level")["-g"]["--logger-level"](
-              "logger verbosity level int (0-6)");
+                   [&log_level](int const d) {
+                       if (d < 0 || d > spdlog::level::off) {
+                           return ParserResult::runtimeError(
+                               "Log level must be between 0 and 6");
+                       } else {
+                           log_level = d;
+                           return ParserResult::ok(ParseResultType::Matched);
+                       }
+                   },
+                   "log_level")["-g"]["--logger-level"](
+                   "logger verbosity level int (0-6)");
     session.cli(cli);
 
     int returnCode = session.applyCommandLine(argc, argv);
     if (returnCode != 0) // Indicates a command line error
         return returnCode;
 
-    spdlog::set_level(static_cast<spdlog::level::level_enum>(log_level));
-    ipc::logger().set_level(static_cast<spdlog::level::level_enum>(log_level));
+    ccd::logger::set_level(static_cast<spdlog::level::level_enum>(log_level));
 
     return session.run();
 }

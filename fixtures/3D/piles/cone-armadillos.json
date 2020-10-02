@@ -10,9 +10,6 @@
     "ipc_solver": {
         "min_barrier_stiffness_scale": 1e11
     },
-    "newton_solver": {
-        "convergence_criteria": "energy"
-    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],

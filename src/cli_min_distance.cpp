@@ -7,10 +7,11 @@
 #include <ccd/collision_detection.hpp>
 #include <geometry/distance.hpp>
 #include <io/serialize_json.hpp>
+#include <logger.hpp>
 
 int main(int argc, char* argv[])
 {
-    spdlog::set_level(spdlog::level::info);
+    ccd::logger::set_level(spdlog::level::info);
 
     struct {
         std::string input_json = "";

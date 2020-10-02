@@ -36,9 +36,7 @@ void UISimState::draw_menu()
         if (ImGui::Combo(
                 "log-level##logger", &m_log_level, level_strings,
                 CCD_IM_ARRAYSIZE(level_strings))) {
-            spdlog::set_level(
-                static_cast<spdlog::level::level_enum>(m_log_level));
-            ipc::logger().set_level(
+            logger::set_level(
                 static_cast<spdlog::level::level_enum>(m_log_level));
         }
 

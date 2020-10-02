@@ -111,20 +111,21 @@ namespace opt {
                 "solver={} iter={:d} step_max_speed={:g} tol={:g}", //
                 name(), iteration_number, step_max_speed, tol);
 
-            double newton_step_energy = abs(gradient_free.dot(direction_free));
-            double gradient_step_energy = abs(gradient_free.dot(gradient_free));
-            double gradient_mass_step_energy =
+            double newton_step_energy =
+                sqrt(abs(gradient_free.dot(direction_free)));
+            double gradient_step_energy =
+                sqrt(abs(gradient_free.dot(gradient_free)));
+            double gradient_mass_step_energy = sqrt(
                 abs(grad_direction.transpose() * problem_ptr->mass_matrix()
-                    * grad_direction);
+                    * grad_direction));
 
+            // GREP_NCONV,1,0.130871,1.02885e-05,1.15864e-06,2.46467e-06,0.00434816,0.00399746,9.82746e-06
             std::cout << fmt::format(
                              "{},{:d},{:g},{:g},{:g},{:g},{:g},{:g},{:g}",
                              step_max_speed <= tol ? "GREP_CONV" : "GREP_NCONV",
                              iteration_number, step_max_speed,
-                             sqrt(newton_step_energy),
-                             sqrt(gradient_step_energy),
-                             sqrt(gradient_mass_step_energy),
-                             sqrt(direction_free.squaredNorm()),
+                             newton_step_energy, gradient_step_energy,
+                             gradient_mass_step_energy, direction_free.norm(),
                              direction_free.lpNorm<Eigen::Infinity>(),
                              sqrt(
                                  abs(direction.transpose()
@@ -292,7 +293,9 @@ namespace opt {
 
         bool success = false;
         int num_it = 0;
-        double lower_bound = line_search_lower_bound() / -grad_fx.dot(dir);
+        // double lower_bound = line_search_lower_bound() / -grad_fx.dot(dir);
+        double lower_bound =
+            line_search_lower_bound() / sqrt(abs(grad_fx.dot(dir)));
         lower_bound = std::min(lower_bound, 1e-1);
         // double lower_bound = line_search_lower_bound() / dir.squaredNorm();
         // double lower_bound = line_search_lower_bound();
@@ -434,31 +437,41 @@ namespace opt {
         // Return true if the solve was successful.
         bool solve_success = false;
 
-        linear_solver->analyzePattern(hessian, hessian.rows());
-        linear_solver->factorize(hessian);
-        nlohmann::json info;
-        linear_solver->getInfo(info);
-        // TODO: This check only works for direct Eigen solvers
-        if (!info.contains("solver_info") || info["solver_info"] == "Success") {
-            // TODO: Do we have a better initial guess for iterative solvers?
-            direction = Eigen::VectorXd::Zero(gradient.size());
-            linear_solver->solve(-gradient, direction);
+        if (hessian.rows() <= 1200) {
+            Eigen::MatrixXd dense_hessian(hessian);
+            direction = dense_hessian.ldlt().solve(-gradient);
+            solve_success = true;
+        } else {
+            linear_solver->analyzePattern(hessian, hessian.rows());
+            linear_solver->factorize(hessian);
+            nlohmann::json info;
             linear_solver->getInfo(info);
+            // TODO: This check only works for direct Eigen solvers
             if (!info.contains("solver_info")
                 || info["solver_info"] == "Success") {
-                solve_success = true;
+                // TODO: Do we have a better initial guess for iterative
+                // solvers?
+                direction = Eigen::VectorXd::Zero(gradient.size());
+                linear_solver->solve(-gradient, direction);
+                linear_solver->getInfo(info);
+                if (!info.contains("solver_info")
+                    || info["solver_info"] == "Success") {
+                    solve_success = true;
+                } else {
+                    spdlog::warn(
+                        "solver={} iter={:d} failure=\"sparse solve for newton "
+                        "direction\" failsafe=\"gradient descent\"",
+                        name(), iteration_number);
+                }
             } else {
                 spdlog::warn(
-                    "solver={} iter={:d} failure=\"sparse solve for newton "
-                    "direction\" failsafe=\"gradient descent\"",
+                    "solver={} iter={:d} failure=\"sparse decomposition of the "
+                    "hessian\" failsafe=\"gradient descent\"",
                     name(), iteration_number);
             }
-        } else {
-            spdlog::warn(
-                "solver={} iter={:d} failure=\"sparse decomposition of the "
-                "hessian\" failsafe=\"gradient descent\"",
-                name(), iteration_number);
         }
+
+        PROFILE_END(SOLVE);
 
         // Check solve residual
         if (solve_success) {
@@ -472,8 +485,6 @@ namespace opt {
                 solve_success = false;
             }
         }
-
-        PROFILE_END(SOLVE);
 
         if (!solve_success) {
             direction = -gradient;

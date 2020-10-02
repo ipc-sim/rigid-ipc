@@ -22,7 +22,14 @@ mark_as_advanced(FIXING_COLLISIONS_ENABLE_MOSEK)
 option(FIXING_COLLISIONS_ENABLE_SIMD              "Enable SIMD" OFF)
 
 # PolySolve settings
-set(POLYSOLVE_WITH_AMGCL OFF CACHE BOOL "Use AMGCL" FORCE)
+option(POLYSOLVE_WITH_CHOLMOD          "Enable Cholmod library"            ON)
+option(POLYSOLVE_WITH_UMFPACK          "Enable UmfPack library"            OFF)
+option(POLYSOLVE_WITH_SUPERLU          "Enable SuperLU library"            OFF)
+option(POLYSOLVE_WITH_MKL              "Enable MKL library"                OFF)
+option(POLYSOLVE_WITH_PARDISO          "Enable Pardiso library"            OFF)
+option(POLYSOLVE_WITH_HYPRE            "Enable hypre"                      OFF)
+option(POLYSOLVE_WITH_AMGCL            "Use AMGCL"                         OFF)
+option(POLYSOLVE_WITH_SPECTRA          "Enable computing spectrum"         OFF)
 
 ################################################################################
 
@@ -250,7 +257,7 @@ add_executable(${PROJECT_NAME}_sim
     src/main.cpp
 )
 
-target_include_directories(${PROJECT_NAME}_sim PRIVATE src)
+target_include_directories(${PROJECT_NAME}_sim PUBLIC src)
 target_link_libraries(${PROJECT_NAME}_sim PUBLIC ${PROJECT_NAME})
 
 # Charlie Tangora's gif-h library
@@ -263,7 +270,6 @@ add_executable(${PROJECT_NAME}_ngui
      src/cli_main.cpp
 )
 
-target_include_directories(${PROJECT_NAME}_ngui PRIVATE src)
 target_link_libraries(${PROJECT_NAME}_ngui PUBLIC ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME}_ngui PUBLIC CLI11::CLI11)
 
@@ -274,7 +280,6 @@ add_executable(cli_mindistance
      src/cli_min_distance.cpp
 )
 
-target_include_directories(cli_mindistance PRIVATE src)
 target_link_libraries(cli_mindistance PUBLIC ${PROJECT_NAME})
 target_link_libraries(cli_mindistance PUBLIC CLI11::CLI11)
 
@@ -285,7 +290,6 @@ add_executable(cli_ccd
      src/cli_ccd.cpp
 )
 
-target_include_directories(cli_ccd PRIVATE src)
 target_link_libraries(cli_ccd PUBLIC ${PROJECT_NAME})
 target_link_libraries(cli_ccd PUBLIC CLI11::CLI11)
 

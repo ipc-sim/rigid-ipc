@@ -9,7 +9,7 @@
 
 int main(int argc, char* argv[])
 {
-    spdlog::set_level(spdlog::level::info);
+    ccd::logger::set_level(spdlog::level::info);
 
     struct {
         std::string input_json = "";

@@ -12,8 +12,6 @@
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
-#include <ipc/utils/logger.hpp>
-
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
@@ -31,6 +29,11 @@ namespace logger {
 
     /// @brief Get a string of the current time
     std::string now();
+
+    // NOTE: Interval logging is defined in the CPP file but declares in
+    // interval.hpp.
+
+    void set_level(spdlog::level::level_enum log_level);
 
 } // namespace logger
 

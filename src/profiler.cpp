@@ -80,7 +80,8 @@ namespace profiler {
     void Profiler::log(const std::string& fin)
     {
 
-        std::string parent_name = fmt::format("{}/log_{}", dout, ccd::logger::now());
+        std::string parent_name =
+            fmt::format("{}/log_{}", dout, ccd::logger::now());
         if (mkdir(parent_name.c_str(), ACCESSPERMS) == 0) {
             write_summary(parent_name, fin);
             for (auto& p : points) {
@@ -90,8 +91,8 @@ namespace profiler {
         }
     }
 
-    void Profiler::write_summary(
-        const std::string& dout, const std::string& fin)
+    void
+    Profiler::write_summary(const std::string& dout, const std::string& fin)
     {
         // create more detailed map of function calls:
         typedef std::tuple<int, double> T;
@@ -104,7 +105,8 @@ namespace profiler {
             auto& stack_history = point->stacks();
             for (size_t i = 0; i < time_history.size(); ++i) {
                 std::string stack = "";
-                std::for_each(stack_history[i].begin(), stack_history[i].end(),
+                std::for_each(
+                    stack_history[i].begin(), stack_history[i].end(),
                     [&](const std::string& piece) { stack += "->" + piece; });
 
                 auto time = time_history[i];
@@ -123,20 +125,21 @@ namespace profiler {
         std::ofstream myfile;
         myfile.open(filename);
         myfile << fin << "\n";
-        myfile
-            << "section, total_time (sec), percentage_time, num_calls, avg_time (sec)\n";
+        myfile << "section, total_time (sec), percentage_time, num_calls, "
+                  "avg_time (sec)\n";
 
         double total_time = main->total_time();
         size_t num_calls = main->num_evaluations();
-        myfile << fmt::format("{}, {:10e}, 100.00%, {}, {}\n", main->name(),
-            total_time, num_calls, total_time / num_calls);
+        myfile << fmt::format(
+            "{}, {:10e}, 100.00%, {}, {}\n", main->name(), total_time,
+            num_calls, total_time / num_calls);
 
         for (auto& p : points) {
             double p_time = p->total_time();
             size_t p_num_calls = p->num_evaluations();
-            myfile << fmt::format("{}, {:10e}, {:2f}%, {}, {}\n", p->name(),
-                p_time, p_time / total_time * 100, p_num_calls,
-                p_time / p_num_calls);
+            myfile << fmt::format(
+                "{}, {:10e}, {:2f}%, {}, {}\n", p->name(), p_time,
+                p_time / total_time * 100, p_num_calls, p_time / p_num_calls);
         }
         myfile << "\n\n";
 
@@ -144,9 +147,9 @@ namespace profiler {
             int p_num_calls = std::get<0>(it.second);
             double p_time = std::get<1>(it.second);
 
-            myfile << fmt::format("{}, {:10e}, {:2f}%, {}, {}\n", it.first,
-                p_time, p_time / total_time * 100, p_num_calls,
-                p_time / p_num_calls);
+            myfile << fmt::format(
+                "{}, {:10e}, {:2f}%, {}, {}\n", it.first, p_time,
+                p_time / total_time * 100, p_num_calls, p_time / p_num_calls);
         }
 
         myfile.close();
@@ -155,8 +158,8 @@ namespace profiler {
     void Profiler::write_point_details(
         const std::string& dout, const ProfilerPoint& point)
     {
-        std::string filename
-            = fmt::format("{}/{}_details.csv", dout, point.name());
+        std::string filename =
+            fmt::format("{}/{}_details.csv", dout, point.name());
 
         std::ofstream myfile;
 
@@ -169,12 +172,13 @@ namespace profiler {
 
         for (size_t i = 0; i < time_history.size(); ++i) {
             std::string stack = "";
-            std::for_each(stack_history[i].begin(), stack_history[i].end(),
+            std::for_each(
+                stack_history[i].begin(), stack_history[i].end(),
                 [&](const std::string& piece) { stack += "->" + piece; });
 
             auto time = time_history[i];
-            std::string message
-                = message_history.size() > i ? message_history[i] : "";
+            std::string message =
+                message_history.size() > i ? message_history[i] : "";
 
             myfile << fmt::format("{},{:10e},{}\n", stack, time, message);
         }
@@ -194,7 +198,8 @@ namespace profiler {
         auto& stack_history = point.stacks();
         for (size_t i = 0; i < time_history.size(); ++i) {
             std::string stack = "";
-            std::for_each(stack_history[i].begin(), stack_history[i].end(),
+            std::for_each(
+                stack_history[i].begin(), stack_history[i].end(),
                 [&](const std::string& piece) { stack += "->" + piece; });
 
             auto time = time_history[i];
@@ -206,14 +211,15 @@ namespace profiler {
                 num_events_per_path.insert(M(stack, T(1, time)));
             }
         }
-        std::string filename
-            = fmt::format("{}/{}_summary.csv", dout, point.name());
+        std::string filename =
+            fmt::format("{}/{}_summary.csv", dout, point.name());
         std::ofstream myfile;
         myfile.open(filename);
         myfile << "stack, total_time (sec), num_calls\n";
         for (auto& it : num_events_per_path) {
-            myfile << fmt::format("{},{:10e},{}\n", it.first,
-                std::get<1>(it.second), std::get<0>(it.second));
+            myfile << fmt::format(
+                "{},{:10e},{}\n", it.first, std::get<1>(it.second),
+                std::get<0>(it.second));
         }
         myfile.close();
     }
@@ -223,9 +229,8 @@ namespace profiler {
     // -----------------------------------------------------------------
     ProfilerLog::ProfilerLog()
     {
-
-        auto console_sink
-            = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        auto console_sink =
+            std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         console_sink->set_level(spdlog::level::debug);
 
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(

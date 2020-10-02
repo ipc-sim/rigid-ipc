@@ -118,7 +118,7 @@ bool SimState::init(const nlohmann::json& args_in)
         },
         "newton_solver": {
             "max_iterations": 3000,
-            "convergence_criteria": "energy",
+            "convergence_criteria": "velocity",
             "linear_solver": {
                 "name": "Eigen::SimplicialLDLT",
                 "max_iter": 1000,
@@ -146,7 +146,7 @@ bool SimState::init(const nlohmann::json& args_in)
             "initial_barrier_activation_distance": 1e-2,
             "min_distance": 0.0,
             "active_constraint_scale": 1.01,
-            "barrier_type": "poly_log"
+            "barrier_type": "ipc"
         },
         "friction_constraints": {
             "static_friction_speed_bound": 1e-3,

@@ -8,6 +8,8 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include <ipc/utils/logger.hpp>
+
 #include <ccd/interval.hpp>
 
 namespace ccd {
@@ -61,6 +63,13 @@ namespace logger {
         }
         ss << "]";
         return ss.str();
+    }
+
+    void set_level(spdlog::level::level_enum log_level)
+    {
+        spdlog::set_level(log_level);
+        ipc::logger().set_level(log_level);
+        // fd::logger().set_level(log_level);
     }
 
 } // namespace logger
