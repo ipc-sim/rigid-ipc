@@ -38,7 +38,7 @@ public:
     std::shared_ptr<igl::opengl::ViewerDataExt>
     get_data(const std::string& data) const;
 
-    void launch();
+    void launch(const std::string& inital_scene);
     void load_scene();
     void redraw_scene();
     bool pre_draw_loop();
@@ -48,7 +48,7 @@ public:
 
     bool load(std::string scene_filename) override
     {
-        if (m_state.load_scene(scene_filename)) {
+        if (scene_filename != "" && m_state.load_scene(scene_filename)) {
             load_scene();
             return true;
         }
@@ -131,6 +131,8 @@ private:
     bool m_scene_changed;
 
     double m_simulation_time;
+
+    std::string inital_scene;
 };
 
 } // namespace ccd

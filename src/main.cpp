@@ -7,13 +7,24 @@
 
 #include <io/json_to_mjcf.hpp>
 
+bool is_number(const std::string& s)
+{
+    return !s.empty()
+        && std::find_if(
+               s.begin(), s.end(),
+               [](unsigned char c) { return !std::isdigit(c); })
+        == s.end();
+}
+
 int main(int argc, char* argv[])
 {
     spdlog::debug(
         "Using Eigen {}.{}.{}", EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION,
         EIGEN_MINOR_VERSION);
 
-    if (argc > 1) {
+    bool is_arg1_number = argc > 1 && is_number(argv[1]);
+
+    if (is_arg1_number) {
         int mode = std::stoi(argv[1]);
         switch (mode) {
         case 1: { // json to MJCF
@@ -49,5 +60,5 @@ int main(int argc, char* argv[])
     // tbb::task_scheduler_init init(1);
     ccd::logger::set_level(spdlog::level::info);
     ccd::UISimState ui;
-    ui.launch();
+    ui.launch((argc > 1 && !is_arg1_number) ? argv[1] : "");
 }

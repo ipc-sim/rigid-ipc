@@ -23,7 +23,7 @@ UISimState::UISimState()
 {
 }
 
-void UISimState::launch()
+void UISimState::launch(const std::string& inital_scene)
 {
     m_viewer.plugins.push_back(this);
     m_viewer.core().set_rotation_type(
@@ -32,6 +32,7 @@ void UISimState::launch()
     m_viewer.core().is_animating = true;
     m_viewer.core().lighting_factor = 0.0;
     m_viewer.core().animation_max_fps = 120.0;
+    this->inital_scene = inital_scene;
     m_viewer.callback_pre_draw = [&](igl::opengl::glfw::Viewer&) {
         return pre_draw_loop();
     };
@@ -72,6 +73,8 @@ void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
     datas_.emplace_back("edges", mesh_data);
     datas_.emplace_back("velocity", velocity_data);
     datas_.emplace_back("body-frame", com_data);
+
+    load(this->inital_scene);
 }
 
 void UISimState::load_scene()
