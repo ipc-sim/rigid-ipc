@@ -187,7 +187,9 @@ bool SimState::init(const nlohmann::json& args_in)
     for (auto& op : patch) {
         if (op["op"].get<std::string>().compare("add") == 0) {
             auto new_path = json::json_pointer(op["path"].get<std::string>());
-            if (!args_in[new_path.parent_pointer()].is_array()) {
+            if (!args_in[new_path.parent_pointer()].is_array()
+                && new_path.back().size() != 0
+                && new_path.back().front() != '#') {
                 spdlog::error(
                     "Unknown key in json path={}",
                     op["path"].get<std::string>());

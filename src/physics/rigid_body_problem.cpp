@@ -547,7 +547,7 @@ namespace physics {
             hashgrid.getEdgeFacePairs(edges, faces, group_ids(), ef_candidates);
 
             for (const EdgeFaceCandidate& ef_candidate : ef_candidates) {
-                if (geometry::segment_triangle_intersect(
+                if (geometry::are_edge_triangle_intersecting(
                         vertices.row(edges(ef_candidate.edge_index, 0)),
                         vertices.row(edges(ef_candidate.edge_index, 1)),
                         vertices.row(faces(ef_candidate.face_index, 0)),

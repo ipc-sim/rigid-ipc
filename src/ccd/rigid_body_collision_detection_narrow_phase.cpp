@@ -4,10 +4,11 @@
 
 #include <igl/barycentric_coordinates.h>
 
+#include <ipc/friction/closest_point.hpp>
+
 #include <ccd/rigid_body_time_of_impact.hpp>
 #include <constants.hpp>
 #include <geometry/intersection.hpp>
-#include <geometry/projection.hpp>
 #include <profiler.hpp>
 #include <utils/not_implemented_error.hpp>
 
@@ -149,8 +150,8 @@ bool detect_edge_vertex_collisions_narrow_phase(
             poseB, bodies.m_rbs[bodyB_id].edges(edge_id, 1));
 
         // Compute the impact parameter along the edge
-        alpha = geometry::project_point_to_line(
-            vertex, edge_vertex0, (edge_vertex1 - edge_vertex0).eval());
+        alpha =
+            ipc::point_edge_closest_point(vertex, edge_vertex0, edge_vertex1);
         // assert(
         //     alpha > -Constants::PARAMETER_ASSERTION_TOL
         //     && alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
@@ -229,10 +230,11 @@ bool detect_edge_edge_collisions_narrow_phase(
         Eigen::Vector3d edgeB_vertex1_toi = bodies.m_rbs[bodyB_id].world_vertex(
             poseB, bodies.m_rbs[bodyB_id].edges(edgeB_id, 1));
 
-        geometry::project_segment_to_segment(
+        Eigen::Vector2d alphas = ipc::edge_edge_closest_point(
             edgeA_vertex0_toi, edgeA_vertex1_toi, //
-            edgeB_vertex0_toi, edgeB_vertex1_toi, //
-            edge0_alpha, edge1_alpha);
+            edgeB_vertex0_toi, edgeB_vertex1_toi);
+        edge0_alpha = alphas(0);
+        edge1_alpha = alphas(1);
         // assert(
         //     edge0_alpha > -Constants::PARAMETER_ASSERTION_TOL
         //     && edge0_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);

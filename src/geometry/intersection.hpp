@@ -1,43 +1,40 @@
 #pragma once
 
-#include <ECCD.hpp>
 #include <Eigen/Core>
 
 #include <ccd/interval.hpp>
-#include <constants.hpp>
-#include <utils/eigen_ext.hpp>
 
 /// NOTE: Naming Convention
 /// Point: Either a 2D or 3D point in space.
-/// Segment: A line segment in either 2D or 3D defined by its endpoints.
+/// Edge: A line segment in either 2D or 3D defined by its endpoints.
 /// Triangle: A triangle in 3D
 
 namespace ccd {
 namespace geometry {
 
-    bool is_point_along_segment(
-        const Eigen::VectorX3I& point,
-        const Eigen::VectorX3I& segment_start,
-        const Eigen::VectorX3I& segment_end);
+    bool is_point_along_edge(
+        const Eigen::VectorX3I& p,
+        const Eigen::VectorX3I& e0,
+        const Eigen::VectorX3I& e1);
 
-    bool are_segments_intersecting(
-        const Eigen::Vector3I& segment0_start,
-        const Eigen::Vector3I& segment0_end,
-        const Eigen::Vector3I& segment1_start,
-        const Eigen::Vector3I& segment1_end);
+    bool are_edges_intersecting(
+        const Eigen::Vector3I& ea0,
+        const Eigen::Vector3I& ea1,
+        const Eigen::Vector3I& eb0,
+        const Eigen::Vector3I& eb1);
 
     bool is_point_inside_triangle(
-        const Eigen::Vector3I& point,
-        const Eigen::Vector3I& triangle_vertex0,
-        const Eigen::Vector3I& triangle_vertex1,
-        const Eigen::Vector3I& triangle_vertex2);
+        const Eigen::Vector3I& p,
+        const Eigen::Vector3I& t0,
+        const Eigen::Vector3I& t1,
+        const Eigen::Vector3I& t2);
 
-    bool segment_triangle_intersect(
-        const Eigen::Vector3d& segment_vertex0,
-        const Eigen::Vector3d& segment_vertex1,
-        const Eigen::Vector3d& triangle_vertex0,
-        const Eigen::Vector3d& triangle_vertex1,
-        const Eigen::Vector3d& triangle_vertex2);
+    bool are_edge_triangle_intersecting(
+        const Eigen::Vector3d& e0,
+        const Eigen::Vector3d& e1,
+        const Eigen::Vector3d& t0,
+        const Eigen::Vector3d& t1,
+        const Eigen::Vector3d& t2);
 
 } // namespace geometry
 } // namespace ccd

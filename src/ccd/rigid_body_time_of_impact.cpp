@@ -10,7 +10,6 @@
 #include <constants.hpp>
 #include <geometry/distance.hpp>
 #include <geometry/intersection.hpp>
-#include <geometry/normal.hpp>
 #include <logger.hpp>
 #include <utils/eigen_ext.hpp>
 #include <utils/not_implemented_error.hpp>

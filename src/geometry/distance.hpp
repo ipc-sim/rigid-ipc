@@ -2,47 +2,8 @@
 
 #include <Eigen/Core>
 
-#include <utils/eigen_ext.hpp>
-
-/// NOTE: Naming Convention
-/// Point: Either a 2D or 3D point in space.
-/// Segment: A line segment in either 2D or 3D defined by its endpoints.
-/// Triangle: A triangle in 3D
-
-// Uncomment this line to switch to distance squared
-// #define USE_DISTANCE_SQUARED
-
 namespace ccd {
 namespace geometry {
-
-    //-------------------------------------------------------------------------
-    // Unsigned Distances
-    //-------------------------------------------------------------------------
-
-    template <typename T, int dim, int max_dim = dim>
-    inline T point_point_distance(
-        const Eigen::Vector<T, dim, max_dim>& point0,
-        const Eigen::Vector<T, dim, max_dim>& point1);
-
-    template <typename T, int dim, int max_dim>
-    inline T point_segment_distance(
-        const Eigen::Vector<T, dim, max_dim>& point,
-        const Eigen::Vector<T, dim, max_dim>& segment_start,
-        const Eigen::Vector<T, dim, max_dim>& segment_end);
-
-    template <typename T>
-    inline T segment_segment_distance(
-        const Eigen::Vector3<T>& segment0_start,
-        const Eigen::Vector3<T>& segment0_end,
-        const Eigen::Vector3<T>& segment1_start,
-        const Eigen::Vector3<T>& segment1_end);
-
-    template <typename T>
-    inline T point_triangle_distance(
-        const Eigen::Vector3<T>& point,
-        const Eigen::Vector3<T>& triangle_vertex0,
-        const Eigen::Vector3<T>& triangle_vertex1,
-        const Eigen::Vector3<T>& triangle_vertex2);
 
     //-------------------------------------------------------------------------
     // Signed Distances (useful for CCD)

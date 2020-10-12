@@ -4,8 +4,9 @@
 #include <CLI/CLI.hpp>
 #include <nlohmann/json.hpp>
 
+#include <ipc/distance/point_edge.hpp>
+
 #include <ccd/collision_detection.hpp>
-#include <geometry/distance.hpp>
 #include <io/serialize_json.hpp>
 #include <logger.hpp>
 
@@ -83,8 +84,7 @@ int main(int argc, char* argv[])
                 vertices.row(edges(ev_candidate.edge_index, 0));
             Eigen::VectorXd s1 =
                 vertices.row(edges(ev_candidate.edge_index, 1));
-            double distance =
-                ccd::geometry::point_segment_distance<double>(p, s0, s1);
+            double distance = ipc::point_edge_distance(p, s0, s1);
 
             if (min_distance < 0 || distance < min_distance) {
                 min_distance = distance;

@@ -10,9 +10,10 @@
 
 #include <igl/barycentric_coordinates.h>
 
+#include <ipc/friction/closest_point.hpp>
+
 #include <ccd/time_of_impact.hpp>
 #include <constants.hpp>
-#include <geometry/projection.hpp>
 #include <profiler.hpp>
 #include <utils/not_implemented_error.hpp>
 
@@ -158,9 +159,11 @@ bool detect_edge_edge_collisions_narrow_phase(
             (edge1_vertex0_t1 - edge1_vertex0_t0) * toi + edge1_vertex0_t0;
         Eigen::Vector3d edge1_vertex1_toi =
             (edge1_vertex1_t1 - edge1_vertex1_t0) * toi + edge1_vertex1_t0;
-        geometry::project_segment_to_segment(
+        Eigen::Vector2d alphas = ipc::edge_edge_closest_point(
             edge0_vertex0_toi, edge0_vertex1_toi, edge1_vertex0_toi,
-            edge1_vertex1_toi, edge0_alpha, edge1_alpha);
+            edge1_vertex1_toi);
+        edge0_alpha = alphas(0);
+        edge1_alpha = alphas(1);
         assert(
             edge0_alpha > -Constants::PARAMETER_ASSERTION_TOL
             && edge0_alpha < 1 + Constants::PARAMETER_ASSERTION_TOL);
