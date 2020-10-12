@@ -4,11 +4,11 @@
     "timestep": 0.01,
     "max_time": 30.0,
     "distance_barrier_constraint": {
-        "barrier_type": "poly_log",
         "initial_barrier_activation_distance": 1e-2
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
+        "coefficient_friction": 1,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "arch/stone-1.obj",

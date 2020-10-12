@@ -6,7 +6,7 @@
     "distance_barrier_constraint": {
         "barrier_type": "ipc",
         "trajectory_type": "screwing",
-        "initial_barrier_activation_distance": 1e-2
+        "initial_barrier_activation_distance": 1e-3
     },
     "ipc_solver": {
         "velocity_conv_tol": 1e-2
@@ -17,7 +17,7 @@
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "cube.obj",
-            "#is_dof_fixed": [false, false, false, true, true, true],
+            "is_dof_fixed": [false, false, false, true, true, true],
             "position": [-3, 0, 0],
             "linear_velocity": [10, 0, 0]
         }, {
