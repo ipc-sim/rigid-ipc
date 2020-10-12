@@ -1,12 +1,11 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "timestep": 0.01,
-    "max_time": 10,
+    "max_time": 5,
     "distance_barrier_constraint": {
         "detection_method": "hash_grid",
         "trajectory_type": "screwing",
-        "initial_barrier_activation_distance": 0.01,
-        "active_constraint_scale": 1.01
+        "initial_barrier_activation_distance": 0.01
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,

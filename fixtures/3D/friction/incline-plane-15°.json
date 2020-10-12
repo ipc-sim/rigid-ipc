@@ -2,30 +2,28 @@
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
     "timestep": 0.01,
-    "max_time": 2.5,
+    "max_time": 10,
     "distance_barrier_constraint": {
         "barrier_type": "ipc",
-        "trajectory_type": "screwing",
         "initial_barrier_activation_distance": 1e-2
     },
     "ipc_solver": {
-        "velocity_conv_tol": 1e-2
+        "#convergence_criteria": "energy",
+        "#velocity_conv_tol": 1e-5
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "coefficient_friction": 5e-2,
+        "coefficient_friction": 1e-2,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "cube.obj",
-            "#is_dof_fixed": [false, false, false, true, true, true],
-            "position": [-3, 0, 0],
-            "linear_velocity": [10, 0, 0]
+            "position": [-3, 0.5, 0],
+            "rotation": [0, 0, 0]
         }, {
-            "mesh": "plane.obj",
+            "mesh": "plane-symmetric.obj",
             "is_dof_fixed": true,
-            "position": [0, -0.51, -3],
-            "rotation": [0, 0, 0],
-            "scale": [2, 1, -1]
+            "position": [0, -1, 0],
+            "rotation": [0, 0, -15]
         }]
     }
 }
