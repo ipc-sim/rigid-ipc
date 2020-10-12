@@ -10,12 +10,12 @@ namespace opt {
 
     template <typename T>
     T DistanceBarrierConstraint::distance_barrier(
-        const T& distance, const double eps) const
+        const T& distance, const double dhat) const
     {
 #ifdef USE_DISTANCE_SQUARED
-        return barrier(distance - min_distance, eps * eps, barrier_type);
+        return barrier(distance, dhat * dhat, barrier_type);
 #else
-        return barrier(distance - min_distance, eps, barrier_type);
+        return barrier(distance, dhat, barrier_type);
 #endif
     }
 

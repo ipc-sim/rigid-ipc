@@ -256,11 +256,12 @@ namespace opt {
                     // converged
                     if (iteration_number == 0 && converged()) {
                         // Do not consider this a failure
-                        spdlog::error(
+                        spdlog::warn(
                             "solver={} failure=\"converged without taking a "
                             "step\"",
                             name());
                         exit_reason = "found a local optimum with -grad dir";
+                        success = true;
                         break;
                     }
                     num_grad_ls_fails++;
@@ -319,6 +320,14 @@ namespace opt {
         double max_step_size =
             std::min(problem_ptr->compute_earliest_toi(x, x + dir), 1.0);
         step_length = std::min(step_length, max_step_size);
+        while (problem_ptr->has_collisions(x, x + step_length * dir)) {
+            step_length /= 2;
+            spdlog::critical(
+                "solver={} iter={:d} failure=\"x → x + αΔx has collision; "
+                "recomputed_earliest_toi={:g}\" failsafe=\"step_length \\= 2\"",
+                name(), iteration_number,
+                problem_ptr->compute_earliest_toi(x, x + dir));
+        }
         assert(!problem_ptr->has_collisions(x, x + step_length * dir));
         if (step_length < lower_bound) {
             spdlog::error(
@@ -446,13 +455,13 @@ namespace opt {
         PROFILE_START(SOLVE);
 
         // Check if the hessian is positive semi-definite.
-        // Eigen::LLT<Eigen::MatrixXd> LLT_H((Eigen::MatrixXd(hessian)));
-        // if (LLT_H.info() == Eigen::NumericalIssue) {
-        //     spdlog::warn(
-        //         "solver={} iter={:d} failure=\"possibly non semi-positive "
-        //         "definite Hessian is not PSD\"",
-        //         name(), iteration_number);
-        // }
+        Eigen::LLT<Eigen::MatrixXd> LLT_H((Eigen::MatrixXd(hessian)));
+        if (LLT_H.info() == Eigen::NumericalIssue) {
+            spdlog::warn(
+                "solver={} iter={:d} failure=\"possibly non semi-positive "
+                "definite Hessian\"",
+                name(), iteration_number);
+        }
 
         // Solve for the Newton direction (Δx = -H⁻¹∇f).
         // Return true if the solve was successful.
@@ -496,7 +505,6 @@ namespace opt {
 
         // Check solve residual
         if (solve_success) {
-            //                     ||(  A  )   (   x   ) - (   b   )||
             double solve_residual = (hessian * direction + gradient).norm();
             if (solve_residual > 1e-10) {
                 spdlog::warn(

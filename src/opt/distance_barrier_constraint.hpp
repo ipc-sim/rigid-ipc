@@ -2,6 +2,8 @@
 
 #include <Eigen/Core>
 
+#include <ipc/collision_constraint.hpp>
+
 #include <opt/collision_constraint.hpp>
 
 #include <autodiff/autodiff_types.hpp>
@@ -47,10 +49,10 @@ namespace opt {
             const physics::Poses<double>& poses,
             Eigen::VectorXd& barriers);
 
-        void construct_active_barrier_set(
+        void construct_constraint_set(
             const physics::RigidBodyAssembler& bodies,
             const physics::Poses<double>& poses,
-            Candidates& barriers) const;
+            ipc::Constraints& constraint_set) const;
 
         template <typename T>
         T distance_barrier(const T& distance, const double dhat) const;
@@ -65,25 +67,17 @@ namespace opt {
         double distance_barrier_hessian(double distance) const
         {
             return barrier_hessian(
-                distance - min_distance, m_barrier_activation_distance,
-                barrier_type);
+                distance, m_barrier_activation_distance, barrier_type);
         }
 
-        void compute_distances(
+        double compute_minimum_distance(
             const physics::RigidBodyAssembler& bodies,
-            const physics::Poses<double>& poses,
-            Eigen::VectorXd& distances) const;
+            const physics::Poses<double>& poses) const;
 
         // Settings
         // ----------
         /// @brief Initial d̂ to use in the barrier function.
         double initial_barrier_activation_distance;
-
-        /// @brief Minimum allowable distance between any pair of primitives.
-        double min_distance;
-
-        /// @brief Active constraints have distances < scale * d̂.
-        double active_constraint_scale;
 
         /// @brief Choice of barrier function (see barrier/barrier.hpp).
         BarrierType barrier_type;
