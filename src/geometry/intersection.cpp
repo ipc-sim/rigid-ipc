@@ -42,7 +42,7 @@ namespace geometry {
         return is_zero(Eigen::Vector3I(ea_alpha - eb_alpha));
     }
 
-    inline bool are_points_on_same_side_of_edge(
+    bool are_points_on_same_side_of_edge(
         const Eigen::Vector3I& p1,
         const Eigen::Vector3I& p2,
         const Eigen::Vector3I& a,
