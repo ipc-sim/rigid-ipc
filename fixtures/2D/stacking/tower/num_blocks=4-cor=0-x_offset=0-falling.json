@@ -5,7 +5,6 @@
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 0.01,
         "detection_method": "hash_grid",
-        "active_constraint_scale": 1.01
     },
     "homotopy_solver": {
         "e_b": 1e-06,

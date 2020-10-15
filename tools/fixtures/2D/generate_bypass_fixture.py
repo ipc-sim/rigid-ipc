@@ -18,7 +18,6 @@ def generate_scene(yvel, xpos) -> dict:
             "initial_barrier_activation_distance": DEFAULT_BARRIER_EPS,
             "detection_method": "hash_grid",
             "use_distance_hashgrid": True,
-            "active_constraint_scale": 1.01,
             "custom_hashgrid_cellsize": -1
         },
         "barrier_solver": {

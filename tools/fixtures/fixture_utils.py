@@ -26,8 +26,7 @@ def generate_default_fixture() -> dict:
         "timestep": DEFAULT_TIMESTEP,
         "distance_barrier_constraint": {
             "initial_barrier_activation_distance": DEFAULT_INITIAL_EPSILON,
-            "detection_method": "hash_grid",
-            "active_constraint_scale": 1.01
+            "detection_method": "hash_grid"
         },
         "barrier_solver": {
             "e_b": DEFAULT_BARRIER_SOLVER_EB,
