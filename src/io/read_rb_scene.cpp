@@ -51,9 +51,14 @@ namespace io {
                 "linear_velocity": [0.0, 0.0, 0.0],
                 "angular_velocity": [0.0, 0.0, 0.0],
                 "force": [0.0, 0.0, 0.0],
-                "torque": [0.0, 0.0, 0.0]
+                "torque": [0.0, 0.0, 0.0],
+                "enabled": true
             })"_json;
             args.merge_patch(jrb);
+
+            if (!args["enabled"].get<bool>()) {
+                continue;
+            }
 
             Eigen::MatrixXd vertices;
             Eigen::MatrixXi faces, edges;

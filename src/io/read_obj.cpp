@@ -23,6 +23,12 @@
 namespace ccd {
 namespace io {
 
+    std::string remove_newline(std::string s)
+    {
+        s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
+        return s;
+    }
+
     bool read_obj(
         const std::string obj_file_name,
         std::vector<std::vector<double>>& V,
@@ -221,9 +227,10 @@ namespace io {
                     // ignore comments or other stuff
                 } else {
                     // ignore any other lines
+                    std::string line_no_newline = remove_newline(line);
                     spdlog::warn(
                         "read_obj: ignored non-comment line {:d}: {:s}",
-                        line_no, line);
+                        line_no, line_no_newline);
                 }
             } else {
                 // ignore empty line

@@ -94,6 +94,7 @@ add_library(${PROJECT_NAME}
     src/solvers/ipc_solver.cpp
     src/solvers/solver_factory.cpp
 
+    src/problems/rigid_body_collision_constraint.cpp
     src/problems/distance_barrier_rb_problem.cpp
     src/problems/split_distance_barrier_rb_problem.cpp
     # src/problems/volume_rb_problem.cpp

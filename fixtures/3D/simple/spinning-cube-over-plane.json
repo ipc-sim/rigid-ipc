@@ -3,9 +3,12 @@
     "solver": "ipc_solver",
     "max_time": 10,
     "timestep": 1e-2,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 1e-4
+    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "gravity": [0, -9.81, 0],
+        "gravity": [0, 0, 0],
         "time_stepper": "dmv",
         "rigid_bodies": [{
             "mesh": "cube.obj",

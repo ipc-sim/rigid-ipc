@@ -5,8 +5,7 @@
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 0.01,
         "detection_method": "hash_grid",
-        "active_constraint_scale": 1.01,
-        "barrier_type": "poly_log"
+        "active_constraint_scale": 1.01
     },
     "homotopy_solver": {
         "min_barrier_epsilon": 0.0001

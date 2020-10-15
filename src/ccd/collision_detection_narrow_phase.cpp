@@ -27,7 +27,8 @@ void detect_collisions_from_candidates(
     const Candidates& candidates,
     ConcurrentImpacts& impacts)
 {
-    NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
+    NAMED_PROFILE_POINT(
+        "linear_collisions_detection__narrow_phase", NARROW_PHASE);
     PROFILE_START(NARROW_PHASE);
 
     auto detect_ev_collision = [&](const EdgeVertexCandidate& ev_candidate) {

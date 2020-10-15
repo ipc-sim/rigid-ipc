@@ -57,8 +57,9 @@ namespace opt {
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1) const
     {
-        PROFILE_POINT("collisions_detection");
-        NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
+        PROFILE_POINT("has_active_collisions");
+        NAMED_PROFILE_POINT(
+            "has_active_collisions__narrow_phase", NARROW_PHASE);
 
         PROFILE_START();
         // This function will profile itself
@@ -118,9 +119,7 @@ namespace opt {
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1) const
     {
-        PROFILE_POINT("collisions_detection");
-        NAMED_PROFILE_POINT("collisions_detection__narrow_phase", NARROW_PHASE);
-
+        PROFILE_POINT("compute_earliest_toi");
         PROFILE_START();
         // This function will profile itself
         Candidates candidates;
@@ -129,10 +128,8 @@ namespace opt {
             candidates, detection_method, trajectory_type,
             /*inflation_radius=*/0);
 
-        PROFILE_START(NARROW_PHASE)
         double earliest_toi = compute_earliest_toi_narrow_phase(
             bodies, poses_t0, poses_t1, candidates);
-        PROFILE_END(NARROW_PHASE)
         PROFILE_END();
 
         return earliest_toi;
@@ -144,9 +141,20 @@ namespace opt {
         const physics::Poses<double>& poses_t1,
         const Candidates& candidates) const
     {
+        NAMED_PROFILE_POINT("compute_earliest_toi__narrow_phase", NARROW_PHASE);
+        NAMED_PROFILE_POINT(
+            "compute_earliest_toi__edge_vertex_narrow_phase", EV_NARROW_PHASE);
+        NAMED_PROFILE_POINT(
+            "compute_earliest_toi__face_vertex_narrow_phase", FV_NARROW_PHASE);
+        NAMED_PROFILE_POINT(
+            "compute_earliest_toi__edge_edge_narrow_phase", EE_NARROW_PHASE);
+
         int collision_count = 0;
         double earliest_toi = 1;
 
+        PROFILE_START(NARROW_PHASE);
+
+        PROFILE_START(EV_NARROW_PHASE);
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double toi = std::numeric_limits<double>::infinity(), alpha;
             bool are_colliding = detect_edge_vertex_collisions_narrow_phase(
@@ -157,6 +165,9 @@ namespace opt {
                 earliest_toi = toi;
             }
         }
+        PROFILE_END(EV_NARROW_PHASE);
+
+        PROFILE_START(FV_NARROW_PHASE);
         for (const auto& fv_candidate : candidates.fv_candidates) {
             double toi = std::numeric_limits<double>::infinity(), u, v;
             bool are_colliding = detect_face_vertex_collisions_narrow_phase(
@@ -167,6 +178,9 @@ namespace opt {
                 earliest_toi = toi;
             }
         }
+        PROFILE_END(FV_NARROW_PHASE);
+
+        PROFILE_START(EE_NARROW_PHASE);
         for (const auto& ee_candidate : candidates.ee_candidates) {
             double toi = std::numeric_limits<double>::infinity(), edge0_alpha,
                    edge1_alpha;
@@ -178,13 +192,21 @@ namespace opt {
                 earliest_toi = toi;
             }
         }
+        PROFILE_END(EE_NARROW_PHASE);
 
-        spdlog::info(
+        double percent_correct = candidates.size() == 0
+            ? 100
+            : (double(collision_count) / candidates.size() * 100);
+        PROFILE_MESSAGE(
+            NARROW_PHASE,
+            fmt::format(
+                "num_candidates,{:d},num_collisions,{:d},percentage,{:g}%",
+                candidates.size(), collision_count, percent_correct));
+        PROFILE_END(NARROW_PHASE);
+
+        spdlog::debug(
             "num_candidates={:d} num_collisions={:d} percentage={:g}%",
-            candidates.size(), collision_count,
-            candidates.size() == 0
-                ? 0
-                : double(collision_count) / candidates.size() * 100);
+            candidates.size(), collision_count, percent_correct);
 
         return collision_count ? earliest_toi
                                : std::numeric_limits<double>::infinity();

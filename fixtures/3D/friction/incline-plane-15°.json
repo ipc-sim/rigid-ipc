@@ -9,18 +9,18 @@
     },
     "ipc_solver": {
         "#convergence_criteria": "energy",
-        "#velocity_conv_tol": 1e-5
+        "velocity_conv_tol": 1e-5
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "coefficient_friction": 1e-2,
+        "coefficient_friction": 2e-1,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
-            "mesh": "cube-symmetric.obj",
+            "mesh": "cube.obj",
             "position": [-3, 2.5, 0],
-            "rotation": [0, 0, 0]
+            "rotation": [0, 0, -15]
         }, {
-            "mesh": "plane-symmetric.obj",
+            "mesh": "plane.obj",
             "is_dof_fixed": true,
             "position": [5, -1, 0],
             "scale": [2, 1, 2],

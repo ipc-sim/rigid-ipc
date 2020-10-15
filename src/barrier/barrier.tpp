@@ -10,7 +10,8 @@
 namespace ccd {
 namespace opt {
 
-    template <typename T> T barrier(T x, double s, BarrierType barrier_type)
+    template <typename T>
+    T barrier(const T& x, double s, BarrierType barrier_type)
     {
         switch (barrier_type) {
         case BarrierType::IPC:
@@ -26,7 +27,7 @@ namespace opt {
         }
     }
 
-    template <typename T> T poly_log_barrier(T x, double s)
+    template <typename T> T poly_log_barrier(const T& x, double s)
     {
         if (x <= T(0))
             return T(std::numeric_limits<double>::infinity());
@@ -39,7 +40,7 @@ namespace opt {
         return g;
     }
 
-    template <typename T> T spline_barrier(T x, double s)
+    template <typename T> T spline_barrier(const T& x, double s)
     {
         if (x <= T(0))
             return T(std::numeric_limits<double>::infinity());

@@ -31,7 +31,8 @@ namespace opt {
      * @param barrier_type  Barrier function type to use.
      * @return The value of the barrier function at x.
      */
-    template <typename T> T barrier(T x, double s, BarrierType barrier_type);
+    template <typename T>
+    T barrier(const T& x, double s, BarrierType barrier_type);
 
     double barrier_gradient(double x, double s, BarrierType barrier_type);
 
@@ -41,7 +42,7 @@ namespace opt {
     // Poly-Log Barrier
 
     /// y := x/eps; b(x, ϵ) = -log(y)*(2*y^3-3*y^2+1)
-    template <typename T> T poly_log_barrier(T x, double s);
+    template <typename T> T poly_log_barrier(const T& x, double s);
 
     double poly_log_barrier_gradient(double x, double s);
 
@@ -68,7 +69,7 @@ namespace opt {
      * @param s Denominator inside x which steepens the function.
      * @return The value of the barrier function at x.
      */
-    template <typename T> T spline_barrier(T x, double s);
+    template <typename T> T spline_barrier(const T& x, double s);
 
     /**
      * @brief Derivative of the spline_barrier function with respect to x.

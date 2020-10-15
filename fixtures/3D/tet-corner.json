@@ -4,7 +4,6 @@
     "timestep": 0.01,
     "max_time": 3.0,
     "distance_barrier_constraint": {
-        "barrier_type": "poly_log",
         "initial_barrier_activation_distance": 1e-4
     },
     "rigid_body_problem": {

@@ -81,7 +81,7 @@ namespace opt {
     // Spline Barrier
     // template spetialization
 
-    template <> double spline_barrier<double>(double x, double s)
+    template <> double spline_barrier<double>(const double& x, double s)
     {
         return barrier_horner_compensated(x, s);
     }

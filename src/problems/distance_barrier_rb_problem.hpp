@@ -1,54 +1,18 @@
 #pragma once
 
+#include <ipc/collision_constraint.hpp>
+
 #include <autodiff/autodiff_types.hpp>
 #include <multiprecision.hpp>
 #include <opt/distance_barrier_constraint.hpp>
 #include <opt/optimization_problem.hpp>
 #include <physics/rigid_body_problem.hpp>
+#include <problems/rigid_body_collision_constraint.hpp>
 #include <solvers/homotopy_solver.hpp>
 
 namespace ccd {
 
 namespace opt {
-
-    struct RigidBodyEdgeVertexCandidate {
-        long vertex_body_id;
-        long edge_body_id;
-        long vertex_local_id;
-        long edge_vertex0_local_id;
-        long edge_vertex1_local_id;
-
-        inline std::array<long, 2> body_ids()
-        {
-            return { { vertex_body_id, edge_body_id } };
-        }
-    };
-    struct RigidBodyEdgeEdgeCandidate {
-        long edge0_body_id;
-        long edge1_body_id;
-        long edge0_vertex0_local_id;
-        long edge0_vertex1_local_id;
-        long edge1_vertex0_local_id;
-        long edge1_vertex1_local_id;
-
-        inline std::array<long, 2> body_ids()
-        {
-            return { { edge0_body_id, edge1_body_id } };
-        }
-    };
-    struct RigidBodyFaceVertexCandidate {
-        long vertex_body_id;
-        long face_body_id;
-        long vertex_local_id;
-        long face_vertex0_local_id;
-        long face_vertex1_local_id;
-        long face_vertex2_local_id;
-
-        inline std::array<long, 2> body_ids()
-        {
-            return { { vertex_body_id, face_body_id } };
-        }
-    };
 
     /// This class is both a simulation and optimization problem.
     class DistanceBarrierRBProblem : public physics::RigidBodyProblem,
@@ -135,6 +99,14 @@ namespace opt {
         ////////////////////////////////////////////////////////////
         // Barrier Problem
 
+        /// Compute the objective function f(x)
+        double compute_objective(
+            const Eigen::VectorXd& x,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
+            bool compute_grad = true,
+            bool compute_hess = true) override;
+
         /// Compute E(x) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
         double compute_energy_term(
             const Eigen::VectorXd& x,
@@ -207,32 +179,32 @@ namespace opt {
         opt::OptimizationSolver& solver() override { return *m_opt_solver; }
 
     protected:
-        void extract_local_system(
-            const EdgeVertexCandidate& c, RigidBodyEdgeVertexCandidate& rbc);
-        void extract_local_system(
-            const EdgeEdgeCandidate& c, RigidBodyEdgeEdgeCandidate& rbc);
-        void extract_local_system(
-            const FaceVertexCandidate& c, RigidBodyFaceVertexCandidate& rbc);
-
-        template <typename T, typename RigidBodyCandidate>
+        template <typename T, typename RigidBodyConstraint>
         T distance_barrier(
-            const Eigen::VectorXd& sigma, const RigidBodyCandidate& rbc);
+            const Eigen::VectorXd& sigma, const RigidBodyConstraint& rbc);
 
         template <typename T>
         T constraint_mollifier(
             const Eigen::VectorXd& sigma,
-            const RigidBodyEdgeVertexCandidate& rbc)
+            const RigidBodyVertexVertexConstraint& rbc)
         {
             return T(1.0);
         }
         template <typename T>
         T constraint_mollifier(
             const Eigen::VectorXd& sigma,
-            const RigidBodyEdgeEdgeCandidate& rbc);
+            const RigidBodyEdgeVertexConstraint& rbc)
+        {
+            return T(1.0);
+        }
         template <typename T>
         T constraint_mollifier(
             const Eigen::VectorXd& sigma,
-            const RigidBodyFaceVertexCandidate& rbc)
+            const RigidBodyEdgeEdgeConstraint& rbc);
+        template <typename T>
+        T constraint_mollifier(
+            const Eigen::VectorXd& sigma,
+            const RigidBodyFaceVertexConstraint& rbc)
         {
             return T(1.0);
         }
@@ -240,24 +212,28 @@ namespace opt {
         template <typename T>
         T distance(
             const Eigen::VectorXd& sigma,
-            const RigidBodyEdgeVertexCandidate& rbc);
+            const RigidBodyVertexVertexConstraint& rbc);
         template <typename T>
         T distance(
             const Eigen::VectorXd& sigma,
-            const RigidBodyEdgeEdgeCandidate& rbc);
+            const RigidBodyEdgeVertexConstraint& rbc);
         template <typename T>
         T distance(
             const Eigen::VectorXd& sigma,
-            const RigidBodyFaceVertexCandidate& rbc);
+            const RigidBodyEdgeEdgeConstraint& rbc);
+        template <typename T>
+        T distance(
+            const Eigen::VectorXd& sigma,
+            const RigidBodyFaceVertexConstraint& rbc);
 
         template <typename T>
         T compute_body_energy(
             const physics::RigidBody& body, const physics::Pose<T>& pose);
 
-        template <typename Candidate, typename RigidBodyCandidate>
+        template <typename Constraint, typename RigidBodyConstraint>
         void add_constraint_barrier(
             const Eigen::VectorXd& sigma,
-            const Candidate& candidate,
+            const Constraint& constraint,
             double& Bx,
             Eigen::VectorXd& grad,
             std::vector<Eigen::Triplet<double>>& hess_triplets,
@@ -265,18 +241,20 @@ namespace opt {
             bool compute_hess);
 
         /// Computes the barrier term value, gradient, and hessian from
-        /// distance candidates.
+        /// distance constraints.
         double compute_barrier_term(
             const Eigen::VectorXd& sigma,
-            const Candidates& distance_candidates,
+            const ipc::Constraints& distance_constraints,
             Eigen::VectorXd& grad,
             Eigen::SparseMatrix<double>& hess,
             bool compute_grad,
             bool compute_hess);
 
+        /// Computes the friction term value, gradient, and hessian from
+        /// distance constraints.
         double compute_friction_term(
             const Eigen::VectorXd& x,
-            const Candidates& distance_candidates,
+            const ipc::Constraints& distance_constraints,
             Eigen::VectorXd& grad,
             Eigen::SparseMatrix<double>& hess,
             bool compute_grad,
@@ -286,26 +264,32 @@ namespace opt {
         // The following functions are used exclusivly to check that the
         // gradient and hessian match a finite difference version.
 
-        template <typename Candidate, typename RigidBodyCandidate>
+        template <typename Constraint, typename RigidBodyConstraint>
         void check_distance_finite_gradient(
-            const Eigen::VectorXd& sigma, const Candidate& candidate);
-        template <typename Candidate, typename RigidBodyCandidate>
+            const Eigen::VectorXd& sigma, const Constraint& constraint);
+        template <typename Constraint, typename RigidBodyConstraint>
         void check_distance_finite_hessian(
-            const Eigen::VectorXd& sigma, const Candidate& candidate);
+            const Eigen::VectorXd& sigma, const Constraint& constraint);
 
         void check_grad_barrier(
-            const Eigen::VectorXd& sigma, const Candidates& candidates);
+            const Eigen::VectorXd& sigma,
+            const ipc::Constraints& constraints,
+            const Eigen::VectorXd& grad);
         void check_hess_barrier(
-            const Eigen::VectorXd& sigma, const Candidates& candidates);
+            const Eigen::VectorXd& sigma,
+            const ipc::Constraints& constraints,
+            const Eigen::SparseMatrix<double>& hess);
 
         void check_grad_friction(
             const Eigen::VectorXd& sigma,
-            const Candidates& candidates,
+            const ipc::Constraints& constraints,
             const Eigen::VectorXd& grad);
         void check_hess_friction(
             const Eigen::VectorXd& sigma,
-            const Candidates& candidates,
+            const ipc::Constraints& constraints,
             const Eigen::SparseMatrix<double>& hess);
+
+        bool is_checking_derivative = false;
 #endif
 
         /// @brief Constraint helper for active set and collision detection.
