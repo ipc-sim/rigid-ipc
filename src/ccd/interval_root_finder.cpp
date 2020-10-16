@@ -128,7 +128,7 @@ bool interval_root_finder(
     std::stack<Eigen::VectorX3I> xs;
     xs.push(x0);
     // TODO: Enable max_iterations
-    for (int i = 0; !xs.empty(); i++) {
+    for (size_t iter = 0; !xs.empty(); iter++) {
         x = xs.top();
         xs.pop();
 

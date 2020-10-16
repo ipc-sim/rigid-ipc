@@ -31,6 +31,21 @@ double sinc(const double& x)
     return result;
 }
 
+// WARNING: Assumes x is a single value and uses interval arithmetic to account
+// for rounding.
+Interval _sinc_interval_taylor(double x_double)
+{
+    Interval x(x_double);
+
+    if (abs(x.lower()) >= taylor_n_bound) {
+        return sin(x) / x;
+    }
+    // approximation by taylor series in x at 0 up to order 5
+    // 1 - x^2 / 6 + x^4 / 120 = 1 + x^2 / 6 * (x^2 / 20 - 1)
+    Interval x2 = x * x;
+    return 1.0 + x2 / 6.0 * (x2 / 20.0 - 1.0);
+}
+
 Interval sinc(const Interval& x)
 {
     // Define two regions and use even symmetry of sinc.
@@ -65,7 +80,14 @@ Interval sinc(const Interval& x)
         // sinc is monotonically decreasing, so flip a and b.
         // TODO: Set rounding modes here to avoid round off error.
         y = hull(
-            y, Interval(sinc(x_monotonic.upper()), sinc(x_monotonic.lower())));
+            y,
+            Interval(
+                // https://www.wolframalpha.com/input/?i=min+sin%28x%29%2Fx+between+4+and+5
+                std::max(
+                    _sinc_interval_taylor(x_monotonic.upper()).lower(),
+                    -0.271724), // <-- A conservative lower bound for sinc(x)
+                std::min(
+                    _sinc_interval_taylor(x_monotonic.lower()).upper(), 1.0)));
     }
 
     // Case 2 (Not necessarily monotonic):

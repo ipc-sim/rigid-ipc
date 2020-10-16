@@ -107,9 +107,8 @@ bool compute_edge_vertex_time_of_impact(
     bool is_impacting = interval_root_finder(distance, x0, tol, toi_interval);
 
     // Return a conservative time-of-impact
-    if (is_impacting) {
-        toi = toi_interval(0).lower();
-    }
+    toi = is_impacting ? toi_interval(0).lower()
+                       : std::numeric_limits<double>::infinity();
 
     // This time of impact is very dangerous for convergence
     // assert(!is_impacting || toi > 0);
@@ -233,9 +232,8 @@ bool compute_edge_edge_time_of_impact(
     std::cout << "EE " << timer.getElapsedTime() << std::endl;
 #endif
     // Return a conservative time-of-impact
-    if (is_impacting) {
-        toi = toi_interval(0).lower();
-    }
+    toi = is_impacting ? toi_interval(0).lower()
+                       : std::numeric_limits<double>::infinity();
     // This time of impact is very dangerous for convergence
     // assert(!is_impacting || toi > 0);
     return is_impacting;
@@ -359,7 +357,8 @@ bool compute_face_vertex_time_of_impact(
 #endif
 
     // Return a conservative time-of-impact
-    toi = toi_interval.lower();
+    toi = is_impacting ? toi_interval.lower()
+                       : std::numeric_limits<double>::infinity();
     // This time of impact is very dangerous for convergence
     // assert(!is_impacting || toi > 0);
     return is_impacting;
