@@ -1,10 +1,11 @@
 #include "intersection.hpp"
 
+#include <Eigen/Geometry>
+
 #include <ECCD.hpp>
 #include <igl/predicates/predicates.h>
 #include <ipc/friction/closest_point.hpp>
 
-#include <ccd/interval.hpp>
 #include <utils/is_zero.hpp>
 
 namespace ccd {
@@ -36,13 +37,14 @@ namespace geometry {
         const Eigen::Vector3I& eb0,
         const Eigen::Vector3I& eb1)
     {
-        // TODO: This can be made more efficient
+        // Check if the origin is withing the 3D difference of edge points
+        // WARNING: This is a very converative estimate.
         Eigen::Vector3I ea_alpha = (ea1 - ea0) * Interval(0, 1) + ea0;
         Eigen::Vector3I eb_alpha = (eb1 - eb0) * Interval(0, 1) + eb0;
         return is_zero(Eigen::Vector3I(ea_alpha - eb_alpha));
     }
 
-    bool are_points_on_same_side_of_edge(
+    inline bool are_points_on_same_side_of_edge(
         const Eigen::Vector3I& p1,
         const Eigen::Vector3I& p2,
         const Eigen::Vector3I& a,
