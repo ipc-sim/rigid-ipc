@@ -1,0 +1,55 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.01,
+    "max_time": 2,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 1e-3
+    },
+    "ipc_solver": {
+        "velocity_conv_tol": 1e-3
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "coefficient_friction": 0.0,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "plane.obj",
+            "position": [-0.65, 3.7, 0],
+            "scale": [0.25, 1, 0.125],
+            "rotation": [0, 0, 65]
+        }, {
+            "mesh": "plane.obj",
+            "position": [0.65, 3.7, 0],
+            "scale": [0.25, 1, 0.125],
+            "rotation": [0, 0, -65]
+        }, {
+            "mesh": "plane.obj",
+            "position": [0, 2.5, 0],
+            "scale": [0.25, 1, 0.125]
+        }, {
+            "mesh": "plane.obj",
+            "position": [-1.75, 1.2, 0],
+            "scale": [0.25, 1, 0.125],
+            "rotation": [0, 0, 65]
+        }, {
+            "mesh": "plane.obj",
+            "position": [-0.55, 1.2, 0],
+            "scale": [0.25, 1, 0.125],
+            "rotation": [0, 0, -65]
+        }, {
+            "mesh": "plane.obj",
+            "position": [0.55, 1.2, 0],
+            "scale": [0.25, 1, 0.125],
+            "rotation": [0, 0, 65]
+        }, {
+            "mesh": "plane.obj",
+            "position": [1.75, 1.2, 0],
+            "scale": [0.25, 1, 0.125],
+            "rotation": [0, 0, -65]
+        }, {
+            "mesh": "plane.obj",
+            "is_dof_fixed": true
+        }]
+    }
+}

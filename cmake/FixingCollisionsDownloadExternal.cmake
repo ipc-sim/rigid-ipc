@@ -78,26 +78,10 @@ function(fixing_collisions_download_tbb)
 endfunction()
 
 # Wrapper for various CCD codes
-# function(fixing_collisions_download_ccd_wrapper)
-#   fixing_collisions_download_project(ccd-wrapper
-#     GIT_REPOSITORY https://github.com/zfergus/ccd-wrapper.git
-#     GIT_TAG        3e1eada7ae6e04fdbe4572417fc05c0b4f698cd6
-#   )
-# endfunction()
-
-# Etienne Vouga's CTCD Library
-function(fixing_collisions_download_evctcd)
-  fixing_collisions_download_project(EVCTCD
-    GIT_REPOSITORY https://github.com/evouga/collisiondetection.git
-    GIT_TAG        e5fe5c9767207df5047e375fb20180a665ae186f
-  )
-endfunction()
-
-# Rational CCD (rational version of Brochu et al. [2012])
-function(fixing_collisions_download_rational_ccd)
-  fixing_collisions_download_project(rational_ccd
-    GIT_REPOSITORY https://github.com/teseoch/Exact-CDD.git
-    GIT_TAG        63fdb92b917c8d7349c9403656f1497df6fa6ce5
+function(fixing_collisions_download_ccd_wrapper)
+  fixing_collisions_download_project(ccd-wrapper
+    GIT_REPOSITORY https://github.com/Continuous-Collision-Detection/CCD-Wrapper.git
+    GIT_TAG        a1ee3033399a3ce5aea158029db957cb2ba96701
   )
 endfunction()
 

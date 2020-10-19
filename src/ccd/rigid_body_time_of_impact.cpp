@@ -7,7 +7,6 @@
 #endif
 
 #include <ccd/interval_root_finder.hpp>
-#include <constants.hpp>
 #include <geometry/distance.hpp>
 #include <geometry/intersection.hpp>
 #include <logger.hpp>
@@ -29,23 +28,26 @@ Eigen::Vector2d compute_edge_vertex_tolerance(
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     const size_t& edge_id)                 // In bodyB
 {
-    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-
-    double omegaA_sqr = (poseA_t1.rotation - poseA_t0.rotation).squaredNorm();
-    double omegaB_sqr = (poseB_t1.rotation - poseB_t0.rotation).squaredNorm();
-
-    // Compute the maximum arc length of all the vertices
-    double dl =
-        sqrt(sA_sqr + omegaA_sqr * bodyA.vertices.row(vertex_id).squaredNorm());
-    for (int i = 0; i < 2; i++) {
-        double arc_len_sqr = omegaB_sqr
-            * bodyB.vertices.row(bodyB.edges(edge_id, i)).squaredNorm();
-        dl = std::max(dl, sqrt(sB_sqr + arc_len_sqr));
-    }
+    // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
+    // double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
+    //
+    // double omegaA_sqr = (poseA_t1.rotation -
+    // poseA_t0.rotation).squaredNorm(); double omegaB_sqr = (poseB_t1.rotation
+    // - poseB_t0.rotation).squaredNorm();
+    //
+    // // Compute the maximum arc length of all the vertices
+    // double dl =
+    //     sqrt(sA_sqr + omegaA_sqr *
+    //     bodyA.vertices.row(vertex_id).squaredNorm());
+    // for (int i = 0; i < 2; i++) {
+    //     double arc_len_sqr = omegaB_sqr
+    //         * bodyB.vertices.row(bodyB.edges(edge_id, i)).squaredNorm();
+    //     dl = std::max(dl, sqrt(sB_sqr + arc_len_sqr));
+    // }
 
     return Eigen::Vector2d(
-        Constants::SCREWING_CCD_LENGTH_TOL / dl,
+        // Constants::SCREWING_CCD_LENGTH_TOL / dl,
+        Constants::SCREWING_CCD_TOI_TOL,
         Constants::SCREWING_CCD_LENGTH_TOL / bodyB.edge_length(edge_id));
 }
 
@@ -60,7 +62,8 @@ bool compute_edge_vertex_time_of_impact(
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     const size_t& edge_id,                 // In bodyB
     double& toi,
-    double earliest_toi) // Only search for collision in [0, earliest_toi]
+    double earliest_toi, // Only search for collision in [0, earliest_toi]
+    double toi_tolerance)
 {
     int dim = bodyA.dim();
     assert(bodyB.dim() == dim);
@@ -100,6 +103,7 @@ bool compute_edge_vertex_time_of_impact(
     Eigen::Vector2d tol = compute_edge_vertex_tolerance(
         bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
         edge_id);
+    tol[0] = toi_tolerance;
 
     Eigen::VectorX3I x0 =
         Eigen::Vector2I(Interval(0, earliest_toi), Interval(0, 1));
@@ -118,6 +122,36 @@ bool compute_edge_vertex_time_of_impact(
 ////////////////////////////////////////////////////////////////////////////////
 // Edge-Edge
 
+void print_EE_query(
+    const physics::RigidBody& bodyA,       // Body of the first edge
+    const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
+    const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
+    const size_t& edgeA_id,                // In bodyA
+    const physics::RigidBody& bodyB,       // Body of the second edge
+    const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
+    const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
+    const size_t& edgeB_id)                // In bodyB
+{
+
+    std::cerr << logger::fmt_eigen(bodyA.vertices.row(bodyA.edges(edgeA_id, 0)))
+              << std::endl;
+    std::cerr << logger::fmt_eigen(bodyA.vertices.row(bodyA.edges(edgeA_id, 1)))
+              << std::endl;
+    std::cerr << logger::fmt_eigen(poseA_t0.position) << std::endl;
+    std::cerr << logger::fmt_eigen(poseA_t0.rotation) << std::endl;
+    std::cerr << logger::fmt_eigen(poseA_t1.position) << std::endl;
+    std::cerr << logger::fmt_eigen(poseA_t1.rotation) << std::endl;
+    std::cerr << logger::fmt_eigen(bodyB.vertices.row(bodyB.edges(edgeB_id, 0)))
+              << std::endl;
+    std::cerr << logger::fmt_eigen(bodyB.vertices.row(bodyB.edges(edgeB_id, 1)))
+              << std::endl;
+    std::cerr << logger::fmt_eigen(poseB_t0.position) << std::endl;
+    std::cerr << logger::fmt_eigen(poseB_t0.rotation) << std::endl;
+    std::cerr << logger::fmt_eigen(poseB_t1.position) << std::endl;
+    std::cerr << logger::fmt_eigen(poseB_t1.rotation) << std::endl;
+    std::cerr << std::endl;
+}
+
 Eigen::Vector3d compute_edge_edge_tolerance(
     const physics::RigidBody& bodyA,       // Body of the first edge
     const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
@@ -129,35 +163,35 @@ Eigen::Vector3d compute_edge_edge_tolerance(
     const size_t& edgeB_id)                // In bodyB
 {
     // TODO: This is not exactly the arc length of the trajectory
-    Eigen::Matrix3d RA_t0, PA;
-    double omegaA;
-    decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
-    Eigen::Matrix3d RA = PA * RA_t0;
-
-    Eigen::Matrix3d RB_t0, PB;
-    double omegaB;
-    decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
-    Eigen::Matrix3d RB = PB * RB_t0;
-
-    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-
-    double dl = -std::numeric_limits<double>::infinity();
-    Eigen::Vector3d v;
-    double radius_sqr;
-    for (int i = 0; i < 2; i++) {
-        v = bodyA.vertices.row(bodyA.edges(edgeA_id, i));
-        radius_sqr = (RA * v).head<2>().squaredNorm();
-        dl = std::max(dl, sqrt(sA_sqr + omegaA * omegaA * radius_sqr));
-
-        v = bodyB.vertices.row(bodyB.edges(edgeB_id, i));
-        radius_sqr = (RB * v).head<2>().squaredNorm();
-        dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
-    }
+    // Eigen::Matrix3d RA_t0, PA;
+    // double omegaA;
+    // decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
+    // Eigen::Matrix3d RA = PA * RA_t0;
+    //
+    // Eigen::Matrix3d RB_t0, PB;
+    // double omegaB;
+    // decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
+    // Eigen::Matrix3d RB = PB * RB_t0;
+    //
+    // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
+    // double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
+    //
+    // double dl = -std::numeric_limits<double>::infinity();
+    // Eigen::Vector3d v;
+    // double radius_sqr;
+    // for (int i = 0; i < 2; i++) {
+    //     v = bodyA.vertices.row(bodyA.edges(edgeA_id, i));
+    //     radius_sqr = (RA * v).head<2>().squaredNorm();
+    //     dl = std::max(dl, sqrt(sA_sqr + omegaA * omegaA * radius_sqr));
+    //
+    //     v = bodyB.vertices.row(bodyB.edges(edgeB_id, i));
+    //     radius_sqr = (RB * v).head<2>().squaredNorm();
+    //     dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
+    // }
 
     return Eigen::Vector3d(
-        Constants::SCREWING_CCD_LENGTH_TOL / dl,
-        // 1e-3, //
+        // Constants::SCREWING_CCD_LENGTH_TOL / dl,
+        Constants::SCREWING_CCD_TOI_TOL,
         Constants::SCREWING_CCD_LENGTH_TOL / bodyA.edge_length(edgeA_id),
         Constants::SCREWING_CCD_LENGTH_TOL / bodyB.edge_length(edgeB_id));
 }
@@ -173,7 +207,8 @@ bool compute_edge_edge_time_of_impact(
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     const size_t& edgeB_id,                // In bodyB
     double& toi,
-    double earliest_toi) // Only search for collision in [0, earliest_toi]
+    double earliest_toi, // Only search for collision in [0, earliest_toi]
+    double toi_tolerance)
 {
     int dim = bodyA.dim();
     assert(bodyB.dim() == dim);
@@ -218,6 +253,7 @@ bool compute_edge_edge_time_of_impact(
     Eigen::Vector3d tol = compute_edge_edge_tolerance(
         bodyA, poseA_t0, poseA_t1, edgeA_id, //
         bodyB, poseB_t0, poseB_t1, edgeB_id);
+    tol[0] = toi_tolerance;
 
     Eigen::VectorX3I toi_interval;
     Eigen::VectorX3I x0 = Eigen::Vector3I(
@@ -230,6 +266,12 @@ bool compute_edge_edge_time_of_impact(
 #ifdef TIME_CCD_QUERIES
     timer.stop();
     std::cout << "EE " << timer.getElapsedTime() << std::endl;
+    if (timer.getElapsedTime() >= 60) {
+        std::cerr << "EE (" << timer.getElapsedTime() << "s)" << std::endl;
+        print_EE_query(
+            bodyA, poseA_t0, poseA_t1, edgeA_id, //
+            bodyB, poseB_t0, poseB_t1, edgeB_id);
+    }
 #endif
     // Return a conservative time-of-impact
     toi = is_impacting ? toi_interval(0).lower()
@@ -253,31 +295,31 @@ double compute_face_vertex_tolerance(
     const size_t& face_id)                 // In bodyB
 {
     // TODO: This is not exactly the arc length of the trajectory
-    Eigen::Matrix3d RA_t0, PA;
-    double omegaA;
-    decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
-    Eigen::Matrix3d RA = PA * RA_t0;
+    // Eigen::Matrix3d RA_t0, PA;
+    // double omegaA;
+    // decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
+    // Eigen::Matrix3d RA = PA * RA_t0;
+    //
+    // Eigen::Matrix3d RB_t0, PB;
+    // double omegaB;
+    // decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
+    // Eigen::Matrix3d RB = PB * RB_t0;
+    //
+    // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
+    // double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
+    //
+    // Eigen::Vector3d v = bodyA.vertices.row(vertex_id);
+    // double radius_sqr = (RA * v).head<2>().squaredNorm();
+    // double dl = sqrt(sA_sqr + omegaA * omegaA * v.squaredNorm());
+    //
+    // for (int i = 0; i < 3; i++) {
+    //     v = bodyB.vertices.row(bodyB.faces(face_id, i));
+    //     radius_sqr = (RB * v).head<2>().squaredNorm();
+    //     dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
+    // }
 
-    Eigen::Matrix3d RB_t0, PB;
-    double omegaB;
-    decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
-    Eigen::Matrix3d RB = PB * RB_t0;
-
-    double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-
-    Eigen::Vector3d v = bodyA.vertices.row(vertex_id);
-    double radius_sqr = (RA * v).head<2>().squaredNorm();
-    double dl = sqrt(sA_sqr + omegaA * omegaA * v.squaredNorm());
-
-    for (int i = 0; i < 3; i++) {
-        v = bodyB.vertices.row(bodyB.faces(face_id, i));
-        radius_sqr = (RB * v).head<2>().squaredNorm();
-        dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
-    }
-
-    return Constants::SCREWING_CCD_LENGTH_TOL / dl;
-    // return 1e-3;
+    // return Constants::SCREWING_CCD_LENGTH_TOL / dl;
+    return Constants::SCREWING_CCD_TOI_TOL;
 }
 
 // Find time-of-impact between two rigid bodies
@@ -291,7 +333,8 @@ bool compute_face_vertex_time_of_impact(
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     const size_t& face_id,                 // In bodyB
     double& toi,
-    double earliest_toi) // Only search for collision in [0, earliest_toi]
+    double earliest_toi, // Only search for collision in [0, earliest_toi]
+    double toi_tolerance)
 {
     int dim = bodyA.dim();
     assert(bodyB.dim() == dim);
@@ -339,9 +382,10 @@ bool compute_face_vertex_time_of_impact(
             vertex, face_vertex0, face_vertex1, face_vertex2);
     };
 
-    double tol = compute_face_vertex_tolerance(
-        bodyA, poseA_t0, poseA_t1, vertex_id, //
-        bodyB, poseB_t0, poseB_t1, face_id);
+    // double tol = compute_face_vertex_tolerance(
+    //     bodyA, poseA_t0, poseA_t1, vertex_id, //
+    //     bodyB, poseB_t0, poseB_t1, face_id);
+    double tol = toi_tolerance;
 
     Interval toi_interval;
 #ifdef TIME_CCD_QUERIES

@@ -6,8 +6,59 @@
 
 #include <constants.hpp>
 
+#include <ccd.hpp>
+
 using namespace ccd;
 using namespace ccd::physics;
+
+const double TESTING_TOI_TOLERANCE = 1e-6;
+
+void print_EE_obj(
+    const RigidBody& bodyA,
+    const Pose<double>& bodyA_pose_t0,
+    const Pose<double>& bodyA_pose_t1,
+    int edgeA_id,
+    const RigidBody& bodyB,
+    const Pose<double>& bodyB_pose_t0,
+    const Pose<double>& bodyB_pose_t1,
+    int edgeB_id,
+    int n = 100)
+{
+    fmt::print("# Edge 1 vertices\n");
+    for (int i = 0; i < n + 1; i++) {
+        Pose<double> pose =
+            Pose<double>::interpolate(bodyA_pose_t0, bodyA_pose_t1, i / n);
+        std::cout
+            << "v "
+            << bodyA.world_vertex(pose, bodyA.edges(edgeA_id, 0)).transpose()
+            << std::endl;
+        std::cout
+            << "v "
+            << bodyA.world_vertex(pose, bodyA.edges(edgeA_id, 1)).transpose()
+            << std::endl;
+    }
+    fmt::print("# Edge 2 vertices\n");
+    for (int i = 0; i < n + 1; i++) {
+        Pose<double> pose =
+            Pose<double>::interpolate(bodyB_pose_t0, bodyB_pose_t1, i / n);
+        std::cout
+            << "v "
+            << bodyB.world_vertex(pose, bodyB.edges(edgeB_id, 0)).transpose()
+            << std::endl;
+        std::cout
+            << "v "
+            << bodyB.world_vertex(pose, bodyB.edges(edgeB_id, 1)).transpose()
+            << std::endl;
+    }
+    fmt::print("# Edge 1 surface\n");
+    for (int i = 0; i < 4 * n + 2; i += 2) {
+        if (i == 2 * n) {
+            fmt::print("# Edge 2 surface\n");
+            continue;
+        }
+        fmt::print("f {} {} {} {}\n", i + 1, i + 2, i + 4, i + 3);
+    }
+}
 
 RigidBody create_body(
     const Eigen::MatrixXd& vertices,
@@ -99,13 +150,12 @@ TEST_CASE("Rigid edge-vertex time of impact", "[ccd][rigid_toi][edge_vertex]")
     bool is_impacting = compute_edge_vertex_time_of_impact(
         bodyA, bodyA_pose_t0, bodyA_pose_t1, /*vertex_id=*/0, //
         bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edge_id=*/0,   //
-        toi);
+        toi, /*earliest_toi=*/1, /*toi_tolerance=*/TESTING_TOI_TOLERANCE);
     CAPTURE(toi, expected_toi);
     CHECK(is_impacting == is_impact_expected);
     if (is_impacting) {
         // clang-format off
-        CHECK(toi == Approx(expected_toi).margin(
-            Constants::INTERVAL_ROOT_FINDER_TOL));
+        CHECK(toi == Approx(expected_toi).margin(TESTING_TOI_TOLERANCE));
         // clang-format on
         CHECK(toi <= expected_toi);
     }
@@ -159,7 +209,7 @@ TEST_CASE("Rigid edge-edge time of impact", "[ccd][rigid_toi][edge_edge]")
     bool is_impacting = compute_edge_edge_time_of_impact(
         bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
         bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeA_id=*/0, //
-        toi);
+        toi, /*earliest_toi=*/1, /*toi_tolerance=*/TESTING_TOI_TOLERANCE);
     CAPTURE(
         bodyA_pose_t0.position.transpose(), bodyA_pose_t1.position.transpose(),
         bodyA.world_vertex(bodyA_pose_t0, 0).transpose(),
@@ -234,8 +284,7 @@ TEST_CASE("Rigid face-vertex time of impact", "[ccd][rigid_toi][face_vertex]")
     bool is_impacting = compute_face_vertex_time_of_impact(
         bodyB, bodyB_pose_t0, bodyB_pose_t1, /*vertex_id=*/0, // Vertex body
         bodyA, bodyA_pose_t0, bodyA_pose_t1, /*face_id=*/0,   // Face body
-        // Output time of impact
-        toi);
+        toi, /*earliest_toi=*/1, /*toi_tolerance=*/TESTING_TOI_TOLERANCE);
     CAPTURE(toi, expected_toi);
     CHECK(is_impacting == is_impact_expected);
     if (is_impacting) {
@@ -441,5 +490,130 @@ TEST_CASE("Actual VF Collision", "[!benchmark][ccd][rigid_toi][face_vertex]")
             bodyB, bodyB_pose_t0, bodyB_pose_t1, /*face_id=*/0,   //
             toi);
         // std::cout << toi << std::endl;
+    };
+}
+
+TEST_CASE(
+    "Extremly Slow EE Case",
+    "[!benchmark][ccd][rigid_toi][edge_edge][extremly_slow]")
+{
+    Eigen::MatrixXd bodyA_vertices = Eigen::MatrixXd::Zero(2, 3);
+    Eigen::MatrixXd bodyB_vertices = Eigen::MatrixXd::Zero(2, 3);
+
+    Eigen::MatrixXi bodyA_edges(1, 2);
+    bodyA_edges.row(0) << 0, 1;
+    Eigen::MatrixXi bodyB_edges(1, 2);
+    bodyB_edges.row(0) << 0, 1;
+
+    RigidBody bodyA = create_body(bodyA_vertices, bodyA_edges);
+    RigidBody bodyB = create_body(bodyB_vertices, bodyB_edges);
+
+    Pose<double> bodyA_pose_t0, bodyA_pose_t1, bodyB_pose_t0, bodyB_pose_t1;
+
+    double earliest_toi;
+
+    SECTION("0")
+    {
+        // clang-format off
+        bodyA.vertices.row(0) << 1.25, 0.625, -1.11022302462516e-16;
+        bodyA.vertices.row(1) << 1.25, -0.625, -1.11022302462516e-16;
+
+        bodyB.vertices.row(0) << 1.25, 0.625, 1.11022302462516e-16;
+        bodyB.vertices.row(1) << 1.25, -0.625, 1.11022302462516e-16;
+
+        bodyA_pose_t0 = Pose<double>(
+            Eigen::Vector3d(-0.749789935368566, 1.00585262304029, 1.37760763963751e-05),
+            Eigen::Vector3d(1.44479640128067, 0.727816581920491, 0.729072550558035)
+        );
+        bodyA_pose_t1 = Pose<double>(
+            Eigen::Vector3d(-0.749767679498726, 0.999291290743525, 1.56515114692218e-05),
+            Eigen::Vector3d(1.44714648553188, 0.720936564079057, 0.722362732765182)
+        );
+        bodyB_pose_t0 = Pose<double>(
+            Eigen::Vector3d(0.749821260870553, 1.00573285487415, -1.25619191880717e-05),
+            Eigen::Vector3d(0.836943953227619, 1.66096593034921, 1.66114035080701)
+        );
+        bodyB_pose_t1 = Pose<double>(
+            Eigen::Vector3d(0.749804770233396, 0.999147283739376, -1.37411290439571e-05),
+            Eigen::Vector3d(0.830693602998813, 1.6669129896604, 1.66713787700267)
+        );
+        // clang-format on
+        earliest_toi = 0.739807;
+    }
+    SECTION("1")
+    {
+        // clang-format off
+        bodyA.vertices.row(0) << 1.25, 0.625, -1.11022302462516e-16;
+        bodyA.vertices.row(1) << 1.25, -0.625, -1.11022302462516e-16;
+
+        bodyB.vertices.row(0) << 1.25, 0.625, 1.11022302462516e-16;
+        bodyB.vertices.row(1) << 1.25, -0.625, 1.11022302462516e-16;
+
+        bodyA_pose_t0 = Pose<double>(
+            Eigen::Vector3d(-0.749781303981602, 1.00328869329824, 1.45053758187115e-05),
+            Eigen::Vector3d(1.44571477658472, 0.725130939760901,
+            0.726452486140648)
+        );
+        bodyA_pose_t1 = Pose<double>(
+            Eigen::Vector3d(-0.749768505996024,
+            0.999271155189446, 1.56109303515142e-05),
+            Eigen::Vector3d(1.44714132170885, 0.720946434493765,
+            0.722364003050481)
+        );
+        bodyB_pose_t0 = Pose<double>(
+            Eigen::Vector3d(0.749814828894052, 1.0031128414029,
+            -1.30219790400155e-05),
+            Eigen::Vector3d(0.834519686991294, 1.66327347194605, 1.6634661858807)
+        );
+        bodyB_pose_t1 = Pose<double>(
+            Eigen::Vector3d(0.749754900679728, 0.999118556601472,
+            -1.68864775474044e-05),
+            Eigen::Vector3d(0.830720747893929, 1.66690721127267, 1.66711165819808)
+        );
+        // clang-format on
+        earliest_toi = 0.57421;
+    }
+
+    // print_EE_obj(
+    //     bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
+    //     bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeB_id=*/0);
+
+    BENCHMARK("Extremly Slow EE CCD")
+    {
+        double toi;
+        bool is_impacting = compute_edge_edge_time_of_impact(
+            bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
+            bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeB_id=*/0, //
+            toi);
+    };
+    BENCHMARK("Extremly Slow EE CCD Linearized")
+    {
+        bool is_impacting = false;
+        int n = 100;
+        Pose<double> poseA_ti0 = bodyA_pose_t0, poseB_ti0 = bodyB_pose_t0;
+        for (int i = 1; i <= n; i++) {
+            Pose<double> poseA_ti1 =
+                Pose<double>::interpolate(bodyA_pose_t0, bodyA_pose_t1, i / n);
+            Pose<double> poseB_ti1 =
+                Pose<double>::interpolate(bodyB_pose_t0, bodyB_pose_t1, i / n);
+
+            is_impacting = ccd::edgeEdgeCCD(
+                bodyA.world_vertex(poseA_ti0, 0),
+                bodyA.world_vertex(poseA_ti0, 1),
+                bodyB.world_vertex(poseB_ti0, 0),
+                bodyB.world_vertex(poseB_ti0, 1),
+                bodyA.world_vertex(poseA_ti1, 0),
+                bodyA.world_vertex(poseA_ti1, 1),
+                bodyB.world_vertex(poseB_ti1, 0),
+                bodyB.world_vertex(poseB_ti1, 1),
+                ccd::CCDMethod::TIGHT_INCLUSION);
+
+            if (is_impacting) {
+                break;
+            }
+
+            poseA_ti0 = poseA_ti1;
+            poseB_ti0 = poseB_ti1;
+        }
     };
 }

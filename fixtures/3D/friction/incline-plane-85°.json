@@ -8,23 +8,23 @@
         "initial_barrier_activation_distance": 1e-3
     },
     "ipc_solver": {
-        "#convergence_criteria": "energy",
         "velocity_conv_tol": 1e-3
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "coefficient_friction": 1e-1,
+        "coefficient_friction": 1.0,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "cube-symmetric.obj",
-            "position": [-3, 2.5, 0],
-            "rotation": [0, 0, -15]
+            "position": [-0.19, 7, 0],
+            "rotation": [0, 0, -85],
+            "is_dof_fixed": [false, false, false, true, true, true]
         }, {
             "mesh": "plane.obj",
             "is_dof_fixed": true,
-            "position": [5, -1, 0],
+            "position": [0, -1, 0],
             "scale": 2,
-            "rotation": [0, 0, -15]
+            "rotation": [0, 0, -85]
         }]
     }
 }

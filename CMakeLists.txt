@@ -201,11 +201,11 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost Boost::filesystem)
 # TBB
 target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
 
+target_link_libraries(${PROJECT_NAME} PUBLIC CCDWrapper)
 # Etienne Vouga's CTCD Library for the floating point root finding algorithm
-target_link_libraries(${PROJECT_NAME} PUBLIC EVCTCD)
-
+target_link_libraries(${PROJECT_NAME} PUBLIC FloatingPointRootFinder)
 # Teseo's Exact CCD library for exact segment-triangle intersection check
-target_link_libraries(${PROJECT_NAME} PUBLIC RationalCCD)
+target_link_libraries(${PROJECT_NAME} PUBLIC RationalRootParity)
 
 # PolySolve for wrapping linear solvers
 target_link_libraries(${PROJECT_NAME} PUBLIC polysolve)
