@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <ccd/interval.hpp>
+#include <interval/interval.hpp>
 #include <logger.hpp>
 #include <physics/pose.hpp>
 
@@ -28,8 +28,8 @@ TEST_CASE("Simple interval arithmetic", "[ccd][interval]")
     CHECK(result.lower() <= result.upper());
 
     result = i + 10.0;
-    CHECK(result.lower() == i.lower() + 10);
-    CHECK(result.upper() == i.upper() + 10);
+    CHECK(result.lower() == Approx(i.lower() + 10).margin(1e-12));
+    CHECK(result.upper() == Approx(i.upper() + 10).margin(1e-12));
 }
 
 TEST_CASE("Cosine interval arithmetic", "[ccd][interval]")

@@ -3,7 +3,7 @@
 #include <Eigen/Geometry>
 
 #include <autodiff/autodiff.h>
-#include <ccd/interval.hpp>
+#include <interval/interval.hpp>
 #include <utils/eigen_ext.hpp>
 
 namespace ccd {

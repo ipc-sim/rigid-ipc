@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include <ccd/interval.hpp>
+#include <interval/interval.hpp>
 #include <logger.hpp>
 
 namespace ccd {

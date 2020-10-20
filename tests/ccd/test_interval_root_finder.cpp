@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <ccd/interval_root_finder.hpp>
+#include <interval/interval_root_finder.hpp>
 #include <constants.hpp>
 #include <logger.hpp>
 

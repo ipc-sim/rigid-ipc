@@ -6,7 +6,7 @@
 #include <igl/Timer.h>
 #endif
 
-#include <ccd/interval_root_finder.hpp>
+#include <interval/interval_root_finder.hpp>
 #include <geometry/distance.hpp>
 #include <geometry/intersection.hpp>
 #include <logger.hpp>
@@ -46,7 +46,8 @@ Eigen::Vector2d compute_edge_vertex_tolerance(
     // }
 
     return Eigen::Vector2d(
-        // Constants::SCREWING_CCD_LENGTH_TOL / dl,
+        // 1e-6 / dl,
+        // 1e-6 / bodyB.edge_length(edge_id));
         Constants::SCREWING_CCD_TOI_TOL,
         Constants::SCREWING_CCD_LENGTH_TOL / bodyB.edge_length(edge_id));
 }
@@ -190,7 +191,9 @@ Eigen::Vector3d compute_edge_edge_tolerance(
     // }
 
     return Eigen::Vector3d(
-        // Constants::SCREWING_CCD_LENGTH_TOL / dl,
+        // 1e-6 / dl,
+        // 1e-6 / bodyA.edge_length(edgeA_id),
+        // 1e-6 / bodyB.edge_length(edgeB_id));
         Constants::SCREWING_CCD_TOI_TOL,
         Constants::SCREWING_CCD_LENGTH_TOL / bodyA.edge_length(edgeA_id),
         Constants::SCREWING_CCD_LENGTH_TOL / bodyB.edge_length(edgeB_id));
@@ -318,7 +321,7 @@ double compute_face_vertex_tolerance(
     //     dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
     // }
 
-    // return Constants::SCREWING_CCD_LENGTH_TOL / dl;
+    // return 1e-6 / dl;
     return Constants::SCREWING_CCD_TOI_TOL;
 }
 

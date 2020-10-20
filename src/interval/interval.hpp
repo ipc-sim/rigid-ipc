@@ -3,8 +3,12 @@
 
 #include <string>
 
-#include <Eigen/Core>
 #include <boost/numeric/interval.hpp>
+
+#define USE_FILIB_INTERVALS
+#ifdef USE_FILIB_INTERVALS
+#include <interval/filib_rounding.hpp>
+#endif
 
 #include <utils/eigen_ext.hpp>
 
@@ -14,7 +18,17 @@ namespace interval_options {
     typedef boost::numeric::interval_lib::checking_base<double> CheckingPolicy;
 } // namespace interval_options
 
-#if defined(__APPLE__)
+#ifdef USE_FILIB_INTERVALS
+
+// Use filib rounding arithmetic
+typedef boost::numeric::interval<
+    double,
+    boost::numeric::interval_lib::policies<
+        boost::numeric::interval_lib::save_state<FILibRounding>,
+        interval_options::CheckingPolicy>>
+    Interval;
+
+#elif defined(__APPLE__)
 
 // clang-format off
 #warning "Rounding modes seem to be broken with trigonometric functions on macOS, unable to compute exact interval arithmetic!"
@@ -38,7 +52,7 @@ typedef boost::numeric::interval<
         interval_options::CheckingPolicy>>
     Interval;
 
-#endif
+#endif // USE_FILIB_INTERVALS
 
 namespace logger {
 

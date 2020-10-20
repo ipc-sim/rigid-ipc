@@ -116,3 +116,11 @@ function(fixing_collisions_download_ipc_toolkit)
     GIT_TAG        724b5f871554a3934f169c8dce1afdfe637fe098
   )
 endfunction()
+
+# filib
+function(fixing_collisions_download_filib)
+  fixing_collisions_download_project(filib
+    GIT_REPOSITORY https://github.com/txstc55/filib.git
+    GIT_TAG        1b36c5047fd2ee27fcbb6d73deb25da7f77a6f70
+  )
+endfunction()

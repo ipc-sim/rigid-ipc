@@ -10,7 +10,7 @@
 
 #include <ipc/utils/logger.hpp>
 
-#include <ccd/interval.hpp>
+#include <interval/interval.hpp>
 
 namespace ccd {
 namespace logger {

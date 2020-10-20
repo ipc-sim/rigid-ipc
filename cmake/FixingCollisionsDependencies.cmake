@@ -135,3 +135,9 @@ if(NOT TARGET IPCToolkit)
   set(IPC_TOOLKIT_BUILD_UNIT_TESTS OFF CACHE BOOL " " FORCE)
   add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/ipc-toolkit)
 endif()
+
+# IPC Toolkit
+if(NOT TARGET filib)
+  fixing_collisions_download_filib()
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/filib)
+endif()

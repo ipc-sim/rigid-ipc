@@ -317,21 +317,9 @@ namespace opt {
         // Filter the step length so that x to x + α * Δx is collision free for
         // α ≤ step_length.
         num_collision_check++; // Count the number of collision checks
-        // TODO: Why do we need this 0.8? Is it because of Boost rounding? What
-        // happens if we use filib++?
         double max_step_size =
-            std::min(problem_ptr->compute_earliest_toi(x, x + dir) * 0.8, 1.0);
+            std::min(problem_ptr->compute_earliest_toi(x, x + dir), 1.0);
         step_length = std::min(step_length, max_step_size);
-        while (problem_ptr->has_collisions(x, x + step_length * dir)) {
-            step_length /= 2;
-            spdlog::critical(
-                "solver={} iter={:d} failure=\"x → x + αΔx has collision\" "
-                "failsafe=\"step_length /= 2\"",
-                name(), iteration_number);
-            // double new_step_length =
-            //     problem_ptr->compute_earliest_toi(x, x + step_length * dir);
-            // step_length = new_step_length * step_length;
-        }
         assert(!problem_ptr->has_collisions(x, x + step_length * dir));
         if (step_length < lower_bound) {
             spdlog::error(

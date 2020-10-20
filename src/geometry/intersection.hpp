@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-#include <ccd/interval.hpp>
+#include <interval/interval.hpp>
 
 /// NOTE: Naming Convention
 /// Point: Either a 2D or 3D point in space.

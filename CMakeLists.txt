@@ -57,7 +57,9 @@ add_library(${PROJECT_NAME}
     src/ccd/collision_detection_narrow_phase.cpp
     src/ccd/collision_detection_broad_phase.cpp
 
-    src/ccd/interval_root_finder.cpp
+    src/interval/filib_rounding.cpp
+    src/interval/interval_root_finder.cpp
+
     src/ccd/rigid_body_time_of_impact.cpp
     src/ccd/rigid_body_hash_grid.cpp
     src/ccd/rigid_body_collision_detection_narrow_phase.cpp
@@ -215,6 +217,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC tinyxml2::tinyxml2)
 
 # IPC Toolkit
 target_link_libraries(${PROJECT_NAME} PUBLIC IPCToolkit)
+
+# filib
+target_link_libraries(${PROJECT_NAME} PUBLIC filib)
 
 ################################################################################
 # Compiler options

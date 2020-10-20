@@ -3,7 +3,7 @@
 
 #include <functional>
 
-#include <ccd/interval.hpp>
+#include <interval/interval.hpp>
 #include <constants.hpp>
 
 namespace ccd {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ccd/interval.hpp>
+#include <interval/interval.hpp>
 
 namespace ccd {
 

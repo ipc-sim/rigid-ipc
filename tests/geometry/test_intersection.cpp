@@ -2,7 +2,7 @@
 
 #include <ipc/friction/closest_point.hpp>
 
-#include <ccd/interval.hpp>
+#include <interval/interval.hpp>
 #include <geometry/intersection.hpp>
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>

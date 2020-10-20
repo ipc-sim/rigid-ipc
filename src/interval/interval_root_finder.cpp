@@ -98,10 +98,12 @@ void log_octree(
         return;
     }
 
-    for (Interval t : { bisect(x0(0)).first, bisect(x0(0)).second }) {
-        for (Interval alpha : { bisect(x0(1)).first, bisect(x0(1)).second }) {
-            for (Interval beta :
-                 { bisect(x0(2)).first, bisect(x0(2)).second }) {
+    std::pair<Interval, Interval> t_split = bisect(x0(0));
+    for (Interval t : { t_split.first, t_split.second }) {
+        std::pair<Interval, Interval> alpha_split = bisect(x0(1));
+        for (Interval alpha : { alpha_split.first, alpha_split.second }) {
+            std::pair<Interval, Interval> beta_split = bisect(x0(2));
+            for (Interval beta : { beta_split.first, beta_split.second }) {
                 Eigen::Vector3I x(t, alpha, beta);
                 log_octree(f, x, levels - 1);
             }
