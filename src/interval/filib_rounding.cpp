@@ -87,17 +87,17 @@ double FILibRounding::exp_up(double x)
     return r;
 }
 
-double FILibRounding::log_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("");
-}
+// double FILibRounding::log_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("");
+// }
 
-double FILibRounding::log_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("");
-}
+// double FILibRounding::log_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("");
+// }
 
 double FILibRounding::cos_down(double x)
 {
@@ -135,125 +135,125 @@ double FILibRounding::cos_up(double x)
     return r;
 }
 
-double FILibRounding::tan_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("tan_down is not implemented!");
-}
+// double FILibRounding::tan_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("tan_down is not implemented!");
+// }
 
-double FILibRounding::tan_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("tan_up is not implemented!");
-}
+// double FILibRounding::tan_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("tan_up is not implemented!");
+// }
 
-double FILibRounding::asin_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("asin_down is not implemented!");
-}
+// double FILibRounding::asin_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("asin_down is not implemented!");
+// }
 
-double FILibRounding::asin_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("asin_up is not implemented!");
-}
+// double FILibRounding::asin_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("asin_up is not implemented!");
+// }
 
-double FILibRounding::acos_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("acos_down is not implemented!");
-}
+// double FILibRounding::acos_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("acos_down is not implemented!");
+// }
 
-double FILibRounding::acos_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("acos_up is not implemented!");
-}
+// double FILibRounding::acos_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("acos_up is not implemented!");
+// }
 
-double FILibRounding::atan_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("atan_down is not implemented!");
-}
+// double FILibRounding::atan_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("atan_down is not implemented!");
+// }
 
-double FILibRounding::atan_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("atan_up is not implemented!");
-}
+// double FILibRounding::atan_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("atan_up is not implemented!");
+// }
 
-double FILibRounding::sinh_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("sinh_down is not implemented!");
-}
+// double FILibRounding::sinh_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("sinh_down is not implemented!");
+// }
 
-double FILibRounding::sinh_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("sinh_up is not implemented!");
-}
+// double FILibRounding::sinh_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("sinh_up is not implemented!");
+// }
 
-double FILibRounding::cosh_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("cosh_down is not implemented!");
-}
+// double FILibRounding::cosh_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("cosh_down is not implemented!");
+// }
 
-double FILibRounding::cosh_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("cosh_up is not implemented!");
-}
+// double FILibRounding::cosh_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("cosh_up is not implemented!");
+// }
 
-double FILibRounding::tanh_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("tanh_down is not implemented!");
-}
+// double FILibRounding::tanh_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("tanh_down is not implemented!");
+// }
 
-double FILibRounding::tanh_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("tanh_up is not implemented!");
-}
+// double FILibRounding::tanh_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("tanh_up is not implemented!");
+// }
 
-double FILibRounding::asinh_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("asinh_down is not implemented!");
-}
+// double FILibRounding::asinh_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("asinh_down is not implemented!");
+// }
 
-double FILibRounding::asinh_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("asinh_up is not implemented!");
-}
+// double FILibRounding::asinh_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("asinh_up is not implemented!");
+// }
 
-double FILibRounding::acosh_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("acosh_down is not implemented!");
-}
+// double FILibRounding::acosh_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("acosh_down is not implemented!");
+// }
 
-double FILibRounding::acosh_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("acosh_up is not implemented!");
-}
+// double FILibRounding::acosh_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("acosh_up is not implemented!");
+// }
 
-double FILibRounding::atanh_down(double x)
-{
-    assert(false);
-    throw NotImplementedError("atanh_down is not implemented!");
-}
+// double FILibRounding::atanh_down(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("atanh_down is not implemented!");
+// }
 
-double FILibRounding::atanh_up(double x)
-{
-    assert(false);
-    throw NotImplementedError("atanh_up is not implemented!");
-}
+// double FILibRounding::atanh_up(double x)
+// {
+//     assert(false);
+//     throw NotImplementedError("atanh_up is not implemented!");
+// }
 
 double FILibRounding::median(double x, double y)
 {
