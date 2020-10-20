@@ -5,23 +5,21 @@
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 0.01,
         "detection_method": "hash_grid",
-        "trajectory_type": "screwing",
+        "trajectory_type": "screwing"
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
-                "mesh": "spot.obj",
-                "position": [0, 1, 0],
-                "rotation": [30, 135, 0],
-                "linear_velocity": [0, 0, 0],
-                "angular_velocity": [0, 0, 0]
-            },
-            {
-                "mesh": "plane.obj",
-                "is_dof_fixed": [true, true, true, true, true, true],
-                "position": [0, -1, 0]
-            }
-        ]
+            "mesh": "spot.obj",
+            "position": [0, 1, 0],
+            "rotation": [30, 135, 0],
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [0, 0, 0]
+        }, {
+            "mesh": "plane.obj",
+            "is_dof_fixed": [true, true, true, true, true, true],
+            "position": [0, -1, 0]
+        }]
     }
 }

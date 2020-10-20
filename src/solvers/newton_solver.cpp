@@ -358,11 +358,11 @@ namespace opt {
                 "success,{},it,{},dir,{:10e}", success, num_it, dir.norm()));
         PROFILE_END(LINE_SEARCH);
 
-        if (!success && iteration_number > 0) {
+        if (!success && iteration_number > 0 && max_step_size >= lower_bound) {
             if (!std::isfinite(lower_bound)) {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"line-search ∇f(x)⋅dir=0\"",
-                    name(), iteration_number, lower_bound);
+                    name(), iteration_number);
             } else {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"line-search α ≤ {:g} / {:g} "
@@ -378,6 +378,10 @@ namespace opt {
                     max_step_size);
             }
         }
+
+        spdlog::debug(
+            "solver={} iter={:d} line_search_success={} step_length={:g}",
+            name(), iteration_number, success, step_length);
 
         return success;
     }

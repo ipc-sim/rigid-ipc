@@ -48,7 +48,7 @@ bool interval_root_finder(
 bool interval_root_finder(
     const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
     const Eigen::VectorX3I& x0,
-    const Eigen::VectorX3d& tol,
+    Eigen::VectorX3d tol,
     Eigen::VectorX3I& x,
     int max_iterations)
 {
@@ -115,7 +115,7 @@ bool interval_root_finder(
     const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
     const std::function<bool(const Eigen::VectorX3I&)>& constraint_predicate,
     const Eigen::VectorX3I& x0,
-    const Eigen::VectorX3d& tol,
+    Eigen::VectorX3d tol,
     Eigen::VectorX3I& x,
     int max_iterations)
 {
@@ -129,6 +129,17 @@ bool interval_root_finder(
     // Stack of intervals and the last split dimension
     std::stack<Eigen::VectorX3I> xs;
     xs.push(x0);
+
+    // If the start is a root then we are in trouble, so we should reduce the
+    // tolerance.
+    Eigen::VectorX3I x_tol(tol.size());
+    for (int i = 0; i < x_tol.size(); i++) {
+        x_tol(i) = Interval(0, tol(i));
+    }
+    if (zero_in(f(x_tol))) {
+        tol(0) = 1e-6;
+    }
+
     // TODO: Enable max_iterations
     for (size_t iter = 0; !xs.empty(); iter++) {
         x = xs.top();
