@@ -9,7 +9,7 @@
 #include <autodiff/autodiff_types.hpp>
 #include <barrier/barrier.hpp>
 #include <ccd/collision_detection.hpp>
-#include <ccd/hash_grid.hpp>
+#include <ipc/spatial_hash/hash_grid.hpp>
 #include <utils/eigen_ext.hpp>
 
 namespace ccd {
@@ -87,13 +87,13 @@ namespace opt {
             const physics::RigidBodyAssembler& bodies,
             const physics::Poses<double>& poses_t0,
             const physics::Poses<double>& poses_t1,
-            const Candidates& candidates) const;
+            const ipc::Candidates& candidates) const;
 
         double compute_earliest_toi_narrow_phase(
             const physics::RigidBodyAssembler& bodies,
             const physics::Poses<double>& poses_t0,
             const physics::Poses<double>& poses_t1,
-            const Candidates& candidates) const;
+            const ipc::Candidates& candidates) const;
 
         /// @brief Max distance, d̂, at which the barrier forces are activate.
         double m_barrier_activation_distance;

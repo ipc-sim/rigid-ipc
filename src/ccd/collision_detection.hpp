@@ -10,8 +10,8 @@
 
 #include <Eigen/Core>
 #include <nlohmann/json.hpp>
+#include <ipc/spatial_hash/collision_candidate.hpp>
 
-#include <ccd/hash_grid.hpp>
 #include <ccd/impact.hpp>
 #include <utils/eigen_ext.hpp>
 
@@ -75,7 +75,7 @@ void detect_collision_candidates(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    Candidates& candidates,
+    ipc::Candidates& candidates,
     DetectionMethod method = DetectionMethod::HASH_GRID,
     const double inflation_radius = 0.0);
 
@@ -96,7 +96,7 @@ void detect_collision_candidates_brute_force(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    Candidates& candidates);
+    ipc::Candidates& candidates);
 
 /**
  * @brief Use a hash grid method to create a set of all candidate collisions.
@@ -119,7 +119,7 @@ void detect_collision_candidates_hash_grid(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    Candidates& candidates,
+    ipc::Candidates& candidates,
     const double inflation_radius = 0.0);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ void detect_collisions_from_candidates(
     const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
-    const Candidates& candidates,
+    const ipc::Candidates& candidates,
     ConcurrentImpacts& impacts);
 
 /// @brief Determine if an edge-vertext pair intersects.

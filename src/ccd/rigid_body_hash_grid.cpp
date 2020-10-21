@@ -82,7 +82,7 @@ void RigidBodyHashGrid::addBodies(
     compute_vertices_intervals(bodies, poses_t0, poses_t1, vertices);
 
     // Create a bounding box for all vertices
-    tbb::concurrent_vector<AABB> vertices_aabb;
+    tbb::concurrent_vector<ipc::AABB> vertices_aabb;
     Eigen::VectorX3d min(bodies.dim()), max(bodies.dim());
     vertices_aabb.reserve(vertices.rows());
     for (long i = 0; i < vertices.rows(); i++) {
@@ -105,7 +105,7 @@ void RigidBodyHashGrid::addBodies(
             // Add all edge of the bodies
             for (long i = 0; i < bodies.m_edges.rows(); i++) {
                 this->addElement(
-                    AABB(
+                    ipc::AABB(
                         vertices_aabb[bodies.m_edges(i, 0)],
                         vertices_aabb[bodies.m_edges(i, 1)]),
                     i, this->m_edgeItems);
@@ -115,8 +115,8 @@ void RigidBodyHashGrid::addBodies(
             // Add all faces of the bodies
             for (long i = 0; i < bodies.m_faces.rows(); i++) {
                 this->addElement(
-                    AABB(
-                        AABB(
+                    ipc::AABB(
+                        ipc::AABB(
                             vertices_aabb[bodies.m_faces(i, 0)],
                             vertices_aabb[bodies.m_faces(i, 1)]),
                         vertices_aabb[bodies.m_faces(i, 2)]),

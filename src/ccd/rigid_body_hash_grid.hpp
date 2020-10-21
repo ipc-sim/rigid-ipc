@@ -1,13 +1,14 @@
 // A spatial hash grid for rigid bodies with angular trajectories.
 #pragma once
 
-#include <ccd/hash_grid.hpp>
+#include <ipc/spatial_hash/hash_grid.hpp>
+
 #include <physics/rigid_body_assembler.hpp>
 
 namespace ccd {
 
 /// A spatial hash grid for rigid bodies with angular trajectories.
-class RigidBodyHashGrid : public HashGrid {
+class RigidBodyHashGrid : public ipc::HashGrid {
 public:
     void resize(
         const physics::RigidBodyAssembler& bodies,

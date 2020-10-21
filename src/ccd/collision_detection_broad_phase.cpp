@@ -4,7 +4,8 @@
 
 #include "collision_detection.hpp"
 
-#include <ccd/hash_grid.hpp>
+#include <ipc/spatial_hash/hash_grid.hpp>
+
 #include <logger.hpp>
 #include <profiler.hpp>
 
@@ -25,7 +26,7 @@ void detect_collisions(
     assert(faces.size() == 0 || faces.cols() == 3);
 
     // Do the broad phase by detecting candidate impacts
-    Candidates candidates;
+    ipc::Candidates candidates;
     detect_collision_candidates(
         vertices_t0, vertices_t1, edges, faces, group_ids, collision_types,
         candidates, method);
@@ -46,7 +47,7 @@ void detect_collision_candidates(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    Candidates& candidates,
+    ipc::Candidates& candidates,
     DetectionMethod method,
     const double inflation_radius)
 {
@@ -78,7 +79,7 @@ void detect_edge_vertex_collision_candidates_brute_force(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& edges,
     const Eigen::VectorXi& group_ids,
-    std::vector<EdgeVertexCandidate>& ev_candidates)
+    std::vector<ipc::EdgeVertexCandidate>& ev_candidates)
 {
     const bool check_group = group_ids.size() > 0;
     for (int ei = 0; ei < edges.rows(); ei++) {
@@ -99,7 +100,7 @@ void detect_edge_vertex_collision_candidates_brute_force(
 void detect_edge_edge_collision_candidates_brute_force(
     const Eigen::MatrixXi& edges,
     const Eigen::VectorXi& group_ids,
-    std::vector<EdgeEdgeCandidate>& ee_candidates)
+    std::vector<ipc::EdgeEdgeCandidate>& ee_candidates)
 {
     const bool check_group = group_ids.size() > 0;
     for (int ei = 0; ei < edges.rows(); ei++) {
@@ -124,7 +125,7 @@ void detect_face_vertex_collision_candidates_brute_force(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
-    std::vector<FaceVertexCandidate>& fv_candidates)
+    std::vector<ipc::FaceVertexCandidate>& fv_candidates)
 {
     const bool check_group = group_ids.size() > 0;
     // Loop over all faces
@@ -153,7 +154,7 @@ void detect_collision_candidates_brute_force(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    Candidates& candidates)
+    ipc::Candidates& candidates)
 {
     assert(edges.size() == 0 || edges.cols() == 2);
     assert(faces.size() == 0 || faces.cols() == 3);
@@ -189,11 +190,11 @@ void detect_collision_candidates_hash_grid(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    Candidates& candidates,
+    ipc::Candidates& candidates,
     const double inflation_radius)
 {
     using namespace CollisionType;
-    HashGrid hashgrid;
+    ipc::HashGrid hashgrid;
     assert(edges.size()); // Even face-vertex need the edges
     hashgrid.resize(vertices_t0, vertices_t1, edges, inflation_radius);
     tbb::parallel_invoke(

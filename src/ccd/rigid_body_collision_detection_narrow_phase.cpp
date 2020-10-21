@@ -18,7 +18,7 @@ void detect_collisions_from_candidates(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
-    const Candidates& candidates,
+    const ipc::Candidates& candidates,
     ConcurrentImpacts& impacts,
     TrajectoryType trajectory)
 {
@@ -35,17 +35,20 @@ void detect_collisions_from_candidates(
         "rigid_collisions_detection__narrow_phase", NARROW_PHASE);
     PROFILE_START(NARROW_PHASE);
 
-    auto detect_ev_collision = [&](const EdgeVertexCandidate& ev_candidate) {
-        double toi, alpha;
-        bool is_colliding = detect_edge_vertex_collisions_narrow_phase(
-            bodies, poses_t0, poses_t1, ev_candidate, toi, alpha, trajectory);
-        if (is_colliding) {
-            impacts.ev_impacts.emplace_back(
-                toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index);
-        }
-    };
+    auto detect_ev_collision =
+        [&](const ipc::EdgeVertexCandidate& ev_candidate) {
+            double toi, alpha;
+            bool is_colliding = detect_edge_vertex_collisions_narrow_phase(
+                bodies, poses_t0, poses_t1, ev_candidate, toi, alpha,
+                trajectory);
+            if (is_colliding) {
+                impacts.ev_impacts.emplace_back(
+                    toi, ev_candidate.edge_index, alpha,
+                    ev_candidate.vertex_index);
+            }
+        };
 
-    auto detect_ee_collision = [&](const EdgeEdgeCandidate& ee_candidate) {
+    auto detect_ee_collision = [&](const ipc::EdgeEdgeCandidate& ee_candidate) {
         double toi, edge0_alpha, edge1_alpha;
         bool is_colliding = detect_edge_edge_collisions_narrow_phase(
             bodies, poses_t0, poses_t1, ee_candidate, toi, edge0_alpha,
@@ -57,15 +60,18 @@ void detect_collisions_from_candidates(
         }
     };
 
-    auto detect_fv_collision = [&](const FaceVertexCandidate& fv_candidate) {
-        double toi, u, v;
-        bool is_colliding = detect_face_vertex_collisions_narrow_phase(
-            bodies, poses_t0, poses_t1, fv_candidate, toi, u, v, trajectory);
-        if (is_colliding) {
-            impacts.fv_impacts.emplace_back(
-                toi, fv_candidate.face_index, u, v, fv_candidate.vertex_index);
-        }
-    };
+    auto detect_fv_collision =
+        [&](const ipc::FaceVertexCandidate& fv_candidate) {
+            double toi, u, v;
+            bool is_colliding = detect_face_vertex_collisions_narrow_phase(
+                bodies, poses_t0, poses_t1, fv_candidate, toi, u, v,
+                trajectory);
+            if (is_colliding) {
+                impacts.fv_impacts.emplace_back(
+                    toi, fv_candidate.face_index, u, v,
+                    fv_candidate.vertex_index);
+            }
+        };
 
     tbb::parallel_invoke(
         [&] {
@@ -94,7 +100,7 @@ bool detect_edge_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
-    const EdgeVertexCandidate& candidate,
+    const ipc::EdgeVertexCandidate& candidate,
     double& toi,
     double& alpha,
     TrajectoryType trajectory,
@@ -167,7 +173,7 @@ bool detect_edge_edge_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
-    const EdgeEdgeCandidate& candidate,
+    const ipc::EdgeEdgeCandidate& candidate,
     double& toi,
     double& edge0_alpha,
     double& edge1_alpha,
@@ -253,7 +259,7 @@ bool detect_face_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
-    const FaceVertexCandidate& candidate,
+    const ipc::FaceVertexCandidate& candidate,
     double& toi,
     double& u,
     double& v,

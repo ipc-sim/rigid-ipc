@@ -19,7 +19,7 @@ void detect_collisions(
     assert(poses_t0.size() == poses_t1.size());
 
     // Do the broad phase by detecting candidate impacts
-    Candidates candidates;
+    ipc::Candidates candidates;
     detect_collision_candidates(
         bodies, poses_t0, poses_t1, collision_types, candidates, method,
         trajectory);
@@ -39,7 +39,7 @@ void detect_collision_candidates(
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
     const int collision_types,
-    Candidates& candidates,
+    ipc::Candidates& candidates,
     DetectionMethod method,
     TrajectoryType trajectory,
     const double inflation_radius)
@@ -109,7 +109,7 @@ void detect_collision_candidates_hash_grid(
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
     const int collision_types,
-    Candidates& candidates,
+    ipc::Candidates& candidates,
     const double inflation_radius)
 {
     RigidBodyHashGrid hashgrid;

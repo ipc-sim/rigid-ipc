@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
         displacements.resizeLike(vertices);
         displacements.setZero();
 
-        ccd::Candidates candidates;
+        ipc::Candidates candidates;
         ccd::detect_collision_candidates(
             vertices, displacements, edges, Eigen::MatrixXi(0, 3), group_ids,
             ccd::CollisionType::EDGE_VERTEX, candidates,
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         }
         double min_distance = -1;
         for (size_t j = 0; j < candidates.ev_candidates.size(); j++) {
-            const ccd::EdgeVertexCandidate& ev_candidate =
+            const ipc::EdgeVertexCandidate& ev_candidate =
                 candidates.ev_candidates[j];
 
             Eigen::VectorXd p = vertices.row(ev_candidate.vertex_index);

@@ -5,6 +5,7 @@
 #include <finitediff.hpp>
 #include <igl/PI.h>
 #include <igl/predicates/segment_segment_intersect.h>
+#include <ipc/spatial_hash/hash_grid.hpp>
 
 #include <geometry/intersection.hpp>
 #include <io/read_rb_scene.hpp>
@@ -505,7 +506,7 @@ namespace physics {
             return false;
         }
 
-        HashGrid hashgrid;
+        ipc::HashGrid hashgrid;
         double inflation_radius = 1e-12; // Conservative broad phase
         const Eigen::MatrixXd vertices = m_assembler.world_vertices(poses);
         const Eigen::MatrixXi& edges = m_assembler.m_edges;
@@ -520,10 +521,10 @@ namespace physics {
             assert(vertices.cols() == 2);
             // Need to check segment-segment intersections in 2D
 
-            std::vector<EdgeEdgeCandidate> ee_candidates;
+            std::vector<ipc::EdgeEdgeCandidate> ee_candidates;
             hashgrid.getEdgeEdgePairs(edges, group_ids(), ee_candidates);
 
-            for (const EdgeEdgeCandidate& ee_candidate : ee_candidates) {
+            for (const ipc::EdgeEdgeCandidate& ee_candidate : ee_candidates) {
                 if (igl::predicates::segment_segment_intersect(
                         vertices.row(edges(ee_candidate.edge0_index, 0))
                             .head<2>(),
@@ -543,10 +544,10 @@ namespace physics {
                 /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, faces,
                 inflation_radius);
 
-            std::vector<EdgeFaceCandidate> ef_candidates;
+            std::vector<ipc::EdgeFaceCandidate> ef_candidates;
             hashgrid.getEdgeFacePairs(edges, faces, group_ids(), ef_candidates);
 
-            for (const EdgeFaceCandidate& ef_candidate : ef_candidates) {
+            for (const ipc::EdgeFaceCandidate& ef_candidate : ef_candidates) {
                 if (geometry::are_edge_triangle_intersecting(
                         vertices.row(edges(ef_candidate.edge_index, 0)),
                         vertices.row(edges(ef_candidate.edge_index, 1)),

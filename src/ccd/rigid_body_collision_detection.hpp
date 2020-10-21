@@ -38,7 +38,7 @@ void detect_collision_candidates(
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
     const int collision_types,
-    Candidates& candidates,
+    ipc::Candidates& candidates,
     DetectionMethod method = DetectionMethod::HASH_GRID,
     TrajectoryType trajectory = TrajectoryType::SCREWING,
     const double inflation_radius = 0.0);
@@ -49,7 +49,7 @@ void detect_collision_candidates_hash_grid(
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
     const int collision_types,
-    Candidates& candidates,
+    ipc::Candidates& candidates,
     const double inflation_radius = 0.0);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ void detect_collisions_from_candidates(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
-    const Candidates& candidates,
+    const ipc::Candidates& candidates,
     ConcurrentImpacts& impacts,
     TrajectoryType trajectory = TrajectoryType::SCREWING);
 
@@ -69,7 +69,7 @@ bool detect_edge_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
-    const EdgeVertexCandidate& ev_candidate,
+    const ipc::EdgeVertexCandidate& ev_candidate,
     double& toi,
     double& alpha,
     TrajectoryType trajectory = TrajectoryType::SCREWING,
@@ -79,7 +79,7 @@ bool detect_edge_edge_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
-    const EdgeEdgeCandidate& ee_candidate,
+    const ipc::EdgeEdgeCandidate& ee_candidate,
     double& toi,
     double& edge0_alpha,
     double& edge1_alpha,
@@ -90,7 +90,7 @@ bool detect_face_vertex_collisions_narrow_phase(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
-    const FaceVertexCandidate& fv_candidate,
+    const ipc::FaceVertexCandidate& fv_candidate,
     double& toi,
     double& u,
     double& v,

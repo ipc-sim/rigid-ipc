@@ -14,106 +14,6 @@
 using namespace ccd;
 using namespace nlohmann;
 
-TEST_CASE("AABB initilization", "[hashgrid][AABB]")
-{
-    int dim = GENERATE(2, 3);
-    CAPTURE(dim);
-    AABB aabb;
-    Eigen::VectorXd actual_center(dim);
-    SECTION("Empty AABB")
-    {
-        aabb = AABB(Eigen::VectorXd::Zero(dim), Eigen::VectorXd::Zero(dim));
-        actual_center = Eigen::VectorXd::Zero(dim);
-    }
-    SECTION("Box centered at zero")
-    {
-        Eigen::VectorXd min =
-            Eigen::VectorXd::Random(dim).array() - 1; // in range [-2, 0]
-        Eigen::VectorXd max = -min;
-        aabb = AABB(min, max);
-        actual_center = Eigen::VectorXd::Zero(dim);
-    }
-    SECTION("Box not centered at zero")
-    {
-        Eigen::VectorXd min(dim), max(dim);
-        if (dim == 2) {
-            min << 5.1, 3.14;
-            max << 10.4, 7.89;
-            actual_center << 7.75, 5.515;
-        } else {
-            min << 5.1, 3.14, 7.94;
-            max << 10.4, 7.89, 10.89;
-            actual_center << 7.75, 5.515, 9.415;
-        }
-        aabb = AABB(min, max);
-    }
-    Eigen::VectorXd center_diff = aabb.getCenter() - actual_center;
-    CHECK(center_diff.norm() == Approx(0.0).margin(1e-12));
-}
-
-TEST_CASE("AABB overlapping", "[hashgrid][AABB]")
-{
-    AABB a, b;
-    bool are_overlaping = false;
-    SECTION("a to the right of b")
-    {
-        a = AABB(Eigen::Vector2d(-1, 0), Eigen::Vector2d(0, 1));
-        SECTION("overlapping")
-        {
-            b = AABB(Eigen::Vector2d(-0.5, 0), Eigen::Vector2d(0.5, 1));
-            are_overlaping = true;
-        }
-        SECTION("not overlapping")
-        {
-            b = AABB(Eigen::Vector2d(0.5, 0), Eigen::Vector2d(1.5, 1));
-            are_overlaping = false;
-        }
-    }
-    SECTION("b to the right of a")
-    {
-        b = AABB(Eigen::Vector2d(-1, 0), Eigen::Vector2d(0, 1));
-        SECTION("overlapping")
-        {
-            a = AABB(Eigen::Vector2d(-0.5, 0), Eigen::Vector2d(0.5, 1));
-            are_overlaping = true;
-        }
-        SECTION("not overlapping")
-        {
-            a = AABB(Eigen::Vector2d(0.5, 0), Eigen::Vector2d(1.5, 1));
-            are_overlaping = false;
-        }
-    }
-    SECTION("a above b")
-    {
-        a = AABB(Eigen::Vector2d(0, -1), Eigen::Vector2d(1, 0));
-        SECTION("overlapping")
-        {
-            b = AABB(Eigen::Vector2d(0, -0.5), Eigen::Vector2d(1, 0.5));
-            are_overlaping = true;
-        }
-        SECTION("not overlapping")
-        {
-            b = AABB(Eigen::Vector2d(0, 0.5), Eigen::Vector2d(1, 1.5));
-            are_overlaping = false;
-        }
-    }
-    SECTION("a above b")
-    {
-        b = AABB(Eigen::Vector2d(0, -1), Eigen::Vector2d(1, 0));
-        SECTION("overlapping")
-        {
-            a = AABB(Eigen::Vector2d(0, -0.5), Eigen::Vector2d(1, 0.5));
-            are_overlaping = true;
-        }
-        SECTION("not overlapping")
-        {
-            a = AABB(Eigen::Vector2d(0, 0.5), Eigen::Vector2d(1, 1.5));
-            are_overlaping = false;
-        }
-    }
-    CHECK(AABB::are_overlaping(a, b) == are_overlaping);
-}
-
 TEST_CASE("2D hash grid", "[hashgrid][2D]")
 {
     Eigen::MatrixXd vertices;
@@ -370,7 +270,7 @@ TEST_CASE("3D brute force is duplicate free", "[ccd][brute_force]")
     }
 
     for (int i = 0; i < 10; i++) {
-        Candidates candidates;
+        ipc::Candidates candidates;
         using namespace CollisionType;
         detect_collision_candidates_brute_force(
             vertices, edges, faces, group_ids,

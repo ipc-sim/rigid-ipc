@@ -63,7 +63,7 @@ namespace opt {
 
         PROFILE_START();
         // This function will profile itself
-        Candidates candidates;
+        ipc::Candidates candidates;
         detect_collision_candidates(
             bodies, poses_t0, poses_t1, dim_to_collision_type(bodies.dim()),
             candidates, detection_method, trajectory_type,
@@ -82,7 +82,7 @@ namespace opt {
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1,
-        const Candidates& candidates) const
+        const ipc::Candidates& candidates) const
     {
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double toi, alpha;
@@ -122,7 +122,7 @@ namespace opt {
         PROFILE_POINT("compute_earliest_toi");
         PROFILE_START();
         // This function will profile itself
-        Candidates candidates;
+        ipc::Candidates candidates;
         detect_collision_candidates(
             bodies, poses_t0, poses_t1, dim_to_collision_type(bodies.dim()),
             candidates, detection_method, trajectory_type,
@@ -139,7 +139,7 @@ namespace opt {
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1,
-        const Candidates& candidates) const
+        const ipc::Candidates& candidates) const
     {
         NAMED_PROFILE_POINT("compute_earliest_toi__narrow_phase", NARROW_PHASE);
         NAMED_PROFILE_POINT(

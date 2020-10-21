@@ -24,34 +24,35 @@ void detect_collisions_from_candidates(
     const Eigen::MatrixXd& vertices_t1,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
-    const Candidates& candidates,
+    const ipc::Candidates& candidates,
     ConcurrentImpacts& impacts)
 {
     NAMED_PROFILE_POINT(
         "linear_collisions_detection__narrow_phase", NARROW_PHASE);
     PROFILE_START(NARROW_PHASE);
 
-    auto detect_ev_collision = [&](const EdgeVertexCandidate& ev_candidate) {
-        long ei = ev_candidate.edge_index, vi = ev_candidate.vertex_index;
-        double toi, alpha;
-        bool is_impacting = detect_edge_vertex_collisions_narrow_phase(
-            // Edge at t=0
-            vertices_t0.row(edges(ei, 0)), vertices_t0.row(edges(ei, 1)),
-            // Vertex at t=0
-            vertices_t0.row(vi),
-            // Edge at t=1
-            vertices_t1.row(edges(ei, 0)), vertices_t1.row(edges(ei, 1)),
-            // Vertex at t=1
-            vertices_t1.row(vi),
-            // Output parameters
-            toi, alpha);
-        // Add the impact if the candidate is impacting
-        if (is_impacting) {
-            impacts.ev_impacts.emplace_back(toi, ei, alpha, vi);
-        }
-    };
+    auto detect_ev_collision =
+        [&](const ipc::EdgeVertexCandidate& ev_candidate) {
+            long ei = ev_candidate.edge_index, vi = ev_candidate.vertex_index;
+            double toi, alpha;
+            bool is_impacting = detect_edge_vertex_collisions_narrow_phase(
+                // Edge at t=0
+                vertices_t0.row(edges(ei, 0)), vertices_t0.row(edges(ei, 1)),
+                // Vertex at t=0
+                vertices_t0.row(vi),
+                // Edge at t=1
+                vertices_t1.row(edges(ei, 0)), vertices_t1.row(edges(ei, 1)),
+                // Vertex at t=1
+                vertices_t1.row(vi),
+                // Output parameters
+                toi, alpha);
+            // Add the impact if the candidate is impacting
+            if (is_impacting) {
+                impacts.ev_impacts.emplace_back(toi, ei, alpha, vi);
+            }
+        };
 
-    auto detect_ee_collision = [&](const EdgeEdgeCandidate& ee_candidate) {
+    auto detect_ee_collision = [&](const ipc::EdgeEdgeCandidate& ee_candidate) {
         long e0i = ee_candidate.edge0_index, e1i = ee_candidate.edge1_index;
         double toi, alpha0, alpha1;
         bool is_impacting = detect_edge_edge_collisions_narrow_phase(
@@ -71,26 +72,27 @@ void detect_collisions_from_candidates(
         }
     };
 
-    auto detect_fv_collision = [&](const FaceVertexCandidate& fv_candidate) {
-        long fi = fv_candidate.face_index, vi = fv_candidate.vertex_index;
-        double toi, u, v;
-        bool is_impacting = detect_face_vertex_collisions_narrow_phase(
-            // Face at t = 0
-            vertices_t0.row(faces(fi, 0)), vertices_t0.row(faces(fi, 1)),
-            vertices_t0.row(faces(fi, 2)),
-            // Vertex at t = 0
-            vertices_t0.row(fv_candidate.vertex_index),
-            // Face at t = 1
-            vertices_t1.row(faces(fi, 0)), vertices_t1.row(faces(fi, 1)),
-            vertices_t1.row(faces(fi, 2)),
-            // Vertex at t = 1
-            vertices_t1.row(fv_candidate.vertex_index),
-            // Output parameters
-            toi, u, v);
-        if (is_impacting) {
-            impacts.fv_impacts.emplace_back(toi, fi, u, v, vi);
-        }
-    };
+    auto detect_fv_collision =
+        [&](const ipc::FaceVertexCandidate& fv_candidate) {
+            long fi = fv_candidate.face_index, vi = fv_candidate.vertex_index;
+            double toi, u, v;
+            bool is_impacting = detect_face_vertex_collisions_narrow_phase(
+                // Face at t = 0
+                vertices_t0.row(faces(fi, 0)), vertices_t0.row(faces(fi, 1)),
+                vertices_t0.row(faces(fi, 2)),
+                // Vertex at t = 0
+                vertices_t0.row(fv_candidate.vertex_index),
+                // Face at t = 1
+                vertices_t1.row(faces(fi, 0)), vertices_t1.row(faces(fi, 1)),
+                vertices_t1.row(faces(fi, 2)),
+                // Vertex at t = 1
+                vertices_t1.row(fv_candidate.vertex_index),
+                // Output parameters
+                toi, u, v);
+            if (is_impacting) {
+                impacts.fv_impacts.emplace_back(toi, fi, u, v, vi);
+            }
+        };
 
     tbb::parallel_invoke(
         [&] {

@@ -592,10 +592,10 @@ TEST_CASE(
         int n = 100;
         Pose<double> poseA_ti0 = bodyA_pose_t0, poseB_ti0 = bodyB_pose_t0;
         for (int i = 1; i <= n; i++) {
-            Pose<double> poseA_ti1 =
-                Pose<double>::interpolate(bodyA_pose_t0, bodyA_pose_t1, i / n);
-            Pose<double> poseB_ti1 =
-                Pose<double>::interpolate(bodyB_pose_t0, bodyB_pose_t1, i / n);
+            Pose<double> poseA_ti1 = Pose<double>::interpolate(
+                bodyA_pose_t0, bodyA_pose_t1, i / double(n));
+            Pose<double> poseB_ti1 = Pose<double>::interpolate(
+                bodyB_pose_t0, bodyB_pose_t1, i / double(n));
 
             is_impacting = ccd::edgeEdgeCCD(
                 bodyA.world_vertex(poseA_ti0, 0),
