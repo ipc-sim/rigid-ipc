@@ -137,7 +137,7 @@ bool interval_root_finder(
         x_tol(i) = Interval(0, tol(i));
     }
     if (zero_in(f(x_tol))) {
-        tol(0) = 1e-6;
+        tol(0) /= 1e2;
     }
 
     // TODO: Enable max_iterations
