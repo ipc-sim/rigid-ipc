@@ -28,7 +28,6 @@ namespace opt {
     nlohmann::json IPCSolver::settings() const
     {
         nlohmann::json json = NewtonSolver::settings();
-        json.erase("convergence_criteria");
         json["dhat_epsilon"] = dhat_epsilon;
         json["min_barrier_stiffness_scale"] = min_barrier_stiffness_scale;
         return json;

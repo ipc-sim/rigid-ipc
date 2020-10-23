@@ -287,7 +287,7 @@ TEST_CASE("Rigid face-vertex time of impact", "[ccd][rigid_toi][face_vertex]")
         toi, /*earliest_toi=*/1, /*toi_tolerance=*/TESTING_TOI_TOLERANCE);
     CAPTURE(toi, expected_toi);
     CHECK(is_impacting == is_impact_expected);
-    if (is_impacting) {
+    if (is_impact_expected) {
         // clang-format off
         CHECK(toi == Approx(expected_toi).margin(
             Constants::SCREWING_CCD_LENGTH_TOL));

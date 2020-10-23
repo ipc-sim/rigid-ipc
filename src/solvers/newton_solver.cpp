@@ -10,6 +10,8 @@
 #include <profiler.hpp>
 #include <solvers/line_search.hpp> // sample_search_direction
 
+// #define USE_GRADIENT_DESCENT
+
 namespace ccd {
 namespace opt {
 
@@ -195,6 +197,9 @@ namespace opt {
             igl::slice(gradient, free_dof, gradient_free);
             igl::slice(hessian, free_dof, free_dof, hessian_free);
 
+#ifdef USE_GRADIENT_DESCENT
+            direction_free = -gradient_free;
+#else
             bool solve_success = compute_regularized_direction(
                 fx, gradient_free, hessian_free, direction_free,
                 regulariztion_coeff);
@@ -202,6 +207,7 @@ namespace opt {
                 exit_reason = "regularization failed";
                 break;
             }
+#endif
 
             ///////////////////////////////////////////////////////////////////
             // Line search over newton direction
@@ -366,14 +372,19 @@ namespace opt {
             } else {
                 spdlog::warn(
                     "solver={} iter={:d} failure=\"line-search α ≤ {:g} / {:g} "
-                    "= {:g}; f(x)={:g}; f(x + αΔx)={:g}; α_max={:g}\"",
+                    "= {:g}; f(x + αΔx)-f(x)={:g}; α_max={:g}\"",
                     name(), iteration_number, line_search_lower_bound(),
-                    sqrt(abs(grad_fx.dot(dir))), lower_bound, fx, fxi,
+                    sqrt(abs(grad_fx.dot(dir))), lower_bound, fxi - fx,
                     max_step_size);
                 sample_search_direction(
                     x, dir,
                     [&](const Eigen::VectorXd& x, Eigen::VectorXd& grad) {
-                        return problem_ptr->compute_objective(x, grad);
+                        double fx = problem_ptr->compute_objective(x, grad);
+                        Eigen::VectorXd grad_free;
+                        igl::slice(grad, free_dof, grad_free);
+                        grad.setZero();
+                        igl::slice_into(grad_free, free_dof, grad);
+                        return fx;
                     },
                     max_step_size);
             }

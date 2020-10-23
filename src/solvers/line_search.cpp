@@ -170,10 +170,11 @@ namespace opt {
         for (int i = 0; i < sampling.size(); i++) {
             double step_length = sampling(i);
             double fx = f_and_gradf(x + step_length * dir, grad_fx);
-            spdlog::info(
+            spdlog::log(
+                step_length < 0 ? spdlog::level::debug : spdlog::level::info,
                 "method=line_search step_length={:+.1e} obj={:.16g} "
-                "(obj_i-obj_0)={:.16g} grad_norm={:g}",
-                step_length, fx, fx - fx0, grad_fx.norm());
+                "(obj_i-obj_0)={:.16g} grad_L∞norm={:g}",
+                step_length, fx, fx - fx0, grad_fx.lpNorm<Eigen::Infinity>());
         }
     }
 
