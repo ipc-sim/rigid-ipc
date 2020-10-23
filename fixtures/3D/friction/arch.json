@@ -2,13 +2,13 @@
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
     "timestep": 0.01,
-    "max_time": 30.0,
+    "max_time": 20.0,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-2
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "coefficient_friction": 1,
+        "coefficient_friction": 0.5,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "arch/stone-1.obj",

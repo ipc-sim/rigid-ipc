@@ -6,6 +6,9 @@
         "initial_barrier_activation_distance": 1e-2,
         "trajectory_type": "screwing"
     },
+    "ipc_solver": {
+        "velocity_conv_tol": 1e-5
+    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, 0, 0],
