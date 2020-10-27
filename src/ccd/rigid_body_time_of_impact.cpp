@@ -1,14 +1,20 @@
 // Time-of-impact computation for rigid bodies with angular trajectories.
 #include "rigid_body_time_of_impact.hpp"
 
+// #define USE_PIECEWISE_LINEAR
+#ifdef USE_PIECEWISE_LINEAR
+static const int NUM_PIECES = 100;
+#include <tight_inclusion/inclusion_ccd.hpp>
+#endif
+
 // #define TIME_CCD_QUERIES
 #ifdef TIME_CCD_QUERIES
 #include <igl/Timer.h>
 #endif
 
-#include <interval/interval_root_finder.hpp>
 #include <geometry/distance.hpp>
 #include <geometry/intersection.hpp>
+#include <interval/interval_root_finder.hpp>
 #include <logger.hpp>
 #include <utils/eigen_ext.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -265,7 +271,50 @@ bool compute_edge_edge_time_of_impact(
     igl::Timer timer;
     timer.start();
 #endif
+#ifdef USE_PIECEWISE_LINEAR
+    bool is_impacting = false;
+    physics::Pose<double> poseA_ti0 = poseA_t0, poseB_ti0 = poseB_t0;
+    for (int i = 1; i <= NUM_PIECES; i++) {
+        double ti0 = (i - 1) / double(NUM_PIECES) * earliest_toi;
+        double ti1 = i / double(NUM_PIECES) * earliest_toi;
+        physics::Pose<double> poseA_ti1 =
+            physics::Pose<double>::interpolate(poseA_t0, poseA_t1, ti1);
+        physics::Pose<double> poseB_ti1 =
+            physics::Pose<double>::interpolate(poseB_t0, poseB_t1, ti1);
+
+        double output_tolerance;
+        // 0: normal ccd method which only checks t = [0,1]
+        // 1: ccd with max_itr and t=[0, t_max]
+        const int CCD_TYPE = 1;
+        is_impacting = inclusion_ccd::edgeEdgeCCD_double(
+            bodyA.world_vertex(poseA_ti0, bodyA.edges(edgeA_id, 0)),
+            bodyA.world_vertex(poseA_ti0, bodyA.edges(edgeA_id, 1)),
+            bodyB.world_vertex(poseB_ti0, bodyB.edges(edgeB_id, 0)),
+            bodyB.world_vertex(poseB_ti0, bodyB.edges(edgeB_id, 1)),
+            bodyA.world_vertex(poseA_ti1, bodyA.edges(edgeA_id, 0)),
+            bodyA.world_vertex(poseA_ti1, bodyA.edges(edgeA_id, 1)),
+            bodyB.world_vertex(poseB_ti1, bodyB.edges(edgeB_id, 0)),
+            bodyB.world_vertex(poseB_ti1, bodyB.edges(edgeB_id, 1)),
+            { { -1, -1, -1 } }, // rounding error
+            0,                  // minimum separation distance
+            toi,                // time of impact
+            1e-4,               // delta
+            1.0,                // Maximum time to check
+            -1,                 // Maximum number of iterations
+            output_tolerance,   // delta_actual
+            CCD_TYPE);
+
+        if (is_impacting) {
+            toi = (ti1 - ti0) * toi + ti0;
+            break;
+        }
+
+        poseA_ti0 = poseA_ti1;
+        poseB_ti0 = poseB_ti1;
+    }
+#else
     bool is_impacting = interval_root_finder(distance, x0, tol, toi_interval);
+#endif
 #ifdef TIME_CCD_QUERIES
     timer.stop();
     std::cout << "EE " << timer.getElapsedTime() << std::endl;
@@ -276,9 +325,11 @@ bool compute_edge_edge_time_of_impact(
             bodyB, poseB_t0, poseB_t1, edgeB_id);
     }
 #endif
+#ifndef USE_PIECEWISE_LINEAR
     // Return a conservative time-of-impact
     toi = is_impacting ? toi_interval(0).lower()
                        : std::numeric_limits<double>::infinity();
+#endif
     // This time of impact is very dangerous for convergence
     // assert(!is_impacting || toi > 0);
     return is_impacting;
@@ -395,17 +446,63 @@ bool compute_face_vertex_time_of_impact(
     igl::Timer timer;
     timer.start();
 #endif
+#ifdef USE_PIECEWISE_LINEAR
+    bool is_impacting = false;
+    physics::Pose<double> poseA_ti0 = poseA_t0, poseB_ti0 = poseB_t0;
+    for (int i = 1; i <= NUM_PIECES; i++) {
+        double ti0 = (i - 1) / double(NUM_PIECES) * earliest_toi;
+        double ti1 = i / double(NUM_PIECES) * earliest_toi;
+        physics::Pose<double> poseA_ti1 =
+            physics::Pose<double>::interpolate(poseA_t0, poseA_t1, ti1);
+        physics::Pose<double> poseB_ti1 =
+            physics::Pose<double>::interpolate(poseB_t0, poseB_t1, ti1);
+
+        double output_tolerance;
+        // 0: normal ccd method which only checks t = [0,1]
+        // 1: ccd with max_itr and t=[0, t_max]
+        const int CCD_TYPE = 1;
+        is_impacting = inclusion_ccd::vertexFaceCCD_double(
+            bodyA.world_vertex(poseA_ti0, vertex_id),
+            bodyB.world_vertex(poseB_ti0, bodyB.faces(face_id, 0)),
+            bodyB.world_vertex(poseB_ti0, bodyB.faces(face_id, 1)),
+            bodyB.world_vertex(poseB_ti0, bodyB.faces(face_id, 2)),
+            bodyA.world_vertex(poseA_ti1, vertex_id),
+            bodyB.world_vertex(poseB_ti1, bodyB.faces(face_id, 0)),
+            bodyB.world_vertex(poseB_ti1, bodyB.faces(face_id, 1)),
+            bodyB.world_vertex(poseB_ti1, bodyB.faces(face_id, 2)),
+            { { -1, -1, -1 } }, // rounding error
+            0,                  // minimum separation distance
+            toi,                // time of impact
+            1e-6,               // delta
+            1.0,                // Maximum time to check
+            1e6,                // Maximum number of iterations
+            output_tolerance,   // delta_actual
+            CCD_TYPE);
+
+        if (is_impacting) {
+            toi = (ti1 - ti0) * toi + ti0;
+            break;
+        }
+
+        poseA_ti0 = poseA_ti1;
+        poseB_ti0 = poseB_ti1;
+    }
+#else
     bool is_impacting = interval_root_finder(
         distance, is_point_inside_triangle, Interval(0, earliest_toi), tol,
         toi_interval);
+#endif
 #ifdef TIME_CCD_QUERIES
     timer.stop();
     std::cout << "VF " << timer.getElapsedTime() << std::endl;
 #endif
 
+// Return a conservative time-of-impact
+#ifndef USE_PIECEWISE_LINEAR
     // Return a conservative time-of-impact
     toi = is_impacting ? toi_interval.lower()
                        : std::numeric_limits<double>::infinity();
+#endif
     // This time of impact is very dangerous for convergence
     // assert(!is_impacting || toi > 0);
     return is_impacting;
