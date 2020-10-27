@@ -14,7 +14,7 @@ namespace physics {
     public:
         RigidBodyProblem();
 
-        void init(const std::vector<RigidBody> rbs);
+        virtual void init(const std::vector<RigidBody>& rbs);
 
         virtual ~RigidBodyProblem() = default;
 
@@ -40,19 +40,13 @@ namespace physics {
             m_timestep = timestep;
         }
 
-        /// Moves status to given configuration vector.
-        virtual bool take_step(const Eigen::VectorXd& x);
-
-        /// Check for intersections at the end of the time-step.
-        virtual bool has_intersections() const override
-        {
-            return detect_intersections(this->poses_t1);
-        }
-
         /// Update problem using current status of bodies.
-        void update_constraint();
-        opt::OptimizationResults solve_constraints();
+        virtual void update_constraints();
+        /// Initialize the solver.
         void init_solve();
+        /// Use the solver to solve this problem.
+        opt::OptimizationResults solve_constraints();
+        /// Take a single solver step.
         opt::OptimizationResults step_solve();
 
         /// World vertices at the END of step (current).
@@ -81,7 +75,7 @@ namespace physics {
             return m_assembler.group_ids();
         }
 
-        const Eigen::MatrixXb& particle_dof_fixed() const override
+        const Eigen::MatrixXb& vertex_dof_fixed() const override
         {
             return m_assembler.is_dof_fixed;
         }
@@ -115,7 +109,8 @@ namespace physics {
         physics::RigidBodyAssembler m_assembler;
 
     protected:
-        void solve_velocities();
+        /// Moves status to given configuration vector.
+        virtual bool take_step(const Eigen::VectorXd& x);
 
         /// Detect collisions between poses_t0 and poses_t1.
         bool detect_collisions(
@@ -126,7 +121,7 @@ namespace physics {
         /// Detect intersections between rigid bodies with given poses.
         bool detect_intersections(const Poses<double>& poses) const;
 
-        void update_dof();
+        virtual void update_dof();
 
         /// @returns \f$x_0\f$: the starting point for the optimization.
         const Eigen::VectorXd& starting_point() const { return x0; }
@@ -138,14 +133,6 @@ namespace physics {
 
         // Used during collision resolution
         Poses<double> poses_t0; ///< Rigid body poses at start of time-step
-        Poses<double> poses_t1; ///< Rigid body poses at end of time-step
-
-        /// @brief Original impacts used for velocity resitution
-        /// @todo Replace this with the std::vector version
-        ConcurrentImpacts original_impacts;
-
-        /// Unconstrained time-stepping method
-        std::shared_ptr<time_stepper::TimeStepper> m_time_stepper;
 
         /// Initial length of the bounding box diagonal
         double init_bbox_diagonal;

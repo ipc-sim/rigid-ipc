@@ -86,7 +86,7 @@ void UISimState::load_scene()
     mesh_data->data().show_vertid = false;
     mesh_data->set_mesh(
         q, m_state.problem_ptr->edges(), m_state.problem_ptr->faces());
-    mesh_data->set_vertex_data(m_state.problem_ptr->particle_dof_fixed());
+    mesh_data->set_vertex_data(m_state.problem_ptr->vertex_dof_fixed());
     mesh_data->data().point_size = 0 * pixel_ratio();
 
     velocity_data->set_vector_field(q, v);

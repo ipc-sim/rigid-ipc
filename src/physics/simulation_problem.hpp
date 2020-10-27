@@ -41,20 +41,15 @@ namespace physics {
         virtual double timestep() const = 0;        ///< Get the timestep size
         virtual void timestep(double timestep) = 0; ///< Set the timestep size
 
-        /**
-         * @brief Takes a step in the simulation
-         * @param had_collisions True if the step had collisions.
-         * @param has_intersections True if the resulting bodies are
-         *                          intersecting.
-         * @param solve_collisions True if collisions should be solved.
-         */
+        /// @brief Takes a step in the simulation
+        /// @param[out] had_collisions True if the step had collisions.
+        /// @param[out] has_intersections True if the resulting bodies are
+        ///                               intersecting.
+        /// @param[in] solve_collisions True if collisions should be solved.
         virtual void simulation_step(
             bool& had_collisions,
             bool& has_intersections,
             bool solve_collisions = true) = 0;
-
-        /// @brief Check for intersections at the end of the time-step.
-        virtual bool has_intersections() const = 0;
 
         virtual Eigen::MatrixXd vertices() const = 0;
         virtual const Eigen::MatrixXi& edges() const = 0;
@@ -62,7 +57,7 @@ namespace physics {
         virtual Eigen::MatrixXd velocities() const = 0;
         virtual const Eigen::VectorXi& group_ids() const = 0;
 
-        virtual const Eigen::MatrixXb& particle_dof_fixed() const = 0;
+        virtual const Eigen::MatrixXb& vertex_dof_fixed() const = 0;
 
         virtual int dim() const = 0; ///< Spatial dimension (e.g. 3 for 3D)
 

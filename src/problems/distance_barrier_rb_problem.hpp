@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ipc/collision_constraint.hpp>
+#include <ipc/friction/friction_constraint.hpp>
 
 #include <autodiff/autodiff_types.hpp>
 #include <multiprecision.hpp>
@@ -14,6 +15,18 @@ namespace ccd {
 
 namespace opt {
 
+    /// @brief Possible methods for detecting all edge vertex collisions.
+    enum BodyEnergyIntegrationMethod { IMPLICIT_EULER, IMPLICIT_NEWMARK };
+
+    const static BodyEnergyIntegrationMethod
+        DEFAULT_BODY_ENERGY_INTEGRATION_METHOD = IMPLICIT_EULER;
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(
+        BodyEnergyIntegrationMethod,
+        { { IMPLICIT_EULER, "implicit_euler" },
+          { IMPLICIT_NEWMARK, "implicit_newmark" },
+          { DEFAULT_BODY_ENERGY_INTEGRATION_METHOD, "default" } });
+
     /// This class is both a simulation and optimization problem.
     class DistanceBarrierRBProblem : public physics::RigidBodyProblem,
                                      public virtual BarrierProblem {
@@ -22,6 +35,8 @@ namespace opt {
         virtual ~DistanceBarrierRBProblem() = default;
 
         void settings(const nlohmann::json& params) override;
+        nlohmann::json settings() const override;
+
         nlohmann::json state() const override;
 
         static std::string problem_name()
@@ -138,6 +153,22 @@ namespace opt {
             bool compute_grad = true,
             bool compute_hess = true);
 
+        virtual double compute_friction_term(const Eigen::VectorXd& x) final
+        {
+            Eigen::VectorXd grad;
+            Eigen::SparseMatrix<double> hess;
+            return compute_friction_term(
+                x, grad, hess, /*compute_grad=*/false, /*compute_hess=*/false);
+        }
+
+        virtual double compute_friction_term(
+            const Eigen::VectorXd& x, Eigen::VectorXd& grad) final
+        {
+            Eigen::SparseMatrix<double> hess;
+            return compute_friction_term(
+                x, grad, hess, /*compute_grad=*/true, /*compute_hess=*/false);
+        }
+
         // Include thes lines to avoid issues with overriding inherited
         // functions with the same name.
         // (http://www.cplusplus.com/forum/beginner/24978/)
@@ -179,6 +210,9 @@ namespace opt {
         opt::OptimizationSolver& solver() override { return *m_opt_solver; }
 
     protected:
+        /// Update problem using current status of bodies.
+        virtual void update_constraints() override;
+
         template <typename T, typename RigidBodyConstraint>
         T distance_barrier(
             const Eigen::VectorXd& sigma, const RigidBodyConstraint& rbc);
@@ -228,7 +262,9 @@ namespace opt {
 
         template <typename T>
         T compute_body_energy(
-            const physics::RigidBody& body, const physics::Pose<T>& pose);
+            const physics::RigidBody& body,
+            const physics::Pose<T>& pose,
+            const Eigen::VectorX6d& grad_barrier_t0);
 
         template <typename Constraint, typename RigidBodyConstraint>
         void add_constraint_barrier(
@@ -244,16 +280,6 @@ namespace opt {
         /// distance constraints.
         double compute_barrier_term(
             const Eigen::VectorXd& sigma,
-            const ipc::Constraints& distance_constraints,
-            Eigen::VectorXd& grad,
-            Eigen::SparseMatrix<double>& hess,
-            bool compute_grad,
-            bool compute_hess);
-
-        /// Computes the friction term value, gradient, and hessian from
-        /// distance constraints.
-        double compute_friction_term(
-            const Eigen::VectorXd& x,
             const ipc::Constraints& distance_constraints,
             Eigen::VectorXd& grad,
             Eigen::SparseMatrix<double>& hess,
@@ -281,12 +307,9 @@ namespace opt {
             const Eigen::SparseMatrix<double>& hess);
 
         void check_grad_friction(
-            const Eigen::VectorXd& sigma,
-            const ipc::Constraints& constraints,
-            const Eigen::VectorXd& grad);
+            const Eigen::VectorXd& sigma, const Eigen::VectorXd& grad);
         void check_hess_friction(
             const Eigen::VectorXd& sigma,
-            const ipc::Constraints& constraints,
             const Eigen::SparseMatrix<double>& hess);
 
         bool is_checking_derivative = false;
@@ -309,9 +332,17 @@ namespace opt {
         /// @brief Did the step have collisions?
         bool m_had_collisions;
 
+        /// @brief Gradient of barrier potential at the start of the time-step.
+        Eigen::VectorXd grad_barrier_t0;
+
         // Friction
         double static_friction_speed_bound;
         int friction_iterations;
+        ipc::FrictionConstraints friction_constraints;
+
+    private:
+        /// Method for integrating the body energy.
+        BodyEnergyIntegrationMethod body_energy_integration_method;
     };
 
 } // namespace opt

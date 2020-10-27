@@ -12,6 +12,9 @@ namespace opt {
         SplitDistanceBarrierRBProblem();
         virtual ~SplitDistanceBarrierRBProblem() = default;
 
+        virtual void settings(const nlohmann::json& params) override;
+        nlohmann::json settings() const override;
+
         /// The name of the class as a string
         static std::string problem_name()
         {
@@ -27,6 +30,11 @@ namespace opt {
         ////////////////////////////////////////////////////////////
         // Rigid Body Problem
 
+        /// @brief Solve for and take a time step.
+        /// @param[out] had_collision True if the step had collisions.
+        /// @param[out] has_intersections True if the step resulted in
+        ///     intersections.
+        /// @param[in] solve_collision True if collisions should be resolved.
         void simulation_step(
             bool& had_collisions,
             bool& has_intersections,
@@ -49,6 +57,29 @@ namespace opt {
         // (http://www.cplusplus.com/forum/beginner/24978/)
         using BarrierProblem::compute_barrier_term;
         using BarrierProblem::compute_energy_term;
+
+    protected:
+        /// Update the stored poses and inital value for the solver.
+        void update_dof() override;
+
+        /// Update problem using current status of bodies.
+        void update_constraints() override;
+
+        /// Take a step from the current DOF to the provided ones.
+        bool take_step(const Eigen::VectorXd& x) override;
+
+        /// Apply restitution to solve for the current velocities.
+        void solve_velocities();
+
+        /// Unconstrained time-stepping method
+        std::shared_ptr<time_stepper::TimeStepper> m_time_stepper;
+
+        /// Rigid body poses at end of time-step
+        physics::Poses<double> poses_t1;
+
+        /// @brief Original impacts used for velocity resitution
+        /// @todo Replace this with the std::vector version
+        ConcurrentImpacts original_impacts;
     };
 
 } // namespace opt
