@@ -54,16 +54,20 @@ add_library(${PROJECT_NAME}
     src/utils/sinc.cpp
 
     src/ccd/impact.cpp
-    src/ccd/collision_detection_narrow_phase.cpp
-    src/ccd/collision_detection_broad_phase.cpp
+    src/ccd/ccd.cpp
+
+    src/ccd/linear/ccd_broad_phase.cpp
+    src/ccd/linear/ccd_narrow_phase.cpp
+
+    src/ccd/piecewise_linear/time_of_impact.cpp
 
     src/interval/filib_rounding.cpp
     src/interval/interval_root_finder.cpp
 
-    src/ccd/rigid_body_time_of_impact.cpp
-    src/ccd/rigid_body_hash_grid.cpp
-    src/ccd/rigid_body_collision_detection_narrow_phase.cpp
-    src/ccd/rigid_body_collision_detection_broad_phase.cpp
+    src/ccd/rigid/ccd_broad_phase.cpp
+    src/ccd/rigid/rigid_body_hash_grid.cpp
+    src/ccd/rigid/ccd_narrow_phase.cpp
+    src/ccd/rigid/time_of_impact.cpp
 
     src/geometry/intersection.cpp
 

@@ -4,8 +4,6 @@
 
 #include <ipc/ipc.hpp>
 
-#include <ccd/rigid_body_collision_detection.hpp>
-#include <ccd/time_of_impact.hpp>
 #include <geometry/distance.hpp>
 
 #include <logger.hpp>
@@ -86,7 +84,7 @@ namespace opt {
     {
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double toi, alpha;
-            bool are_colliding = detect_edge_vertex_collisions_narrow_phase(
+            bool are_colliding = edge_vertex_ccd(
                 bodies, poses_t0, poses_t1, ev_candidate, toi, alpha,
                 trajectory_type);
             if (are_colliding) {
@@ -95,7 +93,7 @@ namespace opt {
         }
         for (const auto& fv_candidate : candidates.fv_candidates) {
             double toi, u, v;
-            bool are_colliding = detect_face_vertex_collisions_narrow_phase(
+            bool are_colliding = face_vertex_ccd(
                 bodies, poses_t0, poses_t1, fv_candidate, toi, u, v,
                 trajectory_type);
             if (are_colliding) {
@@ -104,7 +102,7 @@ namespace opt {
         }
         for (const auto& ee_candidate : candidates.ee_candidates) {
             double toi, edge0_alpha, edge1_alpha;
-            bool are_colliding = detect_edge_edge_collisions_narrow_phase(
+            bool are_colliding = edge_edge_ccd(
                 bodies, poses_t0, poses_t1, ee_candidate, toi, edge0_alpha,
                 edge1_alpha, trajectory_type);
             if (are_colliding) {
@@ -157,7 +155,7 @@ namespace opt {
         PROFILE_START(EV_NARROW_PHASE);
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double toi = std::numeric_limits<double>::infinity(), alpha;
-            bool are_colliding = detect_edge_vertex_collisions_narrow_phase(
+            bool are_colliding = edge_vertex_ccd(
                 bodies, poses_t0, poses_t1, ev_candidate, toi, alpha,
                 trajectory_type, earliest_toi);
             if (are_colliding && toi < earliest_toi) {
@@ -170,7 +168,7 @@ namespace opt {
         PROFILE_START(FV_NARROW_PHASE);
         for (const auto& fv_candidate : candidates.fv_candidates) {
             double toi = std::numeric_limits<double>::infinity(), u, v;
-            bool are_colliding = detect_face_vertex_collisions_narrow_phase(
+            bool are_colliding = face_vertex_ccd(
                 bodies, poses_t0, poses_t1, fv_candidate, toi, u, v,
                 trajectory_type, earliest_toi);
             if (are_colliding && toi < earliest_toi) {
@@ -184,7 +182,7 @@ namespace opt {
         for (const auto& ee_candidate : candidates.ee_candidates) {
             double toi = std::numeric_limits<double>::infinity(), edge0_alpha,
                    edge1_alpha;
-            bool are_colliding = detect_edge_edge_collisions_narrow_phase(
+            bool are_colliding = edge_edge_ccd(
                 bodies, poses_t0, poses_t1, ee_candidate, toi, edge0_alpha,
                 edge1_alpha, trajectory_type, earliest_toi);
             if (are_colliding && toi < earliest_toi) {

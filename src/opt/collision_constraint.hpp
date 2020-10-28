@@ -2,7 +2,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <ccd/rigid_body_collision_detection.hpp>
+#include <ccd/ccd.hpp>
 #include <physics/rigid_body_assembler.hpp>
 
 namespace ccd {

@@ -144,7 +144,7 @@ bool SimState::init(const nlohmann::json& args_in)
         },
         "distance_barrier_constraint": {
             "detection_method": "hash_grid",
-            "trajectory_type": "screwing",
+            "trajectory_type": "rigid",
             "initial_barrier_activation_distance": 1e-2,
             "barrier_type": "ipc"
         },
@@ -154,7 +154,7 @@ bool SimState::init(const nlohmann::json& args_in)
         },
         "volume_constraint": {
             "detection_method": "hash_grid",
-            "trajectory_type": "screwing",
+            "trajectory_type": "rigid",
             "volume_epsilon": 1e-6,
             "custom_hashgrid_cellsize": -1,
             "time_epsilon": 1e-4

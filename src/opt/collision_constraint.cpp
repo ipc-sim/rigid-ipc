@@ -7,7 +7,7 @@ namespace opt {
 
     CollisionConstraint::CollisionConstraint(const std::string& name)
         : detection_method(DetectionMethod::HASH_GRID)
-        , trajectory_type(TrajectoryType::SCREWING)
+        , trajectory_type(TrajectoryType::RIGID)
         , m_name(name)
     {
     }

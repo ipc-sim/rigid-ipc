@@ -28,9 +28,9 @@ namespace Constants {
     /// \brief Tolerance when asserting for valid barycentric coordinates.
     static const double PARAMETER_ASSERTION_TOL = 1e-7;
 
-    /// \brief Tolerance of the length of the screwing trajectory in CCD.
-    static const double SCREWING_CCD_TOI_TOL = 1e-4;
-    static const double SCREWING_CCD_LENGTH_TOL = 1e-4;
+    /// \brief Tolerance of the length of the rigid trajectory in CCD.
+    static const double RIGID_CCD_TOI_TOL = 1e-4;
+    static const double RIGID_CCD_LENGTH_TOL = 1e-4;
 
     /// \brief Tolerance on the size of the range of the interval-based CCD.
     static const double INTERVAL_ROOT_FINDER_RANGE_TOL = 1e-8;

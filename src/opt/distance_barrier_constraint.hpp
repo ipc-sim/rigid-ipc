@@ -8,7 +8,7 @@
 
 #include <autodiff/autodiff_types.hpp>
 #include <barrier/barrier.hpp>
-#include <ccd/collision_detection.hpp>
+#include <ccd/linear/ccd.hpp>
 #include <ipc/spatial_hash/hash_grid.hpp>
 #include <utils/eigen_ext.hpp>
 

@@ -8,7 +8,7 @@
 #include <io/serialize_json.hpp>
 #include <nlohmann/json.hpp>
 
-#include <ccd/collision_detection.hpp>
+#include <ccd/linear/ccd.hpp>
 #include <logger.hpp>
 
 using namespace ccd;

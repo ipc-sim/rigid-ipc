@@ -15,7 +15,7 @@ namespace opt {
     // !important: this needs to be define in the enum namespace
     NLOHMANN_JSON_SERIALIZE_ENUM(
         NCPUpdate,
-        { { NCPUpdate::LINEARIZED, "linearized" },
+        { { NCPUpdate::LINEAR, "linearized" },
           { NCPUpdate::G_GRADIENT, "g_gradient" } })
 
     NLOHMANN_JSON_SERIALIZE_ENUM(
@@ -28,7 +28,7 @@ namespace opt {
         : do_line_search(true)
         , solve_for_active_cstr(true)
         , convergence_tolerance(1e-6)
-        , update_type(NCPUpdate::LINEARIZED)
+        , update_type(NCPUpdate::LINEAR)
         , lcp_solver(LCPSolver::LCP_GAUSS_SEIDEL)
         , max_iterations(1000)
         , num_outer_iterations_(0)
@@ -245,7 +245,7 @@ namespace opt {
         case NCPUpdate::G_GRADIENT:
             p.setZero();
             break;
-        case NCPUpdate::LINEARIZED:
+        case NCPUpdate::LINEAR:
             p = Ainv(b) - xi;
             break;
         }
@@ -263,7 +263,7 @@ namespace opt {
 
         // lcp_solve(q, N, M, p)
         lcp_solve(g_xi, jac_g_xi, M, p, lcp_solver, lambda_i);
-        // Δx = A⁻¹ [∇g(xᵢ)]ᵀ λᵢ + (A⁻¹b - xᵢ) * (update_type == LINEARIZED)
+        // Δx = A⁻¹ [∇g(xᵢ)]ᵀ λᵢ + (A⁻¹b - xᵢ) * (update_type == LINEAR)
         return /*delta_x = */ M * lambda_i + p;
     }
 

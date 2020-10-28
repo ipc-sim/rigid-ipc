@@ -2,8 +2,8 @@
 
 #include <catch2/catch.hpp>
 
-#include <ccd/collision_detection.hpp>
-#include <ccd/time_of_impact.hpp>
+#include <ccd/linear/ccd.hpp>
+#include <ccd/linear/edge_vertex_ccd.hpp>
 #include <finitediff.hpp>
 
 #include "collision_generator.hpp"

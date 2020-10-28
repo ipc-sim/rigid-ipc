@@ -1872,7 +1872,7 @@
             "detection_method": "hash_grid",
             "initial_barrier_activation_distance": 0.01,
             "min_distance": 0.0,
-            "trajectory_type": "screwing"
+            "trajectory_type": "rigid"
         },
         "ipc_solver": {
             "dhat_epsilon": 1e-09,
@@ -1922,7 +1922,7 @@
             "custom_hashgrid_cellsize": -1,
             "detection_method": "hash_grid",
             "time_epsilon": 0.0001,
-            "trajectory_type": "screwing",
+            "trajectory_type": "rigid",
             "volume_epsilon": 1e-06
         }
     }

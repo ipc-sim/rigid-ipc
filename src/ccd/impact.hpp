@@ -12,7 +12,6 @@ struct EdgeVertexImpact {
     double alpha; ///< @brief Parameter along the edge where the impact occured
     long vertex_index; ///< @brief Impacting vertex
 
-    EdgeVertexImpact() {}
     EdgeVertexImpact(
         double time, long edge_index, double alpha, long vertex_index);
 
@@ -29,7 +28,6 @@ struct EdgeEdgeImpact {
     double impacting_alpha; ///< @brief Parameter along the impacting edge where
                             ///< the impact occured.
 
-    EdgeEdgeImpact() {}
     EdgeEdgeImpact(
         double time,
         long impacted_edge_index,
@@ -52,7 +50,6 @@ struct FaceVertexImpact {
                      ///< the impact occured
     long vertex_index; ///< @brief Impacting vertex
 
-    FaceVertexImpact() {}
     FaceVertexImpact(
         double time, long face_index, double u, double v, long vertex_index);
 
@@ -103,7 +100,10 @@ struct ConcurrentImpacts {
  * @return A boolean for if impact0.time <= impact1.time.
  */
 template <typename Impact>
-bool compare_impacts_by_time(Impact impact1, Impact impact2);
+bool compare_impacts_by_time(Impact impact1, Impact impact2)
+{
+    return impact1.time < impact2.time;
+}
 
 /**
  * @brief Convert all edge-vertex impacts to correspoding edge-edge impacts.
@@ -142,5 +142,3 @@ void convert_edge_edge_to_edge_vertex_impacts(
     std::vector<EdgeVertexImpact>& ev_impacts);
 
 } // namespace ccd
-
-#include "impact.tpp"

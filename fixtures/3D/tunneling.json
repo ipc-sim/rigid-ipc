@@ -4,7 +4,7 @@
     "max_time": 1.0,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-2,
-        "trajectory_type": "screwing"
+        "trajectory_type": "rigid"
     },
     "ipc_solver": {
         "velocity_conv_tol": 1e-5

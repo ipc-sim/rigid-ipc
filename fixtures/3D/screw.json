@@ -6,7 +6,7 @@
     "#max_iterations": 10,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-4,
-        "trajectory_type": "screwing"
+        "trajectory_type": "rigid"
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,

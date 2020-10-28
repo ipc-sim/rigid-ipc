@@ -6,7 +6,7 @@
             "custom_initial_epsilon": 0.001,
             "detection_method": "hash_grid",
             "min_distance": 0.0,
-            "trajectory_type": "linearized"
+            "trajectory_type": "linear"
         },
         "distance_barrier_rb_problem": {
             "coefficient_restitution": -1.0,
@@ -136147,7 +136147,7 @@
             "initial_barrier_activation_distance": 0.001,
             "detection_method": "hash_grid",
             "min_distance": 0.0,
-            "trajectory_type": "linearized"
+            "trajectory_type": "linear"
         },
         "ipc_solver": {
             "dhat_epsilon": 1e-09,
@@ -136263,7 +136263,7 @@
             "custom_hashgrid_cellsize": -1,
             "detection_method": "hash_grid",
             "time_epsilon": 0.0001,
-            "trajectory_type": "screwing",
+            "trajectory_type": "rigid",
             "volume_epsilon": 1e-06
         }
     }

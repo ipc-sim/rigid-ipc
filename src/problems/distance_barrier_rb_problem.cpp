@@ -1,8 +1,8 @@
 #include "distance_barrier_rb_problem.hpp"
 
 // IPC Toolkit
-#include <ipc/ipc.hpp>
 #include <ipc/distance/edge_edge_mollifier.hpp>
+#include <ipc/ipc.hpp>
 
 #include <finitediff.hpp>
 
@@ -405,9 +405,8 @@ namespace opt {
                 break;
             case IMPLICIT_NEWMARK: {
                 Eigen::DiagonalMatrix<double, 3> J_inv(
-                    1 / (0.5 * (-I.x() + I.y() + I.z())),
-                    1 / (0.5 * (I.x() - I.y() + I.z())),
-                    1 / (0.5 * (I.x() + I.y() - I.z())));
+                    2 / (-I.x() + I.y() + I.z()), 2 / (I.x() - I.y() + I.z()),
+                    2 / (I.x() + I.y() - I.z()));
                 throw NotImplementedError(
                     "Implicit Newmark not implemented in 3D!");
                 break;

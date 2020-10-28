@@ -22,7 +22,7 @@ namespace opt {
         /// \f$\Delta x = A^{-1} \nabla g(x_i)^T \lambda_i\f$
         G_GRADIENT,
         /// \f$\Delta x = A^{-1} \nabla g(x_i)^T \lambda_i + A^{-1}b - x_i\f$
-        LINEARIZED
+        LINEAR
     };
 
     class NCPSolver : public OptimizationSolver {

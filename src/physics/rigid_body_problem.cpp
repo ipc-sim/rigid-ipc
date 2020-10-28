@@ -87,7 +87,7 @@ namespace physics {
         // Ensure the dimension of gravity matches the dimension of the problem.
         gravity = gravity.head(dim());
 
-        if (detect_intersections(this->poses_t0)) {
+        if (detect_intersections(m_assembler.rb_poses_t1())) {
             spdlog::error("The initial state contains intersections!");
         }
     }

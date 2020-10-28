@@ -3,7 +3,7 @@
 
 #include <CLI/CLI.hpp>
 
-#include <ccd/collision_detection.hpp>
+#include <ccd/linear/ccd.hpp>
 #include <io/serialize_json.hpp>
 #include <opt/distance_barrier_constraint.hpp>
 

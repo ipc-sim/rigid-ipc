@@ -155,7 +155,7 @@ namespace opt {
             Eigen::Vector2d n_toi;
             Eigen::VectorX3d e_toi; // edge vector at toi
             switch (constraint().trajectory_type) {
-            case TrajectoryType::LINEARIZED: {
+            case TrajectoryType::LINEAR: {
                 // Use linearized trajectories
                 Eigen::VectorX3d e_v0_t0 =
                     m_assembler.world_vertex(poses_t0, b0_id);
@@ -172,7 +172,8 @@ namespace opt {
                 e_toi = e_v1_toi - e_v0_toi;
             } break;
 
-            case TrajectoryType::SCREWING: {
+            case TrajectoryType::PIECEWISE_LINEAR:
+            case TrajectoryType::RIGID: {
                 // Use nonlinear trajectory
                 long edge_body_id = m_assembler.edge_id_to_body_id(edge_id);
 

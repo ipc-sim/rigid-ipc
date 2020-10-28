@@ -6,7 +6,7 @@
 #include <igl/edges.h>
 #include <igl/read_triangle_mesh.h>
 
-#include <ccd/collision_detection.hpp>
+#include <ccd/rigid/ccd.hpp>
 #include <io/serialize_json.hpp>
 #include <nlohmann/json.hpp>
 
