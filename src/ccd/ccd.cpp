@@ -152,12 +152,15 @@ bool edge_vertex_ccd(
     }
 
     case TrajectoryType::PIECEWISE_LINEAR:
-        throw NotImplementedError("edge_vertex_ccd() is not implemented for "
-                                  "piecewise linear trajectories!");
+        return edge_vertex_piecewise_linear_ccd(
+            bodies, poses_t0, poses_t1, candidate, toi, alpha, earliest_toi);
 
     case TrajectoryType::RIGID:
         return edge_vertex_rigid_ccd(
             bodies, poses_t0, poses_t1, candidate, toi, alpha, earliest_toi);
+
+    default:
+        throw "Invalid trajectory type";
     }
 }
 
@@ -201,13 +204,17 @@ bool edge_edge_ccd(
     }
 
     case TrajectoryType::PIECEWISE_LINEAR:
-        throw NotImplementedError("edge_edge_ccd() is not implemented for "
-                                  "piecewise linear trajectories!");
+        return edge_edge_piecewise_linear_ccd(
+            bodies, poses_t0, poses_t1, candidate, toi, edge0_alpha,
+            edge1_alpha, earliest_toi);
 
     case TrajectoryType::RIGID:
         return edge_edge_rigid_ccd(
             bodies, poses_t0, poses_t1, candidate, toi, edge0_alpha,
             edge1_alpha, earliest_toi);
+
+    default:
+        throw "Invalid trajectory type";
     }
 }
 
@@ -251,12 +258,15 @@ bool face_vertex_ccd(
     }
 
     case TrajectoryType::PIECEWISE_LINEAR:
-        throw NotImplementedError("face_vertex_ccd() is not implemented for "
-                                  "piecewise linear trajectories!");
+        return face_vertex_piecewise_linear_ccd(
+            bodies, poses_t0, poses_t1, candidate, toi, u, v, earliest_toi);
 
     case TrajectoryType::RIGID:
         return face_vertex_rigid_ccd(
             bodies, poses_t0, poses_t1, candidate, toi, u, v, earliest_toi);
+
+    default:
+        throw "Invalid trajectory type";
     }
 }
 

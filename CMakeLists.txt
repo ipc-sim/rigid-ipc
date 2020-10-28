@@ -59,6 +59,7 @@ add_library(${PROJECT_NAME}
     src/ccd/linear/ccd_broad_phase.cpp
     src/ccd/linear/ccd_narrow_phase.cpp
 
+    src/ccd/piecewise_linear/ccd_narrow_phase.cpp
     src/ccd/piecewise_linear/time_of_impact.cpp
 
     src/interval/filib_rounding.cpp
