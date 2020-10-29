@@ -178,6 +178,11 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
             DetectionMethod::HASH_GRID);
         REQUIRE(hash_impacts.ev_impacts.size() == 0);
 
+        CAPTURE(i);
+        if (brute_force_impacts.ee_impacts.size()
+            != hash_impacts.ee_impacts.size()) {
+            std::cout << displacements << std::endl;
+        }
         REQUIRE(
             brute_force_impacts.ee_impacts.size()
             == hash_impacts.ee_impacts.size());
@@ -210,6 +215,14 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
         }
         CHECK(is_equal);
 
+        if (brute_force_impacts.fv_impacts.size()
+            != hash_impacts.fv_impacts.size()) {
+            std::cout << logger::fmt_eigen(vertices) << std::endl;
+            std::cout << logger::fmt_eigen(displacements) << std::endl;
+            std::cout << edges << std::endl;
+            std::cout << faces << std::endl;
+            std::cout << group_ids << std::endl;
+        }
         REQUIRE(
             brute_force_impacts.fv_impacts.size()
             == hash_impacts.fv_impacts.size());
@@ -225,6 +238,130 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
         displacements.setRandom();
         displacements *= 3;
     }
+}
+
+TEST_CASE("3D hash grid case 1", "[hashgrid][3D]")
+{
+    // clang-format off
+    Eigen::MatrixXd vertices(8, 3);
+    vertices <<
+        -0.5, -0.5, -0.5,
+         0.5,  0.5, -0.5,
+         0.5, -0.5, -0.5,
+        -0.5,  0.5, -0.5,
+        -0.5,  0.5,  0.5,
+        -0.5, -0.5,  0.5,
+         0.5,  0.5,  0.5,
+         0.5, -0.5,  0.5;
+    Eigen::MatrixXd displacements(8, 3);
+    displacements <<
+        -0.521693493948175,  2.8007648996081,   -1.03474376072862,
+        -2.10255278698288,  2.45566771340355,  -2.93838656597696,
+         2.39530917880838, -1.59274082658474,   0.53698562529729,
+        -2.03863176751818,  2.80492759021229,   1.11740437155469,
+         2.71588332192781,  0.418008697879505,  0.215272719606419,
+        -2.14900835936377, -0.527814739163879,  0.0885984250756906,
+         1.6165041730816, -2.98232112730961,   1.07373024712956,
+         0.585636982501315,  0.128813307326666, -1.81573649347561;
+    Eigen::MatrixXi edges(18, 2);
+    edges <<
+        0, 1,
+        0, 2,
+        1, 2,
+        0, 3,
+        1, 3,
+        0, 4,
+        3, 4,
+        0, 5,
+        4, 5,
+        1, 6,
+        2, 6,
+        3, 6,
+        4, 6,
+        5, 6,
+        0, 7,
+        2, 7,
+        5, 7,
+        6, 7;
+    Eigen::MatrixXi faces(12, 3);
+    faces <<
+        0, 1, 2,
+        0, 3, 1,
+        0, 4, 3,
+        0, 5, 4,
+        3, 6, 1,
+        3, 4, 6,
+        2, 1, 6,
+        2, 6, 7,
+        0, 2, 7,
+        0, 7, 5,
+        5, 7, 6,
+        5, 6, 4;
+    // clang-format on
+    Eigen::VectorXi group_ids;
+
+    ConcurrentImpacts bf_impacts;
+    detect_collisions(
+        vertices, vertices + displacements, edges, faces, group_ids,
+        CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX, bf_impacts,
+        DetectionMethod::BRUTE_FORCE);
+    REQUIRE(bf_impacts.ev_impacts.size() == 0);
+
+    ConcurrentImpacts hash_impacts;
+    detect_collisions(
+        vertices, vertices + displacements, edges, faces, group_ids,
+        CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX, hash_impacts,
+        DetectionMethod::HASH_GRID);
+    REQUIRE(hash_impacts.ev_impacts.size() == 0);
+
+    REQUIRE(bf_impacts.ee_impacts.size() == hash_impacts.ee_impacts.size());
+    std::sort(
+        bf_impacts.ee_impacts.begin(), bf_impacts.ee_impacts.end(),
+        compare_impacts_by_time<EdgeEdgeImpact>);
+    std::sort(
+        hash_impacts.ee_impacts.begin(), hash_impacts.ee_impacts.end(),
+        compare_impacts_by_time<EdgeEdgeImpact>);
+    bool is_equal = bf_impacts.ee_impacts == hash_impacts.ee_impacts;
+    CHECK(is_equal);
+
+    // for (int i = 0; i < bf_impacts.fv_impacts.size(); i++) {
+    //     fmt::print(
+    //         "bf_impacts.fv[{:d}]={{toi={:g}, fi={:d}, u={:g}, v={:g}, "
+    //         "vi={:d}}}\n",
+    //         i, bf_impacts.fv_impacts[i].time,
+    //         bf_impacts.fv_impacts[i].face_index, bf_impacts.fv_impacts[i].u,
+    //         bf_impacts.fv_impacts[i].v,
+    //         bf_impacts.fv_impacts[i].vertex_index);
+    // }
+    // for (int i = 0; i < hash_impacts.fv_impacts.size(); i++) {
+    //     fmt::print(
+    //         "hash_impacts.fv[{:d}]={{toi={:g}, fi={:d}, u={:g}, v={:g}, "
+    //         "vi={:d}}}\n",
+    //         i, hash_impacts.fv_impacts[i].time,
+    //         hash_impacts.fv_impacts[i].face_index, //
+    //         hash_impacts.fv_impacts[i].u, hash_impacts.fv_impacts[i].v,
+    //         hash_impacts.fv_impacts[i].vertex_index);
+    // }
+    // ipc::Candidates hash_candidates;
+    // detect_collision_candidates_hash_grid(
+    //     vertices, vertices + displacements, edges, faces, group_ids,
+    //     CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX,
+    //     hash_candidates);
+    // for (int i = 0; i < hash_candidates.fv_candidates.size(); i++) {
+    //     fmt::print(
+    //         "hash_candidates.fv[{:d}]={{fi={:d}, vi={:d}}}\n", i,
+    //         hash_candidates.fv_candidates[i].face_index,
+    //         hash_candidates.fv_candidates[i].vertex_index);
+    // }
+
+    REQUIRE(bf_impacts.fv_impacts.size() == hash_impacts.fv_impacts.size());
+    std::sort(
+        bf_impacts.fv_impacts.begin(), bf_impacts.fv_impacts.end(),
+        compare_impacts_by_time<FaceVertexImpact>);
+    std::sort(
+        hash_impacts.fv_impacts.begin(), hash_impacts.fv_impacts.end(),
+        compare_impacts_by_time<FaceVertexImpact>);
+    CHECK(bf_impacts.fv_impacts == hash_impacts.fv_impacts);
 }
 
 TEST_CASE("3D brute force is duplicate free", "[ccd][brute_force]")
