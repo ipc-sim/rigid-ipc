@@ -1,18 +1,19 @@
-#include <logger.hpp>
-#include <profiler.hpp>
-
 #include <CLI/CLI.hpp>
 #include <nlohmann/json.hpp>
 
-#include <ipc/distance/point_edge.hpp>
+#include <ipc/ipc.hpp>
 
-#include <ccd/linear/ccd.hpp>
+#include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
+#include <physics/rigid_body_assembler.hpp>
+
 #include <logger.hpp>
 
 int main(int argc, char* argv[])
 {
-    ccd::logger::set_level(spdlog::level::info);
+    using namespace ccd;
+    using namespace physics;
+    logger::set_level(spdlog::level::info);
 
     struct {
         std::string input_json = "";
@@ -20,7 +21,9 @@ int main(int argc, char* argv[])
         std::string header = "min_distance";
     } args;
 
-    CLI::App app { "run headless simulation" };
+    CLI::App app {
+        "compute minimum distance for each step of simulation results"
+    };
 
     app.add_option(
            "input_json,-i,--input", args.input_json,
@@ -43,53 +46,41 @@ int main(int argc, char* argv[])
     json scene = json::parse(input, nullptr, false);
     if (scene.is_discarded()) {
         spdlog::error("Invalid Json file");
-        exit(1);
+        return 1;
     }
 
-    Eigen::MatrixXi edges;
-    ccd::io::from_json<int>(scene["animation"]["edges"], edges);
-    Eigen::VectorXi group_ids;
-    ccd::io::from_json<int>(scene["animation"]["group_id"], group_ids);
+    auto state_sequence =
+        scene["animation"]["state_sequence"].get<std::vector<nlohmann::json>>();
+    if (state_sequence.size() == 0) {
+        return 0;
+    }
 
-    auto& vtx_sequence = scene["animation"]["vertices_sequence"];
+    std::vector<physics::RigidBody> rbs;
+    io::read_rb_scene(scene["args"]["rigid_body_problem"], rbs);
+    RigidBodyAssembler bodies;
+    bodies.init(rbs);
 
     std::stringstream csv;
     csv << fmt::format("it, {}\n", args.header);
-    for (size_t i = 0; i < vtx_sequence.size(); ++i) {
-        auto& jv = vtx_sequence[i];
-        Eigen::MatrixXd vertices, displacements;
-        ccd::io::from_json<double>(jv, vertices);
-
-        assert(vertices.rows() == group_ids.rows());
-
-        displacements.resizeLike(vertices);
-        displacements.setZero();
-
-        ipc::Candidates candidates;
-        ccd::detect_collision_candidates(
-            vertices, displacements, edges, Eigen::MatrixXi(0, 3), group_ids,
-            ccd::CollisionType::EDGE_VERTEX, candidates,
-            ccd::DetectionMethod::BRUTE_FORCE, 0.0);
-        if (candidates.ev_candidates.size() == 0) {
-            csv << fmt::format("{},\n", i);
-            continue;
+    for (size_t i = 0; i < state_sequence.size(); ++i) {
+        Poses<double> poses(bodies.num_bodies());
+        assert(state_sequence[i]["rigid_bodies"].size() == bodies.num_bodies());
+        for (int j = 0; j < bodies.num_bodies(); j++) {
+            const auto& jrb = state_sequence[i]["rigid_bodies"][j];
+            io::from_json(jrb["position"], poses[j].position);
+            io::from_json(jrb["rotation"], poses[j].rotation);
         }
-        double min_distance = -1;
-        for (size_t j = 0; j < candidates.ev_candidates.size(); j++) {
-            const ipc::EdgeVertexCandidate& ev_candidate =
-                candidates.ev_candidates[j];
 
-            Eigen::VectorXd p = vertices.row(ev_candidate.vertex_index);
-            Eigen::VectorXd s0 =
-                vertices.row(edges(ev_candidate.edge_index, 0));
-            Eigen::VectorXd s1 =
-                vertices.row(edges(ev_candidate.edge_index, 1));
-            double distance = ipc::point_edge_distance(p, s0, s1);
+        Eigen::MatrixXd V = bodies.world_vertices(poses);
+        ipc::Constraints constraint_set;
+        ipc::construct_constraint_set(
+            /*V_rest=*/V, V, bodies.m_edges, bodies.m_faces,
+            /*dhat=*/1, constraint_set,
+            /*ignore_internal_vertices=*/false,
+            /*vertex_group_ids=*/bodies.group_ids());
+        double min_distance = sqrt(ipc::compute_minimum_distance(
+            V, bodies.m_edges, bodies.m_faces, constraint_set));
 
-            if (min_distance < 0 || distance < min_distance) {
-                min_distance = distance;
-            }
-        }
         csv << fmt::format("{},{:.18e}\n", i, min_distance);
     }
     std::ofstream myfile;

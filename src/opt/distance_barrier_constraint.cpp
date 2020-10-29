@@ -83,28 +83,25 @@ namespace opt {
         const ipc::Candidates& candidates) const
     {
         for (const auto& ev_candidate : candidates.ev_candidates) {
-            double toi, alpha;
+            double toi;
             bool are_colliding = edge_vertex_ccd(
-                bodies, poses_t0, poses_t1, ev_candidate, toi, alpha,
-                trajectory_type);
+                bodies, poses_t0, poses_t1, ev_candidate, toi, trajectory_type);
             if (are_colliding) {
                 return true;
             }
         }
         for (const auto& fv_candidate : candidates.fv_candidates) {
-            double toi, u, v;
+            double toi;
             bool are_colliding = face_vertex_ccd(
-                bodies, poses_t0, poses_t1, fv_candidate, toi, u, v,
-                trajectory_type);
+                bodies, poses_t0, poses_t1, fv_candidate, toi, trajectory_type);
             if (are_colliding) {
                 return true;
             }
         }
         for (const auto& ee_candidate : candidates.ee_candidates) {
-            double toi, edge0_alpha, edge1_alpha;
+            double toi;
             bool are_colliding = edge_edge_ccd(
-                bodies, poses_t0, poses_t1, ee_candidate, toi, edge0_alpha,
-                edge1_alpha, trajectory_type);
+                bodies, poses_t0, poses_t1, ee_candidate, toi, trajectory_type);
             if (are_colliding) {
                 return true;
             }
@@ -154,10 +151,10 @@ namespace opt {
 
         PROFILE_START(EV_NARROW_PHASE);
         for (const auto& ev_candidate : candidates.ev_candidates) {
-            double toi = std::numeric_limits<double>::infinity(), alpha;
+            double toi = std::numeric_limits<double>::infinity();
             bool are_colliding = edge_vertex_ccd(
-                bodies, poses_t0, poses_t1, ev_candidate, toi, alpha,
-                trajectory_type, earliest_toi);
+                bodies, poses_t0, poses_t1, ev_candidate, toi, trajectory_type,
+                earliest_toi);
             if (are_colliding && toi < earliest_toi) {
                 collision_count++;
                 earliest_toi = toi;
@@ -167,10 +164,10 @@ namespace opt {
 
         PROFILE_START(FV_NARROW_PHASE);
         for (const auto& fv_candidate : candidates.fv_candidates) {
-            double toi = std::numeric_limits<double>::infinity(), u, v;
+            double toi = std::numeric_limits<double>::infinity();
             bool are_colliding = face_vertex_ccd(
-                bodies, poses_t0, poses_t1, fv_candidate, toi, u, v,
-                trajectory_type, earliest_toi);
+                bodies, poses_t0, poses_t1, fv_candidate, toi, trajectory_type,
+                earliest_toi);
             if (are_colliding && toi < earliest_toi) {
                 collision_count++;
                 earliest_toi = toi;
@@ -180,11 +177,10 @@ namespace opt {
 
         PROFILE_START(EE_NARROW_PHASE);
         for (const auto& ee_candidate : candidates.ee_candidates) {
-            double toi = std::numeric_limits<double>::infinity(), edge0_alpha,
-                   edge1_alpha;
+            double toi = std::numeric_limits<double>::infinity();
             bool are_colliding = edge_edge_ccd(
-                bodies, poses_t0, poses_t1, ee_candidate, toi, edge0_alpha,
-                edge1_alpha, trajectory_type, earliest_toi);
+                bodies, poses_t0, poses_t1, ee_candidate, toi, trajectory_type,
+                earliest_toi);
             if (are_colliding && toi < earliest_toi) {
                 collision_count++;
                 earliest_toi = toi;

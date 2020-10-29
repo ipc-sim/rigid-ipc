@@ -102,7 +102,6 @@ bool edge_vertex_ccd(
     const physics::Poses<double>& poses_t1,
     const ipc::EdgeVertexCandidate& ev_candidate,
     double& toi,
-    double& alpha,
     TrajectoryType trajectory = TrajectoryType::RIGID,
     double earliest_toi = 1);
 
@@ -112,8 +111,6 @@ bool edge_edge_ccd(
     const physics::Poses<double>& poses_t1,
     const ipc::EdgeEdgeCandidate& ee_candidate,
     double& toi,
-    double& edge0_alpha,
-    double& edge1_alpha,
     TrajectoryType trajectory = TrajectoryType::RIGID,
     double earliest_toi = 1);
 
@@ -123,9 +120,35 @@ bool face_vertex_ccd(
     const physics::Poses<double>& poses_t1,
     const ipc::FaceVertexCandidate& fv_candidate,
     double& toi,
-    double& u,
-    double& v,
     TrajectoryType trajectory = TrajectoryType::RIGID,
     double earliest_toi = 1);
+
+double edge_vertex_closest_point(
+    const physics::RigidBodyAssembler& bodies,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
+    const ipc::EdgeVertexCandidate& candidate,
+    double toi,
+    TrajectoryType trajectory = TrajectoryType::RIGID);
+
+void edge_edge_closest_point(
+    const physics::RigidBodyAssembler& bodies,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
+    const ipc::EdgeEdgeCandidate& candidate,
+    double toi,
+    double& alpha,
+    double& beta,
+    TrajectoryType trajectory = TrajectoryType::RIGID);
+
+void face_vertex_closest_point(
+    const physics::RigidBodyAssembler& bodies,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
+    const ipc::FaceVertexCandidate& candidate,
+    double toi,
+    double& u,
+    double& v,
+    TrajectoryType trajectory = TrajectoryType::RIGID);
 
 } // namespace ccd

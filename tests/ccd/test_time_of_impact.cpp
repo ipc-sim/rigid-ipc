@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <ccd/linear/ccd.hpp>
+#include <ccd/ccd.hpp>
 #include <ccd/linear/edge_vertex_ccd.hpp>
 #include <finitediff.hpp>
 

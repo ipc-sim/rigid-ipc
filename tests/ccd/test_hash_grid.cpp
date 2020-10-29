@@ -5,14 +5,11 @@
 #include <boost/filesystem.hpp>
 #include <igl/edges.h>
 #include <igl/read_triangle_mesh.h>
-#include <io/serialize_json.hpp>
-#include <nlohmann/json.hpp>
 
-#include <ccd/linear/ccd.hpp>
+#include <ccd/ccd.hpp>
 #include <logger.hpp>
 
 using namespace ccd;
-using namespace nlohmann;
 
 TEST_CASE("2D hash grid", "[hashgrid][2D]")
 {

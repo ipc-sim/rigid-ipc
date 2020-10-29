@@ -1,25 +1,22 @@
-#include <logger.hpp>
-#include <profiler.hpp>
-
 #include <CLI/CLI.hpp>
 
-#include <ccd/linear/ccd.hpp>
+#include <ccd/ccd.hpp>
+#include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
-#include <opt/distance_barrier_constraint.hpp>
+
+#include <logger.hpp>
 
 int main(int argc, char* argv[])
 {
-    ccd::logger::set_level(spdlog::level::info);
+    using namespace ccd;
+    using namespace physics;
+    logger::set_level(spdlog::level::info);
 
-    struct {
-        std::string input_json = "";
-        std::string output_csv = "";
-    } args;
+    CLI::App app { "check for collisions over simulation results" };
 
-    CLI::App app { "run headless simulation" };
-
+    std::string input_filename = "";
     app.add_option(
-           "input_json,-i,--input", args.input_json,
+           "input_filename,-i,--input", input_filename,
            "JSON file with input simulation.")
         ->required();
 
@@ -30,42 +27,56 @@ int main(int argc, char* argv[])
     }
 
     using nlohmann::json;
-    std::ifstream input(args.input_json);
+    std::ifstream input(input_filename);
     json scene = json::parse(input, nullptr, false);
     if (scene.is_discarded()) {
         spdlog::error("Invalid Json file");
-        exit(1);
+        return 1;
     }
 
-    Eigen::MatrixXi edges;
-    ccd::io::from_json<int>(scene["animation"]["edges"], edges);
-    Eigen::VectorXi group_ids;
-    ccd::io::from_json<int>(scene["animation"]["group_id"], group_ids);
+    auto state_sequence =
+        scene["animation"]["state_sequence"].get<std::vector<nlohmann::json>>();
+    if (state_sequence.size() == 0) {
+        return 0;
+    }
 
-    auto& vtx_sequence = scene["animation"]["vertices_sequence"];
+    std::vector<physics::RigidBody> rbs;
+    io::read_rb_scene(scene["args"]["rigid_body_problem"], rbs);
+    RigidBodyAssembler bodies;
+    bodies.init(rbs);
 
-    std::stringstream csv;
+    int collision_types = bodies.dim() == 2
+        ? CollisionType::EDGE_VERTEX
+        : (CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX);
+
+    Poses<double> poses_t0(bodies.num_bodies());
+    assert(state_sequence[0]["rigid_bodies"].size() == bodies.num_bodies());
+    for (int i = 0; i < bodies.num_bodies(); i++) {
+        const auto& jrb = state_sequence[0]["rigid_bodies"][i];
+        io::from_json(jrb["position"], poses_t0[i].position);
+        io::from_json(jrb["rotation"], poses_t0[i].rotation);
+    }
+
     int collision_steps = 0;
-    for (size_t i = 0; i < vtx_sequence.size() - 1; ++i) {
-        auto& jv = vtx_sequence[i];
-        auto& jv2 = vtx_sequence[i + 1];
-        Eigen::MatrixXd vertices, displacements;
-        ccd::io::from_json<double>(jv, vertices);
-        ccd::io::from_json<double>(jv2, displacements);
-        displacements = displacements - vertices;
-
-        assert(vertices.rows() == group_ids.rows());
-
-        ccd::ConcurrentImpacts impacts;
-        ccd::detect_collisions(
-            vertices, displacements, edges, Eigen::MatrixXi(0, 3), group_ids,
-            ccd::CollisionType::EDGE_VERTEX, impacts,
-            ccd::DetectionMethod::BRUTE_FORCE);
-        if (impacts.ev_impacts.size() != 0) {
-            std::cout << args.input_json << ": step " << i << " failed"
-                      << std::endl;
-            collision_steps += 1;
+    for (size_t i = 1; i < state_sequence.size(); ++i) {
+        Poses<double> poses_t1(bodies.num_bodies());
+        assert(state_sequence[i]["rigid_bodies"].size() == bodies.num_bodies());
+        for (int j = 0; j < bodies.num_bodies(); j++) {
+            const auto& jrb = state_sequence[i]["rigid_bodies"][j];
+            io::from_json(jrb["position"], poses_t1[j].position);
+            io::from_json(jrb["rotation"], poses_t1[j].rotation);
         }
+
+        ConcurrentImpacts impacts;
+        detect_collisions(
+            bodies, poses_t0, poses_t1, collision_types, impacts,
+            DetectionMethod::HASH_GRID, TrajectoryType::RIGID);
+        if (impacts.size() != 0) {
+            fmt::print("{}: step {:d} failed\n", input_filename, i);
+            collision_steps++;
+        }
+
+        poses_t0 = poses_t1;
     }
-    std::cout << "collision_steps = " << collision_steps << std::endl;
+    fmt::print("collision_steps = {:d}\n", collision_steps);
 }

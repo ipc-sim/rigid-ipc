@@ -2,7 +2,7 @@
 // Includes continous collision detection to compute the time of impact.
 // Supported geometry: point vs edge
 
-#include "ccd.hpp"
+#include "broad_phase.hpp"
 
 #include <ipc/spatial_hash/hash_grid.hpp>
 
@@ -10,31 +10,6 @@
 #include <profiler.hpp>
 
 namespace ccd {
-
-void detect_collisions(
-    const Eigen::MatrixXd& vertices_t0,
-    const Eigen::MatrixXd& vertices_t1,
-    const Eigen::MatrixXi& edges,
-    const Eigen::MatrixXi& faces,
-    const Eigen::VectorXi& group_ids,
-    const int collision_types,
-    ConcurrentImpacts& impacts,
-    DetectionMethod method)
-{
-    assert(vertices_t0.size() == vertices_t1.size());
-    assert(edges.size() == 0 || edges.cols() == 2);
-    assert(faces.size() == 0 || faces.cols() == 3);
-
-    // Do the broad phase by detecting candidate impacts
-    ipc::Candidates candidates;
-    detect_collision_candidates(
-        vertices_t0, vertices_t1, edges, faces, group_ids, collision_types,
-        candidates, method);
-
-    // Do the narrow phase by detecting actual impacts from the candidate set
-    detect_collisions_from_candidates(
-        vertices_t0, vertices_t1, edges, faces, candidates, impacts);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Broad-Phase CCD
