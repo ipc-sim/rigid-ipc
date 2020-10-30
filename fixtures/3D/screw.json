@@ -5,8 +5,7 @@
     "max_time": 2.5,
     "#max_iterations": 10,
     "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 1e-4,
-        "trajectory_type": "rigid"
+        "initial_barrier_activation_distance": 1e-4
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,

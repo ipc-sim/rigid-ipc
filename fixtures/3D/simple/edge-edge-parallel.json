@@ -3,8 +3,6 @@
     "timestep": 0.01,
     "max_time": 2.5,
     "distance_barrier_constraint": {
-        "detection_method": "hash_grid",
-        "trajectory_type": "rigid",
         "initial_barrier_activation_distance": 1e-4
     },
     "rigid_body_problem": {

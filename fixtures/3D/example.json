@@ -4,8 +4,6 @@
     "timestep": 0.01,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 0.01,
-        "detection_method": "hash_grid",
-        "trajectory_type": "rigid"
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,

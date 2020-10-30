@@ -3,8 +3,9 @@
     "solver": "ipc_solver",
     "max_time": 10.0,
     "timestep": 0.01,
-    "distance_barrier_constraints": {
-        "initial_barrier_activation_distance": 1e-4
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 1e-4,
+        "trajectory_type": "piecewise_linear"
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
@@ -17,7 +18,7 @@
         }, {
             "mesh": "cube.obj",
             "position": [0, 1, 0],
-            "rotation": [0, 90, 0],
+            "rotation": [0, 0, 0],
             "is_dof_fixed": false
         }]
     }

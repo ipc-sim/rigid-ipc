@@ -238,7 +238,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
         poseA_ti0 = poseA_ti1;
         poseB_ti0 = poseB_ti1;
     }
-    spdlog::critical("ee_ccd_num_subdivision={:d}", num_subdivisions);
+    // spdlog::trace("ee_ccd_num_subdivision={:d}", num_subdivisions);
 
 #ifdef TIME_CCD_QUERIES
     timer.stop();
@@ -402,7 +402,7 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
         poseA_ti0 = poseA_ti1;
         poseB_ti0 = poseB_ti1;
     }
-    spdlog::critical("vf_ccd_num_subdivision={:d}", num_subdivisions);
+    // spdlog::trace("vf_ccd_num_subdivision={:d}", num_subdivisions);
 
 #ifdef TIME_CCD_QUERIES
     timer.stop();

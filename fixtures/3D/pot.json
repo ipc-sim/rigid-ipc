@@ -4,7 +4,6 @@
     "timestep": 0.005,
     "max_time": 5,
     "distance_barrier_constraint": {
-        "trajectory_type": "rigid",
         "initial_barrier_activation_distance": 1e-2
     },
     "rigid_body_problem": {

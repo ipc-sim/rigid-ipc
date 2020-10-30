@@ -3,8 +3,6 @@
     "timestep": 0.01,
     "max_time": 10,
     "distance_barrier_constraint": {
-        "detection_method": "brute_force",
-        "trajectory_type": "rigid",
         "initial_barrier_activation_distance": 0.01
     },
     "rigid_body_problem": {

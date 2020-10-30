@@ -3,9 +3,7 @@
     "solver": "ipc_solver",
     "timestep": 0.01,
     "max_time": 5.0,
-    "distance_barrier_constraint": {
-        "trajectory_type": "rigid"
-    },
+    "distance_barrier_constraint": {},
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
