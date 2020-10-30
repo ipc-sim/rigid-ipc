@@ -1,6 +1,8 @@
 // Time-of-impact computation for rigid bodies with angular trajectories.
 #include "time_of_impact.hpp"
 
+#include <stack>
+
 #include <tight_inclusion/inclusion_ccd.hpp>
 
 // #define TIME_CCD_QUERIES
