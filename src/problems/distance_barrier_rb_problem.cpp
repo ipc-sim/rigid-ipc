@@ -24,7 +24,7 @@ namespace opt {
         , m_had_collisions(false)
         , static_friction_speed_bound(1e-3)
         , friction_iterations(1)
-        , body_energy_integration_method(IMPLICIT_EULER)
+        , body_energy_integration_method(DEFAULT_BODY_ENERGY_INTEGRATION_METHOD)
     {
     }
 

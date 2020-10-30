@@ -62,6 +62,7 @@ add_library(${PROJECT_NAME}
     src/ccd/rigid/broad_phase.cpp
     src/ccd/rigid/rigid_body_hash_grid.cpp
     src/ccd/rigid/time_of_impact.cpp
+    src/ccd/rigid/rigid_trajectory_aabb.cpp
 
     src/geometry/intersection.cpp
 

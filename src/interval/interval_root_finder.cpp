@@ -57,36 +57,6 @@ bool interval_root_finder(
         max_iterations);
 }
 
-inline Eigen::VectorX3d width(const Eigen::VectorX3I& x)
-{
-    Eigen::VectorX3d w(x.size());
-    for (int i = 0; i < x.size(); i++) {
-        w(i) = width(x(i));
-    }
-    return w;
-}
-
-inline double diagonal_width(const Eigen::VectorX3I& x)
-{
-    double w = 0;
-    for (int i = 0; i < x.size(); i++) {
-        w += width(x(i)) * width(x(i));
-    }
-    return sqrt(w);
-}
-
-template <int dim, int max_dim = dim>
-inline bool zero_in(Eigen::Vector<Interval, dim, max_dim> X)
-{
-    // Check if the origin is in the n-dimensional interval
-    for (int i = 0; i < X.size(); i++) {
-        if (!boost::numeric::zero_in(X(i))) {
-            return false;
-        }
-    }
-    return true;
-}
-
 void log_octree(
     const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
     const Eigen::VectorX3I& x0,

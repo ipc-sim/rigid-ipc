@@ -4,14 +4,15 @@
     "timestep": 0.01,
     "max_time": 4,
     "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 1e-3
+        "initial_barrier_activation_distance": 1e-3,
+        "trajectory_type": "piecewise_linear"
     },
     "ipc_solver": {
         "velocity_conv_tol": 1e-3
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "coefficient_friction": 0.5,
+        "coefficient_friction": 0.0,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "plane.obj",

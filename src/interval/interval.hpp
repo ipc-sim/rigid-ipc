@@ -54,6 +54,39 @@ typedef boost::numeric::interval<
 
 #endif // USE_FILIB_INTERVALS
 
+template <typename Derived>
+inline Eigen::VectorXd width(const Eigen::MatrixBase<Derived>& x)
+{
+    Eigen::VectorXd w(x.size());
+    for (int i = 0; i < x.size(); i++) {
+        w(i) = width(x(i));
+    }
+    return w;
+}
+
+template <typename Derived>
+inline double diagonal_width(const Eigen::MatrixBase<Derived>& x)
+{
+    Eigen::VectorXd widths = width(x);
+    double w = 0;
+    for (int i = 0; i < widths.size(); i++) {
+        w += widths(i) * widths(i);
+    }
+    return sqrt(w);
+}
+
+template <typename Derived>
+inline bool zero_in(const Eigen::MatrixBase<Derived>& x)
+{
+    // Check if the origin is in the n-dimensional interval
+    for (int i = 0; i < x.size(); i++) {
+        if (!boost::numeric::zero_in(x(i))) {
+            return false;
+        }
+    }
+    return true;
+}
+
 namespace logger {
 
     /// @brief Format a string for an Interval

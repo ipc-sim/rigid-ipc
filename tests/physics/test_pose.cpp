@@ -5,6 +5,7 @@
 #include <igl/PI.h>
 
 #include <autodiff/autodiff_types.hpp>
+#include <interval/interval.hpp>
 #include <physics/pose.hpp>
 
 TEST_CASE("Poses to dofs", "[physics][pose]")
@@ -88,4 +89,35 @@ TEST_CASE("∇²(SE(3) ↦ SO(3))", "[!benchmark][physics][pose]")
     d2p.rotation = Diff::d2vars(3, Eigen::Vector3d(0, igl::PI, 0));
 
     BENCHMARK("Compute R DDouble2") { return d2p.construct_rotation_matrix(); };
+}
+
+TEST_CASE("Interval SE(3) ↦ SO(3)", "[!benchmark][physics][pose]")
+{
+    using namespace ccd::physics;
+    double angle;
+    Eigen::Vector3d axis;
+
+    SECTION("zero")
+    {
+        angle = 0;
+        axis = Eigen::Vector3d::Random();
+    }
+    SECTION("random")
+    {
+        angle = GENERATE(take(1, random(0.0, 2 * igl::PI)));
+        axis = Eigen::Vector3d::Random();
+    }
+    axis.normalize();
+
+    Pose<double> p = Pose<double>::Zero(3);
+    p.rotation = angle * axis;
+    BENCHMARK("Double SE(3) ↦ SO(3)")
+    {
+        Eigen::Matrix3d R = p.construct_rotation_matrix();
+    };
+    Pose<ccd::Interval> pI = p.cast<ccd::Interval>();
+    BENCHMARK("Interval SE(3) ↦ SO(3)")
+    {
+        Eigen::Matrix3I R = pI.construct_rotation_matrix();
+    };
 }

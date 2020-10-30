@@ -6,6 +6,7 @@
 #include <igl/Timer.h>
 #endif
 
+#include <ccd/rigid/rigid_trajectory_aabb.hpp>
 #include <geometry/distance.hpp>
 #include <geometry/intersection.hpp>
 #include <interval/interval_root_finder.hpp>
@@ -80,25 +81,9 @@ bool compute_edge_vertex_time_of_impact(
 
     const auto distance = [&](const Eigen::VectorX3I& params) {
         assert(params.size() == 2);
-        Interval t = params(0);
-        Interval alpha = params(1);
-
-        // Compute the poses at time t
-        PoseI poseIA = PoseI::interpolate(poseIA_t0, poseIA_t1, t);
-        PoseI poseIB = PoseI::interpolate(poseIB_t0, poseIB_t1, t);
-
-        // Get the world vertex of the edges at time t
-        Eigen::Vector2I vertex = bodyA.world_vertex(poseIA, vertex_id);
-
-        // Get the world vertex of the edge at time t
-        Eigen::Vector2I edge_vertex0 =
-            bodyB.world_vertex(poseIB, bodyB.edges(edge_id, 0));
-        Eigen::Vector2I edge_vertex1 =
-            bodyB.world_vertex(poseIB, bodyB.edges(edge_id, 1));
-        Eigen::Vector2I edge_vertex =
-            (edge_vertex1 - edge_vertex0) * alpha + edge_vertex0;
-
-        return (vertex - edge_vertex).eval();
+        return edge_vertex_aabb(
+            bodyA, poseIA_t0, poseIA_t1, vertex_id, bodyB, poseIB_t0, poseIB_t1,
+            edge_id, /*t=*/params(0), /*alpha=*/params(1));
     };
 
     Eigen::Vector2d tol = compute_edge_vertex_tolerance(
@@ -213,44 +198,17 @@ bool compute_edge_edge_time_of_impact(
     double earliest_toi, // Only search for collision in [0, earliest_toi]
     double toi_tolerance)
 {
-    int dim = bodyA.dim();
-    assert(bodyB.dim() == dim);
-    assert(dim == 3);
+    assert(bodyA.dim() == 3 && bodyB.dim() == bodyA.dim());
 
-    typedef physics::Pose<Interval> PoseI;
-
-    const PoseI poseIA_t0 = poseA_t0.cast<Interval>();
-    const PoseI poseIA_t1 = poseA_t1.cast<Interval>();
-
-    const PoseI poseIB_t0 = poseB_t0.cast<Interval>();
-    const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
-
+    const physics::Pose<Interval> poseIA_t0 = poseA_t0.cast<Interval>();
+    const physics::Pose<Interval> poseIA_t1 = poseA_t1.cast<Interval>();
+    const physics::Pose<Interval> poseIB_t0 = poseB_t0.cast<Interval>();
+    const physics::Pose<Interval> poseIB_t1 = poseB_t1.cast<Interval>();
     const auto distance = [&](const Eigen::VectorX3I& params) {
         assert(params.size() == 3);
-        Interval t = params(0);
-        Interval edgeA_alpha = params(1);
-        Interval edgeB_alpha = params(2);
-
-        // Compute the poses at time t
-        PoseI poseIA = PoseI::interpolate(poseIA_t0, poseIA_t1, t);
-        PoseI poseIB = PoseI::interpolate(poseIB_t0, poseIB_t1, t);
-
-        // Get the world vertex of the edges at time t
-        Eigen::Vector3I edgeA_vertex0 =
-            bodyA.world_vertex(poseIA, bodyA.edges(edgeA_id, 0));
-        Eigen::Vector3I edgeA_vertex1 =
-            bodyA.world_vertex(poseIA, bodyA.edges(edgeA_id, 1));
-        Eigen::Vector3I edgeA_vertex =
-            (edgeA_vertex1 - edgeA_vertex0) * edgeA_alpha + edgeA_vertex0;
-
-        Eigen::Vector3I edgeB_vertex0 =
-            bodyB.world_vertex(poseIB, bodyB.edges(edgeB_id, 0));
-        Eigen::Vector3I edgeB_vertex1 =
-            bodyB.world_vertex(poseIB, bodyB.edges(edgeB_id, 1));
-        Eigen::Vector3I edgeB_vertex =
-            (edgeB_vertex1 - edgeB_vertex0) * edgeB_alpha + edgeB_vertex0;
-
-        return (edgeB_vertex - edgeA_vertex).eval();
+        return edge_edge_aabb(
+            bodyA, poseIA_t0, poseIA_t1, edgeA_id, bodyB, poseIB_t0, poseIB_t1,
+            edgeB_id, /*t=*/params(0), /*alpha=*/params(1), /*beta=*/params(2));
     };
 
     Eigen::Vector3d tol = compute_edge_edge_tolerance(
