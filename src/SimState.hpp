@@ -1,6 +1,6 @@
 #pragma once
 
-#include <igl/timer.h>
+#include <igl/Timer.h>
 #include <nlohmann/json.hpp>
 
 #include <memory> // shared_ptr

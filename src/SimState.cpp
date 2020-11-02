@@ -5,7 +5,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <igl/timer.h>
+#include <igl/Timer.h>
 #include <nlohmann/json.hpp>
 
 #include <constants.hpp>

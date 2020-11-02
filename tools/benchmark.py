@@ -154,7 +154,7 @@ def main():
 
         df.loc[scene] = df_row
 
-    df.to_csv(args.output, index=True)
+        df.to_csv(args.output, index=False)
     print(f"Results written to {args.output}")
 
 
