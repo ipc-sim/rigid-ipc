@@ -212,7 +212,8 @@ namespace opt {
         }
         bool success = (g_xi.array() >= -Constants::NCP_ABS_TOL).all();
         return OptimizationResults(
-            xi, problem_ptr->compute_objective(xi), success, success);
+            xi, problem_ptr->compute_objective(xi), success, success,
+            num_outer_iterations_);
     }
 
     Eigen::VectorXd NCPSolver::solve_lcp()

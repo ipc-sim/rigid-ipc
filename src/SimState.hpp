@@ -1,5 +1,6 @@
 #pragma once
 
+#include <igl/timer.h>
 #include <nlohmann/json.hpp>
 
 #include <memory> // shared_ptr
@@ -45,8 +46,14 @@ public:
     nlohmann::json args;
 
     std::vector<nlohmann::json> state_sequence;
+    std::vector<double> step_timings;
+    std::vector<int> solver_iterations;
+    std::vector<int> num_contacts;
 
 protected:
+    igl::Timer step_timer;
+    size_t initial_rss;
+
     bool m_dirty_constraints;
 };
 

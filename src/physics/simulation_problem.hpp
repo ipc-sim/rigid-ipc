@@ -51,6 +51,12 @@ namespace physics {
             bool& has_intersections,
             bool solve_collisions = true) = 0;
 
+        virtual int dim() const = 0; ///< Spatial dimension (e.g. 3 for 3D)
+        virtual long num_vertices() const = 0;
+        virtual long num_edges() const = 0;
+        virtual long num_faces() const = 0;
+        virtual size_t num_bodies() const = 0;
+
         virtual Eigen::MatrixXd vertices() const = 0;
         virtual const Eigen::MatrixXi& edges() const = 0;
         virtual const Eigen::MatrixXi& faces() const = 0;
@@ -59,9 +65,9 @@ namespace physics {
 
         virtual const Eigen::MatrixXb& vertex_dof_fixed() const = 0;
 
-        virtual int dim() const = 0; ///< Spatial dimension (e.g. 3 for 3D)
-
         virtual bool is_rb_problem() const { return false; };
+
+        virtual int num_contacts() const = 0;
 
         opt::OptimizationResults opt_result;
     };

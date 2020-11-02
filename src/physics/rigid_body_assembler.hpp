@@ -89,42 +89,39 @@ namespace physics {
 
         // --------------------------------------------------------------------
 
-        inline long num_vertices() const { return m_body_vertex_id.back(); }
-        inline long num_edges() const { return m_body_edge_id.back(); }
-        inline long num_faces() const { return m_body_face_id.back(); }
-        inline size_t num_bodies() const { return m_rbs.size(); }
-        inline int dim() const { return m_rbs.size() ? m_rbs[0].dim() : 0; }
+        long num_vertices() const { return m_body_vertex_id.back(); }
+        long num_edges() const { return m_body_edge_id.back(); }
+        long num_faces() const { return m_body_face_id.back(); }
+        size_t num_bodies() const { return m_rbs.size(); }
+        int dim() const { return m_rbs.size() ? m_rbs[0].dim() : 0; }
 
-        inline long vertex_id_to_body_id(long vi) const
+        long vertex_id_to_body_id(long vi) const
         {
             return m_vertex_to_body_map(vi);
         }
-        inline long edge_id_to_body_id(long ei) const
+        long edge_id_to_body_id(long ei) const
         {
             return m_vertex_to_body_map(m_edges(ei, 0));
         }
-        inline long face_id_to_body_id(long fi) const
+        long face_id_to_body_id(long fi) const
         {
             return m_vertex_to_body_map(m_faces(fi, 0));
         }
 
-        inline const RigidBody& vertex_id_to_body(long vi) const
+        const RigidBody& vertex_id_to_body(long vi) const
         {
             return m_rbs[vertex_id_to_body_id(vi)];
         }
-        inline const RigidBody& edge_id_to_body(long ei) const
+        const RigidBody& edge_id_to_body(long ei) const
         {
             return m_rbs[edge_id_to_body_id(ei)];
         }
-        inline const RigidBody& face_id_to_body(long fi) const
+        const RigidBody& face_id_to_body(long fi) const
         {
             return m_rbs[face_id_to_body_id(fi)];
         }
 
-        inline const Eigen::VectorXi& group_ids() const
-        {
-            return m_vertex_group_ids;
-        }
+        const Eigen::VectorXi& group_ids() const { return m_vertex_group_ids; }
 
         std::vector<RigidBody> m_rbs;
 

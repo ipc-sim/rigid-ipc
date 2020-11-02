@@ -209,6 +209,8 @@ namespace opt {
         }
         opt::OptimizationSolver& solver() override { return *m_opt_solver; }
 
+        int num_contacts() const override { return m_num_contacts; };
+
     protected:
         /// Update problem using current status of bodies.
         virtual void update_constraints() override;
@@ -331,6 +333,8 @@ namespace opt {
 
         /// @brief Did the step have collisions?
         bool m_had_collisions;
+        /// @brief The number of collision during the timestep.
+        int m_num_contacts;
 
         /// @brief Gradient of barrier potential at the start of the time-step.
         Eigen::VectorXd grad_barrier_t0;

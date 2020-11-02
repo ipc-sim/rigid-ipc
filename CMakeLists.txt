@@ -110,6 +110,7 @@ add_library(${PROJECT_NAME}
     src/utils/tensor.cpp
     src/utils/eigen_ext.cpp
     src/utils/regular_2d_grid.cpp
+    src/utils/get_rss.cpp
 
     src/SimState.cpp
     src/logger.cpp

@@ -264,3 +264,5 @@ meshes/fracture/chinese-lion
 
 output/
 fixtures/**/*.gif
+
+src/ccd/EE-CCD-plan.txt

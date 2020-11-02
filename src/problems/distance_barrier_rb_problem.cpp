@@ -79,7 +79,7 @@ namespace opt {
         bool& had_collisions, bool& _has_intersections, bool solve_collisions)
     {
         // Advance the poses, but leave the current pose unchanged for now.
-        tbb::parallel_for(size_t(0), m_assembler.num_bodies(), [&](size_t i) {
+        tbb::parallel_for(size_t(0), num_bodies(), [&](size_t i) {
             m_assembler.m_rbs[i].pose_prev = m_assembler.m_rbs[i].pose;
         });
         // Update the stored poses and inital value for the solver
@@ -87,6 +87,7 @@ namespace opt {
 
         // Reset m_had_collision which will be filled in by has_collisions().
         m_had_collisions = false;
+        m_num_contacts = 0;
 
         // Disable barriers if solve_collision == false
         this->m_use_barriers = solve_collisions;
@@ -243,18 +244,18 @@ namespace opt {
         int pos_ndof = physics::Pose<double>::dim_to_pos_ndof(dim());
         int rot_ndof = physics::Pose<double>::dim_to_rot_ndof(dim());
 
-        Eigen::VectorXd energies(m_assembler.num_bodies());
+        Eigen::VectorXd energies(num_bodies());
         if (compute_grad) {
             grad.resize(x.size());
         }
         tbb::concurrent_vector<Eigen::Triplet<double>> hess_triplets;
         if (compute_hess) {
             // Hessian is a block diagonal with (ndof x ndof) blocks
-            hess_triplets.reserve(m_assembler.num_bodies() * ndof * ndof);
+            hess_triplets.reserve(num_bodies() * ndof * ndof);
         }
 
         const std::vector<physics::Pose<double>> poses = this->dofs_to_poses(x);
-        assert(poses.size() == m_assembler.num_bodies());
+        assert(poses.size() == num_bodies());
 
         tbb::parallel_for(size_t(0), poses.size(), [&](size_t i) {
             // Activate autodiff with the correct number of variables
@@ -451,6 +452,8 @@ namespace opt {
         num_constraints = constraints.num_constraints();
         PROFILE_END(CONSTRUCT_CONSTRAINTS);
 
+        m_num_contacts = std::max(m_num_contacts, num_constraints);
+
         spdlog::debug(
             "problem={} num_vertex_vertex_constraint={:d} "
             "num_edge_vertex_constraints={:d} num_edge_edge_constraints={:d} "
@@ -637,7 +640,7 @@ namespace opt {
     {
         // V: Rᵐ ↦ Rⁿ (vertices flattened rowwise)
         int m = x.size();
-        int n = m_assembler.num_vertices() * dim();
+        int n = num_vertices() * dim();
         int rb_ndof = physics::Pose<double>::dim_to_ndof(dim());
 
         // Activate autodiff with the correct number of variables
@@ -653,8 +656,8 @@ namespace opt {
             hess.reserve(n);
         }
 
-        Eigen::MatrixXd V(m_assembler.num_vertices(), dim());
-        for (int rb_i = 0; rb_i < m_assembler.num_bodies(); rb_i++) {
+        Eigen::MatrixXd V(num_vertices(), dim());
+        for (int rb_i = 0; rb_i < num_bodies(); rb_i++) {
             const physics::RigidBody& rb = m_assembler.m_rbs[rb_i];
             // Index of ribid bodies first vertex in the global vertices
             long rb_v0_i = m_assembler.m_body_vertex_id[rb_i];

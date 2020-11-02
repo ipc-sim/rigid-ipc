@@ -298,7 +298,8 @@ namespace opt {
             iteration_number, exit_reason);
 
         return OptimizationResults(
-            x, problem_ptr->compute_objective(x), success, true);
+            x, problem_ptr->compute_objective(x), success, true,
+            iteration_number);
     }
 
     bool NewtonSolver::line_search(

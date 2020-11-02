@@ -95,6 +95,13 @@ namespace physics {
         }
 
         int dim() const override { return m_assembler.dim(); }
+        long num_vertices() const override
+        {
+            return m_assembler.num_vertices();
+        }
+        long num_edges() const override { return m_assembler.num_edges(); }
+        long num_faces() const override { return m_assembler.num_faces(); }
+        size_t num_bodies() const override { return m_assembler.num_bodies(); }
 
         virtual bool is_rb_problem() const override { return true; };
 

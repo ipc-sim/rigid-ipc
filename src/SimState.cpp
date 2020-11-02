@@ -5,12 +5,14 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <igl/timer.h>
 #include <nlohmann/json.hpp>
 
 #include <constants.hpp>
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
 #include <problems/problem_factory.hpp>
+#include <utils/get_rss.hpp>
 #include <utils/regular_2d_grid.hpp>
 
 #include <logger.hpp>
@@ -28,11 +30,13 @@ SimState::SimState()
     , m_checkpoint_frequency(100)
     , m_dirty_constraints(false)
 {
+    initial_rss = getCurrentRSS();
 }
 
 bool SimState::load_scene(const std::string& filename)
 {
-    PROFILER_CLEAR()
+    PROFILER_CLEAR();
+    initial_rss = getCurrentRSS();
 
     std::string ext = boost::filesystem::extension(filename);
     boost::algorithm::to_lower(ext); // modifies ext
@@ -84,6 +88,12 @@ bool SimState::load_simulation(const nlohmann::json& input_args)
     // now reload simulation history
     state_sequence = input_args["animation"]["state_sequence"]
                          .get<std::vector<nlohmann::json>>();
+    if (input_args.find("stats") != input_args.end()) {
+        const auto& stats = input_args["stats"];
+        step_timings = stats["step_timings"].get<std::vector<double>>();
+        solver_iterations = stats["solver_iterations"].get<std::vector<int>>();
+        num_contacts = stats["num_contacts"].get<std::vector<int>>();
+    }
     m_num_simulation_steps = int(state_sequence.size()) - 1;
     problem_ptr->state(state_sequence.back());
     return true;
@@ -219,6 +229,9 @@ bool SimState::init(const nlohmann::json& args_in)
 
     state_sequence.clear();
     state_sequence.push_back(problem_ptr->state());
+    step_timings.clear();
+    solver_iterations.clear();
+    num_contacts.clear();
 
     return true;
 }
@@ -253,6 +266,10 @@ void SimState::run_simulation(const std::string& fout)
 
     spdlog::info("Starting simulation {}", scene_file);
     spdlog::info("Running {} iterations", m_max_simulation_steps);
+
+    igl::Timer timer;
+    timer.start();
+
     m_solve_collisions = true;
     for (int i = 0; i < m_max_simulation_steps; ++i) {
         simulation_step();
@@ -269,6 +286,13 @@ void SimState::run_simulation(const std::string& fout)
             spdlog::info("Simulation checkpoint saved to {}", chkpt_fout);
         }
     }
+
+    timer.stop();
+    fmt::print(
+        "Simulation finished (total_runtime={:g}s average_fps={:g})\n",
+        timer.getElapsedTime(),
+        m_max_simulation_steps / timer.getElapsedTime());
+
     save_simulation(fout);
     spdlog::info("Simulation results saved to {}", fout);
 
@@ -282,8 +306,10 @@ void SimState::simulation_step()
     m_step_has_collision = false;
     m_step_has_intersections = false;
 
+    step_timer.start();
     problem_ptr->simulation_step(
         m_step_had_collision, m_step_has_intersections, m_solve_collisions);
+    step_timer.stop();
 
     if (m_step_had_collision) {
         spdlog::debug("sim_state action=simulation_step status=had_collision");
@@ -311,6 +337,9 @@ void SimState::simulation_step()
 void SimState::save_simulation_step()
 {
     state_sequence.push_back(problem_ptr->state());
+    step_timings.push_back(step_timer.getElapsedTime());
+    solver_iterations.push_back(problem_ptr->opt_result.num_iterations);
+    num_contacts.push_back(problem_ptr->num_contacts());
 }
 
 void SimState::save_simulation(const std::string& filename)
@@ -319,6 +348,19 @@ void SimState::save_simulation(const std::string& filename)
     results["args"] = args;
     results["animation"] = nlohmann::json();
     results["animation"]["state_sequence"] = state_sequence;
+
+    nlohmann::json stats;
+    stats["dim"] = problem_ptr->dim();
+    stats["num_bodies"] = problem_ptr->num_bodies();
+    stats["num_vertices"] = problem_ptr->num_vertices();
+    stats["num_edges"] = problem_ptr->num_edges();
+    stats["num_faces"] = problem_ptr->num_faces();
+    stats["num_timesteps"] = m_max_simulation_steps;
+    stats["memory"] = getPeakRSS() - initial_rss;
+    stats["step_timings"] = step_timings;
+    stats["solver_iterations"] = solver_iterations;
+    stats["num_contacts"] = num_contacts;
+    results["stats"] = stats;
 
     std::ofstream(filename) << results.dump();
 }

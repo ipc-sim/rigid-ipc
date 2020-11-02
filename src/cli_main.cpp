@@ -66,7 +66,4 @@ int main(int argc, char* argv[])
     }
 
     sim.run_simulation(fout);
-    spdlog::info(
-        "To postprocess run:\n `python tools/results_to_vtk_files.py {} {}`",
-        fout, args.output_dir);
 }

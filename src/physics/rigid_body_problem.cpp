@@ -70,7 +70,7 @@ namespace physics {
 
         update_constraints();
 
-        for (size_t i = 0; i < m_assembler.m_rbs.size(); ++i) {
+        for (size_t i = 0; i < num_bodies(); ++i) {
             auto& rb = m_assembler.m_rbs[i];
             spdlog::info(
                 "rb={:d} group_id={:d} mass={:g} inertia={}", i, rb.group_id,
@@ -138,7 +138,7 @@ namespace physics {
     {
         nlohmann::json json;
         auto& rbs = args["rigid_bodies"];
-        assert(rbs.size() == m_assembler.m_rbs.size());
+        assert(rbs.size() == num_bodies());
         size_t i = 0;
         for (auto& jrb : args["rigid_bodies"]) {
             io::from_json(jrb["position"], m_assembler.m_rbs[i].pose.position);
@@ -249,7 +249,7 @@ namespace physics {
     bool
     RigidBodyProblem::detect_intersections(const Poses<double>& poses) const
     {
-        if (m_assembler.num_bodies() <= 1) {
+        if (num_bodies() <= 1) {
             return false;
         }
 
