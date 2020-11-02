@@ -91,12 +91,10 @@ namespace opt {
     {
         init_solve(x0);
         OptimizationResults results = NewtonSolver::solve(x0);
-        std::cout
-            << fmt::format(
-                   "GREP_ME solver={} min_dist={:g} num_kappa_updates={:d} {}",
-                   name(), problem_ptr->compute_min_distance(results.x),
-                   num_kappa_updates, NewtonSolver::stats())
-            << std::endl;
+        spdlog::info(
+            "solver={} min_dist={:g} num_kappa_updates={:d} {}", name(),
+            problem_ptr->compute_min_distance(results.x), num_kappa_updates,
+            NewtonSolver::stats());
         return results;
     }
 

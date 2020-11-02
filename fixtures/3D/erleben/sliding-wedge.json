@@ -1,20 +1,21 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "max_iterations": 1000,
     "timestep": 0.01,
+    "max_time": 1.5,
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "gravity": [0, -9.8, 0],
+        "gravity": [0, 0, 0],
         "rigid_bodies": [{
                 "mesh": "erleben/wedge.obj",
-                "position": [4.9, 2.05, 0],
+                "position": [4.9, 2.009, 0],
                 "rotation": [0, 0, 180],
                 "linear_velocity": [-10, 0, 0],
-                "angular_velocity": [0, 0, 0]
+                "angular_velocity": [0, 0, 0],
+                "is_dof_fixed": [false, true, false, true, true, true]
             },
             {
                 "mesh": "plane.obj",
-                "is_dof_fixed": [true, true, true, true, true, true],
+                "is_dof_fixed": true,
                 "position": [0, -1, 0]
             }
         ]

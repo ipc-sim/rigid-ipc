@@ -10,7 +10,7 @@ import numpy
 import pandas
 
 
-def machine_info():
+def get_machine_info():
     if platform.system() == "Windows":
         return "Windows machine info not implemented"
     if platform.system() == "Darwin":
@@ -77,7 +77,7 @@ def create_parser():
         default=None, help="path to simulation executable")
     parser.add_argument(
         "--input", metavar="path/to/input", type=pathlib.Path,
-        default=None, help="path to input json(s)")
+        default=None, help="path to input json(s)", nargs="+")
     parser.add_argument(
         "--output", metavar="path/to/output.csv", type=pathlib.Path,
         default=None, help="path to output CSV")
@@ -94,7 +94,14 @@ def parse_arguments():
         else:
             print(f"Using {args.sim_exe}")
     if args.input is None:
-        args.input = fixture_dir() / "3D" / "simple"
+        args.input = [fixture_dir() / "3D" / "simple"]
+    input_jsons = []
+    for input_file in args.input:
+        if input_file.is_file() and input_file.suffix == ".json":
+            input_jsons.append(input_file)
+        elif input_file.is_dir():
+            input_jsons.extend(list(input_file.glob('**/*.json')))
+    args.input = input_jsons
     if args.output is None:
         args.output = pathlib.Path("benchmark.csv")
     return args
@@ -103,6 +110,7 @@ def parse_arguments():
 def main():
     args = parse_arguments()
     git_hash = get_git_hash()
+    machine_info = get_machine_info()
 
     df = pandas.DataFrame(columns=[
         "scene", "dim", "num_bodies", "num_vertices", "num_edges", "num_faces",
@@ -112,14 +120,14 @@ def main():
         "max_step_time", "avg_solver_iterations", "max_solver_iterations",
         "git_hash"])
 
-    for scene in args.input.glob('**/*.json'):
+    for scene in args.input:
         print(f"Running {scene}")
 
         sim_output_dir = f"./output/{scene.stem}"
         results = subprocess.run(
             [str(args.sim_exe), scene.resolve(),
              sim_output_dir, "--loglevel", "4"],
-            capture_output=True, check=True)
+            capture_output=False, check=True)
 
         with open(pathlib.Path(sim_output_dir) / "sim.json") as sim_output:
             sim_json = json.load(sim_output)
@@ -143,7 +151,7 @@ def main():
             "eps_d": sim_args["newton_solver"]["velocity_conv_tol"],
             "avg_num_contacts": numpy.average(sim_stats["num_contacts"]),
             "max_num_contacts": max(sim_stats["num_contacts"]),
-            "machine": machine_info(),
+            "machine": machine_info,
             "memory": sim_stats["memory"] / 1024**2,
             "avg_step_time": numpy.average(sim_stats["step_timings"]),
             "max_step_time": max(sim_stats["step_timings"]),

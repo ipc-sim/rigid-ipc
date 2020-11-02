@@ -214,6 +214,10 @@ namespace opt {
         // TODO: Update brute force version
         assert(detection_method == DetectionMethod::HASH_GRID);
 
+        if (bodies.num_bodies() <= 1) {
+            return;
+        }
+
         PROFILE_POINT("distance_barrier__construct_constraint_set");
         PROFILE_START();
 

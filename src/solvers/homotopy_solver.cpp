@@ -129,12 +129,10 @@ namespace opt {
         results = step_solve();
 
         double min_dist = problem_ptr->compute_min_distance(results.x);
-        std::cout << fmt::format(
-                         "GREP_ME solver={} t={:g} min_dist={:g} "
-                         "max_num_constraints={:d} {}",
-                         name(), t_used, min_dist, max_num_constraints,
-                         inner_solver_ptr->stats())
-                  << std::endl;
+        spdlog::info(
+            "solver={} t={:g} min_dist={:g} max_num_constraints={:d} {}",
+            name(), t_used, min_dist, max_num_constraints,
+            inner_solver_ptr->stats());
 
         spdlog::info(
             "solver={} c={:g} tinit={:g} tinc={:g} num_iterations={:d}", name(),
