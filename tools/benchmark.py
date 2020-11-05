@@ -144,12 +144,12 @@ def main():
                 profiler_dir / "summary.csv", header=1, index_col=0,
                 skipinitialspace=True, converters={
                     "percentage_time": lambda x: float(x.strip('%'))})
-            broad_ccd = profiler_df.loc[
-                "collisions_detection__broad_phase", "percentage_time"]
-            narrow_ccd = profiler_df.loc[
-                "compute_earliest_toi__narrow_phase", "percentage_time"]
-            broad_distance = profiler_df.loc[
-                "distance_barrier__construct_constraint_set", "percentage_time"]
+            broad_ccd = profiler_df.percentage_time.get(
+                "collisions_detection__broad_phase", 0)
+            narrow_ccd = profiler_df.percentage_time.get(
+                "compute_earliest_toi__narrow_phase", 0)
+            broad_distance = profiler_df.percentage_time.get(
+                "distance_barrier__construct_constraint_set", 0)
             # breakpoint()
         else:
             print("Profiling not enabled")
