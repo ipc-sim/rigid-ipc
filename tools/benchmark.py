@@ -1,4 +1,5 @@
 import sys
+import os
 import json
 import pathlib
 import argparse
@@ -16,17 +17,17 @@ def get_machine_info():
     if platform.system() == "Darwin":
         core_count = int(subprocess.run(
             ["sysctl", "-n", "machdep.cpu.core_count"],
-            capture_output=True).stdout.decode("utf-8").rstrip())
+            capture_output=True, text=True).stdout.strip())
         brand_string = subprocess.run(
             ["sysctl", "-n", "machdep.cpu.brand_string"],
-            capture_output=True).stdout.decode("utf-8").rstrip()
+            capture_output=True, text=True).stdout.strip()
         memsize = int(subprocess.run(
             ["sysctl", "-n", "hw.memsize"],
-            capture_output=True).stdout.decode("utf-8").rstrip()) / 1024**3
+            capture_output=True, text=True).stdout.strip()) / 1024**3
         return f"{core_count:d}-core {brand_string}, {memsize} GB memory"
     if platform.system() == "Linux":
         lscpu = subprocess.run(
-            ["lscpu"], capture_output=True).stdout.decode("utf-8")
+            ["lscpu"], capture_output=True, text=True).stdout
         cores_per_socket = int(
             re.search(r"Core\(s\) per socket:\s*(\d*)", lscpu).group(1))
         sockets = int(
@@ -35,7 +36,7 @@ def get_machine_info():
             float(re.search(r"CPU max MHz:\s*(.+)", lscpu).group(1)) / 1000)
         model_name = re.search(r"Model name:\s*(.+)", lscpu).group(1)
         meminfo = subprocess.run(
-            ["cat", "/proc/meminfo"], capture_output=True).stdout.decode("utf-8")
+            ["cat", "/proc/meminfo"], capture_output=True, text=True).stdout
         memsize = (
             int(re.search(r"MemTotal:\s*(\d*) kB", meminfo).group(1)) / 1024**2)
         return ((f"{sockets}x" if sockets > 1 else "")
@@ -65,8 +66,9 @@ def find_sim_exe():
 
 
 def get_git_hash():
-    return subprocess.run("git rev-parse HEAD".split(), capture_output=True,
-                          cwd=pathlib.Path(__file__).parent).stdout.decode("utf-8").rstrip()
+    return subprocess.run(
+        "git rev-parse HEAD".split(), capture_output=True,
+        cwd=pathlib.Path(__file__).parent, text=True).stdout.strip()
 
 
 def create_parser():
@@ -116,23 +118,44 @@ def main():
         "scene", "dim", "num_bodies", "num_vertices", "num_edges", "num_faces",
         "timestep", "num_timesteps", "dhat", "mu", "eps_v",
         "friction_iterations", "cor", "eps_d", "avg_num_contacts",
-        "max_num_contacts", "machine", "memory", "avg_step_time",
-        "max_step_time", "avg_solver_iterations", "max_solver_iterations",
-        "git_hash"])
+        "max_num_contacts", "avg_step_time", "max_step_time", "ccd_broad_phase",
+        "ccd_narrow_phase", "distance_broad_phase", "avg_solver_iterations",
+        "max_solver_iterations", "machine", "memory", "git_hash", "notes"])
 
     for scene in args.input:
         print(f"Running {scene}")
 
-        sim_output_dir = f"./output/{scene.stem}"
+        sim_output_dir = pathlib.Path(f"./output/{scene.stem}")
         results = subprocess.run(
             [str(args.sim_exe), scene.resolve(),
-             sim_output_dir, "--loglevel", "4"],
-            capture_output=False, check=True)
+             sim_output_dir, "--loglevel", "3"],
+            capture_output=False, check=False, text=True)
 
-        with open(pathlib.Path(sim_output_dir) / "sim.json") as sim_output:
+        with open(sim_output_dir / "sim.json") as sim_output:
             sim_json = json.load(sim_output)
             sim_args = sim_json["args"]
             sim_stats = sim_json["stats"]
+
+        log_dirs = list(filter(lambda p: p.is_dir(),
+                               sim_output_dir.glob("log_*")))
+        if log_dirs:
+            profiler_dir = max(log_dirs, key=os.path.getmtime)
+            profiler_df = pandas.read_csv(
+                profiler_dir / "summary.csv", header=1, index_col=0,
+                skipinitialspace=True, converters={
+                    "percentage_time": lambda x: float(x.strip('%'))})
+            broad_ccd = profiler_df.loc[
+                "collisions_detection__broad_phase", "percentage_time"]
+            narrow_ccd = profiler_df.loc[
+                "compute_earliest_toi__narrow_phase", "percentage_time"]
+            broad_distance = profiler_df.loc[
+                "distance_barrier__construct_constraint_set", "percentage_time"]
+            # breakpoint()
+        else:
+            print("Profiling not enabled")
+            broad_ccd = -1
+            narrow_ccd = -1
+            broad_distance = -1
 
         df_row = {
             "scene": scene.stem,
@@ -155,9 +178,13 @@ def main():
             "memory": sim_stats["memory"] / 1024**2,
             "avg_step_time": numpy.average(sim_stats["step_timings"]),
             "max_step_time": max(sim_stats["step_timings"]),
+            "ccd_broad_phase": f"{broad_ccd:g}%",
+            "ccd_narrow_phase": f"{narrow_ccd:g}%",
+            "distance_broad_phase": f"{broad_distance:g}%",
             "avg_solver_iterations": numpy.average(sim_stats["solver_iterations"]),
             "max_solver_iterations": max(sim_stats["solver_iterations"]),
             "git_hash": git_hash,
+            "notes": ""  # results.stdout.strip()
         }
 
         df.loc[scene] = df_row

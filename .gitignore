@@ -266,3 +266,4 @@ output/
 fixtures/**/*.gif
 
 src/ccd/EE-CCD-plan.txt
+benchmark.csv

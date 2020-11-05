@@ -100,6 +100,9 @@ namespace opt {
 
     void DistanceBarrierRBProblem::update_constraints()
     {
+        PROFILE_POINT("DistanceBarrierRBProblem__update_constraints");
+        PROFILE_START();
+
         RigidBodyProblem::update_constraints();
 
         ipc::Constraints collision_constraints;
@@ -122,6 +125,8 @@ namespace opt {
                 barrier_activation_distance(), barrier_stiffness(),
                 coefficient_friction, friction_constraints);
         }
+
+        PROFILE_END();
     }
 
     bool DistanceBarrierRBProblem::take_step(const Eigen::VectorXd& sigma)

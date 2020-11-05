@@ -235,11 +235,18 @@ namespace opt {
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses) const
     {
+        PROFILE_POINT("distance_barrier__compute_minimum_distance");
+        PROFILE_START();
+
         ipc::Constraints constraint_set;
         construct_constraint_set(bodies, poses, constraint_set);
         Eigen::MatrixXd V = bodies.world_vertices(poses);
-        return sqrt(ipc::compute_minimum_distance(
+        double minimum_distance = sqrt(ipc::compute_minimum_distance(
             V, bodies.m_edges, bodies.m_faces, constraint_set));
+
+        PROFILE_END();
+
+        return minimum_distance;
     }
 
 } // namespace opt
