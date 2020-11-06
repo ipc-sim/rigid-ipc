@@ -8,7 +8,7 @@
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "coefficient_friction": 1e0,
+        "coefficient_friction": 0.5,
         "gravity": [0, -9.8, 0],
         "time_stepper": "dmv",
         "rigid_bodies": [{
