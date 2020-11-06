@@ -132,15 +132,16 @@ def main():
             scene_name = scene.stem
 
         sim_output_dir = pathlib.Path(f"./output/{scene_name}")
-        results = subprocess.run(
-            [str(args.sim_exe), scene.resolve(),
-             sim_output_dir, "--loglevel", "3"],
-            capture_output=True, check=False, text=True)
-
-        with open(sim_output_dir / "log.out", 'w') as log_file:
-            log_file.write(results.stdout)
-        with open(sim_output_dir / "log.err", 'w') as log_file:
-            log_file.write(results.stderr)
+        sim_output_dir.mkdir(parents=True, exist_ok=True)
+        with open(sim_output_dir / "log.txt", 'w') as log_file:
+            sim = subprocess.Popen(
+                [str(args.sim_exe), scene.resolve(),
+                 sim_output_dir, "--loglevel", "3"],
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            for line in sim.stdout:
+                sys.stdout.write(line)
+                log_file.write(line)
+            sim.wait()
 
         with open(sim_output_dir / "sim.json") as sim_output:
             sim_json = json.load(sim_output)
