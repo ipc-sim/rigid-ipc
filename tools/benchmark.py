@@ -113,6 +113,7 @@ def main():
     args = parse_arguments()
     git_hash = get_git_hash()
     machine_info = get_machine_info()
+    base_dir = fixture_dir().resolve()
 
     df = pandas.DataFrame(columns=[
         "scene", "dim", "num_bodies", "num_vertices", "num_edges", "num_faces",
@@ -124,12 +125,22 @@ def main():
 
     for scene in args.input:
         print(f"Running {scene}")
+        try:
+            scene_name = scene.resolve().relative_to(base_dir)
+            scene_name = str(scene_name.parent / scene_name.stem)
+        except ValueError:
+            scene_name = scene.stem
 
-        sim_output_dir = pathlib.Path(f"./output/{scene.stem}")
+        sim_output_dir = pathlib.Path(f"./output/{scene_name}")
         results = subprocess.run(
             [str(args.sim_exe), scene.resolve(),
              sim_output_dir, "--loglevel", "3"],
-            capture_output=False, check=False, text=True)
+            capture_output=True, check=False, text=True)
+
+        with open(sim_output_dir / "log.out", 'w') as log_file:
+            log_file.write(results.stdout)
+        with open(sim_output_dir / "log.err", 'w') as log_file:
+            log_file.write(results.stderr)
 
         with open(sim_output_dir / "sim.json") as sim_output:
             sim_json = json.load(sim_output)
@@ -158,7 +169,7 @@ def main():
             broad_distance = -1
 
         df_row = {
-            "scene": scene.stem,
+            "scene": scene_name,
             "dim": sim_stats["dim"],
             "num_bodies": sim_stats["num_bodies"],
             "num_vertices": sim_stats["num_vertices"],
