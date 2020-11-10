@@ -146,46 +146,65 @@ namespace opt {
 
         int collision_count = 0;
         double earliest_toi = 1;
+        tbb::mutex earliest_toi_mutex;
 
         PROFILE_START(NARROW_PHASE);
 
         PROFILE_START(EV_NARROW_PHASE);
-        for (const auto& ev_candidate : candidates.ev_candidates) {
-            double toi = std::numeric_limits<double>::infinity();
-            bool are_colliding = edge_vertex_ccd(
-                bodies, poses_t0, poses_t1, ev_candidate, toi, trajectory_type,
-                earliest_toi);
-            if (are_colliding && toi < earliest_toi) {
-                collision_count++;
-                earliest_toi = toi;
-            }
-        }
+        tbb::parallel_for_each(
+            candidates.ev_candidates,
+            [&](const ipc::EdgeVertexCandidate& ev_candidate) {
+                double toi = std::numeric_limits<double>::infinity();
+                bool are_colliding = edge_vertex_ccd(
+                    bodies, poses_t0, poses_t1, ev_candidate, toi,
+                    trajectory_type, earliest_toi);
+                if (are_colliding) {
+                    earliest_toi_mutex.lock();
+                    collision_count++;
+                    if (toi < earliest_toi) {
+                        earliest_toi = toi;
+                    }
+                    earliest_toi_mutex.unlock();
+                }
+            });
         PROFILE_END(EV_NARROW_PHASE);
 
         PROFILE_START(FV_NARROW_PHASE);
-        for (const auto& fv_candidate : candidates.fv_candidates) {
-            double toi = std::numeric_limits<double>::infinity();
-            bool are_colliding = face_vertex_ccd(
-                bodies, poses_t0, poses_t1, fv_candidate, toi, trajectory_type,
-                earliest_toi);
-            if (are_colliding && toi < earliest_toi) {
-                collision_count++;
-                earliest_toi = toi;
-            }
-        }
+        tbb::parallel_for_each(
+            candidates.fv_candidates,
+            [&](const ipc::FaceVertexCandidate& fv_candidate) {
+                double toi = std::numeric_limits<double>::infinity();
+                bool are_colliding = face_vertex_ccd(
+                    bodies, poses_t0, poses_t1, fv_candidate, toi,
+                    trajectory_type, earliest_toi);
+                if (are_colliding) {
+                    earliest_toi_mutex.lock();
+                    collision_count++;
+                    if (toi < earliest_toi) {
+                        earliest_toi = toi;
+                    }
+                    earliest_toi_mutex.unlock();
+                }
+            });
         PROFILE_END(FV_NARROW_PHASE);
 
         PROFILE_START(EE_NARROW_PHASE);
-        for (const auto& ee_candidate : candidates.ee_candidates) {
-            double toi = std::numeric_limits<double>::infinity();
-            bool are_colliding = edge_edge_ccd(
-                bodies, poses_t0, poses_t1, ee_candidate, toi, trajectory_type,
-                earliest_toi);
-            if (are_colliding && toi < earliest_toi) {
-                collision_count++;
-                earliest_toi = toi;
-            }
-        }
+        tbb::parallel_for_each(
+            candidates.ee_candidates,
+            [&](const ipc::EdgeEdgeCandidate& ee_candidate) {
+                double toi = std::numeric_limits<double>::infinity();
+                bool are_colliding = edge_edge_ccd(
+                    bodies, poses_t0, poses_t1, ee_candidate, toi,
+                    trajectory_type, earliest_toi);
+                if (are_colliding) {
+                    earliest_toi_mutex.lock();
+                    collision_count++;
+                    if (toi < earliest_toi) {
+                        earliest_toi = toi;
+                    }
+                    earliest_toi_mutex.unlock();
+                }
+            });
         PROFILE_END(EE_NARROW_PHASE);
 
         double percent_correct = candidates.size() == 0

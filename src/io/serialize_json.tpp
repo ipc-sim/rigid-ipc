@@ -27,20 +27,15 @@ namespace io {
         return nlohmann::json(vec);
     }
 
-    template <typename T>
-    void from_json(const nlohmann::json& json, Eigen::VectorX<T>& vector)
+    template <typename T, int dim, int max_dim>
+    void from_json(
+        const nlohmann::json& json,
+        Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim, 1>& vector)
     {
+        typedef Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim, 1> Vector;
         typedef std::vector<T> L;
-        L list = json.get<L>();
-        vector = Eigen::Map<Eigen::VectorX<T>>(list.data(), long(list.size()));
-    }
-
-    template <typename T>
-    void from_json(const nlohmann::json& json, Eigen::VectorX3<T>& vector)
-    {
-        typedef std::vector<T> L;
-        L list = json.get<L>();
-        vector = Eigen::Map<Eigen::VectorX3<T>>(list.data(), long(list.size()));
+        L list = json.template get<L>();
+        vector = Eigen::Map<Vector>(list.data(), long(list.size()));
     }
 
     template <typename T>

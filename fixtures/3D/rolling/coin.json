@@ -2,20 +2,21 @@
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
     "max_time": 10,
-    "timestep": 1e-2,
+    "timestep": 0.01,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-3
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "coefficient_friction": 0.05,
+        "coefficient_friction": 0.2,
         "gravity": [0, -9.8, 0],
-        "time_stepper": "dmv",
         "rigid_bodies": [{
-            "mesh": "oloid.obj",
-            "position": [-4.5, -0.49, 0],
-            "rotation": [60, 0, 0],
-            "linear_velocity": [5, 0, 0]
+            "mesh": "cylinder.obj",
+            "position": [0, 0.01, 0],
+            "rotation": [90, 0, 0],
+            "scale": [1, 0.025, 1],
+            "angular_velocity": [0, 900, 0],
+            "density": 0.01
         }, {
             "mesh": "plane.obj",
             "is_dof_fixed": true,

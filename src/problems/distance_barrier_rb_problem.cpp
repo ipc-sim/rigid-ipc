@@ -421,8 +421,9 @@ namespace opt {
 
             // ½tr(QJQᵀ) - tr(QJ(Qᵗ + hQ̇ᵗ + ½h²Aᵗ)ᵀ)
             // TODO: Add torque
-            energy += 0.5 * (Q * J * Q.transpose()).trace()
-                - (Q * J
+            auto QJ = Q * J;
+            energy += 0.5 * (QJ * Q.transpose()).trace()
+                - (QJ
                    * (Q_t0 + h * (Qdot_t0 + 0.5 * h * A_t0))
                          .transpose()
                          .cast<T>())

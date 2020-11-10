@@ -273,7 +273,7 @@ target_link_libraries(${PROJECT_NAME}_sim PRIVATE gif_h::gif_h)
 # No UI Executable
 ################################################################################
 add_executable(${PROJECT_NAME}_ngui
-     src/cli_main.cpp
+  src/cli_main.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_ngui PUBLIC ${PROJECT_NAME})
@@ -283,7 +283,7 @@ target_link_libraries(${PROJECT_NAME}_ngui PUBLIC CLI11::CLI11)
 # MinDistance Executable
 ################################################################################
 add_executable(cli_mindistance
-     src/cli_min_distance.cpp
+  src/cli_min_distance.cpp
 )
 
 target_link_libraries(cli_mindistance PUBLIC ${PROJECT_NAME})
@@ -293,11 +293,23 @@ target_link_libraries(cli_mindistance PUBLIC CLI11::CLI11)
 # CCD Check
 ################################################################################
 add_executable(cli_ccd
-     src/cli_ccd.cpp
+  src/cli_ccd.cpp
 )
 
 target_link_libraries(cli_ccd PUBLIC ${PROJECT_NAME})
 target_link_libraries(cli_ccd PUBLIC CLI11::CLI11)
+
+################################################################################
+# Headless Renderer
+################################################################################
+add_executable(render_simulation
+  src/renderer/main.cpp
+  src/renderer/raster.cpp
+  src/renderer/render_mesh.cpp
+)
+
+target_link_libraries(render_simulation PUBLIC ${PROJECT_NAME})
+target_link_libraries(render_simulation PUBLIC CLI11::CLI11)
 
 ################################################################################
 # Tests

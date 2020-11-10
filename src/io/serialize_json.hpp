@@ -10,11 +10,10 @@ namespace io {
     template <typename T>
     nlohmann::json to_json(const Eigen::VectorX<T>& vector);
 
-    template <typename T>
-    void from_json(const nlohmann::json&, Eigen::VectorX<T>& vector);
-
-    template <typename T>
-    void from_json(const nlohmann::json&, Eigen::VectorX3<T>& vector);
+    template <typename T, int dim, int max_dim = dim>
+    void from_json(
+        const nlohmann::json& json,
+        Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim, 1>& vector);
 
     template <typename T>
     nlohmann::json to_json(const Eigen::MatrixX<T>& matrix);
@@ -23,7 +22,7 @@ namespace io {
         const Eigen::MatrixXd& matrix, const std::string& format = ".16e");
 
     template <typename T>
-    void from_json(const nlohmann::json&, Eigen::MatrixX<T>& matrix);
+    void from_json(const nlohmann::json& json, Eigen::MatrixX<T>& matrix);
 
     template <>
     void

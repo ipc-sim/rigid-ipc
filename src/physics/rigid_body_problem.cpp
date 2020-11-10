@@ -253,6 +253,9 @@ namespace physics {
             return false;
         }
 
+        PROFILE_POINT("RigidBodyProblem::detect_intersections");
+        PROFILE_START();
+
         ipc::HashGrid hashgrid;
         double inflation_radius = 1e-12; // Conservative broad phase
         const Eigen::MatrixXd vertices = m_assembler.world_vertices(poses);
@@ -264,6 +267,8 @@ namespace physics {
         hashgrid.addEdges(
             /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, edges,
             inflation_radius);
+
+        bool is_intersecting = false;
         if (dim() == 2) {
             assert(vertices.cols() == 2);
             // Need to check segment-segment intersections in 2D
@@ -281,7 +286,8 @@ namespace physics {
                             .head<2>(),
                         vertices.row(edges(ee_candidate.edge1_index, 1))
                             .head<2>())) {
-                    return true;
+                    is_intersecting = true;
+                    break;
                 }
             }
         } else {
@@ -301,12 +307,15 @@ namespace physics {
                         vertices.row(faces(ef_candidate.face_index, 0)),
                         vertices.row(faces(ef_candidate.face_index, 1)),
                         vertices.row(faces(ef_candidate.face_index, 2)))) {
-                    return true;
+                    bool is_intersecting = false;
+                    break;
                 }
             }
         }
 
-        return false;
+        PROFILE_END();
+
+        return is_intersecting;
     }
 
 } // namespace physics

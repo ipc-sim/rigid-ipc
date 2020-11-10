@@ -1,7 +1,7 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
-    "max_time": 10,
+    "max_time": 20,
     "timestep": 1e-2,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-2
@@ -14,13 +14,12 @@
             "mesh": "gömböc.stl",
             "position": [0, 0.5, 0],
             "rotation": [0, 0, 45],
-            "linear_velocity": [0, 0, 0],
-            "#torque": [0, 45, 0]
+            "linear_velocity": [0, 0, 0]
         }, {
             "mesh": "plane.obj",
             "is_dof_fixed": true,
             "position": [0, -1, 0],
-            "scale": 1
+            "scale": 2
         }]
     }
 }
