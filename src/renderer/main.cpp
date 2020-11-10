@@ -5,6 +5,7 @@
 #include <fmt/chrono.h>
 #include <igl/Timer.h>
 #include <nlohmann/json.hpp>
+#include <tbb/parallel_for.h>
 
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
@@ -99,8 +100,7 @@ int main(int argc, char* argv[])
     }
 
     Eigen::MatrixXi E = bodies.m_edges, F = bodies.m_faces;
-    igl::Timer render_timer;
-    for (size_t i = 0; i < state_sequence.size(); ++i) {
+    tbb::parallel_for(size_t(0), state_sequence.size(), [&](size_t i) {
         ccd::physics::Poses<double> poses(bodies.num_bodies());
         assert(state_sequence[i]["rigid_bodies"].size() == bodies.num_bodies());
         for (int j = 0; j < bodies.num_bodies(); j++) {
@@ -112,14 +112,20 @@ int main(int argc, char* argv[])
         std::string frame_name =
             (frames_dir / fmt::format("frame{:06d}.png", i)).string();
 
+        igl::Timer render_timer;
         render_timer.start();
-        render_mesh(scene, bodies.world_vertices(poses), E, F, C, frame_name);
+        bool wrote_frame = render_mesh(
+            scene, bodies.world_vertices(poses), E, F, C, frame_name);
         render_timer.stop();
 
-        spdlog::info(
-            "Rendered frame {:d} to '{}' in {:g} seconds", //
-            i, frame_name, render_timer.getElapsedTime());
-    }
+        if (wrote_frame) {
+            spdlog::info(
+                "Rendered frame {:d} to '{}' in {:g} seconds", //
+                i, frame_name, render_timer.getElapsedTime());
+        } else {
+            spdlog::error("Unable to render frame {:d} to '{}'", i, frame_name);
+        }
+    });
 
     int fps = render_args["fps"];
     if (fps <= 0) {

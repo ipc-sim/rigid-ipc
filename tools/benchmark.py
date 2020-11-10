@@ -71,6 +71,21 @@ def get_git_hash():
         cwd=pathlib.Path(__file__).parent, text=True).stdout.strip()
 
 
+def get_remote_storage():
+    for remote_name in "google-drive", "nyu-gdrive", None:
+        if remote_name is None:
+            print("Unable to find remote storage using rclone! "
+                  "Videos will not be uploaded")
+            return None
+        r = subprocess.run(["rclone", "about", f"{remote_name}:"],
+                           capture_output=True, text=True)
+        print(r.stdout)
+        print(r.stderr)
+        if (r.stderr.strip() == ""):
+            break
+    return f"{remote_name}:rigid-bodies/benchmark/"
+
+
 def create_parser():
     parser = argparse.ArgumentParser(
         description="Run all scenes and save a CSV of the results.")
@@ -78,11 +93,11 @@ def create_parser():
         "--sim-exe", metavar=f"path/to/{sim_exe_name()}", type=pathlib.Path,
         default=None, help="path to simulation executable")
     parser.add_argument(
-        "--input", metavar="path/to/input", type=pathlib.Path,
+        "-i,--input", metavar="path/to/input", type=pathlib.Path, dest="input",
         default=None, help="path to input json(s)", nargs="+")
     parser.add_argument(
-        "--output", metavar="path/to/output.csv", type=pathlib.Path,
-        default=None, help="path to output CSV")
+        "-o,--output", metavar="path/to/output.csv", type=pathlib.Path,
+        dest="output", default=None, help="path to output CSV")
     return parser
 
 
@@ -114,6 +129,7 @@ def main():
     git_hash = get_git_hash()
     machine_info = get_machine_info()
     base_dir = fixture_dir().resolve()
+    remote_storage = get_remote_storage()
 
     df = pandas.DataFrame(columns=[
         "scene", "dim", "num_bodies", "num_vertices", "num_edges", "num_faces",
@@ -121,7 +137,8 @@ def main():
         "friction_iterations", "cor", "eps_d", "avg_num_contacts",
         "max_num_contacts", "avg_step_time", "max_step_time", "ccd_broad_phase",
         "ccd_narrow_phase", "distance_broad_phase", "avg_solver_iterations",
-        "max_solver_iterations", "machine", "memory", "git_hash", "notes"])
+        "max_solver_iterations", "video", "machine", "memory", "git_hash",
+        "notes"])
 
     for scene in args.input:
         print(f"Running {scene}")
@@ -131,7 +148,7 @@ def main():
         except ValueError:
             scene_name = scene.stem
 
-        sim_output_dir = pathlib.Path(f"./output/{scene_name}")
+        sim_output_dir = pathlib.Path("output") / scene_name
         sim_output_dir.mkdir(parents=True, exist_ok=True)
         with open(sim_output_dir / "log.txt", 'w') as log_file:
             sim = subprocess.Popen(
@@ -142,6 +159,21 @@ def main():
                 sys.stdout.write(line)
                 log_file.write(line)
             sim.wait()
+
+        print("Rendering simulation")
+        subprocess.run([str(args.sim_exe.parent / "render_simulation"),
+                        sim_output_dir / "sim.json",
+                        "-o", sim_output_dir / f"{scene.stem}.mp4",
+                        "--loglevel", "2"])
+        if remote_storage is not None:
+            remote_path = f"{remote_storage}{pathlib.Path(scene_name).parent}"
+            subprocess.run(
+                ["rclone", "copy", sim_output_dir / f"{scene.stem}.mp4",
+                 remote_path])
+            video_url = subprocess.run(
+                ["rclone", "link", f"{remote_path}/{scene.stem}.mp4"],
+                capture_output=True, text=True).stdout.strip()
+            print(f"Uploaded video to {video_url}")
 
         with open(sim_output_dir / "sim.json") as sim_output:
             sim_json = json.load(sim_output)
@@ -186,8 +218,6 @@ def main():
             "eps_d": sim_args["newton_solver"]["velocity_conv_tol"],
             "avg_num_contacts": numpy.average(sim_stats["num_contacts"]),
             "max_num_contacts": max(sim_stats["num_contacts"]),
-            "machine": machine_info,
-            "memory": sim_stats["memory"] / 1024**2,
             "avg_step_time": numpy.average(sim_stats["step_timings"]),
             "max_step_time": max(sim_stats["step_timings"]),
             "ccd_broad_phase": f"{broad_ccd:g}%",
@@ -195,6 +225,9 @@ def main():
             "distance_broad_phase": f"{broad_distance:g}%",
             "avg_solver_iterations": numpy.average(sim_stats["solver_iterations"]),
             "max_solver_iterations": max(sim_stats["solver_iterations"]),
+            "video": video_url,
+            "machine": machine_info,
+            "memory": sim_stats["memory"] / 1024**2,
             "git_hash": git_hash,
             "notes": ""  # results.stdout.strip()
         }
