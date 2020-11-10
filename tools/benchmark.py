@@ -181,7 +181,7 @@ def main():
             sim_stats = sim_json["stats"]
 
         log_dirs = list(filter(lambda p: p.is_dir(),
-                               sim_output_dir.glob("log_*")))
+                               sim_output_dir.glob("log*")))
         if log_dirs:
             profiler_dir = max(log_dirs, key=os.path.getmtime)
             profiler_df = pandas.read_csv(

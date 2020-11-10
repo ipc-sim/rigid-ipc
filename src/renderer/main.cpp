@@ -9,6 +9,7 @@
 
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
+#include <logger.hpp>
 #include <physics/pose.hpp>
 #include <physics/rigid_body_assembler.hpp>
 #include <renderer/render_mesh.hpp>
@@ -55,7 +56,7 @@ int main(int argc, char* argv[])
         boost::filesystem::create_directories(args.output_path.parent_path());
     }
     boost::filesystem::path frames_dir = args.output_path.parent_path()
-        / fmt::format("frames-{:%F-%H-%M-%S}", fmt::localtime(std::time(0)));
+        / fmt::format("frames-{}", ccd::logger::now());
     boost::filesystem::create_directories(frames_dir);
 
     std::ifstream input(args.sim_path.string());

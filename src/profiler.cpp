@@ -81,7 +81,7 @@ namespace profiler {
     {
 
         std::string parent_name =
-            fmt::format("{}/log_{}", dout, ccd::logger::now());
+            fmt::format("{}/log-{}", dout, ccd::logger::now());
         if (mkdir(parent_name.c_str(), ACCESSPERMS) == 0) {
             write_summary(parent_name, fin);
             for (auto& p : points) {

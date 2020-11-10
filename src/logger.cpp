@@ -1,7 +1,7 @@
 #include "logger.hpp"
 
-#include <chrono>  // chrono::system_clock
-#include <ctime>   // localtime
+#include <ctime> // localtime
+#include <fmt/chrono.h>
 #include <iomanip> // put_time
 #include <sstream> // stringstream
 #include <string>  // string
@@ -37,12 +37,7 @@ namespace logger {
 
     std::string now()
     {
-        auto now = std::chrono::system_clock::now();
-        auto in_time_t = std::chrono::system_clock::to_time_t(now);
-
-        std::stringstream ss;
-        ss << std::put_time(std::localtime(&in_time_t), "%Y_%m_%d_%EX");
-        return ss.str();
+        return fmt::format("{:%F-%H-%M-%S}", fmt::localtime(std::time(0)));
     }
 
     std::string fmt_interval(const Interval& i, const int precision)
