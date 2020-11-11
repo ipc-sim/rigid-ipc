@@ -302,12 +302,21 @@ target_link_libraries(cli_ccd PUBLIC CLI11::CLI11)
 ################################################################################
 # Headless Renderer
 ################################################################################
-add_executable(render_simulation
-  src/renderer/main.cpp
+add_library(software_renderer
+  src/renderer/camera.cpp
   src/renderer/raster.cpp
   src/renderer/render_mesh.cpp
 )
 
+target_link_libraries(software_renderer PUBLIC igl::core igl::png)
+target_link_libraries(software_renderer PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(software_renderer PUBLIC TBB::tbb)
+
+add_executable(render_simulation
+  src/renderer/main.cpp
+)
+
+target_link_libraries(render_simulation PUBLIC software_renderer)
 target_link_libraries(render_simulation PUBLIC ${PROJECT_NAME})
 target_link_libraries(render_simulation PUBLIC CLI11::CLI11)
 

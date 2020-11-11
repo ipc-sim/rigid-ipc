@@ -4,14 +4,12 @@
 #include <string>
 #include <vector>
 
-#include <renderer/attributes.hpp>
+#include "attributes.hpp"
 
-// Stores the final image
-typedef Eigen::Matrix<FrameBufferAttributes, Eigen::Dynamic, Eigen::Dynamic>
-    FrameBuffer;
+namespace swr {
 
 // Contains the three shaders used by the rasterizer
-class Program {
+class Shaders {
 public:
     // Vertex Shader
     std::function<VertexAttributes(
@@ -26,11 +24,11 @@ public:
         blending_shader;
 };
 
-// Rasterizes a single triangle v1,v2,v3 using the provided program and
+// Rasterizes a single triangle v1,v2,v3 using the provided shaders and
 // uniforms. Note: v1, v2, and v3 needs to be in the canonical view volume (i.e.
 // after being processed by the vertex shader)
 void rasterize_triangle(
-    const Program& program,
+    const Shaders& shaders,
     const UniformAttributes& uniform,
     const VertexAttributes& v1,
     const VertexAttributes& v2,
@@ -41,16 +39,16 @@ void rasterize_triangle(
 // consecutive vertices. Note: the vertices will be processed by the vertex
 // shader
 void rasterize_triangles(
-    const Program& program,
+    const Shaders& shaders,
     const UniformAttributes& uniform,
     const std::vector<VertexAttributes>& vertices,
     FrameBuffer& frameBuffer);
 
 // Rasterizes a single line v1,v2 of thickness line_thickness using the provided
-// program and uniforms. Note: v1, v2 needs to be in the canonical view volume
+// shaders and uniforms. Note: v1, v2 needs to be in the canonical view volume
 // (i.e. after being processed by the vertex shader)
 void rasterize_line(
-    const Program& program,
+    const Shaders& shaders,
     const UniformAttributes& uniform,
     const VertexAttributes& v1,
     const VertexAttributes& v2,
@@ -60,7 +58,7 @@ void rasterize_line(
 // Rasterizes a collection of lines, assembling one line for each 2 consecutive
 // vertices. Note: the vertices will be processed by the vertex shader
 void rasterize_lines(
-    const Program& program,
+    const Shaders& shaders,
     const UniformAttributes& uniform,
     const std::vector<VertexAttributes>& vertices,
     Float line_thickness,
@@ -69,3 +67,5 @@ void rasterize_lines(
 // Exports the framebuffer to a uint8 raw image
 void framebuffer_to_uint8(
     const FrameBuffer& frameBuffer, std::vector<uint8_t>& image);
+
+} // namespace swr

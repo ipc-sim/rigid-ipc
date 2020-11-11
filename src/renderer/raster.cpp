@@ -7,8 +7,10 @@
 #include <tbb/blocked_range2d.h>
 #include <tbb/parallel_for.h>
 
+namespace swr {
+
 void rasterize_triangle(
-    const Program& program,
+    const Shaders& shaders,
     const UniformAttributes& uniform,
     const VertexAttributes& v1,
     const VertexAttributes& v2,
@@ -61,9 +63,9 @@ void rasterize_triangle(
                         // Only render fragments within the bi-unit cube
                         if (va.position.z() >= -1 && va.position.z() <= 1) {
                             FragmentAttributes frag =
-                                program.fragment_shader(va, uniform);
+                                shaders.fragment_shader(va, uniform);
                             frameBuffer(i, j).lock.lock();
-                            program.blending_shader(frag, frameBuffer(i, j));
+                            shaders.blending_shader(frag, frameBuffer(i, j));
                             frameBuffer(i, j).lock.unlock();
                         }
                     }
@@ -73,7 +75,7 @@ void rasterize_triangle(
 }
 
 void rasterize_triangles(
-    const Program& program,
+    const Shaders& shaders,
     const UniformAttributes& uniform,
     const std::vector<VertexAttributes>& vertices,
     FrameBuffer& frameBuffer)
@@ -81,20 +83,20 @@ void rasterize_triangles(
     // Call vertex shader on all vertices (parallel)
     std::vector<VertexAttributes> v(vertices.size());
     tbb::parallel_for(size_t(0), vertices.size(), [&](size_t i) {
-        v[i] = program.vertex_shader(vertices[i], uniform);
+        v[i] = shaders.vertex_shader(vertices[i], uniform);
     });
 
     // Call the rasterization function on every triangle
     assert(vertices.size() % 3 == 0);
     tbb::parallel_for(size_t(0), vertices.size() / 3, [&](size_t i) {
         rasterize_triangle(
-            program, uniform, v[i * 3 + 0], v[i * 3 + 1], v[i * 3 + 2],
+            shaders, uniform, v[i * 3 + 0], v[i * 3 + 1], v[i * 3 + 2],
             frameBuffer);
     });
 }
 
 void rasterize_line(
-    const Program& program,
+    const Shaders& shaders,
     const UniformAttributes& uniform,
     const VertexAttributes& v1,
     const VertexAttributes& v2,
@@ -159,9 +161,9 @@ void rasterize_line(
                         // Only render fragments within the bi-unit cube
                         if (va.position[2] >= -1 && va.position[2] <= 1) {
                             FragmentAttributes frag =
-                                program.fragment_shader(va, uniform);
+                                shaders.fragment_shader(va, uniform);
                             frameBuffer(i, j).lock.lock();
-                            program.blending_shader(frag, frameBuffer(i, j));
+                            shaders.blending_shader(frag, frameBuffer(i, j));
                             frameBuffer(i, j).lock.unlock();
                         }
                     }
@@ -171,7 +173,7 @@ void rasterize_line(
 }
 
 void rasterize_lines(
-    const Program& program,
+    const Shaders& shaders,
     const UniformAttributes& uniform,
     const std::vector<VertexAttributes>& vertices,
     Float line_thickness,
@@ -180,14 +182,14 @@ void rasterize_lines(
     // Call vertex shader on all vertices (parallel)
     std::vector<VertexAttributes> v(vertices.size());
     tbb::parallel_for(size_t(0), vertices.size(), [&](size_t i) {
-        v[i] = program.vertex_shader(vertices[i], uniform);
+        v[i] = shaders.vertex_shader(vertices[i], uniform);
     });
 
     // Call the rasterization function on every line
     assert(vertices.size() % 2 == 0);
     tbb::parallel_for(size_t(0), vertices.size() / 2, [&](size_t i) {
         rasterize_line(
-            program, uniform, v[i * 2 + 0], v[i * 2 + 1], line_thickness,
+            shaders, uniform, v[i * 2 + 0], v[i * 2 + 1], line_thickness,
             frameBuffer);
     });
 }
@@ -211,3 +213,5 @@ void framebuffer_to_uint8(
         }
     }
 }
+
+} // namespace swr

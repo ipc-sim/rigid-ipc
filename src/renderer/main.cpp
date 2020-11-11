@@ -2,7 +2,6 @@
 
 #include <CLI/CLI.hpp>
 #include <boost/filesystem.hpp>
-#include <fmt/chrono.h>
 #include <igl/Timer.h>
 #include <nlohmann/json.hpp>
 #include <tbb/parallel_for.h>
@@ -12,7 +11,10 @@
 #include <logger.hpp>
 #include <physics/pose.hpp>
 #include <physics/rigid_body_assembler.hpp>
-#include <renderer/render_mesh.hpp>
+
+#include "render_mesh.hpp"
+
+using namespace swr;
 
 struct SimRenderArgs {
     boost::filesystem::path sim_path;
@@ -45,12 +47,21 @@ SimRenderArgs parse_args(int argc, char* argv[])
     return args;
 }
 
+bool read_json(const std::string& filename, nlohmann::json& json)
+{
+    std::ifstream input(filename);
+    json = nlohmann::json::parse(input, nullptr, false);
+    return !json.is_discarded();
+}
+
 int main(int argc, char* argv[])
 {
     SimRenderArgs args = parse_args(argc, argv);
 
     ccd::logger::set_level(args.loglevel);
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Create folder for PNG frames
     // Create the output directory if it does not exist
     if (args.output_path.has_parent_path()) {
         boost::filesystem::create_directories(args.output_path.parent_path());
@@ -58,10 +69,12 @@ int main(int argc, char* argv[])
     boost::filesystem::path frames_dir = args.output_path.parent_path()
         / fmt::format("frames-{}", ccd::logger::now());
     boost::filesystem::create_directories(frames_dir);
+    ///////////////////////////////////////////////////////////////////////////
 
-    std::ifstream input(args.sim_path.string());
-    nlohmann::json sim = nlohmann::json::parse(input, nullptr, false);
-    if (sim.is_discarded()) {
+    ///////////////////////////////////////////////////////////////////////////
+    // Read the simulation json file
+    nlohmann::json sim;
+    if (!read_json(args.sim_path.string(), sim)) {
         spdlog::error("Invalid simulation JSON file");
         return 1;
     }
@@ -77,30 +90,31 @@ int main(int argc, char* argv[])
     ccd::physics::RigidBodyAssembler bodies;
     bodies.init(rbs);
 
-    std::string render_args_fname =
-        (boost::filesystem::path(__FILE__).parent_path()
-         / "render_settings.json")
-            .string();
-    std::ifstream render_args_file(render_args_fname);
-    nlohmann::json render_args =
-        nlohmann::json::parse(render_args_file, nullptr, false);
-    if (render_args.is_discarded()) {
+    const Eigen::MatrixXi &E = bodies.m_edges, &F = bodies.m_faces;
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Create a scene
+    auto render_args_path = boost::filesystem::path(__FILE__).parent_path()
+        / "render_settings.json";
+    nlohmann::json render_args;
+    if (!read_json(render_args_path.string(), render_args)) {
         spdlog::error(
-            "Invalid render settings JSON file ({})", render_args_fname);
+            "Invalid render settings JSON file ({})",
+            render_args_path.string());
         return 1;
     }
     Scene scene(render_args);
+    scene.camera.align_camera_center(bodies.world_vertices(), F);
+    ///////////////////////////////////////////////////////////////////////////
 
-    Eigen::MatrixXd C(bodies.num_vertices(), 3);
-    Eigen::Vector3d free_color, fixed_color;
-    ccd::io::from_json(render_args["free_body_color"], free_color);   // #E74C3C
-    ccd::io::from_json(render_args["fixed_body_color"], fixed_color); // #B3B3B3
-    Eigen::VectorXb is_vertex_fixed = bodies.is_dof_fixed.rowwise().all();
-    for (int i = 0; i < bodies.num_vertices(); i++) {
-        C.row(i) = is_vertex_fixed(i) ? fixed_color : free_color;
-    }
+    ///////////////////////////////////////////////////////////////////////////
+    // Per-vertex colors
+    // NOTE: Assumes fixed_body_material is at index 0 of scene.materials and
+    // free_body_material is at index 1 of scene.materials.
+    Eigen::VectorXi C = bodies.is_dof_fixed.rowwise().all().cast<int>();
+    ///////////////////////////////////////////////////////////////////////////
 
-    Eigen::MatrixXi E = bodies.m_edges, F = bodies.m_faces;
     tbb::parallel_for(size_t(0), state_sequence.size(), [&](size_t i) {
         ccd::physics::Poses<double> poses(bodies.num_bodies());
         assert(state_sequence[i]["rigid_bodies"].size() == bodies.num_bodies());
@@ -128,6 +142,8 @@ int main(int argc, char* argv[])
         }
     });
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Combine PNG frames to video
     int fps = render_args["fps"];
     if (fps <= 0) {
         fps = int(1 / sim["args"]["timestep"].get<double>());
@@ -137,4 +153,5 @@ int main(int argc, char* argv[])
         frames_dir.string(), args.output_path.string());
     spdlog::info("Combining frames using '{}'", ffmpeg_cmd);
     std::system(ffmpeg_cmd.c_str());
+    ///////////////////////////////////////////////////////////////////////////
 }

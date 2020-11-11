@@ -1,42 +1,44 @@
 #pragma once
 
 #include <array>
+#include <iostream>
 #include <vector>
 
 #include <Eigen/Core>
 #include <tbb/mutex.h>
 
-using Float = double;
-namespace Eigen {
-typedef Matrix<Float, 3, 3> Matrix3F;
-typedef Matrix<Float, 4, 4> Matrix4F;
-typedef Matrix<Float, 2, 1> Vector2F;
-typedef Matrix<Float, 3, 1> Vector3F;
-typedef Matrix<Float, 4, 1> Vector4F;
-} // namespace Eigen
+#include "camera.hpp"
+#include "eigen_json.hpp"
+#include "float.hpp"
+
+namespace swr {
 
 struct Light {
+    Light() = default;
+    Light(const nlohmann::json& json)
+    {
+        from_json(json["position"], position);
+        from_json(json["color"], intensity);
+    }
+
     Eigen::Vector3F position;
     Eigen::Vector3F intensity;
 };
 
 struct Material {
+    Material() = default;
+    Material(const nlohmann::json& json)
+    {
+        from_json(json["ambient"], ambient_color);
+        from_json(json["diffuse"], diffuse_color);
+        from_json(json["specular"], specular_color);
+        specular_exponent = json["shininess"];
+    }
+
     Eigen::Vector3F ambient_color;
     Eigen::Vector3F diffuse_color;
     Eigen::Vector3F specular_color;
     Float specular_exponent; // Also called "shininess"
-};
-
-struct Camera {
-    bool is_perspective;
-    Eigen::Vector3F position;
-    Eigen::Vector3F gaze;
-    Eigen::Vector3F view_up;
-    Float field_of_view; // between 0 and PI
-    Float orthographic_scale;
-    Float near_clip;
-    Float far_clip;
-    Eigen::Vector2i resolution;
 };
 
 class VertexAttributes {
@@ -64,20 +66,27 @@ public:
         r.position =
             alpha * a.position + beta * b.position + gamma * c.position;
         r.color = alpha * a.color + beta * b.color + gamma * c.color;
+        r.bc << alpha, beta, gamma;
         return r;
     }
 
     Eigen::Vector4F position;
     Eigen::Vector3F normal;
     Eigen::Vector3F color;
+    Eigen::Vector3F bc;
     Material material;
 };
 
 class FragmentAttributes {
 public:
     FragmentAttributes(Float r = 0, Float g = 0, Float b = 0, Float a = 1)
+        : FragmentAttributes(Eigen::Vector3F(r, g, b), a)
     {
-        color << r, g, b, a;
+    }
+    FragmentAttributes(const Eigen::Vector3F& rgb, Float a = 1)
+    {
+        color.head<3>() = rgb;
+        color(3) = a;
     }
     Float depth;
     Eigen::Vector4F color;
@@ -100,10 +109,29 @@ public:
     tbb::mutex lock;
 };
 
+typedef Eigen::Matrix<FrameBufferAttributes, Eigen::Dynamic, Eigen::Dynamic>
+    FrameBuffer;
+
+inline FrameBuffer create_frame_buffer(
+    const Eigen::Vector2i& resolution,
+    const Eigen::Matrix<uint8_t, 4, 1>& bg_color)
+{
+    FrameBuffer frame_buffer(resolution.x(), resolution.y());
+    for (int i = 0; i < frame_buffer.rows(); i++) {
+        for (int j = 0; j < frame_buffer.cols(); j++) {
+            frame_buffer(i, j).color = bg_color;
+        }
+    }
+    return frame_buffer;
+}
+
 class UniformAttributes {
 public:
     Eigen::Matrix4F M;
+    Eigen::Matrix4F ST;
     std::vector<Light> lights;
     Eigen::Vector3F ambient;
     Camera camera;
 };
+
+} // namespace swr

@@ -4,10 +4,11 @@
 #include <vector>
 
 #include <Eigen/Core>
-
 #include <nlohmann/json.hpp>
 
-#include <renderer/attributes.hpp>
+#include "attributes.hpp"
+
+namespace swr {
 
 struct Scene {
     Eigen::Vector4F background_color;
@@ -21,11 +22,14 @@ struct Scene {
     Scene(const nlohmann::json&);
 };
 
-/// Render a mesh with vertices V, edges E, faces F, and vertex colors C
+/// Render a mesh with vertices V, edges E, faces F, and vertex material
+/// indicies C
 bool render_mesh(
     const Scene& scene,
     const Eigen::MatrixXd& V,
     const Eigen::MatrixXi& E,
     const Eigen::MatrixXi& F,
-    const Eigen::MatrixXd& C,
+    const Eigen::VectorXi& C,
     const std::string& filename);
+
+} // namespace swr

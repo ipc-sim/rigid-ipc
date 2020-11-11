@@ -1,13 +1,11 @@
 {
     "background_color": [0.3, 0.3, 0.5, 1.0],
     "ambient_light": [1.0, 1.0, 1.0],
-    "free_body_color": [0.90588235, 0.29803922, 0.23529412],
-    "fixed_body_color": [0.70196078, 0.70196078, 0.70196078],
-    "line_thickness": 0.5,
+    "line_thickness": 1,
     "fps": -1,
     "camera": {
         "is_perspective": true,
-        "position": [0, 0, 10],
+        "position": [0, 0, 3],
         "gaze": [0, 0, -1],
         "view_up": [0, 1, 0],
         "field_of_view": 45,
@@ -16,32 +14,38 @@
         "far_clip": 100,
         "resolution": [1920, 1080]
     },
-    "materials": [{
-        "ambient": [0.0, 0.5, 0.0],
-        "diffuse": [0.5, 0.5, 0.5],
-        "specular": [0.2, 0.2, 0.2],
-        "shininess": 256.0
-    }],
+    "fixed_body_material": {
+        "ambient": [0.90588235, 0.29803922, 0.23529412],
+        "diffuse": [0, 0, 0],
+        "specular": [0, 0, 0],
+        "shininess": 0
+    },
+    "free_body_material": {
+        "ambient": [0.70196078, 0.70196078, 0.70196078],
+        "diffuse": [0, 0, 0],
+        "specular": [0, 0, 0],
+        "shininess": 0
+    },
     "lights": [{
         "position": [8, 8, 0],
-        "color": [16, 16, 16]
+        "color": [1, 1, 1]
     }, {
         "position": [6, -8, 0],
-        "color": [16, 16, 16]
+        "color": [1, 1, 1]
     }, {
         "position": [4, 8, 0],
-        "color": [16, 16, 16]
+        "color": [1, 1, 1]
     }, {
         "position": [2, -8, 0],
-        "color": [16, 16, 16]
+        "color": [1, 1, 1]
     }, {
         "position": [0, 8, 0],
-        "color": [16, 16, 16]
+        "color": [1, 1, 1]
     }, {
         "position": [-2, -8, 0],
-        "color": [16, 16, 16]
+        "color": [1, 1, 1]
     }, {
         "position": [-4, 8, 0],
-        "color": [16, 16, 16]
+        "color": [1, 1, 1]
     }]
 }
