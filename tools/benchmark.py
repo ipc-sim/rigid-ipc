@@ -164,7 +164,7 @@ def main():
         subprocess.run([str(args.sim_exe.parent / "render_simulation"),
                         sim_output_dir / "sim.json",
                         "-o", sim_output_dir / f"{scene.stem}.mp4",
-                        "--loglevel", "2"])
+                        "--loglevel", "3"])
         if remote_storage is not None:
             remote_path = f"{remote_storage}{pathlib.Path(scene_name).parent}"
             subprocess.run(

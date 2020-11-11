@@ -189,7 +189,7 @@ bool render_mesh(
         for (int i = 0; i < E.rows(); i++) {
             for (int j = 0; j < E.cols(); j++) {
                 VertexAttributes va(V.row(E(i, j)).cast<Float>());
-                va.material = scene.materials[C[F(i, j)]];
+                va.material = scene.materials[C[E(i, j)]];
                 va.normal.setZero();
                 edge_vertex_attributes.push_back(va);
             }

@@ -149,8 +149,9 @@ int main(int argc, char* argv[])
         fps = int(1 / sim["args"]["timestep"].get<double>());
     }
     std::string ffmpeg_cmd = fmt::format(
-        "ffmpeg -y -r {:d} -i {}/frame%06d.png -vcodec libx264 -crf 0 {}", fps,
-        frames_dir.string(), args.output_path.string());
+        "ffmpeg -hide_banner -loglevel warning -y -r {:d} -i {}/frame%06d.png "
+        "-vcodec libx264 -crf 0 {}",
+        fps, frames_dir.string(), args.output_path.string());
     spdlog::info("Combining frames using '{}'", ffmpeg_cmd);
     std::system(ffmpeg_cmd.c_str());
     ///////////////////////////////////////////////////////////////////////////
