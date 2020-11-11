@@ -55,9 +55,10 @@ namespace opt {
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1) const
     {
-        PROFILE_POINT("has_active_collisions");
+        PROFILE_POINT("DistanceBarrierConstraint::has_active_collisions");
         NAMED_PROFILE_POINT(
-            "has_active_collisions__narrow_phase", NARROW_PHASE);
+            "DistanceBarrierConstraint::has_active_collisions_narrow_phase",
+            NARROW_PHASE);
 
         PROFILE_START();
         // This function will profile itself
@@ -114,7 +115,7 @@ namespace opt {
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1) const
     {
-        PROFILE_POINT("compute_earliest_toi");
+        PROFILE_POINT("DistanceBarrierConstraint::compute_earliest_toi");
         PROFILE_START();
         // This function will profile itself
         ipc::Candidates candidates;
@@ -136,13 +137,14 @@ namespace opt {
         const physics::Poses<double>& poses_t1,
         const ipc::Candidates& candidates) const
     {
-        NAMED_PROFILE_POINT("compute_earliest_toi__narrow_phase", NARROW_PHASE);
         NAMED_PROFILE_POINT(
-            "compute_earliest_toi__edge_vertex_narrow_phase", EV_NARROW_PHASE);
+            "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase",
+            NARROW_PHASE);
         NAMED_PROFILE_POINT(
-            "compute_earliest_toi__face_vertex_narrow_phase", FV_NARROW_PHASE);
+            "compute_edge_vertex_earliest_toi", EV_NARROW_PHASE);
         NAMED_PROFILE_POINT(
-            "compute_earliest_toi__edge_edge_narrow_phase", EE_NARROW_PHASE);
+            "compute_face_vertex_earliest_toi", FV_NARROW_PHASE);
+        NAMED_PROFILE_POINT("compute_edge_edge_earliest_toi", EE_NARROW_PHASE);
 
         int collision_count = 0;
         double earliest_toi = 1;
@@ -237,7 +239,7 @@ namespace opt {
             return;
         }
 
-        PROFILE_POINT("distance_barrier__construct_constraint_set");
+        PROFILE_POINT("DistanceBarrierConstraint::construct_constraint_set");
         PROFILE_START();
 
         Eigen::MatrixXd V = bodies.world_vertices(poses);
@@ -254,7 +256,7 @@ namespace opt {
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses) const
     {
-        PROFILE_POINT("distance_barrier__compute_minimum_distance");
+        PROFILE_POINT("DistanceBarrierConstraint::compute_minimum_distance");
         PROFILE_START();
 
         ipc::Constraints constraint_set;

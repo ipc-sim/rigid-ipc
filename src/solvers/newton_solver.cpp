@@ -309,7 +309,7 @@ namespace opt {
         const Eigen::VectorXd& grad_fx,
         double& step_length)
     {
-        NAMED_PROFILE_POINT("line_search", LINE_SEARCH);
+        NAMED_PROFILE_POINT("NewtonSolver::line_search", LINE_SEARCH);
         PROFILE_START(LINE_SEARCH);
 
         bool success = false;
@@ -459,17 +459,17 @@ namespace opt {
         Eigen::VectorXd& direction,
         bool make_psd)
     {
-        NAMED_PROFILE_POINT("newton_linear_solve", SOLVE);
+        NAMED_PROFILE_POINT("NewtonSolver::compute_direction", SOLVE);
         PROFILE_START(SOLVE);
 
         // Check if the hessian is positive semi-definite.
-        Eigen::LLT<Eigen::MatrixXd> LLT_H((Eigen::MatrixXd(hessian)));
-        if (LLT_H.info() == Eigen::NumericalIssue) {
-            spdlog::warn(
-                "solver={} iter={:d} failure=\"possibly non semi-positive "
-                "definite Hessian\"",
-                name(), iteration_number);
-        }
+        // Eigen::LLT<Eigen::MatrixXd> LLT_H((Eigen::MatrixXd(hessian)));
+        // if (LLT_H.info() == Eigen::NumericalIssue) {
+        //     spdlog::warn(
+        //         "solver={} iter={:d} failure=\"possibly non semi-positive "
+        //         "definite Hessian\"",
+        //         name(), iteration_number);
+        // }
 
         // Solve for the Newton direction (Δx = -H⁻¹∇f).
         // Return true if the solve was successful.

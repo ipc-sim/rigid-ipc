@@ -93,11 +93,14 @@ def create_parser():
         "--sim-exe", metavar=f"path/to/{sim_exe_name()}", type=pathlib.Path,
         default=None, help="path to simulation executable")
     parser.add_argument(
-        "-i,--input", metavar="path/to/input", type=pathlib.Path, dest="input",
-        default=None, help="path to input json(s)", nargs="+")
+        "-i", "--input", metavar="path/to/input", type=pathlib.Path,
+        dest="input", default=None, help="path to input json(s)", nargs="+")
     parser.add_argument(
-        "-o,--output", metavar="path/to/output.csv", type=pathlib.Path,
+        "-o", "--output", metavar="path/to/output.csv", type=pathlib.Path,
         dest="output", default=None, help="path to output CSV")
+    parser.add_argument(
+        "--no-video", action="store_true", default=False,
+        help="do not render a video of the sim")
     return parser
 
 
@@ -160,20 +163,24 @@ def main():
                 log_file.write(line)
             sim.wait()
 
-        print("Rendering simulation")
-        subprocess.run([str(args.sim_exe.parent / "render_simulation"),
-                        sim_output_dir / "sim.json",
-                        "-o", sim_output_dir / f"{scene.stem}.mp4",
-                        "--loglevel", "3"])
-        if remote_storage is not None:
-            remote_path = f"{remote_storage}{pathlib.Path(scene_name).parent}"
-            subprocess.run(
-                ["rclone", "copy", sim_output_dir / f"{scene.stem}.mp4",
-                 remote_path])
-            video_url = subprocess.run(
-                ["rclone", "link", f"{remote_path}/{scene.stem}.mp4"],
-                capture_output=True, text=True).stdout.strip()
-            print(f"Uploaded video to {video_url}")
+        if(args.no_video):
+            video_url = "N/a"
+        else:
+            print("Rendering simulation")
+            subprocess.run([str(args.sim_exe.parent / "render_simulation"),
+                            sim_output_dir / "sim.json",
+                            "-o", sim_output_dir / f"{scene.stem}.mp4",
+                            "--loglevel", "3"])
+            if remote_storage is not None:
+                remote_path = (
+                    f"{remote_storage}{pathlib.Path(scene_name).parent}")
+                subprocess.run(
+                    ["rclone", "copy", sim_output_dir / f"{scene.stem}.mp4",
+                     remote_path])
+                video_url = subprocess.run(
+                    ["rclone", "link", f"{remote_path}/{scene.stem}.mp4"],
+                    capture_output=True, text=True).stdout.strip()
+                print(f"Uploaded video to {video_url}")
 
         with open(sim_output_dir / "sim.json") as sim_output:
             sim_json = json.load(sim_output)

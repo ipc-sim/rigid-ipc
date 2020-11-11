@@ -133,18 +133,7 @@ namespace physics {
     template <typename T>
     Eigen::MatrixXX3<T> Pose<T>::construct_rotation_matrix() const
     {
-        if (dim() == 2) {
-            return Eigen::Rotation2D<T>(rotation(0)).toRotationMatrix();
-        } else {
-            T sinc_angle = sinc_normx(rotation);
-            T sinc_half_angle = sinc_normx((rotation / T(2.0)).eval());
-            Eigen::Matrix3<T> K = Eigen::Hat(rotation);
-            Eigen::Matrix3<T> K2 = K * K;
-            Eigen::Matrix3<T> R =
-                sinc_angle * K + 0.5 * sinc_half_angle * sinc_half_angle * K2;
-            R.diagonal().array() += T(1.0);
-            return R;
-        }
+        return ccd::construct_rotation_matrix(rotation);
     }
 
     template <typename T>
@@ -208,6 +197,24 @@ namespace physics {
     }
 
 } // namespace physics
+
+template <typename T>
+Eigen::MatrixXX3<T> construct_rotation_matrix(const Eigen::VectorX3<T>& r)
+{
+    if (r.size() == 1) {
+        return Eigen::Rotation2D<T>(r(0)).toRotationMatrix();
+    } else {
+        assert(r.size() == 3);
+        T sinc_angle = sinc_normx(r);
+        T sinc_half_angle = sinc_normx((r / T(2.0)).eval());
+        Eigen::Matrix3<T> K = Eigen::Hat(r);
+        Eigen::Matrix3<T> K2 = K * K;
+        Eigen::Matrix3<T> R =
+            sinc_angle * K + 0.5 * sinc_half_angle * sinc_half_angle * K2;
+        R.diagonal().array() += T(1.0);
+        return R;
+    }
+}
 
 template <typename T> Eigen::Matrix3<T> rotate_to_z(Eigen::Vector3<T> n)
 {

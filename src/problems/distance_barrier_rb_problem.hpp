@@ -142,7 +142,7 @@ namespace opt {
         Eigen::MatrixXd rigid_dof_to_vertices(
             const Eigen::VectorXd& x,
             Eigen::MatrixXd& jac,
-            std::vector<Eigen::MatrixXd>& hess,
+            std::vector<Eigen::SparseMatrix<double>>& hess,
             bool compute_jac,
             bool compute_hess);
 

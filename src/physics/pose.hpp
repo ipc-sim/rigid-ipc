@@ -109,6 +109,9 @@ namespace physics {
 
 } // namespace physics
 
+template <typename T>
+Eigen::MatrixXX3<T> construct_rotation_matrix(const Eigen::VectorX3<T>& r);
+
 template <typename T> Eigen::Matrix3<T> rotate_to_z(Eigen::Vector3<T> n);
 template <typename T> Eigen::Matrix3<T> rotate_around_z(const T& theta);
 template <typename T>
