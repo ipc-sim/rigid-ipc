@@ -372,8 +372,7 @@ namespace opt {
 
         // ½mqᵀq - mqᵀ(qᵗ + h(q̇ᵗ + h(g + f/m + ½∇B(qᵗ)/m)))
         energy += 0.5 * body.mass * q.dot(q)
-            - body.mass
-                * q.dot((q_t0 + h * (qdot_t0 + h * (qdotdot_t0))).cast<T>());
+            - body.mass * q.dot((q_t0 + h * (qdot_t0 + h * (qdotdot_t0))));
         // }
 
         // Rotational energy
@@ -411,10 +410,7 @@ namespace opt {
             // TODO: Add torque
             auto QJ = Q * J;
             energy += 0.5 * (QJ * Q.transpose()).trace()
-                - (QJ
-                   * (Q_t0 + h * (Qdot_t0 + 0.5 * h * A_t0))
-                         .transpose()
-                         .cast<T>())
+                - (QJ * (Q_t0 + h * (Qdot_t0 + 0.5 * h * A_t0)).transpose())
                       .trace();
         } else {
             assert(pose.rotation.size() == 1);
@@ -674,8 +670,7 @@ namespace opt {
             if (compute_hess) {
                 auto R = construct_rotation_matrix(
                     Eigen::VectorX3<Diff::DDouble2>(Diff::d2vars(0, r)));
-                Diff::D2MatrixXd V_diff =
-                    (rb.vertices.cast<Diff::DDouble2>() * R.transpose());
+                Diff::D2MatrixXd V_diff = rb.vertices * R.transpose();
 
                 for (int i = 0; i < V_diff.rows(); i++) {
                     for (int j = 0; j < V_diff.cols(); j++) {
@@ -709,8 +704,7 @@ namespace opt {
             } else if (compute_jac) {
                 auto R = construct_rotation_matrix(
                     Eigen::VectorX3<Diff::DDouble1>(Diff::d1vars(0, r)));
-                Diff::D1MatrixXd V_diff =
-                    (rb.vertices.cast<Diff::DDouble1>() * R.transpose());
+                Diff::D1MatrixXd V_diff = rb.vertices * R.transpose();
 
                 for (int i = 0; i < V_diff.rows(); i++) {
                     for (int j = 0; j < V_diff.cols(); j++) {

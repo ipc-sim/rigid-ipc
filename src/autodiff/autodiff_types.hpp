@@ -102,4 +102,35 @@ public:
 };
 
 } // namespace ccd
+
+namespace Eigen {
+
+template <typename Scalar, typename Gradient, typename BinOp>
+struct ScalarBinaryOpTraits<DScalar1<Scalar, Gradient>, Scalar, BinOp> {
+    typedef DScalar1<Scalar, Gradient> ReturnType;
+};
+
+template <typename Scalar, typename Gradient, typename BinOp>
+struct ScalarBinaryOpTraits<Scalar, DScalar1<Scalar, Gradient>, BinOp> {
+    typedef DScalar1<Scalar, Gradient> ReturnType;
+};
+
+template <typename Scalar, typename Gradient, typename Hessian, typename BinOp>
+struct ScalarBinaryOpTraits<
+    DScalar2<Scalar, Gradient, Hessian>,
+    Scalar,
+    BinOp> {
+    typedef DScalar2<Scalar, Gradient, Hessian> ReturnType;
+};
+
+template <typename Scalar, typename Gradient, typename Hessian, typename BinOp>
+struct ScalarBinaryOpTraits<
+    Scalar,
+    DScalar2<Scalar, Gradient, Hessian>,
+    BinOp> {
+    typedef DScalar2<Scalar, Gradient, Hessian> ReturnType;
+};
+
+} // namespace Eigen
+
 #endif

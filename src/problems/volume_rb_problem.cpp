@@ -121,10 +121,10 @@ namespace opt {
 
             // displacements
             Diff::D1Vector2d u_i, u_j, u_k, u_l;
-            u_i = v1i - v_i.cast<Diff::DDouble1>();
-            u_j = v1j - v_j.cast<Diff::DDouble1>();
-            u_k = v1k - v_k.cast<Diff::DDouble1>();
-            u_l = v1l - v_l.cast<Diff::DDouble1>();
+            u_i = v1i - v_i;
+            u_j = v1j - v_j;
+            u_k = v1k - v_k;
+            u_l = v1l - v_l;
 
             // impacting vertice
             Eigen::Vector2d v_c;

@@ -119,7 +119,6 @@ TEST_CASE("Interval rotation rounding", "[ccd][interval][matrix]")
     Interval tmp = 0.5 * interval;
 
     Eigen::MatrixXX3<Interval> RT = R.transpose();
-    Eigen::Matrix<Interval, 4, 2> Vi = V.cast<Interval>();
     // Eigen::Matrix<Interval, 4, 2> RV = Vi * RT;
     Eigen::Matrix<Interval, 4, 2> RV;
     for (int i = 0; i < V.rows(); i++) {

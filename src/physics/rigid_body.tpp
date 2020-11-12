@@ -12,7 +12,7 @@ namespace physics {
     Eigen::MatrixX<T> RigidBody::world_vertices(
         const Eigen::MatrixXX3<T>& R, const Eigen::VectorX3<T>& p) const
     {
-        return (vertices.cast<T>() * R.transpose()).rowwise() + p.transpose();
+        return (vertices * R.transpose()).rowwise() + p.transpose();
     }
 
     template <typename T>
@@ -22,8 +22,7 @@ namespace physics {
         const int vertex_idx) const
     {
         // compute X[i] = R(θ) * rᵢ + X
-        return (vertices.row(vertex_idx).cast<T>() * R.transpose())
-            + p.transpose();
+        return (vertices.row(vertex_idx) * R.transpose()) + p.transpose();
     }
 
 } // namespace physics

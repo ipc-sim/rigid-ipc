@@ -108,6 +108,16 @@ typedef Matrix3<ccd::Interval> Matrix3I;
 typedef MatrixXX3<ccd::Interval> MatrixXX3I;
 typedef MatrixX<ccd::Interval> MatrixXI;
 
+template <typename BinOp>
+struct ScalarBinaryOpTraits<ccd::Interval, double, BinOp> {
+    typedef ccd::Interval ReturnType;
+};
+
+template <typename BinOp>
+struct ScalarBinaryOpTraits<double, ccd::Interval, BinOp> {
+    typedef ccd::Interval ReturnType;
+};
+
 #if EIGEN_MAJOR_VERSION >= 3
 namespace internal {
     template <typename X, typename S, typename P>
