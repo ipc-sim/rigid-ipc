@@ -646,9 +646,8 @@ namespace opt {
         int rb_rot_ndof = physics::Pose<double>::dim_to_rot_ndof(dim());
 
         // We will only use auto diff to compute the derivatives of the rotation
-        // matrix. Activate autodiff with the correct number of variables.
+        // matrix.
         typedef AutodiffType<Eigen::Dynamic, /*maxN=*/3> Diff;
-        Diff::activate(rb_rot_ndof);
 
         if (compute_jac) {
             // ∇ V(x): Rᵐ ↦ Rⁿˣᵐ
@@ -661,6 +660,9 @@ namespace opt {
 
         Eigen::MatrixXd V(num_vertices(), dim());
         tbb::parallel_for(size_t(0), num_bodies(), [&](size_t rb_i) {
+            // Activate autodiff with the correct number of variables.
+            Diff::activate(rb_rot_ndof);
+
             const physics::RigidBody& rb = m_assembler.m_rbs[rb_i];
             // Index of ribid bodies first vertex in the global vertices
             long rb_v0_i = m_assembler.m_body_vertex_id[rb_i];
