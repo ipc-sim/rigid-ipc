@@ -10,6 +10,9 @@
     "ipc_solver": {
         "velocity_conv_tol": 1e-3
     },
+    "friction_constraints": {
+        "iterations": -1
+    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "coefficient_friction": 1.0,

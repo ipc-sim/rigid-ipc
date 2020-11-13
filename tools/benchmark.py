@@ -129,7 +129,6 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
-    git_hash = get_git_hash()
     machine_info = get_machine_info()
     base_dir = fixture_dir().resolve()
     remote_storage = get_remote_storage()
@@ -145,6 +144,9 @@ def main():
 
     for scene in args.input:
         print(f"Running {scene}")
+
+        git_hash = get_git_hash()
+
         try:
             scene_name = scene.resolve().relative_to(base_dir)
             scene_name = str(scene_name.parent / scene_name.stem)

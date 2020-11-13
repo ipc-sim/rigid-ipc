@@ -2,7 +2,8 @@
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
     "timestep": 0.01,
-    "max_time": 1.08,
+    "#max_time": 1.08,
+    "max_time": 10,
     "distance_barrier_constraint": {
         "#barrier_type": "ipc",
         "initial_barrier_activation_distance": 1e-4

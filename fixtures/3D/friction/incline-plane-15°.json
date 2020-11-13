@@ -8,8 +8,10 @@
         "initial_barrier_activation_distance": 1e-3
     },
     "ipc_solver": {
-        "#convergence_criteria": "energy",
         "velocity_conv_tol": 1e-3
+    },
+    "friction_constraints": {
+        "iterations": -1
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
