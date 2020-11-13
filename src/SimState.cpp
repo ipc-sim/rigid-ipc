@@ -264,6 +264,10 @@ void SimState::run_simulation(const std::string& fout)
     std::string chkpt_base =
         (fout_path.parent_path() / fout_path.stem()).string();
 
+    if (m_max_simulation_steps <= 0) {
+        m_max_simulation_steps = 1000;
+    }
+
     spdlog::info("Starting simulation {}", scene_file);
     spdlog::info("Running {} iterations", m_max_simulation_steps);
 

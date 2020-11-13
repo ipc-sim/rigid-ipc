@@ -1,7 +1,7 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "timestep": 0.01,
-    "max_time": -1,
+    "max_time": 10,
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, 0, 0],
