@@ -36,13 +36,15 @@ def main():
                 "density": 1.0,
                 "angular_velocity": [0, 200, 0],
                 "torque": [0, 0, 0],
-                "is_dof_fixed": [True, True, True, True, False, True]
+                "is_dof_fixed": [True, True, True, True, False, True],
+                "group_id": 0
             }, {
                 "mesh": "pot.obj",
                 "position": [0, 0.61, 0],
                 "scale": [2.2, 1, 2.2],
                 "is_dof_fixed": True,
-                "density": 0.01
+                "density": 0.01,
+                "group_id": 0
             }]
         }
     }

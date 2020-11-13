@@ -101,6 +101,9 @@ def create_parser():
     parser.add_argument(
         "--no-video", action="store_true", default=False,
         help="do not render a video of the sim")
+    parser.add_argument(
+        "--loglevel", default=3, type=int, choices=range(7),
+        help="set log level 0=trace, 1=debug, 2=info, 3=warn, 4=error, 5=critical, 6=off")
     return parser
 
 
@@ -158,7 +161,7 @@ def main():
         with open(sim_output_dir / "log.txt", 'w') as log_file:
             sim = subprocess.Popen(
                 [str(args.sim_exe), scene.resolve(),
-                 sim_output_dir, "--loglevel", "3"],
+                 sim_output_dir, "--loglevel", str(args.loglevel)],
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             for line in sim.stdout:
                 sys.stdout.write(line)
@@ -172,7 +175,7 @@ def main():
             subprocess.run([str(args.sim_exe.parent / "render_simulation"),
                             sim_output_dir / "sim.json",
                             "-o", sim_output_dir / f"{scene.stem}.mp4",
-                            "--loglevel", "3"])
+                            "--loglevel", str(args.loglevel)])
             if remote_storage is not None:
                 remote_path = (
                     f"{remote_storage}{pathlib.Path(scene_name).parent}")
