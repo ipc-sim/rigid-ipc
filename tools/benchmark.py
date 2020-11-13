@@ -198,9 +198,10 @@ def main():
             broad_ccd = profiler_df.percentage_time.get(
                 "collisions_detection__broad_phase", 0)
             narrow_ccd = profiler_df.percentage_time.get(
-                "compute_earliest_toi__narrow_phase", 0)
+                "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase",
+                0)
             broad_distance = profiler_df.percentage_time.get(
-                "distance_barrier__construct_constraint_set", 0)
+                "DistanceBarrierConstraint::construct_constraint_set", 0)
             # breakpoint()
         else:
             print("Profiling not enabled")
