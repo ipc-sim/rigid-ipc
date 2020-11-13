@@ -88,8 +88,7 @@ def main():
     filename = (
         f"card-house-{num_levels}-levels.json" if num_levels > 1 else "card-tent.json")
     fixture_utils.save_fixture(
-        scene,
-        fixture_utils.get_fixture_dir_path() / "3D" / "friction" / filename)
+        scene, fixture_utils.get_fixture_dir_path() / "3D" / "friction" / "card-house" / filename)
 
 
 if __name__ == "__main__":

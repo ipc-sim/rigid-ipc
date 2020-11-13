@@ -1,4 +1,5 @@
 import sys
+import pathlib
 
 import numpy
 import scipy.integrate
@@ -53,7 +54,7 @@ def large_arch(fc=60, Qb=100, Qt=49, L=30, nsegs=25):
 
     while x0 < L * 0.999:
         # next segment
-        x1 = scipy.optimize.fsolve(eq_arc_len_func, x0)
+        x1 = scipy.optimize.fsolve(eq_arc_len_func, x0)[0]
         y0 = arch(x0)
         y1 = arch(x1)
         # normals
@@ -103,9 +104,27 @@ def large_arch(fc=60, Qb=100, Qt=49, L=30, nsegs=25):
         x0 = x1
         k += 1
 
+    # Flatten the bottom stones
+    m = (p[4, 1] - p[6, 1]) / (p[4, 0] - p[6, 0])
+    p[[4, 5], 1] = p[0, 1]
+    p[[4, 5], 0] = (p[4, 1] - p[6, 1]) / m + p[6, 0]
+
+    m = (p[-2, 1] - p[-4, 1]) / (p[-2, 0] - p[-4, 0])
+    p[[-2, -1], 1] = p[-5, 1]
+    p[[-2, -1], 0] = (p[-2, 1] - p[-4, 1]) / m + p[-4, 0]
+
+    # Shift entire arch so the base is at y=0.1
+    min_y = min(p[:, 1])
+    p[:, 1] += 0.1 - min_y
+
+    dir = (pathlib.Path(__file__).resolve().parents[2] / "meshes" / "arch" /
+           f"num_stones={nsegs:d}")
+    dir.mkdir(parents=True, exist_ok=True)
+    # print(f"Saving meshes to {dir}")
+
     # Write to obj files, one for each segment...
     for i in range(nsegs):
-        filename = f"stone-{i+1:02d}.obj"
+        filename = dir / f"stone-{i+1:02d}.obj"
         with open(filename, 'w') as f:
             # vertices
             for k in range(8):
@@ -128,6 +147,7 @@ def large_arch(fc=60, Qb=100, Qt=49, L=30, nsegs=25):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
+        assert(int(sys.argv[1]) % 2)
         large_arch(nsegs=int(sys.argv[1]))
     else:
         large_arch()
