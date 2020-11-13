@@ -232,10 +232,18 @@ namespace opt {
         const physics::Poses<double>& poses,
         ipc::Constraints& constraint_set) const
     {
+        static physics::Poses<double> cached_poses;
+        static ipc::Constraints cached_constraint_set;
+
         // TODO: Update brute force version
         assert(detection_method == DetectionMethod::HASH_GRID);
 
         if (bodies.num_bodies() <= 1) {
+            return;
+        }
+
+        if (poses == cached_poses) {
+            constraint_set = cached_constraint_set;
             return;
         }
 
@@ -250,6 +258,9 @@ namespace opt {
             /*vertex_group_ids=*/bodies.group_ids());
 
         PROFILE_END();
+
+        cached_poses = poses;
+        cached_constraint_set = constraint_set;
     }
 
     double DistanceBarrierConstraint::compute_minimum_distance(
