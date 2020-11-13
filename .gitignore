@@ -267,3 +267,4 @@ fixtures/**/*.gif
 
 src/ccd/EE-CCD-plan.txt
 benchmark.csv
+tools/blender

@@ -50,6 +50,12 @@ namespace opt {
             params["rigid_body_problem"]["time_stepper"]
                 .get<BodyEnergyIntegrationMethod>();
         RigidBodyProblem::settings(params["rigid_body_problem"]);
+
+        if (friction_iterations == 0) {
+            spdlog::info(
+                "Disabling friction because friction iterations is zero");
+            coefficient_friction = 0; // This disables all friction computation
+        }
     }
 
     nlohmann::json DistanceBarrierRBProblem::settings() const
@@ -92,6 +98,7 @@ namespace opt {
         // Disable barriers if solve_collision == false
         this->m_use_barriers = solve_collisions;
 
+        // Solve constraints updates the constraints and takes the step
         update_constraints();
         opt_result = solve_constraints();
         _has_intersections = take_step(opt_result.x);
@@ -114,12 +121,24 @@ namespace opt {
             x0, collision_constraints, grad_barrier_t0, hess,
             /*compute_grad=*/true, /*compute_hess=*/false);
 
+        update_friction_constraints(collision_constraints, poses_t0);
+
+        PROFILE_END();
+    }
+
+    void DistanceBarrierRBProblem::update_friction_constraints(
+        const ipc::Constraints& collision_constraints,
+        const physics::Poses<double>& poses)
+    {
+        PROFILE_POINT("DistanceBarrierRBProblem::update_friction_constraints");
+        PROFILE_START();
+
         // The fricition constraints are constant through out the entire
         // lagging iteration.
         if (coefficient_friction > 0) {
             // Contact constraints to friction constraints
             friction_constraints.clear();
-            Eigen::MatrixXd V0 = m_assembler.world_vertices(poses_t0);
+            Eigen::MatrixXd V0 = m_assembler.world_vertices(poses);
             ipc::construct_friction_constraint_set(
                 V0, edges(), faces(), collision_constraints,
                 barrier_activation_distance(), barrier_stiffness(),
@@ -127,6 +146,62 @@ namespace opt {
         }
 
         PROFILE_END();
+    }
+
+    opt::OptimizationResults DistanceBarrierRBProblem::solve_constraints()
+    {
+        opt::OptimizationResults opt_result;
+        opt_result.x = starting_point();
+        double momentum_balance, eps_d = 1e-2 * world_bbox_diagonal();
+        double h_sqr = timestep() * timestep();
+        int i = 0;
+        int total_newton_iterations = 0;
+        do {
+            opt_result = solver().solve(opt_result.x);
+            total_newton_iterations += opt_result.num_iterations;
+            if (!opt_result.success) {
+                break;
+            }
+
+            physics::Poses<double> poses = this->dofs_to_poses(opt_result.x);
+
+            ipc::Constraints collision_constraints;
+            m_constraint.construct_constraint_set(
+                m_assembler, poses, collision_constraints);
+            update_friction_constraints(collision_constraints, poses);
+
+            Eigen::VectorXd grad_Ex, grad_Bx, grad_Dx;
+            compute_energy_term(opt_result.x, grad_Ex);
+            compute_barrier_term(opt_result.x, collision_constraints, grad_Bx);
+            compute_friction_term(opt_result.x, grad_Dx);
+
+            Eigen::VectorXd tmp =
+                grad_Ex + barrier_stiffness() * grad_Bx + h_sqr * grad_Dx;
+            tmp = is_dof_fixed().select(0, tmp);
+
+            momentum_balance = tmp.norm();
+
+            i++;
+
+            spdlog::info(
+                "friction_solve lagging_iteration={:d} momentum_balance={:g}",
+                i, momentum_balance);
+        } while ((friction_iterations < 0 || i < friction_iterations)
+                 && momentum_balance > eps_d);
+
+        if (opt_result.success) {
+            spdlog::info(
+                "Finished friction solve after {:d} lagging iteration(s) and a "
+                "momentum balance error of {:g}",
+                i, momentum_balance);
+        } else {
+            spdlog::error(
+                "Ending friction solve early because newton solve {:d} failed!",
+                i);
+        }
+
+        opt_result.num_iterations = total_newton_iterations;
+        return opt_result;
     }
 
     bool DistanceBarrierRBProblem::take_step(const Eigen::VectorXd& sigma)

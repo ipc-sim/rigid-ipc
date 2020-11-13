@@ -1,0 +1,4031 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.005,
+    "max_time": 5,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 0.01
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "coefficient_friction": 0,
+        "gravity": [0, -9.8, 0],
+        "time_stepper": "dmv",
+        "rigid_bodies": [{
+            "mesh": "plane.obj",
+            "position": [0, 0, 0],
+            "scale": [0.075, 1, 0.42],
+            "rotation": [0, 0, 90],
+            "density": 1.0,
+            "angular_velocity": [0, 200, 0],
+            "torque": [0, 0, 0],
+            "is_dof_fixed": [true, true, true, true, false, true]
+        }, {
+            "mesh": "pot.obj",
+            "position": [0, 0.61, 0],
+            "scale": [2.2, 1, 2.2],
+            "is_dof_fixed": true,
+            "density": 0.01
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 1.0, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 1.0, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 1.0, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 1.0, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 1.0, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 1.51, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 1.51, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 1.51, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 1.51, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 1.51, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 2.02, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 2.02, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 2.02, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 2.02, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 2.02, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 2.5300000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 2.5300000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 2.5300000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 2.5300000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 2.5300000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 3.04, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 3.04, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 3.04, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 3.04, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 3.04, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 3.55, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 3.55, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 3.55, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 3.55, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 3.55, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 4.0600000000000005, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 4.0600000000000005, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 4.0600000000000005, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 4.0600000000000005, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 4.0600000000000005, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 4.57, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 4.57, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 4.57, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 4.57, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 4.57, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 5.08, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 5.08, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 5.08, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 5.08, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 5.08, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 5.59, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 5.59, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 5.59, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 5.59, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 5.59, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 6.1, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 6.1, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 6.1, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 6.1, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 6.1, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 6.61, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 6.61, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 6.61, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 6.61, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 6.61, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 7.12, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 7.12, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 7.12, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 7.12, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 7.12, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 7.63, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 7.63, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 7.63, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 7.63, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 7.63, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 8.14, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 8.14, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 8.14, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 8.14, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 8.14, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 8.65, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 8.65, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 8.65, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 8.65, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 8.65, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 9.16, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 9.16, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 9.16, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 9.16, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 9.16, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 9.67, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 9.67, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 9.67, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 9.67, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 9.67, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 10.18, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 10.18, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 10.18, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 10.18, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 10.18, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 10.69, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 10.69, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 10.69, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 10.69, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 10.69, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 11.2, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 11.2, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 11.2, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 11.2, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 11.2, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 11.71, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 11.71, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 11.71, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 11.71, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 11.71, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 12.22, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 12.22, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 12.22, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 12.22, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 12.22, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 12.73, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 12.73, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 12.73, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 12.73, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 12.73, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 13.24, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 13.24, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 13.24, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 13.24, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 13.24, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 13.75, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 13.75, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 13.75, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 13.75, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 13.75, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 14.26, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 14.26, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 14.26, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 14.26, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 14.26, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 14.77, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 14.77, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 14.77, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 14.77, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 14.77, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 15.280000000000001, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 15.280000000000001, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 15.280000000000001, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 15.280000000000001, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 15.280000000000001, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 15.790000000000001, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 15.790000000000001, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 15.790000000000001, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 15.790000000000001, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 15.790000000000001, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 16.3, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 16.3, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 16.3, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 16.3, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 16.3, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 16.810000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 16.810000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 16.810000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 16.810000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 16.810000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 17.32, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 17.32, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 17.32, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 17.32, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 17.32, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 17.830000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 17.830000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 17.830000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 17.830000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 17.830000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 18.34, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 18.34, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 18.34, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 18.34, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 18.34, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 18.85, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 18.85, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 18.85, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 18.85, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 18.85, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 19.36, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 19.36, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 19.36, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 19.36, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 19.36, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 19.87, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 19.87, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 19.87, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 19.87, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 19.87, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 20.38, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 20.38, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 20.38, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 20.38, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 20.38, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 20.89, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 20.89, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 20.89, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 20.89, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-1.5, 20.89, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 1.0, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 1.0, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 1.0, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 1.0, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 1.0, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 1.51, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 1.51, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 1.51, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 1.51, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 1.51, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 2.02, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 2.02, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 2.02, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 2.02, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 2.02, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 2.5300000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 2.5300000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 2.5300000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 2.5300000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 2.5300000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 3.04, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 3.04, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 3.04, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 3.04, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 3.04, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 3.55, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 3.55, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 3.55, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 3.55, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 3.55, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 4.0600000000000005, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 4.0600000000000005, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 4.0600000000000005, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 4.0600000000000005, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 4.0600000000000005, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 4.57, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 4.57, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 4.57, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 4.57, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 4.57, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 5.08, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 5.08, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 5.08, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 5.08, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 5.08, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 5.59, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 5.59, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 5.59, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 5.59, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 5.59, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 6.1, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 6.1, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 6.1, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 6.1, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 6.1, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 6.61, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 6.61, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 6.61, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 6.61, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 6.61, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 7.12, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 7.12, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 7.12, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 7.12, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 7.12, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 7.63, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 7.63, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 7.63, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 7.63, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 7.63, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 8.14, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 8.14, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 8.14, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 8.14, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 8.14, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 8.65, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 8.65, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 8.65, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 8.65, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 8.65, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 9.16, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 9.16, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 9.16, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 9.16, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 9.16, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 9.67, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 9.67, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 9.67, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 9.67, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 9.67, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 10.18, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 10.18, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 10.18, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 10.18, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 10.18, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 10.69, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 10.69, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 10.69, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 10.69, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 10.69, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 11.2, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 11.2, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 11.2, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 11.2, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 11.2, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 11.71, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 11.71, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 11.71, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 11.71, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 11.71, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 12.22, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 12.22, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 12.22, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 12.22, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 12.22, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 12.73, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 12.73, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 12.73, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 12.73, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 12.73, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 13.24, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 13.24, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 13.24, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 13.24, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 13.24, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 13.75, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 13.75, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 13.75, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 13.75, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 13.75, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 14.26, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 14.26, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 14.26, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 14.26, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 14.26, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 14.77, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 14.77, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 14.77, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 14.77, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 14.77, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 15.280000000000001, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 15.280000000000001, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 15.280000000000001, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 15.280000000000001, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 15.280000000000001, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 15.790000000000001, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 15.790000000000001, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 15.790000000000001, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 15.790000000000001, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 15.790000000000001, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 16.3, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 16.3, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 16.3, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 16.3, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 16.3, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 16.810000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 16.810000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 16.810000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 16.810000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 16.810000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 17.32, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 17.32, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 17.32, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 17.32, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 17.32, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 17.830000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 17.830000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 17.830000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 17.830000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 17.830000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 18.34, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 18.34, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 18.34, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 18.34, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 18.34, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 18.85, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 18.85, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 18.85, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 18.85, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 18.85, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 19.36, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 19.36, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 19.36, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 19.36, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 19.36, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 19.87, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 19.87, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 19.87, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 19.87, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 19.87, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 20.38, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 20.38, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 20.38, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 20.38, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 20.38, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 20.89, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 20.89, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 20.89, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 20.89, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [-0.75, 20.89, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 1.0, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 1.0, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 1.0, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 1.0, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 1.0, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 1.51, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 1.51, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 1.51, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 1.51, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 1.51, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 2.02, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 2.02, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 2.02, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 2.02, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 2.02, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 2.5300000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 2.5300000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 2.5300000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 2.5300000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 2.5300000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 3.04, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 3.04, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 3.04, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 3.04, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 3.04, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 3.55, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 3.55, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 3.55, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 3.55, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 3.55, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 4.0600000000000005, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 4.0600000000000005, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 4.0600000000000005, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 4.0600000000000005, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 4.0600000000000005, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 4.57, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 4.57, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 4.57, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 4.57, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 4.57, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 5.08, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 5.08, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 5.08, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 5.08, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 5.08, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 5.59, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 5.59, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 5.59, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 5.59, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 5.59, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 6.1, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 6.1, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 6.1, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 6.1, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 6.1, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 6.61, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 6.61, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 6.61, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 6.61, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 6.61, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 7.12, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 7.12, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 7.12, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 7.12, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 7.12, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 7.63, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 7.63, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 7.63, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 7.63, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 7.63, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 8.14, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 8.14, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 8.14, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 8.14, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 8.14, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 8.65, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 8.65, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 8.65, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 8.65, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 8.65, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 9.16, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 9.16, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 9.16, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 9.16, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 9.16, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 9.67, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 9.67, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 9.67, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 9.67, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 9.67, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 10.18, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 10.18, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 10.18, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 10.18, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 10.18, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 10.69, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 10.69, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 10.69, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 10.69, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 10.69, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 11.2, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 11.2, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 11.2, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 11.2, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 11.2, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 11.71, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 11.71, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 11.71, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 11.71, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 11.71, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 12.22, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 12.22, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 12.22, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 12.22, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 12.22, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 12.73, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 12.73, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 12.73, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 12.73, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 12.73, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 13.24, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 13.24, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 13.24, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 13.24, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 13.24, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 13.75, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 13.75, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 13.75, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 13.75, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 13.75, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 14.26, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 14.26, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 14.26, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 14.26, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 14.26, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 14.77, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 14.77, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 14.77, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 14.77, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 14.77, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 15.280000000000001, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 15.280000000000001, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 15.280000000000001, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 15.280000000000001, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 15.280000000000001, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 15.790000000000001, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 15.790000000000001, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 15.790000000000001, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 15.790000000000001, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 15.790000000000001, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 16.3, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 16.3, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 16.3, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 16.3, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 16.3, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 16.810000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 16.810000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 16.810000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 16.810000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 16.810000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 17.32, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 17.32, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 17.32, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 17.32, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 17.32, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 17.830000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 17.830000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 17.830000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 17.830000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 17.830000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 18.34, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 18.34, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 18.34, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 18.34, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 18.34, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 18.85, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 18.85, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 18.85, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 18.85, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 18.85, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 19.36, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 19.36, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 19.36, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 19.36, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 19.36, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 19.87, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 19.87, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 19.87, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 19.87, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 19.87, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 20.38, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 20.38, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 20.38, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 20.38, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 20.38, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 20.89, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 20.89, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 20.89, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 20.89, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.0, 20.89, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 1.0, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 1.0, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 1.0, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 1.0, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 1.0, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 1.51, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 1.51, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 1.51, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 1.51, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 1.51, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 2.02, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 2.02, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 2.02, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 2.02, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 2.02, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 2.5300000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 2.5300000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 2.5300000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 2.5300000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 2.5300000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 3.04, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 3.04, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 3.04, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 3.04, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 3.04, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 3.55, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 3.55, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 3.55, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 3.55, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 3.55, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 4.0600000000000005, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 4.0600000000000005, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 4.0600000000000005, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 4.0600000000000005, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 4.0600000000000005, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 4.57, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 4.57, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 4.57, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 4.57, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 4.57, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 5.08, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 5.08, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 5.08, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 5.08, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 5.08, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 5.59, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 5.59, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 5.59, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 5.59, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 5.59, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 6.1, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 6.1, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 6.1, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 6.1, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 6.1, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 6.61, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 6.61, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 6.61, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 6.61, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 6.61, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 7.12, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 7.12, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 7.12, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 7.12, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 7.12, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 7.63, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 7.63, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 7.63, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 7.63, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 7.63, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 8.14, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 8.14, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 8.14, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 8.14, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 8.14, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 8.65, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 8.65, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 8.65, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 8.65, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 8.65, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 9.16, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 9.16, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 9.16, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 9.16, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 9.16, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 9.67, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 9.67, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 9.67, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 9.67, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 9.67, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 10.18, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 10.18, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 10.18, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 10.18, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 10.18, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 10.69, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 10.69, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 10.69, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 10.69, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 10.69, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 11.2, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 11.2, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 11.2, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 11.2, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 11.2, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 11.71, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 11.71, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 11.71, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 11.71, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 11.71, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 12.22, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 12.22, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 12.22, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 12.22, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 12.22, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 12.73, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 12.73, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 12.73, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 12.73, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 12.73, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 13.24, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 13.24, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 13.24, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 13.24, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 13.24, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 13.75, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 13.75, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 13.75, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 13.75, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 13.75, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 14.26, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 14.26, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 14.26, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 14.26, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 14.26, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 14.77, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 14.77, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 14.77, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 14.77, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 14.77, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 15.280000000000001, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 15.280000000000001, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 15.280000000000001, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 15.280000000000001, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 15.280000000000001, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 15.790000000000001, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 15.790000000000001, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 15.790000000000001, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 15.790000000000001, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 15.790000000000001, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 16.3, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 16.3, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 16.3, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 16.3, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 16.3, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 16.810000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 16.810000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 16.810000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 16.810000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 16.810000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 17.32, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 17.32, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 17.32, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 17.32, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 17.32, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 17.830000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 17.830000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 17.830000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 17.830000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 17.830000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 18.34, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 18.34, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 18.34, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 18.34, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 18.34, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 18.85, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 18.85, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 18.85, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 18.85, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 18.85, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 19.36, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 19.36, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 19.36, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 19.36, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 19.36, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 19.87, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 19.87, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 19.87, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 19.87, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 19.87, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 20.38, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 20.38, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 20.38, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 20.38, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 20.38, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 20.89, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 20.89, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 20.89, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 20.89, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [0.75, 20.89, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 1.0, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 1.0, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 1.0, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 1.0, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 1.0, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 1.51, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 1.51, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 1.51, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 1.51, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 1.51, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 2.02, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 2.02, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 2.02, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 2.02, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 2.02, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 2.5300000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 2.5300000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 2.5300000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 2.5300000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 2.5300000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 3.04, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 3.04, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 3.04, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 3.04, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 3.04, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 3.55, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 3.55, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 3.55, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 3.55, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 3.55, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 4.0600000000000005, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 4.0600000000000005, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 4.0600000000000005, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 4.0600000000000005, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 4.0600000000000005, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 4.57, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 4.57, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 4.57, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 4.57, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 4.57, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 5.08, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 5.08, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 5.08, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 5.08, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 5.08, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 5.59, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 5.59, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 5.59, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 5.59, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 5.59, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 6.1, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 6.1, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 6.1, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 6.1, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 6.1, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 6.61, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 6.61, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 6.61, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 6.61, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 6.61, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 7.12, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 7.12, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 7.12, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 7.12, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 7.12, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 7.63, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 7.63, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 7.63, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 7.63, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 7.63, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 8.14, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 8.14, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 8.14, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 8.14, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 8.14, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 8.65, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 8.65, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 8.65, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 8.65, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 8.65, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 9.16, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 9.16, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 9.16, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 9.16, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 9.16, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 9.67, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 9.67, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 9.67, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 9.67, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 9.67, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 10.18, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 10.18, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 10.18, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 10.18, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 10.18, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 10.69, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 10.69, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 10.69, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 10.69, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 10.69, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 11.2, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 11.2, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 11.2, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 11.2, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 11.2, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 11.71, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 11.71, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 11.71, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 11.71, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 11.71, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 12.22, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 12.22, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 12.22, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 12.22, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 12.22, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 12.73, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 12.73, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 12.73, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 12.73, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 12.73, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 13.24, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 13.24, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 13.24, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 13.24, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 13.24, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 13.75, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 13.75, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 13.75, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 13.75, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 13.75, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 14.26, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 14.26, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 14.26, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 14.26, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 14.26, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 14.77, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 14.77, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 14.77, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 14.77, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 14.77, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 15.280000000000001, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 15.280000000000001, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 15.280000000000001, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 15.280000000000001, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 15.280000000000001, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 15.790000000000001, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 15.790000000000001, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 15.790000000000001, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 15.790000000000001, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 15.790000000000001, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 16.3, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 16.3, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 16.3, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 16.3, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 16.3, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 16.810000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 16.810000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 16.810000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 16.810000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 16.810000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 17.32, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 17.32, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 17.32, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 17.32, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 17.32, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 17.830000000000002, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 17.830000000000002, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 17.830000000000002, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 17.830000000000002, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 17.830000000000002, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 18.34, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 18.34, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 18.34, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 18.34, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 18.34, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 18.85, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 18.85, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 18.85, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 18.85, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 18.85, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 19.36, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 19.36, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 19.36, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 19.36, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 19.36, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 19.87, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 19.87, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 19.87, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 19.87, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 19.87, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 20.38, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 20.38, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 20.38, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 20.38, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 20.38, 0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 20.89, -0.9],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 20.89, -0.45],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 20.89, 0.0],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 20.89, 0.45000000000000007],
+            "scale": 0.25
+        }, {
+            "mesh": "suzanne/suzanne.obj",
+            "position": [1.5, 20.89, 0.9],
+            "scale": 0.25
+        }]
+    }
+}

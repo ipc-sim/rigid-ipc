@@ -56,7 +56,11 @@ namespace opt {
             bool& had_collisions,
             bool& has_intersections,
             bool solve_collisions = true) override;
+
         bool take_step(const Eigen::VectorXd& sigma) override;
+
+        /// Use the solver to solve this problem.
+        opt::OptimizationResults solve_constraints() override;
 
         ////////////////////////////////////////////////////////////
         // Optimization Problem
@@ -215,6 +219,11 @@ namespace opt {
         /// Update problem using current status of bodies.
         virtual void update_constraints() override;
 
+        /// Update problem using current status of bodies.
+        void update_friction_constraints(
+            const ipc::Constraints& collision_constraints,
+            const physics::Poses<double>& poses);
+
         template <typename T, typename RigidBodyConstraint>
         T distance_barrier(
             const Eigen::VectorXd& sigma, const RigidBodyConstraint& rbc);
@@ -281,12 +290,34 @@ namespace opt {
         /// Computes the barrier term value, gradient, and hessian from
         /// distance constraints.
         double compute_barrier_term(
-            const Eigen::VectorXd& sigma,
+            const Eigen::VectorXd& x,
             const ipc::Constraints& distance_constraints,
             Eigen::VectorXd& grad,
             Eigen::SparseMatrix<double>& hess,
             bool compute_grad,
             bool compute_hess);
+
+        virtual double compute_barrier_term(
+            const Eigen::VectorXd& x,
+            const ipc::Constraints& distance_constraints) final
+        {
+            Eigen::VectorXd grad;
+            Eigen::SparseMatrix<double> hess;
+            return compute_barrier_term(
+                x, distance_constraints, grad, hess, /*compute_grad=*/false,
+                /*compute_hess=*/false);
+        }
+
+        virtual double compute_barrier_term(
+            const Eigen::VectorXd& x,
+            const ipc::Constraints& distance_constraints,
+            Eigen::VectorXd& grad) final
+        {
+            Eigen::SparseMatrix<double> hess;
+            return compute_barrier_term(
+                x, distance_constraints, grad, hess, /*compute_grad=*/true,
+                /*compute_hess=*/false);
+        }
 
 #ifdef WITH_DERIVATIVE_CHECK
         // The following functions are used exclusivly to check that the

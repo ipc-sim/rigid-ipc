@@ -13,7 +13,7 @@ namespace opt {
     }
 
     OptimizationResults::OptimizationResults(
-        Eigen::MatrixXd x,
+        const Eigen::VectorXd& x,
         double minf,
         bool success,
         bool finished,

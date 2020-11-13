@@ -35,12 +35,12 @@ namespace physics {
         coefficient_friction = params["coefficient_friction"].get<double>();
         if (coefficient_friction < 0 || coefficient_friction > 1) {
             spdlog::warn(
-                "coefficient of friction (μ={:g}) is outside the standard "
+                "Coefficient of friction (μ={:g}) is outside the standard "
                 "[0, 1]",
                 coefficient_friction);
         } else if (coefficient_friction == 0) {
             spdlog::info(
-                "disabling friction because coefficient of friction is zero");
+                "Disabling friction because coefficient of friction is zero");
         }
 
         std::vector<physics::RigidBody> rbs;

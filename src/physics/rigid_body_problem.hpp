@@ -43,11 +43,11 @@ namespace physics {
         /// Update problem using current status of bodies.
         virtual void update_constraints();
         /// Initialize the solver.
-        void init_solve();
+        virtual void init_solve();
         /// Use the solver to solve this problem.
-        opt::OptimizationResults solve_constraints();
+        virtual opt::OptimizationResults solve_constraints();
         /// Take a single solver step.
-        opt::OptimizationResults step_solve();
+        virtual opt::OptimizationResults step_solve();
 
         /// World vertices at the END of step (current).
         Eigen::MatrixXd vertices() const override
