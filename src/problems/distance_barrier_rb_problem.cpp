@@ -153,7 +153,6 @@ namespace opt {
         opt::OptimizationResults opt_result;
         opt_result.x = starting_point();
         double momentum_balance, eps_d = 1e-2 * world_bbox_diagonal();
-        double h_sqr = timestep() * timestep();
         int i = 0;
         int total_newton_iterations = 0;
         do {
@@ -176,7 +175,7 @@ namespace opt {
             compute_friction_term(opt_result.x, grad_Dx);
 
             Eigen::VectorXd tmp =
-                grad_Ex + barrier_stiffness() * grad_Bx + h_sqr * grad_Dx;
+                grad_Ex + barrier_stiffness() * grad_Bx + grad_Dx;
             tmp = is_dof_fixed().select(0, tmp);
 
             momentum_balance = tmp.norm();
