@@ -426,73 +426,76 @@ namespace opt {
         T energy(0.0);
 
         // Linear energy
-        // if (!body.is_dof_fixed.head(pose.pos_ndof()).all()) {
-        Eigen::VectorX3<T> q = pose.position;
-        const Eigen::VectorX3d& q_t0 = body.pose.position;
-        const Eigen::VectorX3d& qdot_t0 = body.velocity.position;
+        if (!body.is_dof_fixed.head(pose.pos_ndof()).all()) {
+            Eigen::VectorX3<T> q = pose.position;
+            const Eigen::VectorX3d& q_t0 = body.pose.position;
+            const Eigen::VectorX3d& qdot_t0 = body.velocity.position;
 
-        Eigen::VectorX3d a_t0;
-        switch (body_energy_integration_method) {
-        case IMPLICIT_EULER:
-            a_t0.setZero(pose.pos_ndof());
-            break;
-        case IMPLICIT_NEWMARK:
-            a_t0 = grad_barrier_t0.head(pose.pos_ndof()) / body.mass;
-            break;
-        }
-        // TODO: Am I missing a ½ in front of all terms?
-        Eigen::VectorX3d qdotdot_t0 =
-            gravity + body.force.position / body.mass + 0.5 * a_t0;
-
-        // ½mqᵀq - mqᵀ(qᵗ + h(q̇ᵗ + h(g + f/m + ½∇B(qᵗ)/m)))
-        energy += 0.5 * body.mass * q.dot(q)
-            - body.mass * q.dot((q_t0 + h * (qdot_t0 + h * (qdotdot_t0))));
-        // }
-
-        // Rotational energy
-        // if (!body.is_dof_fixed.tail(pose.rot_ndof()).all()) {
-        if (dim() == 3) {
-            Eigen::Matrix3<T> Q = pose.construct_rotation_matrix();
-            Eigen::Matrix3d Q_t0 = body.pose.construct_rotation_matrix();
-
-            // Eigen::Matrix3d Qdot_t0 = Q_t0 *
-            // Eigen::Hat(body.velocity.rotation);
-            Eigen::Matrix3d Qdot_t0 = body.Qdot;
-
-            const Eigen::VectorX3d& I = body.moment_of_inertia;
-            Eigen::DiagonalMatrix<T, 3> J(
-                T(0.5 * (-I.x() + I.y() + I.z())),
-                T(0.5 * (I.x() - I.y() + I.z())),
-                T(0.5 * (I.x() + I.y() - I.z())));
-
-            Eigen::Matrix3d A_t0;
+            Eigen::VectorX3d a_t0;
             switch (body_energy_integration_method) {
             case IMPLICIT_EULER:
-                A_t0.setZero();
+                a_t0.setZero(pose.pos_ndof());
                 break;
-            case IMPLICIT_NEWMARK: {
-                Eigen::DiagonalMatrix<double, 3> J_inv(
-                    2 / (-I.x() + I.y() + I.z()), 2 / (I.x() - I.y() + I.z()),
-                    2 / (I.x() + I.y() - I.z()));
-                throw NotImplementedError(
-                    "Implicit Newmark not implemented in 3D!");
+            case IMPLICIT_NEWMARK:
+                a_t0 = 0.5 * grad_barrier_t0.head(pose.pos_ndof()) / body.mass;
                 break;
             }
-            }
+            Eigen::VectorX3d qdotdot_t0 =
+                gravity + body.force.position / body.mass + a_t0;
 
-            // ½tr(QJQᵀ) - tr(QJ(Qᵗ + hQ̇ᵗ + ½h²Aᵗ)ᵀ)
-            // TODO: Add torque
-            auto QJ = Q * J;
-            energy += 0.5 * (QJ * Q.transpose()).trace()
-                - (QJ * (Q_t0 + h * (Qdot_t0 + 0.5 * h * A_t0)).transpose())
-                      .trace();
-        } else {
-            assert(pose.rotation.size() == 1);
-            // ½Iθ² - Iθ(θᵗ + hθ̇ᵗ)
-            throw NotImplementedError(
-                "DistanceBarrierRBProblem energy not implmented for 2D!");
+            // ½mqᵀq - mqᵀ(qᵗ + h(q̇ᵗ + h(g + f/m + ½∇B(qᵗ)/m)))
+            energy += 0.5 * body.mass * q.dot(q)
+                - body.mass * q.dot((q_t0 + h * (qdot_t0 + h * (qdotdot_t0))));
         }
-        // }
+
+        // Rotational energy
+        if (!body.is_dof_fixed.tail(pose.rot_ndof()).all()) {
+            if (dim() == 3) {
+                Eigen::Matrix3<T> Q = pose.construct_rotation_matrix();
+                Eigen::Matrix3d Q_t0 = body.pose.construct_rotation_matrix();
+
+                // Eigen::Matrix3d Qdot_t0 = Q_t0 *
+                // Eigen::Hat(body.velocity.rotation);
+                Eigen::Matrix3d Qdot_t0 = body.Qdot;
+
+                const Eigen::VectorX3d& I = body.moment_of_inertia;
+                Eigen::DiagonalMatrix<double, 3> J(
+                    0.5 * (-I.x() + I.y() + I.z()), //
+                    0.5 * (I.x() - I.y() + I.z()),  //
+                    0.5 * (I.x() + I.y() - I.z()));
+
+                Eigen::Matrix3d A_t0;
+                switch (body_energy_integration_method) {
+                case IMPLICIT_EULER:
+                    A_t0.setZero();
+                    break;
+                case IMPLICIT_NEWMARK: {
+                    Eigen::DiagonalMatrix<double, 3> J_inv(
+                        2 / (-I.x() + I.y() + I.z()),
+                        2 / (I.x() - I.y() + I.z()),
+                        2 / (I.x() + I.y() - I.z()));
+                    // A_t0 = 0.5 * ...;
+                    throw NotImplementedError(
+                        "Implicit Newmark not implemented in 3D!");
+                    break;
+                }
+                }
+
+                // ½tr(QJQᵀ) - tr(Q(J(Qᵗ + hQ̇ᵗ + h²Aᵗ)ᵀ) + h²[τ])
+                Eigen::Matrix3d Tau =
+                    Q_t0.transpose() * Eigen::Hat(body.force.rotation);
+                energy += 0.5 * (Q * J * Q.transpose()).trace();
+                energy -= (Q
+                           * (J * (Q_t0 + h * (Qdot_t0 + h * A_t0)).transpose()
+                              + h * h * Tau))
+                              .trace();
+            } else {
+                assert(pose.rotation.size() == 1);
+                // ½Iθ² - Iθ(θᵗ + hθ̇ᵗ)
+                throw NotImplementedError(
+                    "DistanceBarrierRBProblem energy not implmented for 2D!");
+            }
+        }
 
         return energy;
     }

@@ -14,7 +14,8 @@
             "position": [0, 0, 0],
             "rotation": [90, 0, 0],
             "linear_velocity": [0, 0, 0],
-            "angular_velocity": [0, 0, 360],
+            "angular_velocity": [0, 0, 0],
+            "torque": [0, 0, 100],
             "is_dof_fixed": [true, true, true, true, true, false]
         }, {
             "enabled": true,
