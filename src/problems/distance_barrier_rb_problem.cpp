@@ -55,6 +55,8 @@ namespace opt {
             spdlog::info(
                 "Disabling friction because friction iterations is zero");
             coefficient_friction = 0; // This disables all friction computation
+        } else if (friction_iterations < 0) {
+            friction_iterations = Constants::MAXIMUM_FRICTION_ITERATIONS;
         }
 
         min_distance = compute_min_distance(starting_point());
