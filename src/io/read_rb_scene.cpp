@@ -26,6 +26,7 @@ namespace io {
         const nlohmann::json& scene, std::vector<physics::RigidBody>& rbs)
     {
         using namespace nlohmann;
+        using namespace physics;
         int dim = -1, ndof, angular_dim;
         for (auto& jrb : scene["rigid_bodies"]) {
             // NOTE:
@@ -52,7 +53,8 @@ namespace io {
                 "angular_velocity": [0.0, 0.0, 0.0],
                 "force": [0.0, 0.0, 0.0],
                 "torque": [0.0, 0.0, 0.0],
-                "enabled": true
+                "enabled": true,
+                "type": "dynamic"
             })"_json;
             args.merge_patch(jrb);
 
@@ -96,7 +98,7 @@ namespace io {
             if (dim == -1) {
                 if (vertices.cols() != 0) { // Why would we have an empty body?
                     dim = vertices.cols();
-                    ndof = physics::Pose<double>::dim_to_ndof(dim);
+                    ndof = Pose<double>::dim_to_ndof(dim);
                     angular_dim = dim == 2 ? 1 : 3;
                 }
             } else if (dim != vertices.cols()) {
@@ -182,33 +184,41 @@ namespace io {
                 is_dof_fixed.conservativeResize(ndof);
             }
 
-            double density = args["density"].get<double>();
-            bool is_oriented = args["oriented"].get<bool>();
+            double density = args["density"];
+            bool is_oriented = args["oriented"];
 
-            int group_id = args["group_id"].get<int>();
+            int group_id = args["group_id"];
+
+            RigidBodyType rb_type = args["type"];
 
             auto rb = physics::RigidBody::from_points(
-                vertices, edges, faces,
-                physics::Pose<double>(position, rotation),
-                physics::Pose<double>(linear_velocity, angular_velocity),
-                physics::Pose<double>(force, torque), density, is_dof_fixed,
-                is_oriented, group_id);
+                vertices, edges, faces, Pose<double>(position, rotation),
+                Pose<double>(linear_velocity, angular_velocity),
+                Pose<double>(force, torque), density, is_dof_fixed, is_oriented,
+                group_id, rb_type);
 
             rbs.push_back(rb);
         }
 
         // Adjust the group ids, so the default ones are unique.
         std::vector<int> taken_ids;
-        for (const physics::RigidBody& rb : rbs) {
-            if (rb.group_id >= 0) {
+        for (RigidBody& rb : rbs) {
+            if (rb.type == RigidBodyType::STATIC) {
+                // All static bodies will be given the same group id later
+                rb.group_id = -1;
+            } else if (rb.group_id >= 0) {
                 taken_ids.push_back(rb.group_id);
             }
         }
         tbb::parallel_sort(taken_ids.begin(), taken_ids.end());
         int taken_id_i = 0;
         int id = 0;
-        for (physics::RigidBody& rb : rbs) {
-            if (rb.group_id < 0) {
+        int static_group_id = -1;
+        for (RigidBody& rb : rbs) {
+            if (static_group_id >= 0 && rb.type == RigidBodyType::STATIC) {
+                // All static bodies are in the same group
+                rb.group_id = static_group_id;
+            } else if (rb.group_id < 0) {
                 // Find the next free id
                 while (taken_id_i < taken_ids.size()
                        && id >= taken_ids[taken_id_i]) {
@@ -216,6 +226,10 @@ namespace io {
                         id++;
                     }
                     taken_id_i++;
+                }
+                if (static_group_id < 0 && rb.type == RigidBodyType::STATIC) {
+                    // All static bodies are in the same group
+                    static_group_id = id;
                 }
                 rb.group_id = id++;
             }

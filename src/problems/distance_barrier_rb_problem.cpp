@@ -56,6 +56,13 @@ namespace opt {
                 "Disabling friction because friction iterations is zero");
             coefficient_friction = 0; // This disables all friction computation
         }
+
+        min_distance = compute_min_distance(starting_point());
+        if (min_distance < 0) {
+            spdlog::info("init_min_distance=N/A");
+        } else {
+            spdlog::info("init_min_distance={:.8e}", min_distance);
+        }
     }
 
     nlohmann::json DistanceBarrierRBProblem::settings() const
@@ -481,19 +488,39 @@ namespace opt {
                 }
                 }
 
-                // ½tr(QJQᵀ) - tr(Q(J(Qᵗ + hQ̇ᵗ + h²Aᵗ)ᵀ) + h²[τ])
+                // ½tr(QJQᵀ) - tr(Q(J(Qᵗ + hQ̇ᵗ + h²Aᵗ)ᵀ + h²[τ]))
                 Eigen::Matrix3d Tau =
                     Q_t0.transpose() * Eigen::Hat(body.force.rotation);
                 energy += 0.5 * (Q * J * Q.transpose()).trace();
-                energy -= (Q
-                           * (J * (Q_t0 + h * (Qdot_t0 + h * A_t0)).transpose()
-                              + h * h * Tau))
-                              .trace();
+                energy -=
+                    (Q * J * (Q_t0 + h * (Qdot_t0 + h * A_t0)).transpose())
+                        .trace();
+                energy += h * h * (Q * Tau).trace();
             } else {
-                assert(pose.rotation.size() == 1);
-                // ½Iθ² - Iθ(θᵗ + hθ̇ᵗ)
-                throw NotImplementedError(
-                    "DistanceBarrierRBProblem energy not implmented for 2D!");
+                assert(pose.rot_ndof() == 1);
+                T theta = pose.rotation[0];
+                double theta_t0 = body.pose.rotation[0];
+                double theta_dot_t0 = body.velocity.rotation[0];
+                double tau = body.force.rotation[0];
+
+                double I = body.moment_of_inertia[0];
+
+                double a_t0;
+                switch (body_energy_integration_method) {
+                case IMPLICIT_EULER:
+                    a_t0 = 0;
+                    break;
+                case IMPLICIT_NEWMARK:
+                    a_t0 = 0.5 * grad_barrier_t0.tail(pose.rot_ndof())[0] / I;
+                    break;
+                }
+                // θ̈ = τ/I + ½∇B(θᵗ)/I
+                double theta_ddot_t0 = tau / I + a_t0;
+
+                // ½Iθ² - Iθ(θᵗ + h(θ̇ᵗ + hθ̈ᵗ))
+                double theta_hat =
+                    theta_t0 + h * (theta_dot_t0 + h * theta_ddot_t0);
+                energy += 0.5 * I * theta * theta - I * theta * theta_hat;
             }
         }
 

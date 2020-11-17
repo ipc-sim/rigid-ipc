@@ -25,7 +25,8 @@ namespace physics {
         const double density,
         const Eigen::VectorX6b& is_dof_fixed,
         const bool oriented,
-        const int group_id)
+        const int group_id,
+        const RigidBodyType type)
     {
         int dim = vertices.cols();
         assert(dim == pose.dim());
@@ -53,7 +54,7 @@ namespace physics {
         assert(is_dof_fixed.size() == pose.ndof());
         return RigidBody(
             centered_vertices, edges, faces, adjusted_pose, velocity, force,
-            density, is_dof_fixed, oriented, group_id);
+            density, is_dof_fixed, oriented, group_id, type);
     }
 
     RigidBody::RigidBody(
@@ -66,21 +67,27 @@ namespace physics {
         const double density,
         const Eigen::VectorX6b& is_dof_fixed,
         const bool oriented,
-        const int group_id)
+        const int group_id,
+        const RigidBodyType type)
         : group_id(group_id)
+        , type(type)
         , vertices(vertices)
         , edges(edges)
         , faces(faces)
         , is_dof_fixed(is_dof_fixed)
         , is_oriented(oriented)
         , pose(pose)
-        , pose_prev(pose)
         , velocity(velocity)
-        , velocity_prev(velocity)
         , force(force)
     {
         assert(edges.size() == 0 || edges.cols() == 2);
         assert(faces.size() == 0 || faces.cols() == 3);
+
+        if (type == RigidBodyType::STATIC) {
+            this->is_dof_fixed.setOnes(this->is_dof_fixed.size());
+        } else if (this->is_dof_fixed.array().all()) {
+            this->type = RigidBodyType::STATIC;
+        }
 
         Eigen::VectorX3d center_of_mass;
         Eigen::MatrixXX3d I;
@@ -148,6 +155,11 @@ namespace physics {
         // Zero out the velocity and forces of fixed dof
         this->velocity.zero_dof(is_dof_fixed, R0);
         this->force.zero_dof(is_dof_fixed, R0);
+
+        // Update the previous pose and velocity to reflect the changes made
+        // here
+        this->pose_prev = this->pose;
+        this->velocity_prev = this->velocity;
 
         // Compute and construct some useful constants
         mass_matrix.resize(ndof());

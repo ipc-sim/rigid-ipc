@@ -516,7 +516,8 @@ namespace opt {
             double solve_residual = (hessian * direction + gradient).norm();
             if (solve_residual > 1e-10) {
                 spdlog::warn(
-                    "solver={} iter={:d} failure=\"large residual ({:g})\" "
+                    "solver={} iter={:d} "
+                    "failure=\"linear solve residual ({:g}) > 1e-10\" "
                     "failsafe=\"gradient descent\"",
                     name(), iteration_number, solve_residual);
                 solve_success = false;

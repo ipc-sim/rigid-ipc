@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <nlohmann/json.hpp>
 
 #include <physics/pose.hpp>
 #include <utils/eigen_ext.hpp>
@@ -8,8 +9,15 @@
 namespace ccd {
 namespace physics {
 
-    class RigidBody {
+    enum RigidBodyType { DYNAMIC, KINEMATIC, STATIC };
 
+    // clang-format off
+    NLOHMANN_JSON_SERIALIZE_ENUM(
+        RigidBodyType,
+        { { DYNAMIC, "dynamic" }, { KINEMATIC, "kinematic" }, { STATIC, "static" } });
+    // clang-format on
+
+    class RigidBody {
     protected:
         /**
          * @brief Create rigid body with center of mass at \f$\vec{0}\f$.
@@ -28,7 +36,8 @@ namespace physics {
             const double density,
             const Eigen::VectorX6b& is_dof_fixed,
             const bool oriented,
-            const int group_id);
+            const int group_id,
+            const RigidBodyType type = RigidBodyType::DYNAMIC);
 
     public:
         static RigidBody from_points(
@@ -41,7 +50,8 @@ namespace physics {
             const double density,
             const Eigen::VectorX6b& is_dof_fixed,
             const bool oriented,
-            const int group_id);
+            const int group_id,
+            const RigidBodyType type = RigidBodyType::DYNAMIC);
 
         // Faceless version for convienence (useful for 2D)
         static RigidBody from_points(
@@ -53,7 +63,8 @@ namespace physics {
             const double density,
             const Eigen::VectorX6b& is_dof_fixed,
             const bool oriented,
-            const int group_id)
+            const int group_id,
+            const RigidBodyType type = RigidBodyType::DYNAMIC)
         {
             return from_points(
                 vertices, edges, Eigen::MatrixXi(), pose, velocity, force,
@@ -139,6 +150,9 @@ namespace physics {
 
         /// @brief Group id of this body
         int group_id;
+
+        /// @brief Dyanmic type of rigid body
+        RigidBodyType type;
 
         // --------------------------------------------------------------------
         // Geometry
