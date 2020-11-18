@@ -360,9 +360,8 @@ namespace opt {
         }
 
         PROFILE_MESSAGE(
-            LINE_SEARCH,
-            fmt::format(
-                "success,{},it,{},dir,{:10e}", success, num_it, dir.norm()));
+            LINE_SEARCH, "success,it,dir",
+            fmt::format("{},{:d},{:10e}", success, num_it, dir.norm()));
         PROFILE_END(LINE_SEARCH);
 
         if (!success && iteration_number > 0 && max_step_size >= lower_bound) {

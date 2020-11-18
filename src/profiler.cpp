@@ -12,28 +12,31 @@ namespace profiler {
     // -----------------------------------------------------------------
 
     ProfilerPoint::ProfilerPoint(const std::string name)
-        : name_(name)
+        : m_name(name)
     {
+        clear();
     }
-    void ProfilerPoint::begin(const std::vector<std::string>& stack)
+    void ProfilerPoint::begin() { timer.start(); }
+    void ProfilerPoint::end()
     {
-        stacks_.push_back(stack);
-        timer.start();
+        timer.stop();
+        m_total_time += timer.getElapsedTime();
+        m_num_evaluations++;
     }
-    void ProfilerPoint::end() { times_.push_back(timer.getElapsedTime()); }
+    void ProfilerPoint::message_header(const std::string& header)
+    {
+        m_message_header = header;
+    }
     void ProfilerPoint::message(const std::string& m)
     {
-        messages_.push_back(m);
+        m_messages.push_back(m);
     }
     void ProfilerPoint::clear()
     {
-        times_.clear();
-        stacks_.clear();
-        messages_.clear();
-    }
-    double ProfilerPoint::total_time() const
-    {
-        return std::accumulate(times_.begin(), times_.end(), 0.0);
+        m_num_evaluations = 0;
+        m_total_time = 0;
+        m_message_header = "";
+        m_messages.clear();
     }
 
     // -----------------------------------------------------------------
@@ -79,13 +82,11 @@ namespace profiler {
 
     void Profiler::log(const std::string& fin)
     {
-
         std::string parent_name =
             fmt::format("{}/log-{}", dout, ccd::logger::now());
         if (mkdir(parent_name.c_str(), ACCESSPERMS) == 0) {
             write_summary(parent_name, fin);
             for (auto& p : points) {
-                //                write_point_summary(parent_name, *p);
                 write_point_details(parent_name, *p);
             }
         }
@@ -94,32 +95,6 @@ namespace profiler {
     void
     Profiler::write_summary(const std::string& dout, const std::string& fin)
     {
-        // create more detailed map of function calls:
-        typedef std::tuple<int, double> T;
-        typedef std::pair<std::string, T> M;
-        std::map<std::string, T> num_events_per_path;
-
-        for (auto& point : points) {
-            /// add up the events of each stack
-            auto& time_history = point->time();
-            auto& stack_history = point->stacks();
-            for (size_t i = 0; i < time_history.size(); ++i) {
-                std::string stack = "";
-                std::for_each(
-                    stack_history[i].begin(), stack_history[i].end(),
-                    [&](const std::string& piece) { stack += "->" + piece; });
-
-                auto time = time_history[i];
-                auto el = num_events_per_path.find(stack);
-                if (el != num_events_per_path.end()) { // found
-                    std::get<0>(el->second) += 1;
-                    std::get<1>(el->second) += time;
-                } else {
-                    num_events_per_path.insert(M(stack, T(1, time)));
-                }
-            }
-        }
-
         std::string filename = fmt::format("{}/summary.csv", dout);
 
         std::ofstream myfile;
@@ -141,86 +116,31 @@ namespace profiler {
                 "{},{:10e},{:2f}%,{},{}\n", p->name(), p_time,
                 p_time / total_time * 100, p_num_calls, p_time / p_num_calls);
         }
-        myfile << "\n\n";
-
-        for (auto& it : num_events_per_path) {
-            int p_num_calls = std::get<0>(it.second);
-            double p_time = std::get<1>(it.second);
-
-            myfile << fmt::format(
-                "{},{:10e},{:2f}%,{},{}\n", it.first, p_time,
-                p_time / total_time * 100, p_num_calls, p_time / p_num_calls);
-        }
 
         myfile.close();
-    } // namespace profiler
+    }
 
     void Profiler::write_point_details(
         const std::string& dout, const ProfilerPoint& point)
     {
+        auto& messages = point.messages();
+        if (messages.empty()) {
+            return;
+        }
+
+        std::string point_name = point.name();
+        std::replace(point_name.begin(), point_name.end(), ':', '_');
         std::string filename =
-            fmt::format("{}/{}_details.csv", dout, point.name());
+            fmt::format("{}/{}_details.csv", dout, point_name);
 
         std::ofstream myfile;
-
-        auto& message_history = point.messages();
-        auto& time_history = point.time();
-        auto& stack_history = point.stacks();
-
         myfile.open(filename);
-        myfile << "stack,time (sec),message\n";
 
-        for (size_t i = 0; i < time_history.size(); ++i) {
-            std::string stack = "";
-            std::for_each(
-                stack_history[i].begin(), stack_history[i].end(),
-                [&](const std::string& piece) { stack += "->" + piece; });
-
-            auto time = time_history[i];
-            std::string message =
-                message_history.size() > i ? message_history[i] : "";
-
-            myfile << fmt::format("{},{:10e},{}\n", stack, time, message);
+        myfile << point.message_header() << "\n";
+        for (const std::string& message : messages) {
+            myfile << message << "\n";
         }
 
-        myfile.close();
-    }
-    void Profiler::write_point_summary(
-        const std::string& dout, const ProfilerPoint& point)
-    {
-
-        typedef std::tuple<int, double> T;
-        typedef std::pair<std::string, T> M;
-        std::map<std::string, T> num_events_per_path;
-
-        /// add up the events of each stack
-        auto& time_history = point.time();
-        auto& stack_history = point.stacks();
-        for (size_t i = 0; i < time_history.size(); ++i) {
-            std::string stack = "";
-            std::for_each(
-                stack_history[i].begin(), stack_history[i].end(),
-                [&](const std::string& piece) { stack += "->" + piece; });
-
-            auto time = time_history[i];
-            auto el = num_events_per_path.find(stack);
-            if (el != num_events_per_path.end()) { // found
-                std::get<0>(el->second) += 1;
-                std::get<1>(el->second) += time;
-            } else {
-                num_events_per_path.insert(M(stack, T(1, time)));
-            }
-        }
-        std::string filename =
-            fmt::format("{}/{}_summary.csv", dout, point.name());
-        std::ofstream myfile;
-        myfile.open(filename);
-        myfile << "stack,total_time (sec),num_calls\n";
-        for (auto& it : num_events_per_path) {
-            myfile << fmt::format(
-                "{},{:10e},{}\n", it.first, std::get<1>(it.second),
-                std::get<0>(it.second));
-        }
         myfile.close();
     }
 

@@ -213,10 +213,10 @@ namespace opt {
             ? 100
             : (double(collision_count) / candidates.size() * 100);
         PROFILE_MESSAGE(
-            NARROW_PHASE,
+            NARROW_PHASE, "num_candidates,num_collisions,percentage",
             fmt::format(
-                "num_candidates,{:d},num_collisions,{:d},percentage,{:g}%",
-                candidates.size(), collision_count, percent_correct));
+                "{:d},{:d},{:g}%", candidates.size(), collision_count,
+                percent_correct));
         PROFILE_END(NARROW_PHASE);
 
         spdlog::debug(

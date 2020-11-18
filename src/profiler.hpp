@@ -21,29 +21,27 @@ namespace profiler {
 
         void clear();
 
-        void begin() { timer.start(); }
-        void begin(const std::vector<std::string>& stack);
+        void begin();
         void end();
 
-        void message(const std::string& m);
-        size_t num_evaluations() const { return times_.size(); }
-        double total_time() const;
+        const std::string& name() const { return m_name; }
 
-        const std::string& name() const { return name_; }
-        const std::vector<double>& time() const { return times_; }
-        const std::vector<std::string>& messages() const { return messages_; }
-        const std::vector<std::vector<std::string>>& stacks() const
-        {
-            return stacks_;
-        }
+        size_t num_evaluations() const { return m_num_evaluations; }
+        const double& total_time() const { return m_total_time; }
+
+        void message_header(const std::string& header);
+        const std::string& message_header() const { return m_message_header; }
+        void message(const std::string& m);
+        const std::vector<std::string>& messages() const { return m_messages; }
 
     protected:
-        std::vector<double> times_;
-        std::vector<std::string> messages_;
-        std::vector<std::vector<std::string>> stacks_;
+        std::string m_name;
+        size_t m_num_evaluations;
+        double m_total_time;
+        std::string m_message_header;
+        std::vector<std::string> m_messages;
 
         igl::Timer timer;
-        std::string name_;
     };
 
     class Profiler {
@@ -64,8 +62,6 @@ namespace profiler {
         std::string dout = LOGS_OUTPUT_DIR;
         Profiler() {}
         void write_summary(const std::string& dout, const std::string& fin);
-        void write_point_summary(
-            const std::string& dout, const ProfilerPoint& point);
         void write_point_details(
             const std::string& dout, const ProfilerPoint& point);
 
@@ -85,27 +81,29 @@ namespace profiler {
 } // namespace ccd
 
 #define PROFILE_MAIN_POINT(Description)                                        \
-    static std::shared_ptr<ccd::profiler::ProfilerPoint> _PROFILER_POINT_      \
-        = ccd::profiler::Profiler::instance().create_main_point(Description);
+    static std::shared_ptr<ccd::profiler::ProfilerPoint> _PROFILER_POINT_ =    \
+        ccd::profiler::Profiler::instance().create_main_point(Description);
 
 #define NAMED_PROFILE_POINT(Description, Name)                                 \
     static std::shared_ptr<ccd::profiler::ProfilerPoint>                       \
-        _PROFILER_POINT_##Name                                                 \
-        = ccd::profiler::Profiler::instance().create_point(Description);
+        _PROFILER_POINT_##Name =                                               \
+            ccd::profiler::Profiler::instance().create_point(Description);
 
 #define PROFILE_POINT(Description)                                             \
-    static std::shared_ptr<ccd::profiler::ProfilerPoint> _PROFILER_POINT_      \
-        = ccd::profiler::Profiler::instance().create_point(Description);
+    static std::shared_ptr<ccd::profiler::ProfilerPoint> _PROFILER_POINT_ =    \
+        ccd::profiler::Profiler::instance().create_point(Description);
 
 #define PROFILE_START(Name)                                                    \
     ccd::profiler::Profiler::instance().push(_PROFILER_POINT_##Name);          \
-    _PROFILER_POINT_##Name->begin(ccd::profiler::Profiler::instance().stack());
+    _PROFILER_POINT_##Name->begin();
 
 #define PROFILE_END(Name)                                                      \
     _PROFILER_POINT_##Name->end();                                             \
     ccd::profiler::Profiler::instance().pop();
 
-#define PROFILE_MESSAGE(Name, Val) _PROFILER_POINT_##Name->message(Val);
+#define PROFILE_MESSAGE(Name, Header, Val)                                     \
+    _PROFILER_POINT_##Name->message_header(Header);                            \
+    _PROFILER_POINT_##Name->message(Val);
 #define PROFILER_CLEAR() ccd::profiler::Profiler::instance().clear();
 #define LOG_PROFILER(SceneFile)                                                \
     ccd::profiler::Profiler::instance().log(SceneFile);
@@ -118,9 +116,9 @@ namespace profiler {
 #define PROFILE_POINT(Description) ;
 #define PROFILE_START(Name) ;
 #define PROFILE_END(Name) ;
-#define PROFILE_MESSAGE(Name, Val) ;
+#define PROFILE_MESSAGE(Name, Header, Val) ;
 #define PROFILER_CLEAR() ;
 #define LOG_PROFILER(SceneFile) ;
-#define PROFILER_OUTDIR(OutputDir)  ;
+#define PROFILER_OUTDIR(OutputDir) ;
 
 #endif

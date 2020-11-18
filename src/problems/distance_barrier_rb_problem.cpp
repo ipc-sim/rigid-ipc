@@ -599,6 +599,17 @@ namespace opt {
         }
     }
 
+    // NOTE: Avoid duplicate profile points by declaring them outside the
+    // templated function.
+    NAMED_PROFILE_POINT(
+        "DistanceBarrierRBProblem::add_constraint_barrier:hessian",
+        ADD_CONSTRAINT_BARRIER_HESS);
+    NAMED_PROFILE_POINT(
+        "DistanceBarrierRBProblem::add_constraint_barrier:gradient",
+        ADD_CONSTRAINT_BARRIER_GRAD);
+    NAMED_PROFILE_POINT(
+        "DistanceBarrierRBProblem::add_constraint_barrier:value",
+        ADD_CONSTRAINT_BARRIER_VAL);
     // Compute the derivatives of a single constraint
     template <typename Constraint, typename RigidBodyConstraint>
     void DistanceBarrierRBProblem::add_constraint_barrier(
@@ -621,10 +632,7 @@ namespace opt {
         // Local gradient for a single constraint
         Eigen::VectorXd gradi;
         if (compute_hess) {
-            NAMED_PROFILE_POINT(
-                "DistanceBarrierRBProblem::add_constraint_barrier:hessian",
-                COMPUTE_HESS);
-            PROFILE_START(COMPUTE_HESS);
+            PROFILE_START(ADD_CONSTRAINT_BARRIER_HESS);
 
             Diff::DDouble2 dBxi = distance_barrier<Diff::DDouble2>(sigma, rbc);
             Bx += dBxi.getValue();
@@ -636,25 +644,19 @@ namespace opt {
             local_hessian_to_global_triplets(
                 hessi, body_ids, ndof, hess_triplets);
 
-            PROFILE_END(COMPUTE_HESS);
+            PROFILE_END(ADD_CONSTRAINT_BARRIER_HESS);
         } else if (compute_grad) {
-            NAMED_PROFILE_POINT(
-                "DistanceBarrierRBProblem::add_constraint_barrier:gradient",
-                COMPUTE_GRAD);
-            PROFILE_START(COMPUTE_GRAD);
+            PROFILE_START(ADD_CONSTRAINT_BARRIER_GRAD);
 
             Diff::DDouble1 dBxi = distance_barrier<Diff::DDouble1>(sigma, rbc);
             Bx += dBxi.getValue();
             gradi = dBxi.getGradient();
 
-            PROFILE_END(COMPUTE_GRAD);
+            PROFILE_END(ADD_CONSTRAINT_BARRIER_GRAD);
         } else {
-            NAMED_PROFILE_POINT(
-                "DistanceBarrierRBProblem::add_constraint_barrier:value",
-                COMPUTE_VAL);
-            PROFILE_START(COMPUTE_VAL);
+            PROFILE_START(ADD_CONSTRAINT_BARRIER_VAL);
             Bx += distance_barrier<double>(sigma, rbc);
-            PROFILE_END(COMPUTE_VAL);
+            PROFILE_END(ADD_CONSTRAINT_BARRIER_VAL);
         }
 
         if (compute_grad) {

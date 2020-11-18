@@ -107,12 +107,12 @@ namespace opt {
             PROFILE_START(MINIMIZATION_RULE)
             bool min_rule = minimization_rule();
             PROFILE_MESSAGE(
-                MINIMIZATION_RULE, fmt::format("min_rule,{}", min_rule))
+                MINIMIZATION_RULE, "min_rule", fmt::format("{}", min_rule))
             PROFILE_END(MINIMIZATION_RULE)
 
             PROFILE_START(CONSTRAINT)
             bool cstr = constraint(x + step_length * dir);
-            PROFILE_MESSAGE(CONSTRAINT, fmt::format("cstr,{}", cstr))
+            PROFILE_MESSAGE(CONSTRAINT, "cstr", fmt::format("{}", cstr))
             PROFILE_END(CONSTRAINT)
 
             spdlog::trace(
@@ -134,9 +134,8 @@ namespace opt {
                 LS_FAIL_LOG, step_norm, step_length, min_step_length);
         }
         PROFILE_MESSAGE(
-            ,
-            fmt::format(
-                "success,{},it,{},dir,{:10e}", success, num_it, dir.norm()))
+            , "success,it,dir",
+            fmt::format("{},{:d},{:10e}", success, num_it, dir.norm()))
         PROFILE_END();
         return success;
     }
