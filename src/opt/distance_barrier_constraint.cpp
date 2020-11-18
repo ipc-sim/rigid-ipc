@@ -1,11 +1,12 @@
 #include "distance_barrier_constraint.hpp"
 
-#include <igl/slice_mask.h>
+#include <mutex>
+#include <tbb/parallel_for_each.h>
 
+#include <igl/slice_mask.h>
 #include <ipc/ipc.hpp>
 
 #include <geometry/distance.hpp>
-
 #include <logger.hpp>
 #include <profiler.hpp>
 
@@ -148,7 +149,7 @@ namespace opt {
 
         int collision_count = 0;
         double earliest_toi = 1;
-        tbb::mutex earliest_toi_mutex;
+        std::mutex earliest_toi_mutex;
 
         PROFILE_START(NARROW_PHASE);
 

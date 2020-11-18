@@ -1,5 +1,7 @@
 #include "broad_phase.hpp"
 
+#include <tbb/parallel_invoke.h>
+
 #include <ccd/linear/broad_phase.hpp>
 #include <ccd/rigid/rigid_body_hash_grid.hpp>
 #include <logger.hpp>

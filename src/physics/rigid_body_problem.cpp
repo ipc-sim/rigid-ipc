@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <tbb/parallel_for_each.h>
+
 #include <finitediff.hpp>
 #include <igl/PI.h>
 #include <igl/predicates/segment_segment_intersect.h>

@@ -2,10 +2,10 @@
 
 #include <array>
 #include <iostream>
+#include <mutex>
 #include <vector>
 
 #include <Eigen/Core>
-#include <tbb/mutex.h>
 
 #include "camera.hpp"
 #include "eigen_json.hpp"
@@ -106,7 +106,7 @@ public:
     }
     Float depth;
     Eigen::Matrix<uint8_t, 4, 1> color;
-    tbb::mutex lock;
+    std::mutex lock;
 };
 
 typedef Eigen::Matrix<FrameBufferAttributes, Eigen::Dynamic, Eigen::Dynamic>

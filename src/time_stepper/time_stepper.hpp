@@ -2,6 +2,8 @@
 
 #include <Eigen/Core>
 
+#include <tbb/parallel_for_each.h>
+
 #include <logger.hpp>
 #include <physics/pose.hpp>
 #include <physics/rigid_body_assembler.hpp>

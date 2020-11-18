@@ -4,6 +4,8 @@
 #include <cmath>
 #include <iostream>
 
+#include <tbb/parallel_invoke.h>
+
 #include <interval/interval.hpp>
 #include <logger.hpp>
 

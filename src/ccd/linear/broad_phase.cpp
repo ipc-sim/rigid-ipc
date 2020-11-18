@@ -4,6 +4,8 @@
 
 #include "broad_phase.hpp"
 
+#include <tbb/parallel_invoke.h>
+
 #include <ipc/spatial_hash/hash_grid.hpp>
 
 #include <logger.hpp>

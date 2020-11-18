@@ -1,5 +1,7 @@
 #include "split_distance_barrier_rb_problem.hpp"
 
+#include <tbb/parallel_sort.h>
+
 #include <finitediff.hpp>
 
 #include <constants.hpp>

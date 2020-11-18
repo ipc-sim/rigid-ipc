@@ -1,7 +1,9 @@
 #pragma once
 
+#include <vector>
+
 #include <Eigen/Core>
-#include <tbb/tbb.h>
+#include <tbb/concurrent_vector.h>
 
 namespace ccd {
 

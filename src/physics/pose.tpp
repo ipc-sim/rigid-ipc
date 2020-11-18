@@ -1,7 +1,7 @@
 #include "pose.hpp"
 
 #include <Eigen/Geometry>
-#include <tbb/tbb.h>
+#include <tbb/parallel_for.h>
 
 #include <autodiff/autodiff.h>
 #include <logger.hpp>

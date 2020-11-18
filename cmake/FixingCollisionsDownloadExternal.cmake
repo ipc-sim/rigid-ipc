@@ -73,7 +73,7 @@ endfunction()
 function(fixing_collisions_download_tbb)
    fixing_collisions_download_project(tbb
     GIT_REPOSITORY https://github.com/wjakob/tbb.git
-    GIT_TAG        20357d83871e4cb93b2c724fe0c337cd999fd14f
+    GIT_TAG        141b0e310e1fb552bdca887542c9c1a8544d6503
   )
 endfunction()
 
@@ -113,7 +113,7 @@ endfunction()
 function(fixing_collisions_download_ipc_toolkit)
   fixing_collisions_download_project(ipc-toolkit
     GIT_REPOSITORY https://github.com/ipc-sim/ipc-toolkit.git
-    GIT_TAG        4553509fe6a4e6b78c041018cd6db3fdf23b4730
+    GIT_TAG        e385e02f49e4ec8b8b2db3c18c56ae368b4e22bf
   )
 endfunction()
 
