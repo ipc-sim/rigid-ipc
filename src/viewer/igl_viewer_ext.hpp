@@ -5,6 +5,7 @@
 #include <igl/opengl/glfw/Viewer.h>
 
 #include <physics/pose.hpp>
+#include <utils/eigen_ext.hpp>
 
 namespace igl {
 namespace opengl {
@@ -76,7 +77,7 @@ namespace opengl {
             const Eigen::MatrixXi& F);
 
         void set_vertex_data(
-            const Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> data);
+            const Eigen::MatrixXb& data, const Eigen::VectorXi& vertex_type);
         void update_vertex_data() override;
         void update_vertices(const Eigen::MatrixXd& V);
 
@@ -93,10 +94,11 @@ namespace opengl {
         Eigen::MatrixXi mE;
         Eigen::MatrixXi mF;
 
-        Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> m_is_vertex_fixed;
+        Eigen::VectorXi m_vertex_type;
 
         Eigen::RowVector3d m_edge_color;
-        Eigen::RowVector3d m_fixed_color;
+        Eigen::RowVector3d m_static_color;
+        Eigen::RowVector3d m_kinematic_color;
 
         std::vector<std::string> vertex_data_labels;
     };

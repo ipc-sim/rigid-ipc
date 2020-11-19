@@ -86,7 +86,26 @@ void UISimState::load_scene()
     mesh_data->data().show_vertid = false;
     mesh_data->set_mesh(
         q, m_state.problem_ptr->edges(), m_state.problem_ptr->faces());
-    mesh_data->set_vertex_data(m_state.problem_ptr->vertex_dof_fixed());
+    Eigen::VectorXi vertex_type;
+    if (m_state.problem_ptr->is_rb_problem()) {
+        const auto& bodies =
+            std::dynamic_pointer_cast<physics::RigidBodyProblem>(
+                m_state.problem_ptr)
+                ->m_assembler;
+        vertex_type.resize(bodies.num_vertices());
+        int start_i = 0;
+        for (const auto& body : bodies.m_rbs) {
+            vertex_type.segment(start_i, body.vertices.rows())
+                .setConstant(int(body.type));
+            start_i += body.vertices.rows();
+        }
+    } else {
+        vertex_type =
+            m_state.problem_ptr->vertex_dof_fixed().rowwise().all().cast<int>();
+        vertex_type *= 2; // 0 is static, 1 is kinematic, 2 is dynamic
+    }
+    mesh_data->set_vertex_data(
+        m_state.problem_ptr->vertex_dof_fixed(), vertex_type);
     mesh_data->data().point_size = 0 * pixel_ratio();
 
     velocity_data->set_vector_field(q, v);

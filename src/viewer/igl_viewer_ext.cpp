@@ -5,8 +5,6 @@
 #include <igl/slice.h>
 #include <igl/slice_mask.h>
 
-#include <utils/eigen_ext.hpp>
-
 namespace igl {
 namespace opengl {
     ViewerDataExt::ViewerDataExt(
@@ -91,8 +89,10 @@ namespace opengl {
         igl::opengl::glfw::Viewer* _viewer, const Eigen::RowVector3d& color)
         : ViewerDataExt(_viewer, color)
     {
-        m_edge_color = Eigen::RowVector3d::Zero();                   // #000000
-        m_fixed_color = Eigen::RowVector3d(0xB3, 0xB3, 0xB3) / 0xFF; // #B3B3B3
+        m_edge_color = Eigen::RowVector3d::Zero();                    // #000000
+        m_static_color = Eigen::RowVector3d(0xB3, 0xB3, 0xB3) / 0xFF; // #B3B3B3
+        m_kinematic_color =
+            Eigen::RowVector3d(0xFF, 0x80, 0x00) / 0xFF; // #FF8000
     }
 
     void MeshData::set_mesh(
@@ -121,26 +121,28 @@ namespace opengl {
 
     void MeshData::recolor()
     {
-        assert(mV.rows() == m_is_vertex_fixed.rows());
+        assert(mV.rows() == m_vertex_type.rows());
 
         Eigen::MatrixXd vertex_colors(mV.rows(), 3);
         Eigen::MatrixXd edge_vertex_colors(mE.rows(), 3);
         Eigen::MatrixXd face_vertex_colors(mV.rows(), 3);
 
+        auto type_color = [&](int type) {
+            return type == 0 ? m_static_color
+                             : (type == 1 ? m_kinematic_color : m_color);
+        };
+
         for (int i = 0; i < mV.rows(); i++) {
-            vertex_colors.row(i) = mF.size()
-                ? m_edge_color
-                : (m_is_vertex_fixed(i) ? m_fixed_color : m_color);
-            face_vertex_colors.row(i) =
-                m_is_vertex_fixed(i) ? m_fixed_color : m_color;
+            vertex_colors.row(i) =
+                mF.size() ? m_edge_color : type_color(m_vertex_type(i));
+            face_vertex_colors.row(i) = type_color(m_vertex_type(i));
         }
 
         for (int i = 0; i < mE.rows(); i++) {
             edge_vertex_colors.row(i) = mF.size()
                 ? m_edge_color
-                : ((m_is_vertex_fixed(mE(i, 0)) || m_is_vertex_fixed(mE(i, 1)))
-                       ? m_fixed_color
-                       : m_color);
+                : type_color(std::min(
+                      m_vertex_type(mE(i, 0)), m_vertex_type(mE(i, 1))));
         }
 
         set_points(mV, vertex_colors);
@@ -153,7 +155,7 @@ namespace opengl {
     }
 
     void MeshData::set_vertex_data(
-        const Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> vtx_data)
+        const Eigen::MatrixXb& vtx_data, const Eigen::VectorXi& vertex_type)
     {
         assert(vtx_data.rows() == mV.rows());
 
@@ -172,7 +174,7 @@ namespace opengl {
         data().labels_positions = mV;
         data().labels_strings = vertex_data_labels;
 
-        m_is_vertex_fixed = vtx_data.rowwise().all();
+        m_vertex_type = vertex_type;
         recolor();
     }
 

@@ -9,13 +9,13 @@
 namespace ccd {
 namespace physics {
 
-    enum RigidBodyType { DYNAMIC, KINEMATIC, STATIC };
+    enum RigidBodyType { STATIC, KINEMATIC, DYNAMIC };
 
-    // clang-format off
     NLOHMANN_JSON_SERIALIZE_ENUM(
         RigidBodyType,
-        { { DYNAMIC, "dynamic" }, { KINEMATIC, "kinematic" }, { STATIC, "static" } });
-    // clang-format on
+        { { STATIC, "static" },
+          { KINEMATIC, "kinematic" },
+          { DYNAMIC, "dynamic" } });
 
     class RigidBody {
     protected:
