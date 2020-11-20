@@ -1,10 +1,11 @@
 #include "distance_barrier_rb_problem.hpp"
 
+#include <finitediff.hpp>
 // IPC Toolkit
 #include <ipc/distance/edge_edge_mollifier.hpp>
 #include <ipc/ipc.hpp>
-
-#include <finitediff.hpp>
+#include <tbb/concurrent_vector.h>
+#include <tbb/parallel_for.h>
 
 #include <constants.hpp>
 #include <geometry/distance.hpp>
