@@ -22,8 +22,9 @@ Scene::Scene(const nlohmann::json& scene_json)
     camera = Camera(scene_json["camera"]);
 
     // Read materials
-    materials.emplace_back(scene_json["fixed_body_material"]); // #E74C3C
-    materials.emplace_back(scene_json["free_body_material"]);  // #B3B3B3
+    materials.emplace_back(scene_json["static_body_material"]);    // #B3B3B3
+    materials.emplace_back(scene_json["kinematic_body_material"]); // #FF8000
+    materials.emplace_back(scene_json["dynamic_body_material"]);   // #E74C3C
 
     // Read lights
     for (const auto& entry : scene_json["lights"]) {

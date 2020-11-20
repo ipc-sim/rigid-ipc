@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
             io::from_json(jrb["rotation"], poses_t1[j].rotation);
         }
 
-        ConcurrentImpacts impacts;
+        Impacts impacts;
         detect_collisions(
             bodies, poses_t0, poses_t1, collision_types, impacts,
             DetectionMethod::HASH_GRID, TrajectoryType::RIGID);

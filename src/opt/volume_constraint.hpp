@@ -17,33 +17,33 @@ namespace opt {
         void settings(const nlohmann::json& json) override;
         nlohmann::json settings() const override;
 
-        tbb::concurrent_vector<EdgeVertexImpact> initialize(
+        std::vector<EdgeVertexImpact> initialize(
             const Eigen::MatrixX2d& vertices,
             const Eigen::MatrixX2i& edges,
             const Eigen::VectorXi& group_ids,
             const Eigen::MatrixXd& Uk);
 
-        tbb::concurrent_vector<EdgeEdgeImpact>
+        std::vector<EdgeEdgeImpact>
         get_ee_collision_set(const Eigen::MatrixXd& Uk);
 
         void compute_constraints(
             const Eigen::MatrixXd& Uk,
-            const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+            const std::vector<EdgeEdgeImpact>& ee_impacts,
             Eigen::VectorXd& g_uk);
 
         void compute_constraints_jacobian(
             const Eigen::MatrixXd& Uk,
-            const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+            const std::vector<EdgeEdgeImpact>& ee_impacts,
             Eigen::MatrixXd& jac_uk);
 
         void compute_constraints_normals(
             const Eigen::MatrixXd& Uk,
-            const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+            const std::vector<EdgeEdgeImpact>& ee_impacts,
             Eigen::MatrixXd& jac_uk);
 
         void compute_constraints(
             const Eigen::MatrixXd& Uk,
-            const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+            const std::vector<EdgeEdgeImpact>& ee_impacts,
             Eigen::VectorXd& g_uk,
             Eigen::MatrixXd& g_uk_jacobian);
 
@@ -66,7 +66,7 @@ namespace opt {
         double time_epsilon;
 
         void dense_indices(
-            const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+            const std::vector<EdgeEdgeImpact>& ee_impacts,
             Eigen::VectorXi& dense_indices);
 
         /// @brief #E,1 indices of the edges' first impact

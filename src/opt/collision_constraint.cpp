@@ -30,7 +30,7 @@ namespace opt {
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double> poses_t0,
         const physics::Poses<double> poses_t1,
-        ConcurrentImpacts& impacts) const
+        Impacts& impacts) const
     {
         ccd::detect_collisions(
             bodies, poses_t0, poses_t1, dim_to_collision_type(bodies.dim()),

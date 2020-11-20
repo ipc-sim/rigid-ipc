@@ -86,13 +86,13 @@ TEST_CASE("2D hash grid", "[hashgrid][2D]")
         displacements.setRandom();
         displacements *= 10;
 
-        ConcurrentImpacts brute_force_impacts;
+        Impacts brute_force_impacts;
         detect_collisions(
             vertices, vertices + displacements, edges, Eigen::MatrixXi(0, 3),
             Eigen::VectorXi(), CollisionType::EDGE_VERTEX, brute_force_impacts,
             DetectionMethod::BRUTE_FORCE);
 
-        ConcurrentImpacts hash_impacts;
+        Impacts hash_impacts;
         detect_collisions(
             vertices, vertices + displacements, edges, Eigen::MatrixXi(0, 3),
             Eigen::VectorXi(), CollisionType::EDGE_VERTEX, hash_impacts,
@@ -161,14 +161,14 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
     }
 
     for (int i = 0; i < 10; i++) {
-        ConcurrentImpacts brute_force_impacts;
+        Impacts brute_force_impacts;
         detect_collisions(
             vertices, vertices + displacements, edges, faces, group_ids,
             CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX,
             brute_force_impacts, DetectionMethod::BRUTE_FORCE);
         REQUIRE(brute_force_impacts.ev_impacts.size() == 0);
 
-        ConcurrentImpacts hash_impacts;
+        Impacts hash_impacts;
         detect_collisions(
             vertices, vertices + displacements, edges, faces, group_ids,
             CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX, hash_impacts,
@@ -297,14 +297,14 @@ TEST_CASE("3D hash grid case 1", "[hashgrid][3D]")
     // clang-format on
     Eigen::VectorXi group_ids;
 
-    ConcurrentImpacts bf_impacts;
+    Impacts bf_impacts;
     detect_collisions(
         vertices, vertices + displacements, edges, faces, group_ids,
         CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX, bf_impacts,
         DetectionMethod::BRUTE_FORCE);
     REQUIRE(bf_impacts.ev_impacts.size() == 0);
 
-    ConcurrentImpacts hash_impacts;
+    Impacts hash_impacts;
     detect_collisions(
         vertices, vertices + displacements, edges, faces, group_ids,
         CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX, hash_impacts,

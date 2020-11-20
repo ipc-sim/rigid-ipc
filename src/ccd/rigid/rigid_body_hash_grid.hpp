@@ -14,12 +14,14 @@ public:
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1,
+        const std::vector<int>& body_ids,
         const double inflation_radius = 0.0);
 
     void addBodies(
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1,
+        const std::vector<int>& body_ids,
         const double inflation_radius = 0.0);
 };
 

@@ -15,6 +15,7 @@ void compute_vertices_intervals(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
+    const std::vector<int>& body_ids,
     Eigen::MatrixX<Interval>& vertices)
 {
     Interval t(0, 1);
@@ -26,17 +27,30 @@ void compute_vertices_intervals(
 
     PosesI posesI = physics::interpolate(posesI_t0, posesI_t1, t);
 
-    vertices = bodies.world_vertices(posesI);
+    size_t num_vertices = 0;
+    for (const auto& body_id : body_ids) {
+        num_vertices += bodies.m_rbs[body_id].vertices.rows();
+    }
+
+    vertices.setConstant(num_vertices, bodies.dim(), Interval::empty());
+
+    size_t start_i = 0;
+    for (size_t i = 0; i < body_ids.size(); i++) {
+        vertices.middleRows(start_i, bodies.m_rbs[i].vertices.rows()) =
+            bodies.m_rbs[i].world_vertices(posesI[i]);
+        start_i += bodies.m_rbs[i].vertices.rows();
+    }
 }
 
 void RigidBodyHashGrid::resize(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
+    const std::vector<int>& body_ids,
     const double inflation_radius)
 {
     Eigen::MatrixX<Interval> vertices;
-    compute_vertices_intervals(bodies, poses_t0, poses_t1, vertices);
+    compute_vertices_intervals(bodies, poses_t0, poses_t1, body_ids, vertices);
 
     // Compute the extents of the mesh
     Eigen::VectorX3<Interval> mesh_extents(bodies.dim());
@@ -49,6 +63,7 @@ void RigidBodyHashGrid::resize(
     }
     Eigen::VectorX3d min(mesh_extents.size()), max(mesh_extents.size());
     for (int i = 0; i < mesh_extents.size(); i++) {
+        assert(!empty(mesh_extents(i)));
         min(i) = mesh_extents(i).lower() - inflation_radius;
         max(i) = mesh_extents(i).upper() + inflation_radius;
     }
@@ -77,18 +92,26 @@ void RigidBodyHashGrid::addBodies(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
+    const std::vector<int>& body_ids,
     const double inflation_radius)
 {
     assert(bodies.num_bodies() == poses_t0.size());
     Eigen::MatrixX<Interval> vertices;
-    compute_vertices_intervals(bodies, poses_t0, poses_t1, vertices);
+    compute_vertices_intervals(bodies, poses_t0, poses_t1, body_ids, vertices);
 
     // Create a bounding box for all vertices
-    tbb::concurrent_vector<ipc::AABB> vertices_aabb;
-    Eigen::VectorX3d min(bodies.dim()), max(bodies.dim());
+    std::vector<ipc::AABB> vertices_aabb;
     vertices_aabb.reserve(vertices.rows());
+    std::vector<bool> is_vertex_included(vertices.rows(), true);
+    Eigen::VectorX3d min(bodies.dim()), max(bodies.dim());
     for (long i = 0; i < vertices.rows(); i++) {
+        min.setZero();
+        max.setZero();
         for (int j = 0; j < vertices.cols(); j++) {
+            if (empty(vertices(i, j))) {
+                is_vertex_included[i] = false;
+                break;
+            }
             min(j) = vertices(i, j).lower() - inflation_radius;
             max(j) = vertices(i, j).upper() + inflation_radius;
         }
@@ -100,29 +123,38 @@ void RigidBodyHashGrid::addBodies(
         [&] {
             // Add all vertices of the bodies
             for (long i = 0; i < vertices.rows(); i++) {
-                this->addElement(vertices_aabb[i], i, this->m_vertexItems);
+                if (is_vertex_included[i]) {
+                    this->addElement(vertices_aabb[i], i, this->m_vertexItems);
+                }
             }
         },
         [&] {
             // Add all edge of the bodies
             for (long i = 0; i < bodies.m_edges.rows(); i++) {
-                this->addElement(
-                    ipc::AABB(
-                        vertices_aabb[bodies.m_edges(i, 0)],
-                        vertices_aabb[bodies.m_edges(i, 1)]),
-                    i, this->m_edgeItems);
+                if (is_vertex_included[bodies.m_edges(i, 0)]
+                    && is_vertex_included[bodies.m_edges(i, 1)]) {
+                    this->addElement(
+                        ipc::AABB(
+                            vertices_aabb[bodies.m_edges(i, 0)],
+                            vertices_aabb[bodies.m_edges(i, 1)]),
+                        i, this->m_edgeItems);
+                }
             }
         },
         [&] {
             // Add all faces of the bodies
             for (long i = 0; i < bodies.m_faces.rows(); i++) {
-                this->addElement(
-                    ipc::AABB(
+                if (is_vertex_included[bodies.m_faces(i, 0)]
+                    && is_vertex_included[bodies.m_faces(i, 1)]
+                    && is_vertex_included[bodies.m_faces(i, 2)]) {
+                    this->addElement(
                         ipc::AABB(
-                            vertices_aabb[bodies.m_faces(i, 0)],
-                            vertices_aabb[bodies.m_faces(i, 1)]),
-                        vertices_aabb[bodies.m_faces(i, 2)]),
-                    i, this->m_faceItems);
+                            ipc::AABB(
+                                vertices_aabb[bodies.m_faces(i, 0)],
+                                vertices_aabb[bodies.m_faces(i, 1)]),
+                            vertices_aabb[bodies.m_faces(i, 2)]),
+                        i, this->m_faceItems);
+                }
             }
         });
 }

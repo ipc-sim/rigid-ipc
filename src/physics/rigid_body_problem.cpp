@@ -235,7 +235,7 @@ namespace physics {
         const Poses<double>& poses_q1,
         const CollisionCheck check_type) const
     {
-        ConcurrentImpacts impacts;
+        Impacts impacts;
 
         double scale =
             check_type == CollisionCheck::EXACT ? 1.0 : (1.0 + collision_eps);

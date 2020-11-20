@@ -192,8 +192,9 @@ namespace opt {
             i++;
 
             spdlog::info(
-                "friction_solve lagging_iteration={:d} momentum_balance={:g}",
-                i, momentum_balance);
+                "friction_solve lagging_iteration={:d} momentum_balance={:g} "
+                "eps_d={:g}",
+                i, momentum_balance, eps_d);
         } while ((friction_iterations < 0 || i < friction_iterations)
                  && momentum_balance > eps_d);
 

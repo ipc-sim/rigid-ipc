@@ -37,7 +37,7 @@ namespace opt {
         return json;
     }
 
-    tbb::concurrent_vector<EdgeVertexImpact> VolumeConstraint::initialize(
+    std::vector<EdgeVertexImpact> VolumeConstraint::initialize(
         const Eigen::MatrixX2d& vertices,
         const Eigen::MatrixX2i& edges,
         const Eigen::VectorXi& group_ids,
@@ -59,7 +59,7 @@ namespace opt {
      * @return The number of edges that have an impact.
      */
     int prune_impacts(
-        const tbb::concurrent_vector<EdgeEdgeImpact>& all_impacts,
+        const std::vector<EdgeEdgeImpact>& all_impacts,
         Eigen::VectorXi& pruned_impact_indices)
     {
         // An index value of -1 indicates no impact for that edge
@@ -87,12 +87,12 @@ namespace opt {
         return num_pruned_impacts;
     }
 
-    tbb::concurrent_vector<EdgeEdgeImpact>
+    std::vector<EdgeEdgeImpact>
     VolumeConstraint::get_ee_collision_set(const Eigen::MatrixXd& Uk)
     {
         auto ev_impacts = get_collision_set(Uk);
 
-        tbb::concurrent_vector<EdgeEdgeImpact> ee_impacts;
+        std::vector<EdgeEdgeImpact> ee_impacts;
         ccd::convert_edge_vertex_to_edge_edge_impacts(
             edges, ev_impacts, ee_impacts);
         prune_impacts(ee_impacts, m_edge_impact_map);
@@ -104,8 +104,7 @@ namespace opt {
     void VolumeConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk, Eigen::VectorXd& g_uk)
     {
-        tbb::concurrent_vector<EdgeEdgeImpact> ee_impacts =
-            get_ee_collision_set(Uk);
+        std::vector<EdgeEdgeImpact> ee_impacts = get_ee_collision_set(Uk);
         compute_constraints(Uk, ee_impacts, g_uk);
     }
 
@@ -114,14 +113,13 @@ namespace opt {
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
-        tbb::concurrent_vector<EdgeEdgeImpact> ee_impacts =
-            get_ee_collision_set(Uk);
+        std::vector<EdgeEdgeImpact> ee_impacts = get_ee_collision_set(Uk);
         compute_constraints(Uk, ee_impacts, g_uk, g_uk_jacobian);
     }
 
     void VolumeConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk,
-        const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+        const std::vector<EdgeEdgeImpact>& ee_impacts,
         Eigen::VectorXd& g_uk)
     {
         //        g_uk.resize(num_constraints);
@@ -200,7 +198,7 @@ namespace opt {
 
     void VolumeConstraint::compute_constraints_jacobian(
         const Eigen::MatrixXd& Uk,
-        const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+        const std::vector<EdgeEdgeImpact>& ee_impacts,
         Eigen::MatrixXd& jac_uk)
     {
         jac_uk.resize(int(ee_impacts.size()) * 2, int(vertices.size()));
@@ -293,7 +291,7 @@ namespace opt {
 
     void VolumeConstraint::compute_constraints_normals(
         const Eigen::MatrixXd& Uk,
-        const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+        const std::vector<EdgeEdgeImpact>& ee_impacts,
         Eigen::MatrixXd& jac_uk)
     {
         jac_uk.resize(int(ee_impacts.size()) * 2, int(vertices.size()));
@@ -399,7 +397,7 @@ namespace opt {
 
     void VolumeConstraint::compute_constraints(
         const Eigen::MatrixXd& Uk,
-        const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+        const std::vector<EdgeEdgeImpact>& ee_impacts,
         Eigen::VectorXd& g_uk,
         Eigen::MatrixXd& g_uk_jacobian)
     {
@@ -408,7 +406,7 @@ namespace opt {
     }
 
     void VolumeConstraint::dense_indices(
-        const tbb::concurrent_vector<EdgeEdgeImpact>& ee_impacts,
+        const std::vector<EdgeEdgeImpact>& ee_impacts,
         Eigen::VectorXi& dense_indices)
     {
         dense_indices.resize(int(ee_impacts.size()) * 2);

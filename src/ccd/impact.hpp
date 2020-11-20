@@ -3,7 +3,6 @@
 #include <vector>
 
 #include <Eigen/Core>
-#include <tbb/concurrent_vector.h>
 
 namespace ccd {
 
@@ -58,28 +57,10 @@ struct FaceVertexImpact {
     bool operator==(const FaceVertexImpact& other) const;
 };
 
-// struct Impacts {
-//     std::vector<EdgeVertexImpact> ev_impacts;
-//     std::vector<EdgeEdgeImpact> ee_impacts;
-//     std::vector<FaceVertexImpact> fv_impacts;
-//
-//     size_t size() const
-//     {
-//         return ev_impacts.size() + ee_impacts.size() + fv_impacts.size();
-//     }
-//
-//     void clear()
-//     {
-//         ev_impacts.clear();
-//         ee_impacts.clear();
-//         fv_impacts.clear();
-//     }
-// };
-
-struct ConcurrentImpacts {
-    tbb::concurrent_vector<EdgeVertexImpact> ev_impacts;
-    tbb::concurrent_vector<EdgeEdgeImpact> ee_impacts;
-    tbb::concurrent_vector<FaceVertexImpact> fv_impacts;
+struct Impacts {
+    std::vector<EdgeVertexImpact> ev_impacts;
+    std::vector<EdgeEdgeImpact> ee_impacts;
+    std::vector<FaceVertexImpact> fv_impacts;
 
     size_t size() const
     {

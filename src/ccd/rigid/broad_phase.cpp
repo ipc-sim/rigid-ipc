@@ -56,9 +56,16 @@ void detect_collision_candidates_rigid_hash_grid(
     ipc::Candidates& candidates,
     const double inflation_radius)
 {
+    std::vector<int> body_ids =
+        bodies.close_bodies(poses_t0, poses_t1, inflation_radius);
+
+    if (body_ids.size() <= 1) {
+        return;
+    }
+
     RigidBodyHashGrid hashgrid;
-    hashgrid.resize(bodies, poses_t0, poses_t1, inflation_radius);
-    hashgrid.addBodies(bodies, poses_t0, poses_t1, inflation_radius);
+    hashgrid.resize(bodies, poses_t0, poses_t1, body_ids, inflation_radius);
+    hashgrid.addBodies(bodies, poses_t0, poses_t1, body_ids, inflation_radius);
 
     const Eigen::VectorXi& group_ids = bodies.group_ids();
     tbb::parallel_invoke(

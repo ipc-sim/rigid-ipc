@@ -79,7 +79,7 @@ namespace opt {
 
         /// @brief Original impacts used for velocity resitution
         /// @todo Replace this with the std::vector version
-        ConcurrentImpacts original_impacts;
+        Impacts original_impacts;
     };
 
 } // namespace opt

@@ -123,6 +123,17 @@ namespace physics {
 
         const Eigen::VectorXi& group_ids() const { return m_vertex_group_ids; }
 
+        /// Get a vector of body ids where each body is close to at least one
+        /// other body.
+        std::vector<int> close_bodies(
+            const physics::Poses<double>& poses_t0,
+            const physics::Poses<double>& poses_t1,
+            const double inflation_radius) const;
+        std::vector<int> close_bodies_brute_force(
+            const physics::Poses<double>& poses_t0,
+            const physics::Poses<double>& poses_t1,
+            const double inflation_radius) const;
+
         std::vector<RigidBody> m_rbs;
 
         /// @brief indexes for body

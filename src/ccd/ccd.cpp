@@ -22,7 +22,7 @@ void detect_collisions(
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
     const int collision_types,
-    ConcurrentImpacts& impacts,
+    Impacts& impacts,
     DetectionMethod method,
     TrajectoryType trajectory)
 {
@@ -106,11 +106,13 @@ void detect_collisions_from_candidates(
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
     const ipc::Candidates& candidates,
-    ConcurrentImpacts& impacts,
+    Impacts& impacts,
     TrajectoryType trajectory)
 {
     PROFILE_POINT("collisions_detection__narrow_phase");
     PROFILE_START();
+
+    std::mutex ev_impacts_mutex, ee_impacts_mutex, fv_impacts_mutex;
 
     auto ev_impact = [&](const ipc::EdgeVertexCandidate& ev_candidate) {
         double toi;
@@ -119,8 +121,10 @@ void detect_collisions_from_candidates(
         if (is_colliding) {
             double alpha = edge_vertex_closest_point(
                 bodies, poses_t0, poses_t1, ev_candidate, toi);
+            ev_impacts_mutex.lock();
             impacts.ev_impacts.emplace_back(
                 toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index);
+            ev_impacts_mutex.unlock();
         }
     };
 
@@ -132,9 +136,11 @@ void detect_collisions_from_candidates(
             double alpha, beta;
             edge_edge_closest_point(
                 bodies, poses_t0, poses_t1, ee_candidate, toi, alpha, beta);
+            ee_impacts_mutex.lock();
             impacts.ee_impacts.emplace_back(
                 toi, ee_candidate.edge0_index, alpha, ee_candidate.edge1_index,
                 beta);
+            ee_impacts_mutex.unlock();
         }
     };
 
@@ -146,8 +152,10 @@ void detect_collisions_from_candidates(
             double u, v;
             face_vertex_closest_point(
                 bodies, poses_t0, poses_t1, fv_candidate, toi, u, v);
+            fv_impacts_mutex.lock();
             impacts.fv_impacts.emplace_back(
                 toi, fv_candidate.face_index, u, v, fv_candidate.vertex_index);
+            fv_impacts_mutex.unlock();
         }
     };
 

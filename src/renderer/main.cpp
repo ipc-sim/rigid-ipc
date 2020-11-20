@@ -110,9 +110,12 @@ int main(int argc, char* argv[])
 
     ///////////////////////////////////////////////////////////////////////////
     // Per-vertex colors
-    // NOTE: Assumes fixed_body_material is at index 0 of scene.materials and
-    // free_body_material is at index 1 of scene.materials.
-    Eigen::VectorXi C = bodies.is_dof_fixed.rowwise().all().cast<int>();
+    Eigen::VectorXi C(bodies.num_vertices());
+    int start_i = 0;
+    for (const auto& body : bodies.m_rbs) {
+        C.segment(start_i, body.vertices.rows()).setConstant(int(body.type));
+        start_i += body.vertices.rows();
+    }
     ///////////////////////////////////////////////////////////////////////////
 
     tbb::parallel_for(size_t(0), state_sequence.size(), [&](size_t i) {

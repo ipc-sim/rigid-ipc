@@ -55,7 +55,7 @@ void detect_collisions(
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
     const int collision_types,
-    ConcurrentImpacts& impacts,
+    Impacts& impacts,
     DetectionMethod method = DetectionMethod::HASH_GRID,
     TrajectoryType trajectory = TrajectoryType::RIGID);
 
@@ -92,7 +92,7 @@ void detect_collisions_from_candidates(
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
     const ipc::Candidates& candidates,
-    ConcurrentImpacts& impacts,
+    Impacts& impacts,
     TrajectoryType trajectory = TrajectoryType::RIGID);
 
 /// @brief Determine if a single edge-vertext pair intersects.

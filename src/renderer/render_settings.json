@@ -14,14 +14,20 @@
         "far_clip": 100,
         "resolution": [1920, 1080]
     },
-    "fixed_body_material": {
-        "ambient": [0.90588235, 0.29803922, 0.23529412],
+    "static_body_material": {
+        "ambient": [0.70196078, 0.70196078, 0.70196078],
         "diffuse": [0, 0, 0],
         "specular": [0, 0, 0],
         "shininess": 0
     },
-    "free_body_material": {
-        "ambient": [0.70196078, 0.70196078, 0.70196078],
+    "kinematic_body_material": {
+        "ambient": [1, 0.5, 0],
+        "diffuse": [0, 0, 0],
+        "specular": [0, 0, 0],
+        "shininess": 0
+    },
+    "dynamic_body_material": {
+        "ambient": [0.90588235, 0.29803922, 0.23529412],
         "diffuse": [0, 0, 0],
         "specular": [0, 0, 0],
         "shininess": 0

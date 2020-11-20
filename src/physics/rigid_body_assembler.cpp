@@ -1,12 +1,13 @@
-#include <physics/rigid_body_assembler.hpp>
+#include "rigid_body_assembler.hpp"
 
 #include <Eigen/Geometry>
-
 #include <finitediff.hpp>
-
-#include <physics/mass.hpp>
+#include <ipc/distance/edge_edge.hpp>
+#include <ipc/spatial_hash/hash_grid.hpp>
+#include <tbb/parallel_sort.h>
 
 #include <logger.hpp>
+#include <physics/mass.hpp>
 #include <utils/eigen_ext.hpp>
 #include <utils/flatten.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -207,6 +208,85 @@ namespace physics {
         }
 
         grad_u.setFromTriplets(triplets.begin(), triplets.end());
+    }
+
+    std::vector<int> RigidBodyAssembler::close_bodies_brute_force(
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1,
+        const double inflation_radius) const
+    {
+        std::vector<int> body_ids;
+        for (int i = 0; i < num_bodies(); i++) {
+            double ri = m_rbs[i].r_max;
+            for (int j = i + 1; j < num_bodies(); j++) {
+                double rj = m_rbs[j].r_max;
+                double distance = ipc::edge_edge_distance(
+                    poses_t0[i].position, poses_t1[i].position,
+                    poses_t0[j].position, poses_t1[j].position);
+                if (distance <= ri + rj + inflation_radius) {
+                    body_ids.push_back(i);
+                    body_ids.push_back(j);
+                }
+            }
+        }
+
+        tbb::parallel_sort(body_ids.begin(), body_ids.end());
+        auto new_end = std::unique(body_ids.begin(), body_ids.end());
+        body_ids.erase(new_end, body_ids.end());
+
+        return body_ids;
+    }
+
+    std::vector<int> RigidBodyAssembler::close_bodies(
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1,
+        const double inflation_radius) const
+    {
+        if (num_bodies() < 10) {
+            return close_bodies_brute_force(
+                poses_t0, poses_t1, inflation_radius);
+        }
+
+        ipc::HashGrid hashgrid;
+
+        Eigen::MatrixXd V(2 * num_bodies(), dim());
+        Eigen::MatrixXi E(num_bodies(), dim());
+        Eigen::VectorXi group_ids(2 * num_bodies());
+        double max_radius = 0;
+        for (int i = 0; i < num_bodies(); i++) {
+            V.row(2 * i + 0) = poses_t0[i].position;
+            V.row(2 * i + 1) = poses_t1[i].position;
+            E(i, 0) = 2 * i + 0;
+            E(i, 1) = 2 * i + 1;
+            max_radius = std::max(m_rbs[i].r_max, max_radius);
+            group_ids[2 * i + 1] = group_ids[2 * i] = m_rbs[i].group_id;
+        }
+
+        // Resize the grid
+        hashgrid.resize(V, V, E, max_radius + inflation_radius);
+
+        // Add each body
+        for (int i = 0; i < num_bodies(); i++) {
+            hashgrid.addEdge(
+                V.row(E(i, 0)), V.row(E(i, 1)), V.row(E(i, 0)), V.row(E(i, 1)),
+                i, m_rbs[i].r_max);
+        }
+
+        std::vector<ipc::EdgeEdgeCandidate> body_candidates;
+        hashgrid.getEdgeEdgePairs(E, group_ids, body_candidates);
+
+        std::vector<int> body_ids;
+        body_ids.reserve(2 * body_candidates.size());
+        for (const auto& body_candidate : body_candidates) {
+            body_ids.push_back(body_candidate.edge0_index);
+            body_ids.push_back(body_candidate.edge1_index);
+        }
+
+        tbb::parallel_sort(body_ids.begin(), body_ids.end());
+        auto new_end = std::unique(body_ids.begin(), body_ids.end());
+        body_ids.erase(new_end, body_ids.end());
+
+        return body_ids;
     }
 
 } // namespace physics
