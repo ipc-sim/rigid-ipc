@@ -247,7 +247,7 @@ namespace physics {
                 poses_t0, poses_t1, inflation_radius);
         }
 
-        ipc::HashGrid hashgrid;
+        static ipc::HashGrid hashgrid;
 
         Eigen::MatrixXd V(2 * num_bodies(), dim());
         Eigen::MatrixXi E(num_bodies(), dim());
@@ -274,6 +274,7 @@ namespace physics {
 
         std::vector<ipc::EdgeEdgeCandidate> body_candidates;
         hashgrid.getEdgeEdgePairs(E, group_ids, body_candidates);
+        hashgrid.clear();
 
         std::vector<int> body_ids;
         body_ids.reserve(2 * body_candidates.size());

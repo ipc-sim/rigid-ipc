@@ -255,10 +255,11 @@ namespace physics {
             return false;
         }
 
+        static ipc::HashGrid hashgrid;
+
         PROFILE_POINT("RigidBodyProblem::detect_intersections");
         PROFILE_START();
 
-        ipc::HashGrid hashgrid;
         double inflation_radius = 1e-12; // Conservative broad phase
         const Eigen::MatrixXd vertices = m_assembler.world_vertices(poses);
         const Eigen::MatrixXi& edges = this->edges();
@@ -316,6 +317,8 @@ namespace physics {
         }
 
         PROFILE_END();
+
+        hashgrid.clear();
 
         return is_intersecting;
     }

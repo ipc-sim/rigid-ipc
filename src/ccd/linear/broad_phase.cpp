@@ -171,7 +171,7 @@ void detect_collision_candidates_hash_grid(
     const double inflation_radius)
 {
     using namespace CollisionType;
-    ipc::HashGrid hashgrid;
+    static ipc::HashGrid hashgrid;
     assert(edges.size()); // Even face-vertex need the edges
     hashgrid.resize(vertices_t0, vertices_t1, edges, inflation_radius);
     tbb::parallel_invoke(
@@ -215,6 +215,8 @@ void detect_collision_candidates_hash_grid(
                     faces, group_ids, candidates.fv_candidates);
             }
         });
+
+    hashgrid.clear();
 }
 
 } // namespace ccd

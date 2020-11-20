@@ -63,7 +63,7 @@ void detect_collision_candidates_rigid_hash_grid(
         return;
     }
 
-    RigidBodyHashGrid hashgrid;
+    static RigidBodyHashGrid hashgrid;
     hashgrid.resize(bodies, poses_t0, poses_t1, body_ids, inflation_radius);
     hashgrid.addBodies(bodies, poses_t0, poses_t1, body_ids, inflation_radius);
 
@@ -87,6 +87,8 @@ void detect_collision_candidates_rigid_hash_grid(
                     bodies.m_faces, group_ids, candidates.fv_candidates);
             }
         });
+
+    hashgrid.clear();
 }
 
 } // namespace ccd
