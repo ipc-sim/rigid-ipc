@@ -1,6 +1,7 @@
 #include <logger.hpp>
 #include <map>
 #include <profiler.hpp>
+#include <utils/get_rss.hpp>
 
 #ifdef PROFILE_FUNCTIONS
 
@@ -16,25 +17,37 @@ namespace profiler {
     {
         clear();
     }
-    void ProfilerPoint::begin() { timer.start(); }
+
+    void ProfilerPoint::begin()
+    {
+        timer.start();
+        beginning_peak_rss = getPeakRSS();
+    }
+
     void ProfilerPoint::end()
     {
         timer.stop();
         m_total_time += timer.getElapsedTime();
         m_num_evaluations++;
+        m_max_peak_rss_change =
+            std::max(m_max_peak_rss_change, getPeakRSS() - beginning_peak_rss);
     }
+
     void ProfilerPoint::message_header(const std::string& header)
     {
         m_message_header = header;
     }
+
     void ProfilerPoint::message(const std::string& m)
     {
         m_messages.push_back(m);
     }
+
     void ProfilerPoint::clear()
     {
         m_num_evaluations = 0;
         m_total_time = 0;
+        m_max_peak_rss_change = 0;
         m_message_header = "";
         m_messages.clear();
     }
@@ -100,21 +113,24 @@ namespace profiler {
         std::ofstream myfile;
         myfile.open(filename);
         myfile << fin << "\n";
-        myfile << "section,total_time (sec),percentage_time,num_calls,avg_time "
-                  "(sec)\n";
+        myfile << "section,total_time (sec),percentage_time,num_calls,"
+                  "avg_time (sec),max peak RSS change (KB)\n";
 
         double total_time = main->total_time();
         size_t num_calls = main->num_evaluations();
+        double max_peak_rss_change = main->max_peak_rss_change() / 1024.0;
         myfile << fmt::format(
-            "{},{:10e},100.00%,{},{}\n", main->name(), total_time, num_calls,
-            total_time / num_calls);
+            "{},{:10e},100.00%,{},{},{:g}\n", main->name(), total_time,
+            num_calls, total_time / num_calls, max_peak_rss_change);
 
         for (auto& p : points) {
             double p_time = p->total_time();
             size_t p_num_calls = p->num_evaluations();
+            double p_max_peak_rss_change = p->max_peak_rss_change() / 1024.0;
             myfile << fmt::format(
-                "{},{:10e},{:2f}%,{},{}\n", p->name(), p_time,
-                p_time / total_time * 100, p_num_calls, p_time / p_num_calls);
+                "{},{:10e},{:2f}%,{},{},{:g}\n", p->name(), p_time,
+                p_time / total_time * 100, p_num_calls, p_time / p_num_calls,
+                p_max_peak_rss_change);
         }
 
         myfile.close();

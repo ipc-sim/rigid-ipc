@@ -28,6 +28,10 @@ namespace profiler {
 
         size_t num_evaluations() const { return m_num_evaluations; }
         const double& total_time() const { return m_total_time; }
+        const size_t& max_peak_rss_change() const
+        {
+            return m_max_peak_rss_change;
+        }
 
         void message_header(const std::string& header);
         const std::string& message_header() const { return m_message_header; }
@@ -38,10 +42,12 @@ namespace profiler {
         std::string m_name;
         size_t m_num_evaluations;
         double m_total_time;
+        size_t m_max_peak_rss_change;
         std::string m_message_header;
         std::vector<std::string> m_messages;
 
         igl::Timer timer;
+        size_t beginning_peak_rss;
     };
 
     class Profiler {
