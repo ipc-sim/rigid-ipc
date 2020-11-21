@@ -10,7 +10,7 @@
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
         "rigid_bodies": [{
-            "mesh": "pendulum/pin.obj",
+            "mesh": "pendulum/pin-short.obj",
             "position": [0, 2, 0],
             "rotation": [0, 0, 0],
             "scale": 1,
@@ -22,12 +22,12 @@
             "scale": 1
         }, {
             "mesh": "pendulum/pin.obj",
-            "position": [-4, 2, -0.13],
+            "position": [-4, 2, -0.1275],
             "rotation": [0, 0, 0],
             "scale": 1
         }, {
             "mesh": "pendulum/arm.obj",
-            "position": [-6, 2, -0.26],
+            "position": [-6, 2, -0.255],
             "rotation": [0, 0, 90],
             "scale": 1
         }]

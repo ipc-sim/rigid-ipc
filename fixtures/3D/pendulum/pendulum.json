@@ -5,22 +5,23 @@
     "#max_time": 1.08,
     "max_time": 10,
     "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 1e-4
+        "initial_barrier_activation_distance": 1e-3
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
         "rigid_bodies": [{
-            "mesh": "pendulum/pin.obj",
+            "mesh": "pendulum/pin-short.obj",
             "position": [0, 2, 0],
             "rotation": [0, 0, 0],
-            "scale": 1,
+            "scale": [1, 1, 1],
             "is_dof_fixed": true
         }, {
             "mesh": "pendulum/arm.obj",
             "position": [-2, 2, 0],
             "rotation": [0, 0, 90],
-            "scale": 1
+            "scale": 1,
+            "is_dof_fixed": [false, false, false, false, false, false]
         }]
     }
 }
