@@ -83,7 +83,7 @@ void UISimState::load_scene()
     Eigen::MatrixXd v =
         m_state.problem_ptr->velocities() * m_state.problem_ptr->timestep();
 
-    mesh_data->data().show_vertid = false;
+    // mesh_data->data().show_vertid = false;
     mesh_data->set_mesh(
         q, m_state.problem_ptr->edges(), m_state.problem_ptr->faces());
     Eigen::VectorXi vertex_type;

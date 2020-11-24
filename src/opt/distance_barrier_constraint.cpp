@@ -7,6 +7,7 @@
 #include <ipc/ipc.hpp>
 
 #include <geometry/distance.hpp>
+#include <io/serialize_json.hpp>
 #include <logger.hpp>
 #include <profiler.hpp>
 
@@ -78,6 +79,156 @@ namespace opt {
         return has_collisions;
     }
 
+    static int counter = 0;
+
+    void save_candidate(
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1,
+        const ipc::EdgeVertexCandidate& ev_candidate)
+    {
+        nlohmann::json json;
+        long bodyA_id, vertex_id, bodyB_id, edge_id;
+        bodies.global_to_local_vertex(
+            ev_candidate.vertex_index, bodyA_id, vertex_id);
+        bodies.global_to_local_edge(ev_candidate.edge_index, bodyB_id, edge_id);
+        const auto& bodyA = bodies.m_rbs[bodyA_id];
+        const auto& bodyB = bodies.m_rbs[bodyB_id];
+        json["type"] = "ev";
+
+        json["edge"] = nlohmann::json();
+        json["edge"]["vertex0"] =
+            io::to_json(bodyB.vertices.row(bodyB.edges(edge_id, 0)));
+        json["edge"]["vertex1"] =
+            io::to_json(bodyB.vertices.row(bodyB.edges(edge_id, 1)));
+        json["edge"]["pose_t0"] = nlohmann::json();
+        json["edge"]["pose_t0"]["position"] =
+            io::to_json(poses_t0[bodyB_id].position);
+        json["edge"]["pose_t0"]["rotation"] =
+            io::to_json(poses_t0[bodyB_id].rotation);
+        json["edge"]["pose_t1"] = nlohmann::json();
+        json["edge"]["pose_t1"]["position"] =
+            io::to_json(poses_t1[bodyB_id].position);
+        json["edge"]["pose_t1"]["rotation"] =
+            io::to_json(poses_t1[bodyB_id].rotation);
+
+        json["vertex"] = nlohmann::json();
+        json["vertex"]["vertex"] = io::to_json(bodyA.vertices.row(vertex_id));
+        json["vertex"]["pose_t0"]["position"] =
+            io::to_json(poses_t0[bodyA_id].position);
+        json["vertex"]["pose_t0"]["rotation"] =
+            io::to_json(poses_t0[bodyA_id].rotation);
+        json["vertex"]["pose_t1"] = nlohmann::json();
+        json["vertex"]["pose_t1"]["position"] =
+            io::to_json(poses_t1[bodyA_id].position);
+        json["vertex"]["pose_t1"]["rotation"] =
+            io::to_json(poses_t1[bodyA_id].rotation);
+
+        std::ofstream(fmt::format("ccd-test-{:03d}.json", counter++))
+            << json.dump();
+    }
+
+    void save_candidate(
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1,
+        const ipc::FaceVertexCandidate& fv_candidate)
+    {
+        nlohmann::json json;
+        long bodyA_id, vertex_id, bodyB_id, face_id;
+        bodies.global_to_local_vertex(
+            fv_candidate.vertex_index, bodyA_id, vertex_id);
+        bodies.global_to_local_face(fv_candidate.face_index, bodyB_id, face_id);
+        const auto& bodyA = bodies.m_rbs[bodyA_id];
+        const auto& bodyB = bodies.m_rbs[bodyB_id];
+        json["type"] = "fv";
+
+        json["face"] = nlohmann::json();
+        json["face"]["vertex0"] =
+            io::to_json(bodyB.vertices.row(bodyB.faces(face_id, 0)));
+        json["face"]["vertex1"] =
+            io::to_json(bodyB.vertices.row(bodyB.faces(face_id, 1)));
+        json["face"]["vertex2"] =
+            io::to_json(bodyB.vertices.row(bodyB.faces(face_id, 2)));
+        json["face"]["pose_t0"] = nlohmann::json();
+        json["face"]["pose_t0"]["position"] =
+            io::to_json(poses_t0[bodyB_id].position);
+        json["face"]["pose_t0"]["rotation"] =
+            io::to_json(poses_t0[bodyB_id].rotation);
+        json["face"]["pose_t1"] = nlohmann::json();
+        json["face"]["pose_t1"]["position"] =
+            io::to_json(poses_t1[bodyB_id].position);
+        json["face"]["pose_t1"]["rotation"] =
+            io::to_json(poses_t1[bodyB_id].rotation);
+
+        json["vertex"] = nlohmann::json();
+        json["vertex"]["vertex"] = io::to_json(bodyA.vertices.row(vertex_id));
+        json["vertex"]["pose_t0"]["position"] =
+            io::to_json(poses_t0[bodyA_id].position);
+        json["vertex"]["pose_t0"]["rotation"] =
+            io::to_json(poses_t0[bodyA_id].rotation);
+        json["vertex"]["pose_t1"] = nlohmann::json();
+        json["vertex"]["pose_t1"]["position"] =
+            io::to_json(poses_t1[bodyA_id].position);
+        json["vertex"]["pose_t1"]["rotation"] =
+            io::to_json(poses_t1[bodyA_id].rotation);
+
+        std::ofstream(fmt::format("ccd-test-{:03d}.json", counter++))
+            << json.dump();
+    }
+
+    void save_candidate(
+        const physics::RigidBodyAssembler& bodies,
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1,
+        const ipc::EdgeEdgeCandidate& ee_candidate)
+    {
+        nlohmann::json json;
+        long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
+        bodies.global_to_local_edge(
+            ee_candidate.edge0_index, bodyA_id, edgeA_id);
+        bodies.global_to_local_edge(
+            ee_candidate.edge1_index, bodyB_id, edgeB_id);
+        const auto& bodyA = bodies.m_rbs[bodyA_id];
+        const auto& bodyB = bodies.m_rbs[bodyB_id];
+        json["type"] = "ee";
+
+        json["edge0"] = nlohmann::json();
+        json["edge0"]["vertex0"] =
+            io::to_json(bodyA.vertices.row(bodyA.edges(edgeA_id, 0)));
+        json["edge0"]["vertex1"] =
+            io::to_json(bodyA.vertices.row(bodyA.edges(edgeA_id, 1)));
+        json["edge0"]["pose_t0"] = nlohmann::json();
+        json["edge0"]["pose_t0"]["position"] =
+            io::to_json(poses_t0[bodyA_id].position);
+        json["edge0"]["pose_t0"]["rotation"] =
+            io::to_json(poses_t0[bodyA_id].rotation);
+        json["edge0"]["pose_t1"] = nlohmann::json();
+        json["edge0"]["pose_t1"]["position"] =
+            io::to_json(poses_t1[bodyA_id].position);
+        json["edge0"]["pose_t1"]["rotation"] =
+            io::to_json(poses_t1[bodyA_id].rotation);
+
+        json["edge1"] = nlohmann::json();
+        json["edge1"]["vertex0"] =
+            io::to_json(bodyB.vertices.row(bodyB.edges(edgeB_id, 0)));
+        json["edge1"]["vertex1"] =
+            io::to_json(bodyB.vertices.row(bodyB.edges(edgeB_id, 1)));
+        json["edge1"]["pose_t0"] = nlohmann::json();
+        json["edge1"]["pose_t0"]["position"] =
+            io::to_json(poses_t0[bodyB_id].position);
+        json["edge1"]["pose_t0"]["rotation"] =
+            io::to_json(poses_t0[bodyB_id].rotation);
+        json["edge1"]["pose_t1"] = nlohmann::json();
+        json["edge1"]["pose_t1"]["position"] =
+            io::to_json(poses_t1[bodyB_id].position);
+        json["edge1"]["pose_t1"]["rotation"] =
+            io::to_json(poses_t1[bodyB_id].rotation);
+
+        std::ofstream(fmt::format("ccd-test-{:03d}.json", counter++))
+            << json.dump();
+    }
+
     bool DistanceBarrierConstraint::has_active_collisions_narrow_phase(
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses_t0,
@@ -89,6 +240,7 @@ namespace opt {
             bool are_colliding = edge_vertex_ccd(
                 bodies, poses_t0, poses_t1, ev_candidate, toi, trajectory_type);
             if (are_colliding) {
+                save_candidate(bodies, poses_t0, poses_t1, ev_candidate);
                 return true;
             }
         }
@@ -97,6 +249,7 @@ namespace opt {
             bool are_colliding = face_vertex_ccd(
                 bodies, poses_t0, poses_t1, fv_candidate, toi, trajectory_type);
             if (are_colliding) {
+                save_candidate(bodies, poses_t0, poses_t1, fv_candidate);
                 return true;
             }
         }
@@ -105,6 +258,7 @@ namespace opt {
             bool are_colliding = edge_edge_ccd(
                 bodies, poses_t0, poses_t1, ee_candidate, toi, trajectory_type);
             if (are_colliding) {
+                save_candidate(bodies, poses_t0, poses_t1, ee_candidate);
                 return true;
             }
         }

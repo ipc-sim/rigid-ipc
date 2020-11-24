@@ -10,9 +10,9 @@ namespace ccd {
 
 void UISimState::draw_menu()
 {
-    if (m_show_vertex_data) {
-        draw_labels_window();
-    }
+    // if (m_show_vertex_data) {
+    //     draw_labels_window();
+    // }
 
     float menu_width = 220.f * menu_scaling();
     static bool player_menu = true;
@@ -20,8 +20,8 @@ void UISimState::draw_menu()
     static bool collisions_menu = true;
 
     //--------------------------------------------------------------------------
-    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(
         ImVec2(menu_width, -1.0f), ImVec2(menu_width, -1.0f));
     bool _viewer_menu_visible = true;
@@ -60,8 +60,8 @@ void UISimState::draw_menu()
         float legends_width = 270.f * menu_scaling();
         ImGui::SetNextWindowPos(
             ImVec2(ImGui::GetIO().DisplaySize.x - legends_width, 0.0f),
-            ImGuiSetCond_FirstUseEver);
-        ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiSetCond_FirstUseEver);
+            ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSizeConstraints(
             ImVec2(200.0f, 30.0f), ImVec2(legends_width, -1.0f));
         bool _colors_menu_visible = true;

@@ -45,7 +45,7 @@ endfunction()
 function(fixing_collisions_download_libigl)
      fixing_collisions_download_project(libigl
        GIT_REPOSITORY https://github.com/libigl/libigl.git
-       GIT_TAG        v2.2.0
+       GIT_TAG        efee81b7dbc81ec87adaca1197b47f4faab961d3
     )
 endfunction()
 

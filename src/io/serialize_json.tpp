@@ -4,28 +4,6 @@
 
 namespace ccd {
 namespace io {
-    template <typename T>
-    nlohmann::json to_json(const Eigen::VectorX<T>& vector)
-    {
-        std::vector<T> vec(vector.data(), vector.data() + vector.size());
-        return nlohmann::json(vec);
-    }
-
-    template <typename T>
-    nlohmann::json to_json(const Eigen::MatrixX<T>& matrix)
-    {
-        size_t num_rows = size_t(matrix.rows());
-        size_t num_cols = size_t(matrix.cols());
-        std::vector<std::vector<T>> vec(num_rows);
-        for (size_t i = 0; i < num_rows; ++i) {
-            std::vector<T> row(num_cols);
-            for (size_t j = 0; j < num_cols; ++j) {
-                row[j] = matrix(long(i), long(j));
-            }
-            vec[i] = row;
-        }
-        return nlohmann::json(vec);
-    }
 
     template <typename T, int dim, int max_dim>
     void from_json(
@@ -58,5 +36,34 @@ namespace io {
                     list[i].data(), long(num_cols));
         }
     }
+
+    template <typename Derived>
+    nlohmann::json to_json(const Eigen::MatrixBase<Derived>& matrix_base)
+    {
+        using T = typename Derived::Scalar;
+        size_t num_rows = size_t(matrix_base.rows());
+        size_t num_cols = size_t(matrix_base.cols());
+
+        typedef Eigen::Ref<const Eigen::Matrix<
+            T, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>>
+            RefMatrix;
+        RefMatrix matrix(matrix_base);
+
+        if (num_rows == 1 || num_cols == 1) {
+            std::vector<T> vec(matrix.data(), matrix.data() + matrix.size());
+            return nlohmann::json(vec);
+        }
+
+        std::vector<std::vector<T>> mat(num_rows);
+        for (size_t i = 0; i < num_rows; ++i) {
+            std::vector<T> row(num_cols);
+            for (size_t j = 0; j < num_cols; ++j) {
+                row[j] = matrix(long(i), long(j));
+            }
+            mat[i] = row;
+        }
+        return nlohmann::json(mat);
+    }
+
 } // namespace io
 } // namespace ccd

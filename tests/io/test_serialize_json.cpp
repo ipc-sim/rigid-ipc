@@ -14,7 +14,7 @@ TEST_CASE("Serialize to Json", "[io][json]")
     {
         Eigen::VectorXd vec(3);
         vec << 1.0, 2.0, 3.0;
-        auto jvec = ccd::io::to_json<double>(vec);
+        auto jvec = ccd::io::to_json(vec);
 
         CHECK(jvec.dump() == "[1.0,2.0,3.0]");
     }
@@ -23,7 +23,7 @@ TEST_CASE("Serialize to Json", "[io][json]")
     {
         Eigen::VectorXi vec(3);
         vec << 1, 2, 3;
-        auto jvec = ccd::io::to_json<int>(vec);
+        auto jvec = ccd::io::to_json(vec);
 
         CHECK(jvec.dump() == "[1,2,3]");
     }
@@ -32,7 +32,7 @@ TEST_CASE("Serialize to Json", "[io][json]")
     {
         Eigen::MatrixXd vec(1, 3);
         vec << 1.0, 2.0, 3.0;
-        auto jvec = ccd::io::to_json<double>(vec);
+        auto jvec = ccd::io::to_json(vec);
 
         CHECK(jvec.dump() == "[[1.0,2.0,3.0]]");
     }
@@ -41,7 +41,7 @@ TEST_CASE("Serialize to Json", "[io][json]")
     {
         Eigen::MatrixXd vec(2, 3);
         vec << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
-        auto jvec = ccd::io::to_json<double>(vec);
+        auto jvec = ccd::io::to_json(vec);
 
         CHECK(jvec.dump() == "[[1.0,2.0,3.0],[4.0,5.0,6.0]]");
     }
@@ -50,7 +50,7 @@ TEST_CASE("Serialize to Json", "[io][json]")
     {
         Eigen::MatrixXi vec(1, 3);
         vec << 1, 2, 3;
-        auto jvec = ccd::io::to_json<int>(vec);
+        auto jvec = ccd::io::to_json(vec);
 
         CHECK(jvec.dump() == "[[1,2,3]]");
     }
