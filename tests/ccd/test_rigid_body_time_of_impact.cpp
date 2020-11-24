@@ -622,8 +622,8 @@ TEST_CASE(
 
 TEST_CASE("Failing earliest tois", "[ccd][rigid_toi][thisone]")
 {
-    int id = GENERATE(0, 1, 2, 3);
-    std::string filename = fmt::format("ccd-test-{:03d}.json", id);
+    int id = GENERATE(range(0, 385));
+    std::string filename = fmt::format("wrecking-ball/ccd-test-{:03d}.json", id);
     boost::filesystem::path data_path =
         boost::filesystem::path(__FILE__).parent_path().parent_path() / "data"
         / filename;
