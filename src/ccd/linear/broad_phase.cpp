@@ -196,25 +196,15 @@ void detect_collision_candidates_hash_grid(
 
     // Assume checking if vertex is and end-point of the edge is done by
     // `hashgrid.getVertexEdgePairs(...)`.
-    tbb::parallel_invoke(
-        [&] {
-            if (collision_types & EDGE_VERTEX) {
-                hashgrid.getVertexEdgePairs(
-                    edges, group_ids, candidates.ev_candidates);
-            }
-        },
-        [&] {
-            if (collision_types & EDGE_EDGE) {
-                hashgrid.getEdgeEdgePairs(
-                    edges, group_ids, candidates.ee_candidates);
-            }
-        },
-        [&] {
-            if (collision_types & FACE_VERTEX) {
-                hashgrid.getFaceVertexPairs(
-                    faces, group_ids, candidates.fv_candidates);
-            }
-        });
+    if (collision_types & EDGE_VERTEX) {
+        hashgrid.getVertexEdgePairs(edges, group_ids, candidates.ev_candidates);
+    }
+    if (collision_types & EDGE_EDGE) {
+        hashgrid.getEdgeEdgePairs(edges, group_ids, candidates.ee_candidates);
+    }
+    if (collision_types & FACE_VERTEX) {
+        hashgrid.getFaceVertexPairs(faces, group_ids, candidates.fv_candidates);
+    }
 
     hashgrid.clear();
 }

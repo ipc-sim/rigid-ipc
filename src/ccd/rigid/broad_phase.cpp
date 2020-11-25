@@ -68,25 +68,18 @@ void detect_collision_candidates_rigid_hash_grid(
     hashgrid.addBodies(bodies, poses_t0, poses_t1, body_ids, inflation_radius);
 
     const Eigen::VectorXi& group_ids = bodies.group_ids();
-    tbb::parallel_invoke(
-        [&] {
-            if (collision_types & CollisionType::EDGE_VERTEX) {
-                hashgrid.getVertexEdgePairs(
-                    bodies.m_edges, group_ids, candidates.ev_candidates);
-            }
-        },
-        [&] {
-            if (collision_types & CollisionType::EDGE_EDGE) {
-                hashgrid.getEdgeEdgePairs(
-                    bodies.m_edges, group_ids, candidates.ee_candidates);
-            }
-        },
-        [&] {
-            if (collision_types & CollisionType::FACE_VERTEX) {
-                hashgrid.getFaceVertexPairs(
-                    bodies.m_faces, group_ids, candidates.fv_candidates);
-            }
-        });
+    if (collision_types & CollisionType::EDGE_VERTEX) {
+        hashgrid.getVertexEdgePairs(
+            bodies.m_edges, group_ids, candidates.ev_candidates);
+    }
+    if (collision_types & CollisionType::EDGE_EDGE) {
+        hashgrid.getEdgeEdgePairs(
+            bodies.m_edges, group_ids, candidates.ee_candidates);
+    }
+    if (collision_types & CollisionType::FACE_VERTEX) {
+        hashgrid.getFaceVertexPairs(
+            bodies.m_faces, group_ids, candidates.fv_candidates);
+    }
 
     hashgrid.clear();
 }
