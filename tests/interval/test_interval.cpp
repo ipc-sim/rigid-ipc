@@ -4,7 +4,7 @@
 #include <logger.hpp>
 #include <physics/pose.hpp>
 
-TEST_CASE("Simple interval arithmetic", "[ccd][interval]")
+TEST_CASE("Simple interval arithmetic", "[interval]")
 {
     ccd::Interval i(0, 1), j(4, 5);
     CHECK(i.lower() <= i.upper());
@@ -32,7 +32,7 @@ TEST_CASE("Simple interval arithmetic", "[ccd][interval]")
     CHECK(result.upper() == Approx(i.upper() + 10).margin(1e-12));
 }
 
-TEST_CASE("Cosine interval arithmetic", "[ccd][interval]")
+TEST_CASE("Cosine interval arithmetic", "[interval]")
 {
     ccd::Interval r;
 
@@ -60,7 +60,7 @@ TEST_CASE("Cosine interval arithmetic", "[ccd][interval]")
     CHECK(r.upper() > 0);
 }
 
-TEST_CASE("Sine interval arithmetic", "[ccd][interval]")
+TEST_CASE("Sine interval arithmetic", "[interval]")
 {
     ccd::Interval r;
 
@@ -91,7 +91,7 @@ TEST_CASE("Sine interval arithmetic", "[ccd][interval]")
     CHECK(r.upper() > 0);
 }
 
-TEST_CASE("Interval rotation rounding", "[ccd][interval][matrix]")
+TEST_CASE("Interval rotation rounding", "[interval][matrix]")
 {
     using namespace ccd;
     using namespace ccd::physics;
@@ -134,4 +134,22 @@ TEST_CASE("Interval rotation rounding", "[ccd][interval][matrix]")
         CHECK(std::isfinite(RV(i).upper()));
     }
     // std::cout << RV << std::endl;
+}
+
+TEST_CASE("CheckingPolicy", "[interval][checking_policy]")
+{
+    using namespace ccd;
+    typedef boost::numeric::interval_lib::checking_no_empty<double>
+        m_CheckingPolicy;
+
+    // Use filib rounding arithmetic
+    typedef boost::numeric::interval<
+        double,
+        boost::numeric::interval_lib::policies<
+            boost::numeric::interval_lib::save_state<FILibRounding>,
+            m_CheckingPolicy>>
+        m_Interval;
+
+    m_Interval i = m_Interval(-1, 1);
+    // fmt::print("{}\n", logger::fmt_interval(i / 0.0));
 }

@@ -49,7 +49,7 @@ namespace io {
             RefMatrix;
         RefMatrix matrix(matrix_base);
 
-        if (num_rows == 1 || num_cols == 1) {
+        if (num_cols == 1) {
             std::vector<T> vec(matrix.data(), matrix.data() + matrix.size());
             return nlohmann::json(vec);
         }

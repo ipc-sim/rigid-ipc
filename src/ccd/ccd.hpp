@@ -74,15 +74,6 @@ void detect_collision_candidates(
     TrajectoryType trajectory = TrajectoryType::RIGID,
     const double inflation_radius = 0.0);
 
-/// @brief Use a hash grid method to create a set of all candidate collisions.
-void detect_collision_candidates_hash_grid(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const int collision_types,
-    ipc::Candidates& candidates,
-    const double inflation_radius = 0.0);
-
 ///////////////////////////////////////////////////////////////////////////////
 // Narrow-Phase
 ///////////////////////////////////////////////////////////////////////////////

@@ -105,7 +105,7 @@ endfunction()
 function(fixing_collisions_download_polysolve)
   fixing_collisions_download_project(polysolve
     GIT_REPOSITORY https://github.com/polyfem/polysolve.git
-    GIT_TAG        23ccf9487772ab1b9554a78d8808179d1b3286a0
+    GIT_TAG        5d8f73476d79c79f3daf1bd831f1ad4ba2500711
   )
 endfunction()
 

@@ -1,6 +1,7 @@
 // Launch simulation GUI
 
 #include <Eigen/Core>
+#include <tbb/global_control.h>
 
 #include <logger.hpp>
 #include <viewer/UISimState.hpp>
@@ -57,7 +58,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    // tbb::task_scheduler_init init(1);
+    // tbb::global_control c(tbb::global_control::max_allowed_parallelism, 1);
     ccd::logger::set_level(spdlog::level::info);
     ccd::UISimState ui;
     ui.launch((argc > 1 && !is_arg1_number) ? argv[1] : "");

@@ -262,9 +262,11 @@ bool edge_edge_ccd(
         Eigen::Vector3d eb1_t1 = bodyB.world_vertex(poseB_t1, eb1_id);
 
         // TODO: Check if edges are parallel
-        return ipc::edge_edge_ccd(
-            ea0_t0, ea1_t0, eb0_t0, ea1_t0, ea0_t1, ea1_t1, eb0_t1, ea1_t1, toi,
-            /*conservative_rescaling=*/1.0);
+        bool result = ipc::edge_edge_ccd(
+            ea0_t0, ea1_t0, eb0_t0, eb1_t0, ea0_t1, ea1_t1, eb0_t1, eb1_t1, toi,
+            /*conservative_rescaling=*/0.8);
+        assert(!result || toi > 0);
+        return result;
     }
 
     case TrajectoryType::PIECEWISE_LINEAR:
@@ -302,7 +304,7 @@ bool face_vertex_ccd(
     const physics::Pose<double>& poseB_t1 = poses_t1[bodyB_id];
     long f0_id = bodyB.faces(face_id, 0);
     long f1_id = bodyB.faces(face_id, 1);
-    long f2_id = bodyB.faces(face_id, 1);
+    long f2_id = bodyB.faces(face_id, 2);
 
     switch (trajectory) {
     case TrajectoryType::LINEAR: {
@@ -318,9 +320,11 @@ bool face_vertex_ccd(
         Eigen::Vector3d f2_t0 = bodyB.world_vertex(poseB_t0, f2_id);
         Eigen::Vector3d f2_t1 = bodyB.world_vertex(poseB_t1, f2_id);
 
-        return ipc::point_triangle_ccd(
+        bool result = ipc::point_triangle_ccd(
             v_t0, f0_t0, f1_t0, f2_t0, v_t1, f0_t1, f1_t1, f2_t1, toi,
-            /*conservative_rescaling=*/1.0);
+            /*conservative_rescaling=*/0.8);
+        assert(!result || toi > 0);
+        return result;
     }
 
     case TrajectoryType::PIECEWISE_LINEAR:
@@ -483,7 +487,7 @@ void face_vertex_closest_point(
     const Pose& poseB_t1 = poses_t1[bodyB_id];
     long f0_id = bodyB.faces(face_id, 0);
     long f1_id = bodyB.faces(face_id, 1);
-    long f2_id = bodyB.faces(face_id, 1);
+    long f2_id = bodyB.faces(face_id, 2);
 
     Eigen::Vector3d p, f0, f1, f2;
     switch (trajectory) {

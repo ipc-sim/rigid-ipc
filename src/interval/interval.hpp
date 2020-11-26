@@ -15,7 +15,8 @@
 namespace ccd {
 
 namespace interval_options {
-    typedef boost::numeric::interval_lib::checking_base<double> CheckingPolicy;
+    typedef boost::numeric::interval_lib::checking_catch_nan<double>
+        CheckingPolicy;
 } // namespace interval_options
 
 #ifdef USE_FILIB_INTERVALS
