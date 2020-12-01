@@ -623,7 +623,8 @@ TEST_CASE(
 TEST_CASE("Failing earliest tois", "[ccd][rigid_toi][thisone]")
 {
     int id = GENERATE(range(0, 385));
-    std::string filename = fmt::format("wrecking-ball/ccd-test-{:03d}.json", id);
+    std::string filename =
+        fmt::format("wrecking-ball/ccd-test-{:03d}.json", id);
     boost::filesystem::path data_path =
         boost::filesystem::path(__FILE__).parent_path().parent_path() / "data"
         / filename;
@@ -721,6 +722,7 @@ TEST_CASE("Failing earliest tois", "[ccd][rigid_toi][thisone]")
     REQUIRE(is_impacting);
 
     // toi *= 0.99;
+    double toi2 = 1;
 
     Pose<double> bodyA_pose_toi =
         Pose<double>::interpolate(bodyA_pose_t0, bodyA_pose_t1, toi);
@@ -728,15 +730,16 @@ TEST_CASE("Failing earliest tois", "[ccd][rigid_toi][thisone]")
         Pose<double>::interpolate(bodyB_pose_t0, bodyB_pose_t1, toi);
 
     if (ccd_type == "ee") {
-        is_impacting = compute_piecewise_linear_edge_edge_time_of_impact(
+        is_impacting = compute_edge_edge_time_of_impact(
             bodyA, bodyA_pose_t0, bodyA_pose_toi, /*edgeA_id=*/0, //
             bodyB, bodyB_pose_t0, bodyB_pose_toi, /*edgeB_id=*/0, //
-            toi);
+            toi2);
     } else if (ccd_type == "fv") {
-        is_impacting = compute_piecewise_linear_face_vertex_time_of_impact(
+        is_impacting = compute_face_vertex_time_of_impact(
             bodyB, bodyB_pose_t0, bodyB_pose_toi, /*vertex_id=*/0, // Vertex
             bodyA, bodyA_pose_t0, bodyA_pose_toi, /*face_id=*/0,   // Face
-            toi);
+            toi2);
     }
+    CAPTURE(toi, toi2, toi * toi2);
     CHECK(!is_impacting);
 }

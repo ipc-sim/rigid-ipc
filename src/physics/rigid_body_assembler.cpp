@@ -220,9 +220,9 @@ namespace physics {
             double ri = m_rbs[i].r_max;
             for (int j = i + 1; j < num_bodies(); j++) {
                 double rj = m_rbs[j].r_max;
-                double distance = ipc::edge_edge_distance(
+                double distance = sqrt(ipc::edge_edge_distance(
                     poses_t0[i].position, poses_t1[i].position,
-                    poses_t0[j].position, poses_t1[j].position);
+                    poses_t0[j].position, poses_t1[j].position));
                 if (distance <= ri + rj + inflation_radius) {
                     body_ids.push_back(i);
                     body_ids.push_back(j);

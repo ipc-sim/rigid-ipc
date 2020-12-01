@@ -136,6 +136,7 @@ TEST_CASE("Interval rotation rounding", "[interval][matrix]")
     // std::cout << RV << std::endl;
 }
 
+#ifdef USE_FILIB_INTERVALS
 TEST_CASE("CheckingPolicy", "[interval][checking_policy]")
 {
     using namespace ccd;
@@ -153,3 +154,4 @@ TEST_CASE("CheckingPolicy", "[interval][checking_policy]")
     m_Interval i = m_Interval(-1, 1);
     // fmt::print("{}\n", logger::fmt_interval(i / 0.0));
 }
+#endif

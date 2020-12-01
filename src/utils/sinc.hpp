@@ -16,7 +16,10 @@ Interval sinc(const Interval& x);
 template <typename T> T norm(const Eigen::VectorX3<T>& x)
 {
     // Do an explicit abs to avoid possible problems with intervals
-    Eigen::VectorX3<T> absx = x.cwiseAbs();
+    Eigen::VectorX3<T> absx(x.size());
+    for (int i = 0; i < x.size(); i++) {
+        absx(i) = abs(x(i));
+    }
     return sqrt(absx.dot(absx));
 }
 

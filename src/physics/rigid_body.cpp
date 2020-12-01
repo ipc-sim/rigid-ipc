@@ -166,7 +166,7 @@ namespace physics {
         mass_matrix.diagonal().head(pos_ndof()).setConstant(mass);
         mass_matrix.diagonal().tail(rot_ndof()) = moment_of_inertia;
 
-        r_max = vertices.rowwise().squaredNorm().maxCoeff();
+        r_max = vertices.rowwise().norm().maxCoeff();
 
         average_edge_length = 0;
         for (long i = 0; i < edges.rows(); i++) {
