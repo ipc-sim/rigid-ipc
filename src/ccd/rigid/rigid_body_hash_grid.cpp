@@ -77,35 +77,6 @@ void RigidBodyHashGrid::resize(
 
     double cell_size =
         std::max(average_displacement_length, average_edge_length);
-    spdlog::critical(
-        "RB hash grid resize min={} max={} cell_size={:g}",
-        logger::fmt_eigen(min), logger::fmt_eigen(max), cell_size);
-
-    /// DELETE ME /////////////////////////////////////////////////////////////
-    if ((abs((max - min).array()) > 1000).any()) {
-        static int counter = 0;
-        // Save file
-        std::vector<nlohmann::json> json_bodies;
-        for (int i = 0; i < bodies.num_bodies(); i++) {
-            nlohmann::json json_body = {
-                { "vertices", io::to_json(bodies.m_rbs[i].vertices) },
-                { "edges", io::to_json(bodies.m_rbs[i].edges) },
-                { "faces", io::to_json(bodies.m_rbs[i].faces) },
-                { "pose_t0",
-                  { { "position", io::to_json(poses_t0[i].position) },
-                    { "rotation", io::to_json(poses_t0[i].rotation) } } },
-                { "pose_t1",
-                  { { "position", io::to_json(poses_t1[i].position) },
-                    { "rotation", io::to_json(poses_t1[i].rotation) } } }
-            };
-            json_bodies.push_back(json_body);
-        }
-        nlohmann::json json;
-        json["bodies"] = json_bodies;
-        std::ofstream(fmt::format("large-rb-hashgrid-{:03d}.json", counter++))
-            << json.dump();
-    }
-    ///////////////////////////////////////////////////////////////////////////
 
     HashGrid::resize(min, max, cell_size);
 }
