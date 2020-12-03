@@ -30,7 +30,7 @@ link = {
     "mesh": "chain-mail/link.obj",
     "position": [0, 0, 0],
     "rotation": [0, 0, 0],
-    "density": 8,
+    "density": 7680,
     "is_dof_fixed": False
 }
 
@@ -60,7 +60,7 @@ for j in range(cols):
 # cube = {
 #     "mesh": "cube.obj",
 #     "position": [0, 0, 0],
-#     "density": 1,
+#     "density": 1000,
 #     "is_dof_fixed": False
 # }
 #

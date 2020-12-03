@@ -11,25 +11,25 @@
         "gravity": [0, -9.81, 0],
         "rigid_bodies": [{
             "mesh": "pendulum/pin-short.obj",
-            "position": [0, 2, 0],
+            "position": [0, 0.2, 0],
             "rotation": [0, 0, 0],
-            "scale": 1,
+            "scale": 0.1,
             "is_dof_fixed": true
         }, {
             "mesh": "pendulum/arm.obj",
-            "position": [-2, 2, 0],
+            "position": [-0.2, 0.2, 0],
             "rotation": [0, 0, 90],
-            "scale": 1
+            "scale": 0.1
         }, {
             "mesh": "pendulum/pin.obj",
-            "position": [-4, 2, -0.1275],
+            "position": [-0.4, 0.2, -0.01275],
             "rotation": [0, 0, 0],
-            "scale": 1
+            "scale": 0.1
         }, {
             "mesh": "pendulum/arm.obj",
-            "position": [-6, 2, -0.255],
+            "position": [-0.6, 0.2, -0.0255],
             "rotation": [0, 0, 90],
-            "scale": 1
+            "scale": 0.1
         }]
     }
 }

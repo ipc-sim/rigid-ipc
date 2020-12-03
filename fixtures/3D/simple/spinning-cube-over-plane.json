@@ -17,7 +17,7 @@
             "#angular_velocity": [0, 114591.5590262, 0],
             "angular_velocity": [0, 180, 0],
             "torque": [0, 0, 0],
-            "density": 1
+            "density": 7680
         }, {
             "mesh": "plane.obj",
             "position": [2, -0.5001, -2],

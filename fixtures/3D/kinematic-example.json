@@ -28,6 +28,7 @@
             "position": [-2.5, 0, 0],
             "rotation": [0, 0, 90],
             "linear_velocity": [1, 0, 0],
+            "density": 10000,
             "type": "kinematic"
         }]
     }

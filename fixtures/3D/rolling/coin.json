@@ -2,9 +2,13 @@
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
     "max_time": 10,
-    "timestep": 0.01,
+    "timestep": 0.0001,
     "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 1e-3
+        "initial_barrier_activation_distance": 1e-4
+    },
+    "friction_constraints": {
+        "static_friction_speed_bound": 1e-3,
+        "iterations": -1
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
@@ -12,16 +16,16 @@
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "cylinder.obj",
-            "position": [0, 0.01, 0],
-            "rotation": [90, 0, 0],
-            "scale": [1, 0.025, 1],
+            "position": [0, 0, 0],
+            "rotation": [85, 0, 0],
+            "dimensions": [0.02426, 0.00175, 0.02426],
             "angular_velocity": [0, 900, 0],
-            "density": 0.01
+            "density": 8900
         }, {
             "mesh": "plane.obj",
             "is_dof_fixed": true,
-            "position": [0, -1, 0],
-            "scale": 1
+            "position": [0, -0.0123, 0],
+            "dimensions": [0.1, 0, 0.1]
         }]
     }
 }

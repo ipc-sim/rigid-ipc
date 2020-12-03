@@ -35,7 +35,7 @@ link = {
     "mesh": "wrecking-ball/link.obj",
     "position": [0, 0, 0],
     "rotation": [0, 0, 0],
-    "density": 8,
+    "density": 7680,
     "is_dof_fixed": False
 }
 
@@ -43,7 +43,7 @@ ball = {
     "mesh": "wrecking-ball/ball.obj",
     "position": [0, 0, 0],
     "rotation": [0, 0, 0],
-    "density": 8,
+    "density": 7680,
     "is_dof_fixed": False
 }
 
@@ -83,7 +83,7 @@ origin = numpy.array(ground["position"])
 cube = {
     "mesh": "cube.obj",
     "position": [0, 0, 0],
-    "density": 1,
+    "density": 2800,
     "is_dof_fixed": False
 }
 

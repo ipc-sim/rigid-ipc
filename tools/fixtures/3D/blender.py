@@ -33,7 +33,7 @@ def main():
                 "position": [0, 0, 0],
                 "scale": [0.075, 1, 0.42],
                 "rotation": [0, 0, 90],
-                "density": 1.0,
+                "density": 7680,
                 "angular_velocity": [0, 200, 0],
                 "torque": [0, 0, 0],
                 "is_dof_fixed": [True, True, True, True, False, True],
@@ -43,7 +43,6 @@ def main():
                 "position": [0, 0.61, 0],
                 "scale": [2.2, 1, 2.2],
                 "is_dof_fixed": True,
-                "density": 0.01,
                 "group_id": 0
             }]
         }

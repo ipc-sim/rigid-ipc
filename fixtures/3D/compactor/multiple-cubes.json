@@ -14,7 +14,7 @@
             "position": [-2, 0, 0],
             "rotation": [0, 0, 90],
             "force": [1000, 0, 0],
-            "density": 10,
+            "density": 10000,
             "is_dof_fixed": [false, true, true, true, true, true],
             "group_id": 0
         }, {
@@ -22,7 +22,7 @@
             "position": [2, 0, 0],
             "rotation": [0, 0, -90],
             "force": [-1000, 0, 0],
-            "density": 10,
+            "density": 10000,
             "is_dof_fixed": [false, true, true, true, true, true],
             "group_id": 0
         }, {
@@ -30,7 +30,7 @@
             "position": [0, -2, 0],
             "rotation": [0, 0, 0],
             "force": [0, 1000, 0],
-            "density": 10,
+            "density": 10000,
             "is_dof_fixed": [true, false, true, true, true, true],
             "group_id": 0
         }, {
@@ -38,7 +38,7 @@
             "position": [0, 2, 0],
             "rotation": [0, 0, 0],
             "force": [0, -1000, 0],
-            "density": 10,
+            "density": 10000,
             "is_dof_fixed": [true, false, true, true, true, true],
             "group_id": 0
         }, {

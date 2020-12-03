@@ -30,6 +30,8 @@ namespace io {
         int dim = -1, ndof, angular_dim;
         for (auto& jrb : scene["rigid_bodies"]) {
             // NOTE:
+            // All units by default are expressed in standard SI units
+            // density: units of Kg/m³ (default density of plastic)
             // position: position of the model origin
             // rotation: degrees as xyz euler angles around the model origin
             // scale: scale the vertices around the model origin
@@ -42,7 +44,7 @@ namespace io {
                 "vertices": [],
                 "edges": [],
                 "faces": [],
-                "density": 1.0,
+                "density": 1000.0,
                 "is_dof_fixed": [false, false, false, false, false, false],
                 "oriented": false,
                 "group_id": -1,
@@ -120,11 +122,26 @@ namespace io {
             position.conservativeResize(dim);
 
             Eigen::VectorX3d scale;
-            if (args["scale"].is_number()) {
+            // Dimensions overrides a scale argument
+            if (args.contains("dimensions")) {
+                Eigen::VectorX3d initial_dimensions =
+                    (vertices.colwise().maxCoeff()
+                     - vertices.colwise().minCoeff())
+                        .cwiseAbs();
+                for (int i = 0; i < initial_dimensions.size(); i++) {
+                    if (initial_dimensions(i) == 0) {
+                        initial_dimensions(i) = 1.0;
+                    }
+                }
+                from_json<double>(args["dimensions"], scale);
+                assert(scale.size() = dim);
+                scale.conservativeResize(dim);
+                scale.array() /= initial_dimensions.array();
+            } else if (args["scale"].is_number()) {
                 scale.setConstant(dim, args["scale"].get<double>());
             } else {
                 from_json<double>(args["scale"], scale);
-                assert(scale.size() >= angular_dim);
+                assert(scale.size() >= dim);
                 scale.conservativeResize(dim);
             }
             vertices = vertices * scale.asDiagonal();
