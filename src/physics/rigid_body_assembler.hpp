@@ -134,12 +134,17 @@ namespace physics {
             const physics::Poses<double>& poses_t1,
             const double inflation_radius) const;
 
+        /// Get the ith rigid body
+        const RigidBody& operator[](size_t i) const { return m_rbs[i]; }
+        /// Get the ith rigid body
+        RigidBody& operator[](size_t i) { return m_rbs[i]; }
+
         std::vector<RigidBody> m_rbs;
 
         /// @brief indexes for body
         std::vector<long> m_body_vertex_id;
-        std::vector<long> m_body_face_id;
         std::vector<long> m_body_edge_id;
+        std::vector<long> m_body_face_id;
 
         double average_edge_length; ///< Average edge length
 

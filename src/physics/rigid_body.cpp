@@ -96,7 +96,7 @@ namespace physics {
             center_of_mass, I);
         assert(center_of_mass.squaredNorm() < 1e-8);
 
-        // Mass above is actually volume.
+        // Mass above is actually volume in m³ and density is Kg/m³
         mass *= density;
         if (dim() == 3) {
             // Got this from Chrono: https://bit.ly/2RpbTl1

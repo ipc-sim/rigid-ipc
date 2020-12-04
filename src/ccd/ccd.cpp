@@ -183,8 +183,8 @@ bool edge_vertex_ccd(
     long bodyA_id, vertex_id, bodyB_id, edge_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_edge(candidate.edge_index, bodyB_id, edge_id);
-    const physics::RigidBody& bodyA = bodies.m_rbs[bodyA_id];
-    const physics::RigidBody& bodyB = bodies.m_rbs[bodyB_id];
+    const physics::RigidBody& bodyA = bodies[bodyA_id];
+    const physics::RigidBody& bodyB = bodies[bodyB_id];
     const physics::Pose<double>& poseA_t0 = poses_t0[bodyA_id];
     const physics::Pose<double>& poseA_t1 = poses_t1[bodyA_id];
     const physics::Pose<double>& poseB_t0 = poses_t0[bodyB_id];
@@ -236,8 +236,8 @@ bool edge_edge_ccd(
     long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
     bodies.global_to_local_edge(candidate.edge0_index, bodyA_id, edgeA_id);
     bodies.global_to_local_edge(candidate.edge1_index, bodyB_id, edgeB_id);
-    const physics::RigidBody& bodyA = bodies.m_rbs[bodyA_id];
-    const physics::RigidBody& bodyB = bodies.m_rbs[bodyB_id];
+    const physics::RigidBody& bodyA = bodies[bodyA_id];
+    const physics::RigidBody& bodyB = bodies[bodyB_id];
     const physics::Pose<double>& poseA_t0 = poses_t0[bodyA_id];
     const physics::Pose<double>& poseA_t1 = poses_t1[bodyA_id];
     const physics::Pose<double>& poseB_t0 = poses_t0[bodyB_id];
@@ -296,8 +296,8 @@ bool face_vertex_ccd(
     long bodyA_id, vertex_id, bodyB_id, face_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_face(candidate.face_index, bodyB_id, face_id);
-    const physics::RigidBody& bodyA = bodies.m_rbs[bodyA_id];
-    const physics::RigidBody& bodyB = bodies.m_rbs[bodyB_id];
+    const physics::RigidBody& bodyA = bodies[bodyA_id];
+    const physics::RigidBody& bodyB = bodies[bodyB_id];
     const physics::Pose<double>& poseA_t0 = poses_t0[bodyA_id];
     const physics::Pose<double>& poseA_t1 = poses_t1[bodyA_id];
     const physics::Pose<double>& poseB_t0 = poses_t0[bodyB_id];
@@ -355,8 +355,8 @@ double edge_vertex_closest_point(
     long bodyA_id, vertex_id, bodyB_id, edge_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_edge(candidate.edge_index, bodyB_id, edge_id);
-    const physics::RigidBody& bodyA = bodies.m_rbs[bodyA_id];
-    const physics::RigidBody& bodyB = bodies.m_rbs[bodyB_id];
+    const physics::RigidBody& bodyA = bodies[bodyA_id];
+    const physics::RigidBody& bodyB = bodies[bodyB_id];
     const Pose& poseA_t0 = poses_t0[bodyA_id];
     const Pose& poseA_t1 = poses_t1[bodyA_id];
     const Pose& poseB_t0 = poses_t0[bodyB_id];
@@ -411,8 +411,8 @@ void edge_edge_closest_point(
     long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
     bodies.global_to_local_edge(candidate.edge0_index, bodyA_id, edgeA_id);
     bodies.global_to_local_edge(candidate.edge1_index, bodyB_id, edgeB_id);
-    const physics::RigidBody& bodyA = bodies.m_rbs[bodyA_id];
-    const physics::RigidBody& bodyB = bodies.m_rbs[bodyB_id];
+    const physics::RigidBody& bodyA = bodies[bodyA_id];
+    const physics::RigidBody& bodyB = bodies[bodyB_id];
     const Pose& poseA_t0 = poses_t0[bodyA_id];
     const Pose& poseA_t1 = poses_t1[bodyA_id];
     const Pose& poseB_t0 = poses_t0[bodyB_id];
@@ -479,8 +479,8 @@ void face_vertex_closest_point(
     long bodyA_id, vertex_id, bodyB_id, face_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_face(candidate.face_index, bodyB_id, face_id);
-    const physics::RigidBody& bodyA = bodies.m_rbs[bodyA_id];
-    const physics::RigidBody& bodyB = bodies.m_rbs[bodyB_id];
+    const physics::RigidBody& bodyA = bodies[bodyA_id];
+    const physics::RigidBody& bodyB = bodies[bodyB_id];
     const Pose& poseA_t0 = poses_t0[bodyA_id];
     const Pose& poseA_t1 = poses_t1[bodyA_id];
     const Pose& poseB_t0 = poses_t0[bodyB_id];

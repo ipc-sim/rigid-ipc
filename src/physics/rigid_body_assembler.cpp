@@ -26,6 +26,7 @@ namespace physics {
         m_body_edge_id.resize(num_bodies + 1);
 
         // Store the starting position of each RB vertex in the global vertices
+        m_body_vertex_id[0] = m_body_face_id[0] = m_body_edge_id[0] = 0;
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
             m_body_vertex_id[i + 1] = m_body_vertex_id[i] + rb.vertices.rows();
@@ -40,15 +41,15 @@ namespace physics {
             auto& rb = rigid_bodies[i];
             if (rb.edges.size() != 0) {
                 m_edges.block(m_body_edge_id[i], 0, rb.edges.rows(), 2) =
-                    (rb.edges.array() + int(m_body_vertex_id[i]));
+                    rb.edges.array() + m_body_vertex_id[i];
             }
             if (rb.faces.size() != 0) {
                 m_faces.block(m_body_face_id[i], 0, rb.faces.rows(), 3) =
-                    (rb.faces.array() + int(m_body_vertex_id[i]));
+                    rb.faces.array() + m_body_vertex_id[i];
             }
         }
         // vertex to body map
-        m_vertex_to_body_map.resize(m_body_vertex_id.back());
+        m_vertex_to_body_map.resize(num_vertices());
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
             m_vertex_to_body_map
@@ -56,7 +57,7 @@ namespace physics {
                 .setConstant(int(i));
         }
         // vertex to group id map
-        m_vertex_group_ids.resize(m_body_vertex_id.back());
+        m_vertex_group_ids.resize(num_vertices());
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
             m_vertex_group_ids.segment(m_body_vertex_id[i], rb.vertices.rows())
@@ -79,7 +80,7 @@ namespace physics {
         }
 
         // rigid_body vertex dof_fixed flag
-        is_dof_fixed.resize(m_body_vertex_id.back(), rb_ndof);
+        is_dof_fixed.resize(num_vertices(), rb_ndof);
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
             is_dof_fixed.block(
@@ -247,7 +248,7 @@ namespace physics {
                 poses_t0, poses_t1, inflation_radius);
         }
 
-        static ipc::HashGrid hashgrid;
+        ipc::HashGrid hashgrid;
 
         Eigen::MatrixXd V(2 * num_bodies(), dim());
         Eigen::MatrixXi E(num_bodies(), dim());
@@ -274,7 +275,6 @@ namespace physics {
 
         std::vector<ipc::EdgeEdgeCandidate> body_candidates;
         hashgrid.getEdgeEdgePairs(E, group_ids, body_candidates);
-        hashgrid.clear();
 
         std::vector<int> body_ids;
         body_ids.reserve(2 * body_candidates.size());

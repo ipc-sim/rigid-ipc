@@ -7,8 +7,8 @@
 #include <finitediff.hpp>
 #include <igl/PI.h>
 #include <igl/predicates/segment_segment_intersect.h>
-#include <ipc/spatial_hash/hash_grid.hpp>
 
+#include <ccd/rigid/rigid_body_hash_grid.hpp>
 #include <geometry/intersection.hpp>
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
@@ -73,7 +73,7 @@ namespace physics {
         update_constraints();
 
         for (size_t i = 0; i < num_bodies(); ++i) {
-            auto& rb = m_assembler.m_rbs[i];
+            auto& rb = m_assembler[i];
             spdlog::info(
                 "rb={:d} group_id={:d} mass={:g} inertia={}", i, rb.group_id,
                 rb.mass, logger::fmt_eigen(rb.moment_of_inertia));
@@ -143,13 +143,13 @@ namespace physics {
         assert(rbs.size() == num_bodies());
         size_t i = 0;
         for (auto& jrb : args["rigid_bodies"]) {
-            io::from_json(jrb["position"], m_assembler.m_rbs[i].pose.position);
-            io::from_json(jrb["rotation"], m_assembler.m_rbs[i].pose.rotation);
+            io::from_json(jrb["position"], m_assembler[i].pose.position);
+            io::from_json(jrb["rotation"], m_assembler[i].pose.rotation);
             io::from_json(
-                jrb["linear_velocity"], m_assembler.m_rbs[i].velocity.position);
+                jrb["linear_velocity"], m_assembler[i].velocity.position);
             io::from_json(
                 jrb["angular_velocity"],
-                m_assembler.m_rbs[i].velocity.rotation);
+                m_assembler[i].velocity.rotation);
             i++;
         }
     }
@@ -255,26 +255,28 @@ namespace physics {
             return false;
         }
 
-        static ipc::HashGrid hashgrid;
-
         PROFILE_POINT("RigidBodyProblem::detect_intersections");
         PROFILE_START();
 
-        double inflation_radius = 1e-12; // Conservative broad phase
+        double inflation_radius = 1e-8; // Conservative broad phase
+        std::vector<int> close_bodies =
+            m_assembler.close_bodies(poses, poses, inflation_radius);
+        if (close_bodies.size() <= 1) {
+            PROFILE_END();
+            return false;
+        }
+
+        RigidBodyHashGrid hashgrid;
+        hashgrid.resize(m_assembler, poses, close_bodies, inflation_radius);
+        hashgrid.addBodies(m_assembler, poses, close_bodies, inflation_radius);
+
         const Eigen::MatrixXd vertices = m_assembler.world_vertices(poses);
         const Eigen::MatrixXi& edges = this->edges();
         const Eigen::MatrixXi& faces = this->faces();
-        hashgrid.resize(
-            /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, edges,
-            inflation_radius);
-        hashgrid.addEdges(
-            /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, edges,
-            inflation_radius);
 
         bool is_intersecting = false;
-        if (dim() == 2) {
+        if (dim() == 2) { // Need to check segment-segment intersections in 2D
             assert(vertices.cols() == 2);
-            // Need to check segment-segment intersections in 2D
 
             std::vector<ipc::EdgeEdgeCandidate> ee_candidates;
             hashgrid.getEdgeEdgePairs(edges, group_ids(), ee_candidates);
@@ -293,12 +295,8 @@ namespace physics {
                     break;
                 }
             }
-        } else {
+        } else { // Need to check segment-triangle intersections in 3D
             assert(dim() == 3);
-            // Need to check segment-triangle intersections in 3D
-            hashgrid.addFaces(
-                /*vertices_t0=*/vertices, /*vertices_t1=*/vertices, faces,
-                inflation_radius);
 
             std::vector<ipc::EdgeFaceCandidate> ef_candidates;
             hashgrid.getEdgeFacePairs(edges, faces, group_ids(), ef_candidates);
@@ -317,8 +315,6 @@ namespace physics {
         }
 
         PROFILE_END();
-
-        hashgrid.clear();
 
         return is_intersecting;
     }

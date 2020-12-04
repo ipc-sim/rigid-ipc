@@ -152,7 +152,7 @@ namespace opt {
 
             const size_t body_B_id =
                 size_t(m_assembler.m_vertex_to_body_map(b0_id));
-            bool is_oriented = m_assembler.m_rbs[body_B_id].is_oriented;
+            bool is_oriented = m_assembler[body_B_id].is_oriented;
 
             Eigen::Vector2d n_toi;
             Eigen::VectorX3d e_toi; // edge vector at toi
@@ -234,8 +234,8 @@ namespace opt {
             const long r_B1_id =
                 b1_id - m_assembler.m_body_vertex_id[body_B_id];
 
-            auto& body_A = m_assembler.m_rbs[body_A_id];
-            auto& body_B = m_assembler.m_rbs[body_B_id];
+            auto& body_A = m_assembler[body_A_id];
+            auto& body_B = m_assembler[body_B_id];
 
             // The velocities of the center of mass at the time of
             // collision!!

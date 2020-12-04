@@ -6,6 +6,7 @@
 #include <igl/slice_mask.h>
 #include <ipc/ipc.hpp>
 
+#include <ccd/rigid/rigid_body_hash_grid.hpp>
 #include <geometry/distance.hpp>
 #include <io/serialize_json.hpp>
 #include <logger.hpp>
@@ -92,8 +93,8 @@ namespace opt {
         bodies.global_to_local_vertex(
             ev_candidate.vertex_index, bodyA_id, vertex_id);
         bodies.global_to_local_edge(ev_candidate.edge_index, bodyB_id, edge_id);
-        const auto& bodyA = bodies.m_rbs[bodyA_id];
-        const auto& bodyB = bodies.m_rbs[bodyB_id];
+        const auto& bodyA = bodies[bodyA_id];
+        const auto& bodyB = bodies[bodyB_id];
         json["type"] = "ev";
 
         json["edge"] = nlohmann::json();
@@ -139,8 +140,8 @@ namespace opt {
         bodies.global_to_local_vertex(
             fv_candidate.vertex_index, bodyA_id, vertex_id);
         bodies.global_to_local_face(fv_candidate.face_index, bodyB_id, face_id);
-        const auto& bodyA = bodies.m_rbs[bodyA_id];
-        const auto& bodyB = bodies.m_rbs[bodyB_id];
+        const auto& bodyA = bodies[bodyA_id];
+        const auto& bodyB = bodies[bodyB_id];
         json["type"] = "fv";
 
         json["face"] = nlohmann::json();
@@ -189,8 +190,8 @@ namespace opt {
             ee_candidate.edge0_index, bodyA_id, edgeA_id);
         bodies.global_to_local_edge(
             ee_candidate.edge1_index, bodyB_id, edgeB_id);
-        const auto& bodyA = bodies.m_rbs[bodyA_id];
-        const auto& bodyB = bodies.m_rbs[bodyB_id];
+        const auto& bodyA = bodies[bodyA_id];
+        const auto& bodyB = bodies[bodyB_id];
         json["type"] = "ee";
 
         json["edge0"] = nlohmann::json();
@@ -405,12 +406,35 @@ namespace opt {
         PROFILE_POINT("DistanceBarrierConstraint::construct_constraint_set");
         PROFILE_START();
 
+        const double& dhat = m_barrier_activation_distance;
+
+        std::vector<int> close_bodies = bodies.close_bodies(poses, poses, dhat);
+        if (close_bodies.size() <= 1) {
+            PROFILE_END();
+            return;
+        }
+
+        RigidBodyHashGrid hash_grid;
+        hash_grid.resize(bodies, poses, close_bodies, dhat);
+        hash_grid.addBodies(bodies, poses, close_bodies, dhat);
+
+        ipc::Candidates candidates;
+        if (bodies.dim() == 2) {
+            // This is not needed for 3D
+            hash_grid.getVertexEdgePairs(
+                bodies.m_edges, bodies.group_ids(), candidates.ev_candidates);
+        } else {
+            // These are not needed for 2D
+            hash_grid.getEdgeEdgePairs(
+                bodies.m_edges, bodies.group_ids(), candidates.ee_candidates);
+            hash_grid.getFaceVertexPairs(
+                bodies.m_faces, bodies.group_ids(), candidates.fv_candidates);
+        }
+
         Eigen::MatrixXd V = bodies.world_vertices(poses);
         ipc::construct_constraint_set(
-            /*V_rest=*/V, V, bodies.m_edges, bodies.m_faces,
-            /*dhat=*/m_barrier_activation_distance, constraint_set,
-            /*ignore_internal_vertices=*/false,
-            /*vertex_group_ids=*/bodies.group_ids());
+            candidates, /*V_rest=*/V, V, bodies.m_edges, bodies.m_faces,
+            /*dhat=*/m_barrier_activation_distance, constraint_set);
 
         PROFILE_END();
 

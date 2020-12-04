@@ -96,7 +96,7 @@ namespace opt {
     {
         // Advance the poses, but leave the current pose unchanged for now.
         tbb::parallel_for(size_t(0), num_bodies(), [&](size_t i) {
-            m_assembler.m_rbs[i].pose_prev = m_assembler.m_rbs[i].pose;
+            m_assembler[i].pose_prev = m_assembler[i].pose;
         });
         // Update the stored poses and inital value for the solver
         update_dof();
@@ -338,7 +338,7 @@ namespace opt {
             Diff::activate(ndof);
 
             const physics::Pose<double>& pose = poses[i];
-            const physics::RigidBody& body = m_assembler.m_rbs[i];
+            const physics::RigidBody& body = m_assembler[i];
 
             Eigen::VectorX6d gradi;
 
@@ -769,7 +769,7 @@ namespace opt {
             // Activate autodiff with the correct number of variables.
             Diff::activate(rb_rot_ndof);
 
-            const physics::RigidBody& rb = m_assembler.m_rbs[rb_i];
+            const physics::RigidBody& rb = m_assembler[rb_i];
             // Index of ribid bodies first vertex in the global vertices
             long rb_v0_i = m_assembler.m_body_vertex_id[rb_i];
 

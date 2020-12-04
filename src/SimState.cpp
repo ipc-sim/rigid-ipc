@@ -155,7 +155,7 @@ bool SimState::init(const nlohmann::json& args_in)
         "distance_barrier_constraint": {
             "detection_method": "hash_grid",
             "trajectory_type": "piecewise_linear",
-            "initial_barrier_activation_distance": 1e-2,
+            "initial_barrier_activation_distance": 1e-3,
             "barrier_type": "ipc"
         },
         "friction_constraints": {
