@@ -198,6 +198,10 @@ def get_fixture_dir_path() -> pathlib.Path:
     return pathlib.Path(__file__).resolve().parents[2] / "fixtures"
 
 
+def get_meshes_dir_path() -> pathlib.Path:
+    return pathlib.Path(__file__).resolve().parents[2] / "meshes"
+
+
 def is_polygon_ccw(vertices):
     """
     Check if a polygon's vertices are in counter-clockwise order.

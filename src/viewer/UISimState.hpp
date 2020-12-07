@@ -4,10 +4,12 @@
 
 #include <spdlog/spdlog.h>
 
+#include <igl/Timer.h>
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/opengl/glfw/imgui/ImGuiMenu.h>
 #include <igl/png/render_to_png.h>
 #include <igl/png/writePNG.h>
+
 #include <viewer/igl_viewer_ext.hpp>
 
 // WARNING: Use an anonymous namespace when including gif.h to avoid duplicate
@@ -80,12 +82,12 @@ public:
 
     void simulation_step()
     {
-        // PROFILE_MAIN_POINT("simulation_step")
-        // PROFILE_START()
+        igl::Timer timer;
+        timer.start();
         m_state.simulation_step();
+        timer.stop();
+        m_simulation_time += timer.getElapsedTime();
         m_state.save_simulation_step();
-        // PROFILE_END()
-        // LOG_PROFILER(m_state.scene_file);
         redraw_scene();
     }
 

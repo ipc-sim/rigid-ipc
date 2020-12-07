@@ -15,11 +15,13 @@
             "position": [0, 0, 0],
             "rotation": [0, 0, 0],
             "scale": 0.01,
-            "is_dof_fixed": true
+            "density": 8050,
+            "type": "static"
         }, {
             "mesh": "screw-and-nut/screw-big.obj",
             "position": [0, 0, 0],
-            "scale": 0.01
+            "scale": 0.01,
+            "density": 8050
         }]
     }
 }

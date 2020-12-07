@@ -26,7 +26,6 @@ scene = {
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
-        "time_stepper": "exponential_euler",
         "rigid_bodies": []
     }
 }

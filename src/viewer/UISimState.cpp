@@ -1,7 +1,6 @@
 #include "UISimState.hpp"
 #include <logger.hpp>
 
-#include <igl/Timer.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <physics/rigid_body_problem.hpp>
@@ -184,11 +183,7 @@ bool UISimState::pre_draw_loop()
             replaying = false;
         }
     } else if (m_player_state == PlayerState::Playing) {
-        igl::Timer timer;
-        timer.start();
         simulation_step();
-        timer.stop();
-        m_simulation_time += timer.getElapsedTime();
 
         bool breakpoint = (m_bkp_had_collision && m_state.m_step_had_collision)
             || (m_bkp_has_intersections && m_state.m_step_has_intersections)

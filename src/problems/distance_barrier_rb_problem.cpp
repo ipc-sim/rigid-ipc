@@ -62,7 +62,8 @@ namespace opt {
 
         min_distance = compute_min_distance(starting_point());
         if (min_distance < 0) {
-            spdlog::info("init_min_distance=N/A");
+            spdlog::info(
+                "init_min_distance>d̂={:.8e}", barrier_activation_distance());
         } else {
             spdlog::info("init_min_distance={:.8e}", min_distance);
         }

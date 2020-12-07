@@ -1,0 +1,15 @@
+energy NH
+warmStart 0
+time 5 0.01
+
+shapes input 2
+/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/cone-solid.msh  -0.1 -0.05 0  117 0 0  0.05 0.05 0.05 material 1000 2e11 0.3  initVel 1 0 0  0 0 0
+/Users/zachary/Development/grad-research/collisions/fixing-collisions/meshes/plane.obj  0 -0.074 0  0 0 0  0.05 0 0.05 material 1000 2e11 0.3  linearVelocity 0 0 0
+
+selfCollisionOn
+selfFric 0.5
+
+constraintSolver interiorPoint
+dHat 0.0001
+epsv 0.001
+fricIterAmt 1
