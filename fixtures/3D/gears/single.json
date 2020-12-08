@@ -10,20 +10,20 @@
         "coefficient_friction": 0.0,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
-            "mesh": "gear/rail-guard.obj",
+            "mesh": "gears/rail-guard.obj",
             "position": [-1.25, 2.25, 0],
             "rotation": [90, 0, -90],
             "density": 1,
             "enabled": false,
             "type": "static"
         }, {
-            "mesh": "gear/rail.obj",
+            "mesh": "gears/rail.obj",
             "position": [-1.25, 2.25, 0],
             "rotation": [90, 0, -90],
             "density": 100,
             "is_dof_fixed": [true, false, true, true, true, true]
         }, {
-            "mesh": "gear/gear.obj",
+            "mesh": "gears/gear.obj",
             "rotation": [90, 0, 0],
             "#angular_velocity": [0, 0, -100],
             "#torque": [0, 0, 100],
@@ -31,19 +31,19 @@
             "density": 1,
             "is_dof_fixed": [true, true, true, true, true, false]
         }, {
-            "mesh": "gear/pin.obj",
+            "mesh": "gears/pin.obj",
             "rotation": [90, 0, 0],
             "enabled": false,
             "type": "static"
         }, {
-            "mesh": "gear/gear.obj",
+            "mesh": "gears/gear.obj",
             "position": [2.05, 0, 0],
             "rotation": [90, 0, 15],
             "enabled": true,
             "density": 1,
             "is_dof_fixed": [true, true, true, true, true, false]
         }, {
-            "mesh": "gear/pin.obj",
+            "mesh": "gears/pin.obj",
             "position": [2.05, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
