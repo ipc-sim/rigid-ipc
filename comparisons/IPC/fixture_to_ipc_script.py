@@ -144,10 +144,15 @@ def fixture_to_ipc_script(fixture, output_path):
     friction_iterations = fixture.get(
         "friction_constraints", {}).get("friction_iterations", 1)
 
+    gravity = ""
+    if sum(fixture["rigid_body_problem"].get("gravity", [0, 0, 0])) == 0:
+        gravity = "turnOffGravity"
+
     return textwrap.dedent(f"""\
         energy NH
         warmStart 0
         time {max_time} {timestep}
+        {gravity}
 
         shapes input {len(shapes)}
         {{}}
