@@ -1,6 +1,13 @@
+$MeshFormat
+4 0 8
+$EndMeshFormat
+$Entities
+0 0 0 1
+0 25.0972 0.1 -5 36.5654 7.77184 5 0 0
+$EndEntities
 $Nodes
 1 8
-
+0 3 0 8
 1 25.0972 5.50614 -5
 2 25.0972 5.50614 5
 3 26.315 0.1 -5
@@ -12,7 +19,7 @@ $Nodes
 $EndNodes
 $Elements
 1 6
-
+0 3 4 6
 1 8 2 1 4
 2 1 8 5 6
 3 2 8 1 6

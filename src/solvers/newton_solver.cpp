@@ -518,7 +518,7 @@ namespace opt {
         // Check solve residual
         if (solve_success) {
             double solve_residual = (hessian * direction + gradient).norm();
-            if (solve_residual > 1e-10) {
+            if (solve_residual > 1e-8) {
                 spdlog::warn(
                     "solver={} iter={:d} "
                     "failure=\"linear solve residual ({:g}) > 1e-10\" "

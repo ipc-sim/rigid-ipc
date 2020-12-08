@@ -1,6 +1,6 @@
 energy NH
 warmStart 0
-time 4 0.01
+time 5 0.01
 
 shapes input 2
 ../../../../meshes/screw-and-nut/nut-big.obj  0 0 0  0 0 0  0.01 0.01 0.01 material 8050 2e11 0.3  linearVelocity 0 0 0
