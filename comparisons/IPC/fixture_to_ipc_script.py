@@ -142,11 +142,14 @@ def fixture_to_ipc_script(fixture, output_path):
     epsv = fixture.get("friction_constraints", {}).get(
         "static_friction_speed_bound", 1e-3)
     friction_iterations = fixture.get(
-        "friction_constraints", {}).get("friction_iterations", 1)
+        "friction_constraints", {}).get("iterations", 1)
 
     gravity = ""
     if sum(fixture["rigid_body_problem"].get("gravity", [0, 0, 0])) == 0:
         gravity = "turnOffGravity"
+
+    velocity_conv_tol = fixture.get(
+        "newton_solver", {}).get("velocity_conv_tol", 1e-2)
 
     return textwrap.dedent(f"""\
         energy NH
@@ -164,6 +167,8 @@ def fixture_to_ipc_script(fixture, output_path):
         dHat {dhat}
         epsv {epsv}
         fricIterAmt {friction_iterations}
+        tol 1
+        {velocity_conv_tol}
         """).format("\n".join(shapes))
 
 

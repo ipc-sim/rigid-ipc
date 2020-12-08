@@ -2,6 +2,7 @@ energy NH
 warmStart 0
 time 2 0.0001
 
+
 shapes input 2
 ../../../meshes/cylinder.msh  0 0 0  85 0 0  0.01213 0.000583333 0.01213 material 8900 2e11 0.3  initVel 0 0 0  0 900 0
 ../../../../../meshes/plane.obj  0 -0.0123 0  0 0 0  0.01 0 0.01 material 1000 2e11 0.3  linearVelocity 0 0 0
@@ -13,3 +14,5 @@ constraintSolver interiorPoint
 dHat 0.0001
 epsv 0.001
 fricIterAmt 1
+tol 1
+0.01

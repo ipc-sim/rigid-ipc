@@ -24,7 +24,7 @@ def main():
             "initial_barrier_activation_distance": 1e-2
         },
         "friction_constraints": {
-            "iterations": -1
+            "iterations": 1
         },
         "rigid_body_problem": {
             "coefficient_restitution": -1,

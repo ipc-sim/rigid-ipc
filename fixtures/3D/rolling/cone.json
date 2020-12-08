@@ -7,7 +7,7 @@
         "initial_barrier_activation_distance": 1e-4
     },
     "friction_constraints": {
-        "iterations": -1
+        "iterations": 1
     },
     "rigid_body_problem": {
         "coefficient_restitution": -1,

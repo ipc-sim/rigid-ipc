@@ -2,6 +2,7 @@ energy NH
 warmStart 0
 time 5.0 0.01
 
+
 shapes input 575
 ../../../../meshes/wrecking-ball/link.obj  10.9119 18.3 0  0 0 -60  1 1 1 material 7.68 2e11 0.3  linearVelocity 0 0 0
 ../../meshes/wrecking-ball/link.msh  10.1325 17.85 0  90 30 -90  1 1 1 material 7.68 2e11 0.3  initVel 0 0 0  0 0 0
@@ -586,3 +587,5 @@ constraintSolver interiorPoint
 dHat 0.001
 epsv 0.001
 fricIterAmt 1
+tol 1
+0.01
