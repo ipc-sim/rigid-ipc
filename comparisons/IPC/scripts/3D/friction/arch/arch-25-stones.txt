@@ -3,32 +3,32 @@ warmStart 0
 time 20.0 0.01
 
 shapes input 26
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/meshes/plane.obj  0 0 0  0 0 0  10 10 10 material 1000 2e11 0.3  linearVelocity 0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-01.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-02.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-03.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-04.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-05.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-06.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-07.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-08.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-09.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-10.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-11.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-12.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-13.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-14.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-15.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-16.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-17.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-18.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-19.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-20.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-21.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-22.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-23.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-24.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
-/Users/zachary/Development/grad-research/collisions/fixing-collisions/comparisons/IPC/meshes/arch/num_stones=25/stone-25.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/plane.obj  0 0 0  0 0 0  10 10 10 material 1000 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/arch/num_stones=25/stone-01.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-02.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-03.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-04.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-05.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-06.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-07.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-08.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-09.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-10.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-11.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-12.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-13.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-14.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-15.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-16.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-17.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-18.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-19.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-20.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-21.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-22.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-23.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-24.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/arch/num_stones=25/stone-25.msh  0 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
 
 selfCollisionOn
 selfFric 0.5

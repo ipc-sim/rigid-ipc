@@ -1,6 +1,8 @@
 import sys
+import os
 import pathlib
 import json
+import textwrap
 
 import numpy
 from scipy.spatial.transform import Rotation
@@ -51,13 +53,7 @@ def convert_to_ipc_msh(input_path, output_path):
     # pymesh.save_mesh(str(output_path), output_mesh)
 
 
-def main():
-    assert(len(sys.argv) > 1)
-    input_path = pathlib.Path(sys.argv[1])
-
-    with open(input_path) as input_file:
-        fixture = json.load(input_file)
-
+def fixture_to_ipc_script(fixture, output_path):
     timestep = fixture.get("timestep", 0.01)
 
     if "max_time" in fixture:
@@ -101,6 +97,9 @@ def main():
         else:
             mesh_path = surface_mesh_path
 
+        mesh_path = os.path.relpath(
+            mesh_path.resolve(), output_path.parent.resolve())
+
         if "dimensions" in body:
             vertices = pymesh.load_mesh(str(surface_mesh_path)).vertices
             initial_dimensions = abs(
@@ -124,36 +123,39 @@ def main():
 
         shapes.append(
             "{}  {:g} {:g} {:g}  {:g} {:g} {:g}  {:g} {:g} {:g} material {:g} 2e11 0.3  {}".format(
-                mesh_path.resolve(), *body.get("position", [0, 0, 0]),
+                mesh_path, *body.get("position", [0, 0, 0]),
                 *rotation, *scale, body.get("density", 1000),
                 "linearVelocity 0 0 0" if is_static else
                 "initVel {:g} {:g} {:g}  {:g} {:g} {:g}".format(
                     *linear_velocity, *angular_velocity)
             ))
 
-    num_shapes = len(shapes)
-    shapes = "\n".join(shapes)
-
     epsv = fixture.get("friction_constraints", {}).get(
         "static_friction_speed_bound", 1e-3)
     friction_iterations = fixture.get(
         "friction_constraints", {}).get("friction_iterations", 1)
 
-    ipc_script = f"""energy NH
-warmStart 0
-time {max_time} {timestep}
+    return textwrap.dedent(f"""\
+        energy NH
+        warmStart 0
+        time {max_time} {timestep}
 
-shapes input {num_shapes}
-{shapes}
+        shapes input {len(shapes)}
+        {{}}
 
-selfCollisionOn
-selfFric {fixture["rigid_body_problem"].get("coefficient_friction", 0)}
+        selfCollisionOn
+        selfFric {fixture["rigid_body_problem"].get("coefficient_friction", 0)}
 
-constraintSolver interiorPoint
-dHat {dhat}
-epsv {epsv}
-fricIterAmt {friction_iterations}
-"""
+        constraintSolver interiorPoint
+        dHat {dhat}
+        epsv {epsv}
+        fricIterAmt {friction_iterations}
+        """).format("\n".join(shapes))
+
+
+def main():
+    assert(len(sys.argv) > 1)
+    input_path = pathlib.Path(sys.argv[1])
 
     try:
         output_path = input_path.with_suffix(".txt").resolve()
@@ -163,6 +165,11 @@ fricIterAmt {friction_iterations}
         output_path.parent.mkdir(parents=True, exist_ok=True)
     except:
         output_path = input_path.with_suffix(".txt")
+
+    with open(input_path) as input_file:
+        fixture = json.load(input_file)
+
+    ipc_script = fixture_to_ipc_script(fixture, output_path)
 
     with open(output_path, 'w') as ipc_script_file:
         ipc_script_file.write(ipc_script)
