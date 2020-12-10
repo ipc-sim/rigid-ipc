@@ -134,7 +134,7 @@ namespace io {
                     }
                 }
                 from_json<double>(args["dimensions"], scale);
-                assert(scale.size() = dim);
+                assert(scale.size() >= dim);
                 scale.conservativeResize(dim);
                 scale.array() /= initial_dimensions.array();
             } else if (args["scale"].is_number()) {
