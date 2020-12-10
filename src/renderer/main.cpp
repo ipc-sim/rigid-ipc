@@ -289,7 +289,7 @@ int main(int argc, char* argv[])
 
     ///////////////////////////////////////////////////////////////////////////
     // Combine PNG frames to video
-    int fps = args.fps > 0 ? args.fps : render_args["fps"];
+    int fps = args.fps > 0 ? args.fps : render_args["fps"].get<int>();
     if (fps <= 0) {
         fps = mesh_generator->fps();
     }
