@@ -8,7 +8,7 @@ import pandas
 
 
 def find_rb_exe():
-    for build_dir in (pathlib.Path("."), pathlib.Path(__file__).parents[2] / "build"):
+    for build_dir in (pathlib.Path("."), pathlib.Path(__file__).resolve().parents[2] / "build"):
         for sub_dir in "", "release", "debug":
             rb_exe = build_dir / sub_dir / "FixingCollisions_ngui"
             if rb_exe.is_file():
