@@ -121,14 +121,22 @@ def fixture_to_ipc_script(fixture, output_path):
 
         linear_velocity = body.get("linear_velocity", [0, 0, 0])
         angular_velocity = body.get("angular_velocity", [0, 0, 0])
+        force = body.get("force", [0, 0, 0])
+        if "force" in body:
+            nbc = ("  NBC -1e300 -1e300 -1e300  1e300 1e300 1e300 "
+                   " {:g} {:g} {:g}".format(*body["force"]))
+        else:
+            nbc = ""
+        if "torque" in body:
+            print("External torque is not supported in IPC! Dropping it!")
 
         shapes.append(
-            "{}  {:g} {:g} {:g}  {:g} {:g} {:g}  {:g} {:g} {:g} material {:g} 2e11 0.3  {}".format(
+            "{}  {:g} {:g} {:g}  {:g} {:g} {:g}  {:g} {:g} {:g} material {:g} 2e11 0.3  {}{}".format(
                 mesh_path, *body.get("position", [0, 0, 0]),
                 *rotation, *scale, body.get("density", 1000),
                 "linearVelocity 0 0 0" if is_static else
                 "initVel {:g} {:g} {:g}  {:g} {:g} {:g}".format(
-                    *linear_velocity, *angular_velocity)
+                    *linear_velocity, *angular_velocity), nbc
             ))
 
     epsv = fixture.get("friction_constraints", {}).get(
