@@ -22,16 +22,16 @@ int main(int argc, char* argv[])
     CLI::App app { "run headless simulation" };
 
     app.add_option(
-           "scene_path,-s,--scene-path", args.scene_path,
-           "JSON file with input scene.")
+           "scene_path,-i,-s,--scene-path", args.scene_path,
+           "JSON file with input scene")
         ->required();
 
     app.add_option(
            "output_dir,-o,--output-path", args.output_dir,
-           "directory for results.")
+           "directory for results")
         ->required();
     app.add_option(
-        "-f,--output-name", args.output_name, "name for simulation file");
+        "-f,--output-name", args.output_name, "name for simulation file", true);
     app.add_option("--num-steps", args.num_steps, "number of time-steps");
     app.add_option(
         "--chkpt,--checkpoint-frequency", args.checkpoint_freq,
@@ -39,7 +39,8 @@ int main(int argc, char* argv[])
     app.add_option(
         "--log,--loglevel", args.loglevel,
         "set log level 0=trace, 1=debug, 2=info, 3=warn, 4=error, 5=critical, "
-        "6=off");
+        "6=off",
+        true);
 
     try {
         app.parse(argc, argv);

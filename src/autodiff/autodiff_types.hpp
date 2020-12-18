@@ -51,22 +51,12 @@ public:
 
     inline static D1VectorXd d1vars(const size_t i, const Eigen::VectorXd& v)
     {
-        D1VectorXd vec;
-        vec.resize(v.rows());
-        for (int r = 0; r < v.rows(); r++) {
-            vec[r] = DDouble1(i + r, v[r]);
-        }
-        return vec;
+        return dTvars<DDouble1>(i, v);
     }
 
     inline static D2VectorXd d2vars(const size_t i, const Eigen::VectorXd& v)
     {
-        D2VectorXd vec;
-        vec.resize(v.rows());
-        for (int r = 0; r < v.rows(); r++) {
-            vec[r] = DDouble2(i + r, v[r]);
-        }
-        return vec;
+        return dTvars<DDouble2>(i, v);
     }
 
     template <typename DVectorXd>
@@ -100,6 +90,33 @@ public:
         return hess;
     }
 };
+
+template <typename DScalar, typename Scalar = typename DScalar::Scalar>
+const Scalar& get_value(const DScalar& dscalar)
+{
+    return dscalar.getValue();
+}
+
+template <typename DScalar, typename Gradient = typename DScalar::Gradient>
+const Gradient& get_gradient(const DScalar& dscalar)
+{
+    return dscalar.getGradient();
+}
+
+template <
+    typename Scalar,
+    typename Gradient,
+    typename Hessian = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>>
+const Hessian& get_hessian(const DScalar1<Scalar, Gradient>& dscalar1)
+{
+    throw "DScalar1 does not compute the hessian";
+}
+
+template <typename Scalar, typename Gradient, typename Hessian>
+const Hessian& get_hessian(const DScalar2<Scalar, Gradient, Hessian>& dscalar2)
+{
+    return dscalar2.getHessian();
+}
 
 } // namespace ccd
 

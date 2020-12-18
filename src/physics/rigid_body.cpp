@@ -186,24 +186,5 @@ namespace physics {
             + velocity.position.transpose();
     }
 
-    Eigen::MatrixXd
-    RigidBody::world_vertices_gradient(const Pose<double>& _pose) const
-    {
-        // Dynamic number of dof, but there is a limit of 6 dof in 3D.
-        typedef AutodiffType<Eigen::Dynamic, 6> Diff;
-        Diff::activate(_pose.ndof());
-
-        Pose<Diff::DDouble1> dpose(
-            Diff::d1vars(0, _pose.position),
-            Diff::d1vars(_pose.pos_ndof(), _pose.rotation));
-        dpose.rotation = dpose.rotation / Diff::DDouble1(r_max);
-
-        Diff::D1MatrixXd dx = world_vertices<Diff::DDouble1>(dpose);
-
-        flatten<Diff::DDouble1>(dx);
-        Eigen::MatrixXd gradient = Diff::get_gradient(dx);
-        return gradient;
-    }
-
 } // namespace physics
 } // namespace ccd

@@ -134,7 +134,15 @@ namespace physics {
             return world_vertex<T>(Pose<T>(dof), vertex_idx);
         }
 
-        Eigen::MatrixXd world_vertices_gradient(const Pose<double>& pose) const;
+        /// @warning Will not resize jac or hess, so make sure it is large
+        /// enough.
+        template <typename DScalar>
+        Eigen::MatrixXd world_vertices_diff(
+            const Pose<double>& pose,
+            long rb_v0_i,
+            Eigen::MatrixXd& V,
+            Eigen::MatrixXd& jac,
+            std::vector<Eigen::MatrixXd>& hess) const;
 
         double edge_length(int edge_id) const
         {
@@ -143,6 +151,9 @@ namespace physics {
                 .norm();
         }
 
+        long num_vertices() const { return vertices.rows(); }
+        long num_edges() const { return edges.rows(); }
+        long num_faces() const { return faces.rows(); }
         int dim() const { return vertices.cols(); }
         int ndof() const { return pose.ndof(); }
         int pos_ndof() const { return pose.pos_ndof(); }

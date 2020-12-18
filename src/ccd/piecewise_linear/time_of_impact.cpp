@@ -5,6 +5,9 @@
 
 #include <tight_inclusion/inclusion_ccd.hpp>
 
+#include <ipc/distance/edge_edge.hpp>
+#include <ipc/distance/point_triangle.hpp>
+
 // #define TIME_CCD_QUERIES
 #ifdef TIME_CCD_QUERIES
 #include <igl/Timer.h>

@@ -8,6 +8,7 @@
 
 #include <logger.hpp>
 #include <physics/mass.hpp>
+#include <profiler.hpp>
 #include <utils/eigen_ext.hpp>
 #include <utils/flatten.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -29,7 +30,7 @@ namespace physics {
         m_body_vertex_id[0] = m_body_face_id[0] = m_body_edge_id[0] = 0;
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
-            m_body_vertex_id[i + 1] = m_body_vertex_id[i] + rb.vertices.rows();
+            m_body_vertex_id[i + 1] = m_body_vertex_id[i] + rb.num_vertices();
             m_body_face_id[i + 1] = m_body_face_id[i] + rb.faces.rows();
             m_body_edge_id[i + 1] = m_body_edge_id[i] + rb.edges.rows();
         }
@@ -52,15 +53,14 @@ namespace physics {
         m_vertex_to_body_map.resize(num_vertices());
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
-            m_vertex_to_body_map
-                .segment(m_body_vertex_id[i], rb.vertices.rows())
+            m_vertex_to_body_map.segment(m_body_vertex_id[i], rb.num_vertices())
                 .setConstant(int(i));
         }
         // vertex to group id map
         m_vertex_group_ids.resize(num_vertices());
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
-            m_vertex_group_ids.segment(m_body_vertex_id[i], rb.vertices.rows())
+            m_vertex_group_ids.segment(m_body_vertex_id[i], rb.num_vertices())
                 .setConstant(rb.group_id);
         }
 
@@ -84,8 +84,8 @@ namespace physics {
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
             is_dof_fixed.block(
-                m_body_vertex_id[i], 0, rb.vertices.rows(), rb_ndof) =
-                rb.is_dof_fixed.transpose().replicate(rb.vertices.rows(), 1);
+                m_body_vertex_id[i], 0, rb.num_vertices(), rb_ndof) =
+                rb.is_dof_fixed.transpose().replicate(rb.num_vertices(), 1);
         }
 
         average_edge_length = 0;
@@ -159,7 +159,7 @@ namespace physics {
         Eigen::MatrixXd V(num_vertices(), dim());
         for (size_t i = 0; i < num_bodies(); ++i) {
             auto& rb = m_rbs[i];
-            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), dim()) =
+            V.block(m_body_vertex_id[i], 0, rb.num_vertices(), dim()) =
                 rb.world_vertices(step);
         }
         return V;
@@ -170,45 +170,66 @@ namespace physics {
         Eigen::MatrixXd V(num_vertices(), dim());
         for (size_t i = 0; i < num_bodies(); ++i) {
             auto& rb = m_rbs[i];
-            V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), dim()) =
+            V.block(m_body_vertex_id[i], 0, rb.num_vertices(), dim()) =
                 rb.world_velocities();
         }
         return V;
     }
 
-    void RigidBodyAssembler::world_vertices_gradient(
-        const Poses<double>& poses, Eigen::SparseMatrix<double>& grad_u) const
+    Eigen::MatrixXd RigidBodyAssembler::world_vertices_diff(
+        const Poses<double>& poses,
+        Eigen::MatrixXd& jac,
+        std::vector<Eigen::MatrixXd>& hess,
+        bool compute_jac,
+        bool compute_hess) const
     {
         assert(num_bodies() == poses.size());
 
-        typedef Eigen::Triplet<double> Triplet;
-        std::vector<Triplet> triplets;
-        triplets.reserve(size_t(num_vertices()) * dim());
-
-        grad_u.resize(
-            int(num_vertices() * dim()),
-            int(num_bodies()) * Pose<double>::dim_to_ndof(dim()));
-        for (size_t i = 0; i < num_bodies(); ++i) {
-            auto& rb = m_rbs[i];
-            auto& p_i = poses[i];
-            Eigen::MatrixXd el_grad = rb.world_vertices_gradient(p_i);
-
-            long d = el_grad.rows() / dim();
-            // Loop over dimensions (e.g. x then y)
-            for (int d_i = 0; d_i < dim(); ++d_i) {
-                // Loop over vertices
-                for (int j = 0; j < d; ++j) {
-                    // Loop over dof
-                    for (int k = 0; k < el_grad.cols(); ++k) {
-                        triplets.emplace_back(
-                            int(m_body_vertex_id[i] + d_i * num_vertices()) + j,
-                            int(3 * i) + k, el_grad(d_i * d + j, k));
-                    }
-                }
-            }
+        if (!compute_jac && !compute_hess) {
+            return world_vertices(poses);
         }
 
-        grad_u.setFromTriplets(triplets.begin(), triplets.end());
+        // We will only use auto diff to compute the derivatives of the rotation
+        // matrix.
+        typedef AutodiffType<Eigen::Dynamic, /*maxN=*/3> Diff;
+
+        PROFILE_POINT("RigidBodyAssembler::world_vertices_diff");
+        PROFILE_START();
+
+        // V: Rᵐ ↦ Rⁿ (vertices flattened rowwise)
+        const int n = num_vertices() * dim();
+        const int m = physics::Pose<double>::dim_to_ndof(dim());
+
+        if (compute_jac) {
+            // ∇ V(x): Rᵐ ↦ Rⁿˣᵐ
+            jac = Eigen::MatrixXd::Zero(n, m);
+        }
+        if (compute_hess) {
+            // ∇²V(x): Rᵐ ↦ Rⁿˣᵐˣᵐ
+            hess.resize(n, Eigen::MatrixXd::Zero(m, m));
+        }
+
+        Eigen::MatrixXd V(num_vertices(), dim());
+        tbb::parallel_for(size_t(0), num_bodies(), [&](size_t rb_i) {
+            const physics::RigidBody& rb = m_rbs[rb_i];
+
+            // Index of ribid bodies first vertex in the global vertices
+            long rb_v0_i = m_body_vertex_id[rb_i];
+
+            if (compute_hess) {
+                rb.world_vertices_diff<Diff::DDouble2>(
+                    poses[rb_i], rb_v0_i, V, jac, hess);
+            } else {
+                assert(compute_jac);
+                rb.world_vertices_diff<Diff::DDouble1>(
+                    poses[rb_i], rb_v0_i, V, jac, hess);
+            }
+        });
+
+        assert((V - world_vertices(poses)).norm() < 1e-12);
+
+        PROFILE_END();
+        return V;
     }
 
     std::vector<int> RigidBodyAssembler::close_bodies_brute_force(

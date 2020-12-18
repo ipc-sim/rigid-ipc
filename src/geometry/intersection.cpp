@@ -86,8 +86,19 @@ namespace geometry {
             return false;
         }
 
-        int res = eccd::segment_triangle_inter(e0, e1, t0, t1, t2);
-        return res == 1;
+        // int res = eccd::segment_triangle_inter(e0, e1, t0, t1, t2);
+        // return res == 1;
+        Eigen::Matrix3d M;
+        M.col(0) = t1 - t0;
+        M.col(1) = t2 - t0;
+        M.col(2) = e0 - e1;
+        Eigen::Vector3d uvt = M.fullPivLu().solve(e0 - t0);
+        if (uvt[0] >= 0.0 && uvt[1] >= 0.0 && uvt[0] + uvt[1] <= 1.0
+            && uvt[2] >= 0.0 && uvt[2] <= 1.0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 } // namespace geometry

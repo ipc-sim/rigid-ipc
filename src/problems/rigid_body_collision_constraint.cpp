@@ -5,35 +5,42 @@ namespace opt {
 
     RigidBodyVertexVertexConstraint::RigidBodyVertexVertexConstraint(
         const physics::RigidBodyAssembler& bodies,
-        const ipc::VertexVertexConstraint& vv_constraint)
+        long vertex0_index,
+        long vertex1_index,
+        long multiplicity)
+        : multiplicity(multiplicity)
     {
         bodies.global_to_local_vertex(
-            vv_constraint.vertex0_index, vertex0_body_id, vertex0_local_id);
+            vertex0_index, vertex0_body_id, vertex0_local_id);
         bodies.global_to_local_vertex(
-            vv_constraint.vertex1_index, vertex1_body_id, vertex1_local_id);
-        multiplicity = vv_constraint.multiplicity;
+            vertex1_index, vertex1_body_id, vertex1_local_id);
     }
 
     RigidBodyEdgeVertexConstraint::RigidBodyEdgeVertexConstraint(
         const physics::RigidBodyAssembler& bodies,
-        const ipc::EdgeVertexConstraint& ev_constraint)
+        long edge_index,
+        long vertex_index,
+        long multiplicity)
+        : multiplicity(multiplicity)
     {
-        const auto& edge = bodies.m_edges.row(ev_constraint.edge_index);
+        const auto& edge = bodies.m_edges.row(edge_index);
         bodies.global_to_local_vertex(
-            ev_constraint.vertex_index, vertex_body_id, vertex_local_id);
+            vertex_index, vertex_body_id, vertex_local_id);
         bodies.global_to_local_vertex(
             edge(0), edge_body_id, edge_vertex0_local_id);
         bodies.global_to_local_vertex(
             edge(1), edge_body_id, edge_vertex1_local_id);
-        multiplicity = ev_constraint.multiplicity;
     }
 
     RigidBodyEdgeEdgeConstraint::RigidBodyEdgeEdgeConstraint(
         const physics::RigidBodyAssembler& bodies,
-        const ipc::EdgeEdgeConstraint& ee_constraint)
+        long edge0_index,
+        long edge1_index,
+        double eps_x)
+        : eps_x(eps_x)
     {
-        const auto& edge0 = bodies.m_edges.row(ee_constraint.edge0_index);
-        const auto& edge1 = bodies.m_edges.row(ee_constraint.edge1_index);
+        const auto& edge0 = bodies.m_edges.row(edge0_index);
+        const auto& edge1 = bodies.m_edges.row(edge1_index);
         bodies.global_to_local_vertex(
             edge0(0), edge0_body_id, edge0_vertex0_local_id);
         bodies.global_to_local_vertex(
@@ -42,16 +49,16 @@ namespace opt {
             edge1(0), edge1_body_id, edge1_vertex0_local_id);
         bodies.global_to_local_vertex(
             edge1(1), edge1_body_id, edge1_vertex1_local_id);
-        eps_x = ee_constraint.eps_x;
     }
 
     RigidBodyFaceVertexConstraint::RigidBodyFaceVertexConstraint(
         const physics::RigidBodyAssembler& bodies,
-        const ipc::FaceVertexConstraint& fv_constraint)
+        long face_index,
+        long vertex_index)
     {
-        const auto& face = bodies.m_faces.row(fv_constraint.face_index);
+        const auto& face = bodies.m_faces.row(face_index);
         bodies.global_to_local_vertex(
-            fv_constraint.vertex_index, vertex_body_id, vertex_local_id);
+            vertex_index, vertex_body_id, vertex_local_id);
         bodies.global_to_local_vertex(
             face(0), face_body_id, face_vertex0_local_id);
         bodies.global_to_local_vertex(

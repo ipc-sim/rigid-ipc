@@ -5,7 +5,7 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
-#include <autodiff/autodiff.h>
+#include <autodiff/autodiff_types.hpp>
 #include <physics/rigid_body.hpp>
 #include <utils/eigen_ext.hpp>
 
@@ -55,14 +55,37 @@ namespace physics {
 
         Eigen::MatrixXd world_velocities() const;
 
-        void world_vertices_gradient(
+        /// @brief Derivatives of the vertices with repect to rigid body DOF.
+        ///
+        /// Store the jacobian and hessian in a condensed form where only the
+        /// rigid DOF of the body the vertex belongs to is computed.
+        ///
+        /// @returns The vertices of all rigid bodies as a \f$n \times {2, 3}\f$
+        /// matrix.
+        Eigen::MatrixXd world_vertices_diff(
             const Poses<double>& poses,
-            Eigen::SparseMatrix<double>& grad) const;
-        void world_vertices_gradient(
-            const Eigen::VectorXd& dof, Eigen::SparseMatrix<double>& grad) const
+            Eigen::MatrixXd& jac,
+            std::vector<Eigen::MatrixXd>& hess,
+            bool compute_jac,
+            bool compute_hess) const;
+
+        /// @brief Derivatives of the vertices with repect to rigid body DOF.
+        ///
+        /// Store the jacobian and hessian in a condensed form where only the
+        /// rigid DOF of the body the vertex belongs to is computed.
+        ///
+        /// @returns The vertices of all rigid bodies as a \f$n \times {2, 3}\f$
+        /// matrix.
+        Eigen::MatrixXd world_vertices_diff(
+            const Eigen::VectorXd& dof,
+            Eigen::MatrixXd& jac,
+            std::vector<Eigen::MatrixXd>& hess,
+            bool compute_jac,
+            bool compute_hess) const
         {
-            return world_vertices_gradient(
-                Pose<double>::dofs_to_poses(dof, dim()), grad);
+            return world_vertices_diff(
+                Pose<double>::dofs_to_poses(dof, dim()), jac, hess, compute_jac,
+                compute_hess);
         }
 
         void global_to_local_vertex(

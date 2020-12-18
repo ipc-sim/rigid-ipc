@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tbb/concurrent_vector.h>
+
 #include <ipc/collision_constraint.hpp>
 #include <ipc/friction/friction_constraint.hpp>
 
@@ -57,7 +59,7 @@ namespace opt {
             bool& has_intersections,
             bool solve_collisions = true) override;
 
-        bool take_step(const Eigen::VectorXd& sigma) override;
+        bool take_step(const Eigen::VectorXd& x) override;
 
         /// Use the solver to solve this problem.
         opt::OptimizationResults solve_constraints() override;
@@ -76,13 +78,11 @@ namespace opt {
 
         /// Determine if there is a collision between two configurations
         bool has_collisions(
-            const Eigen::VectorXd& sigma_i,
-            const Eigen::VectorXd& sigma_j) override;
+            const Eigen::VectorXd& x_i, const Eigen::VectorXd& x_j) override;
 
         /// Compute the earliest time of impact between two configurations
         double compute_earliest_toi(
-            const Eigen::VectorXd& sigma_i,
-            const Eigen::VectorXd& sigma_j) override;
+            const Eigen::VectorXd& x_i, const Eigen::VectorXd& x_j) override;
 
         /// Get the world coordinates of the vertices
         Eigen::MatrixXd world_vertices(const Eigen::VectorXd& x) const override
@@ -143,13 +143,6 @@ namespace opt {
             bool compute_grad = true,
             bool compute_hess = true) override;
 
-        Eigen::MatrixXd rigid_dof_to_vertices(
-            const Eigen::VectorXd& x,
-            Eigen::MatrixXd& jac,
-            std::vector<Eigen::SparseMatrix<double>>& hess,
-            bool compute_jac,
-            bool compute_hess);
-
         double compute_friction_term(
             const Eigen::VectorXd& x,
             Eigen::VectorXd& grad,
@@ -179,8 +172,7 @@ namespace opt {
         using BarrierProblem::compute_barrier_term;
         using BarrierProblem::compute_energy_term;
 
-        double
-        compute_min_distance(const Eigen::VectorXd& sigma) const override;
+        double compute_min_distance(const Eigen::VectorXd& x) const override;
 
         /// Compute the value of the barrier at a distance x
         double barrier_hessian(double x) const override
@@ -226,50 +218,44 @@ namespace opt {
 
         template <typename T, typename RigidBodyConstraint>
         T distance_barrier(
-            const Eigen::VectorXd& sigma, const RigidBodyConstraint& rbc);
+            const Eigen::VectorXd& x, const RigidBodyConstraint& rbc);
 
         template <typename T>
         T constraint_mollifier(
-            const Eigen::VectorXd& sigma,
+            const Eigen::VectorXd& x,
             const RigidBodyVertexVertexConstraint& rbc)
         {
             return T(1.0);
         }
         template <typename T>
         T constraint_mollifier(
-            const Eigen::VectorXd& sigma,
-            const RigidBodyEdgeVertexConstraint& rbc)
+            const Eigen::VectorXd& x, const RigidBodyEdgeVertexConstraint& rbc)
         {
             return T(1.0);
         }
         template <typename T>
         T constraint_mollifier(
-            const Eigen::VectorXd& sigma,
-            const RigidBodyEdgeEdgeConstraint& rbc);
+            const Eigen::VectorXd& x, const RigidBodyEdgeEdgeConstraint& rbc);
         template <typename T>
         T constraint_mollifier(
-            const Eigen::VectorXd& sigma,
-            const RigidBodyFaceVertexConstraint& rbc)
+            const Eigen::VectorXd& x, const RigidBodyFaceVertexConstraint& rbc)
         {
             return T(1.0);
         }
 
         template <typename T>
         T distance(
-            const Eigen::VectorXd& sigma,
+            const Eigen::VectorXd& x,
             const RigidBodyVertexVertexConstraint& rbc);
         template <typename T>
         T distance(
-            const Eigen::VectorXd& sigma,
-            const RigidBodyEdgeVertexConstraint& rbc);
+            const Eigen::VectorXd& x, const RigidBodyEdgeVertexConstraint& rbc);
         template <typename T>
         T distance(
-            const Eigen::VectorXd& sigma,
-            const RigidBodyEdgeEdgeConstraint& rbc);
+            const Eigen::VectorXd& x, const RigidBodyEdgeEdgeConstraint& rbc);
         template <typename T>
         T distance(
-            const Eigen::VectorXd& sigma,
-            const RigidBodyFaceVertexConstraint& rbc);
+            const Eigen::VectorXd& x, const RigidBodyFaceVertexConstraint& rbc);
 
         template <typename T>
         T compute_body_energy(
@@ -277,13 +263,24 @@ namespace opt {
             const physics::Pose<T>& pose,
             const Eigen::VectorX6d& grad_barrier_t0);
 
-        template <typename Constraint, typename RigidBodyConstraint>
+        template <typename RigidBodyConstraint, typename Constraint>
         void add_constraint_barrier(
-            const Eigen::VectorXd& sigma,
+            const Eigen::VectorXd& x,
             const Constraint& constraint,
             double& Bx,
             Eigen::VectorXd& grad,
             std::vector<Eigen::Triplet<double>>& hess_triplets,
+            bool compute_grad,
+            bool compute_hess);
+
+        template <typename RigidBodyConstraint, typename FrictionConstraint>
+        double compute_friction_potential(
+            const Eigen::MatrixXd& U,
+            const Eigen::MatrixXd& jac_V,
+            const std::vector<Eigen::MatrixXd>& hess_V,
+            const FrictionConstraint& constraint,
+            tbb::concurrent_vector<Eigen::Triplet<double>>& grad_triplets,
+            tbb::concurrent_vector<Eigen::Triplet<double>>& hess_triplets,
             bool compute_grad,
             bool compute_hess);
 
@@ -323,27 +320,26 @@ namespace opt {
         // The following functions are used exclusivly to check that the
         // gradient and hessian match a finite difference version.
 
-        template <typename Constraint, typename RigidBodyConstraint>
+        template <typename RigidBodyConstraint, typename Constraint>
         void check_distance_finite_gradient(
-            const Eigen::VectorXd& sigma, const Constraint& constraint);
-        template <typename Constraint, typename RigidBodyConstraint>
+            const Eigen::VectorXd& x, const Constraint& constraint);
+        template <typename RigidBodyConstraint, typename Constraint>
         void check_distance_finite_hessian(
-            const Eigen::VectorXd& sigma, const Constraint& constraint);
+            const Eigen::VectorXd& x, const Constraint& constraint);
 
         void check_grad_barrier(
-            const Eigen::VectorXd& sigma,
+            const Eigen::VectorXd& x,
             const ipc::Constraints& constraints,
             const Eigen::VectorXd& grad);
         void check_hess_barrier(
-            const Eigen::VectorXd& sigma,
+            const Eigen::VectorXd& x,
             const ipc::Constraints& constraints,
             const Eigen::SparseMatrix<double>& hess);
 
         void check_grad_friction(
-            const Eigen::VectorXd& sigma, const Eigen::VectorXd& grad);
+            const Eigen::VectorXd& x, const Eigen::VectorXd& grad);
         void check_hess_friction(
-            const Eigen::VectorXd& sigma,
-            const Eigen::SparseMatrix<double>& hess);
+            const Eigen::VectorXd& x, const Eigen::SparseMatrix<double>& hess);
 
         bool is_checking_derivative = false;
 #endif

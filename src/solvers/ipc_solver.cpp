@@ -42,7 +42,8 @@ namespace opt {
 
         double bbox_diagonal = problem_ptr->world_bbox_diagonal();
         double dhat = barrier_problem_ptr()->barrier_activation_distance();
-        double average_mass = problem_ptr->average_mass();
+        // double average_mass = problem_ptr->average_mass();
+        double average_mass = 1;
 
         Eigen::VectorXd grad_E;
         barrier_problem_ptr()->compute_energy_term(x0, grad_E);

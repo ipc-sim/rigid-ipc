@@ -327,12 +327,12 @@ namespace opt {
         double max_step_size =
             std::min(problem_ptr->compute_earliest_toi(x, x + dir), 1.0);
         step_length = std::min(step_length, max_step_size);
-        while (problem_ptr->has_collisions(x, x + step_length * dir)) {
-            spdlog::error(
-                "max_step_size={:g} has collisions halving the step!",
-                step_length);
-            step_length *= 0.8;
-        }
+        // while (problem_ptr->has_collisions(x, x + step_length * dir)) {
+        //     spdlog::error(
+        //         "max_step_size={:g} has collisions halving the step!",
+        //         step_length);
+        //     step_length *= 0.8;
+        // }
         if (step_length < lower_bound) {
             spdlog::error(
                 "solver={} iter={:d} failure=\"initial step_length (α={:g}) is"

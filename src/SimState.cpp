@@ -255,6 +255,26 @@ nlohmann::json SimState::get_active_config()
     return active_args;
 }
 
+void print_progress_bar(
+    int cur_iter, int max_iter, int bar_width = 70, bool clear_end = false)
+{
+    float progress = std::max(0.0f, std::min(1.0f, cur_iter / float(max_iter)));
+    int pos = bar_width * progress;
+    int len = fmt::format("{:d}", max_iter).length();
+    fmt::print(
+        "{3:2d}%|{0:█>{1}}{0: >{2}}| {4: >{6}d}/{5:d}\r", "", pos,
+        std::max(bar_width - pos, 0), int(progress * 100.0), cur_iter, max_iter,
+        len);
+    if (progress >= 1) {
+        if (clear_end) {
+            fmt::print("{0: {1}}", "", bar_width * 2);
+        } else {
+            std::cout << std::endl;
+        }
+    }
+    std::cout.flush();
+}
+
 void SimState::run_simulation(const std::string& fout)
 {
     PROFILE_MAIN_POINT("run_simulation")
@@ -275,6 +295,7 @@ void SimState::run_simulation(const std::string& fout)
     timer.start();
 
     m_solve_collisions = true;
+    print_progress_bar(0, m_max_simulation_steps);
     for (int i = 0; i < m_max_simulation_steps; ++i) {
         simulation_step();
         save_simulation_step();
@@ -289,6 +310,7 @@ void SimState::run_simulation(const std::string& fout)
             save_simulation(chkpt_fout);
             spdlog::info("Simulation checkpoint saved to {}", chkpt_fout);
         }
+        print_progress_bar(i + 1, m_max_simulation_steps);
     }
 
     timer.stop();
