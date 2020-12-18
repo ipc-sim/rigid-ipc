@@ -299,10 +299,17 @@ namespace opt {
             "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase",
             NARROW_PHASE);
         NAMED_PROFILE_POINT(
-            "compute_edge_vertex_earliest_toi", EV_NARROW_PHASE);
+            "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase:edge_"
+            "vertex",
+            EV_NARROW_PHASE);
         NAMED_PROFILE_POINT(
-            "compute_face_vertex_earliest_toi", FV_NARROW_PHASE);
-        NAMED_PROFILE_POINT("compute_edge_edge_earliest_toi", EE_NARROW_PHASE);
+            "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase:edge_"
+            "edge",
+            FV_NARROW_PHASE);
+        NAMED_PROFILE_POINT(
+            "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase:face_"
+            "vertex",
+            EE_NARROW_PHASE);
 
         int collision_count = 0;
         double earliest_toi = 1;

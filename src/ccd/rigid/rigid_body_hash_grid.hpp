@@ -55,7 +55,8 @@ protected:
         const physics::Pose<Interval>& pose_t1,
         Eigen::MatrixXI& vertices,
         double inflation_radius = 0.0,
-        const Interval& t = Interval(0, 1)) const;
+        const Interval& t = Interval(0, 1),
+        int force_subdivision = 0) const;
 };
 
 } // namespace ccd

@@ -163,7 +163,8 @@ void RigidBodyHashGrid::compute_vertices_intervals(
     for (int i : body_ids) {
         Eigen::MatrixXI V;
         int n_subs = compute_vertices_intervals(
-            bodies[i], poses_t0[i], poses_t1[i], V, inflation_radius);
+            bodies[i], poses_t0[i], poses_t1[i], V, inflation_radius,
+            Interval(0, 1), 1);
         if (n_subs) {
             spdlog::trace("nsubs={:d}", n_subs);
         }
@@ -177,42 +178,55 @@ int RigidBodyHashGrid::compute_vertices_intervals(
     const physics::Pose<Interval>& pose_t1,
     Eigen::MatrixX<Interval>& vertices,
     double inflation_radius, // Only used for fit check
-    const Interval& t) const
+    const Interval& t,
+    int force_subdivision) const
 {
-    physics::Pose<Interval> pose =
-        physics::Pose<Interval>::interpolate(pose_t0, pose_t1, t);
-    vertices = body.world_vertices(pose);
-    // Check that the vertex intervals fit inside the scene bbox
-    bool fits = true;
-    for (int i = 0; i < vertices.rows(); i++) {
-        for (int j = 0; j < vertices.cols(); j++) {
-            if (vertices(i, j).lower() - inflation_radius < m_domainMin(j)
-                || vertices(i, j).upper() + inflation_radius > m_domainMax(j)) {
-                fits = false;
-                break;
+    if (force_subdivision <= 0) {
+        physics::Pose<Interval> pose =
+            physics::Pose<Interval>::interpolate(pose_t0, pose_t1, t);
+        vertices = body.world_vertices(pose);
+        // Check that the vertex intervals fit inside the scene bbox
+        bool fits = true;
+        for (int i = 0; i < vertices.rows(); i++) {
+            for (int j = 0; j < vertices.cols(); j++) {
+                if (vertices(i, j).lower() - inflation_radius < m_domainMin(j)
+                    || vertices(i, j).upper() + inflation_radius
+                        > m_domainMax(j)) {
+                    fits = false;
+                    break;
+                }
             }
         }
+
+        if (fits) {
+            return 0;
+        }
+    } else {
+        vertices.resizeLike(body.vertices);
     }
 
-    if (fits) {
-        return 0;
-    }
+    force_subdivision--;
 
     // If the vertices' intervals are outside the scene bbox, then split t in
     // hopes that a smaller interval will be more accurate.
     std::pair<Interval, Interval> t_halves = bisect(t);
     Eigen::MatrixXI V_first, V_second;
     int n_subs0 = compute_vertices_intervals(
-        body, pose_t0, pose_t1, V_first, inflation_radius, t_halves.first);
+        body, pose_t0, pose_t1, V_first, inflation_radius, t_halves.first,
+        force_subdivision);
     int n_subs1 = compute_vertices_intervals(
-        body, pose_t0, pose_t1, V_second, inflation_radius, t_halves.second);
+        body, pose_t0, pose_t1, V_second, inflation_radius, t_halves.second,
+        force_subdivision);
+    assert(vertices.rows() == V_first.rows());
+    assert(vertices.rows() == V_second.rows());
+    assert(vertices.cols() == V_first.cols());
+    assert(vertices.cols() == V_second.cols());
     // Take the hull of the two halves of the vertices' trajectories
     for (int i = 0; i < vertices.rows(); i++) {
         for (int j = 0; j < vertices.cols(); j++) {
             vertices(i, j) = hull(V_first(i, j), V_second(i, j));
-            assert(
-                vertices(i, j).lower() - inflation_radius >= m_domainMin(j)
-                && vertices(i, j).upper() + inflation_radius <= m_domainMax(j));
+            assert(vertices(i, j).lower() - inflation_radius >= m_domainMin(j));
+            assert(vertices(i, j).upper() + inflation_radius <= m_domainMax(j));
         }
     }
 

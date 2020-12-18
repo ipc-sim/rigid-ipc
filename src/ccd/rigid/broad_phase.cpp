@@ -27,8 +27,8 @@ void detect_collision_candidates_rigid(
         return;
     }
 
-    NAMED_PROFILE_POINT("collisions_detection__broad_phase", BROAD_PHASE);
-    PROFILE_START(BROAD_PHASE);
+    PROFILE_POINT("detect_collision_candidates_rigid");
+    PROFILE_START();
 
     switch (method) {
     case BRUTE_FORCE:
@@ -43,7 +43,7 @@ void detect_collision_candidates_rigid(
         break;
     }
 
-    PROFILE_END(BROAD_PHASE);
+    PROFILE_END();
 }
 
 // Find all edge-vertex collisions in one time step using spatial-hashing to

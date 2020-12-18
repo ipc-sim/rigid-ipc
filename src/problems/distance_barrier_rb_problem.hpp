@@ -216,62 +216,11 @@ namespace opt {
             const ipc::Constraints& collision_constraints,
             const physics::Poses<double>& poses);
 
-        template <typename T, typename RigidBodyConstraint>
-        T distance_barrier(
-            const Eigen::VectorXd& x, const RigidBodyConstraint& rbc);
-
-        template <typename T>
-        T constraint_mollifier(
-            const Eigen::VectorXd& x,
-            const RigidBodyVertexVertexConstraint& rbc)
-        {
-            return T(1.0);
-        }
-        template <typename T>
-        T constraint_mollifier(
-            const Eigen::VectorXd& x, const RigidBodyEdgeVertexConstraint& rbc)
-        {
-            return T(1.0);
-        }
-        template <typename T>
-        T constraint_mollifier(
-            const Eigen::VectorXd& x, const RigidBodyEdgeEdgeConstraint& rbc);
-        template <typename T>
-        T constraint_mollifier(
-            const Eigen::VectorXd& x, const RigidBodyFaceVertexConstraint& rbc)
-        {
-            return T(1.0);
-        }
-
-        template <typename T>
-        T distance(
-            const Eigen::VectorXd& x,
-            const RigidBodyVertexVertexConstraint& rbc);
-        template <typename T>
-        T distance(
-            const Eigen::VectorXd& x, const RigidBodyEdgeVertexConstraint& rbc);
-        template <typename T>
-        T distance(
-            const Eigen::VectorXd& x, const RigidBodyEdgeEdgeConstraint& rbc);
-        template <typename T>
-        T distance(
-            const Eigen::VectorXd& x, const RigidBodyFaceVertexConstraint& rbc);
-
         template <typename T>
         T compute_body_energy(
             const physics::RigidBody& body,
             const physics::Pose<T>& pose,
             const Eigen::VectorX6d& grad_barrier_t0);
-
-        template <typename RigidBodyConstraint, typename Constraint>
-        void add_constraint_barrier(
-            const Eigen::VectorXd& x,
-            const Constraint& constraint,
-            double& Bx,
-            Eigen::VectorXd& grad,
-            std::vector<Eigen::Triplet<double>>& hess_triplets,
-            bool compute_grad,
-            bool compute_hess);
 
         template <typename RigidBodyConstraint, typename FrictionConstraint>
         double compute_friction_potential(

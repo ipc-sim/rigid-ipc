@@ -34,8 +34,8 @@ void detect_collision_candidates(
     assert(edges.size() == 0 || edges.cols() == 2);
     assert(faces.size() == 0 || faces.cols() == 3);
 
-    NAMED_PROFILE_POINT("collisions_detection__broad_phase", BROAD_PHASE);
-    PROFILE_START(BROAD_PHASE);
+    PROFILE_POINT("detect_collision_candidates");
+    PROFILE_START();
 
     switch (method) {
     case BRUTE_FORCE:
@@ -49,7 +49,7 @@ void detect_collision_candidates(
         break;
     }
 
-    PROFILE_END(BROAD_PHASE);
+    PROFILE_END();
 }
 
 void detect_edge_vertex_collision_candidates_brute_force(

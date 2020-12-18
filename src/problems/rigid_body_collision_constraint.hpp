@@ -49,7 +49,7 @@ namespace opt {
             return { { vertex0_body_id, vertex1_body_id } };
         }
 
-        static std::array<uint8_t, 2> vertex_local_body_ids()
+        static std::vector<uint8_t> vertex_local_body_ids()
         {
             return { { 0, 1 } };
         }
@@ -95,7 +95,7 @@ namespace opt {
             return { { vertex_body_id, edge_body_id } };
         }
 
-        static std::array<uint8_t, 3> vertex_local_body_ids()
+        static std::vector<uint8_t> vertex_local_body_ids()
         {
             return { { 0, 1, 1 } };
         }
@@ -144,7 +144,7 @@ namespace opt {
             return { { edge0_body_id, edge1_body_id } };
         }
 
-        static std::array<uint8_t, 4> vertex_local_body_ids()
+        static std::vector<uint8_t> vertex_local_body_ids()
         {
             return { { 0, 0, 1, 1 } };
         }
@@ -184,11 +184,67 @@ namespace opt {
             return { { vertex_body_id, face_body_id } };
         }
 
-        static std::array<uint8_t, 4> vertex_local_body_ids()
+        static std::vector<uint8_t> vertex_local_body_ids()
         {
             return { { 0, 1, 1, 1 } };
         }
     };
+
+    template <typename Constraints>
+    std::vector<uint8_t>
+    vertex_local_body_ids(const Constraints& constraints, size_t ci)
+    {
+        if (ci < constraints.vv_constraints.size()) {
+            return RigidBodyVertexVertexConstraint::vertex_local_body_ids();
+        }
+        ci -= constraints.vv_constraints.size();
+        if (ci < constraints.ev_constraints.size()) {
+            return RigidBodyEdgeVertexConstraint::vertex_local_body_ids();
+        }
+        ci -= constraints.ev_constraints.size();
+        if (ci < constraints.ee_constraints.size()) {
+            return RigidBodyEdgeEdgeConstraint::vertex_local_body_ids();
+        }
+        ci -= constraints.ee_constraints.size();
+        if (ci < constraints.fv_constraints.size()) {
+            return RigidBodyFaceVertexConstraint::vertex_local_body_ids();
+        }
+        assert(false);
+        throw "Invalid constraint index!";
+    }
+
+    template <typename Constraints>
+    std::array<long, 2> body_ids(
+        const physics::RigidBodyAssembler& bodies,
+        const Constraints& constraints,
+        size_t ci)
+    {
+        if (ci < constraints.vv_constraints.size()) {
+            return RigidBodyVertexVertexConstraint(
+                       bodies, constraints.vv_constraints[ci])
+                .body_ids();
+        }
+        ci -= constraints.vv_constraints.size();
+        if (ci < constraints.ev_constraints.size()) {
+            return RigidBodyEdgeVertexConstraint(
+                       bodies, constraints.ev_constraints[ci])
+                .body_ids();
+        }
+        ci -= constraints.ev_constraints.size();
+        if (ci < constraints.ee_constraints.size()) {
+            return RigidBodyEdgeEdgeConstraint(
+                       bodies, constraints.ee_constraints[ci])
+                .body_ids();
+        }
+        ci -= constraints.ee_constraints.size();
+        if (ci < constraints.fv_constraints.size()) {
+            return RigidBodyFaceVertexConstraint(
+                       bodies, constraints.fv_constraints[ci])
+                .body_ids();
+        }
+        assert(false);
+        throw "Invalid constraint index!";
+    }
 
 } // namespace opt
 } // namespace ccd

@@ -463,8 +463,8 @@ namespace opt {
         Eigen::VectorXd& direction,
         bool make_psd)
     {
-        NAMED_PROFILE_POINT("NewtonSolver::compute_direction", SOLVE);
-        PROFILE_START(SOLVE);
+        PROFILE_POINT("NewtonSolver::compute_direction:linear_solve");
+        PROFILE_START();
 
         // Check if the hessian is positive semi-definite.
         // Eigen::LLT<Eigen::MatrixXd> LLT_H((Eigen::MatrixXd(hessian)));
@@ -479,41 +479,40 @@ namespace opt {
         // Return true if the solve was successful.
         bool solve_success = false;
 
-        if (hessian.rows() <= 1200) { // <= 200 bodies
-            Eigen::MatrixXd dense_hessian(hessian);
-            direction = dense_hessian.ldlt().solve(-gradient);
-            solve_success = true;
-        } else {
-            linear_solver->analyzePattern(hessian, hessian.rows());
-            linear_solver->factorize(hessian);
-            nlohmann::json info;
+        // if (hessian.rows() <= 1200) { // <= 200 bodies
+        //     Eigen::MatrixXd dense_hessian(hessian);
+        //     direction = dense_hessian.ldlt().solve(-gradient);
+        //     solve_success = true;
+        // } else {
+        linear_solver->analyzePattern(hessian, hessian.rows());
+        linear_solver->factorize(hessian);
+        nlohmann::json info;
+        linear_solver->getInfo(info);
+        // TODO: This check only works for direct Eigen solvers
+        if (!info.contains("solver_info") || info["solver_info"] == "Success") {
+            // TODO: Do we have a better initial guess for iterative
+            // solvers?
+            direction = Eigen::VectorXd::Zero(gradient.size());
+            linear_solver->solve(-gradient, direction);
             linear_solver->getInfo(info);
-            // TODO: This check only works for direct Eigen solvers
             if (!info.contains("solver_info")
                 || info["solver_info"] == "Success") {
-                // TODO: Do we have a better initial guess for iterative
-                // solvers?
-                direction = Eigen::VectorXd::Zero(gradient.size());
-                linear_solver->solve(-gradient, direction);
-                linear_solver->getInfo(info);
-                if (!info.contains("solver_info")
-                    || info["solver_info"] == "Success") {
-                    solve_success = true;
-                } else {
-                    spdlog::warn(
-                        "solver={} iter={:d} failure=\"sparse solve for newton "
-                        "direction\" failsafe=\"gradient descent\"",
-                        name(), iteration_number);
-                }
+                solve_success = true;
             } else {
                 spdlog::warn(
-                    "solver={} iter={:d} failure=\"sparse decomposition of the "
-                    "hessian\" failsafe=\"gradient descent\"",
+                    "solver={} iter={:d} failure=\"sparse solve for newton "
+                    "direction\" failsafe=\"gradient descent\"",
                     name(), iteration_number);
             }
+        } else {
+            spdlog::warn(
+                "solver={} iter={:d} failure=\"sparse decomposition of the "
+                "hessian\" failsafe=\"gradient descent\"",
+                name(), iteration_number);
         }
+        // }
 
-        PROFILE_END(SOLVE);
+        PROFILE_END();
 
         // Check solve residual
         if (solve_success) {
