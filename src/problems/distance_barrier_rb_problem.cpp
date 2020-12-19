@@ -246,6 +246,13 @@ namespace opt {
         // Compute rigid body energy term
         double Ex =
             compute_energy_term(x, grad, hess, compute_grad, compute_hess);
+        Ex /= average_mass();
+        if (compute_grad) {
+            grad /= average_mass();
+        }
+        if (compute_hess) {
+            hess /= average_mass();
+        }
 
         // The following is used to disable constraints if desired
         // (useful for testing).
@@ -280,14 +287,15 @@ namespace opt {
             x, grad_Dx, hess_Dx, compute_grad, compute_hess);
 
         // Sum all the potentials
-        double kappa = barrier_stiffness();
+        double kappa_over_avg_mass = barrier_stiffness() / average_mass();
         if (compute_grad) {
-            grad += kappa * grad_Bx + grad_Dx;
+            grad += kappa_over_avg_mass * grad_Bx + grad_Dx / average_mass();
         }
         if (compute_hess) {
-            hess += kappa * hess_Bx + hess_Dx;
+            hess += kappa_over_avg_mass * hess_Bx + hess_Dx / average_mass();
         }
-        return Ex + kappa * Bx + Dx;
+
+        return Ex + kappa_over_avg_mass * Bx + Dx / average_mass();
     }
 
     // Compute E(x) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
@@ -380,14 +388,6 @@ namespace opt {
             // ∇²E: Rⁿ ↦ Rⁿˣⁿ
             hess.resize(x.size(), x.size());
             hess.setFromTriplets(hess_triplets.begin(), hess_triplets.end());
-        }
-
-        energies /= average_mass();
-        if (compute_grad) {
-            grad /= average_mass();
-        }
-        if (compute_hess) {
-            hess /= average_mass();
         }
 
         PROFILE_END();
