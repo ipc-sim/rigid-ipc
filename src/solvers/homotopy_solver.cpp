@@ -132,7 +132,7 @@ namespace opt {
         spdlog::info(
             "solver={} t={:g} min_dist={:g} max_num_constraints={:d} {}",
             name(), t_used, min_dist, max_num_constraints,
-            inner_solver_ptr->stats());
+            inner_solver_ptr->stats_string());
 
         spdlog::info(
             "solver={} c={:g} tinit={:g} tinc={:g} num_iterations={:d}", name(),

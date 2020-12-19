@@ -362,14 +362,22 @@ void SimState::simulation_step()
 
 void SimState::save_simulation_step()
 {
+    PROFILE_POINT("SimState::save_simulation_step");
+    PROFILE_START();
+
     state_sequence.push_back(problem_ptr->state());
     step_timings.push_back(step_timer.getElapsedTime());
     solver_iterations.push_back(problem_ptr->opt_result.num_iterations);
     num_contacts.push_back(problem_ptr->num_contacts());
+
+    PROFILE_END();
 }
 
 void SimState::save_simulation(const std::string& filename)
 {
+    PROFILE_POINT("SimState::save_simulation");
+    PROFILE_START();
+
     nlohmann::json results;
     results["args"] = args;
     results["animation"] = nlohmann::json();
@@ -386,9 +394,12 @@ void SimState::save_simulation(const std::string& filename)
     stats["step_timings"] = step_timings;
     stats["solver_iterations"] = solver_iterations;
     stats["num_contacts"] = num_contacts;
+    stats["solve_stats"] = problem_ptr->solver().stats();
     results["stats"] = stats;
 
     std::ofstream(filename) << results.dump();
+
+    PROFILE_END();
 }
 
 } // namespace ccd

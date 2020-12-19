@@ -30,6 +30,9 @@ namespace opt {
         /// Solve the saved optimization problem to completion
         virtual OptimizationResults solve(const Eigen::VectorXd& x0) override;
 
+        virtual std::string stats_string() const override;
+        virtual nlohmann::json stats() const override;
+
     protected:
         /// Adaptivly update the barrier stiffness at the end of each step
         void post_step_update() override;

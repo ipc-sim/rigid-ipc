@@ -93,10 +93,23 @@ namespace opt {
         init_solve(x0);
         OptimizationResults results = NewtonSolver::solve(x0);
         spdlog::info(
-            "solver={} min_dist={:g} num_kappa_updates={:d} {}", name(),
-            problem_ptr->compute_min_distance(results.x), num_kappa_updates,
-            NewtonSolver::stats());
+            "solver={} min_dist={:g} {}", name(),
+            problem_ptr->compute_min_distance(results.x), stats_string());
         return results;
+    }
+
+    std::string IPCSolver::stats_string() const
+    {
+        return fmt::format(
+            "num_kappa_updates={:d} {}", num_kappa_updates,
+            NewtonSolver::stats_string());
+    }
+
+    nlohmann::json IPCSolver::stats() const
+    {
+        nlohmann::json stats_json = NewtonSolver::stats();
+        stats_json["num_kappa_updates"] = num_kappa_updates;
+        return stats_json;
     }
 
 } // namespace opt

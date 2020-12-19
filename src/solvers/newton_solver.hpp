@@ -95,7 +95,8 @@ namespace opt {
             Eigen::VectorXd& delta_x,
             double& coeff);
 
-        virtual std::string stats() override;
+        virtual std::string stats_string() const override;
+        virtual nlohmann::json stats() const override;
 
         int max_iterations;
 
@@ -141,15 +142,15 @@ namespace opt {
     private:
         void reset_stats();
 
-        int num_fx = 0;
-        int num_grad_fx = 0;
-        int num_hessian_fx = 0;
-        int num_collision_check = 0;
-        int ls_iterations = 0;
-        int newton_iterations = 0;
-        int num_newton_ls_fails = 0;
-        int num_grad_ls_fails = 0;
-        int regularization_iterations = 0;
+        size_t num_fx = 0;
+        size_t num_grad_fx = 0;
+        size_t num_hessian_fx = 0;
+        size_t num_collision_check = 0;
+        size_t ls_iterations = 0;
+        size_t newton_iterations = 0;
+        size_t num_newton_ls_fails = 0;
+        size_t num_grad_ls_fails = 0;
+        size_t regularization_iterations = 0;
     };
 
     /**

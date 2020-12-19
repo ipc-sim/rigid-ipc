@@ -80,7 +80,20 @@ namespace opt {
         return free_dof;
     }
 
-    std::string NewtonSolver::stats()
+    nlohmann::json NewtonSolver::stats() const
+    {
+        return { { "total_newton_steps", newton_iterations },
+                 { "total_ls_steps", ls_iterations },
+                 { "num_newton_ls_fails", num_newton_ls_fails },
+                 { "num_grad_ls_fails", num_grad_ls_fails },
+                 { "count_fx", num_fx },
+                 { "count_grad", num_grad_fx },
+                 { "count_hess", num_hessian_fx },
+                 { "count_ccd", num_collision_check },
+                 { "total_regularizations", regularization_iterations } };
+    }
+
+    std::string NewtonSolver::stats_string() const
     {
         return fmt::format(
             "total_newton_steps={:d} total_ls_steps={:d} "
@@ -222,7 +235,7 @@ namespace opt {
                 break;
             }
 
-            step_length = 1.0;
+            step_length = 1;
             bool found_newton_step =
                 line_search(x, direction, fx, grad_direction, step_length);
             ///////////////////////////////////////////////////////////////////
@@ -245,12 +258,13 @@ namespace opt {
                 direction_free = -gradient_free;
                 direction = -grad_direction;
 
+                // WARNING: Disable convergence using negative gradient
                 // check for newton termination again
-                if (iteration_number > 0 && converged()) {
-                    exit_reason = "found a local optimum with -grad dir";
-                    success = true;
-                    break;
-                }
+                // if (iteration_number > 0 && converged()) {
+                //     exit_reason = "found a local optimum with -grad dir";
+                //     success = true;
+                //     break;
+                // }
                 step_length = 1;
                 bool found_gradient_step =
                     line_search(x, direction, fx, grad_direction, step_length);

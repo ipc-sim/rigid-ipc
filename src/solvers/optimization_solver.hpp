@@ -40,7 +40,8 @@ namespace opt {
         /// Perform a single step of solving the optimization problem
         virtual OptimizationResults step_solve() = 0;
 
-        virtual std::string stats() { return ""; }
+        virtual std::string stats_string() const { return ""; }
+        virtual nlohmann::json stats() const { return nlohmann::json(); }
 
         virtual bool has_inner_solver() const { return false; }
         virtual OptimizationSolver& inner_solver()
