@@ -46,7 +46,7 @@ def main():
         "IPC Linear Solve Time", "IPC CCD Time",
         "Rigid Linear Solve Time", "Rigid CCD Time"])
 
-    combined_rigid_profile = None
+    combined_rigid_profile = pandas.DataFrame()
 
     scripts = ["3D/simple/cube-falling-on-edge.txt",
                "3D/rolling/cone.txt",
@@ -148,11 +148,11 @@ def main():
                 df_row["Rigid CCD Time"] = profiler_df.percentage_time.get(
                     "DistanceBarrierConstraint::compute_earliest_toi", 0)
 
-                if combined_rigid_profile is None:
-                    combined_rigid_profile = pandas.DataFrame(
-                        index=profiler_df.index.values[1:])
-                combined_rigid_profile[df_row["Scene"]] = (
-                    profiler_df["percentage_time"])
+                rigid_profile = pandas.DataFrame(
+                    index=profiler_df.index.values[1:])
+                rigid_profile[df_row["Scene"]] = profiler_df["percentage_time"]
+                combined_rigid_profile = pandas.concat(
+                    [combined_rigid_profile, rigid_profile], axis=1)
                 combined_rigid_profile.to_csv("combined-rigid-profile.csv")
             else:
                 print("Profiling not enabled")
