@@ -58,8 +58,12 @@ public:
     }
     bool save(std::string scene_filename) override
     {
-        m_state.save_simulation(scene_filename);
-        return true;
+        return m_state.save_simulation(scene_filename);
+    }
+
+    bool save_mesh(const std::string& filename)
+    {
+        return m_state.save_mesh(filename);
     }
 
     void get_window_dimensions(int& width, int& height) const

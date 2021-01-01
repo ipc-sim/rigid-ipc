@@ -6,6 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <igl/Timer.h>
+#include <igl/write_triangle_mesh.h>
 #include <nlohmann/json.hpp>
 
 #include <constants.hpp>
@@ -373,7 +374,7 @@ void SimState::save_simulation_step()
     PROFILE_END();
 }
 
-void SimState::save_simulation(const std::string& filename)
+bool SimState::save_simulation(const std::string& filename)
 {
     PROFILE_POINT("SimState::save_simulation");
     PROFILE_START();
@@ -397,9 +398,29 @@ void SimState::save_simulation(const std::string& filename)
     stats["solve_stats"] = problem_ptr->solver().stats();
     results["stats"] = stats;
 
-    std::ofstream(filename) << results.dump();
+    std::ofstream file(filename);
+    if (!file) {
+        PROFILE_END();
+        return false;
+    }
+
+    file << results.dump();
 
     PROFILE_END();
+    return true;
+}
+
+bool SimState::save_mesh(const std::string& filename)
+{
+    PROFILE_POINT("SimState::save_mesh");
+    PROFILE_START();
+    const Eigen::MatrixXd V = problem_ptr->vertices();
+    // TODO: Save codimensional edges
+    // const Eigen::MatrixXi& E = problem_ptr->edges();
+    const Eigen::MatrixXi& F = problem_ptr->faces();
+    bool success = igl::write_triangle_mesh(filename, V, F);
+    PROFILE_END();
+    return success;
 }
 
 } // namespace ccd

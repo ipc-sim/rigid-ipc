@@ -1,3 +1,4 @@
+import sys
 import json
 import pathlib
 import copy
@@ -19,9 +20,6 @@ scene = {
     "solver": "ipc_solver",
     "timestep": 0.01,
     "max_time": 1.0,
-    "distance_barrier_constraint": {
-        "trajectory_type": "linearized"  # TODO: replace with screwing
-    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
@@ -41,6 +39,10 @@ bodies = scene["rigid_body_problem"]["rigid_bodies"]
 
 net_rows = 8
 net_cols = 8
+
+if len(sys.argv) >= 3:
+    net_rows = int(sys.argv[1])
+    net_cols = int(sys.argv[2])
 
 row_gap = link_height / 2.5
 col_gap = link_height / 10
@@ -89,4 +91,5 @@ for i in range(net_rows):
 #     bodies[-1]["position"] = ([1.05 * w, 1.05 * h, 1.05 * d] + shift).tolist()
 
 
-save_fixture(scene, get_fixture_dir_path() / "3D" / "chain" / "chain-net.json")
+save_fixture(scene, get_fixture_dir_path() / "3D" /
+             "chain" / f"chain-net-{net_rows:d}x{net_cols:d}.json")

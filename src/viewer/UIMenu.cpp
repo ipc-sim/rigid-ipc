@@ -106,6 +106,11 @@ void UISimState::draw_io()
             save(fname);
         }
 
+        if (ImGui::Button("Save mesh", ImVec2(-1, 0))) {
+            std::string fname = igl::file_dialog_save();
+            save_mesh(fname);
+        }
+
         if (ImGui::Button("Save screenshot", ImVec2(-1, 0))) {
             std::string fname = igl::file_dialog_save();
             save_screenshot(fname);

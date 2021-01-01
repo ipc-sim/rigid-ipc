@@ -70,6 +70,7 @@ def fixture_to_ipc_script(fixture, output_path):
     bodies = fixture["rigid_body_problem"]["rigid_bodies"]
 
     shapes = []
+    disabled_shapes = []
     for body in bodies:
         if "type" in body:
             is_static = body["type"] == "static"
@@ -130,14 +131,16 @@ def fixture_to_ipc_script(fixture, output_path):
         if "torque" in body:
             print("External torque is not supported in IPC! Dropping it!")
 
-        shapes.append(
-            "{}  {:g} {:g} {:g}  {:g} {:g} {:g}  {:g} {:g} {:g} material {:g} 2e11 0.3  {}{}".format(
-                mesh_path, *body.get("position", [0, 0, 0]),
-                *rotation, *scale, body.get("density", 1000),
-                "linearVelocity 0 0 0" if is_static else
-                "initVel {:g} {:g} {:g}  {:g} {:g} {:g}".format(
-                    *linear_velocity, *angular_velocity), nbc
-            ))
+        body_line = "{}  {:g} {:g} {:g}  {:g} {:g} {:g}  {:g} {:g} {:g} material {:g} 2e11 0.3  {}{}".format(
+            mesh_path, *body.get("position", [0, 0, 0]),
+            *rotation, *scale, body.get("density", 1000),
+            "linearVelocity 0 0 0" if is_static else
+            "initVel {:g} {:g} {:g}  {:g} {:g} {:g}".format(
+                *linear_velocity, *angular_velocity), nbc)
+        if body.get("enabled", True):
+            shapes.append(body_line)
+        else:
+            disabled_shapes.append(f"# {body_line}")
 
     epsv = fixture.get("friction_constraints", {}).get(
         "static_friction_speed_bound", 1e-3)
@@ -159,6 +162,7 @@ def fixture_to_ipc_script(fixture, output_path):
 
         shapes input {len(shapes)}
         {{}}
+        {{}}
 
         selfCollisionOn
         selfFric {fixture["rigid_body_problem"].get("coefficient_friction", 0)}
@@ -169,7 +173,7 @@ def fixture_to_ipc_script(fixture, output_path):
         fricIterAmt {friction_iterations}
         tol 1
         {velocity_conv_tol}
-        """).format("\n".join(shapes))
+        """).format("\n".join(shapes), "\n".join(disabled_shapes))
 
 
 def main():

@@ -1,0 +1,125 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.01,
+    "max_time": 10.0,
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, 0, 0],
+        "rigid_bodies": [{
+            "mesh": "anchor/spool.obj",
+            "position": [0, 0.7894736842105263, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680,
+            "is_dof_fixed": [true, true, true, false, true, true],
+            "angular_velocity": [-1000.0, 0, 0],
+            "torque": [-1000000.0, 0, 0],
+            "enabled": true
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, 0.0, 0],
+            "rotation": [0, 90, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -0.7894736842105263, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -1.5789473684210527, 0],
+            "rotation": [0, 90, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -2.368421052631579, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -3.1578947368421053, 0],
+            "rotation": [0, 90, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -3.947368421052632, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -4.736842105263158, 0],
+            "rotation": [0, 90, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -5.526315789473684, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -6.315789473684211, 0],
+            "rotation": [0, 90, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -7.105263157894737, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -7.894736842105264, 0],
+            "rotation": [0, 90, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -8.68421052631579, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -9.473684210526317, 0],
+            "rotation": [0, 90, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -10.263157894736842, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -11.052631578947368, 0],
+            "rotation": [0, 90, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -11.842105263157896, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -12.631578947368421, 0],
+            "rotation": [0, 90, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -13.421052631578949, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -14.210526315789474, 0],
+            "rotation": [0, 90, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/link.obj",
+            "position": [0, -15.0, 0],
+            "rotation": [0, 0, 0],
+            "density": 7680
+        }, {
+            "mesh": "wrecking-ball/ball.obj",
+            "position": [0, -15.789473684210527, 0],
+            "rotation": [0, 90, 0],
+            "density": 0.001
+        }]
+    }
+}

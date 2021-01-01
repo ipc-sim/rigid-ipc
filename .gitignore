@@ -261,6 +261,7 @@ meshes/fracture/chinese-lion
 
 output/
 fixtures/**/*.gif
+fixtures/**/*.obj
 
 src/ccd/EE-CCD-plan.txt
 benchmark.csv

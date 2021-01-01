@@ -57,7 +57,7 @@ def main():
                "3D/friction/arch/arch-25-stones.txt",
                "3D/friction/arch/arch-101-stones.txt",
                "3D/pendulum/double-pendulum.txt",
-               "3D/chain/chain-net.txt"]
+               "3D/chain/chain-net-8x8.txt"]
     scripts = [scripts_dir / script for script in scripts]
 
     skip_ipc = True
