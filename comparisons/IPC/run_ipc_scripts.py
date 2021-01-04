@@ -84,6 +84,11 @@ def parse_arguments():
     return args
 
 
+def append_stem(p, stem_suffix):
+    # return p.with_stem(p.stem + stem_suffix)
+    return p.parent / (p.stem + stem_suffix + p.suffix)
+
+
 def main():
     args = parse_arguments()
     remote_storage = get_remote_storage()
@@ -100,8 +105,8 @@ def main():
         "Rigid Linear Solve Time", "Rigid CCD Time"])
 
     combined_rigid_profile = pandas.DataFrame()
-    combined_rigid_profile_filename = args.output.with_stem(
-        args.output.stem + "-rigid-profile")
+    combined_rigid_profile_filename = append_stem(
+        args.output, "-rigid-profile")
 
     for script in args.input:
         rel = script.relative_to(scripts_dir)
