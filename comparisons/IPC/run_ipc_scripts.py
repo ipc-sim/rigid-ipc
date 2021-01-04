@@ -100,6 +100,8 @@ def main():
         "Rigid Linear Solve Time", "Rigid CCD Time"])
 
     combined_rigid_profile = pandas.DataFrame()
+    combined_rigid_profile_filename = args.output.with_stem(
+        args.output.stem + "-rigid-profile")
 
     for script in args.input:
         rel = script.relative_to(scripts_dir)
@@ -192,7 +194,7 @@ def main():
                 rigid_profile[df_row["Scene"]] = profiler_df["percentage_time"]
                 combined_rigid_profile = pandas.concat(
                     [combined_rigid_profile, rigid_profile], axis=1)
-                combined_rigid_profile.to_csv("combined-rigid-profile.csv")
+                combined_rigid_profile.to_csv(combined_rigid_profile_filename)
             else:
                 print("Profiling not enabled")
 
