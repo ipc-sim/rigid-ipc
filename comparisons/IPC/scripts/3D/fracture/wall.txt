@@ -1,0 +1,119 @@
+energy NH
+warmStart 0
+time 1.0 0.001
+
+
+shapes input 102
+../../../meshes/sphere.msh  0 0 2  0 0 0  0.25 0.25 0.25 material 7680 2e11 0.3  initVel 0 0 -120  0 0 0
+../../../../../meshes/plane.obj  0 -5.01 0  0 0 0  1 1 1 material 1000 2e11 0.3  linearVelocity 0 0 0
+../../../meshes/fracture/wall/wall-piece-00000.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00001.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00002.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00003.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00004.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00005.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00006.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00007.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00008.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00009.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00010.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00011.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00012.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00013.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00014.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00015.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00016.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00017.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00018.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00019.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00020.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00021.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00022.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00023.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00024.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00025.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00026.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00027.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00028.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00029.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00030.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00031.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00032.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00033.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00034.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00035.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00036.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00037.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00038.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00039.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00040.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00041.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00042.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00043.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00044.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00045.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00046.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00047.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00048.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00049.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00050.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00051.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00052.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00053.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00054.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00055.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00056.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00057.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00058.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00059.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00060.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00061.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00062.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00063.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00064.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00065.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00066.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00067.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00068.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00069.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00070.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00071.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00072.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00073.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00074.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00075.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00076.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00077.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00078.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00079.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00080.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00081.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00082.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00083.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00084.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00085.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00086.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00087.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00088.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00089.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00090.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00091.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00092.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00093.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00094.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00095.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00096.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00097.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00098.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+../../../meshes/fracture/wall/wall-piece-00099.msh  0 0 0  0 0 0  1 1 1 material 2500 2e11 0.3  initVel 0 0 0  0 0 0
+
+
+selfCollisionOn
+selfFric 0
+
+constraintSolver interiorPoint
+dHat 0.001
+epsv 0.001
+fricIterAmt 1
+tol 1
+0.01

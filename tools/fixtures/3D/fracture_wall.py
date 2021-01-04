@@ -18,7 +18,7 @@ link_width = 1
 scene = {
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
-    "timestep": 0.0001,
+    "timestep": 0.001,
     "max_time": 1.0,
     "rigid_body_problem": {
         "coefficient_restitution": -1,
@@ -41,7 +41,10 @@ bodies = scene["rigid_body_problem"]["rigid_bodies"]
 
 wall_meshes_dir = get_meshes_dir_path() / "fracture" / "wall"
 
-for mesh in wall_meshes_dir.glob("wall-piece-*.obj"):
+wall_pieces = sorted(list(wall_meshes_dir.glob(
+    "wall-piece-*.obj")), key=lambda p: str(p))
+
+for mesh in wall_pieces:
     bodies.append({
         "mesh": "fracture/wall/" + str(mesh.name),
         "density": 2500
