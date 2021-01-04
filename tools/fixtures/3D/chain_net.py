@@ -19,7 +19,7 @@ scene = {
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
     "timestep": 0.01,
-    "max_time": 1.0,
+    "max_time": 20.0,
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
