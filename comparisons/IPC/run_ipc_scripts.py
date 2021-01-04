@@ -1,6 +1,7 @@
 import sys
 import os
 import pathlib
+import argparse
 import subprocess
 import json
 
@@ -31,14 +32,66 @@ def get_remote_storage():
     return f"{remote_name}:rigid-bodies/ipc-comparison/"
 
 
+def create_parser():
+    parser = argparse.ArgumentParser(
+        description="Run a comparison between IPC and our method.")
+    parser.add_argument(
+        "--ipc-exe", "--ipc", "--ipc-bin", metavar=f"path/to/IPC_bin",
+        type=pathlib.Path, default=None, help="path to IPC executable")
+    parser.add_argument(
+        "--rigid-exe", "--rb-exe", metavar=f"path/to/FixingCollisions_ngui",
+        type=pathlib.Path, default=find_rb_exe(),
+        help="path to rigid simulation executable")
+    parser.add_argument(
+        "-i", "--input", metavar="path/to/input", type=pathlib.Path,
+        dest="input", default=None, help="path to input json(s)", nargs="+")
+    parser.add_argument(
+        "-o", "--output", metavar="path/to/output.csv", type=pathlib.Path,
+        dest="output", default=pathlib.Path("ipc-vs-rigid.csv"),
+        help="path to output CSV")
+    parser.add_argument(
+        "--no-ipc", action="store_true", default=False,
+        help="do not run the IPC simulation")
+    parser.add_argument(
+        "--no-rigid", action="store_true", default=False,
+        help="do not run the rigid simulation")
+    parser.add_argument(
+        "--no-video", action="store_true", default=False,
+        help="do not render a video of the sim")
+    parser.add_argument(
+        "--loglevel", default=3, type=int, choices=range(7),
+        help="set log level 0=trace, 1=debug, 2=info, 3=warn, 4=error, 5=critical, 6=off")
+    return parser
+
+
+def parse_arguments():
+    parser = create_parser()
+    args = parser.parse_args()
+    if not args.no_ipc and args.ipc_exe is None:
+        parser.exit(1, f"IPC executable is required!\n")
+    if not args.no_rigid and args.rigid_exe is None:
+        parser.exit(1, f"Rigid simulation executable is required!\n")
+    if args.input is None:
+        args.input = [pathlib.Path(__file__).resolve().parent / "scripts"]
+    input_scripts = []
+    for input_file in args.input:
+        if input_file.is_file() and input_file.suffix == ".txt":
+            input_scripts.append(input_file.resolve())
+        elif input_file.is_dir():
+            for script_file in input_file.glob('**/*.txt'):
+                input_scripts.append(script_file.resolve())
+    args.input = input_scripts
+    return args
+
+
 def main():
-    assert(len(sys.argv) > 1)
-    ipc_bin = sys.argv[1]
-    rb_exe = find_rb_exe()
+    args = parse_arguments()
     remote_storage = get_remote_storage()
 
     scripts_dir = pathlib.Path(__file__).resolve().parent / "scripts"
     fixtures_dir = pathlib.Path(__file__).resolve().parents[2] / "fixtures"
+
+    render_exe = args.rigid_exe.parent / "render_simulation"
 
     df = pandas.DataFrame(columns=[
         "Scene", "IPC Video", "Rigid Video", "IPC Runtime", "Rigid Runtime",
@@ -48,47 +101,33 @@ def main():
 
     combined_rigid_profile = pandas.DataFrame()
 
-    scripts = ["3D/simple/cube-falling-on-edge.txt",
-               "3D/rolling/cone.txt",
-               "3D/gears/single.txt",
-               "3D/gears/chain.txt",
-               "3D/pendulum/pendulum.txt",
-               "3D/screw.txt",
-               "3D/friction/arch/arch-25-stones.txt",
-               "3D/friction/arch/arch-101-stones.txt",
-               "3D/pendulum/double-pendulum.txt",
-               "3D/chain/chain-net-8x8.txt"]
-    scripts = [scripts_dir / script for script in scripts]
-
-    skip_ipc = True
-    skip_rigid = False
-
-    for script in scripts:  # scripts.glob('**/*.txt'):
+    for script in args.input:
         rel = script.relative_to(scripts_dir)
         output = "output" / rel.parent / rel.stem
         df_row = {"Scene": str(rel.parent / rel.stem)}
         #######################################################################
         # Run the IPC sim
-        if not skip_ipc:
+        if not args.no_ipc:
             print(f"Running {script} in IPC")
-            subprocess.run([ipc_bin, "100", script.resolve(), "-o",
-                            output / "ipc", "--logLevel", "3"])
+            subprocess.run([args.ipc_exe, "100", script.resolve(), "-o",
+                            output / "ipc", "--logLevel", str(args.loglevel)])
 
             # Render the IPC sim
-            print("Rendering IPC simulation")
-            subprocess.run([str(rb_exe.parent / "render_simulation"),
-                            output / "ipc",
-                            "-o", output / f"{script.stem}-ipc.mp4",
-                            "--loglevel", "2", "--fps", "100"])
-            if remote_storage is not None:
-                remote_path = (f"{remote_storage}{rel.parent}")
-                subprocess.run(
-                    ["rclone", "copy", output / f"{script.stem}-ipc.mp4",
-                     remote_path])
-                df_row["IPC Video"] = subprocess.run(
-                    ["rclone", "link", f"{remote_path}/{script.stem}-ipc.mp4"],
-                    capture_output=True, text=True).stdout.strip()
-                print(f"Uploaded video to {df_row['IPC Video']}")
+            if not args.no_video:
+                print("Rendering IPC simulation")
+                subprocess.run([str(render_exe), output / "ipc",
+                                "-o", output / f"{script.stem}-ipc.mp4",
+                                "--loglevel", "2", "--fps", "100"])
+                if remote_storage is not None:
+                    remote_path = (f"{remote_storage}{rel.parent}")
+                    subprocess.run(
+                        ["rclone", "copy", output / f"{script.stem}-ipc.mp4",
+                         remote_path])
+                    df_row["IPC Video"] = subprocess.run(
+                        ["rclone", "link",
+                            f"{remote_path}/{script.stem}-ipc.mp4"],
+                        capture_output=True, text=True).stdout.strip()
+                    print(f"Uploaded video to {df_row['IPC Video']}")
 
             # Get running time from info.txt
             with open(output / "ipc" / "info.txt") as info:
@@ -107,27 +146,27 @@ def main():
 
         #######################################################################
         # Run the corresponding rigid body sim
-        if not skip_rigid:
+        if not args.no_rigid:
             fixture = fixtures_dir / rel.with_suffix(".json")
             print(f"Running {fixture}")
-            subprocess.run([str(rb_exe), str(fixture),
-                            str(output), "--log", "3"])
+            subprocess.run([str(args.rigid_exe), str(fixture),
+                            str(output), "--log", str(args.loglevel)])
 
             # Render the RB sim
-            # print("Rendering IPC simulation")
-            # subprocess.run([str(rb_exe.parent / "render_simulation"),
-            #                 output / "sim.json",
-            #                 "-o", output / f"{script.stem}.mp4",
-            #                 "--loglevel", "2", "--fps", "100"])
-            # if remote_storage is not None:
-            #     remote_path = (f"{remote_storage}{rel.parent}")
-            #     subprocess.run(
-            #         ["rclone", "copy", output / f"{script.stem}.mp4",
-            #          remote_path])
-            #     df_row["Rigid Video"] = subprocess.run(
-            #         ["rclone", "link", f"{remote_path}/{script.stem}.mp4"],
-            #         capture_output=True, text=True).stdout.strip()
-            #     print(f"Uploaded video to {df_row['Rigid Video']}")
+            if not args.no_video:
+                print("Rendering IPC simulation")
+                subprocess.run([str(render_exe), output / "sim.json",
+                                "-o", output / f"{script.stem}.mp4",
+                                "--loglevel", "2", "--fps", "100"])
+                if remote_storage is not None:
+                    remote_path = (f"{remote_storage}{rel.parent}")
+                    subprocess.run(
+                        ["rclone", "copy", output / f"{script.stem}.mp4",
+                         remote_path])
+                    df_row["Rigid Video"] = subprocess.run(
+                        ["rclone", "link", f"{remote_path}/{script.stem}.mp4"],
+                        capture_output=True, text=True).stdout.strip()
+                    print(f"Uploaded video to {df_row['Rigid Video']}")
 
             with open(output / "sim.json") as sim:
                 sim_dict = json.load(sim)
@@ -159,8 +198,8 @@ def main():
 
         #######################################################################
         df.loc[df_row["Scene"]] = df_row
-        df.to_csv("ipc-vs-rigid.csv", index=False)
-    print(f"Results written to ipc-vs-rigid.csv")
+        df.to_csv(args.output, index=False)
+    print(f"Results written to {args.output}")
 
 
 if __name__ == "__main__":

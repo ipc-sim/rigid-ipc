@@ -266,3 +266,4 @@ fixtures/**/*.obj
 src/ccd/EE-CCD-plan.txt
 benchmark.csv
 tools/blender
+comparisons/IPC/*.csv
