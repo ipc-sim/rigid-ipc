@@ -21,7 +21,7 @@ scene = {
     "max_time": 10.0,
     "rigid_body_problem": {
         "coefficient_restitution": -1,
-        "gravity": [0, 0, 0],
+        "gravity": [0, -9.8, 0],
         "rigid_bodies": []
     }
 }
@@ -43,6 +43,7 @@ spool = {
     "is_dof_fixed": [True, True, True, False, True, True],
     "angular_velocity": [-1e3, 0, 0],
     "torque": [-1e6, 0, 0],
+    "type": "kinematic",
     "enabled": True
 }
 bodies.append(spool)
@@ -61,7 +62,7 @@ anchor = {
     "position": [0, -chain_length * link_height / 1.9, 0],
     "rotation": [0, ((chain_length + 1) % 2) * 90, 0],
     "density": 1e-3,
-    "enabled": False
+    "enabled": True
 }
 bodies.append(anchor)
 

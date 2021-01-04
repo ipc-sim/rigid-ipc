@@ -1,10 +1,10 @@
 energy NH
 warmStart 0
 time 10.0 0.01
-turnOffGravity
+
 
 shapes input 22
-../../meshes/anchor/spool.msh  0 0.789474 0  0 0 0  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  -1000 0 0
+../../meshes/anchor/spool.msh  0 0.789474 0  0 0 0  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0  angularVelocity -1000 0 0
 ../../meshes/wrecking-ball/link.msh  0 0 0  0 90 0  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
 ../../meshes/wrecking-ball/link.msh  0 -0.789474 0  0 0 0  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
 ../../meshes/wrecking-ball/link.msh  0 -1.57895 0  0 90 0  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0

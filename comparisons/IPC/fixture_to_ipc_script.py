@@ -80,6 +80,8 @@ def fixture_to_ipc_script(fixture, output_path):
         else:
             is_static = False
 
+        is_kinematic = body.get("type", "dynamic") == "kinematic"
+
         surface_mesh_path = pathlib.Path(body["mesh"])
         if not surface_mesh_path.exists():
             surface_mesh_path = (
@@ -131,12 +133,20 @@ def fixture_to_ipc_script(fixture, output_path):
         if "torque" in body:
             print("External torque is not supported in IPC! Dropping it!")
 
+        if is_static:
+            velocity_str = "linearVelocity 0 0 0"
+        elif is_kinematic:
+            velocity_str = (
+                "linearVelocity {:g} {:g} {:g}  angularVelocity {:g} {:g} {:g}".format(
+                    *linear_velocity, *angular_velocity))
+        else:
+            velocity_str = (
+                "initVel {:g} {:g} {:g}  {:g} {:g} {:g}".format(
+                    *linear_velocity, *angular_velocity))
+
         body_line = "{}  {:g} {:g} {:g}  {:g} {:g} {:g}  {:g} {:g} {:g} material {:g} 2e11 0.3  {}{}".format(
             mesh_path, *body.get("position", [0, 0, 0]),
-            *rotation, *scale, body.get("density", 1000),
-            "linearVelocity 0 0 0" if is_static else
-            "initVel {:g} {:g} {:g}  {:g} {:g} {:g}".format(
-                *linear_velocity, *angular_velocity), nbc)
+            *rotation, *scale, body.get("density", 1000), velocity_str, nbc)
         if body.get("enabled", True):
             shapes.append(body_line)
         else:
