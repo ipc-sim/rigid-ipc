@@ -173,7 +173,10 @@ namespace physics {
             average_edge_length +=
                 (vertices.row(edges(i, 0)) - vertices.row(edges(i, 1))).norm();
         }
-        average_edge_length /= edges.rows();
+        if (edges.rows() > 0) {
+            average_edge_length /= edges.rows();
+        }
+        assert(std::isfinite(average_edge_length));
     }
 
     Eigen::MatrixXd RigidBody::world_velocities() const

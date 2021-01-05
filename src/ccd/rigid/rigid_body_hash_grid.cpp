@@ -56,8 +56,10 @@ void compute_scene_conservative_bbox(
     for (int i : body_ids) {
         const auto& body = bodies[i];
 
-        Eigen::VectorX3d p0 = poses_t0[i].position, p1 = poses_t1[i].position;
-        Eigen::VectorX3d r0 = poses_t0[i].rotation, r1 = poses_t1[i].rotation;
+        const Eigen::VectorX3d& p0 = poses_t0[i].position;
+        const Eigen::VectorX3d& p1 = poses_t1[i].position;
+        const Eigen::VectorX3d& r0 = poses_t0[i].rotation;
+        const Eigen::VectorX3d& r1 = poses_t1[i].rotation;
 
         // If the body is not rotating then just use the linearized trajectory
         if ((r0.array() == r1.array()).all()) {

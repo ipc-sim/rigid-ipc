@@ -93,6 +93,7 @@ namespace physics {
             average_edge_length += body.edges.rows() * body.average_edge_length;
         }
         average_edge_length /= m_edges.rows();
+        assert(std::isfinite(average_edge_length));
 
         average_mass = 0;
         int num_free_dof = 0;
