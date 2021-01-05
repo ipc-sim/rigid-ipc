@@ -12,14 +12,15 @@ option(LIBIGL_WITH_PNG               "Use PNG"                       ON)
 option(LIBIGL_WITH_PREDICATES        "Use exact predicates"          ON)
 
 # project-options
-option(FIXING_COLLISIONS_BUILD_UNIT_TESTS         "Build unit-tests"      ON)
-option(FIXING_COLLISIONS_ENABLE_DERIVATIVE_CHECK  "Check Derivatives"    OFF)
-option(FIXING_COLLISIONS_ENABLE_PROFILING         "Profile Functions"    OFF)
-option(FIXING_COLLISIONS_BUILD_COMPARISONS        "Build comparisons"     ON)
-option(FIXING_COLLISIONS_CODE_COVERAGE            "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
-option(FIXING_COLLISIONS_ENABLE_MOSEK             "Enable Mosek Library" OFF)
+option(FIXING_COLLISIONS_BUILD_UNIT_TESTS          "Build unit-tests"   ON)
+option(FIXING_COLLISIONS_ENABLE_DERIVATIVE_CHECK   "Check Derivatives" OFF)
+option(FIXING_COLLISIONS_ENABLE_PROFILING          "Profile Functions" OFF)
+option(FIXING_COLLISIONS_ENABLE_INTERSECTION_CHECK "Intersection check at end of timestep" OFF)
+option(FIXING_COLLISIONS_BUILD_COMPARISONS         "Build comparisons" ON)
+option(FIXING_COLLISIONS_CODE_COVERAGE             "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
+option(FIXING_COLLISIONS_ENABLE_MOSEK              "Enable Mosek Library" OFF)
 mark_as_advanced(FIXING_COLLISIONS_ENABLE_MOSEK)
-option(FIXING_COLLISIONS_ENABLE_SIMD              "Enable SIMD" OFF)
+option(FIXING_COLLISIONS_ENABLE_SIMD "Enable SIMD" OFF)
 
 # PolySolve settings
 option(POLYSOLVE_WITH_CHOLMOD          "Enable Cholmod library"            ON)
@@ -156,6 +157,10 @@ endif()
 if(FIXING_COLLISIONS_ENABLE_PROFILING)
     message(STATUS "Profiling Enabled")
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DPROFILE_FUNCTIONS)
+endif()
+
+if(FIXING_COLLISIONS_ENABLE_INTERSECTION_CHECK)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DWITH_INTERSECTION_CHECK)
 endif()
 
 ################################################################################

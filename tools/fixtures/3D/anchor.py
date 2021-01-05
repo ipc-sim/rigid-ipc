@@ -61,7 +61,7 @@ anchor = {
     "mesh": "wrecking-ball/ball.obj",
     "position": [0, -chain_length * link_height / 1.9, 0],
     "rotation": [0, ((chain_length + 1) % 2) * 90, 0],
-    "density": 1e-3,
+    "density": 7680,
     "enabled": True
 }
 bodies.append(anchor)

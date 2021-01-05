@@ -120,7 +120,7 @@
             "mesh": "wrecking-ball/ball.obj",
             "position": [0, -15.789473684210527, 0],
             "rotation": [0, 90, 0],
-            "density": 0.001,
+            "density": 7680,
             "enabled": true
         }]
     }

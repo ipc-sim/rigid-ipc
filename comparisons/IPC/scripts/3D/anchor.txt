@@ -25,7 +25,7 @@ shapes input 22
 ../../meshes/wrecking-ball/link.msh  0 -13.4211 0  0 0 0  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
 ../../meshes/wrecking-ball/link.msh  0 -14.2105 0  0 90 0  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
 ../../meshes/wrecking-ball/link.msh  0 -15 0  0 0 0  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
-../../meshes/wrecking-ball/ball.msh  0 -15.7895 0  0 90 0  1 1 1 material 0.001 2e11 0.3  initVel 0 0 0  0 0 0
+../../meshes/wrecking-ball/ball.msh  0 -15.7895 0  0 90 0  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
 
 
 selfCollisionOn

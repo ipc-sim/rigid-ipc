@@ -148,8 +148,7 @@ namespace physics {
             io::from_json(
                 jrb["linear_velocity"], m_assembler[i].velocity.position);
             io::from_json(
-                jrb["angular_velocity"],
-                m_assembler[i].velocity.rotation);
+                jrb["angular_velocity"], m_assembler[i].velocity.rotation);
             i++;
         }
     }
@@ -251,6 +250,11 @@ namespace physics {
     bool
     RigidBodyProblem::detect_intersections(const Poses<double>& poses) const
     {
+#ifndef WITH_INTERSECTION_CHECK
+        // Skip the intersection check if it is disabled in CMake
+        return false;
+#endif
+
         if (num_bodies() <= 1) {
             return false;
         }

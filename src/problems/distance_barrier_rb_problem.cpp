@@ -601,7 +601,6 @@ namespace opt {
     }
 
     // Apply the chain rule of f(V(x)) given ∇ᵥf(V) and ∇ₓV(x)
-    template <typename Constraint>
     void apply_chain_rule(
         const Eigen::VectorXd& grad_f,
         const Eigen::MatrixXd& jac_V,
@@ -731,7 +730,7 @@ namespace opt {
                     V, edges(), faces(), dhat, /*project_to_psd=*/false);
             }
 
-            apply_chain_rule<RigidBodyVertexVertexConstraint>(
+            apply_chain_rule(
                 grad_B, jac_V, hess_B, hess_V,
                 constraint.vertex_indices(edges(), faces()),
                 vertex_local_body_ids(constraints, ci),
