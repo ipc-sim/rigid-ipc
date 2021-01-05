@@ -71,10 +71,12 @@ namespace opt {
         int num_vars() const override { return num_vars_; }
 
         /// @returns A vector of booleans indicating if a DoF is fixed.
-        const Eigen::VectorXb& is_dof_fixed() override
+        const Eigen::VectorXb& is_dof_fixed() const override
         {
             return m_assembler.is_rb_dof_fixed;
         }
+
+        Eigen::VectorXi free_dof() const override;
 
         /// Determine if there is a collision between two configurations
         bool has_collisions(
@@ -207,6 +209,31 @@ namespace opt {
 
         int num_contacts() const override { return m_num_contacts; };
 
+        ////////////////////////////////////////////////////////////
+        // Augmented Lagrangian for equality constraints
+
+        /// Initialize the augmented Lagrangian variables.
+        void init_augmented_lagrangian();
+
+        /// Update the augmented Lagrangian for kinematic bodies.
+        void update_augmented_lagrangian(const Eigen::VectorXd& x) override;
+
+        /// Compute the convergence criteria η of the augment Lagrangian.
+        double compute_convergence_criteria(const Eigen::VectorXd& x) const;
+
+        /// Determine if the value x satisfies the equality constraints.
+        bool are_equality_constraints_satisfied(
+            const Eigen::VectorXd& x) const override;
+
+        /// Compute the augmented Lagrangian potential used to enforce equality
+        /// constraints.
+        double compute_augmented_lagrangian(
+            const Eigen::VectorXd& x,
+            Eigen::VectorXd& grad,
+            Eigen::SparseMatrix<double>& hess,
+            bool compute_grad,
+            bool compute_hess);
+
     protected:
         /// Update problem using current status of bodies.
         virtual void update_constraints() override;
@@ -276,18 +303,23 @@ namespace opt {
         void check_distance_finite_hessian(
             const Eigen::VectorXd& x, const Constraint& constraint);
 
-        void check_grad_barrier(
+        void check_barrier_gradient(
             const Eigen::VectorXd& x,
             const ipc::Constraints& constraints,
             const Eigen::VectorXd& grad);
-        void check_hess_barrier(
+        void check_barrier_hessian(
             const Eigen::VectorXd& x,
             const ipc::Constraints& constraints,
             const Eigen::SparseMatrix<double>& hess);
 
-        void check_grad_friction(
+        void check_friction_gradient(
             const Eigen::VectorXd& x, const Eigen::VectorXd& grad);
-        void check_hess_friction(
+        void check_friction_hessian(
+            const Eigen::VectorXd& x, const Eigen::SparseMatrix<double>& hess);
+
+        void check_augmented_lagrangian_gradient(
+            const Eigen::VectorXd& x, const Eigen::VectorXd& grad);
+        void check_augmented_lagrangian_hessian(
             const Eigen::VectorXd& x, const Eigen::SparseMatrix<double>& hess);
 
         bool is_checking_derivative = false;
@@ -319,6 +351,12 @@ namespace opt {
         double static_friction_speed_bound;
         int friction_iterations;
         ipc::FrictionConstraints friction_constraints;
+
+        // Augmented Lagrangian
+        double augmented_lagrangian_penalty;
+        Eigen::VectorXd augmented_lagrangian_multiplier;
+        Eigen::VectorXd x_pred; ///< Predicted DoF using unconstrained timestep
+        Eigen::VectorXb is_dof_satisfied;
 
     private:
         /// Method for integrating the body energy.

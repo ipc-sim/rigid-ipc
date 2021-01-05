@@ -105,7 +105,10 @@ TEST_CASE(
         }
 
         int num_vars() const override { return num_vars_; }
-        const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
+        const Eigen::VectorXb& is_dof_fixed() const override
+        {
+            return is_dof_fixed_;
+        }
         const Eigen::VectorXd& starting_point() const { return x0; }
 
         double compute_min_distance(const Eigen::VectorXd& x) const override

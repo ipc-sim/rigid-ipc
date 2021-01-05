@@ -67,6 +67,8 @@ namespace opt {
 
     void IPCSolver::post_step_update()
     {
+        NewtonSolver::post_step_update();
+
         // Adaptive κ
         double min_distance = problem_ptr->compute_min_distance(x);
         spdlog::debug(

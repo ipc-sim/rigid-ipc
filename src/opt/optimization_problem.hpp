@@ -44,11 +44,30 @@ namespace opt {
                 /*compute_grad=*/true, /*compute_hess=*/false);
         }
 
+        virtual void update_augmented_lagrangian(const Eigen::VectorXd& x) {}
+        virtual bool
+        are_equality_constraints_satisfied(const Eigen::VectorXd& x) const
+        {
+            return true;
+        }
+
         /// @returns the number of variables
         virtual int num_vars() const = 0;
 
         /// @returns A vector of booleans indicating if a DoF is fixed.
-        virtual const Eigen::VectorXb& is_dof_fixed() = 0;
+        virtual const Eigen::VectorXb& is_dof_fixed() const = 0;
+
+        virtual Eigen::VectorXi free_dof() const
+        {
+            const Eigen::VectorXb& is_fixed = is_dof_fixed();
+            Eigen::VectorXi free_dof(is_fixed.size() - is_fixed.count());
+            for (int i = 0, j = 0; i < is_fixed.size(); i++) {
+                if (!is_fixed(i)) {
+                    free_dof(j++) = i;
+                }
+            }
+            return free_dof;
+        }
 
         /// Determine if there is a collision between two configurations
         virtual bool has_collisions(

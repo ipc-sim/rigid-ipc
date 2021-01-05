@@ -66,18 +66,6 @@ namespace opt {
     void NewtonSolver::init_solve(const Eigen::VectorXd& x0)
     {
         assert(problem_ptr != nullptr);
-        free_dof = init_free_dof(problem_ptr->is_dof_fixed());
-    }
-
-    Eigen::VectorXi init_free_dof(const Eigen::VectorXb& is_dof_fixed)
-    {
-        Eigen::VectorXi free_dof(is_dof_fixed.size() - is_dof_fixed.count());
-        for (int i = 0, j = 0; i < is_dof_fixed.size(); i++) {
-            if (!is_dof_fixed(i)) {
-                free_dof(j++) = i;
-            }
-        }
-        return free_dof;
     }
 
     nlohmann::json NewtonSolver::stats() const
@@ -118,7 +106,7 @@ namespace opt {
         regularization_iterations = 0;
     }
 
-    bool NewtonSolver::converged() const
+    bool NewtonSolver::energy_converged() const
     {
         switch (convergence_criteria) {
         case ConvergenceCriteria::VELOCITY: {
@@ -177,6 +165,12 @@ namespace opt {
         throw NotImplementedError("Invalid convergence criteria option!");
     }
 
+    bool NewtonSolver::converged() const
+    {
+        return energy_converged()
+            && problem_ptr->are_equality_constraints_satisfied(x);
+    }
+
     OptimizationResults NewtonSolver::solve(const Eigen::VectorXd& x0)
     {
         assert(problem_ptr != nullptr);
@@ -209,6 +203,7 @@ namespace opt {
             num_hessian_fx++;
 
             // Remove rows and cols of fixed DoF
+            Eigen::VectorXi free_dof = problem_ptr->free_dof();
             igl::slice(gradient, free_dof, gradient_free);
             igl::slice(hessian, free_dof, free_dof, hessian_free);
 
@@ -401,6 +396,7 @@ namespace opt {
                     x, dir,
                     [&](const Eigen::VectorXd& x, Eigen::VectorXd& grad) {
                         double fx = problem_ptr->compute_objective(x, grad);
+                        Eigen::VectorXi free_dof = problem_ptr->free_dof();
                         Eigen::VectorXd grad_free;
                         igl::slice(grad, free_dof, grad_free);
                         grad.setZero();
@@ -602,6 +598,17 @@ namespace opt {
         double mu = std::max((sum_row - diag).maxCoeff(), 0.0);
         A += mu * I;
         return mu;
+    }
+
+    void NewtonSolver::post_step_update()
+    {
+        if (energy_converged()
+            && !problem_ptr->are_equality_constraints_satisfied(x)) {
+            spdlog::info(
+                "solver={} iter={:d} msg=\"updated augmented Lagrangian\"",
+                name(), iteration_number);
+            problem_ptr->update_augmented_lagrangian(x);
+        }
     }
 
 } // namespace opt

@@ -101,9 +101,10 @@ namespace opt {
         int max_iterations;
 
     protected:
+        virtual bool energy_converged() const;
         virtual bool converged() const;
 
-        virtual void post_step_update() {}
+        virtual void post_step_update();
 
         virtual bool line_search(
             const Eigen::VectorXd& x,
@@ -120,8 +121,7 @@ namespace opt {
         /// @brief Pointer to the problem to solve.
         OptimizationProblem* problem_ptr;
 
-        Eigen::VectorXi free_dof; ///< @brief Indices of the free degrees.
-        int iteration_number;     ///< @brief The current iteration number.
+        int iteration_number; ///< @brief The current iteration number.
         ConvergenceCriteria convergence_criteria;
 
         double energy_conv_tol;   ///< @brief Energy convergence tolerance
@@ -161,9 +161,6 @@ namespace opt {
      * @return The scale of the update to the diagonal.
      */
     double make_matrix_positive_definite(Eigen::SparseMatrix<double>& A);
-
-    /// Construct indicies of free DoF
-    Eigen::VectorXi init_free_dof(const Eigen::VectorXb& is_dof_fixed);
 
 } // namespace opt
 } // namespace ccd

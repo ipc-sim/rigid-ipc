@@ -54,7 +54,10 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
 
         const Eigen::VectorXd& starting_point() const { return x0; }
         int num_vars() const override { return num_vars_; }
-        const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
+        const Eigen::VectorXb& is_dof_fixed() const override
+        {
+            return is_dof_fixed_;
+        }
 
         double compute_min_distance(const Eigen::VectorXd& x) const override
         {

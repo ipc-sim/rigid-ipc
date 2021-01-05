@@ -93,6 +93,19 @@ namespace opt {
         return json;
     }
 
+    Eigen::VectorXi DistanceBarrierRBProblem::free_dof() const
+    {
+        const Eigen::VectorXb& is_dof_fixed = this->is_dof_fixed();
+        std::vector<int> free_dofs;
+        free_dofs.reserve(is_dof_fixed.size() - is_dof_fixed.count());
+        for (int i = 0; i < is_dof_fixed.size(); i++) {
+            if (!is_dof_fixed[i] && !is_dof_satisfied[i]) {
+                free_dofs.push_back(i);
+            }
+        }
+        return Eigen::Map<Eigen::VectorXi>(free_dofs.data(), free_dofs.size());
+    }
+
     ////////////////////////////////////////////////////////////
     // Rigid Body Problem
 
@@ -138,6 +151,8 @@ namespace opt {
 
         update_friction_constraints(collision_constraints, poses_t0);
 
+        init_augmented_lagrangian();
+
         PROFILE_END();
     }
 
@@ -161,6 +176,89 @@ namespace opt {
         }
 
         PROFILE_END();
+    }
+
+    void DistanceBarrierRBProblem::init_augmented_lagrangian()
+    {
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        int pos_ndof = physics::Pose<double>::dim_to_pos_ndof(dim());
+        int rot_ndof = physics::Pose<double>::dim_to_rot_ndof(dim());
+
+        augmented_lagrangian_penalty = 1e6;
+        augmented_lagrangian_multiplier.setZero(
+            ndof * m_assembler.num_kinematic_bodies());
+
+        x_pred = x0;
+        for (int i = 0; i < num_bodies(); i++) {
+            x_pred.segment(ndof * i, pos_ndof) +=
+                timestep() * m_assembler[i].velocity.position;
+            x_pred.segment(ndof * i + pos_ndof, rot_ndof) +=
+                timestep() * m_assembler[i].velocity.rotation;
+        }
+
+        is_dof_satisfied.setZero(x0.size());
+        for (int i = 0; i < num_bodies(); i++) {
+            if (m_assembler[i].type == physics::RigidBodyType::STATIC) {
+                is_dof_satisfied.segment(ndof * i, ndof).setOnes();
+            }
+        }
+    }
+
+    double DistanceBarrierRBProblem::compute_convergence_criteria(
+        const Eigen::VectorXd& x) const
+    {
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        double diff_x_pred_x = 0, diff_x_pred_x0 = 0;
+        for (const auto& k : m_assembler.m_kinematic_body_ids) {
+            diff_x_pred_x +=
+                (x_pred.segment(ndof * k, ndof) - x.segment(ndof * k, ndof))
+                    .squaredNorm();
+            diff_x_pred_x0 +=
+                (x_pred.segment(ndof * k, ndof) - x0.segment(ndof * k, ndof))
+                    .squaredNorm();
+        }
+        return 1 - sqrt(diff_x_pred_x / diff_x_pred_x0);
+    }
+
+    void DistanceBarrierRBProblem::update_augmented_lagrangian(
+        const Eigen::VectorXd& x)
+    {
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+
+        double eta_AL = compute_convergence_criteria(x);
+        if (eta_AL >= 0.999) {
+            // Fix the kinematic DoF that have converged
+            for (int i = 0; i < num_bodies(); i++) {
+                if (m_assembler[i].type == physics::RigidBodyType::KINEMATIC) {
+                    is_dof_satisfied.segment(ndof * i, ndof).setOnes();
+                }
+            }
+            return;
+        }
+
+        if (eta_AL < 0.99 && augmented_lagrangian_penalty < 1e8) {
+            augmented_lagrangian_penalty *= 2;
+        } else {
+            for (int ki = 0; ki < m_assembler.num_kinematic_bodies(); ki++) {
+                const auto& k = m_assembler.m_kinematic_body_ids[ki];
+                augmented_lagrangian_multiplier.segment(ki * ndof, ndof) -=
+                    augmented_lagrangian_penalty * sqrt(m_assembler[k].mass)
+                    * (x.segment(ndof * k, ndof)
+                       - x_pred.segment(ndof * k, ndof));
+            }
+        }
+        spdlog::info(
+            "κ_AL={:g} ||λ_AL||∞={}", augmented_lagrangian_penalty,
+            augmented_lagrangian_multiplier.lpNorm<Eigen::Infinity>());
+    }
+
+    bool DistanceBarrierRBProblem::are_equality_constraints_satisfied(
+        const Eigen::VectorXd& x) const
+    {
+        if (m_assembler.num_kinematic_bodies()) {
+            return compute_convergence_criteria(x) >= 0.999;
+        }
+        return true;
     }
 
     opt::OptimizationResults DistanceBarrierRBProblem::solve_constraints()
@@ -254,6 +352,18 @@ namespace opt {
             hess /= average_mass();
         }
 
+        Eigen::VectorXd grad_AL;
+        Eigen::SparseMatrix<double> hess_AL;
+        double ALx = compute_augmented_lagrangian(
+            x, grad_AL, hess_AL, compute_grad, compute_hess);
+        Ex += ALx / average_mass();
+        if (compute_grad) {
+            grad += grad_AL / average_mass();
+        }
+        if (compute_hess) {
+            hess += hess_AL / average_mass();
+        }
+
         // The following is used to disable constraints if desired
         // (useful for testing).
         if (!m_use_barriers) {
@@ -315,9 +425,9 @@ namespace opt {
         int pos_ndof = physics::Pose<double>::dim_to_pos_ndof(dim());
         int rot_ndof = physics::Pose<double>::dim_to_rot_ndof(dim());
 
-        Eigen::VectorXd energies(num_bodies());
+        Eigen::VectorXd energies = Eigen::VectorXd::Zero(num_bodies());
         if (compute_grad) {
-            grad.resize(x.size());
+            grad.setZero(x.size());
         }
         tbb::concurrent_vector<Eigen::Triplet<double>> hess_triplets;
         if (compute_hess) {
@@ -334,6 +444,11 @@ namespace opt {
 
             const physics::Pose<double>& pose = poses[i];
             const physics::RigidBody& body = m_assembler[i];
+
+            // Do not compute the body energy for static and kinematic bodies
+            if (body.type != physics::RigidBodyType::DYNAMIC) {
+                return;
+            }
 
             Eigen::VectorX6d gradi;
 
@@ -524,6 +639,88 @@ namespace opt {
         }
 
         return energy;
+    }
+
+    double DistanceBarrierRBProblem::compute_augmented_lagrangian(
+        const Eigen::VectorXd& x,
+        Eigen::VectorXd& grad,
+        Eigen::SparseMatrix<double>& hess,
+        bool compute_grad,
+        bool compute_hess)
+    {
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        int pos_ndof = physics::Pose<double>::dim_to_pos_ndof(dim());
+        int rot_ndof = physics::Pose<double>::dim_to_rot_ndof(dim());
+
+        double potential = 0;
+        if (compute_grad) {
+            grad.setZero(x.size());
+        }
+        std::vector<Eigen::Triplet<double>> hess_triplets;
+        if (compute_hess) {
+            hess.resize(x.size(), x.size());
+            hess_triplets.reserve(m_assembler.num_kinematic_bodies() * ndof);
+        }
+
+        bool all_kinematic_dof_satisfied = true;
+        for (const auto& k : m_assembler.m_kinematic_body_ids) {
+            all_kinematic_dof_satisfied &=
+                is_dof_satisfied.segment(ndof * k, ndof).all();
+        }
+
+        if (all_kinematic_dof_satisfied) {
+            return potential;
+        }
+
+        PROFILE_POINT("DistanceBarrierRBProblem::compute_augmented_lagrangian");
+        PROFILE_START();
+
+        const auto& kappa = augmented_lagrangian_penalty;
+        for (int ki = 0; ki < m_assembler.num_kinematic_bodies(); ki++) {
+            const auto& k = m_assembler.m_kinematic_body_ids[ki];
+
+            double m = m_assembler[k].mass;
+            const auto& lambda =
+                augmented_lagrangian_multiplier.segment(ki * ndof, ndof);
+
+            const auto& x_k = x.segment(k * ndof, ndof);
+            const auto& x_pred_k = x_pred.segment(k * ndof, ndof);
+
+            potential += kappa / 2 * m * (x_k - x_pred_k).squaredNorm()
+                - sqrt(m) * lambda.dot(x_k - x_pred_k);
+            if (compute_grad) {
+                grad.segment(k * ndof, ndof) =
+                    kappa * m * (x_k - x_pred_k) - sqrt(m) * lambda;
+            }
+            if (compute_hess) {
+                for (int i = 0; i < ndof; i++) {
+                    hess_triplets.emplace_back(
+                        ndof * k + i, ndof * k + i, kappa * m);
+                }
+            }
+        }
+
+        if (compute_hess) {
+            // ∇²E: Rⁿ ↦ Rⁿˣⁿ
+            hess.setFromTriplets(hess_triplets.begin(), hess_triplets.end());
+        }
+
+        PROFILE_END();
+
+#ifdef WITH_DERIVATIVE_CHECK
+        if (!is_checking_derivative) {
+            is_checking_derivative = true;
+            if (compute_grad) {
+                check_augmented_lagrangian_gradient(x, grad);
+            }
+            if (compute_hess) {
+                check_augmented_lagrangian_hessian(x, hess);
+            }
+            is_checking_derivative = false;
+        }
+#endif
+
+        return potential;
     }
 
     // Compute B(x) = ∑_{k ∈ C} b(d(x_k)) in f(x) = E(x) + κ ∑_{k ∈ C} b(d(x_k))
@@ -757,10 +954,10 @@ namespace opt {
         if (!is_checking_derivative) {
             is_checking_derivative = true;
             if (compute_grad) {
-                check_grad_barrier(x, constraints, grad);
+                check_barrier_gradient(x, constraints, grad);
             }
             if (compute_hess) {
-                check_hess_barrier(x, constraints, hess);
+                check_barrier_hessian(x, constraints, hess);
             }
             is_checking_derivative = false;
         }
@@ -972,10 +1169,10 @@ namespace opt {
         if (!is_checking_derivative) {
             is_checking_derivative = true;
             if (compute_grad) {
-                check_grad_friction(x, grad);
+                check_friction_gradient(x, grad);
             }
             if (compute_hess) {
-                check_hess_friction(x, hess);
+                check_friction_hessian(x, hess);
             }
             is_checking_derivative = false;
         }
@@ -1030,7 +1227,7 @@ namespace opt {
     // The following functions are used exclusivly to check that the
     // gradient and hessian match a finite difference version.
 
-    void DistanceBarrierRBProblem::check_grad_barrier(
+    void DistanceBarrierRBProblem::check_barrier_gradient(
         const Eigen::VectorXd& x,
         const ipc::Constraints& constraints,
         const Eigen::VectorXd& grad)
@@ -1059,7 +1256,7 @@ namespace opt {
         }
     }
 
-    void DistanceBarrierRBProblem::check_hess_barrier(
+    void DistanceBarrierRBProblem::check_barrier_hessian(
         const Eigen::VectorXd& x,
         const ipc::Constraints& constraints,
         const Eigen::SparseMatrix<double>& hess)
@@ -1098,7 +1295,7 @@ namespace opt {
         }
     }
 
-    void DistanceBarrierRBProblem::check_grad_friction(
+    void DistanceBarrierRBProblem::check_friction_gradient(
         const Eigen::VectorXd& x, const Eigen::VectorXd& grad)
     {
         ///////////////////////////////////////////////////////////////////////
@@ -1138,7 +1335,7 @@ namespace opt {
         }
     }
 
-    void DistanceBarrierRBProblem::check_hess_friction(
+    void DistanceBarrierRBProblem::check_friction_hessian(
         const Eigen::VectorXd& x, const Eigen::SparseMatrix<double>& hess)
     {
         ///////////////////////////////////////////////////////////////////////
@@ -1203,6 +1400,68 @@ namespace opt {
             }
         } else {
             spdlog::warn("autodiff hessian failed for friction");
+        }
+    }
+
+    void DistanceBarrierRBProblem::check_augmented_lagrangian_gradient(
+        const Eigen::VectorXd& x, const Eigen::VectorXd& grad)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        // Check that everything went well
+        for (int i = 0; i < grad.size(); i++) {
+            if (!std::isfinite(grad(i))) {
+                spdlog::error("augmented lagrangian gradient is not finite");
+            }
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Finite difference check
+        auto AL = [&](const Eigen::VectorXd& x) {
+            Eigen::VectorXd grad_AL;
+            Eigen::SparseMatrix<double> hess_AL;
+            return compute_augmented_lagrangian(
+                x, grad_AL, hess_AL,
+                /*compute_grad=*/false, /*compute_hess=*/false);
+        };
+        Eigen::VectorXd grad_approx;
+        fd::finite_gradient(x, AL, grad_approx);
+        if (!fd::compare_gradient(grad, grad_approx)) {
+            spdlog::error(
+                "finite gradient check failed for augmented lagrangian");
+        }
+    }
+
+    void DistanceBarrierRBProblem::check_augmented_lagrangian_hessian(
+        const Eigen::VectorXd& x, const Eigen::SparseMatrix<double>& hess)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        // Check that everything went well
+        typedef Eigen::SparseMatrix<double>::InnerIterator Iterator;
+        for (int k = 0; k < hess.outerSize(); ++k) {
+            for (Iterator it(hess, k); it; ++it) {
+                if (!std::isfinite(it.value())) {
+                    spdlog::error("augmented lagrangian hessian is not finite");
+                    return;
+                }
+            }
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Finite difference check
+        Eigen::MatrixXd dense_hess(hess);
+        auto AL = [&](const Eigen::VectorXd& x) {
+            Eigen::VectorXd grad_AL;
+            Eigen::SparseMatrix<double> hess_AL;
+            compute_augmented_lagrangian(
+                x, grad_AL, hess_AL,
+                /*compute_grad=*/true, /*compute_hess=*/false);
+            return grad_AL;
+        };
+        Eigen::MatrixXd hess_approx;
+        fd::finite_jacobian(x, AL, hess_approx);
+        if (!fd::compare_jacobian(hess, hess_approx)) {
+            spdlog::error(
+                "finite hessian check failed for augmented lagrangian");
         }
     }
 #endif

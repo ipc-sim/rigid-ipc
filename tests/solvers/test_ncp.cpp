@@ -159,7 +159,10 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         }
 
         const Eigen::VectorXd& starting_point() const { return b; }
-        const Eigen::VectorXb& is_dof_fixed() override { return is_dof_fixed_; }
+        const Eigen::VectorXb& is_dof_fixed() const override
+        {
+            return is_dof_fixed_;
+        }
 
         virtual int num_vars() const override { return NUM_VARS; }
 
