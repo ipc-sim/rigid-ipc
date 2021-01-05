@@ -9,9 +9,10 @@
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "507-mechanisms/493-Lewis/center.obj",
-            "force": [0, 1000000, 0],
-            "linear_velocity": [0, 0, 0],
-            "density": 1000
+            "#force": [0, 1e6, 0],
+            "linear_velocity": [0, 10, 0],
+            "density": 1000,
+            "type": "kinematic"
         }, {
             "mesh": "507-mechanisms/493-Lewis/left.obj",
             "density": 1000

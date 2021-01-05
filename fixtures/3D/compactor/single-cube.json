@@ -3,9 +3,6 @@
     "solver": "ipc_solver",
     "timestep": 0.01,
     "max_time": 10,
-    "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 1e-2
-    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, 0, 0],

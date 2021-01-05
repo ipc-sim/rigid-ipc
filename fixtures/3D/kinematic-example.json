@@ -1,13 +1,7 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "timestep": 1e-2,
-    "max_time": 10.0,
-    "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 1e-2
-    },
-    "ipc_solver": {
-        "velocity_conv_tol": 1e-5
-    },
+    "max_time": 4,
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, 0, 0],
@@ -15,21 +9,25 @@
             "mesh": "plane.obj",
             "position": [2.5, 0, 0],
             "rotation": [0, 0, 90],
-            "type": "static"
+            "type": "static",
+            "enabled": true
         }, {
             "mesh": "cube.obj",
             "position": [0, 0, 0],
-            "rotation": [32, 247, 53],
+            "rotation": [0, 0, 0],
             "linear_velocity": [-2, 0, 0],
-            "density": 1000,
-            "type": "dynamic"
+            "force": [-1e6, 0, 0],
+            "density": 1e4,
+            "type": "dynamic",
+            "enabled": true
         }, {
             "mesh": "plane.obj",
             "position": [-2.5, 0, 0],
             "rotation": [0, 0, 90],
             "linear_velocity": [1, 0, 0],
-            "density": 10000,
-            "type": "kinematic"
+            "density": 1,
+            "type": "kinematic",
+            "enabled": true
         }]
     }
 }

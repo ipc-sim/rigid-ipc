@@ -3,14 +3,9 @@
     "solver": "ipc_solver",
     "timestep": 0.01,
     "max_time": 10,
-    "distance_barrier_constraint": {
-        "detection_method": "brute_force",
-        "initial_barrier_activation_distance": 1e-2
-    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],
-        "time_stepper": "dmv",
         "rigid_bodies": [{
                 "mesh": "tet-pyramid.obj",
                 "position": [0, 1, 0],

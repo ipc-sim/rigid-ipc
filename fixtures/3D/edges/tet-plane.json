@@ -8,7 +8,6 @@
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],
-        "time_stepper": "dmv",
         "rigid_bodies": [{
                 "mesh": "tet-pyramid.obj",
                 "position": [-4, 0.25, 0],

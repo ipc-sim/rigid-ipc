@@ -10,7 +10,6 @@
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
-        "time_stepper": "dmv",
         "rigid_bodies": [{
             "mesh": "torus.obj",
             "position": [1.5, 0, 0],
