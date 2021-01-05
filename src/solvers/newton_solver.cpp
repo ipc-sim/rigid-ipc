@@ -132,7 +132,9 @@ namespace opt {
                 / problem_ptr->timestep();
 
             // TODO: Renable this with a better check for static objects
-            double tol = velocity_conv_tol * problem_ptr->world_bbox_diagonal();
+            // double tol = velocity_conv_tol *
+            // problem_ptr->world_bbox_diagonal();
+            double tol = velocity_conv_tol;
 
             spdlog::info(
                 "solver={} iter={:d} step_max_speed={:g} tol={:g}", //
