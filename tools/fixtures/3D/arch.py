@@ -20,9 +20,6 @@ def main():
         "solver": "ipc_solver",
         "timestep": 0.01,
         "max_time": 20.0,
-        "distance_barrier_constraint": {
-            "initial_barrier_activation_distance": 1e-2
-        },
         "friction_constraints": {
             "iterations": 1
         },

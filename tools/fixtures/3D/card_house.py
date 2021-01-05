@@ -18,9 +18,6 @@ def main():
         "solver": "ipc_solver",
         "timestep": 0.01,
         "max_time": 2,
-        "distance_barrier_constraint": {
-            "initial_barrier_activation_distance": 1e-3
-        },
         "ipc_solver": {
             "velocity_conv_tol": 1e-3
         },
