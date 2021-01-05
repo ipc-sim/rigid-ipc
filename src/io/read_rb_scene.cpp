@@ -1,5 +1,7 @@
 #include "read_rb_scene.hpp"
 
+#include <unordered_set>
+
 #include <Eigen/Geometry>
 #include <boost/filesystem.hpp>
 #include <igl/edges.h>
@@ -13,6 +15,12 @@
 
 namespace ccd {
 namespace io {
+
+    template <typename T>
+    inline bool contains(const std::unordered_set<T>& set, const T& val)
+    {
+        return set.find(val) != set.end();
+    }
 
     int read_rb_scene_from_str(
         const std::string str, std::vector<physics::RigidBody>& rbs)
@@ -218,12 +226,19 @@ namespace io {
         }
 
         // Adjust the group ids, so the default ones are unique.
-        std::vector<int> taken_ids;
+        std::unordered_set<int> static_group_ids;
         for (RigidBody& rb : rbs) {
-            if (rb.type == RigidBodyType::STATIC) {
+            if (rb.type != RigidBodyType::DYNAMIC) {
+                if (rb.group_id >= 0) {
+                    static_group_ids.insert(rb.group_id);
+                }
                 // All static bodies will be given the same group id later
                 rb.group_id = -1;
-            } else if (rb.group_id >= 0) {
+            }
+        }
+        std::vector<int> taken_ids;
+        for (RigidBody& rb : rbs) {
+            if (rb.group_id >= 0) {
                 taken_ids.push_back(rb.group_id);
             }
         }
@@ -232,7 +247,9 @@ namespace io {
         int id = 0;
         int static_group_id = -1;
         for (RigidBody& rb : rbs) {
-            if (static_group_id >= 0 && rb.type == RigidBodyType::STATIC) {
+            bool in_static_group = rb.type != RigidBodyType::DYNAMIC
+                || contains(static_group_ids, rb.group_id);
+            if (static_group_id >= 0 && in_static_group) {
                 // All static bodies are in the same group
                 rb.group_id = static_group_id;
             } else if (rb.group_id < 0) {
@@ -244,11 +261,15 @@ namespace io {
                     }
                     taken_id_i++;
                 }
-                if (static_group_id < 0 && rb.type == RigidBodyType::STATIC) {
-                    // All static bodies are in the same group
-                    static_group_id = id;
-                }
                 rb.group_id = id++;
+                assert(!std::binary_search(
+                    taken_ids.begin(), taken_ids.end(), rb.group_id));
+            }
+
+            assert(rb.group_id >= 0);
+            if (static_group_id < 0 && in_static_group) {
+                // All static bodies are in the same group
+                static_group_id = rb.group_id;
             }
         }
 

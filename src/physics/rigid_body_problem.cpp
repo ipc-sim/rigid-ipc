@@ -191,6 +191,10 @@ namespace physics {
         // Update the velocities
         // This need to be done AFTER updating poses
         tbb::parallel_for_each(m_assembler.m_rbs, [&](RigidBody& rb) {
+            if (rb.type != RigidBodyType::DYNAMIC) {
+                return;
+            }
+
             // Assume linear velocity through the time-step.
             rb.velocity.position =
                 (rb.pose.position - rb.pose_prev.position) / timestep();
@@ -223,10 +227,15 @@ namespace physics {
             rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
         });
 
+#ifdef WITH_INTERSECTION_CHECK
         // Check for intersections instead of collision along the entire step.
         // We only guarentee a piecewise collision-free trajectory.
         // return detect_collisions(poses_t0, poses_q1, CollisionCheck::EXACT);
         return detect_intersections(poses_q1);
+#else
+        // Skip the intersection check if it is disabled in CMake
+        return false;
+#endif
     }
 
     bool RigidBodyProblem::detect_collisions(
@@ -250,11 +259,6 @@ namespace physics {
     bool
     RigidBodyProblem::detect_intersections(const Poses<double>& poses) const
     {
-#ifndef WITH_INTERSECTION_CHECK
-        // Skip the intersection check if it is disabled in CMake
-        return false;
-#endif
-
         if (num_bodies() <= 1) {
             return false;
         }
