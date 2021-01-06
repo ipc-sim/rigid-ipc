@@ -67,10 +67,9 @@ int json_to_mjcf(const char* jsonFilePath)
                 rotation.resize(3, 0.0);
             }
             Eigen::Quaterniond q;
-            q = Eigen::AngleAxisd(rotation[0] * M_PI / 180.0, -Eigen::Vector3d::UnitX())
-                    * Eigen::AngleAxisd(rotation[1] * M_PI / 180.0, Eigen::Vector3d::UnitZ())
-                    * Eigen::AngleAxisd(rotation[2] * M_PI / 180.0, Eigen::Vector3d::UnitY()) 
-                    * swapYZ;
+            q = swapYZ * Eigen::AngleAxisd(rotation[2] * M_PI / 180.0, Eigen::Vector3d::UnitZ())
+                    * Eigen::AngleAxisd(rotation[1] * M_PI / 180.0, Eigen::Vector3d::UnitY())
+                    * Eigen::AngleAxisd(rotation[0] * M_PI / 180.0, Eigen::Vector3d::UnitX());
             ss << q.w() << " " << q.x() << " " << q.y() << " " << q.z();
             printer.PushAttribute("quat", ss.str().c_str());
             ss.str(std::string());
@@ -79,15 +78,27 @@ int json_to_mjcf(const char* jsonFilePath)
             printer.PushAttribute("mesh", meshNames[rbId].c_str());
             printer.PushAttribute("type", "mesh");
             if (rbI.find("scale") != rbI.end()) {
-                double scale = rbI["scale"].get<double>();
-                std::string sizeStr(std::to_string(scale));
-                sizeStr += " " + sizeStr + " " + sizeStr;
-                printer.PushAttribute("size", sizeStr.c_str());
+                try {
+                    double scale = rbI["scale"].get<double>();
+                    std::string sizeStr(std::to_string(scale));
+                    sizeStr += " " + sizeStr + " " + sizeStr;
+                    printer.PushAttribute("size", sizeStr.c_str());
+                }
+                catch(...) {
+                    std::vector<double> scale = rbI["scale"].get<std::vector<double>>();
+                    if (scale.size() != 3) {
+                        spdlog::error("scale dimension error!");
+                        exit(-1);
+                    }
+                    std::string sizeStr(std::to_string(scale[0]));
+                    sizeStr += " " + std::to_string(scale[1]) + " " + std::to_string(scale[2]);
+                    printer.PushAttribute("size", sizeStr.c_str());
+                }
             }
             printer.CloseElement(); // geom
 
+            bool isFixed = false;
             if (rbI.find("is_dof_fixed") != rbI.end()) {
-                bool isFixed = false;
                 try {
                     for (bool i : rbI["is_dof_fixed"].get<std::vector<bool>>()) {
                         isFixed |= i;
@@ -101,6 +112,21 @@ int json_to_mjcf(const char* jsonFilePath)
                     printer.PushAttribute("mass", "0");
                     printer.CloseElement(); // inertial
                 }
+            }
+
+            if (!isFixed && rbI.find("type") != rbI.end()) {
+                if (rbI["type"].get<std::string>() == "static") {
+                    isFixed = true;
+                    printer.OpenElement("inertial");
+                    printer.PushAttribute("mass", "0");
+                    printer.CloseElement(); // inertial
+                }
+            }
+
+            if (rbI.find("density") != rbI.end()) {
+                printer.OpenElement("IPC");
+                printer.PushAttribute("density", std::to_string(rbI["density"].get<double>()).c_str());
+                printer.CloseElement(); // IPC
             }
 
             printer.CloseElement(); // body
@@ -134,9 +160,9 @@ int generate_bullet_results(
             return -1;
         }
         mkdir("output", 0777);
-        std::string jsonFilePathStr(jsonFilePath);
-        int lastSlash = jsonFilePathStr.find_last_of('/');
-        std::string folderPath = "output/" + jsonFilePathStr.substr(lastSlash, jsonFilePathStr.find_last_of('.') - lastSlash) + "/";
+        std::string bulletResultFilePathStr(bulletResultFilePath);
+        int lastSlash = bulletResultFilePathStr.find_last_of('/');
+        std::string folderPath = "output/" + bulletResultFilePathStr.substr(lastSlash, bulletResultFilePathStr.find_last_of('.') - lastSlash) + "/";
         mkdir(folderPath.c_str(), 0777);
 
         std::vector<Eigen::MatrixXd> V;
@@ -147,8 +173,20 @@ int generate_bullet_results(
             F.resize(F.size() + 1);
             igl::readOBJ("meshes/" + meshFilePath, V.back(), F.back());
             if (rbI.find("scale") != rbI.end()) {
-                double scale = rbI["scale"].get<double>();
-                V.back() *= scale;
+                try {
+                    double scale = rbI["scale"].get<double>();
+                    V.back() *= scale;
+                }
+                catch(...) {
+                    std::vector<double> scale = rbI["scale"].get<std::vector<double>>();
+                    if (scale.size() != 3) {
+                        spdlog::error("scale dimension error!");
+                        exit(-1);
+                    }
+                    V.back().col(0) *= scale[0];
+                    V.back().col(1) *= scale[1];
+                    V.back().col(2) *= scale[2];
+                }
             }
         }
         input.close();
@@ -162,6 +200,11 @@ int generate_bullet_results(
         while (!bulletTransFile.eof()) {
             int frameI, objI;
             bulletTransFile >> frameI >> objI;
+            if (frameI == -1) {
+                // timing output
+                spdlog::info("timing: {:g} min", objI / 60.0);
+                exit(0);
+            }
             if (frameI != lastFrameI) {
                 lastFrameI = frameI;
                 VStart = 0;
@@ -197,6 +240,9 @@ int generate_bullet_results(
         }
         bulletTransFile.close();
         return 0;
+    }
+    else {
+        spdlog::error("json and bullet file open error!");
     }
     return -1;
 }

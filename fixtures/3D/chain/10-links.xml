@@ -1,0 +1,47 @@
+<mujoco>
+    <asset>
+        <mesh file="torus.obj" name="torus"/>
+        <mesh file="torus.obj" name="torus"/>
+        <mesh file="torus.obj" name="torus"/>
+        <mesh file="torus.obj" name="torus"/>
+        <mesh file="torus.obj" name="torus"/>
+        <mesh file="torus.obj" name="torus"/>
+        <mesh file="torus.obj" name="torus"/>
+        <mesh file="torus.obj" name="torus"/>
+        <mesh file="torus.obj" name="torus"/>
+        <mesh file="torus.obj" name="torus"/>
+    </asset>
+    <worldbody>
+        <body pos="-0 0 1.5" quat="0 0 0.707107 0.707107">
+            <geom mesh="torus" type="mesh"/>
+            <inertial mass="0"/>
+        </body>
+        <body pos="-0 0 0.95" quat="-0.5 -0.5 0.5 0.5">
+            <geom mesh="torus" type="mesh"/>
+        </body>
+        <body pos="-0 0 0.4" quat="0 0 0.707107 0.707107">
+            <geom mesh="torus" type="mesh"/>
+        </body>
+        <body pos="-0 0 -0.15" quat="-0.5 -0.5 0.5 0.5">
+            <geom mesh="torus" type="mesh"/>
+        </body>
+        <body pos="-0 0 -0.7" quat="0 0 0.707107 0.707107">
+            <geom mesh="torus" type="mesh"/>
+        </body>
+        <body pos="-0 0 -1.25" quat="-0.5 -0.5 0.5 0.5">
+            <geom mesh="torus" type="mesh"/>
+        </body>
+        <body pos="-0 0 -1.8" quat="0 0 0.707107 0.707107">
+            <geom mesh="torus" type="mesh"/>
+        </body>
+        <body pos="-0 0 -2.35" quat="-0.5 -0.5 0.5 0.5">
+            <geom mesh="torus" type="mesh"/>
+        </body>
+        <body pos="-0 0 -2.9" quat="0 0 0.707107 0.707107">
+            <geom mesh="torus" type="mesh"/>
+        </body>
+        <body pos="-0 0 -3.45" quat="-0.5 -0.5 0.5 0.5">
+            <geom mesh="torus" type="mesh"/>
+        </body>
+    </worldbody>
+</mujoco>

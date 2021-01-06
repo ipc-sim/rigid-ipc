@@ -1,0 +1,31 @@
+<mujoco>
+    <asset>
+        <mesh file="cube.obj" name="cube"/>
+        <mesh file="cube.obj" name="cube"/>
+        <mesh file="cube.obj" name="cube"/>
+        <mesh file="cube.obj" name="cube"/>
+        <mesh file="cube.obj" name="cube"/>
+        <mesh file="plane.obj" name="plane"/>
+    </asset>
+    <worldbody>
+        <body pos="-0 0 1" quat="0 0 0.707107 0.707107">
+            <geom mesh="cube" type="mesh"/>
+        </body>
+        <body pos="-0 0 3" quat="0 0 0.707107 0.707107">
+            <geom mesh="cube" type="mesh"/>
+        </body>
+        <body pos="-0 0 5" quat="0 0 0.707107 0.707107">
+            <geom mesh="cube" type="mesh"/>
+        </body>
+        <body pos="-0 0 7" quat="0 0 0.707107 0.707107">
+            <geom mesh="cube" type="mesh"/>
+        </body>
+        <body pos="-0 0 9" quat="0 0 0.707107 0.707107">
+            <geom mesh="cube" type="mesh"/>
+        </body>
+        <body pos="-0 0 -1" quat="0 0 0.707107 0.707107">
+            <geom mesh="plane" type="mesh"/>
+            <inertial mass="0"/>
+        </body>
+    </worldbody>
+</mujoco>

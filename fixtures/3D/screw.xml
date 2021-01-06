@@ -1,0 +1,15 @@
+<mujoco>
+    <asset>
+        <mesh file="screw-and-nut/nut-big.obj" name="screw-and-nut/nut-big"/>
+        <mesh file="screw-and-nut/screw-big.obj" name="screw-and-nut/screw-big"/>
+    </asset>
+    <worldbody>
+        <body pos="-0 0 0" quat="0 0 0.707107 0.707107">
+            <geom mesh="screw-and-nut/nut-big" type="mesh" size="0.010000 0.010000 0.010000"/>
+            <inertial mass="0"/>
+        </body>
+        <body pos="-0 0 0" quat="0 0 0.707107 0.707107">
+            <geom mesh="screw-and-nut/screw-big" type="mesh" size="0.010000 0.010000 0.010000"/>
+        </body>
+    </worldbody>
+</mujoco>
