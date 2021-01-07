@@ -1,0 +1,750 @@
+<mujoco>
+    <asset>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+    </asset>
+    <worldbody>
+        <body pos="-1.65 0.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 0.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 0.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 0.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 0.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 0.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 0.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 0.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 0.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 0.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 0.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 0.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0.825 1.6 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-2.475 1.6 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 2.4000000000000004 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.125 1.6 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 2.4000000000000004 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-5.775 1.6 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 2.4000000000000004 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-7.425 1.6 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 2.4000000000000004 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.075 1.6 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 2.4000000000000004 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-10.725 1.6 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 2.4000000000000004 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-11.55 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0.825 3.2 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-2.475 3.2 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 4.0 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.125 3.2 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 4.0 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-5.775 3.2 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 4.0 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-7.425 3.2 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 4.0 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.075 3.2 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 4.0 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-10.725 3.2 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 4.0 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-11.55 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0 4.800000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0.825 4.800000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 4.800000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-2.475 4.800000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 5.6000000000000005 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 4.800000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.125 4.800000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 5.6000000000000005 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 4.800000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-5.775 4.800000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 5.6000000000000005 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 4.800000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-7.425 4.800000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 5.6000000000000005 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 4.800000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.075 4.800000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 5.6000000000000005 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 4.800000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-10.725 4.800000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 5.6000000000000005 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-11.55 4.800000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0 6.4 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0.825 6.4 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 6.4 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-2.475 6.4 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 7.2 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 6.4 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.125 6.4 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 7.2 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 6.4 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-5.775 6.4 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 7.2 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 6.4 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-7.425 6.4 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 7.2 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 6.4 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.075 6.4 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 7.2 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 6.4 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-10.725 6.4 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 7.2 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-11.55 6.4 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0 8.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0.825 8.0 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 8.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-2.475 8.0 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 8.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 8.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.125 8.0 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 8.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 8.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-5.775 8.0 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 8.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 8.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-7.425 8.0 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 8.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 8.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.075 8.0 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 8.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 8.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-10.725 8.0 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 8.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-11.55 8.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0 9.600000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-0.825 9.600000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 9.600000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-2.475 9.600000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 10.4 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 9.600000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.125 9.600000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 10.4 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 9.600000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-5.775 9.600000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 10.4 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 9.600000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-7.425 9.600000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 10.4 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 9.600000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.075 9.600000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 10.4 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 9.600000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-10.725 9.600000000000001 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 10.4 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-11.55 9.600000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-1.65 11.200000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-3.3 11.200000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-4.95 11.200000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-6.6 11.200000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-8.25 11.200000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+        <body pos="-9.9 11.200000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh"/>
+            <inertial mass="0"/>
+            <IPC density="7680.000000"/>
+        </body>
+    </worldbody>
+</mujoco>
