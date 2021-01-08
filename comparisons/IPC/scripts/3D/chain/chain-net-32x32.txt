@@ -1,6 +1,6 @@
 energy NH
 warmStart 0
-time 1.0 0.01
+time 20.0 0.01
 
 
 shapes input 2880
