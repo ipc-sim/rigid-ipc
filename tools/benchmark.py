@@ -210,7 +210,7 @@ def main():
                 skipinitialspace=True, converters={
                     "percentage_time": lambda x: float(x.strip('%'))})
             broad_ccd = profiler_df.percentage_time.get(
-                "collisions_detection__broad_phase", 0)
+                "detect_continous_collision_candidates_rigid", 0)
             narrow_ccd = profiler_df.percentage_time.get(
                 "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase",
                 0)

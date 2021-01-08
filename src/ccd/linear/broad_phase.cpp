@@ -31,7 +31,7 @@ void detect_collision_candidates(
     assert(edges.size() == 0 || edges.cols() == 2);
     assert(faces.size() == 0 || faces.cols() == 3);
 
-    PROFILE_POINT("detect_collision_candidates");
+    PROFILE_POINT("detect_linear_collision_candidates");
     PROFILE_START();
 
     switch (method) {
