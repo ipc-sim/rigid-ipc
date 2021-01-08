@@ -11,9 +11,14 @@ import context
 
 from fixture_utils import save_fixture, get_fixture_dir_path
 
-link_thickness = 0.3  # padded_link_thickness (actual thickness: 0.190211)
-link_height = 1.5
-link_width = 1
+scale = 1.0
+if len(sys.argv) > 3:
+    scale = float(sys.argv[3])
+
+# padded_link_thickness (actual thickness: 0.190211)
+link_thickness = 0.3 * scale
+link_height = 1.5 * scale
+link_width = 1 * scale
 
 scene = {
     "scene_type": "distance_barrier_rb_problem",
@@ -31,6 +36,7 @@ link = {
     "mesh": "wrecking-ball/link.obj",
     "position": [0, 0, 0],
     "rotation": [0, 0, 0],
+    "scale": scale,
     "density": 7680,
     "is_dof_fixed": False
 }
@@ -90,6 +96,6 @@ for i in range(net_rows):
 #     bodies.append(copy.deepcopy(cube))
 #     bodies[-1]["position"] = ([1.05 * w, 1.05 * h, 1.05 * d] + shift).tolist()
 
-
+scale_str = "" if scale == 1 else f"-{scale:g}scale"
 save_fixture(scene, get_fixture_dir_path() / "3D" /
-             "chain" / f"chain-net-{net_rows:d}x{net_cols:d}.json")
+             "chain" / f"chain-net-{net_rows:d}x{net_cols:d}{scale_str}.json")
