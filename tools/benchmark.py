@@ -180,7 +180,7 @@ def main():
             video_url = "N/a"
         else:
             print("Rendering simulation")
-            video_name = f"{script.stem}-{get_time_stamp()}.mp4"
+            video_name = f"{scene.stem}-{get_time_stamp()}.mp4"
             subprocess.run([str(args.sim_exe.parent / "render_simulation"),
                             sim_output_dir / "sim.json",
                             "-o", sim_output_dir / video_name,
