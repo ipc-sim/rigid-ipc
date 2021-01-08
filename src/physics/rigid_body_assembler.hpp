@@ -152,11 +152,19 @@ namespace physics {
 
         /// Get a vector of body ids where each body is close to at least one
         /// other body.
-        std::vector<int> close_bodies(
+        std::vector<std::pair<int, int>> close_bodies(
             const physics::Poses<double>& poses_t0,
             const physics::Poses<double>& poses_t1,
             const double inflation_radius) const;
-        std::vector<int> close_bodies_brute_force(
+        std::vector<std::pair<int, int>> close_bodies_brute_force(
+            const physics::Poses<double>& poses_t0,
+            const physics::Poses<double>& poses_t1,
+            const double inflation_radius) const;
+        std::vector<std::pair<int, int>> close_bodies_bvh(
+            const physics::Poses<double>& poses_t0,
+            const physics::Poses<double>& poses_t1,
+            const double inflation_radius) const;
+        std::vector<std::pair<int, int>> close_bodies_hash_grid(
             const physics::Poses<double>& poses_t0,
             const physics::Poses<double>& poses_t1,
             const double inflation_radius) const;
@@ -168,9 +176,11 @@ namespace physics {
 
         std::vector<RigidBody> m_rbs;
 
-        /// @brief indexes for body
+        /// @brief The starting index of each RB in the global vertices
         std::vector<long> m_body_vertex_id;
+        /// @brief The starting index of each RB in the global edges
         std::vector<long> m_body_edge_id;
+        /// @brief The starting index of each RB in the global faces
         std::vector<long> m_body_face_id;
 
         double average_edge_length; ///< Average edge length

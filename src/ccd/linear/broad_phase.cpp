@@ -28,9 +28,6 @@ void detect_collision_candidates(
     DetectionMethod method,
     const double inflation_radius)
 {
-    assert(
-        method == DetectionMethod::BRUTE_FORCE
-        || method == DetectionMethod::HASH_GRID);
     assert(edges.size() == 0 || edges.cols() == 2);
     assert(faces.size() == 0 || faces.cols() == 3);
 
@@ -47,6 +44,9 @@ void detect_collision_candidates(
             vertices_t0, vertices_t1, edges, faces, group_ids, collision_types,
             candidates, inflation_radius);
         break;
+    default:
+        throw NotImplementedError("detect_collision_candidates() is only "
+                                  "implemented for BRUTE_FORCE and HASH_GRID!");
     }
 
     PROFILE_END();

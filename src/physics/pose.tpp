@@ -185,15 +185,14 @@ namespace physics {
         return product;
     }
 
-    template <typename T1, typename T2>
-    Poses<T2> cast(const Poses<T1>& poses_T1)
+    template <typename T, typename U> Poses<T> cast(const Poses<U>& poses)
     {
-        Poses<T2> poses_T2;
-        poses_T2.reserve(poses_T1.size());
-        for (int i = 0; i < poses_T1.size(); i++) {
-            poses_T2.push_back(poses_T1[i].template cast<T2>());
+        Poses<T> poses_T;
+        poses_T.reserve(poses_T.size());
+        for (int i = 0; i < poses.size(); i++) {
+            poses_T.push_back(poses[i].template cast<T>());
         }
-        return poses_T2;
+        return poses_T;
     }
 
 } // namespace physics

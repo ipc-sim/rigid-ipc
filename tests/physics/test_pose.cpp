@@ -30,8 +30,7 @@ TEST_CASE("Cast poses", "[physics][pose]")
         Eigen::VectorXf::Random(num_bodies * Pose<float>::dim_to_ndof(dim));
     Poses<float> expected_posesf = Pose<float>::dofs_to_poses(dof, dim);
 
-    Poses<float> actual_posesf =
-        cast<double, float>(cast<float, double>(expected_posesf));
+    Poses<float> actual_posesf = cast<float>(cast<double>(expected_posesf));
 
     CHECK(
         (Pose<float>::poses_to_dofs(expected_posesf)

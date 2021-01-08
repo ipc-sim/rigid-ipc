@@ -14,7 +14,7 @@ public:
     void resize(
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses,
-        const std::vector<int>& body_ids,
+        const std::vector<std::pair<int, int>>& body_pairs,
         const double inflation_radius = 0.0);
 
     /// Resize to fit a dynamic scene
@@ -22,14 +22,14 @@ public:
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1,
-        const std::vector<int>& body_ids,
+        const std::vector<std::pair<int, int>>& body_pairs,
         const double inflation_radius = 0.0);
 
     /// Add static bodies
     void addBodies(
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses,
-        const std::vector<int>& body_ids,
+        const std::vector<std::pair<int, int>>& body_pairs,
         const double inflation_radius = 0.0);
 
     /// Add dynamic bodies
@@ -37,7 +37,7 @@ public:
         const physics::RigidBodyAssembler& bodies,
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1,
-        const std::vector<int>& body_ids,
+        const std::vector<std::pair<int, int>>& body_pairs,
         const double inflation_radius = 0.0);
 
 protected:

@@ -124,3 +124,11 @@ function(fixing_collisions_download_filib)
     GIT_TAG        1b36c5047fd2ee27fcbb6d73deb25da7f77a6f70
   )
 endfunction()
+
+# SimpleBVH
+function(fixing_collisions_download_simple_bvh)
+  fixing_collisions_download_project(SimpleBVH
+    GIT_REPOSITORY git@github.com:geometryprocessing/SimpleBVH.git
+    GIT_TAG        15574502f6cb8039b0bfa4a85ccad04e09deaf05
+  )
+endfunction()

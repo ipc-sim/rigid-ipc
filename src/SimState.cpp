@@ -154,7 +154,7 @@ bool SimState::init(const nlohmann::json& args_in)
             "lcp_solver": "lcp_gauss_seidel"
         },
         "distance_barrier_constraint": {
-            "detection_method": "hash_grid",
+            "detection_method": "bvh",
             "trajectory_type": "piecewise_linear",
             "initial_barrier_activation_distance": 1e-3,
             "barrier_type": "ipc"

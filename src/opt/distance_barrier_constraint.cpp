@@ -6,6 +6,7 @@
 #include <igl/slice_mask.h>
 #include <ipc/ipc.hpp>
 
+#include <ccd/rigid/broad_phase.hpp>
 #include <ccd/rigid/rigid_body_hash_grid.hpp>
 #include <geometry/distance.hpp>
 #include <io/serialize_json.hpp>
@@ -400,9 +401,6 @@ namespace opt {
         static physics::Poses<double> cached_poses;
         static ipc::Constraints cached_constraint_set;
 
-        // TODO: Update brute force version
-        assert(detection_method == DetectionMethod::HASH_GRID);
-
         if (bodies.num_bodies() <= 1) {
             return;
         }
@@ -417,28 +415,10 @@ namespace opt {
 
         const double& dhat = m_barrier_activation_distance;
 
-        std::vector<int> close_bodies = bodies.close_bodies(poses, poses, dhat);
-        if (close_bodies.size() <= 1) {
-            PROFILE_END();
-            return;
-        }
-
-        RigidBodyHashGrid hash_grid;
-        hash_grid.resize(bodies, poses, close_bodies, dhat);
-        hash_grid.addBodies(bodies, poses, close_bodies, dhat);
-
         ipc::Candidates candidates;
-        if (bodies.dim() == 2) {
-            // This is not needed for 3D
-            hash_grid.getVertexEdgePairs(
-                bodies.m_edges, bodies.group_ids(), candidates.ev_candidates);
-        } else {
-            // These are not needed for 2D
-            hash_grid.getEdgeEdgePairs(
-                bodies.m_edges, bodies.group_ids(), candidates.ee_candidates);
-            hash_grid.getFaceVertexPairs(
-                bodies.m_faces, bodies.group_ids(), candidates.fv_candidates);
-        }
+        detect_collision_candidates_rigid(
+            bodies, poses, dim_to_collision_type(bodies.dim()), candidates,
+            detection_method, dhat);
 
         Eigen::MatrixXd V = bodies.world_vertices(poses);
         ipc::construct_constraint_set(

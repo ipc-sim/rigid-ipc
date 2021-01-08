@@ -13,13 +13,16 @@ namespace ccd {
 
 /// @brief Possible methods for detecting all edge vertex collisions.
 enum DetectionMethod {
-    BRUTE_FORCE, ///< @brief Use brute-force to detect all collisions.
-    HASH_GRID ///< @brief Use a spatial data structure to detect all collisions.
+    BRUTE_FORCE, ///< @brief Use brute-force to detect all collisions
+    HASH_GRID, ///< @brief Use a spatial data structure to detect all collisions
+    BVH,       ///< @brief Use a BVH to detect all collisions
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(
     DetectionMethod,
-    { { HASH_GRID, "hash_grid" }, { BRUTE_FORCE, "brute_force" } });
+    { { HASH_GRID, "hash_grid" },
+      { BRUTE_FORCE, "brute_force" },
+      { BVH, "bvh" } });
 
 /// @brief Possible trajectories of vertices in a rigid body.
 enum TrajectoryType {

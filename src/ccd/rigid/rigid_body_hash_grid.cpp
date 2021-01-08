@@ -14,11 +14,29 @@
 
 namespace ccd {
 
+std::vector<int> body_pairs_to_body_ids(
+    const std::vector<std::pair<int, int>>& body_pairs, size_t num_bodies)
+{
+    std::vector<int> body_ids;
+    std::vector<bool> is_body_accounted(num_bodies, false);
+    for (const auto& body_pair : body_pairs) {
+        if (!is_body_accounted[body_pair.first]) {
+            body_ids.push_back(body_pair.first);
+            is_body_accounted[body_pair.first] = true;
+        }
+        if (!is_body_accounted[body_pair.second]) {
+            body_ids.push_back(body_pair.second);
+            is_body_accounted[body_pair.second] = true;
+        }
+    }
+    return body_ids;
+}
+
 /// Resize to fit a static scene
 void RigidBodyHashGrid::resize(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses,
-    const std::vector<int>& body_ids,
+    const std::vector<std::pair<int, int>>& body_pairs,
     const double inflation_radius)
 {
     int dim = bodies.dim();
@@ -26,6 +44,8 @@ void RigidBodyHashGrid::resize(
     min.setConstant(dim, +std::numeric_limits<double>::infinity());
     max.setConstant(dim, -std::numeric_limits<double>::infinity());
 
+    std::vector<int> body_ids =
+        body_pairs_to_body_ids(body_pairs, bodies.num_bodies());
     for (int i : body_ids) {
         Eigen::MatrixXd V = bodies[i].world_vertices(poses[i]);
         min = min.cwiseMin(V.colwise().minCoeff().transpose());
@@ -54,28 +74,11 @@ void compute_scene_conservative_bbox(
     max.setConstant(dim, -std::numeric_limits<double>::infinity());
 
     for (int i : body_ids) {
-        const auto& body = bodies[i];
-
-        const Eigen::VectorX3d& p0 = poses_t0[i].position;
-        const Eigen::VectorX3d& p1 = poses_t1[i].position;
-        const Eigen::VectorX3d& r0 = poses_t0[i].rotation;
-        const Eigen::VectorX3d& r1 = poses_t1[i].rotation;
-
-        // If the body is not rotating then just use the linearized trajectory
-        if ((r0.array() == r1.array()).all()) {
-            Eigen::MatrixXd V0 = body.world_vertices(poses_t0[i]);
-            min = min.cwiseMin(V0.colwise().minCoeff().transpose());
-            max = max.cwiseMax(V0.colwise().maxCoeff().transpose());
-            Eigen::MatrixXd V1 = body.world_vertices(poses_t1[i]);
-            min = min.cwiseMin(V1.colwise().minCoeff().transpose());
-            max = max.cwiseMax(V1.colwise().maxCoeff().transpose());
-        } else {
-            // Use the maximum radius of the body to bound all rotations
-            min = min.cwiseMin((p0.array() - body.r_max).matrix());
-            max = max.cwiseMax((p0.array() + body.r_max).matrix());
-            min = min.cwiseMin((p1.array() - body.r_max).matrix());
-            max = max.cwiseMax((p1.array() + body.r_max).matrix());
-        }
+        Eigen::VectorX3d body_min, body_max;
+        bodies[i].compute_bounding_box(
+            poses_t0[i], poses_t1[i], body_min, body_max);
+        min = min.cwiseMin(body_min);
+        max = max.cwiseMax(body_max);
     }
 
     // Account for rounding controls of interval arithmetic
@@ -88,9 +91,12 @@ void RigidBodyHashGrid::resize(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
-    const std::vector<int>& body_ids,
+    const std::vector<std::pair<int, int>>& body_pairs,
     const double inflation_radius)
 {
+    std::vector<int> body_ids =
+        body_pairs_to_body_ids(body_pairs, bodies.num_bodies());
+
     Eigen::VectorX3d min(bodies.dim()), max(bodies.dim());
     compute_scene_conservative_bbox(
         bodies, poses_t0, poses_t1, body_ids, min, max);
@@ -116,9 +122,12 @@ void RigidBodyHashGrid::resize(
 void RigidBodyHashGrid::addBodies(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses,
-    const std::vector<int>& body_ids,
+    const std::vector<std::pair<int, int>>& body_pairs,
     const double inflation_radius)
 {
+    std::vector<int> body_ids =
+        body_pairs_to_body_ids(body_pairs, bodies.num_bodies());
+
     for (int id : body_ids) {
         Eigen::MatrixXd V = bodies[id].world_vertices(poses[id]);
         tbb::parallel_invoke(
@@ -256,16 +265,19 @@ void RigidBodyHashGrid::addBodies(
     const physics::RigidBodyAssembler& bodies,
     const physics::Poses<double>& poses_t0,
     const physics::Poses<double>& poses_t1,
-    const std::vector<int>& body_ids,
+    const std::vector<std::pair<int, int>>& body_pairs,
     const double inflation_radius)
 {
     assert(bodies.num_bodies() == poses_t0.size());
     assert(poses_t0.size() == poses_t1.size());
 
+    std::vector<int> body_ids =
+        body_pairs_to_body_ids(body_pairs, bodies.num_bodies());
+
     Eigen::MatrixX<Interval> vertices;
     compute_vertices_intervals(
-        bodies, physics::cast<double, Interval>(poses_t0),
-        physics::cast<double, Interval>(poses_t1), body_ids, vertices,
+        bodies, physics::cast<Interval>(poses_t0),
+        physics::cast<Interval>(poses_t1), body_ids, vertices,
         inflation_radius);
 
     // Create a bounding box for all vertices

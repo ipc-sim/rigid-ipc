@@ -6,6 +6,9 @@
 #include <physics/pose.hpp>
 #include <utils/eigen_ext.hpp>
 
+#include <BVH.hpp>
+#include <utils/mesh_selector.hpp>
+
 namespace ccd {
 namespace physics {
 
@@ -159,6 +162,23 @@ namespace physics {
         int pos_ndof() const { return pose.pos_ndof(); }
         int rot_ndof() const { return pose.rot_ndof(); }
 
+        void compute_bounding_box(
+            const physics::Pose<double>& pose_t0,
+            const physics::Pose<double>& pose_t1,
+            Eigen::VectorX3d& box_min,
+            Eigen::VectorX3d& box_max) const;
+        void compute_bounding_box(
+            const physics::Pose<double>& pose,
+            Eigen::VectorX3d& box_min,
+            Eigen::VectorX3d& box_max) const
+        {
+            return compute_bounding_box(pose, pose, box_min, box_max);
+        }
+
+        // --------------------------------------------------------------------
+        // Properties
+        // --------------------------------------------------------------------
+
         /// @brief Group id of this body
         int group_id;
 
@@ -190,6 +210,10 @@ namespace physics {
 
         /// @brief Use edge orientation for normal in 2D restitution
         bool is_oriented;
+
+        /// @brief Local space BVH initalized at construction
+        BVH::BVH bvh;
+        MeshSelector mesh_selector;
 
         // --------------------------------------------------------------------
         // State

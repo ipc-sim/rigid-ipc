@@ -29,6 +29,7 @@ typedef physics::Pose<Interval> PoseI;
 typedef physics::Pose<double> Pose;
 
 static const int NUM_PIECES = 100;
+static const int MAX_NUM_SUBDIVISIONS = 1e5;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Edge-Vertex
@@ -120,6 +121,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
         bodyA.world_vertex(poseA_t0, ea0i), bodyA.world_vertex(poseA_t0, ea1i),
         bodyB.world_vertex(poseB_t0, eb0i),
         bodyB.world_vertex(poseB_t0, eb1i)));
+    assert(distance_t0 > 0);
 
 #ifdef TIME_CCD_QUERIES
     igl::Timer timer;
@@ -205,7 +207,8 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
         min_distance = std::max(min_distance, d.upper());
 
-        if (min_distance >= 0.5 * distance_ti0) {
+        if (min_distance >= 0.5 * distance_ti0
+            && num_subdivisions < MAX_NUM_SUBDIVISIONS) {
             ts.push((ti1 + ti0) / 2);
             num_subdivisions++;
             continue;
@@ -288,6 +291,7 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
     double distance_t0 = sqrt(ipc::point_triangle_distance(
         bodyA.world_vertex(poseA_t0, vi), bodyB.world_vertex(poseB_t0, f0i),
         bodyB.world_vertex(poseB_t0, f1i), bodyB.world_vertex(poseB_t0, f2i)));
+    assert(distance_t0 > 0);
 
 #ifdef TIME_CCD_QUERIES
     igl::Timer timer;
@@ -373,7 +377,8 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
         min_distance = std::max(min_distance, d.upper());
 
-        if (min_distance >= 0.5 * distance_ti0) {
+        if (min_distance >= 0.5 * distance_ti0
+            && num_subdivisions < MAX_NUM_SUBDIVISIONS) {
             ts.push((ti1 + ti0) / 2);
             num_subdivisions++;
             continue;

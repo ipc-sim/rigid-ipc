@@ -20,6 +20,8 @@
 
 #include <utils/eigen_ext.hpp>
 
+#include <ipc/spatial_hash/collision_candidate.hpp>
+
 namespace ccd {
 
 namespace logger {
@@ -34,6 +36,9 @@ namespace logger {
     // interval.hpp.
 
     void set_level(spdlog::level::level_enum log_level);
+
+    void print_candidates(const ipc::Candidates& candidates);
+    void print_candidates_sorted(ipc::Candidates candidates);
 
 } // namespace logger
 

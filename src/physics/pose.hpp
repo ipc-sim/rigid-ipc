@@ -104,8 +104,7 @@ namespace physics {
     Poses<T> interpolate(const Poses<T>& pose0, const Poses<T>& pose1, T t);
     template <typename T> Poses<T> operator*(const Poses<T>& poses, const T& x);
     /// @brief Cast poses element-wise.
-    template <typename T1, typename T2>
-    Poses<T2> cast(const Poses<T1>& poses_T1);
+    template <typename T, typename U> Poses<T> cast(const Poses<U>& poses);
 
 } // namespace physics
 

@@ -72,9 +72,10 @@ add_library(${PROJECT_NAME}
     src/io/read_obj.cpp
 
     src/physics/mass.cpp
-    src/physics/rigid_body_problem.cpp
+    src/utils/mesh_selector.cpp
     src/physics/rigid_body.cpp
     src/physics/rigid_body_assembler.cpp
+    src/physics/rigid_body_problem.cpp
 
     src/barrier/barrier.cpp
     src/barrier/barrier_chorner.cpp
@@ -225,6 +226,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC IPCToolkit)
 
 # filib
 target_link_libraries(${PROJECT_NAME} PUBLIC filib)
+
+# SimpleBVH
+target_link_libraries(${PROJECT_NAME} PUBLIC SimpleBVH::BVH_lib)
 
 ################################################################################
 # Compiler options

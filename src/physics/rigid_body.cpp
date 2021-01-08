@@ -7,6 +7,7 @@
 #include <finitediff.hpp>
 #include <logger.hpp>
 #include <physics/mass.hpp>
+#include <profiler.hpp>
 #include <utils/eigen_ext.hpp>
 #include <utils/flatten.hpp>
 #include <utils/not_implemented_error.hpp>
@@ -76,6 +77,7 @@ namespace physics {
         , faces(faces)
         , is_dof_fixed(is_dof_fixed)
         , is_oriented(oriented)
+        , mesh_selector(vertices.rows(), edges, faces)
         , pose(pose)
         , velocity(velocity)
         , force(force)
@@ -177,6 +179,12 @@ namespace physics {
             average_edge_length /= edges.rows();
         }
         assert(std::isfinite(average_edge_length));
+
+        // TODO: Handle 2D and codimensional geometry
+        PROFILE_POINT("RigidBody::RigidBody:bvh.init");
+        PROFILE_START();
+        bvh.init(this->vertices, this->faces, /*tol=*/0);
+        PROFILE_END();
     }
 
     Eigen::MatrixXd RigidBody::world_velocities() const
@@ -187,6 +195,31 @@ namespace physics {
             pose.construct_rotation_matrix() * Eigen::Hat(velocity.rotation);
         return (vertices * dQ_dt.transpose()).rowwise()
             + velocity.position.transpose();
+    }
+
+    void RigidBody::compute_bounding_box(
+        const physics::Pose<double>& pose_t0,
+        const physics::Pose<double>& pose_t1,
+        Eigen::VectorX3d& box_min,
+        Eigen::VectorX3d& box_max) const
+    {
+        // If the body is not rotating then just use the linearized
+        // trajectory
+        if (type == RigidBodyType::STATIC
+            || (pose_t0.rotation.array() == pose_t1.rotation.array()).all()) {
+            Eigen::MatrixXd V0 = world_vertices(pose_t0);
+            box_min = V0.colwise().minCoeff();
+            box_max = V0.colwise().maxCoeff();
+            Eigen::MatrixXd V1 = world_vertices(pose_t1);
+            box_min = box_min.cwiseMin(V1.colwise().minCoeff().transpose());
+            box_max = box_max.cwiseMax(V1.colwise().maxCoeff().transpose());
+        } else {
+            // Use the maximum radius of the body to bound all rotations
+            box_min =
+                pose_t0.position.cwiseMin(pose_t1.position).array() - r_max;
+            box_max =
+                pose_t0.position.cwiseMax(pose_t1.position).array() + r_max;
+        }
     }
 
 } // namespace physics

@@ -136,8 +136,15 @@ if(NOT TARGET IPCToolkit)
   add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/ipc-toolkit)
 endif()
 
-# IPC Toolkit
+# filib
 if(NOT TARGET filib)
   fixing_collisions_download_filib()
   add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/filib)
+endif()
+
+# SimpleBVH
+if(NOT TARGET SimpleBVH::BVH_lib)
+  fixing_collisions_download_simple_bvh()
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/SimpleBVH)
+  add_library(SimpleBVH::BVH_lib ALIAS BVH_lib)
 endif()

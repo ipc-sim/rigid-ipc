@@ -240,43 +240,90 @@ namespace physics {
         return V;
     }
 
-    std::vector<int> RigidBodyAssembler::close_bodies_brute_force(
+    std::vector<std::pair<int, int>> RigidBodyAssembler::close_bodies(
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1,
         const double inflation_radius) const
     {
-        std::vector<int> body_ids;
+        // if (num_bodies() < 10) {
+        //     return close_bodies_brute_force(
+        //         poses_t0, poses_t1, inflation_radius);
+        // }
+        //
+        // return close_bodies_hash_grid(poses_t0, poses_t1, inflation_radius);
+        return close_bodies_bvh(poses_t0, poses_t1, inflation_radius);
+    }
+
+    std::vector<std::pair<int, int>>
+    RigidBodyAssembler::close_bodies_brute_force(
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1,
+        const double inflation_radius) const
+    {
+        std::vector<std::pair<int, int>> close_body_pairs;
         for (int i = 0; i < num_bodies(); i++) {
             double ri = m_rbs[i].r_max;
             for (int j = i + 1; j < num_bodies(); j++) {
+                if (m_rbs[i].group_id == m_rbs[j].group_id) {
+                    continue;
+                }
+
                 double rj = m_rbs[j].r_max;
                 double distance = sqrt(ipc::edge_edge_distance(
                     poses_t0[i].position, poses_t1[i].position,
                     poses_t0[j].position, poses_t1[j].position));
                 if (distance <= ri + rj + inflation_radius) {
-                    body_ids.push_back(i);
-                    body_ids.push_back(j);
+                    close_body_pairs.emplace_back(i, j);
                 }
             }
         }
-
-        tbb::parallel_sort(body_ids.begin(), body_ids.end());
-        auto new_end = std::unique(body_ids.begin(), body_ids.end());
-        body_ids.erase(new_end, body_ids.end());
-
-        return body_ids;
+        return close_body_pairs;
     }
 
-    std::vector<int> RigidBodyAssembler::close_bodies(
+    std::vector<std::pair<int, int>> RigidBodyAssembler::close_bodies_bvh(
         const physics::Poses<double>& poses_t0,
         const physics::Poses<double>& poses_t1,
         const double inflation_radius) const
     {
-        if (num_bodies() < 10) {
-            return close_bodies_brute_force(
-                poses_t0, poses_t1, inflation_radius);
+        std::vector<std::array<Eigen::Vector3d, 2>> body_bounding_boxes;
+        body_bounding_boxes.reserve(num_bodies());
+
+        for (int i = 0; i < num_bodies(); i++) {
+            Eigen::VectorX3d min, max;
+            m_rbs[i].compute_bounding_box(poses_t0[i], poses_t1[i], min, max);
+            min.array() -= inflation_radius;
+            max.array() += inflation_radius;
+            Eigen::Vector3d min3D = Eigen::Vector3d::Zero(),
+                            max3D = Eigen::Vector3d::Zero();
+            min3D.head(dim()) = min;
+            max3D.head(dim()) = max;
+            body_bounding_boxes.push_back({ { min3D, max3D } });
         }
 
+        BVH::BVH bvh;
+        bvh.init(body_bounding_boxes);
+
+        std::vector<std::pair<int, int>> close_body_pairs;
+        for (int i = 0; i < num_bodies(); i++) {
+            std::vector<unsigned int> intersecting_body_ids;
+            bvh.intersect_box(
+                body_bounding_boxes[i][0], body_bounding_boxes[i][1],
+                intersecting_body_ids);
+            for (const auto& intersecting_body_id : intersecting_body_ids) {
+                if (i < intersecting_body_id) {
+                    close_body_pairs.emplace_back(i, intersecting_body_id);
+                }
+            }
+        }
+
+        return close_body_pairs;
+    }
+
+    std::vector<std::pair<int, int>> RigidBodyAssembler::close_bodies_hash_grid(
+        const physics::Poses<double>& poses_t0,
+        const physics::Poses<double>& poses_t1,
+        const double inflation_radius) const
+    {
         ipc::HashGrid hashgrid;
 
         Eigen::MatrixXd V(2 * num_bodies(), dim());
@@ -305,18 +352,14 @@ namespace physics {
         std::vector<ipc::EdgeEdgeCandidate> body_candidates;
         hashgrid.getEdgeEdgePairs(E, group_ids, body_candidates);
 
-        std::vector<int> body_ids;
-        body_ids.reserve(2 * body_candidates.size());
+        std::vector<std::pair<int, int>> close_body_pairs;
+        close_body_pairs.reserve(body_candidates.size());
         for (const auto& body_candidate : body_candidates) {
-            body_ids.push_back(body_candidate.edge0_index);
-            body_ids.push_back(body_candidate.edge1_index);
+            close_body_pairs.emplace_back(
+                body_candidate.edge0_index, body_candidate.edge1_index);
         }
 
-        tbb::parallel_sort(body_ids.begin(), body_ids.end());
-        auto new_end = std::unique(body_ids.begin(), body_ids.end());
-        body_ids.erase(new_end, body_ids.end());
-
-        return body_ids;
+        return close_body_pairs;
     }
 
 } // namespace physics

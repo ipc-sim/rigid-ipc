@@ -267,9 +267,9 @@ namespace physics {
         PROFILE_START();
 
         double inflation_radius = 1e-8; // Conservative broad phase
-        std::vector<int> close_bodies =
+        std::vector<std::pair<int, int>> close_bodies =
             m_assembler.close_bodies(poses, poses, inflation_radius);
-        if (close_bodies.size() <= 1) {
+        if (close_bodies.size() == 0) {
             PROFILE_END();
             return false;
         }
