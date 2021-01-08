@@ -4,8 +4,13 @@ import pathlib
 import argparse
 import subprocess
 import json
+from datetime import datetime
 
 import pandas
+
+
+def get_time_stamp():
+    return datetime.now().strftime("%Y-%b-%d-%H-%M-%S")
 
 
 def find_rb_exe():
@@ -122,17 +127,16 @@ def main():
             # Render the IPC sim
             if not args.no_video:
                 print("Rendering IPC simulation")
+                video_name = f"{script.stem}-{get_time_stamp()}-ipc.mp4"
                 subprocess.run([str(render_exe), output / "ipc",
-                                "-o", output / f"{script.stem}-ipc.mp4",
+                                "-o", output / video_name,
                                 "--loglevel", "2", "--fps", "100"])
                 if remote_storage is not None:
                     remote_path = (f"{remote_storage}{rel.parent}")
                     subprocess.run(
-                        ["rclone", "copy", output / f"{script.stem}-ipc.mp4",
-                         remote_path])
+                        ["rclone", "copy", output / video_name, remote_path])
                     df_row["IPC Video"] = subprocess.run(
-                        ["rclone", "link",
-                            f"{remote_path}/{script.stem}-ipc.mp4"],
+                        ["rclone", "link", f"{remote_path}/{video_name}"],
                         capture_output=True, text=True).stdout.strip()
                     print(f"Uploaded video to {df_row['IPC Video']}")
 
@@ -162,16 +166,16 @@ def main():
             # Render the RB sim
             if not args.no_video:
                 print("Rendering IPC simulation")
+                video_name = f"{script.stem}-{get_time_stamp()}-rigid.mp4"
                 subprocess.run([str(render_exe), output / "sim.json",
-                                "-o", output / f"{script.stem}.mp4",
+                                "-o", output / video_name,
                                 "--loglevel", "2", "--fps", "100"])
                 if remote_storage is not None:
                     remote_path = (f"{remote_storage}{rel.parent}")
                     subprocess.run(
-                        ["rclone", "copy", output / f"{script.stem}.mp4",
-                         remote_path])
+                        ["rclone", "copy", output / video_name, remote_path])
                     df_row["Rigid Video"] = subprocess.run(
-                        ["rclone", "link", f"{remote_path}/{script.stem}.mp4"],
+                        ["rclone", "link", f"{remote_path}/{video_name}"],
                         capture_output=True, text=True).stdout.strip()
                     print(f"Uploaded video to {df_row['Rigid Video']}")
 

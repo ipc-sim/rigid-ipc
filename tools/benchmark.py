@@ -10,6 +10,12 @@ import platform
 import numpy
 import pandas
 
+from datetime import datetime
+
+
+def get_time_stamp():
+    return datetime.now().strftime("%Y-%b-%d-%H-%M-%S")
+
 
 def get_machine_info():
     if platform.system() == "Windows":
@@ -172,18 +178,19 @@ def main():
             video_url = "N/a"
         else:
             print("Rendering simulation")
+            video_name = f"{script.stem}-{get_time_stamp()}.mp4"
             subprocess.run([str(args.sim_exe.parent / "render_simulation"),
                             sim_output_dir / "sim.json",
-                            "-o", sim_output_dir / f"{scene.stem}.mp4",
+                            "-o", sim_output_dir / video_name,
                             "--loglevel", str(args.loglevel)])
             if remote_storage is not None:
                 remote_path = (
                     f"{remote_storage}{pathlib.Path(scene_name).parent}")
                 subprocess.run(
-                    ["rclone", "copy", sim_output_dir / f"{scene.stem}.mp4",
+                    ["rclone", "copy", sim_output_dir / video_name,
                      remote_path])
                 video_url = subprocess.run(
-                    ["rclone", "link", f"{remote_path}/{scene.stem}.mp4"],
+                    ["rclone", "link", f"{remote_path}/{video_name}"],
                     capture_output=True, text=True).stdout.strip()
                 print(f"Uploaded video to {video_url}")
 
