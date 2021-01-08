@@ -195,7 +195,7 @@ def main():
                     "DistanceBarrierConstraint::compute_earliest_toi", 0)
 
                 rigid_profile = pandas.DataFrame(
-                    index=profiler_df.index.values[1:])
+                    index=profiler_df.index.values)
                 rigid_profile[df_row["Scene"]] = profiler_df["percentage_time"]
                 combined_rigid_profile = pandas.concat(
                     [combined_rigid_profile, rigid_profile], axis=1)

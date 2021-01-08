@@ -29,7 +29,7 @@ void detect_collision_candidates_rigid(
         return;
     }
 
-    PROFILE_POINT("detect_collision_candidates_rigid");
+    PROFILE_POINT("detect_discrete_collision_candidates_rigid");
     PROFILE_START();
 
     switch (method) {
@@ -285,7 +285,7 @@ void detect_collision_candidates_rigid(
         return;
     }
 
-    PROFILE_POINT("detect_collision_candidates_rigid");
+    PROFILE_POINT("detect_continous_collision_candidates_rigid");
     PROFILE_START();
 
     switch (method) {
