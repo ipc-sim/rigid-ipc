@@ -203,6 +203,9 @@ namespace physics {
         Eigen::VectorX3d& box_min,
         Eigen::VectorX3d& box_max) const
     {
+        PROFILE_POINT("RigidBody::compute_bounding_box");
+        PROFILE_START();
+
         // If the body is not rotating then just use the linearized
         // trajectory
         if (type == RigidBodyType::STATIC
@@ -220,6 +223,8 @@ namespace physics {
             box_max =
                 pose_t0.position.cwiseMax(pose_t1.position).array() + r_max;
         }
+
+        PROFILE_END();
     }
 
 } // namespace physics

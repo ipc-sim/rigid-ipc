@@ -164,15 +164,17 @@ def main():
 
         sim_output_dir = pathlib.Path("output") / scene_name
         sim_output_dir.mkdir(parents=True, exist_ok=True)
-        with open(sim_output_dir / "log.txt", 'w') as log_file:
-            sim = subprocess.Popen(
-                [str(args.sim_exe), scene.resolve(),
-                 sim_output_dir, "--loglevel", str(args.loglevel)],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            for line in sim.stdout:
-                sys.stdout.write(line)
-                log_file.write(line)
-            sim.wait()
+        # with open(sim_output_dir / "log.txt", 'w') as log_file:
+        #     sim = subprocess.Popen(
+        #         [str(args.sim_exe), scene.resolve(),
+        #          sim_output_dir, "--loglevel", str(args.loglevel)],
+        #         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        #     for line in sim.stdout:
+        #         sys.stdout.write(line)
+        #         log_file.write(line)
+        #     sim.wait()
+        subprocess.run([str(args.sim_exe), str(scene.resolve()),
+                        str(sim_output_dir), "--loglevel", str(args.loglevel)])
 
         if(args.no_video):
             video_url = "N/a"

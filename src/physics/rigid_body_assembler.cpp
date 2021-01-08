@@ -288,6 +288,10 @@ namespace physics {
         std::vector<std::array<Eigen::Vector3d, 2>> body_bounding_boxes;
         body_bounding_boxes.reserve(num_bodies());
 
+        NAMED_PROFILE_POINT(
+            "RigidBodyAssembler::close_bodies_bvh:build", BUILD);
+        PROFILE_START(BUILD);
+
         for (int i = 0; i < num_bodies(); i++) {
             Eigen::VectorX3d min, max;
             m_rbs[i].compute_bounding_box(poses_t0[i], poses_t1[i], min, max);
@@ -303,6 +307,12 @@ namespace physics {
         BVH::BVH bvh;
         bvh.init(body_bounding_boxes);
 
+        PROFILE_END(BUILD);
+
+        NAMED_PROFILE_POINT(
+            "RigidBodyAssembler::close_bodies_bvh:query", QUERY);
+        PROFILE_START(QUERY);
+
         std::vector<std::pair<int, int>> close_body_pairs;
         for (int i = 0; i < num_bodies(); i++) {
             std::vector<unsigned int> intersecting_body_ids;
@@ -315,6 +325,10 @@ namespace physics {
                 }
             }
         }
+
+        PROFILE_END(QUERY);
+        PROFILE_MESSAGE(
+            QUERY, "num_pairs", fmt::format("{:d}", close_body_pairs.size()));
 
         return close_body_pairs;
     }
