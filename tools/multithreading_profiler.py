@@ -11,6 +11,10 @@ import pandas
 from combine_profiles import combine_profiles
 
 
+def get_fixture_dir():
+    return (pathlib.Path(__file__).parents[1] / "fixtures").resolve()
+
+
 def sim_exe_name():
     return "FixingCollisions_ngui"
 
@@ -32,7 +36,7 @@ def create_parser():
         default=find_sim_exe(), help="path to simulation executable")
     parser.add_argument(
         "-i", "--input", metavar="path/to/input", type=pathlib.Path,
-        dest="input", help="path to input json(s)", nargs="+")
+        dest="input", default=None, help="path to input json(s)", nargs="+")
     parser.add_argument(
         "-o", "--output", metavar="path/to/multithreading-profile.csv",
         type=pathlib.Path, dest="output",
@@ -49,6 +53,12 @@ def parse_arguments():
     args = parser.parse_args()
     if args.sim_exe is None:
         parser.exit(1, "Simulation executable is required!\n")
+    if args.input is None:
+        args.input = [
+            get_fixture_dir() / "3D/chain/chain-line/length=0051.json",
+            get_fixture_dir() / "3D/chain/chain-line/length=0091.json",
+            get_fixture_dir() / "3D/chain/chain-line/sub4/length=0023.json",
+            get_fixture_dir() / "3D/chain/chain-line/sub4/length=0053.json"]
     input_jsons = []
     for input_file in args.input:
         if input_file.is_file() and input_file.suffix == ".json":
@@ -66,7 +76,7 @@ def append_stem(p, stem_suffix):
 
 def main():
     args = parse_arguments()
-    fixtures_dir = (pathlib.Path(__file__).parents[1] / "fixtures").resolve()
+    fixture_dir = get_fixture_dir()
 
     scalability_profiles = []
 
@@ -75,7 +85,7 @@ def main():
         for scene in args.input:
             print(f"Running {scene}")
             try:
-                scene_name = scene.resolve().relative_to(fixtures_dir)
+                scene_name = scene.resolve().relative_to(fixture_dir)
                 scene_name = str(scene_name.parent / scene_name.stem)
             except ValueError:
                 scene_name = scene.stem
@@ -87,9 +97,15 @@ def main():
                             "--loglevel", str(args.loglevel),
                             "--nthreads", str(thread_count)
                             ])
-        combined_profile_df = combine_profiles(args.input, absolute_time=True)
+        combined_profile_df = combine_profiles(
+            args.input, absolute_time=True,
+            base_output=f"output-{thread_count_str}threads")
+        average_percent_time = (
+            (combined_profile_df / combined_profile_df.loc["run_simulation"])
+            .mean(axis=1).map(lambda x: f"{x:%}"))
         if scalability_profiles:
             combined_profile_df = scalability_profiles[0] / combined_profile_df
+        combined_profile_df["average_percent_time"] = average_percent_time
 
         scalability_profiles.append(combined_profile_df)
 

@@ -47,6 +47,7 @@ namespace profiler {
         std::vector<std::string> m_messages;
 
         igl::Timer timer;
+        bool is_active;
         size_t beginning_peak_rss;
     };
 
@@ -55,10 +56,7 @@ namespace profiler {
         static Profiler& instance();
         void clear();
 
-        void push(const std::shared_ptr<ProfilerPoint>& point);
-        void pop();
         void output_dir(const std::string& d) { dout = d; }
-        const std::vector<std::string>& stack() { return stack_; }
         std::shared_ptr<ProfilerPoint> create_point(std::string name);
         std::shared_ptr<ProfilerPoint> create_main_point(std::string name);
 
@@ -71,7 +69,6 @@ namespace profiler {
         void write_point_details(
             const std::string& dout, const ProfilerPoint& point);
 
-        std::vector<std::string> stack_;
         std::shared_ptr<ProfilerPoint> main;
         std::vector<std::shared_ptr<ProfilerPoint>> points;
     };
@@ -99,13 +96,9 @@ namespace profiler {
     static std::shared_ptr<ccd::profiler::ProfilerPoint> _PROFILER_POINT_ =    \
         ccd::profiler::Profiler::instance().create_point(Description);
 
-#define PROFILE_START(Name)                                                    \
-    ccd::profiler::Profiler::instance().push(_PROFILER_POINT_##Name);          \
-    _PROFILER_POINT_##Name->begin();
+#define PROFILE_START(Name) _PROFILER_POINT_##Name->begin();
 
-#define PROFILE_END(Name)                                                      \
-    _PROFILER_POINT_##Name->end();                                             \
-    ccd::profiler::Profiler::instance().pop();
+#define PROFILE_END(Name) _PROFILER_POINT_##Name->end();
 
 #define PROFILE_MESSAGE(Name, Header, Val)                                     \
     _PROFILER_POINT_##Name->message_header(Header);                            \

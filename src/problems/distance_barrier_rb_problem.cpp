@@ -113,9 +113,10 @@ namespace opt {
         bool& had_collisions, bool& _has_intersections, bool solve_collisions)
     {
         // Advance the poses, but leave the current pose unchanged for now.
-        tbb::parallel_for(size_t(0), num_bodies(), [&](size_t i) {
+        for (size_t i = 0; i < num_bodies(); i++) {
             m_assembler[i].pose_prev = m_assembler[i].pose;
-        });
+        }
+
         // Update the stored poses and inital value for the solver
         update_dof();
 

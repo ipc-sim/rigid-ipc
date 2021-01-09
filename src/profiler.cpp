@@ -22,15 +22,19 @@ namespace profiler {
     {
         timer.start();
         beginning_peak_rss = getPeakRSS();
+        is_active = true;
     }
 
     void ProfilerPoint::end()
     {
-        timer.stop();
-        m_total_time += timer.getElapsedTime();
-        m_num_evaluations++;
-        m_max_peak_rss_change =
-            std::max(m_max_peak_rss_change, getPeakRSS() - beginning_peak_rss);
+        if (is_active) {
+            timer.stop();
+            m_total_time += timer.getElapsedTime();
+            m_num_evaluations++;
+            m_max_peak_rss_change = std::max(
+                m_max_peak_rss_change, getPeakRSS() - beginning_peak_rss);
+            is_active = false;
+        }
     }
 
     void ProfilerPoint::message_header(const std::string& header)
@@ -50,6 +54,7 @@ namespace profiler {
         m_max_peak_rss_change = 0;
         m_message_header = "";
         m_messages.clear();
+        is_active = false;
     }
 
     // -----------------------------------------------------------------
@@ -70,7 +75,6 @@ namespace profiler {
         for (auto& p : points) {
             p->clear();
         }
-        stack_.clear();
     }
 
     std::shared_ptr<ProfilerPoint> Profiler::create_point(std::string name)
@@ -85,13 +89,6 @@ namespace profiler {
         main = std::make_shared<ProfilerPoint>(name);
         return main;
     }
-
-    void Profiler::push(const std::shared_ptr<ProfilerPoint>& point)
-    {
-        stack_.push_back(point->name());
-    }
-
-    void Profiler::pop() { stack_.pop_back(); }
 
     void Profiler::log(const std::string& fin)
     {

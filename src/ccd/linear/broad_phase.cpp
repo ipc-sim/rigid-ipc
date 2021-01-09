@@ -174,25 +174,18 @@ void detect_collision_candidates_hash_grid(
     ipc::HashGrid hashgrid;
     assert(edges.size()); // Even face-vertex need the edges
     hashgrid.resize(vertices_t0, vertices_t1, edges, inflation_radius);
-    tbb::parallel_invoke(
-        [&] {
-            if (collision_types & (EDGE_VERTEX | FACE_VERTEX)) {
-                hashgrid.addVertices(
-                    vertices_t0, vertices_t1, inflation_radius);
-            }
-        },
-        [&] {
-            if (collision_types & (EDGE_VERTEX | EDGE_EDGE)) {
-                hashgrid.addEdges(
-                    vertices_t0, vertices_t1, edges, inflation_radius);
-            }
-        },
-        [&] {
-            if (collision_types & FACE_VERTEX) {
-                hashgrid.addFaces(
-                    vertices_t0, vertices_t1, faces, inflation_radius);
-            }
-        });
+
+    if (collision_types & (EDGE_VERTEX | FACE_VERTEX)) {
+        hashgrid.addVertices(vertices_t0, vertices_t1, inflation_radius);
+    }
+
+    if (collision_types & (EDGE_VERTEX | EDGE_EDGE)) {
+        hashgrid.addEdges(vertices_t0, vertices_t1, edges, inflation_radius);
+    }
+
+    if (collision_types & FACE_VERTEX) {
+        hashgrid.addFaces(vertices_t0, vertices_t1, faces, inflation_radius);
+    }
 
     // Assume checking if vertex is and end-point of the edge is done by
     // `hashgrid.getVertexEdgePairs(...)`.

@@ -45,12 +45,13 @@ def append_stem(p, stem_suffix):
     return p.parent / (p.stem + stem_suffix + p.suffix)
 
 
-def combine_profiles(fixtures, absolute_time=False):
+def combine_profiles(fixtures, absolute_time=False, base_output=None):
     fixtures_dir = pathlib.Path(__file__).resolve().parents[1] / "fixtures"
     combined_profile = pandas.DataFrame()
     for fixture in fixtures:
         fixture_name = fixture.relative_to(fixtures_dir)
-        sim_output = "output" / fixture_name.parent / fixture_name.stem
+        sim_output = ((base_output if base_output is not None else "output")
+                      / fixture_name.parent / fixture_name.stem)
         fixture_name = str(fixture_name.parent / fixture_name.stem)
 
         log_dirs = list(filter(lambda p: p.is_dir(), sim_output.glob("log*")))

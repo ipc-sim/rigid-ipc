@@ -190,9 +190,9 @@ namespace physics {
 
         // Update the velocities
         // This need to be done AFTER updating poses
-        tbb::parallel_for_each(m_assembler.m_rbs, [&](RigidBody& rb) {
+        for (RigidBody& rb : m_assembler.m_rbs) {
             if (rb.type != RigidBodyType::DYNAMIC) {
-                return;
+                continue;
             }
 
             // Assume linear velocity through the time-step.
@@ -225,7 +225,7 @@ namespace physics {
                 rb.Qdot = Qdot;
             }
             rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
-        });
+        }
 
 #ifdef WITH_INTERSECTION_CHECK
         // Check for intersections instead of collision along the entire step.

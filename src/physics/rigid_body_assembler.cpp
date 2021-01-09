@@ -147,18 +147,18 @@ namespace physics {
     {
         Poses<double> poses;
         poses.resize(num_bodies());
-        tbb::parallel_for(size_t(0), m_rbs.size(), [&](size_t i) {
+        for (size_t i = 0; i < num_bodies(); i++) {
             poses[i] = previous ? m_rbs[i].pose_prev : m_rbs[i].pose;
-        });
+        }
         return poses;
     }
 
     void RigidBodyAssembler::set_rb_poses(const Poses<double>& poses)
     {
         assert(num_bodies() == poses.size());
-        tbb::parallel_for(size_t(0), num_bodies(), [&](size_t i) {
+        for (size_t i = 0; i < num_bodies(); i++) {
             m_rbs[i].pose = poses[i];
-        });
+        }
     }
 
     Eigen::MatrixXd

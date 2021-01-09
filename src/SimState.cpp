@@ -278,8 +278,8 @@ void print_progress_bar(
 
 void SimState::run_simulation(const std::string& fout)
 {
-    PROFILE_MAIN_POINT("run_simulation")
-    PROFILE_START()
+    PROFILE_MAIN_POINT("run_simulation");
+    PROFILE_START();
 
     boost::filesystem::path fout_path(fout);
     std::string chkpt_base =
@@ -323,7 +323,7 @@ void SimState::run_simulation(const std::string& fout)
     save_simulation(fout);
     spdlog::info("Simulation results saved to {}", fout);
 
-    PROFILE_END()
+    PROFILE_END();
     LOG_PROFILER(scene_file);
 }
 

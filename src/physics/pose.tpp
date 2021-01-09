@@ -171,17 +171,18 @@ namespace physics {
     Poses<T> interpolate(const Poses<T>& poses0, const Poses<T>& poses1, T t)
     {
         Poses<T> poses(poses0.size());
-        tbb::parallel_for(size_t(0), poses.size(), [&](size_t i) {
+        for (size_t i = 0; i < poses.size(); i++) {
             poses[i] = Pose<T>::interpolate(poses0[i], poses1[i], t);
-        });
+        }
         return poses;
     }
 
     template <typename T> Poses<T> operator*(const Poses<T>& poses, const T& x)
     {
         Poses<T> product = poses;
-        tbb::parallel_for(
-            size_t(0), product.size(), [&](size_t i) { product[i] *= x; });
+        for (size_t i = 0; i < product.size(); i++) {
+            product[i] *= x;
+        }
         return product;
     }
 
