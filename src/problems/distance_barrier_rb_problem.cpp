@@ -500,9 +500,17 @@ namespace opt {
         });
 
         if (compute_hess) {
+            NAMED_PROFILE_POINT(
+                "DistanceBarrierRBProblem::compute_energy_term:"
+                "assemble_hessian",
+                ASSEMBLE_ENERGY_HESS);
+            PROFILE_START(ASSEMBLE_ENERGY_HESS);
+
             // ∇²E: Rⁿ ↦ Rⁿˣⁿ
             hess.resize(x.size(), x.size());
             hess.setFromTriplets(hess_triplets.begin(), hess_triplets.end());
+
+            PROFILE_END(ASSEMBLE_ENERGY_HESS);
         }
 
         PROFILE_END();
@@ -701,8 +709,15 @@ namespace opt {
         }
 
         if (compute_hess) {
-            // ∇²E: Rⁿ ↦ Rⁿˣⁿ
+            NAMED_PROFILE_POINT(
+                "DistanceBarrierRBProblem::compute_augmented_lagrangian:"
+                "assemble_hessian",
+                ASSEMBLE_AL_HESS);
+            PROFILE_START(ASSEMBLE_AL_HESS);
+
             hess.setFromTriplets(hess_triplets.begin(), hess_triplets.end());
+
+            PROFILE_END(ASSEMBLE_AL_HESS);
         }
 
         PROFILE_END();
@@ -882,8 +897,14 @@ namespace opt {
             "DistanceBarrierRBProblem::compute_barrier_term:gradient",
             COMPUTE_BARRIER_GRAD);
         NAMED_PROFILE_POINT(
+            "DistanceBarrierRBProblem::compute_barrier_term:assemble_gradient",
+            ASSEMBLE_BARRIER_GRAD);
+        NAMED_PROFILE_POINT(
             "DistanceBarrierRBProblem::compute_barrier_term:hessian",
             COMPUTE_BARRIER_HESS);
+        NAMED_PROFILE_POINT(
+            "DistanceBarrierRBProblem::compute_barrier_term:assemble_hessian",
+            ASSEMBLE_BARRIER_HESS);
 
         PROFILE_START(COMPUTE_BARRIER_TERM);
 
@@ -936,15 +957,23 @@ namespace opt {
         });
 
         if (compute_grad) {
+            PROFILE_START(ASSEMBLE_BARRIER_GRAD);
+
             Eigen::SparseMatrix<double> sparse_grad(x.size(), 1);
             sparse_grad.setFromTriplets(
                 grad_triplets.begin(), grad_triplets.end());
             grad = Eigen::VectorXd(sparse_grad);
+
+            PROFILE_END(ASSEMBLE_BARRIER_GRAD);
             PROFILE_END(COMPUTE_BARRIER_GRAD);
         }
         if (compute_hess) {
+            PROFILE_START(ASSEMBLE_BARRIER_HESS);
+
             hess.resize(x.size(), x.size());
             hess.setFromTriplets(hess_triplets.begin(), hess_triplets.end());
+
+            PROFILE_END(ASSEMBLE_BARRIER_HESS);
             PROFILE_END(COMPUTE_BARRIER_HESS);
         }
 
@@ -1077,8 +1106,14 @@ namespace opt {
             "DistanceBarrierRBProblem::compute_friction_term:gradient",
             COMPUTE_FRICTION_GRAD);
         NAMED_PROFILE_POINT(
+            "DistanceBarrierRBProblem::compute_friction_term:assemble_gradient",
+            ASSEMBLE_FRICTION_GRAD);
+        NAMED_PROFILE_POINT(
             "DistanceBarrierRBProblem::compute_friction_term:hessian",
             COMPUTE_FRICTION_HESS);
+        NAMED_PROFILE_POINT(
+            "DistanceBarrierRBProblem::compute_friction_term:assemble_hessian",
+            ASSEMBLE_FRICTION_HESS);
 
         PROFILE_START(COMPUTE_FRICTION_TERM);
 
@@ -1151,15 +1186,23 @@ namespace opt {
             });
 
         if (compute_grad) {
+            PROFILE_START(ASSEMBLE_FRICTION_GRAD);
+
             Eigen::SparseMatrix<double> sparse_grad(x.size(), 1);
             sparse_grad.setFromTriplets(
                 grad_triplets.begin(), grad_triplets.end());
             grad = Eigen::VectorXd(sparse_grad);
+
+            PROFILE_END(ASSEMBLE_FRICTION_GRAD);
             PROFILE_END(COMPUTE_FRICTION_GRAD);
         }
         if (compute_hess) {
+            PROFILE_START(ASSEMBLE_FRICTION_HESS);
+
             hess.resize(x.size(), x.size());
             hess.setFromTriplets(hess_triplets.begin(), hess_triplets.end());
+
+            PROFILE_END(ASSEMBLE_FRICTION_HESS);
             PROFILE_END(COMPUTE_FRICTION_HESS);
         }
 

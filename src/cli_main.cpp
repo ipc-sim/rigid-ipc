@@ -1,5 +1,8 @@
 #include <CLI/CLI.hpp>
 #include <boost/filesystem.hpp>
+#include <tbb/global_control.h>
+#include <tbb/task_scheduler_init.h>
+#include <thread>
 
 #include <SimState.hpp>
 #include <logger.hpp>
@@ -17,6 +20,7 @@ int main(int argc, char* argv[])
         int num_steps = -1;
         int checkpoint_freq = -1;
         int loglevel = 2; // info
+        int nthreads = tbb::task_scheduler_init::default_num_threads();
     } args;
 
     CLI::App app { "run headless simulation" };
@@ -41,6 +45,8 @@ int main(int argc, char* argv[])
         "set log level 0=trace, 1=debug, 2=info, 3=warn, 4=error, 5=critical, "
         "6=off",
         true);
+    app.add_option(
+        "--nthreads", args.nthreads, "maximum number of threads to use", true);
 
     try {
         app.parse(argc, argv);
@@ -50,6 +56,19 @@ int main(int argc, char* argv[])
 
     ccd::logger::set_level(
         static_cast<spdlog::level::level_enum>(args.loglevel));
+
+    if (args.nthreads <= 0) {
+        args.nthreads = tbb::task_scheduler_init::default_num_threads();
+    }
+
+    if (args.nthreads > tbb::task_scheduler_init::default_num_threads()) {
+        spdlog::warn(
+            "Attempting to use more threads than available ({:d} > {:d})!",
+            args.nthreads, tbb::task_scheduler_init::default_num_threads());
+    }
+
+    tbb::global_control thread_limiter(
+        tbb::global_control::max_allowed_parallelism, args.nthreads);
 
     // Create the output directory if it does not exist
     boost::filesystem::create_directories(

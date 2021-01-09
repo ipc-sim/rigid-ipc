@@ -127,7 +127,7 @@ def parse_arguments():
     input_jsons = []
     for input_file in args.input:
         if input_file.is_file() and input_file.suffix == ".json":
-            input_jsons.append(input_file)
+            input_jsons.append(input_file.resolve())
         elif input_file.is_dir():
             input_jsons.extend(list(input_file.glob('**/*.json')))
     args.input = input_jsons
@@ -210,13 +210,12 @@ def main():
                 skipinitialspace=True, converters={
                     "percentage_time": lambda x: float(x.strip('%'))})
             broad_ccd = profiler_df.percentage_time.get(
-                "detect_continous_collision_candidates_rigid", 0)
+                "detect_continous_collision_candidates_rigid", -1)
             narrow_ccd = profiler_df.percentage_time.get(
                 "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase",
-                0)
+                -1)
             broad_distance = profiler_df.percentage_time.get(
-                "DistanceBarrierConstraint::construct_constraint_set", 0)
-            # breakpoint()
+                "DistanceBarrierConstraint::construct_constraint_set", -1)
         else:
             print("Profiling not enabled")
             broad_ccd = -1

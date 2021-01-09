@@ -132,6 +132,15 @@ inline AABB face_aabb(
             vertex_aabb(V, F(2), inflation_radius)));
 }
 
+// static std::mutex fv_mutex;
+// static std::mutex ee_mutex;
+
+NAMED_PROFILE_POINT(
+    "detect_collision_candidates_rigid_bvh:compute_vertices:interval",
+    COMPUTE_VERTICES_INTERVAL);
+NAMED_PROFILE_POINT(
+    "detect_collision_candidates_rigid_bvh:compute_vertices:double",
+    COMPUTE_VERTICES_DOUBLE);
 template <typename T>
 void detect_collision_candidates_rigid_bvh(
     const physics::RigidBodyAssembler& bodies,
@@ -151,9 +160,19 @@ void detect_collision_candidates_rigid_bvh(
     const auto RB = poses[bodyB_id].construct_rotation_matrix();
     const auto& pA = poses[bodyA_id].position;
     const auto& pB = poses[bodyB_id].position;
+    if (std::is_same<T, Interval>::value) {
+        PROFILE_START(COMPUTE_VERTICES_INTERVAL);
+    } else {
+        PROFILE_START(COMPUTE_VERTICES_DOUBLE);
+    }
     const Eigen::MatrixX<T> VA =
         ((bodyA.vertices * RA.transpose()).rowwise() + (pA - pB).transpose())
         * RB;
+    if (std::is_same<T, Interval>::value) {
+        PROFILE_END(COMPUTE_VERTICES_INTERVAL);
+    } else {
+        PROFILE_END(COMPUTE_VERTICES_DOUBLE);
+    }
     const Eigen::MatrixXd& VB = bodyB.vertices;
     const Eigen::MatrixXi &EA = bodyA.edges, &EB = bodyB.edges,
                           &FA = bodyA.faces, &FB = bodyB.faces;
@@ -161,8 +180,32 @@ void detect_collision_candidates_rigid_bvh(
     // For each face in the small body
     std::mutex fv_mutex, ee_mutex;
     tbb::parallel_for(0l, FA.rows(), [&](long fa_id) {
+        // for (long fa_id = 0; fa_id < FA.rows(); fa_id++) {
         // Construct a bbox of bodyA's face
         AABB fa_aabb = face_aabb(VA, FA.row(fa_id), inflation_radius);
+
+        // DEBUG: print fa_aabb size vs size of triangle
+        // if (std::is_same<T, Interval>::value) {
+        //     double fa_longest_edge_length = (bodyA.vertices.row(FA(fa_id, 0))
+        //                                      - bodyA.vertices.row(FA(fa_id,
+        //                                      1)))
+        //                                         .norm();
+        //     fa_longest_edge_length = std::max(
+        //         fa_longest_edge_length,
+        //         (bodyA.vertices.row(FA(fa_id, 1))
+        //          - bodyA.vertices.row(FA(fa_id, 2)))
+        //             .norm());
+        //     fa_longest_edge_length = std::max(
+        //         fa_longest_edge_length,
+        //         (bodyA.vertices.row(FA(fa_id, 2))
+        //          - bodyA.vertices.row(FA(fa_id, 0)))
+        //             .norm());
+        //
+        //     fmt::print(
+        //         "face_aabb_diag_norm,{:g},fa_longest_edge_length,{:g}\n",
+        //         (fa_aabb.getMax() - fa_aabb.getMin()).norm(),
+        //         fa_longest_edge_length);
+        // }
 
         std::vector<unsigned int> fb_ids;
         bodyB.bvh.intersect_box(
@@ -254,6 +297,8 @@ void detect_collision_candidates_rigid_bvh(
     std::vector<std::pair<int, int>> body_pairs =
         bodies.close_bodies(poses, poses, inflation_radius);
 
+    // tbb::parallel_for_each(
+    // body_pairs, [&](const std::pair<int, int>& body_pair) {
     for (const auto& body_pair : body_pairs) {
         int small_body_id = body_pair.first;
         int large_body_id = body_pair.second;
@@ -266,6 +311,7 @@ void detect_collision_candidates_rigid_bvh(
             bodies, poses, collision_types, small_body_id, large_body_id,
             candidates, inflation_radius);
     }
+    //);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
