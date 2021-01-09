@@ -275,7 +275,8 @@ void merge_local_candidate(
     const tbb::enumerable_thread_specific<ipc::Candidates>& storages,
     ipc::Candidates& candidates)
 {
-    // TODO PROFILE_ME
+    PROFILE_POINT("merge_local_candidate");
+    PROFILE_START();
     // size up the candidates
     size_t ev_size = 0, ee_size = 0, fv_size = 0;
     for (const auto& local_candidates : storages) {
@@ -301,6 +302,7 @@ void merge_local_candidate(
             local_candidates.fv_candidates.begin(),
             local_candidates.fv_candidates.end());
     }
+    PROFILE_END();
 }
 
 // Use a BVH to create a set of all candidate collisions.
@@ -362,7 +364,7 @@ void detect_collision_candidates_rigid(
         return;
     }
 
-    PROFILE_POINT("detect_continous_collision_candidates_rigid");
+    PROFILE_POINT("detect_continuous_collision_candidates_rigid");
     PROFILE_START();
 
     switch (method) {
