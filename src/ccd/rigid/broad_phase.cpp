@@ -168,7 +168,7 @@ void detect_collision_candidates_rigid_bvh(
                           &FA = bodyA.faces, &FB = bodyB.faces;
 
     // For each face in the small body
-    std::mutex fv_mutex, ee_mutex;
+    // std::mutex fv_mutex, ee_mutex;
     // tbb::parallel_for(0l, FA.rows(), [&](long fa_id) {
     for (long fa_id = 0; fa_id < FA.rows(); fa_id++) {
         // Construct a bbox of bodyA's face
@@ -214,7 +214,7 @@ void detect_collision_candidates_rigid_bvh(
                     AABB va_aabb = vertex_aabb(VA, va_id, inflation_radius);
 
                     if (AABB::are_overlaping(va_aabb, fb_aabb)) {
-                        std::scoped_lock lock(fv_mutex);
+                        // std::scoped_lock lock(fv_mutex);
                         // Convert the local ids to the global ones
                         candidates.fv_candidates.emplace_back(
                             bodies.m_body_face_id[bodyB_id] + fb_id,
@@ -228,7 +228,7 @@ void detect_collision_candidates_rigid_bvh(
                     AABB vb_aabb = vertex_aabb(VB, vb_id, inflation_radius);
 
                     if (AABB::are_overlaping(fa_aabb, vb_aabb)) {
-                        std::scoped_lock lock(fv_mutex);
+                        // std::scoped_lock lock(fv_mutex);
                         // Convert the local ids to the global ones
                         candidates.fv_candidates.emplace_back(
                             bodies.m_body_face_id[bodyA_id] + fa_id,
@@ -258,7 +258,7 @@ void detect_collision_candidates_rigid_bvh(
                         edge_aabb(VB, EB.row(eb_id), inflation_radius);
 
                     if (AABB::are_overlaping(ea_aabb, eb_aabb)) {
-                        std::scoped_lock lock(ee_mutex);
+                        // std::scoped_lock lock(ee_mutex);
                         // Convert the local ids to the global ones
                         candidates.ee_candidates.emplace_back(
                             bodies.m_body_edge_id[bodyA_id] + ea_id,
@@ -275,12 +275,13 @@ void merge_local_candidate(
     const tbb::enumerable_thread_specific<ipc::Candidates>& storages,
     ipc::Candidates& candidates)
 {
+    // TODO PROFILE_ME
     // size up the candidates
     size_t ev_size = 0, ee_size = 0, fv_size = 0;
     for (const auto& local_candidates : storages) {
         ev_size += local_candidates.ev_candidates.size();
-        ee_size += local_candidates.ev_candidates.size();
-        fv_size += local_candidates.ev_candidates.size();
+        ee_size += local_candidates.ee_candidates.size();
+        fv_size += local_candidates.fv_candidates.size();
     }
     // serial merge!
     candidates.ev_candidates.reserve(ev_size);
@@ -457,24 +458,11 @@ void detect_collision_candidates_rigid_bvh(
     std::vector<std::pair<int, int>> body_pairs =
         bodies.close_bodies(poses_t0, poses_t1, inflation_radius);
 
-    std::mutex fv_mutex, ee_mutex;
+    // std::mutex fv_mutex, ee_mutex;
 
     physics::Poses<Interval> poses = physics::interpolate(
         physics::cast<Interval>(poses_t0), physics::cast<Interval>(poses_t1),
         Interval(0, 1));
-
-    for (const auto& body_pair : body_pairs) {
-        int small_body_id = body_pair.first;
-        int large_body_id = body_pair.second;
-        if (bodies[small_body_id].num_faces()
-            > bodies[large_body_id].num_faces()) {
-            std::swap(small_body_id, large_body_id);
-        }
-
-        detect_collision_candidates_rigid_bvh(
-            bodies, poses, collision_types, small_body_id, large_body_id,
-            candidates, inflation_radius);
-    }
 
     // for (const auto& body_pair : body_pairs) {
     typedef tbb::enumerable_thread_specific<ipc::Candidates> LocalStorage;
