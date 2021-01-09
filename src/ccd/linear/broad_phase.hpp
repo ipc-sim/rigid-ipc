@@ -1,6 +1,6 @@
 /**
  * Detect collisions between different geometry.
- * Includes continous collision detection to compute the time of impact.
+ * Includes continuous collision detection to compute the time of impact.
  * Supported geometry: point vs edge
  */
 

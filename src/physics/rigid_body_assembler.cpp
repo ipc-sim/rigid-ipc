@@ -208,14 +208,18 @@ namespace physics {
         const int n = num_vertices() * dim();
         const int m = physics::Pose<double>::dim_to_ndof(dim());
 
+        NAMED_PROFILE_POINT(
+            "RigidBodyAssembler::world_vertices_diff:allocation", ALLOCATION);
+        PROFILE_START();
         if (compute_jac) {
             // ∇ V(x): Rᵐ ↦ Rⁿˣᵐ
-            jac = Eigen::MatrixXd::Zero(n, m);
+            jac.setZero(n, m);
         }
         if (compute_hess) {
             // ∇²V(x): Rᵐ ↦ Rⁿˣᵐˣᵐ
             hess.resize(n, Eigen::MatrixXd::Zero(m, m));
         }
+        PROFILE_END();
 
         Eigen::MatrixXd V(num_vertices(), dim());
         tbb::parallel_for(
