@@ -83,6 +83,9 @@ def main():
     for thread_count in [1, 2, 4, 8, -1]:
         thread_count_str = "unlimited" if thread_count < 0 else thread_count
         for scene in args.input:
+            # if thread_count == 1:
+            #     continue
+
             print(f"Running {scene}")
             try:
                 scene_name = scene.resolve().relative_to(fixture_dir)
