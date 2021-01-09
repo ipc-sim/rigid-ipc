@@ -1,5 +1,6 @@
 #include "broad_phase.hpp"
 
+#include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
 
 #include <ccd/linear/broad_phase.hpp>
@@ -7,6 +8,7 @@
 #include <interval/interval.hpp>
 #include <logger.hpp>
 #include <profiler.hpp>
+#include <utils/type_name.hpp>
 
 using ipc::AABB;
 
@@ -132,15 +134,6 @@ inline AABB face_aabb(
             vertex_aabb(V, F(2), inflation_radius)));
 }
 
-// static std::mutex fv_mutex;
-// static std::mutex ee_mutex;
-
-NAMED_PROFILE_POINT(
-    "detect_collision_candidates_rigid_bvh:compute_vertices:interval",
-    COMPUTE_VERTICES_INTERVAL);
-NAMED_PROFILE_POINT(
-    "detect_collision_candidates_rigid_bvh:compute_vertices:double",
-    COMPUTE_VERTICES_DOUBLE);
 template <typename T>
 void detect_collision_candidates_rigid_bvh(
     const physics::RigidBodyAssembler& bodies,
@@ -160,27 +153,24 @@ void detect_collision_candidates_rigid_bvh(
     const auto RB = poses[bodyB_id].construct_rotation_matrix();
     const auto& pA = poses[bodyA_id].position;
     const auto& pB = poses[bodyB_id].position;
-    if (std::is_same<T, Interval>::value) {
-        PROFILE_START(COMPUTE_VERTICES_INTERVAL);
-    } else {
-        PROFILE_START(COMPUTE_VERTICES_DOUBLE);
-    }
+
+    PROFILE_POINT(fmt::format(
+        "detect_collision_candidates_rigid_bvh<{}>:compute_vertices",
+        get_type_name<T>()));
+    // PROFILE_START();
     const Eigen::MatrixX<T> VA =
         ((bodyA.vertices * RA.transpose()).rowwise() + (pA - pB).transpose())
         * RB;
-    if (std::is_same<T, Interval>::value) {
-        PROFILE_END(COMPUTE_VERTICES_INTERVAL);
-    } else {
-        PROFILE_END(COMPUTE_VERTICES_DOUBLE);
-    }
+    // PROFILE_END();
+
     const Eigen::MatrixXd& VB = bodyB.vertices;
     const Eigen::MatrixXi &EA = bodyA.edges, &EB = bodyB.edges,
                           &FA = bodyA.faces, &FB = bodyB.faces;
 
     // For each face in the small body
     std::mutex fv_mutex, ee_mutex;
-    tbb::parallel_for(0l, FA.rows(), [&](long fa_id) {
-        // for (long fa_id = 0; fa_id < FA.rows(); fa_id++) {
+    // tbb::parallel_for(0l, FA.rows(), [&](long fa_id) {
+    for (long fa_id = 0; fa_id < FA.rows(); fa_id++) {
         // Construct a bbox of bodyA's face
         AABB fa_aabb = face_aabb(VA, FA.row(fa_id), inflation_radius);
 
@@ -277,7 +267,39 @@ void detect_collision_candidates_rigid_bvh(
                 }
             }
         }
-    });
+    }
+    // );
+}
+
+void merge_local_candidate(
+    const tbb::enumerable_thread_specific<ipc::Candidates>& storages,
+    ipc::Candidates& candidates)
+{
+    // size up the candidates
+    size_t ev_size = 0, ee_size = 0, fv_size = 0;
+    for (const auto& local_candidates : storages) {
+        ev_size += local_candidates.ev_candidates.size();
+        ee_size += local_candidates.ev_candidates.size();
+        fv_size += local_candidates.ev_candidates.size();
+    }
+    // serial merge!
+    candidates.ev_candidates.reserve(ev_size);
+    candidates.ee_candidates.reserve(ee_size);
+    candidates.fv_candidates.reserve(fv_size);
+    for (const auto& local_candidates : storages) {
+        candidates.ev_candidates.insert(
+            candidates.ev_candidates.end(),
+            local_candidates.ev_candidates.begin(),
+            local_candidates.ev_candidates.end());
+        candidates.ee_candidates.insert(
+            candidates.ee_candidates.end(),
+            local_candidates.ee_candidates.begin(),
+            local_candidates.ee_candidates.end());
+        candidates.fv_candidates.insert(
+            candidates.fv_candidates.end(),
+            local_candidates.fv_candidates.begin(),
+            local_candidates.fv_candidates.end());
+    }
 }
 
 // Use a BVH to create a set of all candidate collisions.
@@ -297,21 +319,29 @@ void detect_collision_candidates_rigid_bvh(
     std::vector<std::pair<int, int>> body_pairs =
         bodies.close_bodies(poses, poses, inflation_radius);
 
-    // tbb::parallel_for_each(
-    // body_pairs, [&](const std::pair<int, int>& body_pair) {
-    for (const auto& body_pair : body_pairs) {
-        int small_body_id = body_pair.first;
-        int large_body_id = body_pair.second;
-        if (bodies[small_body_id].num_faces()
-            > bodies[large_body_id].num_faces()) {
-            std::swap(small_body_id, large_body_id);
-        }
+    // for (const auto& body_pair : body_pairs) {
+    typedef tbb::enumerable_thread_specific<ipc::Candidates> LocalStorage;
+    LocalStorage storages;
+    tbb::parallel_for(
+        tbb::blocked_range<size_t>(size_t(0), body_pairs.size()),
+        [&](const tbb::blocked_range<size_t>& range) {
+            LocalStorage::reference loc_storage_candidates = storages.local();
+            for (long i = range.begin(); i != range.end(); ++i) {
+                int small_body_id = body_pairs[i].first;
+                int large_body_id = body_pairs[i].second;
+                if (bodies[small_body_id].num_faces()
+                    > bodies[large_body_id].num_faces()) {
+                    std::swap(small_body_id, large_body_id);
+                }
 
-        detect_collision_candidates_rigid_bvh(
-            bodies, poses, collision_types, small_body_id, large_body_id,
-            candidates, inflation_radius);
-    }
-    //);
+                detect_collision_candidates_rigid_bvh(
+                    bodies, poses, collision_types, small_body_id,
+                    large_body_id, loc_storage_candidates, inflation_radius);
+            }
+        });
+    //}
+
+    merge_local_candidate(storages, candidates);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -445,6 +475,30 @@ void detect_collision_candidates_rigid_bvh(
             bodies, poses, collision_types, small_body_id, large_body_id,
             candidates, inflation_radius);
     }
+
+    // for (const auto& body_pair : body_pairs) {
+    typedef tbb::enumerable_thread_specific<ipc::Candidates> LocalStorage;
+    LocalStorage storages;
+    tbb::parallel_for(
+        tbb::blocked_range<size_t>(size_t(0), body_pairs.size()),
+        [&](const tbb::blocked_range<size_t>& range) {
+            LocalStorage::reference loc_storage_candidates = storages.local();
+            for (long i = range.begin(); i != range.end(); ++i) {
+                int small_body_id = body_pairs[i].first;
+                int large_body_id = body_pairs[i].second;
+                if (bodies[small_body_id].num_faces()
+                    > bodies[large_body_id].num_faces()) {
+                    std::swap(small_body_id, large_body_id);
+                }
+
+                detect_collision_candidates_rigid_bvh(
+                    bodies, poses, collision_types, small_body_id,
+                    large_body_id, loc_storage_candidates, inflation_radius);
+            }
+        });
+    //}
+
+    merge_local_candidate(storages, candidates);
 }
 
 } // namespace ccd

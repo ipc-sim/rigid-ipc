@@ -260,10 +260,11 @@ meshes/fracture/chinese-lion
 **/*.bak
 
 output/
+output-*threads/
 fixtures/**/*.gif
 fixtures/**/*.obj
 
 src/ccd/EE-CCD-plan.txt
-benchmark.csv
 tools/blender
+*.csv
 comparisons/IPC/*.csv

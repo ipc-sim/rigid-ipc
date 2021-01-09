@@ -1,13 +1,17 @@
 #include "pose.hpp"
 
+#include <typeinfo> // operator typeid
+
 #include <Eigen/Geometry>
 #include <tbb/parallel_for.h>
 
 #include <autodiff/autodiff.h>
 #include <logger.hpp>
+#include <profiler.hpp>
 #include <utils/is_zero.hpp>
 #include <utils/not_implemented_error.hpp>
 #include <utils/sinc.hpp>
+#include <utils/type_name.hpp>
 
 namespace ccd {
 namespace physics {
@@ -170,10 +174,14 @@ namespace physics {
     template <typename T>
     Poses<T> interpolate(const Poses<T>& poses0, const Poses<T>& poses1, T t)
     {
+        PROFILE_POINT(
+            fmt::format("Poses<{}>::interpolate", get_type_name<T>()));
+        PROFILE_START();
         Poses<T> poses(poses0.size());
         for (size_t i = 0; i < poses.size(); i++) {
             poses[i] = Pose<T>::interpolate(poses0[i], poses1[i], t);
         }
+        PROFILE_END();
         return poses;
     }
 
