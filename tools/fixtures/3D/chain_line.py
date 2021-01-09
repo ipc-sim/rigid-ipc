@@ -15,6 +15,8 @@ scale = 1.0
 if len(sys.argv) > 2:
     scale = float(sys.argv[2])
 
+use_sub4 = len(sys.argv) > 3
+
 # padded_link_thickness (actual thickness: 0.190211)
 link_thickness = 0.2005 * scale  # taught
 # link_thickness = 0.201 * scale  # loose
@@ -34,7 +36,7 @@ scene = {
 }
 
 link = {
-    "mesh": "wrecking-ball/link.obj",
+    "mesh": "wrecking-ball/link-sub4.obj" if use_sub4 else "wrecking-ball/link.obj",
     "position": [0, 0, 0],
     "rotation": [0, 0, 0],
     "scale": scale,
@@ -56,7 +58,8 @@ for i in range(chain_length):
         bodies[-1]["type"] = "static"
 
 scale_str = "" if scale == 1 else f"-{scale:g}scale"
-(get_fixture_dir_path() / "3D" / "chain" / "chain-line").mkdir(
-    parents=True, exist_ok=True)
-save_fixture(scene, get_fixture_dir_path() / "3D" /
-             "chain" / "chain-line" / f"length={chain_length:04d}{scale_str}.json")
+output_dir = get_fixture_dir_path() / "3D" / "chain" / "chain-line"
+if use_sub4:
+    output_dir = output_dir / "sub4"
+output_dir.mkdir(parents=True, exist_ok=True)
+save_fixture(scene, output_dir / f"length={chain_length:04d}{scale_str}.json")
