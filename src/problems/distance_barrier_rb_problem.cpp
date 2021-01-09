@@ -161,20 +161,21 @@ namespace opt {
         const ipc::Constraints& collision_constraints,
         const physics::Poses<double>& poses)
     {
+        if (coefficient_friction <= 0) {
+            return;
+        }
+
         PROFILE_POINT("DistanceBarrierRBProblem::update_friction_constraints");
         PROFILE_START();
 
         // The fricition constraints are constant through out the entire
         // lagging iteration.
-        if (coefficient_friction > 0) {
-            // Contact constraints to friction constraints
-            friction_constraints.clear();
-            Eigen::MatrixXd V0 = m_assembler.world_vertices(poses);
-            ipc::construct_friction_constraint_set(
-                V0, edges(), faces(), collision_constraints,
-                barrier_activation_distance(), barrier_stiffness(),
-                coefficient_friction, friction_constraints);
-        }
+        friction_constraints.clear();
+        Eigen::MatrixXd V0 = m_assembler.world_vertices(poses);
+        ipc::construct_friction_constraint_set(
+            V0, edges(), faces(), collision_constraints,
+            barrier_activation_distance(), barrier_stiffness(),
+            coefficient_friction, friction_constraints);
 
         PROFILE_END();
     }

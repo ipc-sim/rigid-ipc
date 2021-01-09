@@ -301,10 +301,6 @@ namespace opt {
             NARROW_PHASE);
         NAMED_PROFILE_POINT(
             "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase:edge_"
-            "vertex",
-            EV_NARROW_PHASE);
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase:edge_"
             "edge",
             FV_NARROW_PHASE);
         NAMED_PROFILE_POINT(
@@ -312,30 +308,36 @@ namespace opt {
             "vertex",
             EE_NARROW_PHASE);
 
+        PROFILE_START(NARROW_PHASE);
+
         int collision_count = 0;
         double earliest_toi = 1;
         std::mutex earliest_toi_mutex;
 
-        PROFILE_START(NARROW_PHASE);
-
-        PROFILE_START(EV_NARROW_PHASE);
-        tbb::parallel_for_each(
-            candidates.ev_candidates,
-            [&](const ipc::EdgeVertexCandidate& ev_candidate) {
-                double toi = std::numeric_limits<double>::infinity();
-                bool are_colliding = edge_vertex_ccd(
-                    bodies, poses_t0, poses_t1, ev_candidate, toi,
-                    trajectory_type, earliest_toi);
-                if (are_colliding) {
-                    earliest_toi_mutex.lock();
-                    collision_count++;
-                    if (toi < earliest_toi) {
-                        earliest_toi = toi;
+        if (candidates.ev_candidates.size()) {
+            NAMED_PROFILE_POINT(
+                "DistanceBarrierConstraint::compute_earliest_toi_narrow_phase:"
+                "edge_vertex",
+                EV_NARROW_PHASE);
+            PROFILE_START(EV_NARROW_PHASE);
+            tbb::parallel_for_each(
+                candidates.ev_candidates,
+                [&](const ipc::EdgeVertexCandidate& ev_candidate) {
+                    double toi = std::numeric_limits<double>::infinity();
+                    bool are_colliding = edge_vertex_ccd(
+                        bodies, poses_t0, poses_t1, ev_candidate, toi,
+                        trajectory_type, earliest_toi);
+                    if (are_colliding) {
+                        earliest_toi_mutex.lock();
+                        collision_count++;
+                        if (toi < earliest_toi) {
+                            earliest_toi = toi;
+                        }
+                        earliest_toi_mutex.unlock();
                     }
-                    earliest_toi_mutex.unlock();
-                }
-            });
-        PROFILE_END(EV_NARROW_PHASE);
+                });
+            PROFILE_END(EV_NARROW_PHASE);
+        }
 
         PROFILE_START(FV_NARROW_PHASE);
         tbb::parallel_for_each(
@@ -383,11 +385,12 @@ namespace opt {
             fmt::format(
                 "{:d},{:d},{:g}%", candidates.size(), collision_count,
                 percent_correct));
-        PROFILE_END(NARROW_PHASE);
 
         spdlog::debug(
             "num_candidates={:d} num_collisions={:d} percentage={:g}%",
             candidates.size(), collision_count, percent_correct);
+
+        PROFILE_END(NARROW_PHASE);
 
         return collision_count ? earliest_toi
                                : std::numeric_limits<double>::infinity();
