@@ -71,6 +71,7 @@ def main():
     scalability_profiles = []
 
     for thread_count in [1, 2, 4, 8, -1]:
+        thread_count_str = "unlimited" if thread_count < 0 else thread_count
         for scene in args.input:
             print(f"Running {scene}")
             try:
@@ -79,7 +80,8 @@ def main():
             except ValueError:
                 scene_name = scene.stem
 
-            sim_output_dir = pathlib.Path("output") / scene_name
+            sim_output_dir = (pathlib.Path(
+                f"output-{thread_count_str}threads") / scene_name)
             subprocess.run([str(args.sim_exe), str(scene.resolve()),
                             str(sim_output_dir),
                             "--loglevel", str(args.loglevel),
@@ -87,11 +89,10 @@ def main():
                             ])
         combined_profile_df = combine_profiles(args.input, absolute_time=True)
         if scalability_profiles:
-            combined_profile_df /= scalability_profiles[0]
+            combined_profile_df = scalability_profiles[0] / combined_profile_df
 
         scalability_profiles.append(combined_profile_df)
 
-        thread_count_str = "unlimited" if thread_count < 0 else thread_count
         output_fname = append_stem(args.output, f"-{thread_count_str}-threads")
         combined_profile_df.to_csv(output_fname)
         print(f"Results written to {output_fname}")
