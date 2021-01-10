@@ -219,11 +219,11 @@ namespace physics {
             // ∇²V(x): Rᵐ ↦ Rⁿˣᵐˣᵐ
             hess.resize(n * m, m); // Store as (n * m) × m matrix
         }
+        Eigen::MatrixXd V(num_vertices(), dim());
         PROFILE_END(ALLOCATION);
 
-        Eigen::MatrixXd V(num_vertices(), dim());
         tbb::parallel_for(
-            tbb::blocked_range<size_t>(size_t(0), num_bodies()),
+            tbb::blocked_range<size_t>(size_t(0), num_bodies(), 6),
             [&](const tbb::blocked_range<size_t>& range) {
                 for (size_t rb_i = range.begin(); rb_i != range.end(); ++rb_i) {
                     const physics::RigidBody& rb = m_rbs[rb_i];
