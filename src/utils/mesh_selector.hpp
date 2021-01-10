@@ -23,6 +23,8 @@ public:
 
 private:
     /// A mapping from a vertex id to the smallest adjacent face id.
+    std::vector<size_t> m_vertex_to_edge;
+    /// A mapping from a vertex id to the smallest adjacent face id.
     std::vector<size_t> m_vertex_to_face;
     /// A mapping from a edge id to the smallest adjacent face id.
     std::vector<size_t> m_edge_to_face;

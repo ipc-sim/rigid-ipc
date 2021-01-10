@@ -440,66 +440,79 @@ namespace opt {
         const std::vector<physics::Pose<double>> poses = this->dofs_to_poses(x);
         assert(poses.size() == num_bodies());
 
-        tbb::parallel_for(size_t(0), poses.size(), [&](size_t i) {
-            // Activate autodiff with the correct number of variables
-            Diff::activate(ndof);
+        // tbb::parallel_for(size_t(0), poses.size(), [&](size_t i) {
+        tbb::parallel_for(
+            tbb::blocked_range<size_t>(size_t(0), poses.size()),
+            [&](const tbb::blocked_range<size_t>& range) {
+                // Activate autodiff with the correct number of variables
+                Diff::activate(ndof);
 
-            const physics::Pose<double>& pose = poses[i];
-            const physics::RigidBody& body = m_assembler[i];
+                for (long i = range.begin(); i != range.end(); ++i) {
+                    const physics::Pose<double>& pose = poses[i];
+                    const physics::RigidBody& body = m_assembler[i];
 
-            // Do not compute the body energy for static and kinematic bodies
-            if (body.type != physics::RigidBodyType::DYNAMIC) {
-                return;
-            }
+                    // Do not compute the body energy for static and kinematic
+                    // bodies
+                    if (body.type != physics::RigidBodyType::DYNAMIC) {
+                        continue;
+                    }
 
-            Eigen::VectorX6d gradi;
+                    Eigen::VectorX6d gradi;
 
-            if (compute_hess) {
-                // Initialize autodiff variables
-                physics::Pose<Diff::DDouble2> pose_diff(
-                    Diff::d2vars(0, pose.dof()));
+                    if (compute_hess) {
+                        // Initialize autodiff variables
+                        physics::Pose<Diff::DDouble2> pose_diff(
+                            Diff::d2vars(0, pose.dof()));
 
-                Diff::DDouble2 dExi = compute_body_energy<Diff::DDouble2>(
-                    body, pose_diff, grad_barrier_t0.segment(i * ndof, ndof));
+                        Diff::DDouble2 dExi =
+                            compute_body_energy<Diff::DDouble2>(
+                                body, pose_diff,
+                                grad_barrier_t0.segment(i * ndof, ndof));
 
-                energies[i] = dExi.getValue();
-                gradi = dExi.getGradient();
-                Eigen::MatrixXX6d hessi = dExi.getHessian();
+                        energies[i] = dExi.getValue();
+                        gradi = dExi.getGradient();
+                        Eigen::MatrixXX6d hessi = dExi.getHessian();
 
-                // Project dense block to make assembled matrix PSD
-                hessi.topLeftCorner(pos_ndof, pos_ndof) = Eigen::project_to_psd(
-                    hessi.topLeftCorner(pos_ndof, pos_ndof));
-                // NOTE: This is handled with Tikhonov regularization instead
-                // hessi.bottomRightCorner(rot_ndof, rot_ndof) =
-                //     Eigen::project_to_pd(
-                //         hessi.bottomRightCorner(rot_ndof, rot_ndof));
+                        // Project dense block to make assembled matrix PSD
+                        hessi.topLeftCorner(pos_ndof, pos_ndof) =
+                            Eigen::project_to_psd(Eigen::MatrixXX3d(
+                                hessi.topLeftCorner(pos_ndof, pos_ndof)));
+                        // NOTE: This is handled with Tikhonov regularization
+                        // instead hessi.bottomRightCorner(rot_ndof, rot_ndof) =
+                        //     Eigen::project_to_pd(
+                        //         hessi.bottomRightCorner(rot_ndof, rot_ndof));
 
-                // Add the local hessian as triplets in the global hessian
-                for (int r = 0; r < hessi.rows(); r++) {
-                    for (int c = 0; c < hessi.cols(); c++) {
-                        hess_triplets.emplace_back(
-                            i * ndof + r, i * ndof + c, hessi(r, c));
+                        // Add the local hessian as triplets in the global
+                        // hessian
+                        for (int r = 0; r < hessi.rows(); r++) {
+                            for (int c = 0; c < hessi.cols(); c++) {
+                                hess_triplets.emplace_back(
+                                    i * ndof + r, i * ndof + c, hessi(r, c));
+                            }
+                        }
+                    } else if (compute_grad) {
+                        // Initialize autodiff variables
+                        physics::Pose<Diff::DDouble1> pose_diff(
+                            Diff::d1vars(0, pose.dof()));
+
+                        Diff::DDouble1 dExi =
+                            compute_body_energy<Diff::DDouble1>(
+                                body, pose_diff,
+                                grad_barrier_t0.segment(i * ndof, ndof));
+
+                        energies[i] = dExi.getValue();
+                        gradi = dExi.getGradient();
+                    } else {
+                        energies[i] = compute_body_energy<double>(
+                            body, pose,
+                            grad_barrier_t0.segment(i * ndof, ndof));
+                    }
+
+                    if (compute_grad) {
+                        grad.segment(i * ndof, ndof) = gradi;
                     }
                 }
-            } else if (compute_grad) {
-                // Initialize autodiff variables
-                physics::Pose<Diff::DDouble1> pose_diff(
-                    Diff::d1vars(0, pose.dof()));
-
-                Diff::DDouble1 dExi = compute_body_energy<Diff::DDouble1>(
-                    body, pose_diff, grad_barrier_t0.segment(i * ndof, ndof));
-
-                energies[i] = dExi.getValue();
-                gradi = dExi.getGradient();
-            } else {
-                energies[i] = compute_body_energy<double>(
-                    body, pose, grad_barrier_t0.segment(i * ndof, ndof));
-            }
-
-            if (compute_grad) {
-                grad.segment(i * ndof, ndof) = gradi;
-            }
-        });
+            });
 
         if (compute_hess) {
             NAMED_PROFILE_POINT(
@@ -773,9 +786,9 @@ namespace opt {
     }
 
     // Convert from a local hessian to the triplets in the global hessian
-    template <typename Triplets>
+    template <typename DerivedLocalGradient, typename Triplets>
     void local_gradient_to_global_triplets(
-        const Eigen::VectorXd& local_gradient,
+        const Eigen::MatrixBase<DerivedLocalGradient>& local_gradient,
         const std::array<long, 2>& body_ids,
         int ndof,
         Triplets& triplets)
@@ -790,9 +803,9 @@ namespace opt {
         }
     }
 
-    template <typename Triplets>
+    template <typename DerivedLocalHessian, typename Triplets>
     void local_hessian_to_global_triplets(
-        const Eigen::MatrixXd& local_hessian,
+        const Eigen::MatrixBase<DerivedLocalHessian>& local_hessian,
         const std::array<long, 2>& body_ids,
         int ndof,
         Triplets& triplets)
@@ -816,9 +829,9 @@ namespace opt {
 
     // Apply the chain rule of f(V(x)) given ∇ᵥf(V) and ∇ₓV(x)
     void apply_chain_rule(
-        const Eigen::VectorXd& grad_f,
+        const Eigen::VectorX12d& grad_f,
         const Eigen::MatrixXd& jac_V,
-        const Eigen::MatrixXd& hess_f,
+        const Eigen::MatrixXX12d& hess_f,
         const Eigen::MatrixXd& hess_V,
         const std::vector<long>& vertex_ids,
         const std::vector<uint8_t>& local_body_ids,
@@ -837,7 +850,7 @@ namespace opt {
 
         if (compute_grad) {
             // jac_Vi ∈ R^{4n × 2m}
-            Eigen::VectorXd grad = Eigen::VectorXd::Zero(2 * rb_ndof);
+            Eigen::VectorX12d grad = Eigen::VectorX12d::Zero(2 * rb_ndof);
             for (int i = 0; i < vertex_ids.size(); i++) {
                 grad.segment(rb_ndof * local_body_ids[i], rb_ndof) +=
                     jac_V.middleRows(vertex_ids[i] * dim, dim).transpose()
@@ -850,8 +863,8 @@ namespace opt {
 
         if (compute_hess) {
             // jac_Vi ∈ R^{4n × 2m}
-            Eigen::MatrixXd jac_Vi =
-                Eigen::MatrixXd::Zero(vertex_ids.size() * dim, 2 * rb_ndof);
+            Eigen::MatrixXX12d jac_Vi =
+                Eigen::MatrixXX12d::Zero(vertex_ids.size() * dim, 2 * rb_ndof);
             for (int i = 0; i < vertex_ids.size(); i++) {
                 jac_Vi.block(
                     i * dim, local_body_ids[i] * rb_ndof, dim, rb_ndof) =
@@ -859,7 +872,7 @@ namespace opt {
             }
 
             // hess ∈ R^{2m × 2m}
-            Eigen::MatrixXd hess = jac_Vi.transpose() * hess_f * jac_Vi;
+            Eigen::MatrixXX12d hess = jac_Vi.transpose() * hess_f * jac_Vi;
             for (int i = 0; i < vertex_ids.size(); i++) {
                 for (int j = 0; j < dim; j++) {
                     // Off diagaonal blocks are all zero because the derivative
@@ -933,31 +946,39 @@ namespace opt {
 
         double dhat = barrier_activation_distance();
 
-        tbb::parallel_for(size_t(0), constraints.size(), [&](size_t ci) {
-            const auto& constraint = constraints[ci];
+        // TODO: block range me
+        // tbb::parallel_for(size_t(0), constraints.size(), [&](size_t ci) {
+        tbb::parallel_for(
+            tbb::blocked_range<size_t>(size_t(0), constraints.size()),
+            [&](const tbb::blocked_range<size_t>& range) {
+                for (size_t ci = range.begin(); ci != range.end(); ++ci) {
+                    const auto& constraint = constraints[ci];
 
-            potential[ci] =
-                constraint.compute_potential(V, edges(), faces(), dhat);
+                    potential[ci] =
+                        constraint.compute_potential(V, edges(), faces(), dhat);
 
-            Eigen::VectorXd grad_B;
-            if (compute_grad || compute_hess) {
-                grad_B = constraint.compute_potential_gradient(
-                    V, edges(), faces(), dhat);
-            }
+                    Eigen::VectorX12d grad_B;
+                    if (compute_grad || compute_hess) {
+                        grad_B = constraint.compute_potential_gradient(
+                            V, edges(), faces(), dhat);
+                    }
 
-            Eigen::MatrixXd hess_B;
-            if (compute_hess) {
-                hess_B = constraint.compute_potential_hessian(
-                    V, edges(), faces(), dhat, /*project_to_psd=*/false);
-            }
+                    Eigen::MatrixXX12d hess_B;
+                    if (compute_hess) {
+                        hess_B = constraint.compute_potential_hessian(
+                            V, edges(), faces(), dhat,
+                            /*project_to_psd=*/false);
+                    }
 
-            apply_chain_rule(
-                grad_B, jac_V, hess_B, hess_V,
-                constraint.vertex_indices(edges(), faces()),
-                vertex_local_body_ids(constraints, ci),
-                body_ids(m_assembler, constraints, ci), dim(), //
-                grad_triplets, hess_triplets, compute_grad, compute_hess);
-        });
+                    apply_chain_rule(
+                        grad_B, jac_V, hess_B, hess_V,
+                        constraint.vertex_indices(edges(), faces()),
+                        vertex_local_body_ids(constraints, ci),
+                        body_ids(m_assembler, constraints, ci), dim(),
+                        grad_triplets, hess_triplets, compute_grad,
+                        compute_hess);
+                }
+            });
 
         if (compute_grad) {
             PROFILE_START(ASSEMBLE_BARRIER_GRAD);
@@ -1024,8 +1045,8 @@ namespace opt {
 
         int rb_ndof = physics::Pose<double>::dim_to_ndof(dim());
 
-        Eigen::VectorXd grad_D;
-        Eigen::MatrixXd hess_D;
+        Eigen::VectorX12d grad_D;
+        Eigen::MatrixXX12d hess_D;
         double epsv_times_h = static_friction_speed_bound * timestep();
         double Dx =
             constraint.compute_potential(U, edges(), faces(), epsv_times_h);
@@ -1045,7 +1066,7 @@ namespace opt {
 
         if (compute_grad) {
             // jac_Vi ∈ R^{4n × 2m}
-            Eigen::VectorXd grad = Eigen::VectorXd::Zero(2 * rb_ndof);
+            Eigen::VectorX12d grad = Eigen::VectorX12d::Zero(2 * rb_ndof);
             for (int i = 0; i < vertex_ids.size(); i++) {
                 grad.segment(rb_ndof * local_body_ids[i], rb_ndof) +=
                     jac_V.middleRows(vertex_ids[i] * dim(), dim()).transpose()
@@ -1058,7 +1079,7 @@ namespace opt {
 
         if (compute_hess) {
             // jac_Vi ∈ R^{4n × 2m}
-            Eigen::MatrixXd jac_Vi =
+            Eigen::MatrixXX12d jac_Vi =
                 Eigen::MatrixXd::Zero(vertex_ids.size() * dim(), 2 * rb_ndof);
             for (int i = 0; i < vertex_ids.size(); i++) {
                 jac_Vi.block(
@@ -1067,7 +1088,7 @@ namespace opt {
             }
 
             // hess ∈ R^{2m × 2m}
-            Eigen::MatrixXd hess = jac_Vi.transpose() * hess_D * jac_Vi;
+            Eigen::MatrixXX12d hess = jac_Vi.transpose() * hess_D * jac_Vi;
             for (int i = 0; i < vertex_ids.size(); i++) {
                 for (int j = 0; j < dim(); j++) {
                     // Off diagaonal blocks are all zero because the derivative

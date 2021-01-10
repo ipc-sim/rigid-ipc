@@ -68,7 +68,6 @@ namespace physics {
                     // Fill in hessian of V(i, j) (∈ R⁶ˣ⁶ for 3D)
                     // Hessian of position is zero
                     // ∇²_p V = ∇_p∇_r V = ∇_r∇_p V = 0
-                    assert(hess.rows() / vertices.size() == ndof());
                     assert(hess.cols() == ndof());
                     hess.middleRows(ndof() * vij_flat, ndof()).setZero();
                     hess.block(

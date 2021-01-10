@@ -181,10 +181,12 @@ namespace physics {
         assert(std::isfinite(average_edge_length));
 
         // TODO: Handle 2D and codimensional geometry
-        PROFILE_POINT("RigidBody::RigidBody:bvh.init");
-        PROFILE_START();
-        bvh.init(this->vertices, this->faces, /*tol=*/0);
-        PROFILE_END();
+        if (this->faces.size()) {
+            PROFILE_POINT("RigidBody::RigidBody:bvh.init");
+            PROFILE_START();
+            bvh.init(this->vertices, this->faces, /*tol=*/0);
+            PROFILE_END();
+        }
     }
 
     Eigen::MatrixXd RigidBody::world_velocities() const
