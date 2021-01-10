@@ -819,7 +819,7 @@ namespace opt {
         const Eigen::VectorXd& grad_f,
         const Eigen::MatrixXd& jac_V,
         const Eigen::MatrixXd& hess_f,
-        const std::vector<Eigen::MatrixXd>& hess_V,
+        const Eigen::MatrixXd& hess_V,
         const std::vector<long>& vertex_ids,
         const std::vector<uint8_t>& local_body_ids,
         const std::array<long, 2>& body_ids,
@@ -867,7 +867,9 @@ namespace opt {
                     hess.block(
                         local_body_ids[i] * rb_ndof,
                         local_body_ids[i] * rb_ndof, rb_ndof, rb_ndof) +=
-                        hess_V[vertex_ids[i] * dim + j] * grad_f[i * dim + j];
+                        hess_V.middleRows(
+                            rb_ndof * (vertex_ids[i] * dim + j), rb_ndof)
+                        * grad_f[i * dim + j];
                 }
             }
 
@@ -923,8 +925,7 @@ namespace opt {
         }
 
         // Compute V(x)
-        Eigen::MatrixXd jac_V;
-        std::vector<Eigen::MatrixXd> hess_V;
+        Eigen::MatrixXd jac_V, hess_V;
         Eigen::MatrixXd V = m_assembler.world_vertices_diff(
             x, jac_V, hess_V, compute_grad || compute_hess, compute_hess);
 
@@ -1001,7 +1002,7 @@ namespace opt {
     double DistanceBarrierRBProblem::compute_friction_potential(
         const Eigen::MatrixXd& U,
         const Eigen::MatrixXd& jac_V,
-        const std::vector<Eigen::MatrixXd>& hess_V,
+        const Eigen::MatrixXd& hess_V,
         const FrictionConstraint& constraint,
         tbb::concurrent_vector<Eigen::Triplet<double>>& grad_triplets,
         tbb::concurrent_vector<Eigen::Triplet<double>>& hess_triplets,
@@ -1074,7 +1075,8 @@ namespace opt {
                     hess.block(
                         local_body_ids[i] * rb_ndof,
                         local_body_ids[i] * rb_ndof, rb_ndof, rb_ndof) +=
-                        hess_V[vertex_ids[i] * dim() + j]
+                        hess_V.middleRows(
+                            rb_ndof * (vertex_ids[i] * dim() + j), rb_ndof)
                         * grad_D[i * dim() + j];
                 }
             }
@@ -1133,8 +1135,7 @@ namespace opt {
         }
 
         // Compute V(x)
-        Eigen::MatrixXd jac_V;
-        std::vector<Eigen::MatrixXd> hess_V;
+        Eigen::MatrixXd jac_V, hess_V;
         Eigen::MatrixXd V1 = m_assembler.world_vertices_diff(
             x, jac_V, hess_V, compute_grad || compute_hess, compute_hess);
 

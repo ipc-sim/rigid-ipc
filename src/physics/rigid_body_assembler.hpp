@@ -65,7 +65,7 @@ namespace physics {
         Eigen::MatrixXd world_vertices_diff(
             const Poses<double>& poses,
             Eigen::MatrixXd& jac,
-            std::vector<Eigen::MatrixXd>& hess,
+            Eigen::MatrixXd& hess,
             bool compute_jac,
             bool compute_hess) const;
 
@@ -79,7 +79,7 @@ namespace physics {
         Eigen::MatrixXd world_vertices_diff(
             const Eigen::VectorXd& dof,
             Eigen::MatrixXd& jac,
-            std::vector<Eigen::MatrixXd>& hess,
+            Eigen::MatrixXd& hess,
             bool compute_jac,
             bool compute_hess) const
         {

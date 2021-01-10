@@ -32,7 +32,7 @@ namespace physics {
         long rb_v0_i,
         Eigen::MatrixXd& V,
         Eigen::MatrixXd& jac,
-        std::vector<Eigen::MatrixXd>& hess) const
+        Eigen::MatrixXd& hess) const
     {
         // We will only use auto diff to compute the derivatives of the rotation
         // matrix.
@@ -44,9 +44,11 @@ namespace physics {
         assert(V.cols() == dim());
         assert(rb_v0_i <= jac.rows() - vertices.size());
         assert(jac.cols() == ndof());
-        bool compute_hess = hess.size() >= vertices.size()
+        bool compute_hess = hess.size() >= vertices.size() * ndof()
             && std::is_base_of<Diff::DDouble2, DScalar>();
-        assert(!compute_hess || rb_v0_i <= hess.size() - vertices.size());
+        assert(
+            !compute_hess
+            || rb_v0_i <= (hess.size() / ndof()) - vertices.size());
 
         auto R = construct_rotation_matrix(
             Eigen::VectorX3<DScalar>(Diff::dTvars<DScalar>(0, pose.rotation)));
@@ -65,9 +67,11 @@ namespace physics {
                     // Fill in hessian of V(i, j) (∈ R⁶ˣ⁶ for 3D)
                     // Hessian of position is zero
                     // ∇²_p V = ∇_p∇_r V = ∇_r∇_p V = 0
-                    assert(hess[vij_flat].rows() == ndof());
-                    assert(hess[vij_flat].cols() == ndof());
-                    hess[vij_flat].bottomRightCorner(rot_ndof(), rot_ndof()) =
+                    assert(hess / vertices.rows() == ndof());
+                    assert(hess.cols() == ndof());
+                    hess.block(
+                        /*i=*/ndof() * vij_flat + pos_ndof(), /*j=*/pos_ndof(),
+                        /*p=*/rot_ndof(), /*q=*/rot_ndof()) =
                         get_hessian(V_diff(i, j));
                 }
             }
