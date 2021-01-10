@@ -943,8 +943,9 @@ namespace opt {
 
         double dhat = barrier_activation_distance();
 
+        Eigen::VectorXd potentials(constraints.size());
         struct ThreadStorage {
-            double potential;
+            // double potential = 0;
             std::vector<Eigen::Triplet<double>> grad_triplets;
             std::vector<Eigen::Triplet<double>> hess_triplets;
         };
@@ -954,11 +955,12 @@ namespace opt {
             tbb::blocked_range<size_t>(size_t(0), constraints.size()),
             [&](const tbb::blocked_range<size_t>& range) {
                 // Get references to the local derivative storage
-                double& potential = storages.local().potential;
-                auto& grad_triplets = storages.local().grad_triplets;
-                auto& hess_triplets = storages.local().hess_triplets;
+                LocalStorage::reference local_storage = storages.local();
+                // double& potential = local_storage.potential;
+                auto& grad_triplets = local_storage.grad_triplets;
+                auto& hess_triplets = local_storage.hess_triplets;
 
-                potential = 0;
+                // potential = 0;
                 if (compute_grad) {
                     grad_triplets.reserve(2 * rb_ndof * range.size());
                 }
@@ -969,7 +971,8 @@ namespace opt {
                 for (size_t ci = range.begin(); ci != range.end(); ++ci) {
                     const auto& constraint = constraints[ci];
 
-                    potential +=
+                    // potential +=
+                    potentials[ci] =
                         constraint.compute_potential(V, edges(), faces(), dhat);
 
                     Eigen::VectorX12d grad_B;
@@ -995,9 +998,10 @@ namespace opt {
                 }
             });
 
-        double potential = 0;
+        // double potential = 0;
+        double potential = potentials.sum();
         for (const auto& local_storage : storages) {
-            potential += local_storage.potential;
+            // potential += local_storage.potential;
             if (compute_grad) {
                 PROFILE_START(ASSEMBLE_BARRIER_GRAD);
 
