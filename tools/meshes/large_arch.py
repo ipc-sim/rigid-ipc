@@ -144,6 +144,8 @@ def large_arch(fc=60, Qb=100, Qt=49, L=30, nsegs=25):
             f.write("f 2 4 8\n")  # +z
             f.write("f 8 6 2\n")  # +z
 
+    return p
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

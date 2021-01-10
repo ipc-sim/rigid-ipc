@@ -13,7 +13,13 @@ def main():
     if len(sys.argv) > 1:
         num_stones = int(sys.argv[1])
 
-    large_arch(nsegs=num_stones)
+    V = large_arch(nsegs=num_stones)
+    arch_min = V.min(axis=0)
+    arch_max = V.max(axis=0)
+
+    plane_dims = 125 / 91.41345433982721 * (arch_max - arch_min)
+    plane_dims[1] = 0
+    plane_dims[2] = 100
 
     scene = {
         "scene_type": "distance_barrier_rb_problem",
@@ -30,7 +36,7 @@ def main():
             "rigid_bodies": [{
                 "mesh": "plane.obj",
                 "position": [0, 0, 0],
-                "scale": 10,
+                "dimensions": plane_dims.tolist(),
                 "is_dof_fixed": True
             }]
         }
