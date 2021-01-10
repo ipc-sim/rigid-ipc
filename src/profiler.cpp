@@ -20,6 +20,9 @@ namespace profiler {
 
     void ProfilerPoint::begin()
     {
+        if (is_active) {
+            throw fmt::format("ProfilePoint {} is already active!", name());
+        }
         timer.start();
         beginning_peak_rss = getPeakRSS();
         is_active = true;

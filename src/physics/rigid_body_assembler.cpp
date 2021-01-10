@@ -210,7 +210,7 @@ namespace physics {
 
         NAMED_PROFILE_POINT(
             "RigidBodyAssembler::world_vertices_diff:allocation", ALLOCATION);
-        PROFILE_START();
+        PROFILE_START(ALLOCATION);
         if (compute_jac) {
             // ∇ V(x): Rᵐ ↦ Rⁿˣᵐ
             jac.setZero(n, m);
@@ -219,7 +219,7 @@ namespace physics {
             // ∇²V(x): Rᵐ ↦ Rⁿˣᵐˣᵐ
             hess.resize(n, Eigen::MatrixXd::Zero(m, m));
         }
-        PROFILE_END();
+        PROFILE_END(ALLOCATION);
 
         Eigen::MatrixXd V(num_vertices(), dim());
         tbb::parallel_for(
