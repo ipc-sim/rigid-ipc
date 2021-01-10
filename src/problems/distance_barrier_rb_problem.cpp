@@ -1,5 +1,6 @@
 #include "distance_barrier_rb_problem.hpp"
 
+#include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
 
 #include <ipc/distance/edge_edge.hpp>
@@ -837,8 +838,8 @@ namespace opt {
         const std::vector<uint8_t>& local_body_ids,
         const std::array<long, 2>& body_ids,
         const int dim,
-        tbb::concurrent_vector<Eigen::Triplet<double>>& grad_triplets,
-        tbb::concurrent_vector<Eigen::Triplet<double>>& hess_triplets,
+        std::vector<Eigen::Triplet<double>>& grad_triplets,
+        std::vector<Eigen::Triplet<double>>& hess_triplets,
         bool compute_grad,
         bool compute_hess)
     {
@@ -925,16 +926,14 @@ namespace opt {
 
         PROFILE_START(COMPUTE_BARRIER_TERM);
 
-        tbb::concurrent_vector<Eigen::Triplet<double>> grad_triplets;
-        tbb::concurrent_vector<Eigen::Triplet<double>> hess_triplets;
         int rb_ndof = physics::Pose<double>::dim_to_ndof(dim());
         if (compute_grad) {
             PROFILE_START(COMPUTE_BARRIER_GRAD);
-            grad_triplets.reserve(2 * rb_ndof * constraints.size());
+            grad.setZero(x.size());
         }
         if (compute_hess) {
             PROFILE_START(COMPUTE_BARRIER_HESS);
-            hess_triplets.reserve(4 * rb_ndof * rb_ndof * constraints.size());
+            hess.resize(x.size(), x.size());
         }
 
         // Compute V(x)
@@ -942,19 +941,35 @@ namespace opt {
         Eigen::MatrixXd V = m_assembler.world_vertices_diff(
             x, jac_V, hess_V, compute_grad || compute_hess, compute_hess);
 
-        Eigen::VectorXd potential(constraints.size());
-
         double dhat = barrier_activation_distance();
 
-        // TODO: block range me
-        // tbb::parallel_for(size_t(0), constraints.size(), [&](size_t ci) {
+        struct ThreadStorage {
+            double potential;
+            std::vector<Eigen::Triplet<double>> grad_triplets;
+            std::vector<Eigen::Triplet<double>> hess_triplets;
+        };
+        typedef tbb::enumerable_thread_specific<ThreadStorage> LocalStorage;
+        LocalStorage storages;
         tbb::parallel_for(
             tbb::blocked_range<size_t>(size_t(0), constraints.size()),
             [&](const tbb::blocked_range<size_t>& range) {
+                // Get references to the local derivative storage
+                double& potential = storages.local().potential;
+                auto& grad_triplets = storages.local().grad_triplets;
+                auto& hess_triplets = storages.local().hess_triplets;
+
+                potential = 0;
+                if (compute_grad) {
+                    grad_triplets.reserve(2 * rb_ndof * range.size());
+                }
+                if (compute_hess) {
+                    hess_triplets.reserve(4 * rb_ndof * rb_ndof * range.size());
+                }
+
                 for (size_t ci = range.begin(); ci != range.end(); ++ci) {
                     const auto& constraint = constraints[ci];
 
-                    potential[ci] =
+                    potential +=
                         constraint.compute_potential(V, edges(), faces(), dhat);
 
                     Eigen::VectorX12d grad_B;
@@ -980,27 +995,36 @@ namespace opt {
                 }
             });
 
-        if (compute_grad) {
-            PROFILE_START(ASSEMBLE_BARRIER_GRAD);
+        double potential = 0;
+        for (const auto& local_storage : storages) {
+            potential += local_storage.potential;
+            if (compute_grad) {
+                PROFILE_START(ASSEMBLE_BARRIER_GRAD);
 
-            Eigen::SparseMatrix<double> sparse_grad(x.size(), 1);
-            sparse_grad.setFromTriplets(
-                grad_triplets.begin(), grad_triplets.end());
-            grad = Eigen::VectorXd(sparse_grad);
+                Eigen::SparseMatrix<double> tmp_grad(x.size(), 1);
+                tmp_grad.setFromTriplets(
+                    local_storage.grad_triplets.begin(),
+                    local_storage.grad_triplets.end());
+                grad += tmp_grad;
 
-            PROFILE_END(ASSEMBLE_BARRIER_GRAD);
-            PROFILE_END(COMPUTE_BARRIER_GRAD);
+                PROFILE_END(ASSEMBLE_BARRIER_GRAD);
+            }
+            if (compute_hess) {
+                PROFILE_START(ASSEMBLE_BARRIER_HESS);
+
+                Eigen::SparseMatrix<double> tmp_hess(x.size(), x.size());
+                tmp_hess.setFromTriplets(
+                    local_storage.hess_triplets.begin(),
+                    local_storage.hess_triplets.end());
+                hess += tmp_hess;
+
+                PROFILE_END(ASSEMBLE_BARRIER_HESS);
+            }
         }
-        if (compute_hess) {
-            PROFILE_START(ASSEMBLE_BARRIER_HESS);
 
-            hess.resize(x.size(), x.size());
-            hess.setFromTriplets(hess_triplets.begin(), hess_triplets.end());
-
-            PROFILE_END(ASSEMBLE_BARRIER_HESS);
-            PROFILE_END(COMPUTE_BARRIER_HESS);
-        }
-
+        // if not active, nothing happens
+        PROFILE_END(COMPUTE_BARRIER_GRAD);
+        PROFILE_END(COMPUTE_BARRIER_HESS);
         PROFILE_END(COMPUTE_BARRIER_TERM);
 
 #ifdef WITH_DERIVATIVE_CHECK
@@ -1016,7 +1040,7 @@ namespace opt {
         }
 #endif
 
-        return potential.sum();
+        return potential;
     }
 
     template <typename RigidBodyConstraint, typename FrictionConstraint>
