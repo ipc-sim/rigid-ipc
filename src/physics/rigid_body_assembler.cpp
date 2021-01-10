@@ -223,7 +223,7 @@ namespace physics {
         PROFILE_END(ALLOCATION);
 
         tbb::parallel_for(
-            tbb::blocked_range<size_t>(size_t(0), num_bodies(), 6),
+            tbb::blocked_range<size_t>(size_t(0), num_bodies()),
             [&](const tbb::blocked_range<size_t>& range) {
                 for (size_t rb_i = range.begin(); rb_i != range.end(); ++rb_i) {
                     const physics::RigidBody& rb = m_rbs[rb_i];
