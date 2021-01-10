@@ -213,11 +213,11 @@ namespace physics {
         PROFILE_START(ALLOCATION);
         if (compute_jac) {
             // ∇ V(x): Rᵐ ↦ Rⁿˣᵐ
-            jac.setZero(n, m);
+            jac.resize(n, m);
         }
         if (compute_hess) {
             // ∇²V(x): Rᵐ ↦ Rⁿˣᵐˣᵐ
-            hess.setZero(n * m, m); // Store as (n * m) × m matrix
+            hess.resize(n * m, m); // Store as (n * m) × m matrix
         }
         PROFILE_END(ALLOCATION);
 

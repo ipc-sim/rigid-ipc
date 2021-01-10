@@ -60,6 +60,7 @@ namespace physics {
 
                 // Fill in gradient of V(i, j) (∈ R⁶ for 3D)
                 int vij_flat = (rb_v0_i + i) * V.cols() + j;
+                jac.row(vij_flat).head(pos_ndof()).setZero();
                 jac(vij_flat, j) = 1; // ∇p V = I
                 jac.row(vij_flat).tail(rot_ndof()) = get_gradient(V_diff(i, j));
 
@@ -67,8 +68,9 @@ namespace physics {
                     // Fill in hessian of V(i, j) (∈ R⁶ˣ⁶ for 3D)
                     // Hessian of position is zero
                     // ∇²_p V = ∇_p∇_r V = ∇_r∇_p V = 0
-                    assert(hess / vertices.rows() == ndof());
+                    assert(hess.rows() / vertices.size() == ndof());
                     assert(hess.cols() == ndof());
+                    hess.middleRows(ndof() * vij_flat, ndof()).setZero();
                     hess.block(
                         /*i=*/ndof() * vij_flat + pos_ndof(), /*j=*/pos_ndof(),
                         /*p=*/rot_ndof(), /*q=*/rot_ndof()) =
