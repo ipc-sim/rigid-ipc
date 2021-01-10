@@ -138,7 +138,7 @@ Eigen::MatrixXX3d sinc_normx_hess(const Eigen::VectorX3d& x)
 {
     double normx = x.norm();
     return ddsinc_over_x2_minus_dsinc_over_x3(normx) * x * x.transpose()
-        + dsinc_over_x(normx) * Eigen::MatrixXd::Identity(x.size(), x.size());
+        + dsinc_over_x(normx) * Eigen::MatrixXX3d::Identity(x.size(), x.size());
 }
 
 } // namespace ccd

@@ -26,7 +26,7 @@ namespace physics {
         , collision_eps(2)
         , m_timestep(0.01)
     {
-        gravity = Eigen::VectorXd::Zero(3);
+        gravity.setZero(3);
     }
 
     void RigidBodyProblem::settings(const nlohmann::json& params)
