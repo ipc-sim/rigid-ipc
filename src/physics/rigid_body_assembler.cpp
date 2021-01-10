@@ -187,7 +187,7 @@ namespace physics {
     Eigen::MatrixXd RigidBodyAssembler::world_vertices_diff(
         const Poses<double>& poses,
         Eigen::MatrixXd& jac,
-        std::vector<Eigen::MatrixXd>& hess,
+        Eigen::MatrixXd& hess,
         bool compute_jac,
         bool compute_hess) const
     {
@@ -217,7 +217,7 @@ namespace physics {
         }
         if (compute_hess) {
             // ∇²V(x): Rᵐ ↦ Rⁿˣᵐˣᵐ
-            hess.resize(n, Eigen::MatrixXd::Zero(m, m));
+            hess.setZero(n * m, m); // Store as (n * m) × m matrix
         }
         PROFILE_END(ALLOCATION);
 

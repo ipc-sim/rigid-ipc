@@ -145,7 +145,7 @@ namespace physics {
             long rb_v0_i,
             Eigen::MatrixXd& V,
             Eigen::MatrixXd& jac,
-            std::vector<Eigen::MatrixXd>& hess) const;
+            Eigen::MatrixXd& hess) const;
 
         double edge_length(int edge_id) const
         {

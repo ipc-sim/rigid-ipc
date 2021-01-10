@@ -253,7 +253,7 @@ namespace opt {
         double compute_friction_potential(
             const Eigen::MatrixXd& U,
             const Eigen::MatrixXd& jac_V,
-            const std::vector<Eigen::MatrixXd>& hess_V,
+            const Eigen::MatrixXd& hess_V,
             const FrictionConstraint& constraint,
             tbb::concurrent_vector<Eigen::Triplet<double>>& grad_triplets,
             tbb::concurrent_vector<Eigen::Triplet<double>>& hess_triplets,
