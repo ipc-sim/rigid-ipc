@@ -100,10 +100,9 @@ void detect_collisions_from_candidates(
         if (is_colliding) {
             double alpha = edge_vertex_closest_point(
                 bodies, poses_t0, poses_t1, ev_candidate, toi);
-            ev_impacts_mutex.lock();
+            std::scoped_lock lock(ev_impacts_mutex);
             impacts.ev_impacts.emplace_back(
                 toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index);
-            ev_impacts_mutex.unlock();
         }
     };
 
@@ -115,11 +114,10 @@ void detect_collisions_from_candidates(
             double alpha, beta;
             edge_edge_closest_point(
                 bodies, poses_t0, poses_t1, ee_candidate, toi, alpha, beta);
-            ee_impacts_mutex.lock();
+            std::scoped_lock lock(ee_impacts_mutex);
             impacts.ee_impacts.emplace_back(
                 toi, ee_candidate.edge0_index, alpha, ee_candidate.edge1_index,
                 beta);
-            ee_impacts_mutex.unlock();
         }
     };
 
@@ -131,10 +129,9 @@ void detect_collisions_from_candidates(
             double u, v;
             face_vertex_closest_point(
                 bodies, poses_t0, poses_t1, fv_candidate, toi, u, v);
-            fv_impacts_mutex.lock();
+            std::scoped_lock lock(fv_impacts_mutex);
             impacts.fv_impacts.emplace_back(
                 toi, fv_candidate.face_index, u, v, fv_candidate.vertex_index);
-            fv_impacts_mutex.unlock();
         }
     };
 
