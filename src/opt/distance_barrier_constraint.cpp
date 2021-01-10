@@ -328,12 +328,11 @@ namespace opt {
                         bodies, poses_t0, poses_t1, ev_candidate, toi,
                         trajectory_type, earliest_toi);
                     if (are_colliding) {
-                        earliest_toi_mutex.lock();
+                        std::scoped_lock lock(earliest_toi_mutex);
                         collision_count++;
                         if (toi < earliest_toi) {
                             earliest_toi = toi;
                         }
-                        earliest_toi_mutex.unlock();
                     }
                 });
             PROFILE_END(EV_NARROW_PHASE);
@@ -349,12 +348,11 @@ namespace opt {
                         bodies, poses_t0, poses_t1, candidates.fv_candidates[i],
                         toi, trajectory_type, earliest_toi);
                     if (are_colliding) {
-                        earliest_toi_mutex.lock();
+                        std::scoped_lock lock(earliest_toi_mutex);
                         collision_count++;
                         if (toi < earliest_toi) {
                             earliest_toi = toi;
                         }
-                        earliest_toi_mutex.unlock();
                     }
                 }
             });
@@ -370,12 +368,11 @@ namespace opt {
                         bodies, poses_t0, poses_t1, candidates.ee_candidates[i],
                         toi, trajectory_type, earliest_toi);
                     if (are_colliding) {
-                        earliest_toi_mutex.lock();
+                        std::scoped_lock lock(earliest_toi_mutex);
                         collision_count++;
                         if (toi < earliest_toi) {
                             earliest_toi = toi;
                         }
-                        earliest_toi_mutex.unlock();
                     }
                 }
             });
