@@ -19,9 +19,10 @@ namespace opt {
         : max_iterations(1000)
         , iteration_number(0)
         , convergence_criteria(ConvergenceCriteria::ENERGY)
+        , m_line_search_lower_bound(Constants::DEFAULT_LINE_SEARCH_LOWER_BOUND)
         , energy_conv_tol(Constants::DEFAULT_NEWTON_ENERGY_CONVERGENCE_TOL)
         , velocity_conv_tol(Constants::DEFAULT_NEWTON_VELOCITY_CONVERGENCE_TOL)
-        , m_line_search_lower_bound(Constants::DEFAULT_LINE_SEARCH_LOWER_BOUND)
+        , is_velocity_conv_tol_abs(false)
     {
         linear_solver = polysolve::LinearSolver::create("", "");
     }
@@ -336,15 +337,22 @@ namespace opt {
         // Filter the step length so that x to x + α * Δx is collision free for
         // α ≤ step_length.
         num_collision_check++; // Count the number of collision checks
-        double max_step_size =
-            std::min(problem_ptr->compute_earliest_toi(x, x + dir), 1.0);
-        step_length = std::min(step_length, max_step_size);
+        bool is_ccd_aligned_with_newton_update =
+            problem_ptr->is_ccd_aligned_with_newton_update();
+        double max_step_size = 1;
+        if (is_ccd_aligned_with_newton_update) {
+            max_step_size =
+                std::min(problem_ptr->compute_earliest_toi(x, x + dir), 1.0);
+            step_length = std::min(step_length, max_step_size);
+        }
+        // #ifndef NDEBUG
         // while (problem_ptr->has_collisions(x, x + step_length * dir)) {
         //     spdlog::error(
-        //         "max_step_size={:g} has collisions halving the step!",
+        //         "max_step_size={:g} has collisions reducing the step!",
         //         step_length);
         //     step_length *= 0.8;
         // }
+        // #endif
         if (step_length < lower_bound) {
             spdlog::error(
                 "solver={} iter={:d} failure=\"initial step_length (α={:g}) is"
@@ -363,14 +371,15 @@ namespace opt {
             // NOTE: We do not need to check for collisions because we filtered
             // the step length.
             // Check for collisions between newton updates
-            // if (!problem_ptr->has_collisions(x, xi)) {
-            fxi = problem_ptr->compute_objective(xi);
-            num_fx++; // Count the number of objective computations
-            if (fxi < fx) {
-                success = true;
-                break; // while loop
+            if (is_ccd_aligned_with_newton_update
+                || !problem_ptr->has_collisions(x, xi)) {
+                fxi = problem_ptr->compute_objective(xi);
+                num_fx++; // Count the number of objective computations
+                if (fxi < fx) {
+                    success = true;
+                    break; // while loop
+                }
             }
-            // }
 
             // Try again with a smaller step_length
             step_length /= 2.0;

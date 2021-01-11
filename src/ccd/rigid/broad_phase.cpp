@@ -1,11 +1,9 @@
 #include "broad_phase.hpp"
 
-#include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
 
 #include <ccd/linear/broad_phase.hpp>
 #include <ccd/rigid/rigid_body_hash_grid.hpp>
-#include <interval/interval.hpp>
 #include <logger.hpp>
 #include <profiler.hpp>
 #include <utils/type_name.hpp>
@@ -45,7 +43,6 @@ void detect_collision_candidates_rigid(
             bodies, poses, collision_types, candidates, inflation_radius);
         break;
     case BVH:
-        candidates.clear();
         detect_collision_candidates_rigid_bvh(
             bodies, poses, collision_types, candidates, inflation_radius);
         break;
@@ -89,50 +86,191 @@ void detect_collision_candidates_rigid_hash_grid(
     }
 }
 
-inline AABB
-vertex_aabb(const Eigen::MatrixXd& V, const size_t vi, double inflation_radius)
+// Use a BVH to create a set of all candidate collisions.
+void detect_collision_candidates_rigid_bvh(
+    const physics::RigidBodyAssembler& bodies,
+    const physics::Poses<double>& poses,
+    const int collision_types,
+    ipc::Candidates& candidates,
+    const double inflation_radius)
 {
-    return AABB(
-        V.row(vi).array() - inflation_radius,
-        V.row(vi).array() + inflation_radius);
+    if (bodies.dim() != 3 || (collision_types & CollisionType::EDGE_VERTEX)) {
+        throw NotImplementedError(
+            "detect_collision_candidates_rigid_bvh is not implemented for 2D "
+            "or codimensional objects!");
+    }
+
+    std::vector<std::pair<int, int>> body_pairs =
+        bodies.close_bodies(poses, poses, inflation_radius);
+
+    // for (const auto& body_pair : body_pairs) {
+    ThreadSpecificCandidates storages;
+    tbb::parallel_for(
+        tbb::blocked_range<size_t>(size_t(0), body_pairs.size()),
+        [&](const tbb::blocked_range<size_t>& range) {
+            ThreadSpecificCandidates::reference local_storage_candidates =
+                storages.local();
+            for (long i = range.begin(); i != range.end(); ++i) {
+                int small_body_id = body_pairs[i].first;
+                int large_body_id = body_pairs[i].second;
+                if (bodies[small_body_id].num_faces()
+                    > bodies[large_body_id].num_faces()) {
+                    std::swap(small_body_id, large_body_id);
+                }
+
+                detect_collision_candidates_rigid_bvh(
+                    bodies, poses, collision_types, small_body_id,
+                    large_body_id, local_storage_candidates, inflation_radius);
+            }
+        });
+    //}
+
+    merge_local_candidate(storages, candidates);
 }
 
-inline AABB
-vertex_aabb(const Eigen::MatrixXI& V, const size_t vi, double inflation_radius)
+///////////////////////////////////////////////////////////////////////////////
+// Broad-Phase Continous Collision Detection
+///////////////////////////////////////////////////////////////////////////////
+
+void detect_collision_candidates_rigid(
+    const physics::RigidBodyAssembler& bodies,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
+    const int collision_types,
+    ipc::Candidates& candidates,
+    DetectionMethod method,
+    const double inflation_radius)
 {
-    const auto& v = V.row(vi);
-    Eigen::VectorX3d min(v.size());
-    Eigen::VectorX3d max(v.size());
-    for (int i = 0; i < v.size(); i++) {
-        min(i) = (v(i) - inflation_radius).lower();
-        max(i) = (v(i) + inflation_radius).upper();
+    if (bodies.m_rbs.size() <= 1) {
+        return;
+    }
+
+    PROFILE_POINT("detect_continuous_collision_candidates_rigid");
+    PROFILE_START();
+
+    switch (method) {
+    case BRUTE_FORCE:
+        detect_collision_candidates_brute_force(
+            bodies.world_vertices(poses_t0), bodies.m_edges, bodies.m_faces,
+            bodies.group_ids(), collision_types, candidates);
+        break;
+    case HASH_GRID:
+        detect_collision_candidates_rigid_hash_grid(
+            bodies, poses_t0, poses_t1, collision_types, candidates,
+            inflation_radius);
+        break;
+    case BVH:
+        detect_collision_candidates_rigid_bvh(
+            bodies, poses_t0, poses_t1, collision_types, candidates,
+            inflation_radius);
+        break;
+    }
+
+    PROFILE_END();
+}
+
+// Find all edge-vertex collisions in one time step using spatial-hashing to
+// only compare points and edge in the same cells.
+void detect_collision_candidates_rigid_hash_grid(
+    const physics::RigidBodyAssembler& bodies,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
+    const int collision_types,
+    ipc::Candidates& candidates,
+    const double inflation_radius)
+{
+    std::vector<std::pair<int, int>> body_pairs =
+        bodies.close_bodies(poses_t0, poses_t1, inflation_radius);
+
+    if (body_pairs.size() == 0) {
+        return;
+    }
+
+    RigidBodyHashGrid hashgrid;
+    hashgrid.resize(bodies, poses_t0, poses_t1, body_pairs, inflation_radius);
+    hashgrid.addBodies(
+        bodies, poses_t0, poses_t1, body_pairs, inflation_radius);
+
+    const Eigen::VectorXi& group_ids = bodies.group_ids();
+    if (collision_types & CollisionType::EDGE_VERTEX) {
+        hashgrid.getVertexEdgePairs(
+            bodies.m_edges, group_ids, candidates.ev_candidates);
+    }
+    if (collision_types & CollisionType::EDGE_EDGE) {
+        hashgrid.getEdgeEdgePairs(
+            bodies.m_edges, group_ids, candidates.ee_candidates);
+    }
+    if (collision_types & CollisionType::FACE_VERTEX) {
+        hashgrid.getFaceVertexPairs(
+            bodies.m_faces, group_ids, candidates.fv_candidates);
+    }
+}
+
+template <typename Derived>
+inline AABB
+intervals_to_AABB(const Eigen::MatrixBase<Derived>& x, double inflation_radius)
+{
+    assert(x.rows() == 1 || x.cols() == 1);
+    Eigen::VectorX3d min(x.size());
+    Eigen::VectorX3d max(x.size());
+    for (int i = 0; i < x.size(); i++) {
+        if (empty(x(i))) {
+            throw "interval is empty";
+        }
+        min(i) = x(i).lower() - inflation_radius;
+        max(i) = x(i).upper() + inflation_radius;
     }
     return AABB(min, max);
 }
 
-template <typename T>
-inline AABB edge_aabb(
-    const Eigen::MatrixX<T>& V,
-    const Eigen::Vector2i& E,
-    double inflation_radius)
+// Use a BVH to create a set of all candidate collisions.
+void detect_collision_candidates_rigid_bvh(
+    const physics::RigidBodyAssembler& bodies,
+    const physics::Poses<double>& poses_t0,
+    const physics::Poses<double>& poses_t1,
+    const int collision_types,
+    ipc::Candidates& candidates,
+    const double inflation_radius)
 {
-    return AABB(
-        vertex_aabb(V, E(0), inflation_radius),
-        vertex_aabb(V, E(1), inflation_radius));
+    if (bodies.dim() != 3 || (collision_types & CollisionType::EDGE_VERTEX)) {
+        throw NotImplementedError(
+            "detect_collision_candidates_rigid_bvh is not implemented for 2D "
+            "or codimensional objects!");
+    }
+
+    std::vector<std::pair<int, int>> body_pairs =
+        bodies.close_bodies(poses_t0, poses_t1, inflation_radius);
+
+    physics::Poses<Interval> poses = physics::interpolate(
+        physics::cast<Interval>(poses_t0), physics::cast<Interval>(poses_t1),
+        Interval(0, 1));
+
+    ThreadSpecificCandidates storages;
+    tbb::parallel_for(
+        tbb::blocked_range<size_t>(size_t(0), body_pairs.size()),
+        [&](const tbb::blocked_range<size_t>& range) {
+            ThreadSpecificCandidates::reference local_storage_candidates =
+                storages.local();
+            for (long i = range.begin(); i != range.end(); ++i) {
+                int small_body_id = body_pairs[i].first;
+                int large_body_id = body_pairs[i].second;
+                if (bodies[small_body_id].num_faces()
+                    > bodies[large_body_id].num_faces()) {
+                    std::swap(small_body_id, large_body_id);
+                }
+
+                detect_collision_candidates_rigid_bvh(
+                    bodies, poses, collision_types, small_body_id,
+                    large_body_id, local_storage_candidates, inflation_radius);
+            }
+        });
+
+    merge_local_candidate(storages, candidates);
 }
 
-template <typename T>
-inline AABB face_aabb(
-    const Eigen::MatrixX<T>& V,
-    const Eigen::Vector3i& F,
-    double inflation_radius)
-{
-    return AABB(
-        vertex_aabb(V, F(0), inflation_radius),
-        AABB(
-            vertex_aabb(V, F(1), inflation_radius),
-            vertex_aabb(V, F(2), inflation_radius)));
-}
+///////////////////////////////////////////////////////////////////////////////
+// Helper functions
+///////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 void detect_collision_candidates_rigid_bvh(
@@ -272,8 +410,7 @@ void detect_collision_candidates_rigid_bvh(
 }
 
 void merge_local_candidate(
-    const tbb::enumerable_thread_specific<ipc::Candidates>& storages,
-    ipc::Candidates& candidates)
+    const ThreadSpecificCandidates& storages, ipc::Candidates& candidates)
 {
     PROFILE_POINT("merge_local_candidate");
     PROFILE_START();
@@ -303,192 +440,6 @@ void merge_local_candidate(
             local_candidates.fv_candidates.end());
     }
     PROFILE_END();
-}
-
-// Use a BVH to create a set of all candidate collisions.
-void detect_collision_candidates_rigid_bvh(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    const int collision_types,
-    ipc::Candidates& candidates,
-    const double inflation_radius)
-{
-    if (bodies.dim() != 3 || (collision_types & CollisionType::EDGE_VERTEX)) {
-        throw NotImplementedError(
-            "detect_collision_candidates_rigid_bvh is not implemented for 2D "
-            "or codimensional objects!");
-    }
-
-    std::vector<std::pair<int, int>> body_pairs =
-        bodies.close_bodies(poses, poses, inflation_radius);
-
-    // for (const auto& body_pair : body_pairs) {
-    typedef tbb::enumerable_thread_specific<ipc::Candidates> LocalStorage;
-    LocalStorage storages;
-    tbb::parallel_for(
-        tbb::blocked_range<size_t>(size_t(0), body_pairs.size()),
-        [&](const tbb::blocked_range<size_t>& range) {
-            LocalStorage::reference loc_storage_candidates = storages.local();
-            for (long i = range.begin(); i != range.end(); ++i) {
-                int small_body_id = body_pairs[i].first;
-                int large_body_id = body_pairs[i].second;
-                if (bodies[small_body_id].num_faces()
-                    > bodies[large_body_id].num_faces()) {
-                    std::swap(small_body_id, large_body_id);
-                }
-
-                detect_collision_candidates_rigid_bvh(
-                    bodies, poses, collision_types, small_body_id,
-                    large_body_id, loc_storage_candidates, inflation_radius);
-            }
-        });
-    //}
-
-    merge_local_candidate(storages, candidates);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Broad-Phase Continous Collision Detection
-///////////////////////////////////////////////////////////////////////////////
-
-void detect_collision_candidates_rigid(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const int collision_types,
-    ipc::Candidates& candidates,
-    DetectionMethod method,
-    const double inflation_radius)
-{
-    if (bodies.m_rbs.size() <= 1) {
-        return;
-    }
-
-    PROFILE_POINT("detect_continuous_collision_candidates_rigid");
-    PROFILE_START();
-
-    switch (method) {
-    case BRUTE_FORCE:
-        detect_collision_candidates_brute_force(
-            bodies.world_vertices(poses_t0), bodies.m_edges, bodies.m_faces,
-            bodies.group_ids(), collision_types, candidates);
-        break;
-    case HASH_GRID:
-        detect_collision_candidates_rigid_hash_grid(
-            bodies, poses_t0, poses_t1, collision_types, candidates,
-            inflation_radius);
-        break;
-    case BVH:
-        detect_collision_candidates_rigid_bvh(
-            bodies, poses_t0, poses_t1, collision_types, candidates,
-            inflation_radius);
-        break;
-    }
-
-    PROFILE_END();
-}
-
-// Find all edge-vertex collisions in one time step using spatial-hashing to
-// only compare points and edge in the same cells.
-void detect_collision_candidates_rigid_hash_grid(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const int collision_types,
-    ipc::Candidates& candidates,
-    const double inflation_radius)
-{
-    std::vector<std::pair<int, int>> body_pairs =
-        bodies.close_bodies(poses_t0, poses_t1, inflation_radius);
-
-    if (body_pairs.size() == 0) {
-        return;
-    }
-
-    RigidBodyHashGrid hashgrid;
-    hashgrid.resize(bodies, poses_t0, poses_t1, body_pairs, inflation_radius);
-    hashgrid.addBodies(
-        bodies, poses_t0, poses_t1, body_pairs, inflation_radius);
-
-    const Eigen::VectorXi& group_ids = bodies.group_ids();
-    if (collision_types & CollisionType::EDGE_VERTEX) {
-        hashgrid.getVertexEdgePairs(
-            bodies.m_edges, group_ids, candidates.ev_candidates);
-    }
-    if (collision_types & CollisionType::EDGE_EDGE) {
-        hashgrid.getEdgeEdgePairs(
-            bodies.m_edges, group_ids, candidates.ee_candidates);
-    }
-    if (collision_types & CollisionType::FACE_VERTEX) {
-        hashgrid.getFaceVertexPairs(
-            bodies.m_faces, group_ids, candidates.fv_candidates);
-    }
-}
-
-template <typename Derived>
-inline AABB
-intervals_to_AABB(const Eigen::MatrixBase<Derived>& x, double inflation_radius)
-{
-    assert(x.rows() == 1 || x.cols() == 1);
-    Eigen::VectorX3d min(x.size());
-    Eigen::VectorX3d max(x.size());
-    for (int i = 0; i < x.size(); i++) {
-        if (empty(x(i))) {
-            throw "interval is empty";
-        }
-        min(i) = x(i).lower() - inflation_radius;
-        max(i) = x(i).upper() + inflation_radius;
-    }
-    return AABB(min, max);
-}
-
-// Use a BVH to create a set of all candidate collisions.
-void detect_collision_candidates_rigid_bvh(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const int collision_types,
-    ipc::Candidates& candidates,
-    const double inflation_radius)
-{
-    if (bodies.dim() != 3 || (collision_types & CollisionType::EDGE_VERTEX)) {
-        throw NotImplementedError(
-            "detect_collision_candidates_rigid_bvh is not implemented for 2D "
-            "or codimensional objects!");
-    }
-
-    std::vector<std::pair<int, int>> body_pairs =
-        bodies.close_bodies(poses_t0, poses_t1, inflation_radius);
-
-    // std::mutex fv_mutex, ee_mutex;
-
-    physics::Poses<Interval> poses = physics::interpolate(
-        physics::cast<Interval>(poses_t0), physics::cast<Interval>(poses_t1),
-        Interval(0, 1));
-
-    // for (const auto& body_pair : body_pairs) {
-    typedef tbb::enumerable_thread_specific<ipc::Candidates> LocalStorage;
-    LocalStorage storages;
-    tbb::parallel_for(
-        tbb::blocked_range<size_t>(size_t(0), body_pairs.size()),
-        [&](const tbb::blocked_range<size_t>& range) {
-            LocalStorage::reference loc_storage_candidates = storages.local();
-            for (long i = range.begin(); i != range.end(); ++i) {
-                int small_body_id = body_pairs[i].first;
-                int large_body_id = body_pairs[i].second;
-                if (bodies[small_body_id].num_faces()
-                    > bodies[large_body_id].num_faces()) {
-                    std::swap(small_body_id, large_body_id);
-                }
-
-                detect_collision_candidates_rigid_bvh(
-                    bodies, poses, collision_types, small_body_id,
-                    large_body_id, loc_storage_candidates, inflation_radius);
-            }
-        });
-    //}
-
-    merge_local_candidate(storages, candidates);
 }
 
 } // namespace ccd

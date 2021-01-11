@@ -176,6 +176,10 @@ TEST_CASE("NCP", "[opt][NCP][NCP-Interface]")
         {
             return std::numeric_limits<double>::infinity();
         }
+        virtual bool is_ccd_aligned_with_newton_update() override
+        {
+            return true;
+        }
         virtual double
         compute_min_distance(const Eigen::VectorXd& x) const override
         {

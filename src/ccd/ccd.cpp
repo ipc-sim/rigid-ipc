@@ -59,14 +59,11 @@ void detect_collision_candidates(
     }
 
     switch (trajectory) {
-    case TrajectoryType::LINEAR: {
-        Eigen::MatrixXd V_t0 = bodies.world_vertices(poses_t0);
-        Eigen::MatrixXd V_t1 = bodies.world_vertices(poses_t1);
-        detect_collision_candidates(
-            V_t0, V_t1, bodies.m_edges, bodies.m_faces, bodies.group_ids(),
-            collision_types, candidates, method, inflation_radius);
+    case TrajectoryType::LINEAR:
+        detect_collision_candidates_linear(
+            bodies, poses_t0, poses_t1, collision_types, candidates, method,
+            inflation_radius);
         break;
-    }
     case TrajectoryType::PIECEWISE_LINEAR:
     case TrajectoryType::RIGID:
         detect_collision_candidates_rigid(
@@ -99,7 +96,7 @@ void detect_collisions_from_candidates(
             bodies, poses_t0, poses_t1, ev_candidate, toi, trajectory);
         if (is_colliding) {
             double alpha = edge_vertex_closest_point(
-                bodies, poses_t0, poses_t1, ev_candidate, toi);
+                bodies, poses_t0, poses_t1, ev_candidate, toi, trajectory);
             std::scoped_lock lock(ev_impacts_mutex);
             impacts.ev_impacts.emplace_back(
                 toi, ev_candidate.edge_index, alpha, ev_candidate.vertex_index);
@@ -113,7 +110,8 @@ void detect_collisions_from_candidates(
         if (is_colliding) {
             double alpha, beta;
             edge_edge_closest_point(
-                bodies, poses_t0, poses_t1, ee_candidate, toi, alpha, beta);
+                bodies, poses_t0, poses_t1, ee_candidate, toi, alpha, beta,
+                trajectory);
             std::scoped_lock lock(ee_impacts_mutex);
             impacts.ee_impacts.emplace_back(
                 toi, ee_candidate.edge0_index, alpha, ee_candidate.edge1_index,
@@ -128,7 +126,8 @@ void detect_collisions_from_candidates(
         if (is_colliding) {
             double u, v;
             face_vertex_closest_point(
-                bodies, poses_t0, poses_t1, fv_candidate, toi, u, v);
+                bodies, poses_t0, poses_t1, fv_candidate, toi, u, v,
+                trajectory);
             std::scoped_lock lock(fv_impacts_mutex);
             impacts.fv_impacts.emplace_back(
                 toi, fv_candidate.face_index, u, v, fv_candidate.vertex_index);

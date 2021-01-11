@@ -25,6 +25,7 @@ namespace physics {
         , coefficient_friction(0)
         , collision_eps(2)
         , m_timestep(0.01)
+        , do_intersection_check(false)
     {
         gravity.setZero(3);
     }
@@ -53,6 +54,8 @@ namespace physics {
         io::from_json(params["gravity"], gravity);
         assert(gravity.size() >= dim());
         gravity.conservativeResize(dim());
+
+        do_intersection_check = params["do_intersection_check"];
     }
 
     nlohmann::json RigidBodyProblem::settings() const
@@ -63,6 +66,7 @@ namespace physics {
         json["coefficient_restitution"] = coefficient_restitution;
         json["coefficient_friction"] = coefficient_friction;
         json["gravity"] = io::to_json(gravity);
+        json["do_intersection_check"] = do_intersection_check;
         return json;
     }
 
@@ -227,15 +231,14 @@ namespace physics {
             rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
         }
 
-#ifdef WITH_INTERSECTION_CHECK
-        // Check for intersections instead of collision along the entire step.
-        // We only guarentee a piecewise collision-free trajectory.
-        // return detect_collisions(poses_t0, poses_q1, CollisionCheck::EXACT);
-        return detect_intersections(poses_q1);
-#else
-        // Skip the intersection check if it is disabled in CMake
+        if (do_intersection_check) {
+            // Check for intersections instead of collision along the entire
+            // step. We only guarentee a piecewise collision-free trajectory.
+            // return detect_collisions(poses_t0, poses_q1,
+            // CollisionCheck::EXACT);
+            return detect_intersections(poses_q1);
+        }
         return false;
-#endif
     }
 
     bool RigidBodyProblem::detect_collisions(

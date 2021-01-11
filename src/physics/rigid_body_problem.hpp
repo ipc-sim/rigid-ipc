@@ -143,6 +143,8 @@ namespace physics {
 
         /// Initial length of the bounding box diagonal
         double init_bbox_diagonal;
+
+        bool do_intersection_check;
     };
 
 } // namespace physics

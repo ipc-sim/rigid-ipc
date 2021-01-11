@@ -86,6 +86,13 @@ namespace opt {
         double compute_earliest_toi(
             const Eigen::VectorXd& x_i, const Eigen::VectorXd& x_j) override;
 
+        bool is_ccd_aligned_with_newton_update() override
+        {
+            return m_constraint.trajectory_type == TrajectoryType::RIGID
+                || m_constraint.trajectory_type
+                == TrajectoryType::PIECEWISE_LINEAR;
+        }
+
         /// Get the world coordinates of the vertices
         Eigen::MatrixXd world_vertices(const Eigen::VectorXd& x) const override
         {

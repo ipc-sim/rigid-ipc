@@ -77,6 +77,8 @@ namespace opt {
         virtual double compute_earliest_toi(
             const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) = 0;
 
+        virtual bool is_ccd_aligned_with_newton_update() = 0;
+
         /// Compute the minimum distance among geometry
         virtual double compute_min_distance(const Eigen::VectorXd& x) const = 0;
 

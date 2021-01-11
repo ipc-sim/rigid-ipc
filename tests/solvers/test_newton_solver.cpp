@@ -46,11 +46,12 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
         {
             return false;
         }
-        virtual double compute_earliest_toi(
+        double compute_earliest_toi(
             const Eigen::VectorXd& xi, const Eigen::VectorXd& xj) override
         {
             return std::numeric_limits<double>::infinity();
         }
+        bool is_ccd_aligned_with_newton_update() override { return true; }
 
         const Eigen::VectorXd& starting_point() const { return x0; }
         int num_vars() const override { return num_vars_; }

@@ -120,7 +120,8 @@ bool SimState::init(const nlohmann::json& args_in)
             "coefficient_friction": 0.0,
             "gravity": [0.0, 0.0, 0.0],
             "collision_eps": 0.0,
-            "time_stepper": "default"
+            "time_stepper": "default",
+            "do_intersection_check": false
         },
         "homotopy_solver": {
             "inner_solver": "DEPRECATED",

@@ -103,6 +103,10 @@ TEST_CASE(
         {
             return std::numeric_limits<double>::infinity();
         }
+        virtual bool is_ccd_aligned_with_newton_update() override
+        {
+            return true;
+        }
 
         int num_vars() const override { return num_vars_; }
         const Eigen::VectorXb& is_dof_fixed() const override
