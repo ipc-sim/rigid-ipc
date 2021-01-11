@@ -135,6 +135,7 @@ bool SimState::init(const nlohmann::json& args_in)
             "convergence_criteria": "velocity",
             "energy_conv_tol": null,
             "velocity_conv_tol": null,
+            "is_velocity_conv_tol_abs": false,
             "line_search_lower_bound": null,
             "linear_solver": {
                 "name": "Eigen::SimplicialLDLT",
