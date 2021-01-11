@@ -1144,7 +1144,7 @@ namespace opt {
                 4 * rb_ndof * rb_ndof * friction_constraints.size());
         }
 
-        PROFILE_POINT(
+        NAMED_PROFILE_POINT(
             "DistanceBarrierRBProblem::compute_friction_term:displacement",
             DISPLACEMENT);
         PROFILE_START(DISPLACEMENT);

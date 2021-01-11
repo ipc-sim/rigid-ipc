@@ -1,0 +1,68 @@
+bool compute_piecewise_linear_edge_edge_time_of_impact(
+    bodyA, poseA_t0, poseA_t1, bodyB, poseB_t0, poseB_t1, earliest_toi, &toi):
+
+	distance_t0 = edge_edge_distance(edges' vertices at t=0)
+
+    ti0 = 0
+    poseA_ti0 = poseA_t0
+    poseB_ti0 = poseB_t0
+
+    stack<double> ts = [earliest_toi]
+    while(!ts.empty()):
+        ti1 = ts.top()
+
+        poseA_ti1 = linear_interpolate(poseA_t0, poseA_t1, ti1)
+        poseB_ti1 = linear_interpolate(poseB_t0, poseB_t1, ti1)
+
+        distance_ti0 = edge_edge_distance(edges' vertices at t=ti0)
+
+        // This is optional, but is based on the MS conservative CCD used in the
+        // original IPC.
+        if (distance_ti0 < 0.2 * distance_t0 && ti0 >= 1e-6) {
+            toi = ti0;
+            return true;
+        }
+
+        // Compute minimum distance to use in CCD
+        // We want to compute a maximum bound on the distance of the rigid
+        // trajectory from the linear trajectory.
+
+        min_distance = 0;
+
+        ti = Interval(0, 1)
+        poseIA = linear_interpolate<Interval>(poseA_ti0, poseA_ti1, ti)
+        poseIB = linear_interpolate<Interval>(poseB_ti0, poseB_ti1, ti)
+
+        for each of the four edge vertices vi:
+			// {vi} mean select the appropriate A or B depending on vi
+            v_ti0 = world_vertex(pose{vi}_ti0, vi).cast<Interval>()
+            v_ti1 = world_vertex(pose{vi}_ti1, vi).cast<Interval>()
+            v = world_vertex(poseI{vi}, vi)
+            // distance between rigid and linearized trajectory
+            Interval d = (v - ((v_ti1 - v_ti0) * ti + v_ti0)).norm()
+            min_distance = max(min_distance, d.upper())
+
+        // if min_distance is too large we need to split
+        if (min_distance >= 0.5 * distance_ti0 && num_subdivisions < 1e5) {
+            ts.push((ti1 + ti0) / 2);
+            continue;
+        }
+
+        // Perform CCD
+        is_impacting = edgeEdgeMSCCD(
+            edges' vertices at t=ti0,
+            edges' vertices at t=ti1,
+            min_distance, // minimum separation distance
+            toi)          // time of impact as output
+
+        if(is_impacting):
+            // toi in [0, 1], so map it to [ti0, ti1]
+            toi = (ti1 - ti0) * toi + ti0
+            return true
+
+        ts.pop()
+        ti0 = ti1
+        poseA_ti0 = poseA_ti1
+        poseB_ti0 = poseB_ti1
+
+    return false;
