@@ -1194,47 +1194,55 @@ namespace opt {
         Eigen::VectorXd friction_potential(friction_constraints.size());
 
         size_t start_ci = 0;
-        tbb::parallel_for(
-            size_t(0), friction_constraints.vv_constraints.size(),
-            [&](size_t ci) {
-                friction_potential[start_ci + ci] =
-                    compute_friction_potential<RigidBodyVertexVertexConstraint>(
-                        U, jac_V, hess_V,
-                        friction_constraints.vv_constraints[ci], grad_triplets,
-                        hess_triplets, compute_grad, compute_hess);
-            });
 
-        start_ci += friction_constraints.vv_constraints.size();
         tbb::parallel_for(
-            size_t(0), friction_constraints.ev_constraints.size(),
-            [&](size_t ci) {
-                friction_potential[start_ci + ci] =
-                    compute_friction_potential<RigidBodyEdgeVertexConstraint>(
-                        U, jac_V, hess_V,
-                        friction_constraints.ev_constraints[ci], grad_triplets,
-                        hess_triplets, compute_grad, compute_hess);
-            });
+            tbb::blocked_range<size_t>(size_t(0), friction_constraints.size()),
+            [&](const tbb::blocked_range<size_t>& range) {
+                for (size_t ci = range.begin(); ci != range.end(); ++ci) {
+                    size_t local_ci = ci;
 
-        start_ci += friction_constraints.ev_constraints.size();
-        tbb::parallel_for(
-            size_t(0), friction_constraints.ee_constraints.size(),
-            [&](size_t ci) {
-                friction_potential[start_ci + ci] =
-                    compute_friction_potential<RigidBodyEdgeEdgeConstraint>(
-                        U, jac_V, hess_V,
-                        friction_constraints.ee_constraints[ci], grad_triplets,
-                        hess_triplets, compute_grad, compute_hess);
-            });
+                    if (local_ci < friction_constraints.vv_constraints.size()) {
+                        friction_potential[ci] = compute_friction_potential<
+                            RigidBodyVertexVertexConstraint>(
+                            U, jac_V, hess_V,
+                            friction_constraints.vv_constraints[local_ci],
+                            grad_triplets, hess_triplets, compute_grad,
+                            compute_hess);
+                        continue;
+                    }
 
-        start_ci += friction_constraints.ee_constraints.size();
-        tbb::parallel_for(
-            size_t(0), friction_constraints.fv_constraints.size(),
-            [&](size_t ci) {
-                friction_potential[start_ci + ci] =
-                    compute_friction_potential<RigidBodyFaceVertexConstraint>(
+                    local_ci -= friction_constraints.vv_constraints.size();
+                    if (local_ci < friction_constraints.ev_constraints.size()) {
+                        friction_potential[ci] = compute_friction_potential<
+                            RigidBodyEdgeVertexConstraint>(
+                            U, jac_V, hess_V,
+                            friction_constraints.ev_constraints[local_ci],
+                            grad_triplets, hess_triplets, compute_grad,
+                            compute_hess);
+                        continue;
+                    }
+
+                    local_ci -= friction_constraints.ev_constraints.size();
+                    if (local_ci < friction_constraints.ee_constraints.size()) {
+                        friction_potential[ci] = compute_friction_potential<
+                            RigidBodyEdgeEdgeConstraint>(
+                            U, jac_V, hess_V,
+                            friction_constraints.ee_constraints[local_ci],
+                            grad_triplets, hess_triplets, compute_grad,
+                            compute_hess);
+                        continue;
+                    }
+
+                    local_ci -= friction_constraints.ee_constraints.size();
+                    assert(
+                        local_ci < friction_constraints.fv_constraints.size());
+                    friction_potential[ci] = compute_friction_potential<
+                        RigidBodyFaceVertexConstraint>(
                         U, jac_V, hess_V,
-                        friction_constraints.fv_constraints[ci], grad_triplets,
-                        hess_triplets, compute_grad, compute_hess);
+                        friction_constraints.fv_constraints[local_ci],
+                        grad_triplets, hess_triplets, compute_grad,
+                        compute_hess);
+                }
             });
 
         if (compute_grad) {
