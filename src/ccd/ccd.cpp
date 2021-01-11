@@ -185,11 +185,17 @@ bool edge_vertex_ccd(
             (v_t1 - v_t0).eval(), toi);
     }
 
-    case TrajectoryType::PIECEWISE_LINEAR:
-        return compute_piecewise_linear_edge_vertex_time_of_impact(
+    case TrajectoryType::PIECEWISE_LINEAR: {
+        bool is_colliding = compute_piecewise_linear_edge_vertex_time_of_impact(
             bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
             edge_id, toi, earliest_toi);
-
+        if (!is_colliding && toi > 0) {
+            return is_colliding;
+        }
+        // else use the full rigid CCD even if it is slow
+        spdlog::warn("Piecewise linear edge-vertex CCD resulted in a toi of "
+                     "zero using rigid CCD instead.");
+    }
     case TrajectoryType::RIGID:
         return compute_edge_vertex_time_of_impact(
             bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
@@ -245,11 +251,17 @@ bool edge_edge_ccd(
         return result;
     }
 
-    case TrajectoryType::PIECEWISE_LINEAR:
-        return compute_piecewise_linear_edge_edge_time_of_impact(
+    case TrajectoryType::PIECEWISE_LINEAR: {
+        bool is_colliding = compute_piecewise_linear_edge_edge_time_of_impact(
             bodyA, poseA_t0, poseA_t1, edgeA_id, bodyB, poseB_t0, poseB_t1,
             edgeB_id, toi, earliest_toi);
-
+        if (!is_colliding && toi > 0) {
+            return is_colliding;
+        }
+        // else use the full rigid CCD even if it is slow
+        spdlog::warn("Piecewise linear edge-edge CCD resulted in a toi of zero "
+                     "using rigid CCD instead.");
+    }
     case TrajectoryType::RIGID:
         return compute_edge_edge_time_of_impact(
             bodyA, poseA_t0, poseA_t1, edgeA_id, bodyB, poseB_t0, poseB_t1,
@@ -303,11 +315,17 @@ bool face_vertex_ccd(
         return result;
     }
 
-    case TrajectoryType::PIECEWISE_LINEAR:
-        return compute_piecewise_linear_face_vertex_time_of_impact(
+    case TrajectoryType::PIECEWISE_LINEAR: {
+        bool is_colliding = compute_piecewise_linear_face_vertex_time_of_impact(
             bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
             face_id, toi, earliest_toi);
-
+        if (!is_colliding && toi > 0) {
+            return is_colliding;
+        }
+        // else use the full rigid CCD even if it is slow
+        spdlog::warn("Piecewise linear face-vertex CCD resulted in a toi of "
+                     "zero using rigid CCD instead.");
+    }
     case TrajectoryType::RIGID:
         return compute_face_vertex_time_of_impact(
             bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
