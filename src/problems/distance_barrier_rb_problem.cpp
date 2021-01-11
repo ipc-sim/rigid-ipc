@@ -1193,8 +1193,6 @@ namespace opt {
 
         Eigen::VectorXd friction_potential(friction_constraints.size());
 
-        size_t start_ci = 0;
-
         tbb::parallel_for(
             tbb::blocked_range<size_t>(size_t(0), friction_constraints.size()),
             [&](const tbb::blocked_range<size_t>& range) {
