@@ -1,0 +1,70 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.01,
+    "max_time": 20.0,
+    "friction_constraints": {
+        "iterations": 1
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "coefficient_friction": 0.5,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "plane.obj",
+            "position": [0, 0, 0],
+            "dimensions": [100.00000000000001, 0.0, 100.0],
+            "is_dof_fixed": true
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-01.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-02.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-03.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-04.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-05.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-06.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-07.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-08.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-09.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-10.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-11.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-12.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-13.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-14.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-15.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-16.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-17.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-18.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-19.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-20.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-21.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-22.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-23.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-24.obj"
+        }, {
+            "mesh": "arch/num_stones=25_sub=12/stone-25.obj"
+        }]
+    }
+}

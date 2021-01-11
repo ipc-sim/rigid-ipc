@@ -154,9 +154,9 @@ void detect_collision_candidates_rigid_bvh(
     const auto& pA = poses[bodyA_id].position;
     const auto& pB = poses[bodyB_id].position;
 
-    PROFILE_POINT(fmt::format(
-        "detect_collision_candidates_rigid_bvh<{}>:compute_vertices",
-        get_type_name<T>()));
+    // PROFILE_POINT(fmt::format(
+    //     "detect_collision_candidates_rigid_bvh<{}>:compute_vertices",
+    //     get_type_name<T>()));
     // PROFILE_START();
     const Eigen::MatrixX<T> VA =
         ((bodyA.vertices * RA.transpose()).rowwise() + (pA - pB).transpose())

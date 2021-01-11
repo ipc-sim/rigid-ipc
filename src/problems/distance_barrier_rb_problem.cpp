@@ -1144,6 +1144,10 @@ namespace opt {
                 4 * rb_ndof * rb_ndof * friction_constraints.size());
         }
 
+        PROFILE_POINT(
+            "DistanceBarrierRBProblem::compute_friction_term:displacement",
+            DISPLACEMENT);
+        PROFILE_START(DISPLACEMENT);
         // Compute V(x)
         Eigen::MatrixXd jac_V, hess_V;
         Eigen::MatrixXd V1 = m_assembler.world_vertices_diff(
@@ -1151,6 +1155,7 @@ namespace opt {
 
         // absolute linear dislacement of each point
         Eigen::MatrixXd U = V1 - m_assembler.world_vertices(poses_t0);
+        PROFILE_END(DISPLACEMENT);
 
         Eigen::VectorXd friction_potential(friction_constraints.size());
 

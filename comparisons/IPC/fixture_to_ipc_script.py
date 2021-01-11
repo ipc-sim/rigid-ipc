@@ -13,22 +13,30 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "tools" / "fix
 import fixture_utils
 
 
-def convert_to_ipc_msh(input_path, output_path):
+def convert_to_ipc_msh(input_path, output_path, remesh=False):
     input_mesh = pymesh.load_mesh(str(input_path))
     if input_mesh.num_voxels == 0:  # tetrahedralize the mesh
         tetgen = pymesh.tetgen()
         tetgen.points = input_mesh.vertices
         tetgen.triangles = input_mesh.faces
-        tetgen.split_boundary = False
+        tetgen.split_boundary = remesh
         tetgen.max_radius_edge_ratio = 2.0
         tetgen.min_dihedral_angle = 0.0
-        tetgen.merge_coplanar = False
+        tetgen.merge_coplanar = remesh
         tetgen.run()
         output_mesh = tetgen.mesh
+        # Reorient faces
+        faces = output_mesh.faces.copy()
+        faces[:, [1, 2]] = faces[:, [2, 1]]
+        output_mesh = pymesh.form_mesh(
+            output_mesh.vertices, faces, output_mesh.voxels)
     else:  # mesh is already a tet mesh, just convert to IPC compatible
         output_mesh = input_mesh
 
-    # pymesh.save_mesh(str(args.output), output_mesh, ascii=True)
+    if remesh:
+        pymesh.save_mesh(
+            str(output_path.with_suffix(".obj")), output_mesh, ascii=True)
+
     with open(output_path, mode='w') as f:
         f.write("$MeshFormat\n4 0 8\n$EndMeshFormat\n")
         f.write("$Entities\n0 0 0 1\n")
@@ -50,11 +58,11 @@ def convert_to_ipc_msh(input_path, output_path):
         f.write("$Surface\n")
         f.write("{:d}\n".format(output_mesh.num_faces))
         for face in output_mesh.faces:
-            f.write("{0:d} {2:d} {1:d}\n".format(*(face + 1)))
+            f.write("{:d} {:d} {:d}\n".format(*(face + 1)))
         f.write("$EndSurface\n")
 
 
-def fixture_to_ipc_script(fixture, output_path):
+def fixture_to_ipc_script(fixture, output_path, remesh=False):
     timestep = fixture.get("timestep", 0.01)
 
     if "max_time" in fixture:
@@ -68,6 +76,8 @@ def fixture_to_ipc_script(fixture, output_path):
         "initial_barrier_activation_distance", 1e-3)
 
     bodies = fixture["rigid_body_problem"]["rigid_bodies"]
+
+    is_remeshed = {}
 
     shapes = []
     disabled_shapes = []
@@ -95,8 +105,9 @@ def fixture_to_ipc_script(fixture, output_path):
                 msh_path.parent.mkdir(parents=True, exist_ok=True)
             except:
                 msh_path = surface_mesh_path.with_suffix('.msh')
-            if not msh_path.exists():
-                convert_to_ipc_msh(surface_mesh_path, msh_path)
+            if not msh_path.exists() or is_remeshed.get(surface_mesh_path, remesh):
+                convert_to_ipc_msh(surface_mesh_path, msh_path, remesh)
+                is_remeshed[surface_mesh_path] = remesh
             mesh_path = msh_path
         else:
             mesh_path = surface_mesh_path
@@ -190,6 +201,8 @@ def main():
     assert(len(sys.argv) > 1)
     input_path = pathlib.Path(sys.argv[1])
 
+    remesh = len(sys.argv) > 2 and bool(sys.argv[2])
+
     try:
         output_path = input_path.with_suffix(".txt").resolve()
         output_path = (
@@ -202,7 +215,7 @@ def main():
     with open(input_path) as input_file:
         fixture = json.load(input_file)
 
-    ipc_script = fixture_to_ipc_script(fixture, output_path)
+    ipc_script = fixture_to_ipc_script(fixture, output_path, remesh)
 
     with open(output_path, 'w') as ipc_script_file:
         ipc_script_file.write(ipc_script)
