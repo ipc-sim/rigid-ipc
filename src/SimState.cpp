@@ -34,7 +34,7 @@ SimState::SimState()
     initial_rss = getCurrentRSS();
 }
 
-bool SimState::load_scene(const std::string& filename)
+bool SimState::load_scene(const std::string& filename, const std::string& patch)
 {
     PROFILER_CLEAR();
     initial_rss = getCurrentRSS();
@@ -52,6 +52,9 @@ bool SimState::load_scene(const std::string& filename)
         std::ifstream input(filename);
         if (input.good()) {
             scene = nlohmann::json::parse(input, nullptr, false);
+            if (patch.size()) {
+                scene.merge_patch(nlohmann::json::parse(patch));
+            }
         } else {
             spdlog::error("Unable to open json file: {}", filename);
             return false;

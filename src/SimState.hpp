@@ -14,7 +14,7 @@ class SimState {
 public:
     SimState();
 
-    bool load_scene(const std::string& filename);
+    bool load_scene(const std::string& filename, const std::string& patch = "");
     bool reload_scene();
     bool load_simulation(const nlohmann::json& args);
     bool init(const nlohmann::json& args);

@@ -21,6 +21,7 @@ int main(int argc, char* argv[])
         int checkpoint_freq = -1;
         int loglevel = 2; // info
         int nthreads = tbb::task_scheduler_init::default_num_threads();
+        std::string patch = "";
     } args;
 
     CLI::App app { "run headless simulation" };
@@ -47,6 +48,7 @@ int main(int argc, char* argv[])
         true);
     app.add_option(
         "--nthreads", args.nthreads, "maximum number of threads to use", true);
+    app.add_option("--patch", args.patch, "patch to input file", true);
 
     try {
         app.parse(argc, argv);
@@ -76,7 +78,7 @@ int main(int argc, char* argv[])
     PROFILER_OUTDIR(args.output_dir)
     std::string fout = fmt::format("{}/{}", args.output_dir, args.output_name);
 
-    sim.load_scene(args.scene_path);
+    sim.load_scene(args.scene_path, args.patch);
     if (args.num_steps > 0) {
         sim.m_max_simulation_steps = args.num_steps;
     }
