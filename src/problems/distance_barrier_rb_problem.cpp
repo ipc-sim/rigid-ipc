@@ -829,6 +829,7 @@ namespace opt {
     }
 
     // Apply the chain rule of f(V(x)) given ∇ᵥf(V) and ∇ₓV(x)
+    template <typename Triplets>
     void apply_chain_rule(
         const Eigen::VectorX12d& grad_f,
         const Eigen::MatrixXd& jac_V,
@@ -838,8 +839,8 @@ namespace opt {
         const std::vector<uint8_t>& local_body_ids,
         const std::array<long, 2>& body_ids,
         const int dim,
-        std::vector<Eigen::Triplet<double>>& grad_triplets,
-        std::vector<Eigen::Triplet<double>>& hess_triplets,
+        Triplets& grad_triplets,
+        Triplets& hess_triplets,
         bool compute_grad,
         bool compute_hess)
     {
@@ -1073,68 +1074,28 @@ namespace opt {
 
         int rb_ndof = physics::Pose<double>::dim_to_ndof(dim());
 
-        Eigen::VectorX12d grad_D;
-        Eigen::MatrixXX12d hess_D;
         double epsv_times_h = static_friction_speed_bound * timestep();
         double Dx =
             constraint.compute_potential(U, edges(), faces(), epsv_times_h);
+
+        Eigen::VectorX12d grad_D;
         if (compute_grad || compute_hess) {
             grad_D = constraint.compute_potential_gradient(
                 U, edges(), faces(), epsv_times_h);
         }
+
+        Eigen::MatrixXX12d hess_D;
         if (compute_hess) {
             hess_D = constraint.compute_potential_hessian(
                 U, edges(), faces(), epsv_times_h, /*project_to_psd=*/false);
         }
-        std::vector<long> vertex_ids =
-            constraint.vertex_indices(edges(), faces());
 
         RigidBodyConstraint rbc(m_assembler, constraint);
-        auto local_body_ids = rbc.vertex_local_body_ids();
-
-        if (compute_grad) {
-            // jac_Vi ∈ R^{4n × 2m}
-            Eigen::VectorX12d grad = Eigen::VectorX12d::Zero(2 * rb_ndof);
-            for (int i = 0; i < vertex_ids.size(); i++) {
-                grad.segment(rb_ndof * local_body_ids[i], rb_ndof) +=
-                    jac_V.middleRows(vertex_ids[i] * dim(), dim()).transpose()
-                    * grad_D.segment(i * dim(), dim());
-            }
-
-            local_gradient_to_global_triplets(
-                grad, rbc.body_ids(), rb_ndof, grad_triplets);
-        }
-
-        if (compute_hess) {
-            // jac_Vi ∈ R^{4n × 2m}
-            Eigen::MatrixXX12d jac_Vi =
-                Eigen::MatrixXd::Zero(vertex_ids.size() * dim(), 2 * rb_ndof);
-            for (int i = 0; i < vertex_ids.size(); i++) {
-                jac_Vi.block(
-                    i * dim(), local_body_ids[i] * rb_ndof, dim(), rb_ndof) =
-                    jac_V.middleRows(vertex_ids[i] * dim(), dim());
-            }
-
-            // hess ∈ R^{2m × 2m}
-            Eigen::MatrixXX12d hess = jac_Vi.transpose() * hess_D * jac_Vi;
-            for (int i = 0; i < vertex_ids.size(); i++) {
-                for (int j = 0; j < dim(); j++) {
-                    // Off diagaonal blocks are all zero because the derivative
-                    // of a vertex of body A with body B is zero.
-                    hess.block(
-                        local_body_ids[i] * rb_ndof,
-                        local_body_ids[i] * rb_ndof, rb_ndof, rb_ndof) +=
-                        hess_V.middleRows(
-                            rb_ndof * (vertex_ids[i] * dim() + j), rb_ndof)
-                        * grad_D[i * dim() + j];
-                }
-            }
-
-            hess = project_to_psd(hess);
-
-            local_hessian_to_global_triplets(
-                hess, rbc.body_ids(), rb_ndof, hess_triplets);
-        }
+        apply_chain_rule(
+            grad_D, jac_V, hess_D, hess_V,
+            constraint.vertex_indices(edges(), faces()),
+            rbc.vertex_local_body_ids(), rbc.body_ids(), dim(), grad_triplets,
+            hess_triplets, compute_grad, compute_hess);
 
         return Dx;
     }

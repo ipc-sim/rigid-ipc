@@ -124,9 +124,11 @@ namespace opt {
         int iteration_number; ///< @brief The current iteration number.
         ConvergenceCriteria convergence_criteria;
 
+        double m_line_search_lower_bound; ///< @brief Line search lower bound
+
         double energy_conv_tol;   ///< @brief Energy convergence tolerance
         double velocity_conv_tol; ///< @brief Velocity convergence tolerance
-        double m_line_search_lower_bound; ///< @brief Line search lower bound
+        bool is_velocity_conv_tol_abs; ///< @brief Absolute velocity tol
 
         // State variables
         Eigen::VectorXd x, x_prev;

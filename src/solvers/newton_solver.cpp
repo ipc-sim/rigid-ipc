@@ -28,24 +28,23 @@ namespace opt {
 
     void NewtonSolver::settings(const nlohmann::json& json)
     {
-        max_iterations = json["max_iterations"].get<int>();
-        convergence_criteria =
-            json["convergence_criteria"].get<ConvergenceCriteria>();
-        energy_conv_tol = json["energy_conv_tol"].get<double>();
-        velocity_conv_tol = json["velocity_conv_tol"].get<double>();
-        m_line_search_lower_bound =
-            json["line_search_lower_bound"].get<double>();
+        max_iterations = json["max_iterations"];
+        convergence_criteria = json["convergence_criteria"];
+        energy_conv_tol = json["energy_conv_tol"];
+        velocity_conv_tol = json["velocity_conv_tol"];
+        is_velocity_conv_tol_abs = json["is_velocity_conv_tol_abs"];
+        m_line_search_lower_bound = json["line_search_lower_bound"];
 
         linear_solver_settings = json["linear_solver"];
         try {
             linear_solver = polysolve::LinearSolver::create(
-                linear_solver_settings["name"].get<std::string>(), "");
+                linear_solver_settings["name"], "");
         } catch (const std::runtime_error& err) {
             spdlog::error(
                 "{}! Using Eigen::SimplicialLDLT instead.", err.what());
             linear_solver_settings["name"] = "Eigen::SimplicialLDLT";
             linear_solver = polysolve::LinearSolver::create(
-                linear_solver_settings["name"].get<std::string>(), "");
+                linear_solver_settings["name"], "");
         }
         linear_solver->setParameters(linear_solver_settings);
 
@@ -60,6 +59,7 @@ namespace opt {
         settings["linear_solver"] = linear_solver_settings;
         settings["energy_conv_tol"] = energy_conv_tol;
         settings["velocity_conv_tol"] = velocity_conv_tol;
+        settings["is_velocity_conv_tol_abs"] = is_velocity_conv_tol_abs;
         return settings;
     }
 
@@ -120,9 +120,10 @@ namespace opt {
                 / problem_ptr->timestep();
 
             // TODO: Renable this with a better check for static objects
-            // double tol = velocity_conv_tol *
-            // problem_ptr->world_bbox_diagonal();
             double tol = velocity_conv_tol;
+            if (!is_velocity_conv_tol_abs) {
+                tol *= problem_ptr->world_bbox_diagonal();
+            }
 
             spdlog::info(
                 "solver={} iter={:d} step_max_speed={:g} tol={:g}", //
