@@ -189,7 +189,7 @@ bool edge_vertex_ccd(
         bool is_colliding = compute_piecewise_linear_edge_vertex_time_of_impact(
             bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
             edge_id, toi, earliest_toi);
-        if (!is_colliding && toi > 0) {
+        if (!is_colliding || toi > 0) {
             return is_colliding;
         }
         // else use the full rigid CCD even if it is slow
@@ -255,7 +255,7 @@ bool edge_edge_ccd(
         bool is_colliding = compute_piecewise_linear_edge_edge_time_of_impact(
             bodyA, poseA_t0, poseA_t1, edgeA_id, bodyB, poseB_t0, poseB_t1,
             edgeB_id, toi, earliest_toi);
-        if (!is_colliding && toi > 0) {
+        if (!is_colliding || toi > 0) {
             return is_colliding;
         }
         // else use the full rigid CCD even if it is slow
@@ -319,7 +319,7 @@ bool face_vertex_ccd(
         bool is_colliding = compute_piecewise_linear_face_vertex_time_of_impact(
             bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
             face_id, toi, earliest_toi);
-        if (!is_colliding && toi > 0) {
+        if (!is_colliding || toi > 0) {
             return is_colliding;
         }
         // else use the full rigid CCD even if it is slow
