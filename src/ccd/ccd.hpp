@@ -30,17 +30,22 @@ enum TrajectoryType {
     /// trajectories.
     LINEAR,
     /// @brief Piceiwise linearization of the the rotation component of rigid
-    /// body trajectories.
+    /// body trajectories. CCD is computed conservativly using minimum
+    /// separation CCD to bound the difference between RIGID.
     PIECEWISE_LINEAR,
     /// @brief Fully nonlinear rigid trajectories.
-    RIGID
+    RIGID,
+    /// @brief Same trajectory as RIGID, but the time of impact is computed
+    /// using Redon et al. [2002].
+    REDON
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(
     TrajectoryType,
     { { LINEAR, "linear" },
       { PIECEWISE_LINEAR, "piecewise_linear" },
-      { RIGID, "rigid" } });
+      { RIGID, "rigid" },
+      { REDON, "redon" } });
 
 namespace CollisionType {
     static const int EDGE_VERTEX = 1;

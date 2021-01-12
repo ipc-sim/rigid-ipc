@@ -88,9 +88,7 @@ namespace opt {
 
         bool is_ccd_aligned_with_newton_update() override
         {
-            return m_constraint.trajectory_type == TrajectoryType::RIGID
-                || m_constraint.trajectory_type
-                == TrajectoryType::PIECEWISE_LINEAR;
+            return m_constraint.trajectory_type != TrajectoryType::LINEAR;
         }
 
         /// Get the world coordinates of the vertices

@@ -175,7 +175,8 @@ namespace opt {
             } break;
 
             case TrajectoryType::PIECEWISE_LINEAR:
-            case TrajectoryType::RIGID: {
+            case TrajectoryType::RIGID:
+            case TrajectoryType::REDON: {
                 // Use nonlinear trajectory
                 long edge_body_id = m_assembler.edge_id_to_body_id(edge_id);
 

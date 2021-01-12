@@ -10,6 +10,7 @@
 #include <ccd/linear/broad_phase.hpp>
 #include <ccd/linear/edge_vertex_ccd.hpp>
 #include <ccd/piecewise_linear/time_of_impact.hpp>
+#include <ccd/redon/time_of_impact.hpp>
 #include <ccd/rigid/broad_phase.hpp>
 #include <ccd/rigid/time_of_impact.hpp>
 
@@ -66,6 +67,7 @@ void detect_collision_candidates(
         break;
     case TrajectoryType::PIECEWISE_LINEAR:
     case TrajectoryType::RIGID:
+    case TrajectoryType::REDON:
         detect_collision_candidates_rigid(
             bodies, poses_t0, poses_t1, collision_types, candidates, method,
             inflation_radius);
@@ -200,6 +202,11 @@ bool edge_vertex_ccd(
             bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
             edge_id, toi, earliest_toi);
 
+    case TrajectoryType::REDON:
+        return compute_edge_vertex_time_of_impact_redon(
+            bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
+            edge_id, toi, earliest_toi);
+
     default:
         throw "Invalid trajectory type";
     }
@@ -263,6 +270,11 @@ bool edge_edge_ccd(
     }
     case TrajectoryType::RIGID:
         return compute_edge_edge_time_of_impact(
+            bodyA, poseA_t0, poseA_t1, edgeA_id, bodyB, poseB_t0, poseB_t1,
+            edgeB_id, toi, earliest_toi);
+
+    case TrajectoryType::REDON:
+        return compute_edge_edge_time_of_impact_redon(
             bodyA, poseA_t0, poseA_t1, edgeA_id, bodyB, poseB_t0, poseB_t1,
             edgeB_id, toi, earliest_toi);
 
@@ -330,6 +342,11 @@ bool face_vertex_ccd(
             bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
             face_id, toi, earliest_toi);
 
+    case TrajectoryType::REDON:
+        return compute_face_vertex_time_of_impact_redon(
+            bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
+            face_id, toi, earliest_toi);
+
     default:
         throw "Invalid trajectory type";
     }
@@ -376,7 +393,8 @@ double edge_vertex_closest_point(
     }
 
     case TrajectoryType::PIECEWISE_LINEAR:
-    case TrajectoryType::RIGID: {
+    case TrajectoryType::RIGID:
+    case TrajectoryType::REDON: {
         // Compute the poses at time toi
         Pose poseA_toi = Pose::interpolate(poseA_t0, poseA_t1, toi);
         Pose poseB_toi = Pose::interpolate(poseB_t0, poseB_t1, toi);
@@ -438,7 +456,8 @@ void edge_edge_closest_point(
     }
 
     case TrajectoryType::PIECEWISE_LINEAR:
-    case TrajectoryType::RIGID: {
+    case TrajectoryType::RIGID:
+    case TrajectoryType::REDON: {
         // Compute the poses at time toi
         Pose poseA_toi = Pose::interpolate(poseA_t0, poseA_t1, toi);
         Pose poseB_toi = Pose::interpolate(poseB_t0, poseB_t1, toi);
@@ -504,7 +523,8 @@ void face_vertex_closest_point(
     }
 
     case TrajectoryType::PIECEWISE_LINEAR:
-    case TrajectoryType::RIGID: {
+    case TrajectoryType::RIGID:
+    case TrajectoryType::REDON: {
         // Compute the poses at time toi
         Pose poseA_toi = Pose::interpolate(poseA_t0, poseA_t1, toi);
         Pose poseB_toi = Pose::interpolate(poseB_t0, poseB_t1, toi);
