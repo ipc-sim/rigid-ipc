@@ -29,6 +29,7 @@ shapes input 24
 ../../../../../meshes/wrecking-ball/link.obj  1.65 0 4.8  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
 ../../../../../meshes/wrecking-ball/link.obj  3.3 0 4.8  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
 
+
 selfCollisionOn
 selfFric 0
 

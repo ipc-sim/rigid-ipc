@@ -158,7 +158,9 @@ def fixture_to_ipc_script(fixture, output_path, remesh=False):
         body_line = "{}  {:g} {:g} {:g}  {:g} {:g} {:g}  {:g} {:g} {:g} material {:g} 2e11 0.3  {}{}".format(
             mesh_path, *body.get("position", [0, 0, 0]),
             *rotation, *scale, body.get("density", 1000), velocity_str, nbc)
-        if body.get("enabled", True):
+        is_enabled = (body.get("enabled", True) or body.get(
+            "ipc_comparison_enabled", False))
+        if is_enabled:
             shapes.append(body_line)
         else:
             disabled_shapes.append(f"# {body_line}")

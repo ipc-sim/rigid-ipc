@@ -8,6 +8,7 @@ shapes input 3
 ../../../meshes/cube.msh  0 1 0  0 0 -30  2 1 1 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
 ../../../../../meshes/plane.obj  0 -1 0  0 0 0  1 1 1 material 1000 2e11 0.3  linearVelocity 0 0 0
 
+
 selfCollisionOn
 selfFric 0
 

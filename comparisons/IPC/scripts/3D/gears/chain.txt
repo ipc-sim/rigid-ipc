@@ -17,6 +17,7 @@ shapes input 12
 ../../../meshes/gears/gear.msh  8.2 0 0  90 0 0  1 1 1 material 1 2e11 0.3  initVel 0 0 0  0 0 0
 ../../../../../meshes/gears/pin.obj  8.2 0 0  90 0 0  1 1 1 material 1 2e11 0.3  linearVelocity 0 0 0
 
+
 selfCollisionOn
 selfFric 0.0
 

@@ -165,7 +165,7 @@ def main():
 
             # Render the RB sim
             if not args.no_video:
-                print("Rendering IPC simulation")
+                print("Rendering rigid simulation")
                 video_name = f"{script.stem}-{get_time_stamp()}-rigid.mp4"
                 subprocess.run([str(render_exe), output / "sim.json",
                                 "-o", output / video_name,

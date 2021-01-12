@@ -15,6 +15,7 @@
             "rotation": [90, 0, -90],
             "density": 1,
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "type": "static"
         }, {
             "mesh": "gears/rail.obj",
@@ -36,6 +37,7 @@
             "position": [0, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "density": 1,
             "type": "static"
         }, {
@@ -52,6 +54,7 @@
             "position": [2.05, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "density": 1,
             "type": "static"
         }, {
@@ -68,6 +71,7 @@
             "position": [4.1, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "density": 1,
             "type": "static"
         }, {
@@ -84,6 +88,7 @@
             "position": [6.15, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "density": 1,
             "type": "static"
         }, {
@@ -100,6 +105,7 @@
             "position": [8.2, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "density": 1,
             "type": "static"
         }]

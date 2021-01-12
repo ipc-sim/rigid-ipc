@@ -38,7 +38,6 @@
             "density": 1,
             "type": "static"
         }, {
-            "enabled": true,
             "mesh": "gears/gear.obj",
             "position": [2.05, 0, 0],
             "rotation": [90, 0, 15],
@@ -51,10 +50,10 @@
             "position": [2.05, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "density": 1,
             "type": "static"
         }, {
-            "enabled": true,
             "mesh": "gears/gear.obj",
             "position": [4.1, 0, 0],
             "rotation": [90, 0, 0],
@@ -67,10 +66,10 @@
             "position": [4.1, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "density": 1,
             "type": "static"
         }, {
-            "enabled": true,
             "mesh": "gears/gear.obj",
             "position": [6.15, 0, 0],
             "rotation": [90, 0, 15],
@@ -83,10 +82,10 @@
             "position": [6.15, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "density": 1,
             "type": "static"
         }, {
-            "enabled": true,
             "mesh": "gears/gear.obj",
             "position": [8.2, 0, 0],
             "rotation": [90, 0, 0],
@@ -99,6 +98,7 @@
             "position": [8.2, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "density": 1,
             "type": "static"
         }]

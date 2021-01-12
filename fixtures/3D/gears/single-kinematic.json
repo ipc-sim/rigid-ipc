@@ -47,6 +47,7 @@
             "position": [2.05, 0, 0],
             "rotation": [90, 0, 0],
             "enabled": false,
+            "ipc_comparison_enabled": true,
             "density": 1,
             "type": "static"
         }]
