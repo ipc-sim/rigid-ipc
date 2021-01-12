@@ -237,10 +237,16 @@ namespace opt {
         const physics::Poses<double>& poses_t1,
         const ipc::Candidates& candidates) const
     {
+        TrajectoryType overloaded_trajectory =
+            trajectory_type == TrajectoryType::PIECEWISE_LINEAR
+            ? TrajectoryType::RIGID
+            : trajectory_type;
+
         for (const auto& ev_candidate : candidates.ev_candidates) {
             double toi;
             bool are_colliding = edge_vertex_ccd(
-                bodies, poses_t0, poses_t1, ev_candidate, toi, trajectory_type);
+                bodies, poses_t0, poses_t1, ev_candidate, toi,
+                overloaded_trajectory);
             if (are_colliding) {
                 // save_candidate(bodies, poses_t0, poses_t1, ev_candidate);
                 return true;
@@ -249,7 +255,8 @@ namespace opt {
         for (const auto& fv_candidate : candidates.fv_candidates) {
             double toi;
             bool are_colliding = face_vertex_ccd(
-                bodies, poses_t0, poses_t1, fv_candidate, toi, trajectory_type);
+                bodies, poses_t0, poses_t1, fv_candidate, toi,
+                overloaded_trajectory);
             if (are_colliding) {
                 // save_candidate(bodies, poses_t0, poses_t1, fv_candidate);
                 return true;
@@ -258,7 +265,8 @@ namespace opt {
         for (const auto& ee_candidate : candidates.ee_candidates) {
             double toi;
             bool are_colliding = edge_edge_ccd(
-                bodies, poses_t0, poses_t1, ee_candidate, toi, trajectory_type);
+                bodies, poses_t0, poses_t1, ee_candidate, toi,
+                overloaded_trajectory);
             if (are_colliding) {
                 // save_candidate(bodies, poses_t0, poses_t1, ee_candidate);
                 return true;

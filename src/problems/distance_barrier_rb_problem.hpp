@@ -262,8 +262,8 @@ namespace opt {
             const Eigen::MatrixXd& jac_V,
             const Eigen::MatrixXd& hess_V,
             const FrictionConstraint& constraint,
-            tbb::concurrent_vector<Eigen::Triplet<double>>& grad_triplets,
-            tbb::concurrent_vector<Eigen::Triplet<double>>& hess_triplets,
+            Eigen::VectorXd& grad,
+            std::vector<Eigen::Triplet<double>>& hess_triplets,
             bool compute_grad,
             bool compute_hess);
 

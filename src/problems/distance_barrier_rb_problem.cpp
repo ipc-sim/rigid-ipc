@@ -787,29 +787,26 @@ namespace opt {
     }
 
     // Convert from a local hessian to the triplets in the global hessian
-    template <typename DerivedLocalGradient, typename Triplets>
-    void local_gradient_to_global_triplets(
+    template <typename DerivedLocalGradient>
+    void local_gradient_to_global(
         const Eigen::MatrixBase<DerivedLocalGradient>& local_gradient,
         const std::array<long, 2>& body_ids,
         int ndof,
-        Triplets& triplets)
+        Eigen::VectorXd& grad)
     {
         assert(local_gradient.size() == 2 * ndof);
         for (int b_i = 0; b_i < body_ids.size(); b_i++) {
-            for (int dof_i = 0; dof_i < ndof; dof_i++) {
-                double v = local_gradient(ndof * b_i + dof_i);
-                int r = ndof * body_ids[b_i] + dof_i;
-                triplets.emplace_back(r, /*c=*/0, v);
-            }
+            grad.segment(ndof * body_ids[b_i], ndof) +=
+                local_gradient.segment(ndof * b_i, ndof);
         }
     }
 
-    template <typename DerivedLocalHessian, typename Triplets>
+    template <typename DerivedLocalHessian>
     void local_hessian_to_global_triplets(
         const Eigen::MatrixBase<DerivedLocalHessian>& local_hessian,
         const std::array<long, 2>& body_ids,
         int ndof,
-        Triplets& triplets)
+        std::vector<Eigen::Triplet<double>>& triplets)
     {
         assert(local_hessian.rows() == 2 * ndof);
         assert(local_hessian.cols() == 2 * ndof);
@@ -829,7 +826,6 @@ namespace opt {
     }
 
     // Apply the chain rule of f(V(x)) given ∇ᵥf(V) and ∇ₓV(x)
-    template <typename Triplets>
     void apply_chain_rule(
         const Eigen::VectorX12d& grad_f,
         const Eigen::MatrixXd& jac_V,
@@ -839,8 +835,8 @@ namespace opt {
         const std::vector<uint8_t>& local_body_ids,
         const std::array<long, 2>& body_ids,
         const int dim,
-        Triplets& grad_triplets,
-        Triplets& hess_triplets,
+        Eigen::VectorXd& grad,
+        std::vector<Eigen::Triplet<double>>& hess_triplets,
         bool compute_grad,
         bool compute_hess)
     {
@@ -848,19 +844,21 @@ namespace opt {
             return;
         }
 
+        // PROFILE_POINT("apply_chain_rule");
+        // PROFILE_START();
+
         const int rb_ndof = physics::Pose<double>::dim_to_ndof(dim);
 
         if (compute_grad) {
             // jac_Vi ∈ R^{4n × 2m}
-            Eigen::VectorX12d grad = Eigen::VectorX12d::Zero(2 * rb_ndof);
+            Eigen::VectorX12d local_grad = Eigen::VectorX12d::Zero(2 * rb_ndof);
             for (int i = 0; i < vertex_ids.size(); i++) {
-                grad.segment(rb_ndof * local_body_ids[i], rb_ndof) +=
+                local_grad.segment(rb_ndof * local_body_ids[i], rb_ndof) +=
                     jac_V.middleRows(vertex_ids[i] * dim, dim).transpose()
                     * grad_f.segment(i * dim, dim);
             }
 
-            local_gradient_to_global_triplets(
-                grad, body_ids, rb_ndof, grad_triplets);
+            local_gradient_to_global(local_grad, body_ids, rb_ndof, grad);
         }
 
         if (compute_hess) {
@@ -893,6 +891,57 @@ namespace opt {
             local_hessian_to_global_triplets(
                 hess, body_ids, rb_ndof, hess_triplets);
         }
+
+        // PROFILE_END();
+    }
+
+    struct PotentialStorage {
+        PotentialStorage() {}
+        PotentialStorage(size_t nvars) { gradient.setZero(nvars); }
+        double potential = 0;
+        Eigen::VectorXd gradient;
+        std::vector<Eigen::Triplet<double>> hessian_triplets;
+    };
+    typedef tbb::enumerable_thread_specific<PotentialStorage>
+        ThreadSpecificPotentials;
+
+    double merge_derivative_storage(
+        const ThreadSpecificPotentials& potentials,
+        size_t nvars,
+        Eigen::VectorXd& grad,
+        Eigen::SparseMatrix<double>& hess,
+        bool compute_grad,
+        bool compute_hess)
+    {
+        PROFILE_POINT("merge_derivative_storage");
+        PROFILE_START();
+
+        if (compute_grad) {
+            grad.setZero(nvars);
+        }
+        if (compute_hess) {
+            hess.resize(nvars, nvars);
+        }
+
+        double potential = 0;
+        for (const auto& p : potentials) {
+            potential += p.potential;
+
+            if (compute_grad) {
+                grad += p.gradient;
+            }
+
+            if (compute_hess) {
+                Eigen::SparseMatrix<double> p_hess(nvars, nvars);
+                p_hess.setFromTriplets(
+                    p.hessian_triplets.begin(), p.hessian_triplets.end());
+                hess += p_hess;
+            }
+        }
+
+        PROFILE_END();
+
+        return potential;
     }
 
     double DistanceBarrierRBProblem::compute_barrier_term(
@@ -905,37 +954,25 @@ namespace opt {
     {
         if (constraints.size() == 0) {
             grad.setZero(x.size());
-            hess = Eigen::SparseMatrix<double>(x.size(), x.size());
+            hess.resize(x.size(), x.size());
             return 0;
         }
 
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_barrier_term",
-            COMPUTE_BARRIER_TERM);
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_barrier_term:gradient",
-            COMPUTE_BARRIER_GRAD);
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_barrier_term:assemble_gradient",
-            ASSEMBLE_BARRIER_GRAD);
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_barrier_term:hessian",
-            COMPUTE_BARRIER_HESS);
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_barrier_term:assemble_hessian",
-            ASSEMBLE_BARRIER_HESS);
+        PROFILE_POINT("DistanceBarrierRBProblem::compute_barrier_term");
+        // WARNING: PROFILE_POINTs are not thread safe
+        // NAMED_PROFILE_POINT(
+        //     "DistanceBarrierRBProblem::compute_barrier_term:value",
+        //     COMPUTE_BARRIER_VAL);
+        // NAMED_PROFILE_POINT(
+        //     "DistanceBarrierRBProblem::compute_barrier_term:gradient",
+        //     COMPUTE_BARRIER_GRAD);
+        // NAMED_PROFILE_POINT(
+        //     "DistanceBarrierRBProblem::compute_barrier_term:hessian",
+        //     COMPUTE_BARRIER_HESS);
 
-        PROFILE_START(COMPUTE_BARRIER_TERM);
+        PROFILE_START();
 
         int rb_ndof = physics::Pose<double>::dim_to_ndof(dim());
-        if (compute_grad) {
-            PROFILE_START(COMPUTE_BARRIER_GRAD);
-            grad.setZero(x.size());
-        }
-        if (compute_hess) {
-            PROFILE_START(COMPUTE_BARRIER_HESS);
-            hess.resize(x.size(), x.size());
-        }
 
         // Compute V(x)
         Eigen::MatrixXd jac_V, hess_V;
@@ -944,49 +981,39 @@ namespace opt {
 
         double dhat = barrier_activation_distance();
 
-        Eigen::VectorXd potentials(constraints.size());
-        struct ThreadStorage {
-            // double potential = 0;
-            std::vector<Eigen::Triplet<double>> grad_triplets;
-            std::vector<Eigen::Triplet<double>> hess_triplets;
-        };
-        typedef tbb::enumerable_thread_specific<ThreadStorage> LocalStorage;
-        LocalStorage storages;
+        ThreadSpecificPotentials thread_storage(x.size());
         tbb::parallel_for(
             tbb::blocked_range<size_t>(size_t(0), constraints.size()),
             [&](const tbb::blocked_range<size_t>& range) {
                 // Get references to the local derivative storage
-                LocalStorage::reference local_storage = storages.local();
-                // double& potential = local_storage.potential;
-                auto& grad_triplets = local_storage.grad_triplets;
-                auto& hess_triplets = local_storage.hess_triplets;
-
-                // potential = 0;
-                if (compute_grad) {
-                    grad_triplets.reserve(2 * rb_ndof * range.size());
-                }
-                if (compute_hess) {
-                    hess_triplets.reserve(4 * rb_ndof * rb_ndof * range.size());
-                }
+                auto& local_storage = thread_storage.local();
+                auto& potential = local_storage.potential;
+                auto& local_grad = local_storage.gradient;
+                auto& hess_triplets = local_storage.hessian_triplets;
 
                 for (size_t ci = range.begin(); ci != range.end(); ++ci) {
                     const auto& constraint = constraints[ci];
 
-                    // potential +=
-                    potentials[ci] =
+                    // PROFILE_START(COMPUTE_BARRIER_VAL);
+                    potential +=
                         constraint.compute_potential(V, edges(), faces(), dhat);
+                    // PROFILE_START(COMPUTE_BARRIER_VAL);
 
                     Eigen::VectorX12d grad_B;
                     if (compute_grad || compute_hess) {
+                        // PROFILE_START(COMPUTE_BARRIER_GRAD);
                         grad_B = constraint.compute_potential_gradient(
                             V, edges(), faces(), dhat);
+                        // PROFILE_END(COMPUTE_BARRIER_GRAD);
                     }
 
                     Eigen::MatrixXX12d hess_B;
                     if (compute_hess) {
+                        // PROFILE_START(COMPUTE_BARRIER_HESS);
                         hess_B = constraint.compute_potential_hessian(
                             V, edges(), faces(), dhat,
                             /*project_to_psd=*/false);
+                        // PROFILE_END(COMPUTE_BARRIER_HESS);
                     }
 
                     apply_chain_rule(
@@ -994,43 +1021,14 @@ namespace opt {
                         constraint.vertex_indices(edges(), faces()),
                         vertex_local_body_ids(constraints, ci),
                         body_ids(m_assembler, constraints, ci), dim(),
-                        grad_triplets, hess_triplets, compute_grad,
-                        compute_hess);
+                        local_grad, hess_triplets, compute_grad, compute_hess);
                 }
             });
 
-        // double potential = 0;
-        double potential = potentials.sum();
-        for (const auto& local_storage : storages) {
-            // potential += local_storage.potential;
-            if (compute_grad) {
-                PROFILE_START(ASSEMBLE_BARRIER_GRAD);
+        double potential = merge_derivative_storage(
+            thread_storage, x.size(), grad, hess, compute_grad, compute_hess);
 
-                Eigen::SparseMatrix<double> tmp_grad(x.size(), 1);
-                tmp_grad.setFromTriplets(
-                    local_storage.grad_triplets.begin(),
-                    local_storage.grad_triplets.end());
-                grad += tmp_grad;
-
-                PROFILE_END(ASSEMBLE_BARRIER_GRAD);
-            }
-            if (compute_hess) {
-                PROFILE_START(ASSEMBLE_BARRIER_HESS);
-
-                Eigen::SparseMatrix<double> tmp_hess(x.size(), x.size());
-                tmp_hess.setFromTriplets(
-                    local_storage.hess_triplets.begin(),
-                    local_storage.hess_triplets.end());
-                hess += tmp_hess;
-
-                PROFILE_END(ASSEMBLE_BARRIER_HESS);
-            }
-        }
-
-        // if not active, nothing happens
-        PROFILE_END(COMPUTE_BARRIER_GRAD);
-        PROFILE_END(COMPUTE_BARRIER_HESS);
-        PROFILE_END(COMPUTE_BARRIER_TERM);
+        PROFILE_END();
 
 #ifdef WITH_DERIVATIVE_CHECK
         if (!is_checking_derivative) {
@@ -1048,14 +1046,23 @@ namespace opt {
         return potential;
     }
 
+    // NAMED_PROFILE_POINT(
+    //     "DistanceBarrierRBProblem::compute_friction_potential:value",
+    //     COMPUTE_FRICTION_VAL);
+    // NAMED_PROFILE_POINT(
+    //     "DistanceBarrierRBProblem::compute_friction_potential:gradient",
+    //     COMPUTE_FRICTION_GRAD);
+    // NAMED_PROFILE_POINT(
+    //     "DistanceBarrierRBProblem::compute_friction_potential:hessian",
+    //     COMPUTE_FRICTION_HESS);
     template <typename RigidBodyConstraint, typename FrictionConstraint>
     double DistanceBarrierRBProblem::compute_friction_potential(
         const Eigen::MatrixXd& U,
         const Eigen::MatrixXd& jac_V,
         const Eigen::MatrixXd& hess_V,
         const FrictionConstraint& constraint,
-        tbb::concurrent_vector<Eigen::Triplet<double>>& grad_triplets,
-        tbb::concurrent_vector<Eigen::Triplet<double>>& hess_triplets,
+        Eigen::VectorXd& grad,
+        std::vector<Eigen::Triplet<double>>& hess_triplets,
         bool compute_grad,
         bool compute_hess)
     {
@@ -1075,27 +1082,34 @@ namespace opt {
         int rb_ndof = physics::Pose<double>::dim_to_ndof(dim());
 
         double epsv_times_h = static_friction_speed_bound * timestep();
+
+        // PROFILE_START(COMPUTE_FRICTION_VAL);
         double Dx =
             constraint.compute_potential(U, edges(), faces(), epsv_times_h);
+        // PROFILE_END(COMPUTE_FRICTION_VAL);
 
         Eigen::VectorX12d grad_D;
         if (compute_grad || compute_hess) {
+            // PROFILE_START(COMPUTE_FRICTION_GRAD);
             grad_D = constraint.compute_potential_gradient(
                 U, edges(), faces(), epsv_times_h);
+            // PROFILE_END(COMPUTE_FRICTION_GRAD);
         }
 
         Eigen::MatrixXX12d hess_D;
         if (compute_hess) {
+            // PROFILE_START(COMPUTE_FRICTION_HESS);
             hess_D = constraint.compute_potential_hessian(
                 U, edges(), faces(), epsv_times_h, /*project_to_psd=*/false);
+            // PROFILE_END(COMPUTE_FRICTION_HESS);
         }
 
         RigidBodyConstraint rbc(m_assembler, constraint);
         apply_chain_rule(
             grad_D, jac_V, hess_D, hess_V,
             constraint.vertex_indices(edges(), faces()),
-            rbc.vertex_local_body_ids(), rbc.body_ids(), dim(), grad_triplets,
-            hess_triplets, compute_grad, compute_hess);
+            rbc.vertex_local_body_ids(), rbc.body_ids(), dim(), //
+            grad, hess_triplets, compute_grad, compute_hess);
 
         return Dx;
     }
@@ -1109,90 +1123,69 @@ namespace opt {
     {
         if (coefficient_friction <= 0 || friction_constraints.size() == 0) {
             grad.setZero(x.size());
-            hess = Eigen::SparseMatrix<double>(x.size(), x.size());
+            hess.resize(x.size(), x.size());
             return 0;
         }
 
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_friction_term",
-            COMPUTE_FRICTION_TERM);
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_friction_term:gradient",
-            COMPUTE_FRICTION_GRAD);
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_friction_term:assemble_gradient",
-            ASSEMBLE_FRICTION_GRAD);
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_friction_term:hessian",
-            COMPUTE_FRICTION_HESS);
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_friction_term:assemble_hessian",
-            ASSEMBLE_FRICTION_HESS);
+        PROFILE_POINT("DistanceBarrierRBProblem::compute_friction_term");
+        PROFILE_START();
 
-        PROFILE_START(COMPUTE_FRICTION_TERM);
-
-        tbb::concurrent_vector<Eigen::Triplet<double>> grad_triplets;
-        tbb::concurrent_vector<Eigen::Triplet<double>> hess_triplets;
         int rb_ndof = physics::Pose<double>::dim_to_ndof(dim());
-        if (compute_grad) {
-            PROFILE_START(COMPUTE_FRICTION_GRAD);
-            grad_triplets.reserve(2 * rb_ndof * friction_constraints.size());
-        }
-        if (compute_hess) {
-            PROFILE_START(COMPUTE_FRICTION_HESS);
-            hess_triplets.reserve(
-                4 * rb_ndof * rb_ndof * friction_constraints.size());
-        }
 
-        NAMED_PROFILE_POINT(
-            "DistanceBarrierRBProblem::compute_friction_term:displacement",
-            DISPLACEMENT);
-        PROFILE_START(DISPLACEMENT);
         // Compute V(x)
         Eigen::MatrixXd jac_V, hess_V;
         Eigen::MatrixXd V1 = m_assembler.world_vertices_diff(
             x, jac_V, hess_V, compute_grad || compute_hess, compute_hess);
 
+        NAMED_PROFILE_POINT(
+            "DistanceBarrierRBProblem::compute_friction_term:displacement",
+            DISPLACEMENT);
+        PROFILE_START(DISPLACEMENT);
         // absolute linear dislacement of each point
         Eigen::MatrixXd U = V1 - m_assembler.world_vertices(poses_t0);
         PROFILE_END(DISPLACEMENT);
 
-        Eigen::VectorXd friction_potential(friction_constraints.size());
-
+        ThreadSpecificPotentials thread_storage(x.size());
         tbb::parallel_for(
             tbb::blocked_range<size_t>(size_t(0), friction_constraints.size()),
             [&](const tbb::blocked_range<size_t>& range) {
+                // Get references to the local derivative storage
+                auto& local_storage = thread_storage.local();
+                auto& potential = local_storage.potential;
+                auto& local_grad = local_storage.gradient;
+                auto& hess_triplets = local_storage.hessian_triplets;
+
                 for (size_t ci = range.begin(); ci != range.end(); ++ci) {
                     size_t local_ci = ci;
 
                     if (local_ci < friction_constraints.vv_constraints.size()) {
-                        friction_potential[ci] = compute_friction_potential<
+                        potential += compute_friction_potential<
                             RigidBodyVertexVertexConstraint>(
                             U, jac_V, hess_V,
                             friction_constraints.vv_constraints[local_ci],
-                            grad_triplets, hess_triplets, compute_grad,
+                            local_grad, hess_triplets, compute_grad,
                             compute_hess);
                         continue;
                     }
 
                     local_ci -= friction_constraints.vv_constraints.size();
                     if (local_ci < friction_constraints.ev_constraints.size()) {
-                        friction_potential[ci] = compute_friction_potential<
+                        potential += compute_friction_potential<
                             RigidBodyEdgeVertexConstraint>(
                             U, jac_V, hess_V,
                             friction_constraints.ev_constraints[local_ci],
-                            grad_triplets, hess_triplets, compute_grad,
+                            local_grad, hess_triplets, compute_grad,
                             compute_hess);
                         continue;
                     }
 
                     local_ci -= friction_constraints.ev_constraints.size();
                     if (local_ci < friction_constraints.ee_constraints.size()) {
-                        friction_potential[ci] = compute_friction_potential<
+                        potential += compute_friction_potential<
                             RigidBodyEdgeEdgeConstraint>(
                             U, jac_V, hess_V,
                             friction_constraints.ee_constraints[local_ci],
-                            grad_triplets, hess_triplets, compute_grad,
+                            local_grad, hess_triplets, compute_grad,
                             compute_hess);
                         continue;
                     }
@@ -1200,37 +1193,18 @@ namespace opt {
                     local_ci -= friction_constraints.ee_constraints.size();
                     assert(
                         local_ci < friction_constraints.fv_constraints.size());
-                    friction_potential[ci] = compute_friction_potential<
+                    potential += compute_friction_potential<
                         RigidBodyFaceVertexConstraint>(
                         U, jac_V, hess_V,
                         friction_constraints.fv_constraints[local_ci],
-                        grad_triplets, hess_triplets, compute_grad,
-                        compute_hess);
+                        local_grad, hess_triplets, compute_grad, compute_hess);
                 }
             });
 
-        if (compute_grad) {
-            PROFILE_START(ASSEMBLE_FRICTION_GRAD);
+        double potential = merge_derivative_storage(
+            thread_storage, x.size(), grad, hess, compute_grad, compute_hess);
 
-            Eigen::SparseMatrix<double> sparse_grad(x.size(), 1);
-            sparse_grad.setFromTriplets(
-                grad_triplets.begin(), grad_triplets.end());
-            grad = Eigen::VectorXd(sparse_grad);
-
-            PROFILE_END(ASSEMBLE_FRICTION_GRAD);
-            PROFILE_END(COMPUTE_FRICTION_GRAD);
-        }
-        if (compute_hess) {
-            PROFILE_START(ASSEMBLE_FRICTION_HESS);
-
-            hess.resize(x.size(), x.size());
-            hess.setFromTriplets(hess_triplets.begin(), hess_triplets.end());
-
-            PROFILE_END(ASSEMBLE_FRICTION_HESS);
-            PROFILE_END(COMPUTE_FRICTION_HESS);
-        }
-
-        PROFILE_END(COMPUTE_FRICTION_TERM);
+        PROFILE_END();
 
 #ifdef WITH_DERIVATIVE_CHECK
         if (!is_checking_derivative) {
@@ -1245,7 +1219,7 @@ namespace opt {
         }
 #endif
 
-        return friction_potential.sum();
+        return potential;
     }
 
     ///////////////////////////////////////////////////////////////////////////
