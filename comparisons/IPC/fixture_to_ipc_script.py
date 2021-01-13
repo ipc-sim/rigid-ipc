@@ -193,9 +193,11 @@ def fixture_to_ipc_script(fixture, output_path, remesh=False):
         constraintSolver interiorPoint
         dHat {dhat}
         epsv {epsv}
+        useAbsParameters
         fricIterAmt {friction_iterations}
         tol 1
         {velocity_conv_tol}
+        # useAbsTol
         """).format("\n".join(shapes), "\n".join(disabled_shapes))
 
 

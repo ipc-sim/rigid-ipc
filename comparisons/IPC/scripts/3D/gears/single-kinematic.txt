@@ -17,6 +17,8 @@ selfFric 0.0
 constraintSolver interiorPoint
 dHat 0.001
 epsv 0.001
+useAbsParameters
 fricIterAmt 1
 tol 1
 0.01
+# useAbsTol

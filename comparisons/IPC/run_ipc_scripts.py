@@ -123,7 +123,7 @@ def main():
         # Run the IPC sim
         if not args.no_ipc:
             print(f"Running {script} in IPC")
-            subprocess.run([args.ipc_exe, "100", script.resolve(), "-o",
+            subprocess.run([args.ipc_exe, "10", script.resolve(), "-o",
                             output / "ipc", "--logLevel", str(args.loglevel)])
 
             # Render the IPC sim
