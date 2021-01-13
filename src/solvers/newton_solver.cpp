@@ -23,6 +23,7 @@ namespace opt {
         , energy_conv_tol(Constants::DEFAULT_NEWTON_ENERGY_CONVERGENCE_TOL)
         , velocity_conv_tol(Constants::DEFAULT_NEWTON_VELOCITY_CONVERGENCE_TOL)
         , is_velocity_conv_tol_abs(false)
+        , is_energy_converged(false)
     {
         linear_solver = polysolve::LinearSolver::create("", "");
     }
@@ -67,6 +68,7 @@ namespace opt {
     void NewtonSolver::init_solve(const Eigen::VectorXd& x0)
     {
         assert(problem_ptr != nullptr);
+        is_energy_converged = false;
     }
 
     nlohmann::json NewtonSolver::stats() const
@@ -107,7 +109,7 @@ namespace opt {
         regularization_iterations = 0;
     }
 
-    bool NewtonSolver::energy_converged() const
+    bool NewtonSolver::converged()
     {
         switch (convergence_criteria) {
         case ConvergenceCriteria::VELOCITY: {
@@ -152,7 +154,7 @@ namespace opt {
                                      * problem_ptr->mass_matrix() * direction)))
                       << std::endl;
             */
-            return step_max_speed <= tol;
+            is_energy_converged = step_max_speed <= tol;
         }
         case ConvergenceCriteria::ENERGY: {
             double step_energy = abs(gradient_free.dot(direction_free));
@@ -161,15 +163,11 @@ namespace opt {
             spdlog::info(
                 "solver={} iter={:d} step_energy={:g} tol={:g}", //
                 name(), iteration_number, step_energy, tol);
-            return step_energy <= tol;
+            is_energy_converged = step_energy <= tol;
         }
         }
-        throw NotImplementedError("Invalid convergence criteria option!");
-    }
 
-    bool NewtonSolver::converged() const
-    {
-        return energy_converged()
+        return is_energy_converged
             && problem_ptr->are_equality_constraints_satisfied(x);
     }
 
@@ -194,6 +192,7 @@ namespace opt {
         direction.setZero(problem_ptr->num_vars());
         grad_direction.setZero(problem_ptr->num_vars());
 
+        is_energy_converged = false;
         bool success = false;
 
         for (iteration_number = 0; iteration_number < max_iterations;
@@ -612,7 +611,7 @@ namespace opt {
 
     void NewtonSolver::post_step_update()
     {
-        if (energy_converged()
+        if (is_energy_converged
             && !problem_ptr->are_equality_constraints_satisfied(x)) {
             spdlog::info(
                 "solver={} iter={:d} msg=\"updated augmented Lagrangian\"",

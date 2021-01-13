@@ -101,8 +101,7 @@ namespace opt {
         int max_iterations;
 
     protected:
-        virtual bool energy_converged() const;
-        virtual bool converged() const;
+        virtual bool converged();
 
         virtual void post_step_update();
 
@@ -129,6 +128,7 @@ namespace opt {
         double energy_conv_tol;   ///< @brief Energy convergence tolerance
         double velocity_conv_tol; ///< @brief Velocity convergence tolerance
         bool is_velocity_conv_tol_abs; ///< @brief Absolute velocity tol
+        bool is_energy_converged;
 
         // State variables
         Eigen::VectorXd x, x_prev;

@@ -100,7 +100,7 @@ namespace opt {
                     NewtonSolver::line_search_lower_bound(), c_ * e_b_ / 10.0);
             }
 
-            bool converged() const override
+            bool converged() override
             {
                 switch (convergence_criteria) {
                 case ConvergenceCriteria::ENERGY:
