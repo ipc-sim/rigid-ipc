@@ -155,6 +155,7 @@ namespace opt {
                       << std::endl;
             */
             is_energy_converged = step_max_speed <= tol;
+            break;
         }
         case ConvergenceCriteria::ENERGY: {
             double step_energy = abs(gradient_free.dot(direction_free));
@@ -164,6 +165,7 @@ namespace opt {
                 "solver={} iter={:d} step_energy={:g} tol={:g}", //
                 name(), iteration_number, step_energy, tol);
             is_energy_converged = step_energy <= tol;
+            break;
         }
         }
 
