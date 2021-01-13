@@ -518,7 +518,7 @@ void face_vertex_closest_point(
 
         Eigen::Vector3d f2_t0 = bodyB.world_vertex(poseB_t0, f2_id);
         Eigen::Vector3d f2_t1 = bodyB.world_vertex(poseB_t1, f2_id);
-        f1 = (f1_t1 - f1_t0) * toi + f1_t0;
+        f2 = (f2_t1 - f2_t0) * toi + f2_t0;
         break;
     }
 

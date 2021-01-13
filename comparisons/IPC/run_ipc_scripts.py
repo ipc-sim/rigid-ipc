@@ -66,6 +66,8 @@ def create_parser():
     parser.add_argument(
         "--loglevel", default=3, type=int, choices=range(7),
         help="set log level 0=trace, 1=debug, 2=info, 3=warn, 4=error, 5=critical, 6=off")
+    parser.add_argument(
+        "--rigid-args", default="", help=f"arguments to FixingCollisions_ngui")
     return parser
 
 
@@ -130,7 +132,7 @@ def main():
                 video_name = f"{script.stem}-{get_time_stamp()}-ipc.mp4"
                 subprocess.run([str(render_exe), output / "ipc",
                                 "-o", output / video_name,
-                                "--loglevel", str(args.loglevel), 
+                                "--loglevel", str(args.loglevel),
                                 "--fps", "100"])
                 if remote_storage is not None:
                     remote_path = (f"{remote_storage}{rel.parent}")
@@ -164,7 +166,8 @@ def main():
             fixture = fixtures_dir / rel.with_suffix(".json")
             print(f"Running {fixture}")
             subprocess.run([str(args.rigid_exe), str(fixture),
-                            str(output), "--log", str(args.loglevel)])
+                            str(output), "--log", str(args.loglevel)]
+                           + args.rigid_args.split())
 
             # Render the RB sim
             if not args.no_video:
@@ -172,7 +175,7 @@ def main():
                 video_name = f"{script.stem}-{get_time_stamp()}-rigid.mp4"
                 subprocess.run([str(render_exe), output / "sim.json",
                                 "-o", output / video_name,
-                                "--loglevel", str(args.loglevel), 
+                                "--loglevel", str(args.loglevel),
                                 "--fps", "100"])
                 if remote_storage is not None:
                     remote_path = (f"{remote_storage}{rel.parent}")
