@@ -4,10 +4,10 @@
 
 #include <Eigen/Geometry>
 #include <Eigen/LU>
-#include <igl/png/writePNG.h>
 
 #include "eigen_json.hpp"
 #include "raster.hpp"
+#include "write_png.hpp"
 
 namespace swr {
 
@@ -201,7 +201,7 @@ bool render_mesh(
     }
 
     // Convert Framebuffer to RGBA matrices
-    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> R, G, B, A;
+    Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> R, G, B, A;
     R.resizeLike(frame_buffer);
     G.resizeLike(frame_buffer);
     B.resizeLike(frame_buffer);
@@ -215,7 +215,7 @@ bool render_mesh(
         }
     }
 
-    return igl::png::writePNG(R, G, B, A, filename);
+    return write_png(R, G, B, A, filename);
 }
 
 } // namespace swr

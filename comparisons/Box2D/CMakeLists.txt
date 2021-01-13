@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 ################################################################################
 
-add_executable(Box2D-comparison
+add_executable(Box2D_comparison
     src/main.cpp
 )
 
@@ -18,19 +18,19 @@ if(NOT TARGET tobanteGaming::Box2D)
     fixing_collisions_download_box2d()
     add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/Box2D-cmake box2d)
 endif()
-target_link_libraries(Box2D-comparison PUBLIC tobanteGaming::Box2D)
+target_link_libraries(Box2D_comparison PUBLIC tobanteGaming::Box2D)
 
 # Eigen through libigl
-target_link_libraries(Box2D-comparison PUBLIC igl::core)
+target_link_libraries(Box2D_comparison PUBLIC igl::core)
 
 # Warnings
-target_link_libraries(Box2D-comparison PUBLIC warnings::all)
+target_link_libraries(Box2D_comparison PUBLIC warnings::all)
 
 # Json Parser
-target_link_libraries(Box2D-comparison PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(Box2D_comparison PUBLIC nlohmann_json::nlohmann_json)
 
 # Logger
-target_link_libraries(Box2D-comparison PUBLIC spdlog::spdlog)
+target_link_libraries(Box2D_comparison PUBLIC spdlog::spdlog)
 
 # Command-Line Interface
-target_link_libraries(Box2D-comparison PUBLIC CLI11::CLI11)
+target_link_libraries(Box2D_comparison PUBLIC CLI11::CLI11)

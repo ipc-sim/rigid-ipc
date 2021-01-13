@@ -15,61 +15,67 @@ include(FixingCollisionsDownloadExternal)
 ################################################################################
 
 # MOSEK library
-if(FIXING_COLLISIONS_ENABLE_MOSEK)
-    if(NOT TARGET mosek)
-        # fixing_collisions_download_mosek()
-        find_package(MOSEK QUIET)
-        if(MOSEK_FOUND)
-            message(STATUS "Including MOSEK")
-            # Make sure libigl uses mosek
-            set(LIBIGL_WITH_MOSEK ON CACHE BOOL "Use MOSEK" FORCE)
-            # Create a library for mosek
-            add_library(mosek_mosek INTERFACE)
-            target_link_libraries(mosek_mosek INTERFACE ${MOSEK_LIBRARIES})
-            target_include_directories(mosek_mosek SYSTEM INTERFACE ${MOSEK_INCLUDE_DIRS})
-            target_compile_definitions(mosek_mosek INTERFACE -DHAS_MOSEK)
-            add_library(mosek::mosek ALIAS mosek_mosek)
-        else()
-            message(WARNING "MOSEK not found!")
-            add_library(mosek::mosek INTERFACE IMPORTED)
-        endif()
+if(FIXING_COLLISIONS_WITH_MOSEK)
+  if(NOT TARGET mosek)
+    # fixing_collisions_download_mosek()
+    find_package(MOSEK QUIET)
+    if(MOSEK_FOUND)
+      message(STATUS "Including MOSEK")
+      # Make sure libigl uses mosek
+      set(LIBIGL_WITH_MOSEK ON CACHE BOOL "Use MOSEK" FORCE)
+      # Create a library for mosek
+      add_library(mosek_mosek INTERFACE)
+      target_link_libraries(mosek_mosek INTERFACE ${MOSEK_LIBRARIES})
+      target_include_directories(mosek_mosek SYSTEM INTERFACE ${MOSEK_INCLUDE_DIRS})
+      target_compile_definitions(mosek_mosek INTERFACE -DHAS_MOSEK)
+      add_library(mosek::mosek ALIAS mosek_mosek)
+    else()
+      message(WARNING "MOSEK not found!")
+      add_library(mosek::mosek INTERFACE IMPORTED)
     endif()
+  endif()
 endif()
 
 if(NOT TARGET fmt::fmt)
-    fixing_collisions_download_fmt()
-    add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/fmt)
+  fixing_collisions_download_fmt()
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/fmt)
 endif()
 
 # spdlog
 if(NOT TARGET spdlog::spdlog)
-    fixing_collisions_download_spdlog()
-    add_library(spdlog INTERFACE)
-    add_library(spdlog::spdlog ALIAS spdlog)
-    target_include_directories(spdlog SYSTEM INTERFACE ${FIXING_COLLISIONS_EXTERNAL}/spdlog/include)
-    target_compile_definitions(spdlog INTERFACE -DSPDLOG_FMT_EXTERNAL)
-    target_link_libraries(spdlog INTERFACE fmt::fmt)
+  fixing_collisions_download_spdlog()
+  add_library(spdlog INTERFACE)
+  add_library(spdlog::spdlog ALIAS spdlog)
+  target_include_directories(spdlog SYSTEM INTERFACE ${FIXING_COLLISIONS_EXTERNAL}/spdlog/include)
+  target_compile_definitions(spdlog INTERFACE -DSPDLOG_FMT_EXTERNAL)
+  target_link_libraries(spdlog INTERFACE fmt::fmt)
 endif()
 
 # libigl
 if(NOT TARGET igl::core)
-    fixing_collisions_download_libigl()
-    # Import libigl targets
-    list(APPEND CMAKE_MODULE_PATH "${FIXING_COLLISIONS_EXTERNAL}/libigl/cmake")
-    include(libigl)
+  fixing_collisions_download_libigl()
+  # Import libigl targets
+  list(APPEND CMAKE_MODULE_PATH "${FIXING_COLLISIONS_EXTERNAL}/libigl/cmake")
+  include(libigl)
+
+  if(NOT FIXING_COLLISIONS_WITH_OPENGL AND NOT TARGET stb_image)
+    # Download this myself for the software renderer
+    igl_download_stb()
+    add_subdirectory(${LIBIGL_EXTERNAL}/stb stb_image)
+  endif()
 endif()
 
 # json
 if(NOT TARGET nlohmann_json::nlohmann_json)
-    fixing_collisions_download_json()
-    option(JSON_BuildTests "" OFF)
-    option(JSON_MultipleHeaders "" ON)
-    add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/json json)
+  fixing_collisions_download_json()
+  option(JSON_BuildTests "" OFF)
+  option(JSON_MultipleHeaders "" ON)
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/json json)
 endif()
 
 if(NOT TARGET CLI11::CLI11)
-    fixing_collisions_download_cli11()
-    add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/cli11)
+  fixing_collisions_download_cli11()
+  add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/cli11)
 endif()
 
 # finite-diff

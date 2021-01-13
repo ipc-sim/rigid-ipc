@@ -2,47 +2,47 @@ cmake_minimum_required(VERSION 3.1)
 ################################################################################
 
 add_executable(${PROJECT_NAME}_tests
-    main.cpp
+  main.cpp
 
-    barrier/test_barriers.cpp
+  barrier/test_barriers.cpp
 
-    # Test CCD
-    ccd/collision_generator.cpp
-    ccd/test_edge_vertex_ccd.cpp
-    ccd/test_time_of_impact.cpp
-    # ccd/test_hash_grid.cpp
+  # Test CCD
+  ccd/collision_generator.cpp
+  ccd/test_edge_vertex_ccd.cpp
+  ccd/test_time_of_impact.cpp
+  # ccd/test_hash_grid.cpp
 
-    interval/test_interval.cpp
-    interval/test_interval_root_finder.cpp
-    ccd/test_rigid_body_time_of_impact.cpp
-    ccd/test_rigid_body_hash_grid.cpp
+  interval/test_interval.cpp
+  interval/test_interval_root_finder.cpp
+  ccd/test_rigid_body_time_of_impact.cpp
+  ccd/test_rigid_body_hash_grid.cpp
 
-    # Test libarary integration
-    integration/test_mosek.cpp
+  # Test libarary integration
+  integration/test_mosek.cpp
 
-    solvers/test_ncp.cpp
-    solvers/test_ncp_displacements_opt.cpp
-    solvers/test_newton_solver.cpp
-    solvers/test_barrier_newton_solver.cpp
-    solvers/test_barrier_displacements_opt.cpp
-    solvers/test_line_search.cpp
+  solvers/test_ncp.cpp
+  solvers/test_ncp_displacements_opt.cpp
+  solvers/test_newton_solver.cpp
+  solvers/test_barrier_newton_solver.cpp
+  solvers/test_barrier_displacements_opt.cpp
+  solvers/test_line_search.cpp
 
-    # opt/test_volume_constraint.cpp
-    opt/test_distance_barrier_constraint.cpp
+  # opt/test_volume_constraint.cpp
+  opt/test_distance_barrier_constraint.cpp
 
-    physics/test_mass.cpp
-    physics/test_pose.cpp
-    physics/test_rigid_body.cpp
-    physics/test_rigid_body_system.cpp
-    physics/test_rigid_body_problem.cpp
+  physics/test_mass.cpp
+  physics/test_pose.cpp
+  physics/test_rigid_body.cpp
+  physics/test_rigid_body_system.cpp
+  physics/test_rigid_body_problem.cpp
 
-    io/test_serialize_json.cpp
-    io/test_read_rb_scene.cpp
+  io/test_serialize_json.cpp
+  io/test_read_rb_scene.cpp
 
-    geometry/test_distance.cpp
-    geometry/test_intersection.cpp
+  geometry/test_distance.cpp
+  geometry/test_intersection.cpp
 
-    utils/test_sinc.cpp
+  utils/test_sinc.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)
@@ -50,12 +50,12 @@ target_link_libraries(${PROJECT_NAME}_tests PUBLIC FiniteDiff::FiniteDiff)
 
 target_compile_definitions(${PROJECT_NAME}_tests PUBLIC CATCH_CONFIG_ENABLE_BENCHMARKING)
 
-if(FIXING_COLLISIONS_CODE_COVERAGE)
-    target_code_coverage(${PROJECT_NAME}_tests AUTO ALL)
+if(FIXING_COLLISIONS_WITH_CODE_COVERAGE)
+  target_code_coverage(${PROJECT_NAME}_tests AUTO ALL)
 endif()
 
 foreach(source IN ITEMS ${test_sources})
-   source_group("tests" FILES "${source}")
+  source_group("tests" FILES "${source}")
 endforeach()
 
 # Register tests

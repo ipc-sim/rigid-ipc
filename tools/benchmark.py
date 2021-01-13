@@ -110,6 +110,8 @@ def create_parser():
     parser.add_argument(
         "--loglevel", default=3, type=int, choices=range(7),
         help="set log level 0=trace, 1=debug, 2=info, 3=warn, 4=error, 5=critical, 6=off")
+    parser.add_argument(
+        "--sim-args", default="", help=f"arguments to {sim_exe_name()}")
     return parser
 
 
@@ -174,7 +176,8 @@ def main():
         #         log_file.write(line)
         #     sim.wait()
         subprocess.run([str(args.sim_exe), str(scene.resolve()),
-                        str(sim_output_dir), "--loglevel", str(args.loglevel)])
+                        str(sim_output_dir), "--loglevel", str(args.loglevel)]
+                       + args.sim_args.split())
 
         if(args.no_video):
             video_url = "N/a"

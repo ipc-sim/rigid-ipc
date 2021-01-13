@@ -11,16 +11,6 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use IMGUI"                     ON)
 option(LIBIGL_WITH_PNG               "Use PNG"                       ON)
 option(LIBIGL_WITH_PREDICATES        "Use exact predicates"          ON)
 
-# project-options
-option(FIXING_COLLISIONS_BUILD_UNIT_TESTS          "Build unit-tests"   ON)
-option(FIXING_COLLISIONS_ENABLE_DERIVATIVE_CHECK   "Check Derivatives" OFF)
-option(FIXING_COLLISIONS_ENABLE_PROFILING          "Profile Functions" OFF)
-option(FIXING_COLLISIONS_BUILD_COMPARISONS         "Build comparisons" ON)
-option(FIXING_COLLISIONS_CODE_COVERAGE             "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
-option(FIXING_COLLISIONS_ENABLE_MOSEK              "Enable Mosek Library" OFF)
-mark_as_advanced(FIXING_COLLISIONS_ENABLE_MOSEK)
-option(FIXING_COLLISIONS_ENABLE_SIMD "Enable SIMD" OFF)
-
 # PolySolve settings
 option(POLYSOLVE_WITH_CHOLMOD          "Enable Cholmod library"            ON)
 option(POLYSOLVE_WITH_UMFPACK          "Enable UmfPack library"            OFF)
@@ -30,6 +20,22 @@ option(POLYSOLVE_WITH_PARDISO          "Enable Pardiso library"            OFF)
 option(POLYSOLVE_WITH_HYPRE            "Enable hypre"                      OFF)
 option(POLYSOLVE_WITH_AMGCL            "Use AMGCL"                         OFF)
 option(POLYSOLVE_WITH_SPECTRA          "Enable computing spectrum"         OFF)
+
+# project-options
+option(FIXING_COLLISIONS_WITH_UNIT_TESTS       "Build unit-tests"       ON)
+option(FIXING_COLLISIONS_WITH_CODE_COVERAGE    "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
+option(FIXING_COLLISIONS_WITH_DERIVATIVE_CHECK "Check Derivatives"     OFF)
+option(FIXING_COLLISIONS_WITH_PROFILING        "Profile Functions"     OFF)
+option(FIXING_COLLISIONS_WITH_COMPARISONS      "Build comparisons"      ON)
+option(FIXING_COLLISIONS_WITH_SIMD             "Enable SIMD"           OFF)
+option(FIXING_COLLISIONS_WITH_OPENGL           "Build GUI"              ON)
+option(FIXING_COLLISIONS_WITH_MOSEK            "Enable Mosek Library"  OFF)
+mark_as_advanced(FIXING_COLLISIONS_WITH_MOSEK)
+
+set(LIBIGL_WITH_OPENGL_GLFW_IMGUI ${FIXING_COLLISIONS_WITH_OPENGL} CACHE BOOL "" FORCE)
+set(LIBIGL_WITH_OPENGL_GLFW ${FIXING_COLLISIONS_WITH_OPENGL} CACHE BOOL "" FORCE)
+set(LIBIGL_WITH_OPENGL ${FIXING_COLLISIONS_WITH_OPENGL} CACHE BOOL "" FORCE)
+set(LIBIGL_WITH_PNG ${FIXING_COLLISIONS_WITH_OPENGL} CACHE BOOL "" FORCE)
 
 ################################################################################
 
@@ -48,80 +54,79 @@ mark_as_advanced(CLEAR CMAKE_BUILD_TYPE)
 ################################################################################
 
 add_library(${PROJECT_NAME}
-    src/autodiff/autodiff.cpp
-    ${FIXING_COLLISIONS_EXTERNAL}/finite-diff/finitediff.cpp
+  src/autodiff/autodiff.cpp
+  ${FIXING_COLLISIONS_EXTERNAL}/finite-diff/finitediff.cpp
 
-    src/utils/sinc.cpp
+  src/utils/sinc.cpp
 
-    src/ccd/impact.cpp
-    src/ccd/ccd.cpp
-    src/ccd/linear/broad_phase.cpp
-    src/ccd/piecewise_linear/time_of_impact.cpp
-    src/interval/filib_rounding.cpp
-    src/interval/interval_root_finder.cpp
-    src/ccd/rigid/broad_phase.cpp
-    src/ccd/rigid/rigid_body_hash_grid.cpp
-    src/ccd/rigid/time_of_impact.cpp
-    src/ccd/rigid/rigid_trajectory_aabb.cpp
-    src/ccd/redon/time_of_impact.cpp
+  src/ccd/impact.cpp
+  src/ccd/ccd.cpp
+  src/ccd/linear/broad_phase.cpp
+  src/ccd/piecewise_linear/time_of_impact.cpp
+  src/interval/filib_rounding.cpp
+  src/interval/interval_root_finder.cpp
+  src/ccd/rigid/broad_phase.cpp
+  src/ccd/rigid/rigid_body_hash_grid.cpp
+  src/ccd/rigid/time_of_impact.cpp
+  src/ccd/rigid/rigid_trajectory_aabb.cpp
+  src/ccd/redon/time_of_impact.cpp
 
-    src/geometry/intersection.cpp
+  src/geometry/intersection.cpp
 
-    src/io/serialize_json.cpp
-    src/io/read_rb_scene.cpp
-    src/io/read_obj.cpp
+  src/io/serialize_json.cpp
+  src/io/read_rb_scene.cpp
+  src/io/read_obj.cpp
 
-    src/physics/mass.cpp
-    src/utils/mesh_selector.cpp
-    src/physics/rigid_body.cpp
-    src/physics/rigid_body_assembler.cpp
-    src/physics/rigid_body_problem.cpp
+  src/physics/mass.cpp
+  src/utils/mesh_selector.cpp
+  src/physics/rigid_body.cpp
+  src/physics/rigid_body_assembler.cpp
+  src/physics/rigid_body_problem.cpp
 
-    src/barrier/barrier.cpp
-    src/barrier/barrier_chorner.cpp
+  src/barrier/barrier.cpp
+  src/barrier/barrier_chorner.cpp
 
-    src/opt/distance_barrier_constraint.cpp
-    src/opt/collision_constraint.cpp
-    src/opt/optimization_problem.cpp
-    src/opt/optimization_results.cpp
-    # src/opt/volume_constraint.cpp
+  src/opt/distance_barrier_constraint.cpp
+  src/opt/collision_constraint.cpp
+  src/opt/optimization_problem.cpp
+  src/opt/optimization_results.cpp
+  # src/opt/volume_constraint.cpp
 
-    src/problems/barrier_problem.cpp
+  src/problems/barrier_problem.cpp
 
-    src/solvers/homotopy_solver.cpp
-    src/solvers/fischer_newton.cpp
-    src/solvers/lcp_solver.cpp
-    src/solvers/ncp_solver.cpp
-    src/solvers/line_search.cpp
-    src/solvers/newton_solver.cpp
-    src/solvers/ipc_solver.cpp
-    src/solvers/solver_factory.cpp
+  src/solvers/homotopy_solver.cpp
+  src/solvers/fischer_newton.cpp
+  src/solvers/lcp_solver.cpp
+  src/solvers/ncp_solver.cpp
+  src/solvers/line_search.cpp
+  src/solvers/newton_solver.cpp
+  src/solvers/ipc_solver.cpp
+  src/solvers/solver_factory.cpp
 
-    src/problems/rigid_body_collision_constraint.cpp
-    src/problems/distance_barrier_rb_problem.cpp
-    src/problems/split_distance_barrier_rb_problem.cpp
-    # src/problems/volume_rb_problem.cpp
-    src/problems/problem_factory.cpp
+  src/problems/rigid_body_collision_constraint.cpp
+  src/problems/distance_barrier_rb_problem.cpp
+  src/problems/split_distance_barrier_rb_problem.cpp
+  # src/problems/volume_rb_problem.cpp
+  src/problems/problem_factory.cpp
 
-    src/time_stepper/sympletic_euler_time_stepper.cpp
-    src/time_stepper/verlet_time_stepper.cpp
-    src/time_stepper/exponential_euler_time_stepper.cpp
-    src/time_stepper/dmv_time_stepper.cpp
-    src/time_stepper/time_stepper_factory.cpp
+  src/time_stepper/sympletic_euler_time_stepper.cpp
+  src/time_stepper/verlet_time_stepper.cpp
+  src/time_stepper/exponential_euler_time_stepper.cpp
+  src/time_stepper/dmv_time_stepper.cpp
+  src/time_stepper/time_stepper_factory.cpp
 
-    src/utils/tensor.cpp
-    src/utils/eigen_ext.cpp
-    src/utils/regular_2d_grid.cpp
-    src/utils/get_rss.cpp
+  src/utils/tensor.cpp
+  src/utils/eigen_ext.cpp
+  src/utils/regular_2d_grid.cpp
+  src/utils/get_rss.cpp
 
-    src/SimState.cpp
-    src/logger.cpp
-    src/profiler.cpp
+  src/SimState.cpp
+  src/logger.cpp
+  src/profiler.cpp
 
-    # Generated files
-    src/autogen/time_of_impact_coeff.tpp
-    src/autogen/collision_volume.tpp
-
+  # Generated files
+  src/autogen/time_of_impact_coeff.tpp
+  src/autogen/collision_volume.tpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)
@@ -151,13 +156,13 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DDATA_OUTPUT_DIR=\"${DATA_OUT
 set(LOGS_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/logs")
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DLOGS_OUTPUT_DIR=\"${LOGS_OUTPUT_DIR}\")
 
-if(FIXING_COLLISIONS_ENABLE_DERIVATIVE_CHECK)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DWITH_DERIVATIVE_CHECK)
+if(FIXING_COLLISIONS_WITH_DERIVATIVE_CHECK)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC -DWITH_DERIVATIVE_CHECK)
 endif()
 
-if(FIXING_COLLISIONS_ENABLE_PROFILING)
-    message(STATUS "Profiling Enabled")
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DPROFILE_FUNCTIONS)
+if(FIXING_COLLISIONS_WITH_PROFILING)
+  message(STATUS "Profiling Enabled")
+  target_compile_definitions(${PROJECT_NAME} PUBLIC -DPROFILE_FUNCTIONS)
 endif()
 
 ################################################################################
@@ -165,9 +170,7 @@ endif()
 ################################################################################
 
 # libigl
-target_link_libraries(${PROJECT_NAME} PUBLIC
-  igl::core igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui igl::png
-  igl::predicates)
+target_link_libraries(${PROJECT_NAME} PUBLIC igl::core igl::predicates)
 
 # Extra warnings
 target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
@@ -192,7 +195,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${FIXING_COLLISIONS_EXTERNAL}/
 #
 
 # Mosek
-if(FIXING_COLLISIONS_ENABLE_MOSEK)
+if(FIXING_COLLISIONS_WITH_MOSEK)
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DBUILD_WITH_MOSEK)
     target_link_libraries(${PROJECT_NAME} PUBLIC mosek::mosek)
 endif()
@@ -231,7 +234,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC SimpleBVH::BVH_lib)
 ################################################################################
 
 ## SIMD support
-if(FIXING_COLLISIONS_ENABLE_SIMD)
+if(FIXING_COLLISIONS_WITH_SIMD)
   # Figure out SSE level support
   message(STATUS "Seaching for SSE...")
   find_package(SSE)
@@ -259,20 +262,25 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_14)
 # Simulations Executable
 ################################################################################
 
-add_executable(${PROJECT_NAME}_sim
+if(FIXING_COLLISIONS_WITH_OPENGL)
+  add_executable(${PROJECT_NAME}_sim
+    src/main.cpp
+
     src/viewer/imgui_ext.cpp
     src/viewer/igl_viewer_ext.cpp
     src/viewer/UISimState.cpp
     src/viewer/UIMenu.cpp
+  )
+  target_include_directories(${PROJECT_NAME}_sim PUBLIC src)
 
-    src/main.cpp
-)
+  target_link_libraries(${PROJECT_NAME}_sim PUBLIC ${PROJECT_NAME})
 
-target_include_directories(${PROJECT_NAME}_sim PUBLIC src)
-target_link_libraries(${PROJECT_NAME}_sim PUBLIC ${PROJECT_NAME})
+  target_link_libraries(${PROJECT_NAME}_sim PUBLIC
+    igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
 
-# Charlie Tangora's gif-h library
-target_link_libraries(${PROJECT_NAME}_sim PRIVATE gif_h::gif_h)
+  # Charlie Tangora's gif-h library
+  target_link_libraries(${PROJECT_NAME}_sim PRIVATE gif_h::gif_h)
+endif()
 
 ################################################################################
 # No UI Executable
@@ -311,9 +319,10 @@ add_library(software_renderer
   src/renderer/camera.cpp
   src/renderer/raster.cpp
   src/renderer/render_mesh.cpp
+  src/renderer/write_png.cpp
 )
 
-target_link_libraries(software_renderer PUBLIC igl::core igl::png)
+target_link_libraries(software_renderer PUBLIC igl::core igl_stb_image)
 target_link_libraries(software_renderer PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(software_renderer PUBLIC TBB::tbb)
 
@@ -330,32 +339,32 @@ target_link_libraries(render_simulation PUBLIC CLI11::CLI11)
 ################################################################################
 
 if(FIXING_COLLISIONS_CODE_COVERAGE)
-    message(STATUS "Building with code coverage")
-    include(CodeCoverage)
-    add_code_coverage_all_targets()
+  message(STATUS "Building with code coverage")
+  include(CodeCoverage)
+  add_code_coverage_all_targets()
 
-    target_code_coverage(${PROJECT_NAME})
-#    target_code_coverage(${PROJECT_NAME}_bin)
-    target_code_coverage(${PROJECT_NAME}_sim)
-    target_code_coverage(${PROJECT_NAME}_ngui)
+  target_code_coverage(${PROJECT_NAME})
+  # target_code_coverage(${PROJECT_NAME}_bin)
+  target_code_coverage(${PROJECT_NAME}_sim)
+  target_code_coverage(${PROJECT_NAME}_ngui)
 endif()
 
-if(FIXING_COLLISIONS_BUILD_UNIT_TESTS)
-    # Catch2
-    if(NOT TARGET Catch2::Catch2)
-        fixing_collisions_download_catch2()
-        add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/Catch2 catch2)
-        list(APPEND CMAKE_MODULE_PATH ${FIXING_COLLISIONS_EXTERNAL}/Catch2/contrib)
-    endif()
+if(FIXING_COLLISIONS_WITH_UNIT_TESTS)
+  # Catch2
+  if(NOT TARGET Catch2::Catch2)
+    fixing_collisions_download_catch2()
+    add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/Catch2 catch2)
+    list(APPEND CMAKE_MODULE_PATH ${FIXING_COLLISIONS_EXTERNAL}/Catch2/contrib)
+  endif()
 
-    include(CTest)
-    enable_testing()
-    add_subdirectory(tests)
+  include(CTest)
+  enable_testing()
+  add_subdirectory(tests)
 endif()
 
 ################################################################################
 # Comparisons to other methods
 ################################################################################
-if(FIXING_COLLISIONS_BUILD_COMPARISONS)
-    add_subdirectory(comparisons)
+if(FIXING_COLLISIONS_WITH_COMPARISONS)
+  add_subdirectory(comparisons)
 endif()
