@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
             /*V_rest=*/V, V, bodies.m_edges, bodies.m_faces,
             /*dhat=*/1, constraint_set,
             /*ignore_internal_vertices=*/false,
-            /*vertex_group_ids=*/bodies.group_ids());
+            /*vertex_group_ids=*/bodies.group_ids(), bodies.m_faces_to_edges);
         double min_distance = sqrt(ipc::compute_minimum_distance(
             V, bodies.m_edges, bodies.m_faces, constraint_set));
 

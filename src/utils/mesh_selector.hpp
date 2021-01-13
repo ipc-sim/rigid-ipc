@@ -19,9 +19,10 @@ public:
     {
         return m_face_to_edges(fi, fi_ei);
     }
+    const Eigen::MatrixXi& face_to_edges() const { return m_face_to_edges; }
     size_t edge_to_face(size_t ei) const { return m_edge_to_face[ei]; }
 
-private:
+protected:
     /// A mapping from a vertex id to the smallest adjacent face id.
     std::vector<size_t> m_vertex_to_edge;
     /// A mapping from a vertex id to the smallest adjacent face id.

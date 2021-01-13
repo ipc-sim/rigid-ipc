@@ -420,7 +420,8 @@ namespace opt {
         Eigen::MatrixXd V = bodies.world_vertices(poses);
         ipc::construct_constraint_set(
             candidates, /*V_rest=*/V, V, bodies.m_edges, bodies.m_faces,
-            /*dhat=*/m_barrier_activation_distance, constraint_set);
+            /*dhat=*/m_barrier_activation_distance, constraint_set,
+            bodies.m_faces_to_edges);
 
         PROFILE_END();
 

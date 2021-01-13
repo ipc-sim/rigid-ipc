@@ -38,6 +38,7 @@ namespace physics {
         // global edges and faces
         m_edges.resize(m_body_edge_id.back(), 2);
         m_faces.resize(m_body_face_id.back(), 3);
+        m_faces_to_edges.resize(m_body_face_id.back(), 3);
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
             if (rb.edges.size() != 0) {
@@ -47,6 +48,10 @@ namespace physics {
             if (rb.faces.size() != 0) {
                 m_faces.block(m_body_face_id[i], 0, rb.faces.rows(), 3) =
                     rb.faces.array() + m_body_vertex_id[i];
+                m_faces_to_edges.block(
+                    m_body_face_id[i], 0, rb.faces.rows(), 3) =
+                    rb.mesh_selector.face_to_edges().array()
+                    + m_body_edge_id[i];
             }
         }
         // vertex to body map

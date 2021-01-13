@@ -144,6 +144,8 @@ def main():
             with open(output / "ipc" / "info.txt") as info:
                 lines = info.readlines()
                 df_row["IPC Runtime"] = float(lines[5].strip().split()[0])
+                print("IPC finished (total_runtime={:g}s)".format(
+                    df_row["IPC Runtime"]))
                 df_row["IPC Iterations"] = int(lines[1].strip().split()[1])
                 df_row["IPC Linear Solve Time"] = sum([
                     float(lines[9].strip().split()[0]) for i in (9, 10, 11)])
