@@ -130,7 +130,8 @@ def main():
                 video_name = f"{script.stem}-{get_time_stamp()}-ipc.mp4"
                 subprocess.run([str(render_exe), output / "ipc",
                                 "-o", output / video_name,
-                                "--loglevel", "2", "--fps", "100"])
+                                "--loglevel", str(args.loglevel), 
+                                "--fps", "100"])
                 if remote_storage is not None:
                     remote_path = (f"{remote_storage}{rel.parent}")
                     subprocess.run(
@@ -171,7 +172,8 @@ def main():
                 video_name = f"{script.stem}-{get_time_stamp()}-rigid.mp4"
                 subprocess.run([str(render_exe), output / "sim.json",
                                 "-o", output / video_name,
-                                "--loglevel", "2", "--fps", "100"])
+                                "--loglevel", str(args.loglevel), 
+                                "--fps", "100"])
                 if remote_storage is not None:
                     remote_path = (f"{remote_storage}{rel.parent}")
                     subprocess.run(
