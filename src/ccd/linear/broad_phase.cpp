@@ -275,7 +275,7 @@ void detect_collision_candidates_linear_bvh(
             }
         });
 
-    merge_local_candidate(storages, candidates);
+    merge_local_candidates(storages, candidates);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

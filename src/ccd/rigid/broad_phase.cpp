@@ -103,6 +103,8 @@ void detect_collision_candidates_rigid_bvh(
     std::vector<std::pair<int, int>> body_pairs =
         bodies.close_bodies(poses, poses, inflation_radius);
 
+    // auto posesI = physics::cast<Interval>(poses);
+
     // for (const auto& body_pair : body_pairs) {
     ThreadSpecificCandidates storages;
     tbb::parallel_for(
@@ -119,13 +121,14 @@ void detect_collision_candidates_rigid_bvh(
                 }
 
                 detect_collision_candidates_rigid_bvh(
+                    // bodies, posesI, collision_types, small_body_id,
                     bodies, poses, collision_types, small_body_id,
                     large_body_id, local_storage_candidates, inflation_radius);
             }
         });
     //}
 
-    merge_local_candidate(storages, candidates);
+    merge_local_candidates(storages, candidates);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -265,7 +268,7 @@ void detect_collision_candidates_rigid_bvh(
             }
         });
 
-    merge_local_candidate(storages, candidates);
+    merge_local_candidates(storages, candidates);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -409,10 +412,10 @@ void detect_collision_candidates_rigid_bvh(
     // );
 }
 
-void merge_local_candidate(
+void merge_local_candidates(
     const ThreadSpecificCandidates& storages, ipc::Candidates& candidates)
 {
-    PROFILE_POINT("merge_local_candidate");
+    PROFILE_POINT("merge_local_candidates");
     PROFILE_START();
     // size up the candidates
     size_t ev_size = 0, ee_size = 0, fv_size = 0;
@@ -440,6 +443,153 @@ void merge_local_candidate(
             local_candidates.fv_candidates.end());
     }
     PROFILE_END();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Broad-Phase Intersection Detection
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+void detect_intersection_candidates_rigid_bvh(
+    const physics::RigidBodyAssembler& bodies,
+    const physics::Poses<T>& poses,
+    const size_t bodyA_id,
+    const size_t bodyB_id,
+    std::vector<ipc::EdgeFaceCandidate>& ef_candidates)
+{
+    const physics::RigidBody& bodyA = bodies[bodyA_id];
+    const physics::RigidBody& bodyB = bodies[bodyB_id];
+
+    // Compute the smaller body's vertices in the larger body's local
+    // coordinates.
+    const auto RA = poses[bodyA_id].construct_rotation_matrix();
+    const auto RB = poses[bodyB_id].construct_rotation_matrix();
+    const auto& pA = poses[bodyA_id].position;
+    const auto& pB = poses[bodyB_id].position;
+
+    // PROFILE_POINT(fmt::format(
+    //     "detect_intersection_candidates_rigid_bvh<{}>:compute_vertices",
+    //     get_type_name<T>()));
+    // PROFILE_START();
+    const Eigen::MatrixX<T> VA =
+        ((bodyA.vertices * RA.transpose()).rowwise() + (pA - pB).transpose())
+        * RB;
+    // PROFILE_END();
+
+    const Eigen::MatrixXd& VB = bodyB.vertices;
+    const Eigen::MatrixXi &EA = bodyA.edges, &EB = bodyB.edges,
+                          &FA = bodyA.faces, &FB = bodyB.faces;
+
+    // For each face in the small body
+    // std::mutex fv_mutex, ee_mutex;
+    // tbb::parallel_for(0l, FA.rows(), [&](long fa_id) {
+    for (long fa_id = 0; fa_id < FA.rows(); fa_id++) {
+        // Construct a bbox of bodyA's face
+        AABB fa_aabb = face_aabb(VA, FA.row(fa_id));
+
+        std::vector<unsigned int> fb_ids;
+        bodyB.bvh.intersect_box(
+            fa_aabb.getMin().array(), fa_aabb.getMax().array(), fb_ids);
+
+        for (const unsigned int fb_id : fb_ids) {
+            AABB fb_aabb = face_aabb(VB, FB.row(fb_id));
+
+            for (int fa_ei = 0; fa_ei < 3; fa_ei++) {
+                long ea_id = bodyA.mesh_selector.face_to_edge(fa_id, fa_ei);
+
+                if (bodyA.mesh_selector.edge_to_face(ea_id) != fa_id) {
+                    continue;
+                }
+
+                AABB ea_aabb = edge_aabb(VA, EA.row(ea_id));
+                if (AABB::are_overlaping(ea_aabb, fb_aabb)) {
+                    // std::scoped_lock lock(ee_mutex);
+                    // Convert the local ids to the global ones
+                    ef_candidates.emplace_back(
+                        bodies.m_body_edge_id[bodyA_id] + ea_id,
+                        bodies.m_body_face_id[bodyB_id] + fb_id);
+                }
+            }
+
+            for (int fb_ei = 0; fb_ei < 3; fb_ei++) {
+                long eb_id = bodyB.mesh_selector.face_to_edge(fb_id, fb_ei);
+
+                if (bodyB.mesh_selector.edge_to_face(eb_id) != fb_id) {
+                    continue;
+                }
+
+                AABB eb_aabb = edge_aabb(VB, EB.row(eb_id));
+                if (AABB::are_overlaping(fa_aabb, eb_aabb)) {
+                    // std::scoped_lock lock(ee_mutex);
+                    // Convert the local ids to the global ones
+                    ef_candidates.emplace_back(
+                        bodies.m_body_edge_id[bodyB_id] + eb_id,
+                        bodies.m_body_face_id[bodyA_id] + fa_id);
+                }
+            }
+        }
+    }
+    // );
+}
+
+typedef tbb::enumerable_thread_specific<std::vector<ipc::EdgeFaceCandidate>>
+    ThreadSpecificEFCandidates;
+
+void merge_local_candidates(
+    const ThreadSpecificEFCandidates& storages,
+    std::vector<ipc::EdgeFaceCandidate>& ef_candidates)
+{
+    PROFILE_POINT("merge_local_ef_candidates");
+    PROFILE_START();
+    // size up the candidates
+    size_t size = 0;
+    for (const auto& local_candidates : storages) {
+        size += local_candidates.size();
+    }
+    // serial merge
+    ef_candidates.reserve(size);
+    for (const auto& local_candidates : storages) {
+        ef_candidates.insert(
+            ef_candidates.end(), //
+            local_candidates.begin(), local_candidates.end());
+    }
+    PROFILE_END();
+}
+
+// Use a BVH to create a set of all candidate intersections.
+void detect_intersection_candidates_rigid_bvh(
+    const physics::RigidBodyAssembler& bodies,
+    const physics::Poses<double>& poses,
+    std::vector<ipc::EdgeFaceCandidate>& ef_candidates)
+{
+    std::vector<std::pair<int, int>> body_pairs =
+        bodies.close_bodies(poses, poses, /*inflation_radius=*/0);
+
+    auto posesI = physics::cast<Interval>(poses);
+
+    // for (const auto& body_pair : body_pairs) {
+    ThreadSpecificEFCandidates storages;
+    tbb::parallel_for(
+        tbb::blocked_range<size_t>(size_t(0), body_pairs.size()),
+        [&](const tbb::blocked_range<size_t>& range) {
+            ThreadSpecificEFCandidates::reference local_storage_candidates =
+                storages.local();
+            for (long i = range.begin(); i != range.end(); ++i) {
+                int small_body_id = body_pairs[i].first;
+                int large_body_id = body_pairs[i].second;
+                if (bodies[small_body_id].num_faces()
+                    > bodies[large_body_id].num_faces()) {
+                    std::swap(small_body_id, large_body_id);
+                }
+
+                detect_intersection_candidates_rigid_bvh(
+                    bodies, posesI, small_body_id, large_body_id,
+                    local_storage_candidates);
+            }
+        });
+    //}
+
+    merge_local_candidates(storages, ef_candidates);
 }
 
 } // namespace ccd

@@ -8,6 +8,7 @@
 #include <igl/PI.h>
 #include <igl/predicates/segment_segment_intersect.h>
 
+#include <ccd/rigid/broad_phase.hpp>
 #include <ccd/rigid/rigid_body_hash_grid.hpp>
 #include <geometry/intersection.hpp>
 #include <io/read_rb_scene.hpp>
@@ -99,6 +100,8 @@ namespace physics {
 
         if (detect_intersections(m_assembler.rb_poses_t1())) {
             spdlog::error("The initial state contains intersections!");
+        } else {
+            spdlog::info("No intersections found in initial state");
         }
     }
 
@@ -273,18 +276,6 @@ namespace physics {
         PROFILE_POINT("RigidBodyProblem::detect_intersections");
         PROFILE_START();
 
-        double inflation_radius = 1e-8; // Conservative broad phase
-        std::vector<std::pair<int, int>> close_bodies =
-            m_assembler.close_bodies(poses, poses, inflation_radius);
-        if (close_bodies.size() == 0) {
-            PROFILE_END();
-            return false;
-        }
-
-        RigidBodyHashGrid hashgrid;
-        hashgrid.resize(m_assembler, poses, close_bodies, inflation_radius);
-        hashgrid.addBodies(m_assembler, poses, close_bodies, inflation_radius);
-
         const Eigen::MatrixXd vertices = m_assembler.world_vertices(poses);
         const Eigen::MatrixXi& edges = this->edges();
         const Eigen::MatrixXi& faces = this->faces();
@@ -292,6 +283,19 @@ namespace physics {
         bool is_intersecting = false;
         if (dim() == 2) { // Need to check segment-segment intersections in 2D
             assert(vertices.cols() == 2);
+
+            double inflation_radius = 1e-8; // Conservative broad phase
+            std::vector<std::pair<int, int>> close_bodies =
+                m_assembler.close_bodies(poses, poses, inflation_radius);
+            if (close_bodies.size() == 0) {
+                PROFILE_END();
+                return false;
+            }
+
+            RigidBodyHashGrid hashgrid;
+            hashgrid.resize(m_assembler, poses, close_bodies, inflation_radius);
+            hashgrid.addBodies(
+                m_assembler, poses, close_bodies, inflation_radius);
 
             std::vector<ipc::EdgeEdgeCandidate> ee_candidates;
             hashgrid.getEdgeEdgePairs(edges, group_ids(), ee_candidates);
@@ -314,7 +318,8 @@ namespace physics {
             assert(dim() == 3);
 
             std::vector<ipc::EdgeFaceCandidate> ef_candidates;
-            hashgrid.getEdgeFacePairs(edges, faces, group_ids(), ef_candidates);
+            detect_intersection_candidates_rigid_bvh(
+                m_assembler, poses, ef_candidates);
 
             for (const ipc::EdgeFaceCandidate& ef_candidate : ef_candidates) {
                 if (geometry::are_edge_triangle_intersecting(
@@ -323,7 +328,7 @@ namespace physics {
                         vertices.row(faces(ef_candidate.face_index, 0)),
                         vertices.row(faces(ef_candidate.face_index, 1)),
                         vertices.row(faces(ef_candidate.face_index, 2)))) {
-                    bool is_intersecting = false;
+                    is_intersecting = true;
                     break;
                 }
             }
