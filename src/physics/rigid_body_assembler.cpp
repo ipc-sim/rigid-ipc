@@ -332,9 +332,9 @@ namespace physics {
             bvh.intersect_box(
                 body_bounding_boxes[i][0], body_bounding_boxes[i][1],
                 intersecting_body_ids);
-            for (const auto& intersecting_body_id : intersecting_body_ids) {
-                if (i < intersecting_body_id) {
-                    close_body_pairs.emplace_back(i, intersecting_body_id);
+            for (const auto& j : intersecting_body_ids) {
+                if (i < j && m_rbs[i].group_id != m_rbs[j].group_id) {
+                    close_body_pairs.emplace_back(i, j);
                 }
             }
         }
