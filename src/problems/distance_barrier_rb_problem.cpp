@@ -192,7 +192,7 @@ namespace opt {
         int pos_ndof = physics::Pose<double>::dim_to_pos_ndof(dim());
         int rot_ndof = physics::Pose<double>::dim_to_rot_ndof(dim());
 
-        augmented_lagrangian_penalty = 1e6;
+        augmented_lagrangian_penalty = 1e3;
         augmented_lagrangian_multiplier.setZero(
             ndof * m_assembler.num_kinematic_bodies());
 
@@ -241,6 +241,7 @@ namespace opt {
                     is_dof_satisfied.segment(ndof * i, ndof).setOnes();
                 }
             }
+            spdlog::info("kinematic movement achieved freezing kinematic DoF");
             return;
         }
 

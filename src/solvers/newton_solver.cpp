@@ -418,11 +418,27 @@ namespace opt {
             }
         }
 
-        spdlog::debug(
-            "solver={} iter={:d} line_search_success={} step_length={:g}",
-            name(), iteration_number, success, step_length);
+        spdlog::info(
+            "solver={} iter={:d} α_min={:g} α_max={:g} α={:g} ",
+            // "d_min(x)={:g} d_min(x+αΔx)={:g}",
+            name(), iteration_number, lower_bound, max_step_size, step_length
+            // , problem_ptr->compute_min_distance(x),
+            // problem_ptr->compute_min_distance(x + step_length * dir)
+        );
 
         return success;
+    }
+
+    double norm_Linf(const Eigen::SparseMatrix<double>& M)
+    {
+        double norm = 0;
+        for (int k = 0; k < M.outerSize(); ++k) {
+            for (Eigen::SparseMatrix<double>::InnerIterator it(M, k); it;
+                 ++it) {
+                norm = std::max(norm, abs(it.value()));
+            }
+        }
+        return norm;
     }
 
     bool NewtonSolver::compute_regularized_direction(
@@ -474,7 +490,7 @@ namespace opt {
                     "solver={} iter={:d} failure=\"solve failed (∇f⋅Δx={:g}, "
                     "||H||_∞={:g}); increasing regularization coeff={:g}\"",
                     name(), iteration_number, gradient_free.dot(direction_free),
-                    Eigen::MatrixXd(hessian).lpNorm<Eigen::Infinity>(), coeff);
+                    norm_Linf(hessian), coeff);
             }
         }
         return success;
@@ -543,10 +559,11 @@ namespace opt {
             if (solve_residual > 1e-8) {
                 spdlog::warn(
                     "solver={} iter={:d} "
-                    "failure=\"linear solve residual ({:g}) > 1e-10\" "
-                    "failsafe=\"gradient descent\"",
-                    name(), iteration_number, solve_residual);
-                solve_success = false;
+                    "failure=\"linear solve residual ({:g}) > 1e-8; "
+                    "||H||_{{L^∞}}={:g}\"",
+                    name(), iteration_number, solve_residual,
+                    norm_Linf(hessian));
+                // solve_success = false;
             }
         }
 
