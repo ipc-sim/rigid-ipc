@@ -31,7 +31,7 @@ namespace physics {
         /// Get the settings of the simulation
         virtual nlohmann::json settings() const = 0;
         /// Set the settings of the simulation
-        virtual void settings(const nlohmann::json& params) = 0;
+        virtual bool settings(const nlohmann::json& params) = 0;
 
         /// Get the state of the simulation
         virtual nlohmann::json state() const = 0;

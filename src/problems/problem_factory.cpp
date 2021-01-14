@@ -31,7 +31,9 @@ std::shared_ptr<physics::SimulationProblem>
 ProblemFactory::get_problem(const std::string& name) const
 {
     auto it = problems_.find(name);
-    assert(it != problems_.end());
+    if (it == problems_.end()) {
+        return nullptr;
+    }
     return it->second;
 }
 

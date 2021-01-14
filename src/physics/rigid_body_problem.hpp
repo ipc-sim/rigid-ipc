@@ -28,7 +28,7 @@ namespace physics {
         /// Simulation Problem
         ////////////////////////////////////////////////////////////////////////
 
-        virtual void settings(const nlohmann::json& params) override;
+        virtual bool settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
 
         virtual nlohmann::json state() const override;

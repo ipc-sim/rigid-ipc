@@ -219,8 +219,17 @@ bool SimState::init(const nlohmann::json& args_in)
     args["ipc_solver"] = newton_settings; // set ipc to updated newton
 
     auto problem_name = args["scene_type"].get<std::string>();
-    problem_ptr = ProblemFactory::factory().get_problem(problem_name);
-    problem_ptr->settings(args);
+    auto tmp_problem_ptr = ProblemFactory::factory().get_problem(problem_name);
+    if (tmp_problem_ptr == nullptr) {
+        spdlog::error("Invalid scene_type \"{}\"!", problem_name);
+        return false;
+    }
+    problem_ptr = tmp_problem_ptr;
+
+    bool success = problem_ptr->settings(args);
+    if (!success) {
+        return false;
+    }
 
     m_max_simulation_steps = args["max_iterations"].get<int>();
     problem_ptr->timestep(args["timestep"].get<double>());

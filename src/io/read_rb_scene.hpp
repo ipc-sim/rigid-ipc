@@ -8,10 +8,10 @@
 namespace ccd {
 namespace io {
 
-    int read_rb_scene_from_str(
+    bool read_rb_scene_from_str(
         const std::string str, std::vector<physics::RigidBody>& rbs);
 
-    int read_rb_scene(
+    bool read_rb_scene(
         const nlohmann::json& scene, std::vector<physics::RigidBody>& rbs);
 
 } // namespace io

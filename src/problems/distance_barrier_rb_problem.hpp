@@ -36,7 +36,7 @@ namespace opt {
         DistanceBarrierRBProblem();
         virtual ~DistanceBarrierRBProblem() = default;
 
-        void settings(const nlohmann::json& params) override;
+        bool settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
 
         nlohmann::json state() const override;

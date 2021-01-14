@@ -19,14 +19,14 @@ namespace opt {
     {
     }
 
-    void SplitDistanceBarrierRBProblem::settings(const nlohmann::json& params)
+    bool SplitDistanceBarrierRBProblem::settings(const nlohmann::json& params)
     {
         auto time_stepper_name =
             params["rigid_body_problem"]["time_stepper"].get<std::string>();
         m_time_stepper = time_stepper_name == "default"
             ? TimeStepperFactory::factory().get_default_time_stepper(dim())
             : TimeStepperFactory::factory().get_time_stepper(time_stepper_name);
-        DistanceBarrierRBProblem::settings(params);
+        return DistanceBarrierRBProblem::settings(params);
     }
 
     nlohmann::json SplitDistanceBarrierRBProblem::settings() const

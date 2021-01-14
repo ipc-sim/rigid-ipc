@@ -34,7 +34,7 @@ namespace opt {
     {
     }
 
-    void DistanceBarrierRBProblem::settings(const nlohmann::json& params)
+    bool DistanceBarrierRBProblem::settings(const nlohmann::json& params)
     {
         m_constraint.settings(params["distance_barrier_constraint"]);
         // Select the optimization solver
@@ -55,7 +55,10 @@ namespace opt {
         body_energy_integration_method =
             params["rigid_body_problem"]["time_stepper"]
                 .get<BodyEnergyIntegrationMethod>();
-        RigidBodyProblem::settings(params["rigid_body_problem"]);
+        bool success = RigidBodyProblem::settings(params["rigid_body_problem"]);
+        if (!success) {
+            return false;
+        }
 
         if (friction_iterations == 0) {
             spdlog::info(
@@ -72,6 +75,8 @@ namespace opt {
         } else {
             spdlog::info("init_min_distance={:.8e}", min_distance);
         }
+
+        return true;
     }
 
     nlohmann::json DistanceBarrierRBProblem::settings() const

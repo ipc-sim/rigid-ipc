@@ -30,12 +30,11 @@ namespace physics {
         gravity.setZero(3);
     }
 
-    void RigidBodyProblem::settings(const nlohmann::json& params)
+    bool RigidBodyProblem::settings(const nlohmann::json& params)
     {
-        collision_eps = params["collision_eps"].get<double>();
-        coefficient_restitution =
-            params["coefficient_restitution"].get<double>();
-        coefficient_friction = params["coefficient_friction"].get<double>();
+        collision_eps = params["collision_eps"];
+        coefficient_restitution = params["coefficient_restitution"];
+        coefficient_friction = params["coefficient_friction"];
         if (coefficient_friction < 0 || coefficient_friction > 1) {
             spdlog::warn(
                 "Coefficient of friction (μ={:g}) is outside the standard "
@@ -47,7 +46,11 @@ namespace physics {
         }
 
         std::vector<physics::RigidBody> rbs;
-        io::read_rb_scene(params, rbs);
+        bool success = io::read_rb_scene(params, rbs);
+        if (!success) {
+            spdlog::error("Unable to read rigid body scene!");
+            return false;
+        }
 
         init(rbs);
 
@@ -56,6 +59,7 @@ namespace physics {
         gravity.conservativeResize(dim());
 
         do_intersection_check = params["do_intersection_check"];
+        return true;
     }
 
     nlohmann::json RigidBodyProblem::settings() const

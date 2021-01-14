@@ -78,7 +78,11 @@ int main(int argc, char* argv[])
     PROFILER_OUTDIR(args.output_dir)
     std::string fout = fmt::format("{}/{}", args.output_dir, args.output_name);
 
-    sim.load_scene(args.scene_path, args.patch);
+    bool success = sim.load_scene(args.scene_path, args.patch);
+    if (!success) {
+        return 1;
+    }
+
     if (args.num_steps > 0) {
         sim.m_max_simulation_steps = args.num_steps;
     }

@@ -12,7 +12,7 @@ namespace opt {
         SplitDistanceBarrierRBProblem();
         virtual ~SplitDistanceBarrierRBProblem() = default;
 
-        virtual void settings(const nlohmann::json& params) override;
+        virtual bool settings(const nlohmann::json& params) override;
         nlohmann::json settings() const override;
 
         /// The name of the class as a string
