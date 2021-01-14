@@ -121,6 +121,11 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
         bodyA.world_vertex(poseA_t0, ea0i), bodyA.world_vertex(poseA_t0, ea1i),
         bodyB.world_vertex(poseB_t0, eb0i),
         bodyB.world_vertex(poseB_t0, eb1i)));
+    if (distance_t0 == 0) {
+        spdlog::warn("initial distance in edge-edge CCD is 0!");
+        toi = 0;
+        return true;
+    }
     assert(distance_t0 > 0);
 
 #ifdef TIME_CCD_QUERIES
@@ -208,7 +213,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
         min_distance = std::max(min_distance, d.upper());
 
         if (min_distance >= 0.5 * distance_ti0
-            && num_subdivisions < MAX_NUM_SUBDIVISIONS) {
+            && (num_subdivisions < MAX_NUM_SUBDIVISIONS || ti0 == 0)) {
             ts.push((ti1 + ti0) / 2);
             num_subdivisions++;
             continue;
@@ -240,6 +245,17 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
 
         if (is_impacting) {
             toi = (ti1 - ti0) * toi + ti0;
+            if (toi == 0) {
+                // This is impossible because distance_t0 != 0
+                ts.push((ti1 + ti0) / 2);
+                num_subdivisions++;
+                spdlog::warn(
+                    "failure=\"Edge-edge MSCCD says toi=0, but "
+                    "distance_t0={0:g}\" failsafe=\"spliting [{1:g}, "
+                    "{2:g}] into ([{1:g}, {3:g}], [{3:g}, {2:g}])\"",
+                    distance_t0, ti0, ti1, ts.top());
+                continue;
+            }
             break;
         }
 
@@ -291,6 +307,11 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
     double distance_t0 = sqrt(ipc::point_triangle_distance(
         bodyA.world_vertex(poseA_t0, vi), bodyB.world_vertex(poseB_t0, f0i),
         bodyB.world_vertex(poseB_t0, f1i), bodyB.world_vertex(poseB_t0, f2i)));
+    if (distance_t0 == 0) {
+        spdlog::warn("initial distance in face-vertex CCD is 0!");
+        toi = 0;
+        return true;
+    }
     assert(distance_t0 > 0);
 
 #ifdef TIME_CCD_QUERIES
@@ -378,7 +399,7 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
         min_distance = std::max(min_distance, d.upper());
 
         if (min_distance >= 0.5 * distance_ti0
-            && num_subdivisions < MAX_NUM_SUBDIVISIONS) {
+            && (num_subdivisions < MAX_NUM_SUBDIVISIONS || ti0 == 0)) {
             ts.push((ti1 + ti0) / 2);
             num_subdivisions++;
             continue;
@@ -410,6 +431,17 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
 
         if (is_impacting) {
             toi = (ti1 - ti0) * toi + ti0;
+            if (toi == 0) {
+                // This is impossible because distance_t0 != 0
+                ts.push((ti1 + ti0) / 2);
+                num_subdivisions++;
+                spdlog::warn(
+                    "failure=\"Face-vertex MSCCD says toi=0, but "
+                    "distance_t0={0:g}\" failsafe=\"spliting [{1:g}, "
+                    "{2:g}] into ([{1:g}, {3:g}], [{3:g}, {2:g}])\"",
+                    distance_t0, ti0, ti1, ts.top());
+                continue;
+            }
             break;
         }
 

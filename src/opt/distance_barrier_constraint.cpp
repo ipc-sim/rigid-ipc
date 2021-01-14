@@ -82,6 +82,7 @@ namespace opt {
     }
 
     static int counter = 0;
+    static std::mutex save_candidate_mutex;
 
     void save_candidate(
         const physics::RigidBodyAssembler& bodies,
@@ -99,10 +100,10 @@ namespace opt {
         json["type"] = "ev";
 
         json["edge"] = nlohmann::json();
-        json["edge"]["vertex0"] =
-            io::to_json(bodyB.vertices.row(bodyB.edges(edge_id, 0)));
-        json["edge"]["vertex1"] =
-            io::to_json(bodyB.vertices.row(bodyB.edges(edge_id, 1)));
+        json["edge"]["vertex0"] = io::to_json(
+            bodyB.vertices.row(bodyB.edges(edge_id, 0)).transpose());
+        json["edge"]["vertex1"] = io::to_json(
+            bodyB.vertices.row(bodyB.edges(edge_id, 1)).transpose());
         json["edge"]["pose_t0"] = nlohmann::json();
         json["edge"]["pose_t0"]["position"] =
             io::to_json(poses_t0[bodyB_id].position);
@@ -115,7 +116,8 @@ namespace opt {
             io::to_json(poses_t1[bodyB_id].rotation);
 
         json["vertex"] = nlohmann::json();
-        json["vertex"]["vertex"] = io::to_json(bodyA.vertices.row(vertex_id));
+        json["vertex"]["vertex"] =
+            io::to_json(bodyA.vertices.row(vertex_id).transpose());
         json["vertex"]["pose_t0"]["position"] =
             io::to_json(poses_t0[bodyA_id].position);
         json["vertex"]["pose_t0"]["rotation"] =
@@ -126,6 +128,7 @@ namespace opt {
         json["vertex"]["pose_t1"]["rotation"] =
             io::to_json(poses_t1[bodyA_id].rotation);
 
+        std::scoped_lock lock(save_candidate_mutex);
         std::ofstream(fmt::format("ccd-test-{:03d}.json", counter++))
             << json.dump();
     }
@@ -146,12 +149,12 @@ namespace opt {
         json["type"] = "fv";
 
         json["face"] = nlohmann::json();
-        json["face"]["vertex0"] =
-            io::to_json(bodyB.vertices.row(bodyB.faces(face_id, 0)));
-        json["face"]["vertex1"] =
-            io::to_json(bodyB.vertices.row(bodyB.faces(face_id, 1)));
-        json["face"]["vertex2"] =
-            io::to_json(bodyB.vertices.row(bodyB.faces(face_id, 2)));
+        json["face"]["vertex0"] = io::to_json(
+            bodyB.vertices.row(bodyB.faces(face_id, 0)).transpose());
+        json["face"]["vertex1"] = io::to_json(
+            bodyB.vertices.row(bodyB.faces(face_id, 1)).transpose());
+        json["face"]["vertex2"] = io::to_json(
+            bodyB.vertices.row(bodyB.faces(face_id, 2)).transpose());
         json["face"]["pose_t0"] = nlohmann::json();
         json["face"]["pose_t0"]["position"] =
             io::to_json(poses_t0[bodyB_id].position);
@@ -164,7 +167,8 @@ namespace opt {
             io::to_json(poses_t1[bodyB_id].rotation);
 
         json["vertex"] = nlohmann::json();
-        json["vertex"]["vertex"] = io::to_json(bodyA.vertices.row(vertex_id));
+        json["vertex"]["vertex"] =
+            io::to_json(bodyA.vertices.row(vertex_id).transpose());
         json["vertex"]["pose_t0"]["position"] =
             io::to_json(poses_t0[bodyA_id].position);
         json["vertex"]["pose_t0"]["rotation"] =
@@ -175,6 +179,7 @@ namespace opt {
         json["vertex"]["pose_t1"]["rotation"] =
             io::to_json(poses_t1[bodyA_id].rotation);
 
+        std::scoped_lock lock(save_candidate_mutex);
         std::ofstream(fmt::format("ccd-test-{:03d}.json", counter++))
             << json.dump();
     }
@@ -196,10 +201,10 @@ namespace opt {
         json["type"] = "ee";
 
         json["edge0"] = nlohmann::json();
-        json["edge0"]["vertex0"] =
-            io::to_json(bodyA.vertices.row(bodyA.edges(edgeA_id, 0)));
-        json["edge0"]["vertex1"] =
-            io::to_json(bodyA.vertices.row(bodyA.edges(edgeA_id, 1)));
+        json["edge0"]["vertex0"] = io::to_json(
+            bodyA.vertices.row(bodyA.edges(edgeA_id, 0)).transpose());
+        json["edge0"]["vertex1"] = io::to_json(
+            bodyA.vertices.row(bodyA.edges(edgeA_id, 1)).transpose());
         json["edge0"]["pose_t0"] = nlohmann::json();
         json["edge0"]["pose_t0"]["position"] =
             io::to_json(poses_t0[bodyA_id].position);
@@ -212,10 +217,10 @@ namespace opt {
             io::to_json(poses_t1[bodyA_id].rotation);
 
         json["edge1"] = nlohmann::json();
-        json["edge1"]["vertex0"] =
-            io::to_json(bodyB.vertices.row(bodyB.edges(edgeB_id, 0)));
-        json["edge1"]["vertex1"] =
-            io::to_json(bodyB.vertices.row(bodyB.edges(edgeB_id, 1)));
+        json["edge1"]["vertex0"] = io::to_json(
+            bodyB.vertices.row(bodyB.edges(edgeB_id, 0)).transpose());
+        json["edge1"]["vertex1"] = io::to_json(
+            bodyB.vertices.row(bodyB.edges(edgeB_id, 1)).transpose());
         json["edge1"]["pose_t0"] = nlohmann::json();
         json["edge1"]["pose_t0"]["position"] =
             io::to_json(poses_t0[bodyB_id].position);
@@ -227,6 +232,7 @@ namespace opt {
         json["edge1"]["pose_t1"]["rotation"] =
             io::to_json(poses_t1[bodyB_id].rotation);
 
+        std::scoped_lock lock(save_candidate_mutex);
         std::ofstream(fmt::format("ccd-test-{:03d}.json", counter++))
             << json.dump();
     }
@@ -359,6 +365,26 @@ namespace opt {
                             candidates.fv_candidates[i - num_ev - num_ee], toi,
                             trajectory_type, earliest_toi);
                         // PROFILE_END(FV_NARROW_PHASE);
+                    }
+
+                    if (are_colliding && toi == 0) {
+                        if (i < num_ev) {
+                            spdlog::error("Edge-vertex CCD resulted in toi=0!");
+                            save_candidate(
+                                bodies, poses_t0, poses_t1,
+                                candidates.ev_candidates[i]);
+                        } else if (i - num_ev < num_ee) {
+                            spdlog::error("Edge-edge CCD resulted in toi=0!");
+                            save_candidate(
+                                bodies, poses_t0, poses_t1,
+                                candidates.ee_candidates[i - num_ev]);
+                        } else {
+                            assert(i - num_ev - num_ee < num_fv);
+                            spdlog::error("Face-vertex CCD resulted in toi=0!");
+                            save_candidate(
+                                bodies, poses_t0, poses_t1,
+                                candidates.fv_candidates[i - num_ev - num_ee]);
+                        }
                     }
 
                     if (are_colliding) {

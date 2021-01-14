@@ -4,6 +4,8 @@
 #include <igl/PI.h>
 #include <igl/edges.h>
 
+#include <ipc/distance/edge_edge.hpp>
+
 #include <ccd.hpp>
 #include <ccd/piecewise_linear/time_of_impact.hpp>
 #include <ccd/rigid/time_of_impact.hpp>
@@ -620,7 +622,7 @@ TEST_CASE(
     };
 }
 
-TEST_CASE("Failing earliest tois", "[ccd][rigid_toi][thisone]")
+TEST_CASE("Failing earliest tois", "[ccd][rigid_toi]")
 {
     int id = GENERATE(range(0, 385));
     std::string filename =
@@ -681,6 +683,10 @@ TEST_CASE("Failing earliest tois", "[ccd][rigid_toi][thisone]")
 
         bodyA_faces.resize(1, 3);
         bodyA_faces.row(0) << 0, 1, 2;
+        bodyA_edges.resize(3, 2);
+        bodyA_edges.row(0) << 0, 1;
+        bodyA_edges.row(1) << 1, 2;
+        bodyA_edges.row(2) << 2, 0;
 
         poseA_t0_json = json["face"]["pose_t0"];
         poseA_t1_json = json["face"]["pose_t1"];
@@ -744,4 +750,134 @@ TEST_CASE("Failing earliest tois", "[ccd][rigid_toi][thisone]")
     }
     CAPTURE(toi, toi2, toi * toi2);
     CHECK(!is_impacting);
+}
+
+TEST_CASE("toi=0", "[ccd][rigid_toi][thisone]")
+{
+    int id = GENERATE(range(0, 13));
+    std::string filename = fmt::format("kinematic/ccd-test-{:03d}.json", id);
+    boost::filesystem::path data_path =
+        boost::filesystem::path(__FILE__).parent_path().parent_path() / "data"
+        / filename;
+
+    std::ifstream input(data_path.string());
+    nlohmann::json json = nlohmann::json::parse(input);
+
+    Eigen::MatrixXd bodyA_vertices, bodyB_vertices;
+    Eigen::MatrixXi bodyA_edges, bodyB_edges, bodyA_faces, bodyB_faces;
+    Pose<double> bodyA_pose_t0, bodyA_pose_t1, bodyB_pose_t0, bodyB_pose_t1;
+
+    std::string ccd_type = json["type"];
+
+    nlohmann::json poseA_t0_json, poseA_t1_json, poseB_t0_json, poseB_t1_json;
+
+    if (ccd_type == "ee") {
+        Eigen::VectorXd tmp;
+
+        bodyA_vertices.resize(2, 3);
+        io::from_json(json["edge0"]["vertex0"], tmp);
+        bodyA_vertices.row(0) = tmp;
+        io::from_json(json["edge0"]["vertex1"], tmp);
+        bodyA_vertices.row(1) = tmp;
+
+        bodyB_vertices.resize(2, 3);
+        io::from_json(json["edge1"]["vertex0"], tmp);
+        bodyB_vertices.row(0) = tmp;
+        io::from_json(json["edge1"]["vertex1"], tmp);
+        bodyB_vertices.row(1) = tmp;
+
+        bodyA_edges.resize(1, 2);
+        bodyA_edges.row(0) << 0, 1;
+        bodyB_edges.resize(1, 2);
+        bodyB_edges.row(0) << 0, 1;
+
+        poseA_t0_json = json["edge0"]["pose_t0"];
+        poseA_t1_json = json["edge0"]["pose_t1"];
+        poseB_t0_json = json["edge1"]["pose_t0"];
+        poseB_t1_json = json["edge1"]["pose_t1"];
+    } else if (ccd_type == "fv") {
+        Eigen::VectorXd tmp;
+
+        bodyA_vertices.resize(3, 3);
+        io::from_json(json["face"]["vertex0"], tmp);
+        bodyA_vertices.row(0) = tmp;
+        io::from_json(json["face"]["vertex1"], tmp);
+        bodyA_vertices.row(1) = tmp;
+        io::from_json(json["face"]["vertex2"], tmp);
+        bodyA_vertices.row(2) = tmp;
+
+        bodyB_vertices.resize(1, 3);
+        io::from_json(json["vertex"]["vertex"], tmp);
+        bodyB_vertices.row(0) = tmp;
+
+        bodyA_faces.resize(1, 3);
+        bodyA_faces.row(0) << 0, 1, 2;
+        bodyA_edges.resize(3, 2);
+        bodyA_edges.row(0) << 0, 1;
+        bodyA_edges.row(1) << 1, 2;
+        bodyA_edges.row(2) << 2, 0;
+
+        poseA_t0_json = json["face"]["pose_t0"];
+        poseA_t1_json = json["face"]["pose_t1"];
+        poseB_t0_json = json["vertex"]["pose_t0"];
+        poseB_t1_json = json["vertex"]["pose_t1"];
+    } else if (ccd_type == "ev") {
+        // TODO
+        return;
+    }
+
+    io::from_json(poseA_t0_json["position"], bodyA_pose_t0.position);
+    io::from_json(poseA_t0_json["rotation"], bodyA_pose_t0.rotation);
+    io::from_json(poseA_t1_json["position"], bodyA_pose_t1.position);
+    io::from_json(poseA_t1_json["rotation"], bodyA_pose_t1.rotation);
+    io::from_json(poseB_t0_json["position"], bodyB_pose_t0.position);
+    io::from_json(poseB_t0_json["rotation"], bodyB_pose_t0.rotation);
+    io::from_json(poseB_t1_json["position"], bodyB_pose_t1.position);
+    io::from_json(poseB_t1_json["rotation"], bodyB_pose_t1.rotation);
+
+    RigidBody bodyA = create_body(bodyA_vertices, bodyA_edges, bodyA_faces);
+    RigidBody bodyB = create_body(bodyB_vertices, bodyB_edges, bodyB_faces);
+
+    double toi = 1;
+    bool is_impacting = false;
+
+    if (ccd_type == "ee") {
+        is_impacting = compute_piecewise_linear_edge_edge_time_of_impact(
+            bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
+            bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeB_id=*/0, //
+            toi);
+    } else if (ccd_type == "fv") {
+        is_impacting = compute_piecewise_linear_face_vertex_time_of_impact(
+            bodyB, bodyB_pose_t0, bodyB_pose_t1, /*vertex_id=*/0, // Vertex body
+            bodyA, bodyA_pose_t0, bodyA_pose_t1, /*face_id=*/0,   // Face body
+            toi);
+    }
+
+    Eigen::MatrixXd VA_t0 = bodyA.world_vertices(bodyA_pose_t0);
+    Eigen::MatrixXd VB_t0 = bodyB.world_vertices(bodyB_pose_t0);
+
+    if (ccd_type == "ee") {
+        double distance = ipc::edge_edge_distance(
+            VA_t0.row(0), VA_t0.row(1), VB_t0.row(0), VB_t0.row(1));
+        // std::cout << "distance_t0=" << distance << std::endl;
+    }
+
+    Pose<double> bodyA_pose_toi =
+        Pose<double>::interpolate(bodyA_pose_t0, bodyA_pose_t1, toi);
+    Pose<double> bodyB_pose_toi =
+        Pose<double>::interpolate(bodyB_pose_t0, bodyB_pose_t1, toi);
+    Eigen::MatrixXd VA_toi = bodyA.world_vertices(bodyA_pose_toi);
+    Eigen::MatrixXd VB_toi = bodyB.world_vertices(bodyB_pose_toi);
+
+    if (ccd_type == "ee") {
+        double distance = ipc::edge_edge_distance(
+            VA_toi.row(0), VA_toi.row(1), VB_toi.row(0), VB_toi.row(1));
+        // std::cout << "distance_toi=" << distance << std::endl;
+        CHECK(distance == Approx(0).margin(1e-10));
+    }
+
+    CAPTURE(ccd_type);
+    if (is_impacting) {
+        CHECK(toi > 0);
+    }
 }
