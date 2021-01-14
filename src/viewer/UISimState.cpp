@@ -19,6 +19,7 @@ UISimState::UISimState()
     , m_reloading_scene(false)
     , m_scene_changed(false)
     , m_simulation_time(0)
+    , m_save_mesh_per_body(true)
 {
 }
 

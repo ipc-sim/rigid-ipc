@@ -431,15 +431,40 @@ bool SimState::save_simulation(const std::string& filename)
     return true;
 }
 
-bool SimState::save_mesh(const std::string& filename)
+bool SimState::save_meshes(const std::string& dir_name, bool mesh_per_body)
 {
     PROFILE_POINT("SimState::save_mesh");
     PROFILE_START();
-    const Eigen::MatrixXd V = problem_ptr->vertices();
-    // TODO: Save codimensional edges
-    // const Eigen::MatrixXi& E = problem_ptr->edges();
-    const Eigen::MatrixXi& F = problem_ptr->faces();
-    bool success = igl::write_triangle_mesh(filename, V, F);
+
+    // Create the output directory if it does not exist
+    boost::filesystem::path dir_path(dir_name);
+    boost::filesystem::create_directories(dir_path);
+
+    bool success = true;
+    for (int i = 0; i < state_sequence.size(); i++) {
+        const auto& state = state_sequence[i];
+        problem_ptr->state(state);
+
+        if (mesh_per_body) {
+            for (int j = 0; j < problem_ptr->num_bodies(); j++) {
+                // TODO: Save codimensional edges
+                // const Eigen::MatrixXi& E = problem_ptr->edges(j);
+                success &= igl::write_triangle_mesh(
+                    (dir_path / fmt::format("body{:03d}-{:03d}.obj", j, i))
+                        .string(),
+                    problem_ptr->vertices(j), problem_ptr->faces(j));
+            }
+        } else {
+            // TODO: Save codimensional edges
+            // const Eigen::MatrixXi& E = problem_ptr->edges();
+            success &= igl::write_triangle_mesh(
+                (dir_path / fmt::format("{:03d}.obj", i)).string(),
+                problem_ptr->vertices(), problem_ptr->faces());
+        }
+    }
+
+    problem_ptr->state(state_sequence.back());
+
     PROFILE_END();
     return success;
 }

@@ -60,6 +60,9 @@ namespace physics {
         virtual Eigen::MatrixXd vertices() const = 0;
         virtual const Eigen::MatrixXi& edges() const = 0;
         virtual const Eigen::MatrixXi& faces() const = 0;
+        virtual Eigen::MatrixXd vertices(size_t i) const { return vertices(); }
+        virtual const Eigen::MatrixXi& edges(size_t i) const { return edges(); }
+        virtual const Eigen::MatrixXi& faces(size_t i) const { return faces(); }
         virtual Eigen::MatrixXd velocities() const = 0;
         virtual const Eigen::VectorXi& group_ids() const = 0;
 

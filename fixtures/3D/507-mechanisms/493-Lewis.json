@@ -1,8 +1,8 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
-    "max_time": 1,
-    "timestep": 0.001,
+    "max_time": 5,
+    "timestep": 0.01,
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "coefficient_friction": 1,
@@ -10,7 +10,7 @@
         "rigid_bodies": [{
             "mesh": "507-mechanisms/493-Lewis/center.obj",
             "#force": [0, 1e6, 0],
-            "linear_velocity": [0, 10, 0],
+            "linear_velocity": [0, 0.1, 0],
             "density": 1000,
             "type": "kinematic"
         }, {

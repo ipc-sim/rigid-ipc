@@ -106,10 +106,13 @@ void UISimState::draw_io()
             save(fname);
         }
 
-        if (ImGui::Button("Save mesh", ImVec2(-1, 0))) {
-            std::string fname = igl::file_dialog_save();
-            save_mesh(fname);
+        if (ImGui::Button("Save meshes", ImVec2(-1, 0))) {
+            std::string dir_name = igl::file_dialog_save();
+            if (dir_name != "") {
+                save_meshes(dir_name);
+            }
         }
+        ImGui::Checkbox("save mesh per body", &m_save_mesh_per_body);
 
         if (ImGui::Button("Save screenshot", ImVec2(-1, 0))) {
             std::string fname = igl::file_dialog_save();
