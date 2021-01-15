@@ -2,7 +2,6 @@
     <asset>
         <mesh file="plane.obj" name="plane"/>
         <mesh file="cube.obj" name="cube"/>
-        <mesh file="cube.obj" name="cube"/>
     </asset>
     <worldbody>
         <body pos="-0 0 -0.5" quat="0 0 0.707107 0.707107">
