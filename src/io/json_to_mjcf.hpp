@@ -109,6 +109,9 @@ int json_to_mjcf(const char* jsonFilePath, int mode = 0) // mode0: bullet, mode1
                     printer.PushAttribute("size", sizeStr.c_str());
                 }
             }
+            if (rbI.find("density") != rbI.end()) {
+                printer.PushAttribute("density", std::to_string(rbI["density"].get<double>()).c_str());
+            }
             printer.CloseElement(); // geom
 
             bool isFixed = false;
@@ -140,12 +143,6 @@ int json_to_mjcf(const char* jsonFilePath, int mode = 0) // mode0: bullet, mode1
             if (mode == 1 && !isFixed) {
                 printer.OpenElement("freejoint");
                 printer.CloseElement(); // freejoint
-            }
-
-            if (rbI.find("density") != rbI.end()) {
-                printer.OpenElement("IPC");
-                printer.PushAttribute("density", std::to_string(rbI["density"].get<double>()).c_str());
-                printer.CloseElement(); // IPC
             }
 
             printer.CloseElement(); // body
