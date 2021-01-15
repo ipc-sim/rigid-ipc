@@ -21,7 +21,6 @@ def main():
         "timestep": 0.005,
         "max_time": 5,
         "rigid_body_problem": {
-            "coefficient_restitution": -1,
             "coefficient_friction": 0,
             "gravity": [0, -9.8, 0],
             "rigid_bodies": [{

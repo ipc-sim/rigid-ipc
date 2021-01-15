@@ -25,7 +25,6 @@ def main():
             "iterations": -1
         },
         "rigid_body_problem": {
-            "coefficient_restitution": -1,
             "coefficient_friction": 0.5,
             "gravity": [0, -9.8, 0],
             "rigid_bodies": [{

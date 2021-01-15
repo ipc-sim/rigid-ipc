@@ -24,7 +24,6 @@ scene = {
         "trajectory_type": "screwing"
     },
     "rigid_body_problem": {
-        "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
         "rigid_bodies": []
     }
