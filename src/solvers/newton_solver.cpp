@@ -276,9 +276,8 @@ namespace opt {
                     // converged
                     if (iteration_number == 0 && converged()) {
                         // Do not consider this a failure
-                        spdlog::warn(
-                            "solver={} failure=\"converged without taking a "
-                            "step\"",
+                        spdlog::info(
+                            "solver={} msg=\"converged without taking a step\"",
                             name());
                         exit_reason = "found a local optimum with -grad dir";
                         success = true;

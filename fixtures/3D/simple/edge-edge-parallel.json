@@ -2,9 +2,6 @@
     "scene_type": "distance_barrier_rb_problem",
     "timestep": 0.01,
     "max_time": 2.5,
-    "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 1e-4
-    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],
