@@ -5,7 +5,6 @@
         <mesh file="plane.stl" name="plane"/>
         <mesh file="cube.stl" name="cube"/>
     </asset>
-    <option timestep="0.001" />
     <worldbody>
         <body pos="-10.9119 0.0 18.299999999999997" quat="0.353553 -0.353553 0.612372 0.612372">
             <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
