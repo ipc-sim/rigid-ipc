@@ -68,6 +68,9 @@ def create_parser():
         help="set log level 0=trace, 1=debug, 2=info, 3=warn, 4=error, 5=critical, 6=off")
     parser.add_argument(
         "--rigid-args", default="", help=f"arguments to FixingCollisions_ngui")
+    parser.add_argument(
+        "--with-viewer", action="store_true", default=False,
+        help="run simulation through the viewer")
     return parser
 
 
@@ -123,8 +126,9 @@ def main():
         # Run the IPC sim
         if not args.no_ipc:
             print(f"Running {script} in IPC")
-            subprocess.run([args.ipc_exe, "10", script.resolve(), "-o",
-                            output / "ipc", "--logLevel", str(args.loglevel)])
+            subprocess.run([args.ipc_exe, "10" if args.with_viewer else "100",
+                            script.resolve(), "-o", output / "ipc",
+                            "--logLevel", str(args.loglevel)])
 
             # Render the IPC sim
             if not args.no_video:

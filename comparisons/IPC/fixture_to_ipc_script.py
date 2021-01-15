@@ -3,6 +3,7 @@ import os
 import pathlib
 import json
 import textwrap
+import argparse
 
 import numpy
 from scipy.spatial.transform import Rotation
@@ -62,6 +63,10 @@ def convert_to_ipc_msh(input_path, output_path, remesh=False):
         f.write("$EndSurface\n")
 
 
+def convert_to_obj(input_path, output_path):
+    pymesh.save_mesh(str(output_path), pymesh.load_mesh(str(input_path)))
+
+
 def fixture_to_ipc_script(fixture, output_path, remesh=False):
     timestep = fixture.get("timestep", 0.01)
 
@@ -109,6 +114,18 @@ def fixture_to_ipc_script(fixture, output_path, remesh=False):
                 convert_to_ipc_msh(surface_mesh_path, msh_path, remesh)
                 is_remeshed[surface_mesh_path] = remesh
             mesh_path = msh_path
+        elif surface_mesh_path.suffix != ".obj":
+            try:
+                obj_path = surface_mesh_path.with_suffix('.obj').resolve()
+                obj_path = (
+                    pathlib.Path(__file__).resolve().parent / "meshes" /
+                    obj_path.relative_to(fixture_utils.get_meshes_dir_path()))
+                obj_path.parent.mkdir(parents=True, exist_ok=True)
+            except:
+                obj_path = surface_mesh_path.with_suffix('.obj')
+            if not obj_path.exists():
+                convert_to_obj(surface_mesh_path, obj_path)
+            mesh_path = obj_path
         else:
             mesh_path = surface_mesh_path
 
@@ -202,27 +219,33 @@ def fixture_to_ipc_script(fixture, output_path, remesh=False):
 
 
 def main():
-    assert(len(sys.argv) > 1)
-    input_path = pathlib.Path(sys.argv[1])
+    parser = argparse.ArgumentParser(
+        description="Convert a rigid fixture to a IPC script")
+    parser.add_argument(
+        "-i", "--input", metavar="path/to/input", type=pathlib.Path,
+        dest="input", default=None, help="path to input json(s)", nargs="+")
+    parser.add_argument(
+        "--remesh", action="store_true", default=False, help="remesh meshes")
+    args, _ = parser.parse_known_args()
 
-    remesh = len(sys.argv) > 2 and bool(sys.argv[2])
+    for input in args.input:
+        print(f"Converting {input}")
+        try:
+            output = input.with_suffix(".txt").resolve()
+            output = (
+                pathlib.Path(__file__).resolve().parent / "scripts" /
+                output.relative_to(fixture_utils.get_fixture_dir_path()))
+            output.parent.mkdir(parents=True, exist_ok=True)
+        except:
+            output = input.with_suffix(".txt")
 
-    try:
-        output_path = input_path.with_suffix(".txt").resolve()
-        output_path = (
-            pathlib.Path(__file__).resolve().parent / "scripts" /
-            output_path.relative_to(fixture_utils.get_fixture_dir_path()))
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-    except:
-        output_path = input_path.with_suffix(".txt")
+        with open(input) as input_file:
+            fixture = json.load(input_file)
 
-    with open(input_path) as input_file:
-        fixture = json.load(input_file)
+        ipc_script = fixture_to_ipc_script(fixture, output, args.remesh)
 
-    ipc_script = fixture_to_ipc_script(fixture, output_path, remesh)
-
-    with open(output_path, 'w') as ipc_script_file:
-        ipc_script_file.write(ipc_script)
+        with open(output, 'w') as ipc_script_file:
+            ipc_script_file.write(ipc_script)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,6 @@
     "timestep": 0.01,
     "max_time": 1,
     "rigid_body_problem": {
-        0,
         "gravity": [0, 0, 0],
         "rigid_bodies": [{
                 "mesh": "erleben/wedge.obj",
