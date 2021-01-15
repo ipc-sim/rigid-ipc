@@ -258,7 +258,12 @@ int generate_bullet_results(
         return 0;
     }
     else {
-        spdlog::error("json and bullet file open error!");
+        if (!input.good()) {
+            spdlog::error("json file open error!");
+        }
+        if (!bulletTransFile.good()) {
+            spdlog::error("bullet file open error!");
+        }
     }
     return -1;
 }
