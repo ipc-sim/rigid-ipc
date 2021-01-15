@@ -7,8 +7,13 @@ using nlohmann::json;
 
 #include <sys/stat.h> // for mkdir
 
-int json_to_mjcf(const char* jsonFilePath) 
+int json_to_mjcf(const char* jsonFilePath, int mode = 0) // mode0: bullet, mode1: mujoco
 {
+    if (mode > 1) {
+        spdlog::error("Invalid mode in mjcf file generation!");
+        exit(-1);
+    }
+
     std::ifstream input(jsonFilePath);
     if (input.good()) {
         json scene = json::parse(input, nullptr, false);
@@ -19,7 +24,8 @@ int json_to_mjcf(const char* jsonFilePath)
         }
 
         std::string jsonFilePathStr(jsonFilePath);
-        std::string xmlFilePath = jsonFilePathStr.substr(0, jsonFilePathStr.find_last_of('.')) + ".xml";
+        std::string xmlFilePath = jsonFilePathStr.substr(0, jsonFilePathStr.find_last_of('.')) + 
+            ((mode == 0) ? ".xml": "_mjc.xml");
         FILE *output = fopen(xmlFilePath.c_str(), "w");
         if (!output) {
             spdlog::error("failed to create file");
@@ -31,17 +37,25 @@ int json_to_mjcf(const char* jsonFilePath)
         tinyxml2::XMLPrinter printer( output );
         printer.OpenElement("mujoco");
 
+        std::set<std::string> meshFilePathSet;
         std::vector<std::string> meshNames;
         printer.OpenElement("asset");
         for (const auto& rbI : scene["rigid_body_problem"]["rigid_bodies"]) {
-            printer.OpenElement("mesh");
-
             std::string meshFilePath = rbI["mesh"].get<std::string>();
-            printer.PushAttribute("file", meshFilePath.c_str());
             meshNames.emplace_back(meshFilePath.substr(0, meshFilePath.find_last_of('.')));
-            printer.PushAttribute("name", meshNames.back().c_str());
-            
-            printer.CloseElement(); // mesh
+            if (meshFilePathSet.find(meshFilePath) == meshFilePathSet.end()) {
+                meshFilePathSet.insert(meshFilePath);
+                
+                printer.OpenElement("mesh");
+                if (mode == 0) {
+                    printer.PushAttribute("file", meshFilePath.c_str());
+                }
+                else {
+                    printer.PushAttribute("file", (meshNames.back() + ".stl").c_str());
+                }
+                printer.PushAttribute("name", meshNames.back().c_str());
+                printer.CloseElement(); // mesh
+            }
         }
         printer.CloseElement(); // asset
 
@@ -107,7 +121,7 @@ int json_to_mjcf(const char* jsonFilePath)
                 catch (...) {
                     isFixed = rbI["is_dof_fixed"].get<bool>();
                 }
-                if (isFixed) {
+                if (isFixed && mode == 0) {
                     printer.OpenElement("inertial");
                     printer.PushAttribute("mass", "0");
                     printer.CloseElement(); // inertial
@@ -115,12 +129,17 @@ int json_to_mjcf(const char* jsonFilePath)
             }
 
             if (!isFixed && rbI.find("type") != rbI.end()) {
-                if (rbI["type"].get<std::string>() == "static") {
+                if (rbI["type"].get<std::string>() == "static" && mode == 0) {
                     isFixed = true;
                     printer.OpenElement("inertial");
                     printer.PushAttribute("mass", "0");
                     printer.CloseElement(); // inertial
                 }
+            }
+
+            if (mode == 1 && !isFixed) {
+                printer.OpenElement("freejoint");
+                printer.CloseElement(); // freejoint
             }
 
             if (rbI.find("density") != rbI.end()) {

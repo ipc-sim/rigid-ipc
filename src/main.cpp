@@ -36,7 +36,12 @@ int main(int argc, char* argv[])
                 return -1;
             }
 
-            return json_to_mjcf(argv[2]);
+            if (argc == 3) {
+                return json_to_mjcf(argv[2]);
+            }
+            else {
+                return json_to_mjcf(argv[2], std::stoi(argv[3]));
+            }
         }
 
         case 2: { // process bullet output
