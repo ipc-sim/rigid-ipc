@@ -633,12 +633,13 @@ namespace opt {
                 }
 
                 // ½tr(QJQᵀ) - tr(Q(J(Qᵗ + hQ̇ᵗ + h²Aᵗ)ᵀ + h²[τ]))
-                Eigen::Matrix3d Tau =
-                    Q_t0.transpose() * Eigen::Hat(body.force.rotation);
                 energy += 0.5 * (Q * J * Q.transpose()).trace();
                 energy -=
                     (Q * J * (Q_t0 + h * (Qdot_t0 + h * A_t0)).transpose())
                         .trace();
+                // Transform the world space torque into body space
+                Eigen::Matrix3d Tau =
+                    Q_t0.transpose() * Eigen::Hat(body.force.rotation);
                 energy += h * h * (Q * Tau).trace();
             } else {
                 assert(pose.rot_ndof() == 1);

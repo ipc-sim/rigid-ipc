@@ -157,7 +157,8 @@ namespace physics {
             Eigen::Matrix3d Q_t0 = this->pose.construct_rotation_matrix();
             this->Qdot = Q_t0 * Eigen::Hat(this->velocity.rotation);
             // τ = R₀ᵀτ₀ (τ₀ expressed in body coordinates)
-            this->force.rotation = R0.transpose() * this->force.rotation;
+            // NOTE: this transformation will be done later
+            // this->force.rotation = R0.transpose() * this->force.rotation;
         } else {
             moment_of_inertia = density * I.diagonal();
             R0 = Eigen::Matrix<double, 1, 1>::Identity();
