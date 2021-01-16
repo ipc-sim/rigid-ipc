@@ -6,7 +6,7 @@
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
-            "mesh": "point-cloud/tet.obj",
+            "mesh": "codimensional/points/tet.obj",
             "position": [0, 1, 0],
             "rotation": [15, 30, 15],
             "linear_velocity": [0, 0, 0],

@@ -385,7 +385,7 @@ void detect_body_pair_intersection_candidates_from_aabbs(
                 // (f, ce)
                 size_t eb_id = selectorB.codim_edges_to_edges(
                     id - bodyB.num_codim_vertices());
-                add_ef(fa_id, eb_id);
+                add_fe(fa_id, eb_id);
 
             } else {
                 size_t fb_id =

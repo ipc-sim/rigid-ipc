@@ -3,16 +3,18 @@
     "timestep": 0.01,
     "max_time": 10,
     "rigid_body_problem": {
-        "coefficient_restitution": -1,
+        "coefficient_friction": 0.1,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
-            "mesh": "tet-pyramid.obj",
-            "position": [-4, 0.25, 0],
+            "mesh": "sphere.obj",
+            "position": [1.5, 4, 0],
             "rotation": [0, 0, 0],
-            "linear_velocity": [1, 0, 0],
-            "angular_velocity": [0, 0, 0]
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [0, 0, 0],
+            "enabled": true,
+            "scale": 0.25
         }, {
-            "mesh": "codimensional/edges/plane.obj",
+            "mesh": "codimensional/edges/needle-bed.obj",
             "position": [0, 0, 0],
             "rotation": [0, 0, 0],
             "type": "static"

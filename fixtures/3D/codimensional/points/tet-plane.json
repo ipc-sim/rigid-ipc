@@ -12,7 +12,7 @@
             "linear_velocity": [0, 0, 0],
             "angular_velocity": [0, 0, 0]
         }, {
-            "mesh": "point-cloud/plane.obj",
+            "mesh": "codimensional/points/plane.obj",
             "position": [0, 0, 0],
             "rotation": [0, 0, 0],
             "type": "static"
