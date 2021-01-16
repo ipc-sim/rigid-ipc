@@ -141,7 +141,7 @@ namespace physics {
 
         // mass
         mass = integral[0];
-        if (mass <= 0) {
+        if (mass <= 0 || !isfinite(mass)) {
             throw NotImplementedError(
                 "3D mass computation only works for closed meshes!");
         }
@@ -149,10 +149,6 @@ namespace physics {
 
         // center of mass
         center = Eigen::Vector3d(integral[1], integral[2], integral[3]) / mass;
-        if (center.squaredNorm() > 1e-8) {
-            throw NotImplementedError(
-                "3D mass computation only works for closed meshes!");
-        }
 
         // inertia relative to world origin
         inertia.resize(3, 3);

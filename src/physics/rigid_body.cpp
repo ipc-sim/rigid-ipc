@@ -40,14 +40,23 @@ namespace physics {
         Eigen::MatrixXd vertices_ = vertices;
         vertices_.rowwise() += pose.position.transpose();
 
-        double m;
-        Eigen::VectorX3d center_of_mass;
-        Eigen::MatrixXX3d I;
-        compute_mass_properties(
-            vertices_, dim == 2 || faces.size() == 0 ? edges : faces, m,
-            center_of_mass, I);
-        Eigen::MatrixXd centered_vertices =
-            vertices_.rowwise() - center_of_mass.transpose();
+        // compute the center of mass several times to get more accurate
+        Eigen::MatrixXd centered_vertices = vertices_;
+        Eigen::VectorX3d center_of_mass = Eigen::VectorX3d::Zero(dim);
+        for (int i = 0; i < 10; i++) {
+            double tmp_m;
+            Eigen::VectorX3d tmp_center_of_mass;
+            Eigen::MatrixXX3d tmp_I;
+            compute_mass_properties(
+                centered_vertices,
+                dim == 2 || faces.size() == 0 ? edges : faces, //
+                tmp_m, tmp_center_of_mass, tmp_I);
+            centered_vertices.rowwise() -= tmp_center_of_mass.transpose();
+            center_of_mass += tmp_center_of_mass;
+            if (tmp_center_of_mass.squaredNorm() < 1e-8) {
+                break;
+            }
+        }
 
         // set position so current vertices match input
         Pose<double> adjusted_pose(center_of_mass, pose.rotation);
