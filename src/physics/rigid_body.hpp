@@ -157,10 +157,19 @@ namespace physics {
         long num_vertices() const { return vertices.rows(); }
         long num_edges() const { return edges.rows(); }
         long num_faces() const { return faces.rows(); }
+        long num_codim_vertices() const
+        {
+            return mesh_selector.num_codim_vertices();
+        }
+        long num_codim_edges() const { return mesh_selector.num_codim_edges(); }
         int dim() const { return vertices.cols(); }
         int ndof() const { return pose.ndof(); }
         int pos_ndof() const { return pose.pos_ndof(); }
         int rot_ndof() const { return pose.rot_ndof(); }
+        long bvh_size() const
+        {
+            return num_codim_vertices() + num_codim_edges() + num_faces();
+        }
 
         void compute_bounding_box(
             const physics::Pose<double>& pose_t0,
@@ -232,6 +241,9 @@ namespace physics {
 
         /// @brief external force acting on the body
         Pose<double> force;
+
+    protected:
+        void init_bvh();
     };
 
 } // namespace physics

@@ -7,6 +7,7 @@
 #include <tbb/parallel_invoke.h>
 
 #include <ccd/rigid/broad_phase.hpp>
+#include <ccd/rigid/rigid_body_bvh.hpp>
 #include <logger.hpp>
 #include <profiler.hpp>
 
@@ -246,12 +247,6 @@ void detect_collision_candidates_linear_bvh(
     ipc::Candidates& candidates,
     const double inflation_radius)
 {
-    if (bodies.dim() != 3 || (collision_types & CollisionType::EDGE_VERTEX)) {
-        throw NotImplementedError(
-            "detect_collision_candidates_rigid_bvh is not implemented for 2D "
-            "or codimensional objects!");
-    }
-
     std::vector<std::pair<int, int>> body_pairs =
         bodies.close_bodies(poses_t0, poses_t1, inflation_radius);
 
@@ -262,147 +257,56 @@ void detect_collision_candidates_linear_bvh(
         [&](const tbb::blocked_range<size_t>& range) {
             LocalStorage::reference loc_storage_candidates = storages.local();
             for (long i = range.begin(); i != range.end(); ++i) {
-                int small_body_id = body_pairs[i].first;
-                int large_body_id = body_pairs[i].second;
-                if (bodies[small_body_id].num_faces()
-                    > bodies[large_body_id].num_faces()) {
-                    std::swap(small_body_id, large_body_id);
-                }
+                int bodyA_id = body_pairs[i].first;
+                int bodyB_id = body_pairs[i].second;
+                sort_body_pair(bodies, bodyA_id, bodyB_id);
 
-                detect_collision_candidates_linear_bvh(
-                    bodies, poses_t0, poses_t1, collision_types, small_body_id,
-                    large_body_id, loc_storage_candidates, inflation_radius);
+                const auto& bodyA = bodies[bodyA_id];
+                const auto& bodyB = bodies[bodyB_id];
+
+                // PROFILE_POINT("detect_collision_candidates_linear_bvh:compute_vertices");
+                // PROFILE_START();
+                // Compute the smaller body's vertices in the larger body's
+                // local coordinates.
+                const auto& pA_t0 = poses_t0[bodyA_id].position;
+                const auto& pB_t0 = poses_t0[bodyB_id].position;
+                const auto& pA_t1 = poses_t1[bodyA_id].position;
+                const auto& pB_t1 = poses_t1[bodyB_id].position;
+                const auto RA_t0 =
+                    poses_t0[bodyA_id].construct_rotation_matrix();
+                const auto RB_t0 =
+                    poses_t0[bodyB_id].construct_rotation_matrix();
+                const auto RA_t1 =
+                    poses_t1[bodyA_id].construct_rotation_matrix();
+                const auto RB_t1 =
+                    poses_t1[bodyB_id].construct_rotation_matrix();
+                const Eigen::MatrixXd VA_t0 =
+                    ((bodyA.vertices * RA_t0.transpose()).rowwise()
+                     + (pA_t0 - pB_t0).transpose())
+                    * RB_t0;
+                const Eigen::MatrixXd VA_t1 =
+                    ((bodyA.vertices * RA_t1.transpose()).rowwise()
+                     + (pA_t1 - pB_t1).transpose())
+                    * RB_t1;
+
+                std::vector<AABB> VA_aabbs;
+                VA_aabbs.reserve(bodyA.num_vertices());
+                for (int i = 0; i < bodyA.num_vertices(); i++) {
+                    const auto& v_t0 = VA_t0.row(i);
+                    const auto& v_t1 = VA_t1.row(i);
+                    VA_aabbs.emplace_back(
+                        v_t0.cwiseMin(v_t1).array() - inflation_radius,
+                        v_t0.cwiseMax(v_t1).array() + inflation_radius);
+                }
+                // PROFILE_END();
+
+                detect_body_pair_collision_candidates_from_aabbs(
+                    bodies, VA_aabbs, bodyA_id, bodyB_id, collision_types,
+                    loc_storage_candidates, inflation_radius);
             }
         });
 
     merge_local_candidates(storages, candidates);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Helper functions
-///////////////////////////////////////////////////////////////////////////////
-
-void detect_collision_candidates_linear_bvh(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const int collision_types,
-    const size_t bodyA_id,
-    const size_t bodyB_id,
-    ipc::Candidates& candidates,
-    const double inflation_radius)
-{
-    const physics::RigidBody& bodyA = bodies[bodyA_id];
-    const physics::RigidBody& bodyB = bodies[bodyB_id];
-
-    // Compute the smaller body's vertices in the larger body's local
-    // coordinates.
-    const auto& pA_t0 = poses_t0[bodyA_id].position;
-    const auto& pB_t0 = poses_t0[bodyB_id].position;
-    const auto& pA_t1 = poses_t1[bodyA_id].position;
-    const auto& pB_t1 = poses_t1[bodyB_id].position;
-    const auto RA_t0 = poses_t0[bodyA_id].construct_rotation_matrix();
-    const auto RB_t0 = poses_t0[bodyB_id].construct_rotation_matrix();
-    const auto RA_t1 = poses_t1[bodyA_id].construct_rotation_matrix();
-    const auto RB_t1 = poses_t1[bodyB_id].construct_rotation_matrix();
-
-    // PROFILE_POINT("detect_collision_candidates_linear_bvh:compute_vertices");
-    // PROFILE_START();
-    const Eigen::MatrixXd VA_t0 =
-        ((bodyA.vertices * RA_t0.transpose()).rowwise()
-         + (pA_t0 - pB_t0).transpose())
-        * RB_t0;
-    const Eigen::MatrixXd VA_t1 =
-        ((bodyA.vertices * RA_t1.transpose()).rowwise()
-         + (pA_t1 - pB_t1).transpose())
-        * RB_t1;
-    // PROFILE_END();
-
-    const Eigen::MatrixXd& VB = bodyB.vertices;
-    const Eigen::MatrixXi &EA = bodyA.edges, &EB = bodyB.edges,
-                          &FA = bodyA.faces, &FB = bodyB.faces;
-
-    // For each face in the small body
-    // std::mutex fv_mutex, ee_mutex;
-    // tbb::parallel_for(0l, FA.rows(), [&](long fa_id) {
-    for (long fa_id = 0; fa_id < FA.rows(); fa_id++) {
-        // Construct a bbox of bodyA's face
-        AABB fa_aabb = face_aabb(VA_t0, VA_t1, FA.row(fa_id), inflation_radius);
-
-        std::vector<unsigned int> fb_ids;
-        bodyB.bvh.intersect_box(
-            // Grow the box by inflation_radius because the BVH is not grown
-            fa_aabb.getMin().array() - inflation_radius,
-            fa_aabb.getMax().array() + inflation_radius, //
-            fb_ids);
-
-        for (const unsigned int fb_id : fb_ids) {
-            AABB fb_aabb = face_aabb(VB, FB.row(fb_id), inflation_radius);
-
-            for (int f_vi = 0; f_vi < 3; f_vi++) {
-                // vertex A - face B
-                long va_id = FA(fa_id, f_vi);
-                if (bodyA.mesh_selector.vertex_to_face(va_id) == fa_id) {
-                    AABB va_aabb =
-                        vertex_aabb(VA_t0, VA_t1, va_id, inflation_radius);
-
-                    if (AABB::are_overlaping(va_aabb, fb_aabb)) {
-                        // std::scoped_lock lock(fv_mutex);
-                        // Convert the local ids to the global ones
-                        candidates.fv_candidates.emplace_back(
-                            bodies.m_body_face_id[bodyB_id] + fb_id,
-                            bodies.m_body_vertex_id[bodyA_id] + va_id);
-                    }
-                }
-
-                // face A - vertex B
-                long vb_id = FB(fb_id, f_vi);
-                if (bodyB.mesh_selector.vertex_to_face(vb_id) == fb_id) {
-                    AABB vb_aabb = vertex_aabb(VB, vb_id, inflation_radius);
-
-                    if (AABB::are_overlaping(fa_aabb, vb_aabb)) {
-                        // std::scoped_lock lock(fv_mutex);
-                        // Convert the local ids to the global ones
-                        candidates.fv_candidates.emplace_back(
-                            bodies.m_body_face_id[bodyA_id] + fa_id,
-                            bodies.m_body_vertex_id[bodyB_id] + vb_id);
-                    }
-                }
-            }
-
-            for (int fa_ei = 0; fa_ei < 3; fa_ei++) {
-                long ea_id = bodyA.mesh_selector.face_to_edge(fa_id, fa_ei);
-
-                if (bodyA.mesh_selector.edge_to_face(ea_id) != fa_id) {
-                    continue;
-                }
-
-                AABB ea_aabb =
-                    edge_aabb(VA_t0, VA_t1, EA.row(ea_id), inflation_radius);
-
-                for (int fb_ei = 0; fb_ei < 3; fb_ei++) {
-                    long eb_id = bodyB.mesh_selector.face_to_edge(fb_id, fb_ei);
-
-                    if (bodyB.mesh_selector.edge_to_face(eb_id) != fb_id) {
-                        continue;
-                    }
-
-                    // AABB edge-edge check
-                    AABB eb_aabb =
-                        edge_aabb(VB, EB.row(eb_id), inflation_radius);
-
-                    if (AABB::are_overlaping(ea_aabb, eb_aabb)) {
-                        // std::scoped_lock lock(ee_mutex);
-                        // Convert the local ids to the global ones
-                        candidates.ee_candidates.emplace_back(
-                            bodies.m_body_edge_id[bodyA_id] + ea_id,
-                            bodies.m_body_edge_id[bodyB_id] + eb_id);
-                    }
-                }
-            }
-        }
-    }
-    // );
 }
 
 } // namespace ccd

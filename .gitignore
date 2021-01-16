@@ -268,3 +268,4 @@ src/ccd/EE-CCD-plan.txt
 tools/blender
 *.csv
 comparisons/IPC/*.csv
+**/*.sim.json

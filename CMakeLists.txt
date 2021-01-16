@@ -67,6 +67,7 @@ add_library(${PROJECT_NAME}
   src/interval/interval_root_finder.cpp
   src/ccd/rigid/broad_phase.cpp
   src/ccd/rigid/rigid_body_hash_grid.cpp
+  src/ccd/rigid/rigid_body_bvh.cpp
   src/ccd/rigid/time_of_impact.cpp
   src/ccd/rigid/rigid_trajectory_aabb.cpp
   src/ccd/redon/time_of_impact.cpp

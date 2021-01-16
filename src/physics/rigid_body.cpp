@@ -105,7 +105,7 @@ namespace physics {
         compute_mass_properties(
             vertices, dim() == 2 || faces.size() == 0 ? edges : faces, mass,
             center_of_mass, I);
-        assert(center_of_mass.squaredNorm() < 1e-8);
+        // assert(center_of_mass.squaredNorm() < 1e-8);
 
         // Mass above is actually volume in m³ and density is Kg/m³
         mass *= density;
@@ -189,13 +189,55 @@ namespace physics {
         }
         assert(std::isfinite(average_edge_length));
 
-        // TODO: Handle 2D and codimensional geometry
-        if (this->faces.size()) {
-            PROFILE_POINT("RigidBody::RigidBody:bvh.init");
-            PROFILE_START();
-            bvh.init(this->vertices, this->faces, /*tol=*/0);
-            PROFILE_END();
+        init_bvh();
+    }
+
+    void RigidBody::init_bvh()
+    {
+        PROFILE_POINT("RigidBody::init_bvh");
+        PROFILE_START();
+
+        // heterogenous bounding boxes
+        std::vector<std::array<Eigen::Vector3d, 2>> aabbs(
+            num_codim_vertices() + num_codim_edges() + num_faces());
+
+        for (size_t i = 0; i < num_codim_vertices(); i++) {
+            size_t vi = mesh_selector.codim_vertices_to_vertices(i);
+            if (dim() == 2) {
+                aabbs[i][0][2] = 0;
+                aabbs[i][1][2] = 0;
+            }
+            aabbs[i][0].head(dim()) = vertices.row(i);
+            aabbs[i][1].head(dim()) = vertices.row(i);
         }
+
+        size_t start_i = num_codim_vertices();
+        for (size_t i = 0; i < num_codim_edges(); i++) {
+            size_t ei = mesh_selector.codim_edges_to_edges(i);
+            const auto& e0 = vertices.row(edges(ei, 0));
+            const auto& e1 = vertices.row(edges(ei, 1));
+
+            if (dim() == 2) {
+                aabbs[start_i + i][0][2] = 0;
+                aabbs[start_i + i][1][2] = 0;
+            }
+            aabbs[start_i + i][0].head(dim()) = e0.cwiseMin(e1);
+            aabbs[start_i + i][1].head(dim()) = e0.cwiseMax(e1);
+        }
+
+        start_i += num_codim_edges();
+        for (size_t i = 0; i < num_faces(); i++) {
+            assert(dim() == 3);
+            const auto& f0 = vertices.row(faces(i, 0));
+            const auto& f1 = vertices.row(faces(i, 1));
+            const auto& f2 = vertices.row(faces(i, 2));
+            aabbs[start_i + i][0] = f0.cwiseMin(f1).cwiseMin(f2);
+            aabbs[start_i + i][1] = f0.cwiseMax(f1).cwiseMax(f2);
+        }
+
+        bvh.init(aabbs);
+
+        PROFILE_END();
     }
 
     Eigen::MatrixXd RigidBody::world_velocities() const

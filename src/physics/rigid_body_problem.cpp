@@ -101,7 +101,7 @@ namespace physics {
         if (detect_intersections(m_assembler.rb_poses_t1())) {
             spdlog::error("The initial state contains intersections!");
         } else {
-            spdlog::info("No intersections found in initial state");
+            spdlog::info("no intersections found in initial state");
         }
     }
 

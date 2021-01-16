@@ -622,7 +622,7 @@ TEST_CASE(
     };
 }
 
-TEST_CASE("Failing earliest tois", "[ccd][rigid_toi]")
+TEST_CASE("Failing earliest tois", "[ccd][rigid_toi][failing_toi]")
 {
     int id = GENERATE(range(0, 385));
     std::string filename =
