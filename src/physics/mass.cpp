@@ -141,7 +141,7 @@ namespace physics {
 
         // mass
         mass = integral[0];
-        if (mass <= 0 || !isfinite(mass)) {
+        if (mass <= 0 || !std::isfinite(mass)) {
             throw NotImplementedError(
                 "3D mass computation only works for closed meshes!");
         }
