@@ -19,82 +19,109 @@
         "rigid_bodies": [{
             "mesh": "plane.obj",
             "is_dof_fixed": true,
-            "scale": [1, 1, 1]
+            "scale": 2,
+            "density": 1
         }, {
             "mesh": "plane.obj",
             "position": [-2.75, 1.20830308488593, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, 65]
+            "rotation": [0, 0, 65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [-1.6500000000000001, 1.20830308488593, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, -65]
+            "rotation": [0, 0, -65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [-0.55, 1.20830308488593, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, 65]
+            "rotation": [0, 0, 65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [0.55, 1.20830308488593, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, -65]
+            "rotation": [0, 0, -65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [1.6500000000000001, 1.20830308488593, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, 65]
+            "rotation": [0, 0, 65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [2.75, 1.20830308488593, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, -65]
+            "rotation": [0, 0, -65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [-1.1, 2.41660616977186, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, -1]
+            "rotation": [0, 0, -1],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [-1.6500000000000001, 3.6249092546577897, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, 65]
+            "rotation": [0, 0, 65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [-0.55, 3.6249092546577897, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, -65]
+            "rotation": [0, 0, -65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [1.1, 2.41660616977186, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, -1]
+            "rotation": [0, 0, -1],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [0.55, 3.6249092546577897, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, 65]
+            "rotation": [0, 0, 65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [1.6500000000000001, 3.6249092546577897, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, -65]
+            "rotation": [0, 0, -65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [0.0, 4.83321233954372, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, -1]
+            "rotation": [0, 0, -1],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [-0.55, 6.04151542442965, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, 65]
+            "rotation": [0, 0, 65],
+            "density": 50
         }, {
             "mesh": "plane.obj",
             "position": [0.55, 6.04151542442965, 0],
             "scale": [0.25, 1, 0.125],
-            "rotation": [0, 0, -65]
+            "rotation": [0, 0, -65],
+            "density": 50
+        }, {
+            "mesh": "cube.obj",
+            "position": [0.2, 8, -0.2],
+            "scale": 1.0,
+            "density": 7680
+        }, {
+            "mesh": "cube.obj",
+            "position": [0.5, 11, -0.3],
+            "scale": 1.0,
+            "density": 7680,
+            "enabled": false
         }]
     }
 }
