@@ -1,0 +1,21 @@
+energy NH
+warmStart 0
+time 2 0.01
+
+
+shapes input 2
+../../../../meshes/oloid.msh  -0.45 -0.0245 0  60 0 0  0.05 0.05 0.05 material 1000 2e11 0.3  initVel 0.5 0 0  0 0 0  NBC -1e300 -1e300 -1e300  1e300 1e300 1e300  0.5 0 0
+../../../../../../meshes/plane.obj  0 -0.05 0  0 0 0  0.1 0 0.1 material 1000 2e11 0.3  linearVelocity 0 0 0
+
+
+selfCollisionOn
+selfFric 0.2
+
+constraintSolver interiorPoint
+dHat 0.0001
+epsv 0.001
+useAbsParameters
+fricIterAmt 1
+tol 1
+0.01
+# useAbsTol

@@ -7,18 +7,19 @@
         "initial_barrier_activation_distance": 1e-4
     },
     "ipc_solver": {
-        "velocity_conv_tol": 1e-2
+        "velocity_conv_tol": 1e-5
     },
     "friction_constraints": {
+        "static_friction_speed_bound": 1e-5,
         "iterations": -1
     },
     "rigid_body_problem": {
-        "coefficient_friction": 0.1,
+        "coefficient_friction": 0.2,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "tippe-top/tippe-top-decimated.obj",
             "position": [0, 0, 0],
-            "angular_velocity": [0, 720, 0],
+            "angular_velocity": [0, 43200, 0],
             "scale": 0.001
         }, {
             "mesh": "plane.obj",

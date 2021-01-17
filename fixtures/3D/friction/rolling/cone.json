@@ -1,0 +1,33 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "max_time": 5,
+    "timestep": 0.01,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 1e-4
+    },
+    "ipc_solver": {
+        "velocity_conv_tol": 1e-4
+    },
+    "friction_constraints": {
+        "static_friction_speed_bound": 1e-5,
+        "iterations": 1
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "coefficient_friction": 0.5,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "cone-solid.obj",
+            "position": [-0.1, -0.05, 0],
+            "rotation": [117, 0, 0],
+            "linear_velocity": [1, 0, 0],
+            "dimensions": [0.1, 0.1, 0.1]
+        }, {
+            "mesh": "plane.obj",
+            "is_dof_fixed": true,
+            "position": [0, -0.074, 0],
+            "dimensions": [0.5, 0, 0.5]
+        }]
+    }
+}

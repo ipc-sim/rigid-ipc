@@ -4,14 +4,14 @@
     "timestep": 0.025,
     "max_time": 5,
     "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 0.0001
+        "initial_barrier_activation_distance": 1e-3
     },
     "ipc_solver": {
-        "velocity_conv_tol": 0.001
+        "velocity_conv_tol": 1e-4
     },
     "friction_constraints": {
         "static_friction_speed_bound": 1e-5,
-        "iterations": 1
+        "iterations": -1
     },
     "rigid_body_problem": {
         "coefficient_friction": 0.9,
