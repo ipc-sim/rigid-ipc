@@ -269,4 +269,5 @@ tools/blender
 *.csv
 comparisons/IPC/*.csv
 **/*.sim.json
-meshes/expanding-lock-box # this is a model we bought and cannot share
+# this is a model we bought and cannot share
+meshes/expanding-lock-box
