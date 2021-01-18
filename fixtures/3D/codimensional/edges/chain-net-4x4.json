@@ -1,0 +1,158 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.01,
+    "max_time": 20.0,
+    "distance_barrier_constraint": {
+        "detection_method": "bvh"
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.81, 0],
+        "rigid_bodies": [{
+            "mesh": "codimensional/edges/link.obj",
+            "position": [1.65, 0, 0.0],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": true
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [1.65, 0, 0.8],
+            "rotation": [90, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [3.3, 0, 0.0],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": true
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [3.3, 0, 0.8],
+            "rotation": [90, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [0.0, 0, 1.6],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": true
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [0.825, 0, 1.6],
+            "rotation": [0, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [1.65, 0, 1.6],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [2.4749999999999996, 0, 1.6],
+            "rotation": [0, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [1.65, 0, 2.4000000000000004],
+            "rotation": [90, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [3.3, 0, 1.6],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [4.125, 0, 1.6],
+            "rotation": [0, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [3.3, 0, 2.4000000000000004],
+            "rotation": [90, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [4.949999999999999, 0, 1.6],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": true
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [0.0, 0, 3.2],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": true
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [0.825, 0, 3.2],
+            "rotation": [0, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [1.65, 0, 3.2],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [2.4749999999999996, 0, 3.2],
+            "rotation": [0, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [1.65, 0, 4.0],
+            "rotation": [90, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [3.3, 0, 3.2],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [4.125, 0, 3.2],
+            "rotation": [0, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [3.3, 0, 4.0],
+            "rotation": [90, 0, 90],
+            "density": 7680,
+            "is_dof_fixed": false
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [4.949999999999999, 0, 3.2],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": true
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [1.65, 0, 4.800000000000001],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": true
+        }, {
+            "mesh": "codimensional/edges/link.obj",
+            "position": [3.3, 0, 4.800000000000001],
+            "rotation": [90, 90, 0],
+            "density": 7680,
+            "is_dof_fixed": true
+        }]
+    }
+}

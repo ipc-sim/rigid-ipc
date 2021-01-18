@@ -40,7 +40,9 @@ namespace physics {
             const Eigen::VectorX6b& is_dof_fixed,
             const bool oriented,
             const int group_id,
-            const RigidBodyType type = RigidBodyType::DYNAMIC);
+            const RigidBodyType type = RigidBodyType::DYNAMIC,
+            const double kinematic_max_time =
+                std::numeric_limits<double>::infinity());
 
     public:
         static RigidBody from_points(
@@ -54,7 +56,9 @@ namespace physics {
             const Eigen::VectorX6b& is_dof_fixed,
             const bool oriented,
             const int group_id,
-            const RigidBodyType type = RigidBodyType::DYNAMIC);
+            const RigidBodyType type = RigidBodyType::DYNAMIC,
+            const double kinematic_max_time =
+                std::numeric_limits<double>::infinity());
 
         // Faceless version for convienence (useful for 2D)
         static RigidBody from_points(
@@ -184,6 +188,12 @@ namespace physics {
             return compute_bounding_box(pose, pose, box_min, box_max);
         }
 
+        void convert_to_static()
+        {
+            type = RigidBodyType::STATIC;
+            is_dof_fixed.setOnes();
+        }
+
         // --------------------------------------------------------------------
         // Properties
         // --------------------------------------------------------------------
@@ -193,6 +203,8 @@ namespace physics {
 
         /// @brief Dyanmic type of rigid body
         RigidBodyType type;
+
+        double kinematic_max_time;
 
         // --------------------------------------------------------------------
         // Geometry

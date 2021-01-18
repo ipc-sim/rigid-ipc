@@ -27,7 +27,8 @@ namespace physics {
         const Eigen::VectorX6b& is_dof_fixed,
         const bool oriented,
         const int group_id,
-        const RigidBodyType type)
+        const RigidBodyType type,
+        const double kinematic_max_time)
     {
         int dim = vertices.cols();
         assert(dim == pose.dim());
@@ -64,7 +65,8 @@ namespace physics {
         assert(is_dof_fixed.size() == pose.ndof());
         return RigidBody(
             centered_vertices, edges, faces, adjusted_pose, velocity, force,
-            density, is_dof_fixed, oriented, group_id, type);
+            density, is_dof_fixed, oriented, group_id, type,
+            kinematic_max_time);
     }
 
     RigidBody::RigidBody(
@@ -78,9 +80,11 @@ namespace physics {
         const Eigen::VectorX6b& is_dof_fixed,
         const bool oriented,
         const int group_id,
-        const RigidBodyType type)
+        const RigidBodyType type,
+        const double kinematic_max_time)
         : group_id(group_id)
         , type(type)
+        , kinematic_max_time(kinematic_max_time)
         , vertices(vertices)
         , edges(edges)
         , faces(faces)

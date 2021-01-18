@@ -5,7 +5,9 @@
 #include <Eigen/Geometry>
 #include <boost/filesystem.hpp>
 #include <igl/edges.h>
+#include <igl/facet_components.h>
 #include <igl/read_triangle_mesh.h>
+#include <igl/remove_unreferenced.h>
 #include <tbb/parallel_sort.h>
 
 #include <io/read_obj.hpp>
@@ -64,9 +66,15 @@ namespace io {
                 "force": [0.0, 0.0, 0.0],
                 "torque": [0.0, 0.0, 0.0],
                 "enabled": true,
-                "type": "dynamic"
+                "type": "dynamic",
+                "kinematic_max_time": -1,
+                "split_components": false
             })"_json;
             args.merge_patch(jrb);
+            if (args["kinematic_max_time"] < 0) {
+                args["kinematic_max_time"] =
+                    std::numeric_limits<double>::infinity();
+            }
 
             if (!args["enabled"].get<bool>()) {
                 continue;
@@ -221,13 +229,46 @@ namespace io {
 
             RigidBodyType rb_type = args["type"];
 
-            auto rb = physics::RigidBody::from_points(
-                vertices, edges, faces, Pose<double>(position, rotation),
-                Pose<double>(linear_velocity, angular_velocity),
-                Pose<double>(force, torque), density, is_dof_fixed, is_oriented,
-                group_id, rb_type);
+            if (args["split_components"].get<bool>()) {
+                // TODO: Handle codimensional edges too
+                assert(faces.cols() == 3);
+                Eigen::VectorXi C;
+                igl::facet_components(faces, C);
+                int num_components = C.maxCoeff();
+                std::vector<std::vector<int>> CFs(num_components + 1);
+                for (int j = 0; j < faces.cols(); j++) {
+                    for (int i = 0; i < faces.rows(); i++) {
+                        CFs[C[i]].push_back(faces(i, j));
+                    }
+                }
 
-            rbs.push_back(rb);
+                for (int ci = 0; ci < CFs.size(); ci++) {
+
+                    Eigen::MatrixXi F = Eigen::Map<Eigen::MatrixXi>(
+                        CFs[ci].data(), CFs[ci].size() / 3, 3);
+                    Eigen::MatrixXd CV;
+                    Eigen::MatrixXi CF;
+                    Eigen::VectorXi I;
+                    igl::remove_unreferenced(vertices, F, CV, CF, I);
+                    Eigen::MatrixXi CE;
+                    igl::edges(CF, CE);
+                    // WARNING: angular velocity and torque will be around the
+                    // components center of mass not the entire meshes.
+                    auto rb = physics::RigidBody::from_points(
+                        CV, CE, CF, Pose<double>(position, rotation),
+                        Pose<double>(linear_velocity, angular_velocity),
+                        Pose<double>(force, torque), density, is_dof_fixed,
+                        is_oriented, group_id, rb_type);
+                    rbs.push_back(rb);
+                }
+            } else {
+                auto rb = physics::RigidBody::from_points(
+                    vertices, edges, faces, Pose<double>(position, rotation),
+                    Pose<double>(linear_velocity, angular_velocity),
+                    Pose<double>(force, torque), density, is_dof_fixed,
+                    is_oriented, group_id, rb_type);
+                rbs.push_back(rb);
+            }
         }
 
         // Adjust the group ids, so the default ones are unique.
