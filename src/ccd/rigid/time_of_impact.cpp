@@ -16,6 +16,8 @@
 
 namespace ccd {
 
+typedef physics::Pose<Interval> PoseI;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Edge-Vertex
 
@@ -47,9 +49,7 @@ Eigen::Vector2d compute_edge_vertex_tolerance(
     // }
 
     return Eigen::Vector2d(
-        // 1e-6 / dl,
-        // 1e-6 / bodyB.edge_length(edge_id));
-        Constants::RIGID_CCD_TOI_TOL,
+        Constants::RIGID_CCD_TOI_TOL, // / dl,
         Constants::RIGID_CCD_LENGTH_TOL / bodyB.edge_length(edge_id));
 }
 
@@ -70,8 +70,6 @@ bool compute_edge_vertex_time_of_impact(
     int dim = bodyA.dim();
     assert(bodyB.dim() == dim);
     assert(dim == 2); // TODO: 3D
-
-    typedef physics::Pose<Interval> PoseI;
 
     const PoseI poseIA_t0 = poseA_t0.cast<Interval>();
     const PoseI poseIA_t1 = poseA_t1.cast<Interval>();
@@ -148,38 +146,11 @@ Eigen::Vector3d compute_edge_edge_tolerance(
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     size_t edgeB_id)                       // In bodyB
 {
-    // TODO: This is not exactly the arc length of the trajectory
-    // Eigen::Matrix3d RA_t0, PA;
-    // double omegaA;
-    // decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
-    // Eigen::Matrix3d RA = PA * RA_t0;
-    //
-    // Eigen::Matrix3d RB_t0, PB;
-    // double omegaB;
-    // decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
-    // Eigen::Matrix3d RB = PB * RB_t0;
-    //
-    // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    // double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-    //
-    // double dl = -std::numeric_limits<double>::infinity();
-    // Eigen::Vector3d v;
-    // double radius_sqr;
-    // for (int i = 0; i < 2; i++) {
-    //     v = bodyA.vertices.row(bodyA.edges(edgeA_id, i));
-    //     radius_sqr = (RA * v).head<2>().squaredNorm();
-    //     dl = std::max(dl, sqrt(sA_sqr + omegaA * omegaA * radius_sqr));
-    //
-    //     v = bodyB.vertices.row(bodyB.edges(edgeB_id, i));
-    //     radius_sqr = (RB * v).head<2>().squaredNorm();
-    //     dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
-    // }
+    // TODO: Compute trajecotry length for interpolating rotation vectors.
+    // double dl = ...
 
     return Eigen::Vector3d(
-        // 1e-6 / dl,
-        // 1e-6 / bodyA.edge_length(edgeA_id),
-        // 1e-6 / bodyB.edge_length(edgeB_id));
-        Constants::RIGID_CCD_TOI_TOL,
+        Constants::RIGID_CCD_TOI_TOL, // / dl
         Constants::RIGID_CCD_LENGTH_TOL / bodyA.edge_length(edgeA_id),
         Constants::RIGID_CCD_LENGTH_TOL / bodyB.edge_length(edgeB_id));
 }
@@ -200,10 +171,10 @@ bool compute_edge_edge_time_of_impact(
 {
     assert(bodyA.dim() == 3 && bodyB.dim() == bodyA.dim());
 
-    const physics::Pose<Interval> poseIA_t0 = poseA_t0.cast<Interval>();
-    const physics::Pose<Interval> poseIA_t1 = poseA_t1.cast<Interval>();
-    const physics::Pose<Interval> poseIB_t0 = poseB_t0.cast<Interval>();
-    const physics::Pose<Interval> poseIB_t1 = poseB_t1.cast<Interval>();
+    const PoseI poseIA_t0 = poseA_t0.cast<Interval>();
+    const PoseI poseIA_t1 = poseA_t1.cast<Interval>();
+    const PoseI poseIB_t0 = poseB_t0.cast<Interval>();
+    const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
     const auto distance = [&](const Eigen::VectorX3I& params) {
         assert(params.size() == 3);
         return edge_edge_aabb(
@@ -249,7 +220,7 @@ bool compute_edge_edge_time_of_impact(
 ////////////////////////////////////////////////////////////////////////////////
 // Face-Vertex
 
-double compute_face_vertex_tolerance(
+Eigen::Vector3d compute_face_vertex_tolerance(
     const physics::RigidBody& bodyA,       // Body of the vertex
     const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
     const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
@@ -259,32 +230,19 @@ double compute_face_vertex_tolerance(
     const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
     size_t face_id)                        // In bodyB
 {
-    // TODO: This is not exactly the arc length of the trajectory
-    // Eigen::Matrix3d RA_t0, PA;
-    // double omegaA;
-    // decompose_to_z_screwing(poseA_t0, poseA_t1, RA_t0, PA, omegaA);
-    // Eigen::Matrix3d RA = PA * RA_t0;
-    //
-    // Eigen::Matrix3d RB_t0, PB;
-    // double omegaB;
-    // decompose_to_z_screwing(poseB_t0, poseB_t1, RB_t0, PB, omegaB);
-    // Eigen::Matrix3d RB = PB * RB_t0;
-    //
-    // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
-    // double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
-    //
-    // Eigen::Vector3d v = bodyA.vertices.row(vertex_id);
-    // double radius_sqr = (RA * v).head<2>().squaredNorm();
-    // double dl = sqrt(sA_sqr + omegaA * omegaA * v.squaredNorm());
-    //
-    // for (int i = 0; i < 3; i++) {
-    //     v = bodyB.vertices.row(bodyB.faces(face_id, i));
-    //     radius_sqr = (RB * v).head<2>().squaredNorm();
-    //     dl = std::max(dl, sqrt(sB_sqr + omegaB * omegaB * radius_sqr));
-    // }
+    // TODO: Compute trajecotry length for interpolating rotation vectors.
+    // double dl = ...
 
-    // return 1e-6 / dl;
-    return Constants::RIGID_CCD_TOI_TOL;
+    // (f1 - f0) * u + (f2 - f0) * v + f0
+    // u interpolates edge (f0, f1) and v interpolates edge (f1, f2)
+    size_t edge0_id = bodyB.mesh_selector.face_to_edge(face_id, 0);
+    size_t edge1_id = bodyB.mesh_selector.face_to_edge(face_id, 1);
+
+    return Eigen::Vector3d(
+        // Constants::RIGID_CCD_TOI_TOL / dl,
+        Constants::RIGID_CCD_TOI_TOL,
+        Constants::RIGID_CCD_LENGTH_TOL / bodyB.edge_length(edge0_id),
+        Constants::RIGID_CCD_LENGTH_TOL / bodyB.edge_length(edge1_id));
 }
 
 // Find time-of-impact between two rigid bodies
@@ -301,66 +259,42 @@ bool compute_face_vertex_time_of_impact(
     double earliest_toi, // Only search for collision in [0, earliest_toi]
     double toi_tolerance)
 {
-    int dim = bodyA.dim();
-    assert(bodyB.dim() == dim);
-    assert(dim == 3);
-
-    typedef physics::Pose<Interval> PoseI;
+    assert(bodyA.dim() == 3 && bodyA.dim() == bodyB.dim());
 
     const PoseI poseIA_t0 = poseA_t0.cast<Interval>();
     const PoseI poseIA_t1 = poseA_t1.cast<Interval>();
-
     const PoseI poseIB_t0 = poseB_t0.cast<Interval>();
     const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
 
-    const auto vertex_positions =
-        [&](const Interval& t, Eigen::Vector3I& vertex,
-            Eigen::Vector3I& face_vertex0, Eigen::Vector3I& face_vertex1,
-            Eigen::Vector3I& face_vertex2) {
-            // Compute the poses at time t
-            PoseI poseIA = PoseI::interpolate(poseIA_t0, poseIA_t1, t);
-            PoseI poseIB = PoseI::interpolate(poseIB_t0, poseIB_t1, t);
-
-            // Get the world vertex of the point at time t
-            vertex = bodyA.world_vertex(poseIA, vertex_id);
-            // Get the world vertex of the edge at time t
-            face_vertex0 = bodyB.world_vertex(poseIB, bodyB.faces(face_id, 0));
-            face_vertex1 = bodyB.world_vertex(poseIB, bodyB.faces(face_id, 1));
-            face_vertex2 = bodyB.world_vertex(poseIB, bodyB.faces(face_id, 2));
-        };
-
-    const auto distance = [&](const Interval& t) {
-        // Get the world vertex and face of the point at time t
-        Eigen::Vector3I vertex;
-        Eigen::Vector3I face_vertex0, face_vertex1, face_vertex2;
-        vertex_positions(t, vertex, face_vertex0, face_vertex1, face_vertex2);
-        return geometry::point_plane_signed_distance(
-            vertex, face_vertex0, face_vertex1, face_vertex2);
+    const auto distance = [&](const Eigen::VectorX3I& params) {
+        assert(params.size() == 3);
+        return face_vertex_aabb(
+            bodyA, poseIA_t0, poseIA_t1, vertex_id, //
+            bodyB, poseIB_t0, poseIB_t1, face_id,   //
+            /*t=*/params(0), /*u=*/params(1), /*v=*/params(2));
     };
 
-    const auto is_point_inside_triangle = [&](const Interval& t) {
-        // Get the world vertex and face of the point at time t
-        Eigen::Vector3I vertex;
-        Eigen::Vector3I face_vertex0, face_vertex1, face_vertex2;
-        vertex_positions(t, vertex, face_vertex0, face_vertex1, face_vertex2);
-        return geometry::is_point_inside_triangle(
-            vertex, face_vertex0, face_vertex1, face_vertex2);
+    const auto is_domain_valid = [&](const Eigen::VectorX3I& params) {
+        const Interval &t = params[0], &u = params[1], &v = params[2];
+        // 0 ≤ t, u, v ≤ 1 is satisfied by the initial domain of the solve
+        return overlap(u + v, Interval(0, 1));
     };
 
-    // double tol = compute_face_vertex_tolerance(
-    //     bodyA, poseA_t0, poseA_t1, vertex_id, //
-    //     bodyB, poseB_t0, poseB_t1, face_id);
-    double tol = toi_tolerance;
+    Eigen::Vector3d tol = compute_face_vertex_tolerance(
+        bodyA, poseA_t0, poseA_t1, vertex_id, //
+        bodyB, poseB_t0, poseB_t1, face_id);
+    tol[0] = toi_tolerance;
 
 #ifdef TIME_CCD_QUERIES
     igl::Timer timer;
     timer.start();
 #endif
 
-    Interval toi_interval;
-    bool is_impacting = interval_root_finder(
-        distance, is_point_inside_triangle, Interval(0, earliest_toi), tol,
-        toi_interval);
+    Eigen::VectorX3I toi_interval;
+    Eigen::VectorX3I x0 = Eigen::Vector3I(
+        Interval(0, earliest_toi), Interval(0, 1), Interval(0, 1));
+    bool is_impacting =
+        interval_root_finder(distance, is_domain_valid, x0, tol, toi_interval);
 
 #ifdef TIME_CCD_QUERIES
     timer.stop();
@@ -368,7 +302,7 @@ bool compute_face_vertex_time_of_impact(
 #endif
 
     // Return a conservative time-of-impact
-    toi = is_impacting ? toi_interval.lower()
+    toi = is_impacting ? toi_interval(0).lower()
                        : std::numeric_limits<double>::infinity();
 
     // This time of impact is very dangerous for convergence

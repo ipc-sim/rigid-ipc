@@ -37,7 +37,8 @@ bool interval_root_finder(
             assert(x.size() == 1);
             return constraint_predicate(x(0));
         },
-        x0_vec, tol_vec, x_vec, max_iterations);
+        [&](const Eigen::VectorX3I& x) { return true; }, x0_vec, tol_vec, x_vec,
+        max_iterations);
     if (found_root) {
         assert(x_vec.size() == 1);
         x = x_vec(0);
@@ -55,6 +56,19 @@ bool interval_root_finder(
     return interval_root_finder(
         f, [](const Eigen::VectorX3I&) { return true; }, x0, tol, x,
         max_iterations);
+}
+
+bool interval_root_finder(
+    const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
+    const std::function<bool(const Eigen::VectorX3I&)>& is_domain_valid,
+    const Eigen::VectorX3I& x0,
+    Eigen::VectorX3d tol,
+    Eigen::VectorX3I& x,
+    int max_iterations)
+{
+    return interval_root_finder(
+        f, [](const Eigen::VectorX3I&) { return true; }, is_domain_valid, x0,
+        tol, x, max_iterations);
 }
 
 void log_octree(
@@ -84,6 +98,7 @@ void log_octree(
 bool interval_root_finder(
     const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
     const std::function<bool(const Eigen::VectorX3I&)>& constraint_predicate,
+    const std::function<bool(const Eigen::VectorX3I&)>& is_domain_valid,
     const Eigen::VectorX3I& x0,
     Eigen::VectorX3d tol,
     Eigen::VectorX3I& x,
@@ -117,6 +132,10 @@ bool interval_root_finder(
 
         // Skip any interval that is not before the earliest root
         if (x[0].lower() >= earliest_root[0].lower()) {
+            continue;
+        }
+
+        if (!is_domain_valid(x)) {
             continue;
         }
 

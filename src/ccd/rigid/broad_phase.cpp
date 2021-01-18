@@ -98,7 +98,8 @@ void detect_collision_candidates_rigid_bvh(
     std::vector<std::pair<int, int>> body_pairs =
         bodies.close_bodies(poses, poses, inflation_radius);
 
-    // auto posesI = physics::cast<Interval>(poses);
+    // Use interval arithmetic to conservativly capture all distance candidates
+    auto posesI = physics::cast<Interval>(poses);
 
     ThreadSpecificCandidates storages;
     tbb::parallel_for(
@@ -108,7 +109,7 @@ void detect_collision_candidates_rigid_bvh(
                 storages.local();
             for (long i = range.begin(); i != range.end(); ++i) {
                 detect_body_pair_collision_candidates_bvh(
-                    bodies, poses, body_pairs[i].first, body_pairs[i].second,
+                    bodies, posesI, body_pairs[i].first, body_pairs[i].second,
                     collision_types, local_storage_candidates,
                     inflation_radius);
             }
