@@ -1,0 +1,62 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "max_time": 10,
+    "timestep": 0.01,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 1e-5
+    },
+    "rigid_body_problem": {
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "expanding-lock-box/Locking Bolt.stl",
+            "rotation": [-90, 0, 0],
+            "scale": 0.001
+        }, {
+            "mesh": "expanding-lock-box/Locking Bolt.stl",
+            "rotation": [-90, 60, 0],
+            "scale": 0.001
+        }, {
+            "mesh": "expanding-lock-box/Locking Bolt.stl",
+            "rotation": [-90, 120, 0],
+            "scale": 0.001
+        }, {
+            "mesh": "expanding-lock-box/Locking Bolt.stl",
+            "rotation": [-90, 180, 0],
+            "scale": 0.001
+        }, {
+            "mesh": "expanding-lock-box/Locking Bolt.stl",
+            "rotation": [-90, 240, 0],
+            "scale": 0.001
+        }, {
+            "mesh": "expanding-lock-box/Locking Bolt.stl",
+            "rotation": [-90, 300, 0],
+            "scale": 0.001
+        }, {
+            "mesh": "expanding-lock-box/Spiral Gear NO LOCK.stl",
+            "rotation": [-90, 0, 0],
+            "scale": 0.001
+        }, {
+            "mesh": "expanding-lock-box/Bolt Slide Carrier.stl",
+            "position": [0, 0.0001, 0],
+            "rotation": [-90, 0, 0],
+            "scale": 0.001
+        }, {
+            "mesh": "expanding-lock-box/Locking Top Cover.stl",
+            "rotation": [-90, 0, 0],
+            "scale": 0.001,
+            "force": [0, 1, 0],
+            "is_dof_fixed": [true, false, true, true, true, true]
+        }, {
+            "mesh": "expanding-lock-box/Main Body NO LOCK.stl",
+            "rotation": [-90, 0, 0],
+            "scale": 0.001,
+            "type": "static"
+        }, {
+            "mesh": "expanding-lock-box/Key.stl",
+            "rotation": [-90, 0, 0],
+            "angular_velocity": [0, 90, 0],
+            "scale": 0.001,
+            "type": "kinematic"
+        }]
+    }
+}
