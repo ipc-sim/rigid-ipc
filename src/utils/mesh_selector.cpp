@@ -74,10 +74,10 @@ void MeshSelector::init_face_to_edge(
     const Eigen::MatrixXi& F,
     const Eigen::SparseMatrix<size_t>& vertices_to_edge)
 {
-    m_face_to_edges.resize(F.rows(), 3);
+    m_faces_to_edges.resize(F.rows(), 3);
     for (size_t i = 0; i < F.rows(); i++) {
         for (size_t j = 0; j < F.cols(); j++) {
-            m_face_to_edges(i, j) = vertices_to_edge.coeff(
+            m_faces_to_edges(i, j) = vertices_to_edge.coeff(
                 std::min(F(i, j), F(i, (j + 1) % 3)),
                 std::max(F(i, j), F(i, (j + 1) % 3)));
         }
@@ -86,17 +86,17 @@ void MeshSelector::init_face_to_edge(
 
 void MeshSelector::init_edge_to_face(const size_t num_edges)
 {
-    assert(m_face_to_edges.size());
+    assert(m_faces_to_edges.size());
 
     if (!num_edges) {
         return;
     }
 
     m_edge_to_face.resize(num_edges, std::numeric_limits<size_t>::max());
-    for (size_t i = 0; i < m_face_to_edges.rows(); i++) {
-        for (size_t j = 0; j < m_face_to_edges.cols(); j++) {
-            m_edge_to_face[m_face_to_edges(i, j)] =
-                std::min(m_edge_to_face[m_face_to_edges(i, j)], i);
+    for (size_t i = 0; i < m_faces_to_edges.rows(); i++) {
+        for (size_t j = 0; j < m_faces_to_edges.cols(); j++) {
+            m_edge_to_face[m_faces_to_edges(i, j)] =
+                std::min(m_edge_to_face[m_faces_to_edges(i, j)], i);
         }
     }
 }
@@ -123,9 +123,9 @@ void MeshSelector::init_codim_vertices_to_vertices(
 void MeshSelector::init_codim_edges_to_edges(size_t num_edges)
 {
     std::vector<bool> is_edge_codim(num_edges, true);
-    for (size_t i = 0; i < m_face_to_edges.rows(); i++) {
-        for (size_t j = 0; j < m_face_to_edges.cols(); j++) {
-            is_edge_codim[m_face_to_edges(i, j)] = false;
+    for (size_t i = 0; i < m_faces_to_edges.rows(); i++) {
+        for (size_t j = 0; j < m_faces_to_edges.cols(); j++) {
+            is_edge_codim[m_faces_to_edges(i, j)] = false;
         }
     }
     size_t num_codim_edges =

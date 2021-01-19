@@ -1,0 +1,33 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "timestep": 1e-2,
+    "max_time": 4,
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, 0, 0],
+        "rigid_bodies": [{
+            "mesh": "plane.obj",
+            "position": [2.5, 0, 0],
+            "rotation": [0, 0, 90],
+            "type": "static",
+            "enabled": true
+        }, {
+            "mesh": "cube.obj",
+            "position": [0, 0, 0],
+            "rotation": [0, 0, 0],
+            "linear_velocity": [-2, 0, 0],
+            "force": [-1e6, 0, 0],
+            "density": 1e4,
+            "type": "dynamic",
+            "enabled": true
+        }, {
+            "mesh": "plane.obj",
+            "position": [-2.5, 0, 0],
+            "rotation": [0, 0, 90],
+            "linear_velocity": [1, 0, 0],
+            "density": 1,
+            "type": "kinematic",
+            "enabled": true
+        }]
+    }
+}

@@ -60,6 +60,11 @@ namespace physics {
             return m_assembler.m_edges;
         }
 
+        const std::vector<size_t>& codim_edges_to_edges() const override
+        {
+            return m_assembler.m_codim_edges_to_edges;
+        }
+
         const Eigen::MatrixXi& faces() const override
         {
             return m_assembler.m_faces;
@@ -73,6 +78,12 @@ namespace physics {
         const Eigen::MatrixXi& edges(size_t i) const override
         {
             return m_assembler[i].edges;
+        }
+
+        virtual const std::vector<size_t>&
+        codim_edges_to_edges(size_t i) const override
+        {
+            return m_assembler[i].mesh_selector.codim_edges_to_edges();
         }
 
         const Eigen::MatrixXi& faces(size_t i) const override

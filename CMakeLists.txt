@@ -77,6 +77,7 @@ add_library(${PROJECT_NAME}
   src/io/serialize_json.cpp
   src/io/read_rb_scene.cpp
   src/io/read_obj.cpp
+  src/io/write_obj.cpp
 
   src/physics/mass.cpp
   src/utils/mesh_selector.cpp

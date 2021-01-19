@@ -20,10 +20,10 @@ public:
 
     size_t face_to_edge(size_t fi, size_t fi_ei) const
     {
-        return m_face_to_edges(fi, fi_ei);
+        return m_faces_to_edges(fi, fi_ei);
     }
 
-    const Eigen::MatrixXi& face_to_edges() const { return m_face_to_edges; }
+    const Eigen::MatrixXi& face_to_edges() const { return m_faces_to_edges; }
 
     size_t edge_to_face(size_t ei) const { return m_edge_to_face[ei]; }
 
@@ -35,6 +35,11 @@ public:
     size_t codim_edges_to_edges(size_t ei) const
     {
         return m_codim_edges_to_edges[ei];
+    }
+
+    const std::vector<size_t>& codim_edges_to_edges() const
+    {
+        return m_codim_edges_to_edges;
     }
 
     size_t num_codim_vertices() const
@@ -70,7 +75,7 @@ protected:
     /// A mapping from a edge id to the smallest adjacent face id.
     std::vector<size_t> m_edge_to_face;
     /// A mapping from a face to the indices of the face's edges.
-    Eigen::MatrixXi m_face_to_edges;
+    Eigen::MatrixXi m_faces_to_edges;
     /// A map from codimensional vertices ids to full vertices ids.
     std::vector<size_t> m_codim_vertices_to_vertices;
     /// A map from codimensional edges ids to full edges ids.

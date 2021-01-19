@@ -39,6 +39,7 @@ namespace physics {
         m_edges.resize(m_body_edge_id.back(), 2);
         m_faces.resize(m_body_face_id.back(), 3);
         m_faces_to_edges.resize(m_body_face_id.back(), 3);
+        m_codim_edges_to_edges.clear();
         for (size_t i = 0; i < num_bodies; ++i) {
             auto& rb = rigid_bodies[i];
             if (rb.edges.size() != 0) {
@@ -52,6 +53,9 @@ namespace physics {
                     m_body_face_id[i], 0, rb.faces.rows(), 3) =
                     rb.mesh_selector.face_to_edges().array()
                     + m_body_edge_id[i];
+            }
+            for (const auto& ei : rb.mesh_selector.codim_edges_to_edges()) {
+                m_codim_edges_to_edges.push_back(ei + m_body_edge_id[i]);
             }
         }
         // vertex to body map

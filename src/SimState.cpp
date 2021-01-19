@@ -12,6 +12,7 @@
 #include <constants.hpp>
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
+#include <io/write_obj.hpp>
 #include <problems/problem_factory.hpp>
 #include <utils/get_rss.hpp>
 #include <utils/regular_2d_grid.hpp>
@@ -447,19 +448,18 @@ bool SimState::save_meshes(const std::string& dir_name, bool mesh_per_body)
 
         if (mesh_per_body) {
             for (int j = 0; j < problem_ptr->num_bodies(); j++) {
-                // TODO: Save codimensional edges
-                // const Eigen::MatrixXi& E = problem_ptr->edges(j);
-                success &= igl::write_triangle_mesh(
+                success &= io::write_obj(
                     (dir_path / fmt::format("body{:03d}-{:03d}.obj", j, i))
                         .string(),
-                    problem_ptr->vertices(j), problem_ptr->faces(j));
+                    problem_ptr->vertices(j), problem_ptr->edges(j),
+                    problem_ptr->codim_edges_to_edges(j),
+                    problem_ptr->faces(j));
             }
         } else {
-            // TODO: Save codimensional edges
-            // const Eigen::MatrixXi& E = problem_ptr->edges();
-            success &= igl::write_triangle_mesh(
+            success &= io::write_obj(
                 (dir_path / fmt::format("{:03d}.obj", i)).string(),
-                problem_ptr->vertices(), problem_ptr->faces());
+                problem_ptr->vertices(), problem_ptr->edges(),
+                problem_ptr->codim_edges_to_edges(), problem_ptr->faces());
         }
     }
 
