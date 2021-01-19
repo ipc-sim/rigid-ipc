@@ -233,7 +233,12 @@ namespace physics {
                 // rb.velocity.rotation.x() = omega_hat(2, 1);
                 // rb.velocity.rotation.y() = omega_hat(0, 2);
                 // rb.velocity.rotation.z() = omega_hat(1, 0);
+                // v^{t+1} = 2 (x^{t+1} - x^{t}) / h - v^t
                 rb.Qdot = Qdot;
+                // rb.Qdot = 2 * (Q - Q_prev) / h - rb.Qdot;
+
+                // a^{t+1} = 2 (v^{t+1} - v^{t}) / h - a^t
+                // rb.Qddot = 2 * (Qdot - Qddot) / h - Qddot
             }
             rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
         }

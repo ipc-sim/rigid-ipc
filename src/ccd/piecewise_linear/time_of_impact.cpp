@@ -13,8 +13,6 @@
 #include <igl/Timer.h>
 #endif
 
-// #define USE_FIXED_PIECES
-
 #include <ipc/ipc.hpp>
 
 #include <ccd/linear/edge_vertex_ccd.hpp>
@@ -23,13 +21,27 @@
 #include <utils/eigen_ext.hpp>
 #include <utils/not_implemented_error.hpp>
 
+// #define USE_FIXED_PIECES
+#define USE_DECREASING_DISTANCE_CHECK
+
 namespace ccd {
 
 typedef physics::Pose<Interval> PoseI;
 typedef physics::Pose<double> Pose;
 
-static const int NUM_PIECES = 100;
-static const int MAX_NUM_SUBDIVISIONS = 1e5;
+static const size_t FIXED_NUM_PIECES = 100;
+
+static const size_t MAX_NUM_SUBDIVISIONS = 1e3;
+
+static const size_t LINEAR_CCD_MAX_ITERATIONS = 1e6;
+static const double LINEAR_CCD_MAX_TOL = 1e-6;
+
+static const double TRAJECTORY_DISTANCE_FACTOR = 0.5;
+
+#ifdef USE_DECREASING_DISTANCE_CHECK
+static const double DECREASING_DISTANCE_FACTOR = 0.2;
+static const double DECREASING_DISTANCE_MIN_TIME = 1e-6;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Edge-Vertex
@@ -56,9 +68,9 @@ bool compute_piecewise_linear_edge_vertex_time_of_impact(
 
     bool is_impacting = false;
     Pose poseA_ti0 = poseA_t0, poseB_ti0 = poseB_t0;
-    for (int i = 1; i <= NUM_PIECES; i++) {
-        double ti0 = (i - 1) / double(NUM_PIECES) * earliest_toi;
-        double ti1 = i / double(NUM_PIECES) * earliest_toi;
+    for (int i = 1; i <= FIXED_NUM_PIECES; i++) {
+        double ti0 = (i - 1) / double(FIXED_NUM_PIECES) * earliest_toi;
+        double ti1 = i / double(FIXED_NUM_PIECES) * earliest_toi;
         Pose poseA_ti1 = Pose::interpolate(poseA_t0, poseA_t1, ti1);
         Pose poseB_ti1 = Pose::interpolate(poseB_t0, poseB_t1, ti1);
 
@@ -161,11 +173,14 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
             bodyB.world_vertex(poseB_ti0, bodyB.edges(edgeB_id, 0)),
             bodyB.world_vertex(poseB_ti0, bodyB.edges(edgeB_id, 1))));
 
-        if (distance_ti0 < 0.2 * distance_t0 && ti0 >= 1e-6) {
+#ifndef USE_DECREASING_DISTANCE_CHECK
+        if (distance_ti0 < DECREASING_DISTANCE_FACTOR * distance_t0
+            && ti0 >= DECREASING_DISTANCE_MIN_TIME) {
             toi = ti0;
             is_impacting = true;
             break;
         }
+#endif
 
         double min_distance = 0;
 #ifndef USE_FIXED_PIECES
@@ -212,7 +227,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
         min_distance = std::max(min_distance, d.upper());
 
-        if (min_distance >= 0.5 * distance_ti0
+        if (min_distance >= TRAJECTORY_DISTANCE_FACTOR * distance_ti0
             && (num_subdivisions < MAX_NUM_SUBDIVISIONS || ti0 == 0)) {
             ts.push((ti1 + ti0) / 2);
             num_subdivisions++;
@@ -234,13 +249,13 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
             bodyA.world_vertex(poseA_ti1, bodyA.edges(edgeA_id, 1)),
             bodyB.world_vertex(poseB_ti1, bodyB.edges(edgeB_id, 0)),
             bodyB.world_vertex(poseB_ti1, bodyB.edges(edgeB_id, 1)),
-            { { -1, -1, -1 } }, // rounding error
-            min_distance,       // minimum separation distance
-            toi,                // time of impact
-            1e-6,               // delta
-            1.0,                // Maximum time to check
-            1e6,                // Maximum number of iterations
-            output_tolerance,   // delta_actual
+            { { -1, -1, -1 } },        // rounding error
+            min_distance,              // minimum separation distance
+            toi,                       // time of impact
+            LINEAR_CCD_MAX_TOL,        // delta
+            1.0,                       // Maximum time to check
+            LINEAR_CCD_MAX_ITERATIONS, // Maximum number of iterations
+            output_tolerance,          // delta_actual
             CCD_TYPE);
 
         if (is_impacting) {
@@ -249,11 +264,11 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
                 // This is impossible because distance_t0 != 0
                 ts.push((ti1 + ti0) / 2);
                 num_subdivisions++;
-                spdlog::warn(
-                    "failure=\"Edge-edge MSCCD says toi=0, but "
-                    "distance_t0={0:g}\" failsafe=\"spliting [{1:g}, "
-                    "{2:g}] into ([{1:g}, {3:g}], [{3:g}, {2:g}])\"",
-                    distance_t0, ti0, ti1, ts.top());
+                // spdlog::warn(
+                //     "failure=\"Edge-edge MSCCD says toi=0, but "
+                //     "distance_t0={0:g}\" failsafe=\"spliting [{1:g}, "
+                //     "{2:g}] into ([{1:g}, {3:g}], [{3:g}, {2:g}])\"",
+                //     distance_t0, ti0, ti1, ts.top());
                 continue;
             }
             break;
@@ -272,7 +287,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
 #endif
 
     // This time of impact is very dangerous for convergence
-    // assert(!is_impacting || toi > 0);
+    assert(!is_impacting || toi > 0);
     return is_impacting;
 }
 
@@ -347,12 +362,14 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
             bodyB.world_vertex(poseB_ti0, f1i),
             bodyB.world_vertex(poseB_ti0, f2i)));
 
-        if ((distance_ti0 < 0.2 * distance_t0) && ti0 >= 1e-6) {
+#ifndef USE_DECREASING_DISTANCE_CHECK
+        if ((distance_ti0 < DECREASING_DISTANCE_FACTOR * distance_t0)
+            && ti0 >= DECREASING_DISTANCE_MIN_TIME) {
             toi = ti0;
             is_impacting = true;
             break;
         }
-
+#endif
         double min_distance = 0;
 #ifndef USE_FIXED_PIECES
         Interval ti(0, 1);
@@ -398,14 +415,13 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
         min_distance = std::max(min_distance, d.upper());
 
-        if (min_distance >= 0.5 * distance_ti0
+        if (min_distance >= TRAJECTORY_DISTANCE_FACTOR * distance_ti0
             && (num_subdivisions < MAX_NUM_SUBDIVISIONS || ti0 == 0)) {
             ts.push((ti1 + ti0) / 2);
             num_subdivisions++;
             continue;
         }
 #endif
-        // spdlog::critical("min_distance={:g}", min_distance);
 
         double output_tolerance;
         // 0: normal ccd method which only checks t = [0,1]
@@ -420,13 +436,13 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
             bodyB.world_vertex(poseB_ti1, f0i),
             bodyB.world_vertex(poseB_ti1, f1i),
             bodyB.world_vertex(poseB_ti1, f2i),
-            { { -1, -1, -1 } }, // rounding error
-            min_distance,       // minimum separation distance
-            toi,                // time of impact
-            1e-6,               // delta
-            1.0,                // Maximum time to check
-            1e6,                // Maximum number of iterations
-            output_tolerance,   // delta_actual
+            { { -1, -1, -1 } },        // rounding error
+            min_distance,              // minimum separation distance
+            toi,                       // time of impact
+            LINEAR_CCD_MAX_TOL,        // delta
+            1.0,                       // Maximum time to check
+            LINEAR_CCD_MAX_ITERATIONS, // Maximum number of iterations
+            output_tolerance,          // delta_actual
             CCD_TYPE);
 
         if (is_impacting) {
@@ -435,11 +451,11 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
                 // This is impossible because distance_t0 != 0
                 ts.push((ti1 + ti0) / 2);
                 num_subdivisions++;
-                spdlog::warn(
-                    "failure=\"Face-vertex MSCCD says toi=0, but "
-                    "distance_t0={0:g}\" failsafe=\"spliting [{1:g}, "
-                    "{2:g}] into ([{1:g}, {3:g}], [{3:g}, {2:g}])\"",
-                    distance_t0, ti0, ti1, ts.top());
+                // spdlog::warn(
+                //     "failure=\"Face-vertex MSCCD says toi=0, but "
+                //     "distance_t0={0:g}\" failsafe=\"spliting [{1:g}, "
+                //     "{2:g}] into ([{1:g}, {3:g}], [{3:g}, {2:g}])\"",
+                //     distance_t0, ti0, ti1, ts.top());
                 continue;
             }
             break;
@@ -458,7 +474,7 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
 #endif
 
     // This time of impact is very dangerous for convergence
-    // assert(!is_impacting || toi > 0);
+    assert(!is_impacting || toi > 0);
     return is_impacting;
 }
 

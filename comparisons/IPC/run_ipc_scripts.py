@@ -34,7 +34,7 @@ def get_remote_storage():
         print(r.stderr)
         if (r.stderr.strip() == ""):
             break
-    return f"{remote_name}:rigid-bodies/ipc-comparison/"
+    return f"{remote_name}:rigid-ipc/ipc-comparison/"
 
 
 def create_parser():

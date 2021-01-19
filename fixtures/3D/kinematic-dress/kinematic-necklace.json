@@ -1,0 +1,29 @@
+{
+    "#units": "cgs",
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "max_iterations": 1000,
+    "timestep": 0.001,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 1e-5
+    },
+    "rigid_body_problem": {
+        "coefficient_friction": 0,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "kinematic-dress/dress_unfolded_noButtons_necklace_noKinematic.obj",
+            "split_components": true,
+            "position": [0, 0, 0],
+            "rotation": [90, 180, 180],
+            "scale": 0.01,
+            "density": 1150
+        }, {
+            "mesh": "kinematic-dress/dress_unfolded_noButtons_necklace_kinematic.obj",
+            "type": "static",
+            "position": [0, 0, 0],
+            "rotation": [90, 180, 180],
+            "scale": 0.01,
+            "density": 1150
+        }]
+    }
+}

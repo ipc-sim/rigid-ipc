@@ -432,7 +432,7 @@ bool SimState::save_simulation(const std::string& filename)
     return true;
 }
 
-bool SimState::save_meshes(const std::string& dir_name, bool mesh_per_body)
+bool SimState::save_obj_sequence(const std::string& dir_name)
 {
     PROFILE_POINT("SimState::save_mesh");
     PROFILE_START();
@@ -445,22 +445,9 @@ bool SimState::save_meshes(const std::string& dir_name, bool mesh_per_body)
     for (int i = 0; i < state_sequence.size(); i++) {
         const auto& state = state_sequence[i];
         problem_ptr->state(state);
-
-        if (mesh_per_body) {
-            for (int j = 0; j < problem_ptr->num_bodies(); j++) {
-                success &= io::write_obj(
-                    (dir_path / fmt::format("body{:03d}-{:03d}.obj", j, i))
-                        .string(),
-                    problem_ptr->vertices(j), problem_ptr->edges(j),
-                    problem_ptr->codim_edges_to_edges(j),
-                    problem_ptr->faces(j));
-            }
-        } else {
-            success &= io::write_obj(
-                (dir_path / fmt::format("{:03d}.obj", i)).string(),
-                problem_ptr->vertices(), problem_ptr->edges(),
-                problem_ptr->codim_edges_to_edges(), problem_ptr->faces());
-        }
+        io::write_obj(
+            (dir_path / fmt::format("{:05d}.obj", i)).string(), *problem_ptr,
+            false);
     }
 
     problem_ptr->state(state_sequence.back());

@@ -61,9 +61,9 @@ public:
         return m_state.save_simulation(scene_filename);
     }
 
-    bool save_meshes(const std::string& dir_name)
+    bool save_obj_sequence(const std::string& dir_name)
     {
-        bool success = m_state.save_meshes(dir_name, m_save_mesh_per_body);
+        bool success = m_state.save_obj_sequence(dir_name);
         m_state.problem_ptr->state(
             m_state.state_sequence[m_state.m_num_simulation_steps]);
         return success;
@@ -115,7 +115,6 @@ public:
     int m_log_level;        ///< @brief setup log
     double m_interval_time; ///< @brief time within the interval
     bool m_show_vertex_data;
-    bool m_save_mesh_per_body;
 
 protected:
     void draw_io();

@@ -14,6 +14,8 @@
 
 #include <Eigen/Core>
 
+#include <physics/simulation_problem.hpp>
+
 namespace ccd {
 namespace io {
 
@@ -23,6 +25,11 @@ namespace io {
         const Eigen::MatrixXi& E,
         const std::vector<size_t>& codim_edges_to_edges,
         const Eigen::MatrixXi& F);
+
+    bool write_obj(
+        const std::string str,
+        const physics::SimulationProblem& problem,
+        bool write_mtl);
 
 } // namespace io
 } // namespace ccd

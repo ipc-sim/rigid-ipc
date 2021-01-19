@@ -16,9 +16,29 @@
 #include <limits>
 
 #include <logger.hpp>
+#include <physics/rigid_body_problem.hpp>
 
 namespace ccd {
 namespace io {
+
+    static const Eigen::IOFormat vertices_format(
+        Eigen::FullPrecision,
+        Eigen::DontAlignCols,
+        " ",
+        "\n",
+        "v ",
+        "",
+        "",
+        "\n");
+    static const Eigen::IOFormat faces_format(
+        Eigen::FullPrecision,
+        Eigen::DontAlignCols,
+        " ",
+        "\n",
+        "f ",
+        "",
+        "",
+        "\n");
 
     bool write_obj(
         const std::string str,
@@ -34,15 +54,66 @@ namespace io {
             spdlog::error("IOError: write_obj() could not open {}", str);
             return false;
         }
-        s << V.format(IOFormat(
-                 FullPrecision, DontAlignCols, " ", "\n", "v ", "", "", "\n"))
-          << (F.array() + 1)
-                 .format(IOFormat(
-                     FullPrecision, DontAlignCols, " ", "\n", "f ", "", "",
-                     "\n"));
+        s << V.format(vertices_format) << (F.array() + 1).format(faces_format);
         for (const size_t& ei : codim_edges_to_edges) {
             s << fmt::format("l {:d} {:d}\n", E(ei, 0) + 1, E(ei, 1) + 1);
         }
+        return true;
+    }
+
+    bool write_obj(
+        const std::string str,
+        const physics::SimulationProblem& problem,
+        bool write_mtl)
+    {
+        std::ofstream s(str);
+        if (!s.is_open()) {
+            spdlog::error("IOError: write_obj() could not open {}", str);
+            return false;
+        }
+
+        s << "mtllib mat.mtl\n";
+
+        size_t start_vi = 1;
+        for (int i = 0; i < problem.num_bodies(); i++) {
+            s << fmt::format("o body{0:04d}\nusemtl body{0:04d}\n", i);
+            Eigen::MatrixXd V = problem.vertices(i);
+            s << V.format(vertices_format)
+              << (problem.faces(i).array() + start_vi).format(faces_format);
+            const auto& E = problem.edges(i);
+            for (const size_t& ei : problem.codim_edges_to_edges(i)) {
+                s << fmt::format(
+                    "l {:d} {:d}\n", E(ei, 0) + start_vi, E(ei, 1) + start_vi);
+            }
+            start_vi += V.rows();
+        }
+
+        if (!write_mtl) {
+            return true;
+        }
+
+        // 0 is static, 1 is kinematic, 2 is dynamic
+        Eigen::VectorXi body_types(problem.num_bodies());
+        if (problem.is_rb_problem()) {
+            const auto& bodies =
+                dynamic_cast<const physics::RigidBodyProblem&>(problem)
+                    .m_assembler;
+            for (int i = 0; i < problem.num_bodies(); i++) {
+                body_types[i] = int(bodies[i].type);
+            }
+        } else {
+            body_types.setConstant(2);
+        }
+
+        // for (int i = 0; i < problem.num_bodies(); i++) {
+        //     std::ofstream mtl_ofs(fmt::format("body{:04d}.mtl", i));
+        //     if (!mtl_ofs.is_open()) {
+        //         spdlog::error(
+        //             "IOError: write_obj() could not open body{:04d}.mtl", i);
+        //         return false;
+        //     }
+        // }
+
         return true;
     }
 

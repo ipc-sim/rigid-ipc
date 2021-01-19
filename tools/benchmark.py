@@ -89,7 +89,7 @@ def get_remote_storage():
         print(r.stderr)
         if (r.stderr.strip() == ""):
             break
-    return f"{remote_name}:rigid-bodies/benchmark/"
+    return f"{remote_name}:rigid-ipc/benchmark/"
 
 
 def create_parser():
@@ -176,7 +176,7 @@ def main():
         #         log_file.write(line)
         #     sim.wait()
         subprocess.run([str(args.sim_exe), str(scene.resolve()),
-                        str(sim_output_dir), "--loglevel", str(args.loglevel), 
+                        str(sim_output_dir), "--loglevel", str(args.loglevel),
                         "--nthreads", "16"]
                        + args.sim_args.split())
 

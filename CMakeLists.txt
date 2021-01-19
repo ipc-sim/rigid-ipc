@@ -298,7 +298,7 @@ target_link_libraries(${PROJECT_NAME}_ngui PUBLIC CLI11::CLI11)
 # MinDistance Executable
 ################################################################################
 add_executable(cli_mindistance
-  src/cli_min_distance.cpp
+  src/tools/cli_min_distance.cpp
 )
 
 target_link_libraries(cli_mindistance PUBLIC ${PROJECT_NAME})
@@ -308,7 +308,7 @@ target_link_libraries(cli_mindistance PUBLIC CLI11::CLI11)
 # CCD Check
 ################################################################################
 add_executable(cli_ccd
-  src/cli_ccd.cpp
+  src/tools/cli_ccd.cpp
 )
 
 target_link_libraries(cli_ccd PUBLIC ${PROJECT_NAME})
@@ -318,10 +318,10 @@ target_link_libraries(cli_ccd PUBLIC CLI11::CLI11)
 # Headless Renderer
 ################################################################################
 add_library(software_renderer
-  src/renderer/camera.cpp
-  src/renderer/raster.cpp
-  src/renderer/render_mesh.cpp
-  src/renderer/write_png.cpp
+  src/tools/renderer/camera.cpp
+  src/tools/renderer/raster.cpp
+  src/tools/renderer/render_mesh.cpp
+  src/tools/renderer/write_png.cpp
 )
 
 target_link_libraries(software_renderer PUBLIC igl::core igl_stb_image)
@@ -329,12 +329,22 @@ target_link_libraries(software_renderer PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(software_renderer PUBLIC TBB::tbb)
 
 add_executable(render_simulation
-  src/renderer/main.cpp
+  src/tools/renderer/main.cpp
 )
 
 target_link_libraries(render_simulation PUBLIC software_renderer)
 target_link_libraries(render_simulation PUBLIC ${PROJECT_NAME})
 target_link_libraries(render_simulation PUBLIC CLI11::CLI11)
+
+################################################################################
+# Headless Renderer
+################################################################################
+add_executable(obj_sequence
+  src/tools/obj_sequence.cpp
+)
+
+target_link_libraries(obj_sequence PUBLIC ${PROJECT_NAME})
+target_link_libraries(obj_sequence PUBLIC CLI11::CLI11)
 
 ################################################################################
 # Tests

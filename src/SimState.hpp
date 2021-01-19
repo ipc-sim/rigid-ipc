@@ -24,7 +24,7 @@ public:
     bool save_simulation(const std::string& filename);
     void save_simulation_step();
 
-    bool save_meshes(const std::string& dir_name, bool mesh_per_body);
+    bool save_obj_sequence(const std::string& dir_name);
 
     void run_simulation(const std::string& fout);
 
