@@ -34,7 +34,7 @@ static const size_t FIXED_NUM_PIECES = 100;
 static const size_t MAX_NUM_SUBDIVISIONS = 1e3;
 
 static const size_t LINEAR_CCD_MAX_ITERATIONS = 1e6;
-static const double LINEAR_CCD_MAX_TOL = 1e-6;
+static const double LINEAR_CCD_TOL = 1e-6;
 
 static const double TRAJECTORY_DISTANCE_FACTOR = 0.5;
 
@@ -173,7 +173,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
             bodyB.world_vertex(poseB_ti0, bodyB.edges(edgeB_id, 0)),
             bodyB.world_vertex(poseB_ti0, bodyB.edges(edgeB_id, 1))));
 
-#ifndef USE_DECREASING_DISTANCE_CHECK
+#ifdef USE_DECREASING_DISTANCE_CHECK
         if (distance_ti0 < DECREASING_DISTANCE_FACTOR * distance_t0
             && ti0 >= DECREASING_DISTANCE_MIN_TIME) {
             toi = ti0;
@@ -252,7 +252,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
             { { -1, -1, -1 } },        // rounding error
             min_distance,              // minimum separation distance
             toi,                       // time of impact
-            LINEAR_CCD_MAX_TOL,        // delta
+            LINEAR_CCD_TOL,            // delta
             1.0,                       // Maximum time to check
             LINEAR_CCD_MAX_ITERATIONS, // Maximum number of iterations
             output_tolerance,          // delta_actual
@@ -362,7 +362,7 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
             bodyB.world_vertex(poseB_ti0, f1i),
             bodyB.world_vertex(poseB_ti0, f2i)));
 
-#ifndef USE_DECREASING_DISTANCE_CHECK
+#ifdef USE_DECREASING_DISTANCE_CHECK
         if ((distance_ti0 < DECREASING_DISTANCE_FACTOR * distance_t0)
             && ti0 >= DECREASING_DISTANCE_MIN_TIME) {
             toi = ti0;
@@ -439,7 +439,7 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
             { { -1, -1, -1 } },        // rounding error
             min_distance,              // minimum separation distance
             toi,                       // time of impact
-            LINEAR_CCD_MAX_TOL,        // delta
+            LINEAR_CCD_TOL,            // delta
             1.0,                       // Maximum time to check
             LINEAR_CCD_MAX_ITERATIONS, // Maximum number of iterations
             output_tolerance,          // delta_actual

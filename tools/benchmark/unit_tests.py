@@ -10,4 +10,6 @@ print_fixtures("unit-tests", [
     "large-mass-ratio",
     "tet-corner",
     "erleben/*",
+    "friction/incline-plane/slopeTest_highSchoolPhysics_mu=0.49",
+    "friction/incline-plane/slopeTest_highSchoolPhysics_mu=0.5"
 ])

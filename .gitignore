@@ -259,7 +259,7 @@ meshes/fracture/chinese-lion
 
 **/*.bak
 
-output/
+output*/
 output-*threads/
 fixtures/**/*.gif
 fixtures/**/*.obj

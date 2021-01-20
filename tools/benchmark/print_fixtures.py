@@ -11,5 +11,7 @@ def print_fixtures(name, scenes):
         for p in fixture_dir.glob(scene + ".json"):
             if p.exists():
                 print(p, end=" ")
+            else:
+                raise Exception(f"{p} does not exist!")
 
     print(f"-o {name}.csv", end="")

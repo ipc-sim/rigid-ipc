@@ -150,8 +150,10 @@ def main():
         "friction_iterations", "cor", "eps_d", "avg_num_contacts",
         "max_num_contacts", "avg_step_time", "max_step_time", "ccd_broad_phase",
         "ccd_narrow_phase", "distance_broad_phase", "avg_solver_iterations",
-        "max_solver_iterations", "video", "machine", "memory", "git_hash",
+        "max_solver_iterations", "video", "machine", "max_threads", "memory", "git_hash",
         "notes"])
+
+    max_threads = 16
 
     for scene in args.input:
         print(f"Running {scene}")
@@ -177,7 +179,7 @@ def main():
         #     sim.wait()
         subprocess.run([str(args.sim_exe), str(scene.resolve()),
                         str(sim_output_dir), "--loglevel", str(args.loglevel),
-                        "--nthreads", "16"]
+                        "--nthreads", str(max_threads)]
                        + args.sim_args.split())
 
         if(args.no_video):
@@ -199,6 +201,12 @@ def main():
                     ["rclone", "link", f"{remote_path}/{video_name}"],
                     capture_output=True, text=True).stdout.strip()
                 print(f"Uploaded video to {video_url}")
+
+        subprocess.run([str(args.sim_exe.parent / "obj_sequence"),
+                        "-i", sim_output_dir / "sim.json",
+                        "-o", sim_output_dir / "objs",
+                        "--loglevel", str(args.loglevel)])
+        
 
         with open(sim_output_dir / "sim.json") as sim_output:
             sim_json = json.load(sim_output)
@@ -252,6 +260,7 @@ def main():
             "max_solver_iterations": max(sim_stats["solver_iterations"]),
             "video": video_url,
             "machine": machine_info,
+            "max_threads": max_threads,
             "memory": sim_stats["memory"] / 1024**2,
             "git_hash": git_hash,
             "notes": ""  # results.stdout.strip()
