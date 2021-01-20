@@ -11,18 +11,18 @@
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
         "rigid_bodies": [{
-            "mesh": "two-way-screw/nut-1.stl",
+            "mesh": "two-way-screw/nut-1-decimated.stl",
             "position": [0, -0.024, 0],
             "rotation": [0, 12, 0],
             "density": 1250,
             "scale": 0.001
         }, {
-            "mesh": "two-way-screw/nut-2.stl",
+            "mesh": "two-way-screw/nut-2-decimated.stl",
             "position": [0, 0, 0],
             "density": 1250,
             "scale": 0.001
         }, {
-            "mesh": "two-way-screw/two-way-screw.stl",
+            "mesh": "two-way-screw/two-way-screw-decimated.stl",
             "position": [0, 0, 0],
             "scale": 0.001,
             "density": 1250,
