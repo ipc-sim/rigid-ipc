@@ -365,8 +365,8 @@ namespace opt {
                     auto Q = construct_rotation_matrix(
                         Eigen::VectorX3d(x.segment(ri, rot_ndof)));
                     angular_augmented_lagrangian_multiplier.middleRows(
-                        ki * 3, 3) -= angular_augmented_lagrangian_penalty
-                        * (Q - Q_pred.middleRows(3 * k, 3))
+                        3 * ki, 3) -= angular_augmented_lagrangian_penalty
+                        * (Q - Q_pred)
                         * compute_Jsqrt(m_assembler[k].moment_of_inertia);
                 }
             }

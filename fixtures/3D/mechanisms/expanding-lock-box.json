@@ -1,6 +1,6 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "max_time": 10,
+    "max_time": 5,
     "timestep": 0.01,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-5
@@ -58,7 +58,8 @@
             "angular_velocity": [0, 90, 0],
             "scale": 0.001,
             "is_dof_fixed": [true, true, true, true, false, true],
-            "type": "kinematic"
+            "type": "kinematic",
+            "kinematic_max_time": 1.7
         }]
     }
 }
