@@ -116,9 +116,15 @@
             "rotation": [0, 0, 0],
             "density": 7680
         }, {
-            "mesh": "wrecking-ball/ball.obj",
+            "mesh": "wrecking-ball/link.obj",
             "position": [0, -15.789473684210527, 0],
             "rotation": [0, 90, 0],
+            "density": 7680,
+            "enabled": true
+        }, {
+            "mesh": "anchor/anchor.obj",
+            "position": [0, -16.75, 0],
+            "rotation": [0, 0, 0],
             "density": 7680,
             "enabled": true
         }]
