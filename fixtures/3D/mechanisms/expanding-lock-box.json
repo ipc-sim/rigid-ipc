@@ -1,6 +1,6 @@
 {
     "scene_type": "distance_barrier_rb_problem",
-    "max_time": 5,
+    "max_time": 2,
     "timestep": 0.01,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-5
