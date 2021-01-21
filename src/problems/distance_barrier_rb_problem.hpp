@@ -224,7 +224,10 @@ namespace opt {
         void update_augmented_lagrangian(const Eigen::VectorXd& x) override;
 
         /// Compute the convergence criteria η of the augment Lagrangian.
-        double compute_convergence_criteria(const Eigen::VectorXd& x) const;
+        double compute_linear_augment_lagrangian_progress(
+            const Eigen::VectorXd& x) const;
+        double compute_angular_augment_lagrangian_progress(
+            const Eigen::VectorXd& x) const;
 
         /// Determine if the value x satisfies the equality constraints.
         bool are_equality_constraints_satisfied(
@@ -358,8 +361,10 @@ namespace opt {
         ipc::FrictionConstraints friction_constraints;
 
         // Augmented Lagrangian
-        double augmented_lagrangian_penalty;
-        Eigen::VectorXd augmented_lagrangian_multiplier;
+        double linear_augmented_lagrangian_penalty;
+        double angular_augmented_lagrangian_penalty;
+        Eigen::VectorXd linear_augmented_lagrangian_multiplier;
+        Eigen::MatrixXd angular_augmented_lagrangian_multiplier;
         Eigen::VectorXd x_pred; ///< Predicted DoF using unconstrained timestep
         Eigen::VectorXb is_dof_satisfied;
 

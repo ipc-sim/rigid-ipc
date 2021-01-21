@@ -192,14 +192,19 @@ namespace opt {
         int pos_ndof = physics::Pose<double>::dim_to_pos_ndof(dim());
         int rot_ndof = physics::Pose<double>::dim_to_rot_ndof(dim());
 
-        augmented_lagrangian_penalty = 1e3;
-        augmented_lagrangian_multiplier.setZero(
-            ndof * m_assembler.num_kinematic_bodies());
+        linear_augmented_lagrangian_penalty = 1e3;
+        angular_augmented_lagrangian_penalty = 1e3;
+        linear_augmented_lagrangian_multiplier.setZero(
+            pos_ndof * m_assembler.num_kinematic_bodies());
+        angular_augmented_lagrangian_multiplier.setZero(
+            rot_ndof * m_assembler.num_kinematic_bodies(), rot_ndof);
 
         x_pred = x0;
         for (int i = 0; i < num_bodies(); i++) {
+            // Kinematic position
             x_pred.segment(ndof * i, pos_ndof) +=
                 timestep() * m_assembler[i].velocity.position;
+            // Kinematic rotation
             x_pred.segment(ndof * i + pos_ndof, rot_ndof) +=
                 timestep() * m_assembler[i].velocity.rotation;
         }
@@ -212,60 +217,176 @@ namespace opt {
         }
     }
 
-    double DistanceBarrierRBProblem::compute_convergence_criteria(
+    inline Eigen::DiagonalMatrix<double, 3> compute_J(const Eigen::VectorX3d& I)
+    {
+        return Eigen::DiagonalMatrix<double, 3>(
+            0.5 * (-I.x() + I.y() + I.z()), //
+            0.5 * (I.x() - I.y() + I.z()),  //
+            0.5 * (I.x() + I.y() - I.z()));
+    }
+
+    inline Eigen::DiagonalMatrix<double, 3>
+    compute_Jinv(const Eigen::VectorX3d& I)
+    {
+        return Eigen::DiagonalMatrix<double, 3>(
+            2 / (-I.x() + I.y() + I.z()), //
+            2 / (I.x() - I.y() + I.z()),  //
+            2 / (I.x() + I.y() - I.z()));
+    }
+
+    inline Eigen::DiagonalMatrix<double, 3>
+    compute_Jsqrt(const Eigen::VectorX3d& I)
+    {
+        assert(0.5 * (-I.x() + I.y() + I.z()) >= 0);
+        assert(0.5 * (I.x() - I.y() + I.z()) >= 0);
+        assert(0.5 * (I.x() + I.y() - I.z()) >= 0);
+        return Eigen::DiagonalMatrix<double, 3>(
+            sqrt(0.5 * (-I.x() + I.y() + I.z())),
+            sqrt(0.5 * (I.x() - I.y() + I.z())),
+            sqrt(0.5 * (I.x() + I.y() - I.z())));
+    }
+
+    double DistanceBarrierRBProblem::compute_linear_augment_lagrangian_progress(
         const Eigen::VectorXd& x) const
     {
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
-        double diff_x_pred_x = 0, diff_x_pred_x0 = 0;
+        int pos_ndof = physics::Pose<double>::dim_to_pos_ndof(dim());
+
+        double a = 0, b = 0;
+
         for (const auto& k : m_assembler.m_kinematic_body_ids) {
-            diff_x_pred_x +=
-                (x_pred.segment(ndof * k, ndof) - x.segment(ndof * k, ndof))
-                    .squaredNorm();
-            diff_x_pred_x0 +=
-                (x_pred.segment(ndof * k, ndof) - x0.segment(ndof * k, ndof))
-                    .squaredNorm();
+            a += (x_pred.segment(ndof * k, pos_ndof)
+                  - x.segment(ndof * k, pos_ndof))
+                     .squaredNorm();
+            b += (x_pred.segment(ndof * k, pos_ndof)
+                  - x0.segment(ndof * k, pos_ndof))
+                     .squaredNorm();
         }
-        return 1 - sqrt(diff_x_pred_x / diff_x_pred_x0);
+
+        if (a == 0 && b == 0) {
+            return 1;
+        }
+        return 1 - sqrt(a / (b == 0 ? 1 : b));
+    }
+
+    double
+    DistanceBarrierRBProblem::compute_angular_augment_lagrangian_progress(
+        const Eigen::VectorXd& x) const
+    {
+        int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        int rot_ndof = physics::Pose<double>::dim_to_rot_ndof(dim());
+        int pos_ndof = physics::Pose<double>::dim_to_pos_ndof(dim());
+
+        double a = 0, b = 0;
+        for (const auto& k : m_assembler.m_kinematic_body_ids) {
+            size_t ri = ndof * k + pos_ndof;
+            if (dim() == 2) {
+                a += (x_pred.segment(ri, rot_ndof) - x.segment(ri, rot_ndof))
+                         .squaredNorm();
+                b += (x_pred.segment(ri, rot_ndof) - x0.segment(ri, rot_ndof))
+                         .squaredNorm();
+            } else {
+                auto Q_pred = construct_rotation_matrix(
+                    Eigen::VectorX3d(x_pred.segment(ri, rot_ndof)));
+                auto Q = construct_rotation_matrix(
+                    Eigen::VectorX3d(x.segment(ri, rot_ndof)));
+                auto Q0 = construct_rotation_matrix(
+                    Eigen::VectorX3d(x0.segment(ri, rot_ndof)));
+                a += (Q - Q_pred).squaredNorm();
+                b += (Q0 - Q_pred).squaredNorm();
+            }
+        }
+        if (a == 0 && b == 0) {
+            return 1;
+        }
+        return 1 - sqrt(a / (b == 0 ? 1 : b));
     }
 
     void DistanceBarrierRBProblem::update_augmented_lagrangian(
         const Eigen::VectorXd& x)
     {
         int ndof = physics::Pose<double>::dim_to_ndof(dim());
+        int pos_ndof = physics::Pose<double>::dim_to_pos_ndof(dim());
+        int rot_ndof = physics::Pose<double>::dim_to_rot_ndof(dim());
 
-        double eta_AL = compute_convergence_criteria(x);
-        if (eta_AL >= 0.999) {
+        double eta_q = compute_linear_augment_lagrangian_progress(x);
+        double eta_Q = compute_angular_augment_lagrangian_progress(x);
+
+        if (eta_q >= 0.999) {
             // Fix the kinematic DoF that have converged
-            for (int i = 0; i < num_bodies(); i++) {
-                if (m_assembler[i].type == physics::RigidBodyType::KINEMATIC) {
-                    is_dof_satisfied.segment(ndof * i, ndof).setOnes();
-                }
+            for (const auto& k : m_assembler.m_kinematic_body_ids) {
+                is_dof_satisfied.segment(ndof * k, pos_ndof).setOnes();
             }
-            spdlog::info("kinematic movement achieved freezing kinematic DoF");
-            return;
-        }
-
-        if (eta_AL < 0.99 && augmented_lagrangian_penalty < 1e8) {
-            augmented_lagrangian_penalty *= 2;
+        } else if (eta_q < 0.99 && linear_augmented_lagrangian_penalty < 1e8) {
+            // Increase the κ_q
+            linear_augmented_lagrangian_penalty *= 2;
         } else {
+            // Increase the λ
             for (int ki = 0; ki < m_assembler.num_kinematic_bodies(); ki++) {
                 const auto& k = m_assembler.m_kinematic_body_ids[ki];
-                augmented_lagrangian_multiplier.segment(ki * ndof, ndof) -=
-                    augmented_lagrangian_penalty * sqrt(m_assembler[k].mass)
-                    * (x.segment(ndof * k, ndof)
-                       - x_pred.segment(ndof * k, ndof));
+                linear_augmented_lagrangian_multiplier.segment(
+                    ki * pos_ndof, pos_ndof) -=
+                    linear_augmented_lagrangian_penalty
+                    * sqrt(m_assembler[k].mass)
+                    * (x.segment(ndof * k, pos_ndof)
+                       - x_pred.segment(ndof * k, pos_ndof));
             }
         }
-        spdlog::info(
-            "κ_AL={:g} ||λ_AL||∞={}", augmented_lagrangian_penalty,
-            augmented_lagrangian_multiplier.lpNorm<Eigen::Infinity>());
+
+        if (eta_Q >= 0.999) {
+            // Fix the kinematic DoF that have converged
+            for (const auto& k : m_assembler.m_kinematic_body_ids) {
+                is_dof_satisfied.segment(ndof * k + pos_ndof, rot_ndof)
+                    .setOnes();
+            }
+        } else if (eta_Q < 0.99 && angular_augmented_lagrangian_penalty < 1e8) {
+            // Increase the κ_Q
+            angular_augmented_lagrangian_penalty *= 2;
+        } else {
+            // Increase the Λ
+            for (int ki = 0; ki < m_assembler.num_kinematic_bodies(); ki++) {
+                const auto& k = m_assembler.m_kinematic_body_ids[ki];
+                size_t ri = ndof * k + pos_ndof;
+                if (dim() == 2) {
+                    angular_augmented_lagrangian_multiplier.middleRows(
+                        ki * rot_ndof, rot_ndof) -=
+                        angular_augmented_lagrangian_penalty
+                        * sqrt(m_assembler[k].moment_of_inertia[0])
+                        * (x.segment(ri, rot_ndof)
+                           - x_pred.segment(ri, rot_ndof));
+                } else {
+                    auto Q_pred = construct_rotation_matrix(
+                        Eigen::VectorX3d(x_pred.segment(ri, rot_ndof)));
+                    auto Q = construct_rotation_matrix(
+                        Eigen::VectorX3d(x.segment(ri, rot_ndof)));
+                    angular_augmented_lagrangian_multiplier.middleRows(
+                        ki * 3, 3) -= angular_augmented_lagrangian_penalty
+                        * (Q - Q_pred.middleRows(3 * k, 3))
+                        * compute_Jsqrt(m_assembler[k].moment_of_inertia);
+                }
+            }
+        }
+
+        if (eta_q < 0.999 || eta_Q < 0.999) {
+            spdlog::info(
+                "updated augmented Lagrangian "
+                "κ_q={:g} κ_Q={:g} ||λ||∞={:g} ||Λ||∞={:g} η_q={:g} η_Q={:g}",
+                linear_augmented_lagrangian_penalty,
+                angular_augmented_lagrangian_penalty,
+                linear_augmented_lagrangian_multiplier
+                    .lpNorm<Eigen::Infinity>(),
+                angular_augmented_lagrangian_multiplier
+                    .lpNorm<Eigen::Infinity>(),
+                eta_q, eta_Q);
+        }
     }
 
     bool DistanceBarrierRBProblem::are_equality_constraints_satisfied(
         const Eigen::VectorXd& x) const
     {
         if (m_assembler.num_kinematic_bodies()) {
-            return compute_convergence_criteria(x) >= 0.999;
+            return compute_linear_augment_lagrangian_progress(x) >= 0.999
+                && compute_angular_augment_lagrangian_progress(x) >= 0.999;
         }
         return true;
     }
@@ -610,10 +731,7 @@ namespace opt {
                 Eigen::Matrix3d Qdot_t0 = body.Qdot;
 
                 const Eigen::VectorX3d& I = body.moment_of_inertia;
-                Eigen::DiagonalMatrix<double, 3> J(
-                    0.5 * (-I.x() + I.y() + I.z()), //
-                    0.5 * (I.x() - I.y() + I.z()),  //
-                    0.5 * (I.x() + I.y() - I.z()));
+                Eigen::DiagonalMatrix<double, 3> J = compute_J(I);
 
                 Eigen::Matrix3d A_t0;
                 switch (body_energy_integration_method) {
@@ -621,10 +739,7 @@ namespace opt {
                     A_t0.setZero();
                     break;
                 case IMPLICIT_NEWMARK: {
-                    Eigen::DiagonalMatrix<double, 3> J_inv(
-                        2 / (-I.x() + I.y() + I.z()),
-                        2 / (I.x() - I.y() + I.z()),
-                        2 / (I.x() + I.y() - I.z()));
+                    Eigen::DiagonalMatrix<double, 3> Jinv = compute_Jinv(I);
                     // A_t0 = 0.5 * ...;
                     throw NotImplementedError(
                         "Implicit Newmark not implemented in 3D!");
@@ -706,27 +821,74 @@ namespace opt {
         PROFILE_POINT("DistanceBarrierRBProblem::compute_augmented_lagrangian");
         PROFILE_START();
 
-        const auto& kappa = augmented_lagrangian_penalty;
+        // Compute the linear AL potential
+        const double& kappa_q = linear_augmented_lagrangian_penalty;
         for (int ki = 0; ki < m_assembler.num_kinematic_bodies(); ki++) {
             const auto& k = m_assembler.m_kinematic_body_ids[ki];
 
             double m = m_assembler[k].mass;
-            const auto& lambda =
-                augmented_lagrangian_multiplier.segment(ki * ndof, ndof);
+            const auto& lambda = linear_augmented_lagrangian_multiplier.segment(
+                ki * pos_ndof, pos_ndof);
 
-            const auto& x_k = x.segment(k * ndof, ndof);
-            const auto& x_pred_k = x_pred.segment(k * ndof, ndof);
+            const auto& q = x.segment(k * ndof, pos_ndof);
+            const auto& q_pred = x_pred.segment(k * ndof, pos_ndof);
 
-            potential += kappa / 2 * m * (x_k - x_pred_k).squaredNorm()
-                - sqrt(m) * lambda.dot(x_k - x_pred_k);
+            potential += kappa_q / 2 * m * (q - q_pred).squaredNorm()
+                - sqrt(m) * lambda.dot(q - q_pred);
             if (compute_grad) {
-                grad.segment(k * ndof, ndof) =
-                    kappa * m * (x_k - x_pred_k) - sqrt(m) * lambda;
+                grad.segment(k * ndof, pos_ndof) =
+                    kappa_q * m * (q - q_pred) - sqrt(m) * lambda;
             }
             if (compute_hess) {
-                for (int i = 0; i < ndof; i++) {
+                for (int i = 0; i < pos_ndof; i++) {
                     hess_triplets.emplace_back(
-                        ndof * k + i, ndof * k + i, kappa * m);
+                        ndof * k + i, ndof * k + i, kappa_q * m);
+                }
+            }
+        }
+
+        typedef AutodiffType<Eigen::Dynamic, /*maxN=*/3> Diff;
+        Diff::activate(rot_ndof);
+
+        // Compute the angular AL potential
+        if (dim() == 2) {
+            throw NotImplementedError("AL not implemented for 2D");
+        }
+        const double& kappa_Q = angular_augmented_lagrangian_penalty;
+        for (int ki = 0; ki < m_assembler.num_kinematic_bodies(); ki++) {
+            const auto& k = m_assembler.m_kinematic_body_ids[ki];
+
+            Eigen::VectorX3<Diff::DDouble2> theta_diff =
+                Diff::d2vars(0, x.segment(k * ndof + pos_ndof, rot_ndof));
+            Eigen::VectorX3d theta_pred =
+                x_pred.segment(k * ndof + pos_ndof, rot_ndof);
+
+            Eigen::DiagonalMatrix<double, 3> J =
+                compute_J(m_assembler[k].moment_of_inertia);
+            Eigen::DiagonalMatrix<double, 3> Jsqrt =
+                compute_Jsqrt(m_assembler[k].moment_of_inertia);
+            const auto& lambda =
+                angular_augmented_lagrangian_multiplier.middleRows(3 * ki, 3);
+
+            const auto& Q = construct_rotation_matrix(theta_diff);
+            const auto& Q_pred = construct_rotation_matrix(theta_pred);
+
+            Diff::DDouble2 dAL = kappa_Q / 2
+                    * ((Q - Q_pred) * J * (Q - Q_pred).transpose()).trace()
+                - (lambda.transpose() * (Q - Q_pred) * Jsqrt).trace();
+
+            potential += dAL.getValue();
+            if (compute_grad) {
+                grad.segment(k * ndof + pos_ndof, rot_ndof) = dAL.getGradient();
+            }
+            if (compute_hess) {
+                Eigen::Matrix3d H = dAL.getHessian();
+                for (int i = 0; i < H.rows(); i++) {
+                    for (int j = 0; j < H.cols(); j++) {
+                        hess_triplets.emplace_back(
+                            ndof * k + pos_ndof + i, ndof * k + pos_ndof + j,
+                            H(i, j));
+                    }
                 }
             }
         }

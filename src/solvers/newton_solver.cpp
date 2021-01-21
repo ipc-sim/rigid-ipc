@@ -631,9 +631,6 @@ namespace opt {
     {
         if (is_energy_converged
             && !problem_ptr->are_equality_constraints_satisfied(x)) {
-            spdlog::info(
-                "solver={} iter={:d} msg=\"updated augmented Lagrangian\"",
-                name(), iteration_number);
             problem_ptr->update_augmented_lagrangian(x);
         }
     }
