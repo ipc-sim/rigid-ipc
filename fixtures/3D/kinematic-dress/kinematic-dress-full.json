@@ -10,18 +10,11 @@
         "coefficient_friction": 0,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
-            "mesh": "kinematic-dress/dress_unfolded_noButtons_necklace_noKinematic.obj",
+            "mesh": "kinematic-dress/dress_unfolded_noButtons.obj",
             "split_components": true,
             "position": [0, 0, 0],
             "rotation": [90, 180, 180],
-            "scale": 0.01,
-            "density": 1150
-        }, {
-            "mesh": "kinematic-dress/dress_unfolded_noButtons_necklace_kinematic.obj",
-            "type": "dynamic",
-            "position": [0, 0, 0],
-            "rotation": [90, 180, 180],
-            "scale": 0.01,
+            "scale": 0.001,
             "density": 1150
         }, {
             "mesh": "kinematic-dress/hooks.obj",
