@@ -192,6 +192,9 @@ namespace physics {
         {
             type = RigidBodyType::STATIC;
             is_dof_fixed.setOnes();
+            // Zero out the velocity and forces of fixed dof
+            velocity.zero_dof(is_dof_fixed, R0);
+            force.zero_dof(is_dof_fixed, R0);
         }
 
         // --------------------------------------------------------------------

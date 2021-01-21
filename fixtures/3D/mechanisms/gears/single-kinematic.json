@@ -10,20 +10,6 @@
         "coefficient_friction": 0.0,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
-            "mesh": "gears/rail-guard.obj",
-            "position": [-1.25, 2.25, 0],
-            "rotation": [90, 0, -90],
-            "density": 1,
-            "enabled": false,
-            "type": "static"
-        }, {
-            "mesh": "gears/rail.obj",
-            "position": [-1.25, 2.25, 0],
-            "rotation": [90, 0, -90],
-            "density": 100,
-            "enabled": false,
-            "is_dof_fixed": [true, false, true, true, true, true]
-        }, {
             "mesh": "gears/gear.obj",
             "rotation": [90, 0, 0],
             "angular_velocity": [0, 0, -100],

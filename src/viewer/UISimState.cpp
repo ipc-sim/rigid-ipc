@@ -154,6 +154,21 @@ void UISimState::redraw_scene()
 
     mesh_data->update_vertices(q1);
     velocity_data->update_vector_field(q1, v1);
+    if (m_state.problem_ptr->is_rb_problem()) {
+        const auto& bodies =
+            std::dynamic_pointer_cast<physics::RigidBodyProblem>(
+                m_state.problem_ptr)
+                ->m_assembler;
+        Eigen::VectorXi vertex_type(bodies.num_vertices());
+        int start_i = 0;
+        for (const auto& body : bodies.m_rbs) {
+            vertex_type.segment(start_i, body.vertices.rows())
+                .setConstant(int(body.type));
+            start_i += body.vertices.rows();
+        }
+        mesh_data->set_vertex_data(
+            m_state.problem_ptr->vertex_dof_fixed(), vertex_type);
+    }
 
     if (m_state.problem_ptr->is_rb_problem()) {
         com_data->set_coms(std::dynamic_pointer_cast<physics::RigidBodyProblem>(

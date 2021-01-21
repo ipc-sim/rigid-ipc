@@ -4,21 +4,26 @@
     "max_time": 10,
     "rigid_body_problem": {
         "coefficient_friction": 0.1,
-        "gravity": [0, 0, 0],
+        "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
-            "mesh": "codimensional/points/sphere-pc-vs-sphere-plane/sphere-planes-25.obj",
+            "mesh": "codimensional/points/sphere-pc-vs-sphere-plane/sphere-planes-12.obj",
             "position": [-1.5, 0, 0],
-            "rotation": [0, 0, 0],
+            "rotation": [45, 0, 0],
             "dimensions": [2, 2, 2],
             "linear_velocity": [1.5, 0, 0],
             "angular_velocity": [0, 0, 0]
         }, {
             "mesh": "codimensional/points/sphere-pc-vs-sphere-plane/sphere-pc.obj",
             "position": [1.5, 0, 0],
-            "rotation": [0, 0, 10],
+            "rotation": [0, 0, 0],
             "linear_velocity": [-1.5, 0, 0],
             "angular_velocity": [0, 0, 0],
             "density": 0.5
+        }, {
+            "mesh": "plane.obj",
+            "position": [0, -1.01, 0],
+            "rotation": [0, 0, 0],
+            "type": "static"
         }]
     }
 }

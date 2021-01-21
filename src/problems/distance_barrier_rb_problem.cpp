@@ -199,6 +199,15 @@ namespace opt {
         angular_augmented_lagrangian_multiplier.setZero(
             rot_ndof * m_assembler.num_kinematic_bodies(), rot_ndof);
 
+        for (int i = 0; i < num_bodies(); i++) {
+            if (m_assembler[i].type == physics::RigidBodyType::KINEMATIC) {
+                if (m_assembler[i].kinematic_max_time < 0) {
+                    m_assembler[i].convert_to_static();
+                }
+                m_assembler[i].kinematic_max_time -= timestep();
+            }
+        }
+
         x_pred = x0;
         for (int i = 0; i < num_bodies(); i++) {
             // Kinematic position
@@ -211,13 +220,8 @@ namespace opt {
 
         is_dof_satisfied.setZero(x0.size());
         for (int i = 0; i < num_bodies(); i++) {
-            if ((m_assembler[i].type == physics::RigidBodyType::STATIC)
-                || m_assembler[i].type == physics::RigidBodyType::KINEMATIC
-                    && m_assembler[i].kinematic_max_time < 0) {
+            if (m_assembler[i].type == physics::RigidBodyType::STATIC) {
                 is_dof_satisfied.segment(ndof * i, ndof).setOnes();
-            }
-            if (m_assembler[i].type == physics::RigidBodyType::KINEMATIC) {
-                m_assembler[i].kinematic_max_time -= timestep();
             }
         }
     }
