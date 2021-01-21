@@ -1,0 +1,57 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "max_iterations": 1000,
+    "timestep": 0.01,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 0.001
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "coefficient_friction": 0.0,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "gears/rail-guard.obj",
+            "position": [-1.25, 2.25, 0],
+            "rotation": [90, 0, -90],
+            "density": 1,
+            "enabled": false,
+            "ipc_comparison_enabled": true,
+            "type": "static"
+        }, {
+            "mesh": "gears/rail.obj",
+            "position": [-1.25, 2.25, 0],
+            "rotation": [90, 0, -90],
+            "density": 100,
+            "is_dof_fixed": [true, false, true, true, true, true]
+        }, {
+            "mesh": "gears/gear.obj",
+            "rotation": [90, 0, 0],
+            "#angular_velocity": [0, 0, -100],
+            "#torque": [0, 0, 100],
+            "#type": "kinematic",
+            "density": 1,
+            "is_dof_fixed": [true, true, true, true, true, false]
+        }, {
+            "mesh": "gears/pin.obj",
+            "rotation": [90, 0, 0],
+            "enabled": false,
+            "ipc_comparison_enabled": true,
+            "type": "static"
+        }, {
+            "mesh": "gears/gear.obj",
+            "position": [2.05, 0, 0],
+            "rotation": [90, 0, 15],
+            "enabled": true,
+            "density": 1,
+            "is_dof_fixed": [true, true, true, true, true, false]
+        }, {
+            "mesh": "gears/pin.obj",
+            "position": [2.05, 0, 0],
+            "rotation": [90, 0, 0],
+            "enabled": false,
+            "ipc_comparison_enabled": true,
+            "density": 1,
+            "type": "static"
+        }]
+    }
+}

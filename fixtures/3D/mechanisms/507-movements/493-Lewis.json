@@ -1,0 +1,38 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "max_time": 5,
+    "timestep": 0.01,
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "coefficient_friction": 1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "507-movements/493-Lewis/center.obj",
+            "#force": [0, 1e6, 0],
+            "linear_velocity": [0, 0.1, 0],
+            "density": 1000,
+            "type": "kinematic"
+        }, {
+            "mesh": "507-movements/493-Lewis/left.obj",
+            "density": 1000
+        }, {
+            "mesh": "507-movements/493-Lewis/right.obj",
+            "density": 1000
+        }, {
+            "mesh": "507-movements/493-Lewis/back.obj",
+            "density": 1000
+        }, {
+            "mesh": "507-movements/493-Lewis/front.obj",
+            "density": 1000
+        }, {
+            "mesh": "507-movements/493-Lewis/block.obj",
+            "density": 1000
+        }, {
+            "mesh": "plane.obj",
+            "is_dof_fixed": true,
+            "position": [0, -0.61, 0],
+            "dimensions": [5, 0, 5]
+        }]
+    }
+}

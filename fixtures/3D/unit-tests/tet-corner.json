@@ -1,0 +1,34 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.01,
+    "max_time": 3.0,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 1e-4
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.81, 0],
+        "rigid_bodies": [{
+            "mesh": "plane.obj",
+            "position": [0, -0.5, 0],
+            "type": "static"
+        }, {
+            "mesh": "cube.obj",
+            "position": [-1, 0, 0],
+            "type": "static"
+        }, {
+            "mesh": "cube.obj",
+            "position": [0, 0, -1],
+            "type": "static"
+        }, {
+            "mesh": "cube.obj",
+            "position": [1, 0, 0],
+            "type": "static"
+        }, {
+            "mesh": "tet-corner.obj",
+            "position": [-0.4995, 0.6, -0.4995],
+            "scale": 0.999
+        }]
+    }
+}

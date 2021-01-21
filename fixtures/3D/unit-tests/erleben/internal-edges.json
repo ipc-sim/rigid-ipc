@@ -1,0 +1,23 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.01,
+    "max_time": 5,
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+                "mesh": "cube.obj",
+                "position": [0, 0.05, 0],
+                "rotation": [0, 0, 0],
+                "linear_velocity": [0, 0, 0],
+                "angular_velocity": [0, 0, 0]
+            },
+            {
+                "mesh": "erleben/internal_edges.obj",
+                "type": "static",
+                "position": [0, -1.0, 0]
+            }
+        ]
+    }
+}

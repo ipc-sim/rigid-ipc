@@ -1,0 +1,21 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "max_iterations": 1000,
+    "timestep": 0.01,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 0.001
+    },
+    "ipc_solver": {
+        "velocity_conv_tol": 1e-5
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "coefficient_friction": 0.0,
+        "rigid_bodies": [{
+            "mesh": "gears/gear.obj",
+            "rotation": [90, 0, 0],
+            "torque": [0, 90, 0],
+            "density": 1
+        }]
+    }
+}

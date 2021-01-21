@@ -1,0 +1,22 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "timestep": 0.01,
+    "max_time": 1.25,
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+                "mesh": "erleben/spike.obj",
+                "position": [0, 3.0001, 0],
+                "rotation": [0, 0, 180],
+                "linear_velocity": [0, 0, 0],
+                "angular_velocity": [0, 0, 0]
+            },
+            {
+                "mesh": "erleben/wedge.obj",
+                "type": "static",
+                "position": [0, -3.0, 0]
+            }
+        ]
+    }
+}

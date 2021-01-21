@@ -1,0 +1,36 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "timestep": 0.01,
+    "max_time": 5.0,
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "507-movements/092-piston/crank.stl",
+            "rotation": [0, 0, 180],
+            "density": 1000,
+            "angular_velocity": [0, 0, -360],
+            "#torque": [0, 0, -1e6],
+            "type": "kinematic",
+            "is_dof_fixed": [true, true, true, true, true, false],
+            "scale": 0.001
+        }, {
+            "mesh": "507-movements/092-piston/connecting-rod.stl",
+            "rotation": [0, 0, 180],
+            "density": 1000,
+            "scale": 0.001
+        }, {
+            "mesh": "507-movements/092-piston/head.stl",
+            "rotation": [0, 0, 180],
+            "density": 1000,
+            "scale": 0.001
+        }, {
+            "mesh": "507-movements/092-piston/cylinder.stl",
+            "rotation": [0, 0, 180],
+            "position": [0, 0.3, 0],
+            "density": 1000,
+            "type": "static",
+            "scale": 0.001
+        }]
+    }
+}

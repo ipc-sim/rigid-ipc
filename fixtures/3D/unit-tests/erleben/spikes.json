@@ -1,0 +1,20 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "max_time": 1.25,
+    "timestep": 0.01,
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+                "mesh": "erleben/spike.obj",
+                "position": [0, 3.0001, 0],
+                "rotation": [0, 0, 180]
+            },
+            {
+                "mesh": "erleben/spike.obj",
+                "type": "static",
+                "position": [0, -3.0, 0]
+            }
+        ]
+    }
+}

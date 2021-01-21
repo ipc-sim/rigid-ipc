@@ -1,0 +1,24 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "timestep": 0.01,
+    "max_time": 10,
+    "rigid_body_problem": {
+        "coefficient_friction": 0.1,
+        "gravity": [0, 0, 0],
+        "rigid_bodies": [{
+            "mesh": "codimensional/points/sphere-pc-vs-sphere-plane/sphere-planes-25.obj",
+            "position": [-1.5, 0, 0],
+            "rotation": [0, 0, 0],
+            "dimensions": [2, 2, 2],
+            "linear_velocity": [1.5, 0, 0],
+            "angular_velocity": [0, 0, 0]
+        }, {
+            "mesh": "codimensional/points/sphere-pc-vs-sphere-plane/sphere-pc.obj",
+            "position": [1.5, 0, 0],
+            "rotation": [0, 0, 10],
+            "linear_velocity": [-1.5, 0, 0],
+            "angular_velocity": [0, 0, 0],
+            "density": 0.5
+        }]
+    }
+}

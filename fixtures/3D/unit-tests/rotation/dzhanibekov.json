@@ -1,0 +1,19 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "timestep": 0.01,
+    "max_time": 10,
+    "ipc_solver": {
+        "velocity_conv_tol": 1e-5
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, 0, 0],
+        "rigid_bodies": [{
+            "mesh": "wing-nut.obj",
+            "position": [0, 0, 0],
+            "rotation": [-3, 0, 0],
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [0, 180, 0]
+        }]
+    }
+}

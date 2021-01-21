@@ -1,0 +1,22 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "timestep": 0.01,
+    "max_time": 10,
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "plane.obj",
+            "position": [0, -0.5, 0],
+            "scale": 2,
+            "is_dof_fixed": true
+        }, {
+            "mesh": "cube.obj",
+            "position": [0, 0.1, 0]
+        }, {
+            "mesh": "cube.obj",
+            "position": [0, 6.0, 0],
+            "scale": 10
+        }]
+    }
+}

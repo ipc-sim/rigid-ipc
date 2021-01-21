@@ -1,0 +1,17 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "timestep": 0.01,
+    "max_time": 10,
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, 0, 0],
+        "rigid_bodies": [{
+            "mesh": "sphere.obj",
+            "position": [0, 0, 0],
+            "rotation": [0, 0, 0],
+            "scale": [2, 1, 0.5],
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [180, 0, 0]
+        }]
+    }
+}

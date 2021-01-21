@@ -1,0 +1,16 @@
+<mujoco>
+    <asset>
+        <mesh file="screw-and-nut/nut-big.stl" name="screw-and-nut/nut-big"/>
+        <mesh file="screw-and-nut/screw-big.stl" name="screw-and-nut/screw-big"/>
+    </asset>
+    <worldbody>
+        <body pos="-0 0 0" quat="0 0 0.707107 0.707107">
+            <geom mesh="screw-and-nut/nut-big" type="mesh" size="0.010000 0.010000 0.010000" density="8050.000000"/>
+            <freejoint/>
+        </body>
+        <body pos="-0 0 0" quat="0 0 0.707107 0.707107">
+            <geom mesh="screw-and-nut/screw-big" type="mesh" size="0.010000 0.010000 0.010000" density="8050.000000"/>
+            <freejoint/>
+        </body>
+    </worldbody>
+</mujoco>

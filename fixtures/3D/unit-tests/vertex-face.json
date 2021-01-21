@@ -1,0 +1,23 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.01,
+    "max_time": 10,
+    "distance_barrier_constraint": {},
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "tet-pyramid.obj",
+            "position": [0, 0.5, 0],
+            "rotation": [0, 0, 180],
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [0, 0, 0]
+        }, {
+            "mesh": "tet-pyramid.obj",
+            "position": [0, -0.5, 0],
+            "rotation": [0, 0, 180],
+            "is_dof_fixed": [true, true, true, true, true, true]
+        }]
+    }
+}

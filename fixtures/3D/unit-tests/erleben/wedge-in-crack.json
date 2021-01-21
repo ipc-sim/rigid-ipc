@@ -1,0 +1,24 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.01,
+    "max_time": 3,
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+                "mesh": "erleben/wedge.obj",
+                "position": [0, 2.001, 0],
+                "rotation": [0, 0, 180],
+                "linear_velocity": [1, 0, 0],
+                "angular_velocity": [0, 0, 0],
+                "force": [10, 0, 0]
+            },
+            {
+                "mesh": "erleben/crack.obj",
+                "type": "static",
+                "position": [0, -1.0, 0]
+            }
+        ]
+    }
+}

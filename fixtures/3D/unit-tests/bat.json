@@ -1,0 +1,35 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.001,
+    "max_time": 0.1,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 1e-3
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "coefficient_friction": 0,
+        "gravity": [0, -9.81, 0],
+        "rigid_bodies": [{
+            "mesh": "cylinder.obj",
+            "position": [0, -0.04, 0],
+            "dimensions": [0.0635, 0.8636, 0.0635],
+            "rotation": [90, 0, 0],
+            "density": 700.0,
+            "angular_velocity": [-500, 2000, 0],
+            "torque": [0, 0, 0],
+            "is_dof_fixed": [true, true, true, false, false, false]
+        }, {
+            "mesh": "sphere.obj",
+            "position": [0.15, 0, 0.3],
+            "dimensions": [0.075, 0.075, 0.075],
+            "linear_velocity": [0, 0, 0],
+            "density": 7
+        }, {
+            "mesh": "cylinder.obj",
+            "dimensions": [0.03, 0.1, 0.03],
+            "position": [0.15, -0.09, 0.3],
+            "is_dof_fixed": true
+        }]
+    }
+}

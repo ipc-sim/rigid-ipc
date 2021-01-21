@@ -211,8 +211,13 @@ namespace opt {
 
         is_dof_satisfied.setZero(x0.size());
         for (int i = 0; i < num_bodies(); i++) {
-            if (m_assembler[i].type == physics::RigidBodyType::STATIC) {
+            if ((m_assembler[i].type == physics::RigidBodyType::STATIC)
+                || m_assembler[i].type == physics::RigidBodyType::KINEMATIC
+                    && m_assembler[i].kinematic_max_time < 0) {
                 is_dof_satisfied.segment(ndof * i, ndof).setOnes();
+            }
+            if (m_assembler[i].type == physics::RigidBodyType::KINEMATIC) {
+                m_assembler[i].kinematic_max_time -= timestep();
             }
         }
     }

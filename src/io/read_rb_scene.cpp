@@ -228,6 +228,7 @@ namespace io {
             int group_id = args["group_id"];
 
             RigidBodyType rb_type = args["type"];
+            double kinematic_max_time = args["kinematic_max_time"];
 
             if (args["split_components"].get<bool>()) {
                 // TODO: Handle codimensional edges too
@@ -258,7 +259,7 @@ namespace io {
                         CV, CE, CF, Pose<double>(position, rotation),
                         Pose<double>(linear_velocity, angular_velocity),
                         Pose<double>(force, torque), density, is_dof_fixed,
-                        is_oriented, group_id, rb_type);
+                        is_oriented, group_id, rb_type, kinematic_max_time);
                     rbs.push_back(rb);
                 }
             } else {
@@ -266,7 +267,7 @@ namespace io {
                     vertices, edges, faces, Pose<double>(position, rotation),
                     Pose<double>(linear_velocity, angular_velocity),
                     Pose<double>(force, torque), density, is_dof_fixed,
-                    is_oriented, group_id, rb_type);
+                    is_oriented, group_id, rb_type, kinematic_max_time);
                 rbs.push_back(rb);
             }
         }

@@ -1,0 +1,32 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.01,
+    "max_time": 5,
+    "#max_iterations": 10,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 1e-5
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "gravity": [0, -9.81, 0],
+        "rigid_bodies": [{
+            "mesh": "two-way-screw/nut-1-decimated.stl",
+            "position": [0, -0.024, 0],
+            "rotation": [0, 12, 0],
+            "density": 1250,
+            "scale": 0.001
+        }, {
+            "mesh": "two-way-screw/nut-2-decimated.stl",
+            "position": [0, 0, 0],
+            "density": 1250,
+            "scale": 0.001
+        }, {
+            "mesh": "two-way-screw/two-way-screw-decimated.stl",
+            "position": [0, 0, 0],
+            "scale": 0.001,
+            "density": 1250,
+            "type": "static"
+        }]
+    }
+}

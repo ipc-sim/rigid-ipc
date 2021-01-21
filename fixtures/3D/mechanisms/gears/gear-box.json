@@ -1,0 +1,29 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "max_iterations": 1000,
+    "timestep": 0.01,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 0.001
+    },
+    "rigid_body_problem": {
+        "coefficient_restitution": -1,
+        "coefficient_friction": 0.0,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "gearbox/big-gear.stl",
+            "position": [0, 0, 0],
+            "rotation": [90, -0.45, 0],
+            "scale": 0.001
+        }, {
+            "mesh": "gearbox/small-gear.stl",
+            "position": [0.0629, 0, 0.0165],
+            "rotation": [0, 0, 90],
+            "scale": 0.001
+        }, {
+            "mesh": "gearbox/small-gear.stl",
+            "position": [-0.0629, 0, 0.0165],
+            "rotation": [0, 0, -90],
+            "scale": 0.001
+        }]
+    }
+}

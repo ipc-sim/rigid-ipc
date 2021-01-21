@@ -1,0 +1,37 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "solver": "ipc_solver",
+    "timestep": 0.01,
+    "max_time": 2.5,
+    "distance_barrier_constraint": {
+        "initial_barrier_activation_distance": 1e-4
+    },
+    "rigid_body_problem": {
+        "rigid_bodies": [{
+            "mesh": "507-movements/398-intermitten-motion/axis.off",
+            "density": 1000,
+            "scale": 0.002
+        }, {
+            "mesh": "507-movements/398-intermitten-motion/curved_wheel.off",
+            "type": "kinematic",
+            "angular_velocity": [0, 0, -50],
+            "is_dof_fixed": [true, true, true, true, true, false],
+            "density": 1000,
+            "scale": 0.002
+        }, {
+            "mesh": "507-movements/398-intermitten-motion/end.off",
+            "density": 1000,
+            "scale": 0.002,
+            "is_dof_fixed": [true, true, true, true, true, false]
+        }, {
+            "mesh": "507-movements/398-intermitten-motion/piston.off",
+            "density": 1000,
+            "scale": 0.002
+        }, {
+            "mesh": "507-movements/398-intermitten-motion/walls.off",
+            "type": "static",
+            "density": 1000,
+            "scale": 0.002
+        }]
+    }
+}

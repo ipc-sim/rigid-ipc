@@ -4,7 +4,7 @@ print_fixtures("chains", [
     "chain/chain-net-4x4",
     "chain/chain-net-8x8",
     "chain/chain-net-16x16",
-    # "chain/chain-net-16x16-ball",
+    "chain/chain-net-16x16-ball",
     "anchor",
     "wrecking-ball"
 ])
