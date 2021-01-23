@@ -124,8 +124,10 @@ namespace physics {
                 io::to_json(Eigen::VectorXd(rb.velocity.position));
             jrb["angular_velocity"] =
                 io::to_json(Eigen::VectorXd(rb.velocity.rotation));
-            jrb["Qdot"] = io::to_json(rb.Qdot);
-            jrb["Qddot"] = io::to_json(rb.Qddot);
+            if (dim() == 3) {
+                jrb["Qdot"] = io::to_json(rb.Qdot);
+                jrb["Qddot"] = io::to_json(rb.Qddot);
+            }
             rbs.push_back(jrb);
 
             // momentum
@@ -162,8 +164,21 @@ namespace physics {
                 jrb["linear_velocity"], m_assembler[i].velocity.position);
             io::from_json(
                 jrb["angular_velocity"], m_assembler[i].velocity.rotation);
-            io::from_json(jrb["Qdot"], m_assembler[i].Qdot);
-            io::from_json(jrb["Qddot"], m_assembler[i].Qddot);
+            if (dim() == 3) {
+                if (args.contains("Qdot")) {
+                    io::from_json(jrb["Qdot"], m_assembler[i].Qdot);
+                } else {
+                    spdlog::warn("Missing field \"Qdot\" in rigid body state!");
+                    m_assembler[i].Qdot.setZero();
+                }
+                if (args.contains("Qddot")) {
+                    io::from_json(jrb["Qddot"], m_assembler[i].Qddot);
+                } else {
+                    spdlog::warn(
+                        "Missing field \"Qddot\" in rigid body state!");
+                    m_assembler[i].Qddot.setZero();
+                }
+            }
             i++;
         }
     }

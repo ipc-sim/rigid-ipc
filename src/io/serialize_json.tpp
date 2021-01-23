@@ -16,11 +16,9 @@ namespace io {
         vector = Eigen::Map<Vector>(list.data(), long(list.size()));
     }
 
-    template <typename Derived>
-    void
-    from_json(const nlohmann::json& json, Eigen::MatrixBase<Derived>& matrix)
+    template <typename T>
+    void from_json(const nlohmann::json& json, Eigen::MatrixX<T>& matrix)
     {
-        using T = typename Derived::Scalar;
         typedef std::vector<std::vector<T>> L;
         L list = json.get<L>();
 
@@ -30,6 +28,27 @@ namespace io {
         }
         size_t num_cols = list[0].size();
         matrix.resize(long(num_rows), long(num_cols));
+
+        for (size_t i = 0; i < num_rows; ++i) {
+            assert(num_cols == list[i].size());
+            matrix.row(int(i)) =
+                Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic>>(
+                    list[i].data(), long(num_cols));
+        }
+    }
+
+    template <typename T>
+    void from_json(const nlohmann::json& json, Eigen::Matrix3<T>& matrix)
+    {
+        typedef std::vector<std::vector<T>> L;
+        L list = json.get<L>();
+
+        size_t num_rows = list.size();
+        if (num_rows == 0) {
+            return;
+        }
+        size_t num_cols = list[0].size();
+        assert(num_rows == matrix.rows() && num_cols == matrix.cols());
 
         for (size_t i = 0; i < num_rows; ++i) {
             assert(num_cols == list[i].size());
