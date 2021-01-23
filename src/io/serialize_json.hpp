@@ -12,8 +12,9 @@ namespace io {
         const nlohmann::json& json,
         Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim, 1>& vector);
 
-    template <typename T>
-    void from_json(const nlohmann::json& json, Eigen::MatrixX<T>& matrix);
+    template <typename Derived>
+    void
+    from_json(const nlohmann::json& json, Eigen::MatrixBase<Derived>& matrix);
 
     template <>
     void

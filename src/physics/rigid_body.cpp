@@ -177,6 +177,9 @@ namespace physics {
         this->pose_prev = this->pose;
         this->velocity_prev = this->velocity;
 
+        this->acceleration = Pose<double>::Zero(dim());
+        this->Qddot.setZero();
+
         // Compute and construct some useful constants
         mass_matrix.resize(ndof());
         mass_matrix.diagonal().head(pos_ndof()).setConstant(mass);
@@ -249,9 +252,13 @@ namespace physics {
     {
         // compute ẋ = Q̇ * x_B + q̇
         // where Q̇ = Qω̂
-        Eigen::MatrixXX3d dQ_dt =
-            pose.construct_rotation_matrix() * Eigen::Hat(velocity.rotation);
-        return (vertices * dQ_dt.transpose()).rowwise()
+        if (dim() == 2) {
+            Eigen::MatrixXX3d Q_dt = pose.construct_rotation_matrix()
+                * Eigen::Hat(velocity.rotation);
+            return (vertices * Q_dt.transpose()).rowwise()
+                + velocity.position.transpose();
+        }
+        return (vertices * Qdot.transpose()).rowwise()
             + velocity.position.transpose();
     }
 

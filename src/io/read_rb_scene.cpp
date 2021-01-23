@@ -113,9 +113,9 @@ namespace io {
                 }
             } else {
                 // Assumes that edges contains the edges of the faces too.
-                from_json<double>(args["vertices"], vertices);
-                from_json<int>(args["edges"], edges);
-                from_json<int>(args["faces"], faces);
+                from_json(args["vertices"], vertices);
+                from_json(args["edges"], edges);
+                from_json(args["faces"], faces);
             }
 
             if (dim == -1) {
@@ -138,7 +138,7 @@ namespace io {
             }
 
             Eigen::VectorX3d position;
-            from_json<double>(args["position"], position);
+            from_json(args["position"], position);
             assert(position.size() >= dim);
             position.conservativeResize(dim);
 
@@ -154,14 +154,14 @@ namespace io {
                         initial_dimensions(i) = 1.0;
                     }
                 }
-                from_json<double>(args["dimensions"], scale);
+                from_json(args["dimensions"], scale);
                 assert(scale.size() >= dim);
                 scale.conservativeResize(dim);
                 scale.array() /= initial_dimensions.array();
             } else if (args["scale"].is_number()) {
                 scale.setConstant(dim, args["scale"].get<double>());
             } else {
-                from_json<double>(args["scale"], scale);
+                from_json(args["scale"], scale);
                 assert(scale.size() >= dim);
                 scale.conservativeResize(dim);
             }
@@ -170,7 +170,7 @@ namespace io {
             // Rotate around the models origin NOT the rigid bodies center of
             // mass
             Eigen::VectorX3d rotation;
-            from_json<double>(args["rotation"], rotation);
+            from_json(args["rotation"], rotation);
             assert(rotation.size() >= angular_dim);
             rotation.conservativeResize(angular_dim);
             // Convert to radians for easy use later
@@ -189,24 +189,24 @@ namespace io {
             rotation.setZero(angular_dim); // Zero initial body rotation
 
             Eigen::VectorX3d linear_velocity;
-            from_json<double>(args["linear_velocity"], linear_velocity);
+            from_json(args["linear_velocity"], linear_velocity);
             assert(linear_velocity.size() >= dim);
             linear_velocity.conservativeResize(dim);
 
             Eigen::VectorX3d angular_velocity;
-            from_json<double>(args["angular_velocity"], angular_velocity);
+            from_json(args["angular_velocity"], angular_velocity);
             assert(angular_velocity.size() >= angular_dim);
             angular_velocity.conservativeResize(angular_dim);
             // Convert to radians for easy use later
             angular_velocity *= M_PI / 180.0;
 
             Eigen::VectorX3d force;
-            from_json<double>(args["force"], force);
+            from_json(args["force"], force);
             assert(force.size() >= dim);
             force.conservativeResize(dim);
 
             Eigen::VectorX3d torque;
-            from_json<double>(args["torque"], torque);
+            from_json(args["torque"], torque);
             assert(torque.size() >= angular_dim);
             torque.conservativeResize(angular_dim);
             // Convert to radians for easy use later
@@ -217,7 +217,7 @@ namespace io {
                 is_dof_fixed.setConstant(
                     ndof, args["is_dof_fixed"].get<bool>());
             } else {
-                from_json<bool>(args["is_dof_fixed"], is_dof_fixed);
+                from_json(args["is_dof_fixed"], is_dof_fixed);
                 assert(is_dof_fixed.size() >= ndof);
                 is_dof_fixed.conservativeResize(ndof);
             }

@@ -64,9 +64,10 @@ namespace opt {
             spdlog::info(
                 "Disabling friction because friction iterations is zero");
             coefficient_friction = 0; // This disables all friction computation
-        } else if (friction_iterations < 0) {
-            friction_iterations = Constants::MAXIMUM_FRICTION_ITERATIONS;
         }
+        // else if (friction_iterations < 0) {
+        //     friction_iterations = Constants::MAXIMUM_FRICTION_ITERATIONS;
+        // }
 
         min_distance = compute_min_distance(starting_point());
         if (min_distance < 0) {
@@ -121,6 +122,7 @@ namespace opt {
         // Advance the poses, but leave the current pose unchanged for now.
         for (size_t i = 0; i < num_bodies(); i++) {
             m_assembler[i].pose_prev = m_assembler[i].pose;
+            m_assembler[i].velocity_prev = m_assembler[i].velocity;
         }
 
         // Update the stored poses and inital value for the solver
@@ -465,7 +467,104 @@ namespace opt {
             spdlog::info("final_step min_distance={:.8e}", min_distance);
         }
 
-        return RigidBodyProblem::take_step(x);
+        const double h = timestep();
+
+        // update final pose
+        // -------------------------------------
+        m_assembler.set_rb_poses(this->dofs_to_poses(x));
+        physics::Poses<double> poses_q1 = m_assembler.rb_poses_t1();
+
+        // Update the velocities
+        // This need to be done AFTER updating poses
+        for (physics::RigidBody& rb : m_assembler.m_rbs) {
+            if (rb.type != physics::RigidBodyType::DYNAMIC) {
+                continue;
+            }
+
+            // Linear update
+            switch (body_energy_integration_method) {
+            case IMPLICIT_EULER:
+                rb.velocity.position =
+                    (rb.pose.position - rb.pose_prev.position) / h;
+                break;
+
+            case IMPLICIT_NEWMARK:
+                rb.velocity.position =
+                    2 * (rb.pose.position - rb.pose_prev.position) / h
+                    - rb.velocity.position;
+                rb.acceleration.position =
+                    2 * (rb.velocity.position - rb.velocity_prev.position) / h
+                    - rb.acceleration.position;
+                break;
+            }
+
+            // Angular update
+            if (dim() == 2) {
+                switch (body_energy_integration_method) {
+                case IMPLICIT_EULER:
+                    rb.velocity.rotation =
+                        (rb.pose.rotation - rb.pose_prev.rotation) / h;
+                    break;
+
+                case IMPLICIT_NEWMARK:
+                    rb.velocity.rotation =
+                        2 * (rb.pose.rotation - rb.pose_prev.rotation) / h
+                        - rb.velocity.rotation;
+                    rb.acceleration.rotation = 2
+                            * (rb.velocity.rotation - rb.velocity_prev.rotation)
+                            / h
+                        - rb.acceleration.rotation;
+                    break;
+                }
+            } else {
+                // Compute the rotation R s.t.
+                // R * Rᵗ = Rᵗ⁺¹ → R = Rᵗ⁺¹(Rᵗ)ᵀ
+                Eigen::Matrix3d R = rb.pose.construct_rotation_matrix()
+                    * rb.pose_prev.construct_rotation_matrix().transpose();
+                // TODO: Make sure we did not loose momentum do to π modulus
+                // ω = rotation_vector(R)
+                Eigen::AngleAxisd omega(R);
+                rb.velocity.rotation = omega.angle() / timestep()
+                    * rb.R0.transpose() * omega.axis();
+
+                Eigen::Matrix3d Q = rb.pose.construct_rotation_matrix();
+                Eigen::Matrix3d Q_prev =
+                    rb.pose_prev.construct_rotation_matrix();
+                // Q̇ = Q[ω]
+                // Q̇ᵗ = (Qᵗ - Qᵗ⁻¹) / h
+                // Eigen::Matrix3d omega_hat = Q.transpose() * Qdot;
+                // std::cout << omega_hat << std::endl << std::endl;
+                // rb.velocity.rotation.x() = omega_hat(2, 1);
+                // rb.velocity.rotation.y() = omega_hat(0, 2);
+                // rb.velocity.rotation.z() = omega_hat(1, 0);
+                // rb.velocity.rotation = omega.angle() / h
+                //      * rb.R0.transpose() * omega.axis();
+
+                switch (body_energy_integration_method) {
+                case IMPLICIT_EULER:
+                    rb.Qdot = (Q - Q_prev) / h;
+                    break;
+                case IMPLICIT_NEWMARK: {
+                    auto Qdot_prev = rb.Qdot;
+                    rb.Qdot = 2 * (Q - Q_prev) / h - rb.Qdot;
+                    rb.Qddot = 2 * (rb.Qdot - Qdot_prev) / h - rb.Qddot;
+                    break;
+                }
+                }
+            }
+
+            rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
+            rb.acceleration.zero_dof(rb.is_dof_fixed, rb.R0);
+        }
+
+        if (do_intersection_check) {
+            // Check for intersections instead of collision along the entire
+            // step. We only guarentee a piecewise collision-free trajectory.
+            // return detect_collisions(poses_t0, poses_q1,
+            // CollisionCheck::EXACT);
+            return detect_intersections(poses_q1);
+        }
+        return false;
     }
 
     ////////////////////////////////////////////////////////////
@@ -711,22 +810,20 @@ namespace opt {
             Eigen::VectorX3<T> q = pose.position;
             const Eigen::VectorX3d& q_t0 = body.pose.position;
             const Eigen::VectorX3d& qdot_t0 = body.velocity.position;
-
-            Eigen::VectorX3d a_t0;
+            Eigen::VectorX3d qddot_t0 =
+                gravity + body.force.position / body.mass;
             switch (body_energy_integration_method) {
             case IMPLICIT_EULER:
-                a_t0.setZero(pose.pos_ndof());
                 break;
             case IMPLICIT_NEWMARK:
-                a_t0 = 0.5 * grad_barrier_t0.head(pose.pos_ndof()) / body.mass;
+                qddot_t0 += body.acceleration.position;
+                qddot_t0 *= 0.25;
                 break;
             }
-            Eigen::VectorX3d qdotdot_t0 =
-                gravity + body.force.position / body.mass + a_t0;
 
             // ½mqᵀq - mqᵀ(qᵗ + h(q̇ᵗ + h(g + f/m + ½∇B(qᵗ)/m)))
             energy += 0.5 * body.mass * q.dot(q)
-                - body.mass * q.dot((q_t0 + h * (qdot_t0 + h * (qdotdot_t0))));
+                - body.mass * q.dot(q_t0 + h * (qdot_t0 + h * qddot_t0));
         }
 
         // Rotational energy
@@ -734,57 +831,49 @@ namespace opt {
             if (dim() == 3) {
                 Eigen::Matrix3<T> Q = pose.construct_rotation_matrix();
                 Eigen::Matrix3d Q_t0 = body.pose.construct_rotation_matrix();
-
-                // Eigen::Matrix3d Qdot_t0 = Q_t0 *
-                // Eigen::Hat(body.velocity.rotation);
+                // Eigen::Matrix3d Qdot_t0 =
+                //     Q_t0 * Eigen::Hat(body.velocity.rotation);
                 Eigen::Matrix3d Qdot_t0 = body.Qdot;
 
-                const Eigen::VectorX3d& I = body.moment_of_inertia;
-                Eigen::DiagonalMatrix<double, 3> J = compute_J(I);
+                Eigen::DiagonalMatrix<double, 3> J =
+                    compute_J(body.moment_of_inertia);
+                Eigen::DiagonalMatrix<double, 3> Jinv =
+                    compute_Jinv(body.moment_of_inertia);
 
-                Eigen::Matrix3d A_t0;
+                // Transform the world space torque into body space
+                Eigen::Matrix3d Tau =
+                    Q_t0.transpose() * Eigen::Hat(body.force.rotation);
+                Eigen::Matrix3d Qddot_t0 = Tau * Jinv;
                 switch (body_energy_integration_method) {
                 case IMPLICIT_EULER:
-                    A_t0.setZero();
                     break;
-                case IMPLICIT_NEWMARK: {
-                    Eigen::DiagonalMatrix<double, 3> Jinv = compute_Jinv(I);
-                    // A_t0 = 0.5 * ...;
-                    throw NotImplementedError(
-                        "Implicit Newmark not implemented in 3D!");
+                case IMPLICIT_NEWMARK:
+                    Qddot_t0 += body.Qddot;
+                    Qddot_t0 *= 0.25;
                     break;
-                }
                 }
 
                 // ½tr(QJQᵀ) - tr(Q(J(Qᵗ + hQ̇ᵗ + h²Aᵗ)ᵀ + h²[τ]))
                 energy += 0.5 * (Q * J * Q.transpose()).trace();
                 energy -=
-                    (Q * J * (Q_t0 + h * (Qdot_t0 + h * A_t0)).transpose())
+                    (Q * J * (Q_t0 + h * (Qdot_t0 + h * Qddot_t0)).transpose())
                         .trace();
-                // Transform the world space torque into body space
-                Eigen::Matrix3d Tau =
-                    Q_t0.transpose() * Eigen::Hat(body.force.rotation);
-                energy += h * h * (Q * Tau).trace();
             } else {
                 assert(pose.rot_ndof() == 1);
                 T theta = pose.rotation[0];
                 double theta_t0 = body.pose.rotation[0];
                 double theta_dot_t0 = body.velocity.rotation[0];
-                double tau = body.force.rotation[0];
-
+                // θ̈ = α + τ/I
                 double I = body.moment_of_inertia[0];
-
-                double a_t0;
+                double theta_ddot_t0 = body.force.rotation[0] / I;
                 switch (body_energy_integration_method) {
                 case IMPLICIT_EULER:
-                    a_t0 = 0;
                     break;
                 case IMPLICIT_NEWMARK:
-                    a_t0 = 0.5 * grad_barrier_t0.tail(pose.rot_ndof())[0] / I;
+                    theta_ddot_t0 += body.acceleration.rotation[0];
+                    theta_ddot_t0 *= 0.25;
                     break;
                 }
-                // θ̈ = τ/I + ½∇B(θᵗ)/I
-                double theta_ddot_t0 = tau / I + a_t0;
 
                 // ½Iθ² - Iθ(θᵗ + h(θ̇ᵗ + hθ̈ᵗ))
                 double theta_hat =

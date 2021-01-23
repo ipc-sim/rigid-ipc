@@ -16,9 +16,11 @@ namespace io {
         vector = Eigen::Map<Vector>(list.data(), long(list.size()));
     }
 
-    template <typename T>
-    void from_json(const nlohmann::json& json, Eigen::MatrixX<T>& matrix)
+    template <typename Derived>
+    void
+    from_json(const nlohmann::json& json, Eigen::MatrixBase<Derived>& matrix)
     {
+        using T = typename Derived::Scalar;
         typedef std::vector<std::vector<T>> L;
         L list = json.get<L>();
 

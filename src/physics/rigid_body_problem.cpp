@@ -124,6 +124,8 @@ namespace physics {
                 io::to_json(Eigen::VectorXd(rb.velocity.position));
             jrb["angular_velocity"] =
                 io::to_json(Eigen::VectorXd(rb.velocity.rotation));
+            jrb["Qdot"] = io::to_json(rb.Qdot);
+            jrb["Qddot"] = io::to_json(rb.Qddot);
             rbs.push_back(jrb);
 
             // momentum
@@ -160,6 +162,8 @@ namespace physics {
                 jrb["linear_velocity"], m_assembler[i].velocity.position);
             io::from_json(
                 jrb["angular_velocity"], m_assembler[i].velocity.rotation);
+            io::from_json(jrb["Qdot"], m_assembler[i].Qdot);
+            io::from_json(jrb["Qddot"], m_assembler[i].Qddot);
             i++;
         }
     }
@@ -194,6 +198,12 @@ namespace physics {
 
     bool RigidBodyProblem::take_step(const Eigen::VectorXd& dof)
     {
+        ////////////////////////////////////////////////////////////////////////
+        // WARNING: This only assumes an implicit euler velocity update. For
+        // more updates look at the overridden version in
+        // distance_barrier_rb_problem.
+        ////////////////////////////////////////////////////////////////////////
+
         // update final pose
         // -------------------------------------
         m_assembler.set_rb_poses(this->dofs_to_poses(dof));
@@ -214,7 +224,7 @@ namespace physics {
                     (rb.pose.rotation - rb.pose_prev.rotation) / timestep();
             } else {
                 // Compute the rotation R s.t.
-                // R * Rᵗ = Rᵗ⁺¹ → R = Rᵗ⁺¹[Rᵗ]ᵀ
+                // R * Rᵗ = Rᵗ⁺¹ → R = Rᵗ⁺¹(Rᵗ)ᵀ
                 Eigen::Matrix3d R = rb.pose.construct_rotation_matrix()
                     * rb.pose_prev.construct_rotation_matrix().transpose();
                 // TODO: Make sure we did not loose momentum do to π modulus
@@ -233,12 +243,7 @@ namespace physics {
                 // rb.velocity.rotation.x() = omega_hat(2, 1);
                 // rb.velocity.rotation.y() = omega_hat(0, 2);
                 // rb.velocity.rotation.z() = omega_hat(1, 0);
-                // v^{t+1} = 2 (x^{t+1} - x^{t}) / h - v^t
                 rb.Qdot = Qdot;
-                // rb.Qdot = 2 * (Q - Q_prev) / h - rb.Qdot;
-
-                // a^{t+1} = 2 (v^{t+1} - v^{t}) / h - a^t
-                // rb.Qddot = 2 * (Qdot - Qddot) / h - Qddot
             }
             rb.velocity.zero_dof(rb.is_dof_fixed, rb.R0);
         }

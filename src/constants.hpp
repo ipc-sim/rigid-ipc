@@ -48,7 +48,7 @@ namespace Constants {
     static const double DEFAULT_MIN_BARRIER_STIFFNESS_SCALE = 1e11;
 #endif
 
-    static const int MAXIMUM_FRICTION_ITERATIONS = 100;
+    // static const int MAXIMUM_FRICTION_ITERATIONS = 100;
 
     // ------------------------------------------------------------------------
     // Nonlinear Complementarity Problem
