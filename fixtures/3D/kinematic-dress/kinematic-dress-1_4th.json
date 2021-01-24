@@ -8,6 +8,7 @@
     },
     "rigid_body_problem": {
         "coefficient_friction": 0,
+	"do_intersection_check": true,
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "kinematic-dress/dress_unfolded_noButtons_1_4th.obj",

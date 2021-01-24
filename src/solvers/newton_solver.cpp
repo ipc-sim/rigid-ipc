@@ -559,11 +559,11 @@ namespace opt {
                 spdlog::warn(
                     "solver={} iter={:d} "
                     "failure=\"linear solve residual ({:g}) > 1e-8; "
-                    "||H||_{{L^∞}}={:g}\"",
+                    "||g||_{{L^∞}}={:g} ||H||_{{L^∞}}={:g}\"",
                     name(), iteration_number, solve_residual,
-                    norm_Linf(hessian));
-                // solve_success = false;
+                    gradient.lpNorm<Eigen::Infinity>(), norm_Linf(hessian));
             }
+            solve_success = std::isfinite(solve_residual);
         }
 
         if (!solve_success) {

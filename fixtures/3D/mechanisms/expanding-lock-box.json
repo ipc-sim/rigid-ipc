@@ -51,7 +51,8 @@
             "mesh": "expanding-lock-box/Main Body NO LOCK.stl",
             "rotation": [-90, 0, 0],
             "scale": 0.001,
-            "type": "dynamic"
+            "type": "dynamic",
+	    "is_dof_fixed": [false, false, false, true, true, true]
         }, {
             "mesh": "expanding-lock-box/Key.stl",
             "rotation": [-90, 0, 0],
