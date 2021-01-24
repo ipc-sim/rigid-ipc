@@ -165,13 +165,13 @@ namespace physics {
             io::from_json(
                 jrb["angular_velocity"], m_assembler[i].velocity.rotation);
             if (dim() == 3) {
-                if (args.contains("Qdot")) {
+                if (jrb.contains("Qdot")) {
                     io::from_json(jrb["Qdot"], m_assembler[i].Qdot);
                 } else {
                     spdlog::warn("Missing field \"Qdot\" in rigid body state!");
                     m_assembler[i].Qdot.setZero();
                 }
-                if (args.contains("Qddot")) {
+                if (jrb.contains("Qddot")) {
                     io::from_json(jrb["Qddot"], m_assembler[i].Qddot);
                 } else {
                     spdlog::warn(

@@ -252,9 +252,9 @@ namespace opt {
         assert(0.5 * (I.x() - I.y() + I.z()) >= 0);
         assert(0.5 * (I.x() + I.y() - I.z()) >= 0);
         return Eigen::DiagonalMatrix<double, 3>(
-            sqrt(0.5 * (-I.x() + I.y() + I.z())),
-            sqrt(0.5 * (I.x() - I.y() + I.z())),
-            sqrt(0.5 * (I.x() + I.y() - I.z())));
+            sqrt(std::max(0.5 * (-I.x() + I.y() + I.z()), 0.0)),
+            sqrt(std::max(0.5 * (I.x() - I.y() + I.z()), 0.0)),
+            sqrt(std::max(0.5 * (I.x() + I.y() - I.z()), 0.0)));
     }
 
     double DistanceBarrierRBProblem::compute_linear_augment_lagrangian_progress(
@@ -837,19 +837,15 @@ namespace opt {
 
                 Eigen::DiagonalMatrix<double, 3> J =
                     compute_J(body.moment_of_inertia);
-                Eigen::DiagonalMatrix<double, 3> Jinv =
-                    compute_Jinv(body.moment_of_inertia);
 
                 // Transform the world space torque into body space
-                Eigen::Matrix3d Tau =
-                    Q_t0.transpose() * Eigen::Hat(body.force.rotation);
-                Eigen::Matrix3d Qddot_t0 = Tau * Jinv;
+                Eigen::Matrix3d Qddot_t0;
                 switch (body_energy_integration_method) {
                 case IMPLICIT_EULER:
+                    Qddot_t0.setZero();
                     break;
                 case IMPLICIT_NEWMARK:
-                    Qddot_t0 += body.Qddot;
-                    Qddot_t0 *= 0.25;
+                    Qddot_t0 = 0.25 * body.Qddot;
                     break;
                 }
 
@@ -858,6 +854,17 @@ namespace opt {
                 energy -=
                     (Q * J * (Q_t0 + h * (Qdot_t0 + h * Qddot_t0)).transpose())
                         .trace();
+                // Transform the world space torque into body space
+                Eigen::Matrix3d Tau =
+                    Q_t0.transpose() * Eigen::Hat(body.force.rotation);
+                switch (body_energy_integration_method) {
+                case IMPLICIT_EULER:
+                    energy += h * h * (Q * Tau).trace();
+                    break;
+                case IMPLICIT_NEWMARK:
+                    energy += 0.25 * h * h * (Q * Tau).trace();
+                    break;
+                }
             } else {
                 assert(pose.rot_ndof() == 1);
                 T theta = pose.rotation[0];
