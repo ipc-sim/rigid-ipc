@@ -58,6 +58,7 @@ bool compute_piecewise_linear_edge_vertex_time_of_impact(
     size_t edge_id,                  // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
+    double minimum_separation_distance,
     double toi_tolerance)
 {
     int dim = bodyA.dim();
@@ -65,6 +66,11 @@ bool compute_piecewise_linear_edge_vertex_time_of_impact(
     assert(dim == 2);
 
     spdlog::warn("piecewise linear edge vertex CCD is not conservative");
+
+    if (minimum_separation_distance > 0) {
+        spdlog::warn("minimum seperation piecewise linear edge vertex CCD is "
+                     "not supported");
+    }
 
     bool is_impacting = false;
     Pose poseA_ti0 = poseA_t0, poseB_ti0 = poseB_t0;
@@ -118,11 +124,13 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
     size_t edgeB_id,                 // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
+    double minimum_separation_distance,
     double toi_tolerance)
 {
     int dim = bodyA.dim();
     assert(bodyB.dim() == dim);
     assert(dim == 3);
+    assert(minimum_separation_distance >= 0);
 
     long ea0i = bodyA.edges(edgeA_id, 0);
     long ea1i = bodyA.edges(edgeA_id, 1);
@@ -133,12 +141,14 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
         bodyA.world_vertex(poseA_t0, ea0i), bodyA.world_vertex(poseA_t0, ea1i),
         bodyB.world_vertex(poseB_t0, eb0i),
         bodyB.world_vertex(poseB_t0, eb1i)));
-    if (distance_t0 == 0) {
-        spdlog::warn("initial distance in edge-edge CCD is 0!");
+    if (distance_t0 <= minimum_separation_distance) {
+        spdlog::warn(
+            "initial distance in edge-edge CCD is less than MS={:g}!",
+            minimum_separation_distance);
         toi = 0;
         return true;
     }
-    assert(distance_t0 > 0);
+    assert(distance_t0 > minimum_separation_distance);
 
 #ifdef TIME_CCD_QUERIES
     igl::Timer timer;
@@ -234,6 +244,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
             continue;
         }
 #endif
+        min_distance += minimum_separation_distance;
         // spdlog::critical("min_distance={:g}", min_distance);
 
         double output_tolerance;
@@ -261,7 +272,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
         if (is_impacting) {
             toi = (ti1 - ti0) * toi + ti0;
             if (toi == 0) {
-                // This is impossible because distance_t0 != 0
+                // This is impossible because distance_t0 > MS_DIST
                 ts.push((ti1 + ti0) / 2);
                 num_subdivisions++;
                 // spdlog::warn(
@@ -306,11 +317,13 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
     size_t face_id,                  // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
+    double minimum_separation_distance,
     double toi_tolerance)
 {
     int dim = bodyA.dim();
     assert(bodyB.dim() == dim);
     assert(dim == 3);
+    assert(minimum_separation_distance >= 0);
 
     typedef physics::Pose<Interval> PoseI;
 
@@ -322,12 +335,14 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
     double distance_t0 = sqrt(ipc::point_triangle_distance(
         bodyA.world_vertex(poseA_t0, vi), bodyB.world_vertex(poseB_t0, f0i),
         bodyB.world_vertex(poseB_t0, f1i), bodyB.world_vertex(poseB_t0, f2i)));
-    if (distance_t0 == 0) {
-        spdlog::warn("initial distance in face-vertex CCD is 0!");
+    if (distance_t0 <= minimum_separation_distance) {
+        spdlog::warn(
+            "initial distance in edge-edge CCD is less than MS={:g}!",
+            minimum_separation_distance);
         toi = 0;
         return true;
     }
-    assert(distance_t0 > 0);
+    assert(distance_t0 > minimum_separation_distance);
 
 #ifdef TIME_CCD_QUERIES
     igl::Timer timer;
@@ -422,6 +437,7 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
             continue;
         }
 #endif
+        min_distance += minimum_separation_distance;
 
         double output_tolerance;
         // 0: normal ccd method which only checks t = [0,1]
@@ -448,7 +464,7 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
         if (is_impacting) {
             toi = (ti1 - ti0) * toi + ti0;
             if (toi == 0) {
-                // This is impossible because distance_t0 != 0
+                // This is impossible because distance_t0 > MS_DIST
                 ts.push((ti1 + ti0) / 2);
                 num_subdivisions++;
                 // spdlog::warn(

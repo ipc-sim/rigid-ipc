@@ -2,8 +2,6 @@
 
 #include <Eigen/Core>
 
-#define USE_DISTANCE_SQUARED
-
 namespace ccd {
 namespace geometry {
 

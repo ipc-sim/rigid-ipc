@@ -25,8 +25,9 @@ namespace opt {
     DistanceBarrierConstraint::DistanceBarrierConstraint(
         const std::string& name)
         : CollisionConstraint(name)
-        , initial_barrier_activation_distance(1e-2)
+        , initial_barrier_activation_distance(1e-3)
         , barrier_type(BarrierType::IPC)
+        , minimum_separation_distance(0.0)
         , m_barrier_activation_distance(0.0)
     {
     }
@@ -35,8 +36,9 @@ namespace opt {
     {
         CollisionConstraint::settings(json);
         initial_barrier_activation_distance =
-            json["initial_barrier_activation_distance"].get<double>();
-        barrier_type = json["barrier_type"].get<BarrierType>();
+            json["initial_barrier_activation_distance"];
+        minimum_separation_distance = json["minimum_separation_distance"];
+        barrier_type = json["barrier_type"];
     }
 
     nlohmann::json DistanceBarrierConstraint::settings() const
@@ -44,6 +46,7 @@ namespace opt {
         nlohmann::json json = CollisionConstraint::settings();
         json["initial_barrier_activation_distance"] =
             initial_barrier_activation_distance;
+        json["minimum_separation_distance"] = minimum_separation_distance;
         json["barrier_type"] = barrier_type;
         return json;
     }
@@ -70,7 +73,7 @@ namespace opt {
         detect_collision_candidates(
             bodies, poses_t0, poses_t1, dim_to_collision_type(bodies.dim()),
             candidates, detection_method, trajectory_type,
-            /*inflation_radius=*/0);
+            /*inflation_radius=*/minimum_separation_distance / 2.0);
 
         PROFILE_START(NARROW_PHASE)
         bool has_collisions = has_active_collisions_narrow_phase(
@@ -293,7 +296,7 @@ namespace opt {
         detect_collision_candidates(
             bodies, poses_t0, poses_t1, dim_to_collision_type(bodies.dim()),
             candidates, detection_method, trajectory_type,
-            /*inflation_radius=*/0);
+            /*inflation_radius=*/minimum_separation_distance / 2.0);
 
         double earliest_toi = compute_earliest_toi_narrow_phase(
             bodies, poses_t0, poses_t1, candidates);
@@ -348,14 +351,15 @@ namespace opt {
                         are_colliding = edge_vertex_ccd(
                             bodies, poses_t0, poses_t1,
                             candidates.ev_candidates[i], toi, trajectory_type,
-                            earliest_toi);
+                            earliest_toi, minimum_separation_distance);
                         // PROFILE_END(EV_NARROW_PHASE);
                     } else if (i - num_ev < num_ee) {
                         // PROFILE_START(EE_NARROW_PHASE);
                         are_colliding = edge_edge_ccd(
                             bodies, poses_t0, poses_t1,
                             candidates.ee_candidates[i - num_ev], toi,
-                            trajectory_type, earliest_toi);
+                            trajectory_type, earliest_toi,
+                            minimum_separation_distance);
                         // PROFILE_END(EE_NARROW_PHASE);
                     } else {
                         assert(i - num_ev - num_ee < num_fv);
@@ -363,7 +367,8 @@ namespace opt {
                         are_colliding = face_vertex_ccd(
                             bodies, poses_t0, poses_t1,
                             candidates.fv_candidates[i - num_ev - num_ee], toi,
-                            trajectory_type, earliest_toi);
+                            trajectory_type, earliest_toi,
+                            minimum_separation_distance);
                         // PROFILE_END(FV_NARROW_PHASE);
                     }
 
@@ -437,17 +442,19 @@ namespace opt {
         PROFILE_START();
 
         const double& dhat = m_barrier_activation_distance;
+        const double& dmin = minimum_separation_distance;
+        const double inflation_radius = dhat + dmin / 2.0;
 
         ipc::Candidates candidates;
         detect_collision_candidates_rigid(
             bodies, poses, dim_to_collision_type(bodies.dim()), candidates,
-            detection_method, dhat);
+            detection_method, inflation_radius);
 
         Eigen::MatrixXd V = bodies.world_vertices(poses);
         ipc::construct_constraint_set(
             candidates, /*V_rest=*/V, V, bodies.m_edges, bodies.m_faces,
-            /*dhat=*/m_barrier_activation_distance, constraint_set,
-            bodies.m_faces_to_edges);
+            /*dhat=*/dhat, constraint_set, bodies.m_faces_to_edges,
+            /*dmin=*/dmin);
 
         PROFILE_END();
 

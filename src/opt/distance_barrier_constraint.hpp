@@ -82,6 +82,8 @@ namespace opt {
         /// @brief Choice of barrier function (see barrier/barrier.hpp).
         BarrierType barrier_type;
 
+        double minimum_separation_distance;
+
     protected:
         bool has_active_collisions_narrow_phase(
             const physics::RigidBodyAssembler& bodies,

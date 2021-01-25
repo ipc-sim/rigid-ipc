@@ -126,11 +126,12 @@ namespace physics {
             moment_of_inertia = density * es.eigenvalues();
             if ((moment_of_inertia.array() < 0).any()) {
                 spdlog::warn(
-                    "Negative moment of inertia ({}), projecting to 0.",
+                    "Negative moment of inertia ({}), inverting.",
                     logger::fmt_eigen(moment_of_inertia));
                 // Avoid negative epsilon inertias
-                moment_of_inertia = (moment_of_inertia.array() < 0)
-                                        .select(0, moment_of_inertia);
+                moment_of_inertia =
+                    (moment_of_inertia.array() < 0)
+                        .select(-moment_of_inertia, moment_of_inertia);
             }
             R0 = es.eigenvectors();
             // Ensure that we have an orientation preserving transform

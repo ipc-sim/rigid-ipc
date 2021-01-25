@@ -153,7 +153,8 @@ bool edge_vertex_ccd(
     const ipc::EdgeVertexCandidate& candidate,
     double& toi,
     TrajectoryType trajectory,
-    double earliest_toi)
+    double earliest_toi,
+    double minimum_separation_distance)
 {
     assert(bodies.dim() == 2);
 
@@ -189,7 +190,7 @@ bool edge_vertex_ccd(
     case TrajectoryType::PIECEWISE_LINEAR: {
         bool is_colliding = compute_piecewise_linear_edge_vertex_time_of_impact(
             bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
-            edge_id, toi, earliest_toi);
+            edge_id, toi, earliest_toi, minimum_separation_distance);
         if (!is_colliding || toi > 0) {
             return is_colliding;
         }
@@ -219,7 +220,8 @@ bool edge_edge_ccd(
     const ipc::EdgeEdgeCandidate& candidate,
     double& toi,
     TrajectoryType trajectory,
-    double earliest_toi)
+    double earliest_toi,
+    double minimum_separation_distance)
 {
     long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
     bodies.global_to_local_edge(candidate.edge0_index, bodyA_id, edgeA_id);
@@ -260,7 +262,7 @@ bool edge_edge_ccd(
     case TrajectoryType::PIECEWISE_LINEAR: {
         bool is_colliding = compute_piecewise_linear_edge_edge_time_of_impact(
             bodyA, poseA_t0, poseA_t1, edgeA_id, bodyB, poseB_t0, poseB_t1,
-            edgeB_id, toi, earliest_toi);
+            edgeB_id, toi, earliest_toi, minimum_separation_distance);
         if (!is_colliding || toi > 0) {
             return is_colliding;
         }
@@ -290,7 +292,8 @@ bool face_vertex_ccd(
     const ipc::FaceVertexCandidate& candidate,
     double& toi,
     TrajectoryType trajectory,
-    double earliest_toi)
+    double earliest_toi,
+    double minimum_separation_distance)
 {
     long bodyA_id, vertex_id, bodyB_id, face_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
@@ -329,7 +332,7 @@ bool face_vertex_ccd(
     case TrajectoryType::PIECEWISE_LINEAR: {
         bool is_colliding = compute_piecewise_linear_face_vertex_time_of_impact(
             bodyA, poseA_t0, poseA_t1, vertex_id, bodyB, poseB_t0, poseB_t1,
-            face_id, toi, earliest_toi);
+            face_id, toi, earliest_toi, minimum_separation_distance);
         if (!is_colliding || toi > 0) {
             return is_colliding;
         }

@@ -72,7 +72,9 @@ namespace opt {
         min_distance = compute_min_distance(starting_point());
         if (min_distance < 0) {
             spdlog::info(
-                "init_min_distance>d̂={:.8e}", barrier_activation_distance());
+                "init_min_distance>d̂+dmin={:.8e}",
+                barrier_activation_distance()
+                    + m_constraint.minimum_separation_distance);
         } else {
             spdlog::info("init_min_distance={:.8e}", min_distance);
         }
@@ -183,7 +185,8 @@ namespace opt {
         ipc::construct_friction_constraint_set(
             V0, edges(), faces(), collision_constraints,
             barrier_activation_distance(), barrier_stiffness(),
-            coefficient_friction, friction_constraints);
+            coefficient_friction, friction_constraints,
+            m_constraint.minimum_separation_distance);
 
         PROFILE_END();
     }
@@ -897,6 +900,7 @@ namespace opt {
                     energy += h * h * (Q * Tau).trace();
                     break;
                 case IMPLICIT_NEWMARK:
+                case STABILIZED_NEWMARK:
                     energy += 0.25 * h * h * (Q * Tau).trace();
                     break;
                 }
@@ -1290,6 +1294,7 @@ namespace opt {
             x, jac_V, hess_V, compute_grad || compute_hess, compute_hess);
 
         double dhat = barrier_activation_distance();
+        double dmin = m_constraint.minimum_separation_distance;
 
         ThreadSpecificPotentials thread_storage(x.size());
         tbb::parallel_for(
@@ -1305,15 +1310,15 @@ namespace opt {
                     const auto& constraint = constraints[ci];
 
                     // PROFILE_START(COMPUTE_BARRIER_VAL);
-                    potential +=
-                        constraint.compute_potential(V, edges(), faces(), dhat);
+                    potential += constraint.compute_potential(
+                        V, edges(), faces(), dhat, dmin);
                     // PROFILE_START(COMPUTE_BARRIER_VAL);
 
                     Eigen::VectorX12d grad_B;
                     if (compute_grad || compute_hess) {
                         // PROFILE_START(COMPUTE_BARRIER_GRAD);
                         grad_B = constraint.compute_potential_gradient(
-                            V, edges(), faces(), dhat);
+                            V, edges(), faces(), dhat, dmin);
                         // PROFILE_END(COMPUTE_BARRIER_GRAD);
                     }
 
@@ -1321,7 +1326,7 @@ namespace opt {
                     if (compute_hess) {
                         // PROFILE_START(COMPUTE_BARRIER_HESS);
                         hess_B = constraint.compute_potential_hessian(
-                            V, edges(), faces(), dhat,
+                            V, edges(), faces(), dhat, dmin,
                             /*project_to_psd=*/false);
                         // PROFILE_END(COMPUTE_BARRIER_HESS);
                     }

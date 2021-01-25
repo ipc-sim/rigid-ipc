@@ -163,6 +163,7 @@ bool SimState::init(const nlohmann::json& args_in)
             "detection_method": "bvh",
             "trajectory_type": "piecewise_linear",
             "initial_barrier_activation_distance": 1e-3,
+            "minimum_separation_distance": 0,
             "barrier_type": "ipc"
         },
         "friction_constraints": {

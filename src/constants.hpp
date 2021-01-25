@@ -42,11 +42,7 @@ namespace Constants {
     static const int INTERVAL_ROOT_FINDER_MAX_ITERATIONS = 10000;
 
     /// \brief Scaling of κ_min to better condition the system
-#ifdef USE_DISTANCE_SQUARED
     static const double DEFAULT_MIN_BARRIER_STIFFNESS_SCALE = 1e11;
-#else
-    static const double DEFAULT_MIN_BARRIER_STIFFNESS_SCALE = 1e11;
-#endif
 
     // static const int MAXIMUM_FRICTION_ITERATIONS = 100;
 

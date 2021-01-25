@@ -12,11 +12,10 @@ namespace opt {
     T DistanceBarrierConstraint::distance_barrier(
         const T& distance, const double dhat) const
     {
-#ifdef USE_DISTANCE_SQUARED
-        return barrier(distance, dhat * dhat, barrier_type);
-#else
-        return barrier(distance, dhat, barrier_type);
-#endif
+        const double& dmin = minimum_separation_distance;
+        return barrier(
+            distance - dmin * dmin, 2 * dmin * dhat + dhat * dhat,
+            barrier_type);
     }
 
 } // namespace opt

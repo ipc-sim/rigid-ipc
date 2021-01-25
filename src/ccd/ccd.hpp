@@ -102,7 +102,8 @@ bool edge_vertex_ccd(
     const ipc::EdgeVertexCandidate& ev_candidate,
     double& toi,
     TrajectoryType trajectory,
-    double earliest_toi = 1);
+    double earliest_toi = 1,
+    double minimum_separation_distance = 0);
 
 bool edge_edge_ccd(
     const physics::RigidBodyAssembler& bodies,
@@ -111,7 +112,8 @@ bool edge_edge_ccd(
     const ipc::EdgeEdgeCandidate& ee_candidate,
     double& toi,
     TrajectoryType trajectory,
-    double earliest_toi = 1);
+    double earliest_toi = 1,
+    double minimum_separation_distance = 0);
 
 bool face_vertex_ccd(
     const physics::RigidBodyAssembler& bodies,
@@ -120,7 +122,8 @@ bool face_vertex_ccd(
     const ipc::FaceVertexCandidate& fv_candidate,
     double& toi,
     TrajectoryType trajectory,
-    double earliest_toi = 1);
+    double earliest_toi = 1,
+    double minimum_separation_distance = 0);
 
 double edge_vertex_closest_point(
     const physics::RigidBodyAssembler& bodies,
