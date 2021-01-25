@@ -18,7 +18,11 @@ namespace ccd {
 namespace opt {
 
     /// @brief Possible methods for detecting all edge vertex collisions.
-    enum BodyEnergyIntegrationMethod { IMPLICIT_EULER, IMPLICIT_NEWMARK };
+    enum BodyEnergyIntegrationMethod {
+        IMPLICIT_EULER,
+        IMPLICIT_NEWMARK,
+        STABILIZED_NEWMARK
+    };
 
     const static BodyEnergyIntegrationMethod
         DEFAULT_BODY_ENERGY_INTEGRATION_METHOD = IMPLICIT_EULER;
@@ -27,6 +31,7 @@ namespace opt {
         BodyEnergyIntegrationMethod,
         { { IMPLICIT_EULER, "implicit_euler" },
           { IMPLICIT_NEWMARK, "implicit_newmark" },
+          { STABILIZED_NEWMARK, "stabilized_newmark" },
           { DEFAULT_BODY_ENERGY_INTEGRATION_METHOD, "default" } });
 
     /// This class is both a simulation and optimization problem.

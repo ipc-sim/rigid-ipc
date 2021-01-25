@@ -3,8 +3,11 @@
     "solver": "ipc_solver",
     "max_time": 10,
     "timestep": 0.01,
+    "ipc_solver": {
+        "velocity_conv_tol": 1e-5
+    },
     "rigid_body_problem": {
-        "coefficient_restitution": -1,
+        "time_stepper": "implicit_euler",
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "cube.obj",

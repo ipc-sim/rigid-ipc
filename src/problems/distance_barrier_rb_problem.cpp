@@ -496,6 +496,22 @@ namespace opt {
                     2 * (rb.velocity.position - rb.velocity_prev.position) / h
                     - rb.acceleration.position;
                 break;
+            case STABILIZED_NEWMARK: {
+                rb.velocity.position =
+                    2 * (rb.pose.position - rb.pose_prev.position) / h
+                    - rb.velocity.position;
+                // q̃ = q⁰ + hv⁰+ ¼h²(g + m⁻¹f + a⁰)
+                Eigen::VectorX3d pos_tilde = rb.pose_prev.position
+                    + h
+                        * (rb.velocity_prev.position
+                           + h / 4.0
+                               * (gravity + rb.force.position / rb.mass
+                                  + rb.acceleration.position));
+                rb.acceleration.position =
+                    4 * (rb.pose.position - pos_tilde) / (h * h) + gravity
+                    + rb.force.position / rb.mass;
+                break;
+            }
             }
 
             // Angular update
@@ -507,6 +523,7 @@ namespace opt {
                     break;
 
                 case IMPLICIT_NEWMARK:
+                case STABILIZED_NEWMARK:
                     rb.velocity.rotation =
                         2 * (rb.pose.rotation - rb.pose_prev.rotation) / h
                         - rb.velocity.rotation;
@@ -548,6 +565,22 @@ namespace opt {
                     auto Qdot_prev = rb.Qdot;
                     rb.Qdot = 2 * (Q - Q_prev) / h - rb.Qdot;
                     rb.Qddot = 2 * (rb.Qdot - Qdot_prev) / h - rb.Qddot;
+                    break;
+                }
+                case STABILIZED_NEWMARK: {
+                    auto Qdot_prev = rb.Qdot;
+                    rb.Qdot = 2 * (Q - Q_prev) / h - rb.Qdot;
+                    // auto Jinv = compute_Jinv(rb.moment_of_inertia);
+                    // Eigen::Matrix3d Tau =
+                    //     Q_prev.transpose() * Eigen::Hat(rb.force.rotation);
+                    Eigen::Matrix3d Q_tilde = Q_prev
+                        + h
+                            * (Qdot_prev
+                               + h / 4.0
+                                   * (
+                                         // Tau * Jinv +
+                                         rb.Qddot));
+                    rb.Qddot = 4 * (Q - Q_tilde) / (h * h); //+ Tau * Jinv;
                     break;
                 }
                 }
@@ -816,6 +849,7 @@ namespace opt {
             case IMPLICIT_EULER:
                 break;
             case IMPLICIT_NEWMARK:
+            case STABILIZED_NEWMARK:
                 qddot_t0 += body.acceleration.position;
                 qddot_t0 *= 0.25;
                 break;
@@ -845,6 +879,7 @@ namespace opt {
                     Qddot_t0.setZero();
                     break;
                 case IMPLICIT_NEWMARK:
+                case STABILIZED_NEWMARK:
                     Qddot_t0 = 0.25 * body.Qddot;
                     break;
                 }
@@ -877,6 +912,7 @@ namespace opt {
                 case IMPLICIT_EULER:
                     break;
                 case IMPLICIT_NEWMARK:
+                case STABILIZED_NEWMARK:
                     theta_ddot_t0 += body.acceleration.rotation[0];
                     theta_ddot_t0 *= 0.25;
                     break;
