@@ -10,374 +10,74 @@
         "gravity": [0, -9.81, 0],
         "rigid_bodies": [{
             "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 99.00000000000003],
+            "rotation": [90, 0, 9.000000000000016],
             "scale": 0.01,
-            "position": [0.15334681923071564, 0.02428775013940473, 0.007633870000000001]
+            "position": [0.02428775013940473, -0.15334681923071564, 0.007633870000000001]
         }, {
             "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 99.00000000000003],
+            "rotation": [90, 0, 9.000000000000016],
             "scale": 0.01,
-            "position": [0.15334681923071564, 0.02428775013940473, -0.007633870000000001]
+            "position": [0.02428775013940473, -0.15334681923071564, -0.007633870000000001]
         }, {
             "mesh": "507-movements/227-chain-pully/barring.obj",
             "rotation": [90, 0, 0],
             "scale": 0.01,
-            "position": [0.15719362094328743, 0.0, 0.0]
+            "position": [0.0, -0.15719362094328743, 0.0]
         }, {
             "mesh": "507-movements/227-chain-pully/pin.obj",
             "rotation": [90, 0, 0],
             "scale": 0.01,
-            "position": [0.15719362094328743, 0.0, 0.0]
+            "position": [0.04857550027880946, -0.14950001751814382, 0.0]
         }, {
             "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 116.99999999999999],
+            "rotation": [90, 0, 26.999999999999968],
             "scale": 0.01,
-            "position": [0.13833616413429853, 0.07048579621186353, 0.00940965]
+            "position": [0.07048579621186353, -0.13833616413429853, 0.00940965]
         }, {
             "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 116.99999999999999],
+            "rotation": [90, 0, 26.999999999999968],
             "scale": 0.01,
-            "position": [0.13833616413429853, 0.07048579621186353, -0.00940965]
+            "position": [0.07048579621186353, -0.13833616413429853, -0.00940965]
         }, {
             "mesh": "507-movements/227-chain-pully/barring.obj",
             "rotation": [90, 0, 0],
             "scale": 0.01,
-            "position": [0.14950001751814382, 0.04857550027880946, 0.0]
+            "position": [0.04857550027880946, -0.14950001751814382, 0.0]
         }, {
             "mesh": "507-movements/227-chain-pully/pin.obj",
             "rotation": [90, 0, 0],
             "scale": 0.01,
-            "position": [0.14950001751814382, 0.04857550027880946, 0.0]
+            "position": [0.09239609214491759, -0.12717231075045318, 0.0]
         }, {
             "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 135.0],
+            "rotation": [90, 0, 45.0],
             "scale": 0.01,
-            "position": [0.1097842014476854, 0.10978420144768539, 0.007633870000000001]
+            "position": [0.10978420144768539, -0.1097842014476854, 0.007633870000000001]
         }, {
             "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 135.0],
+            "rotation": [90, 0, 45.0],
             "scale": 0.01,
-            "position": [0.1097842014476854, 0.10978420144768539, -0.007633870000000001]
+            "position": [0.10978420144768539, -0.1097842014476854, -0.007633870000000001]
         }, {
             "mesh": "507-movements/227-chain-pully/barring.obj",
             "rotation": [90, 0, 0],
             "scale": 0.01,
-            "position": [0.12717231075045318, 0.09239609214491759, 0.0]
+            "position": [0.09239609214491759, -0.12717231075045318, 0.0]
         }, {
             "mesh": "507-movements/227-chain-pully/pin.obj",
             "rotation": [90, 0, 0],
             "scale": 0.01,
-            "position": [0.12717231075045318, 0.09239609214491759, 0.0]
+            "position": [0.12717231075045318, -0.0923960921449176, 0.0]
         }, {
             "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 153.00000000000003],
+            "rotation": [90, 0, 63.00000000000002],
             "scale": 0.01,
-            "position": [0.07048579621186354, 0.1383361641342985, 0.00940965]
+            "position": [0.1383361641342985, -0.07048579621186354, 0.00940965]
         }, {
             "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 153.00000000000003],
+            "rotation": [90, 0, 63.00000000000002],
             "scale": 0.01,
-            "position": [0.07048579621186354, 0.1383361641342985, -0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [0.0923960921449176, 0.12717231075045318, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [0.0923960921449176, 0.12717231075045318, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 171.0],
-            "scale": 0.01,
-            "position": [0.02428775013940474, 0.15334681923071564, 0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 171.0],
-            "scale": 0.01,
-            "position": [0.02428775013940474, 0.15334681923071564, -0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [0.04857550027880947, 0.14950001751814382, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [0.04857550027880947, 0.14950001751814382, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -171.0],
-            "scale": 0.01,
-            "position": [-0.024287750139404724, 0.15334681923071564, 0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -171.0],
-            "scale": 0.01,
-            "position": [-0.024287750139404724, 0.15334681923071564, -0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [9.625333236728964e-18, 0.15719362094328743, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [9.625333236728964e-18, 0.15719362094328743, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -153.00000000000003],
-            "scale": 0.01,
-            "position": [-0.07048579621186352, 0.13833616413429853, 0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -153.00000000000003],
-            "scale": 0.01,
-            "position": [-0.07048579621186352, 0.13833616413429853, -0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.048575500278809455, 0.14950001751814385, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.048575500278809455, 0.14950001751814385, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -135.00000000000003],
-            "scale": 0.01,
-            "position": [-0.10978420144768539, 0.1097842014476854, 0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -135.00000000000003],
-            "scale": 0.01,
-            "position": [-0.10978420144768539, 0.1097842014476854, -0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.09239609214491758, 0.12717231075045318, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.09239609214491758, 0.12717231075045318, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -117.0],
-            "scale": 0.01,
-            "position": [-0.1383361641342985, 0.07048579621186354, 0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -117.0],
-            "scale": 0.01,
-            "position": [-0.1383361641342985, 0.07048579621186354, -0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.12717231075045318, 0.0923960921449176, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.12717231075045318, 0.0923960921449176, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -99.00000000000003],
-            "scale": 0.01,
-            "position": [-0.15334681923071564, 0.02428775013940475, 0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -99.00000000000003],
-            "scale": 0.01,
-            "position": [-0.15334681923071564, 0.02428775013940475, -0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.14950001751814382, 0.04857550027880948, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.14950001751814382, 0.04857550027880948, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -81.00000000000001],
-            "scale": 0.01,
-            "position": [-0.15334681923071564, -0.024287750139404714, 0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -81.00000000000001],
-            "scale": 0.01,
-            "position": [-0.15334681923071564, -0.024287750139404714, -0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.15719362094328743, 1.9250666473457928e-17, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.15719362094328743, 1.9250666473457928e-17, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -63.000000000000014],
-            "scale": 0.01,
-            "position": [-0.13833616413429853, -0.0704857962118635, 0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -63.000000000000014],
-            "scale": 0.01,
-            "position": [-0.13833616413429853, -0.0704857962118635, -0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.14950001751814385, -0.04857550027880945, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.14950001751814385, -0.04857550027880945, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -45.00000000000002],
-            "scale": 0.01,
-            "position": [-0.1097842014476854, -0.10978420144768539, 0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -45.00000000000002],
-            "scale": 0.01,
-            "position": [-0.1097842014476854, -0.10978420144768539, -0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.12717231075045318, -0.09239609214491758, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.12717231075045318, -0.09239609214491758, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -26.999999999999993],
-            "scale": 0.01,
-            "position": [-0.07048579621186356, -0.1383361641342985, 0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -26.999999999999993],
-            "scale": 0.01,
-            "position": [-0.07048579621186356, -0.1383361641342985, -0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.0923960921449176, -0.12717231075045318, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.0923960921449176, -0.12717231075045318, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -9.000000000000016],
-            "scale": 0.01,
-            "position": [-0.02428775013940476, -0.15334681923071564, 0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, -9.000000000000016],
-            "scale": 0.01,
-            "position": [-0.02428775013940476, -0.15334681923071564, -0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.04857550027880949, -0.14950001751814382, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-0.04857550027880949, -0.14950001751814382, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 8.999999999999995],
-            "scale": 0.01,
-            "position": [0.024287750139404707, -0.15334681923071564, 0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 8.999999999999995],
-            "scale": 0.01,
-            "position": [0.024287750139404707, -0.15334681923071564, -0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-2.8875999710186893e-17, -0.15719362094328743, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [-2.8875999710186893e-17, -0.15719362094328743, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 26.999999999999975],
-            "scale": 0.01,
-            "position": [0.0704857962118635, -0.13833616413429853, 0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 26.999999999999975],
-            "scale": 0.01,
-            "position": [0.0704857962118635, -0.13833616413429853, -0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [0.048575500278809434, -0.14950001751814385, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [0.048575500278809434, -0.14950001751814385, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 44.999999999999986],
-            "scale": 0.01,
-            "position": [0.10978420144768537, -0.10978420144768541, 0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 44.999999999999986],
-            "scale": 0.01,
-            "position": [0.10978420144768537, -0.10978420144768541, -0.00940965]
-        }, {
-            "mesh": "507-movements/227-chain-pully/barring.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [0.09239609214491756, -0.1271723107504532, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/pin.obj",
-            "rotation": [90, 0, 0],
-            "scale": 0.01,
-            "position": [0.09239609214491756, -0.1271723107504532, 0.0]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 63.000000000000014],
-            "scale": 0.01,
-            "position": [0.1383361641342985, -0.07048579621186356, 0.007633870000000001]
-        }, {
-            "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 63.000000000000014],
-            "scale": 0.01,
-            "position": [0.1383361641342985, -0.07048579621186356, -0.007633870000000001]
+            "position": [0.1383361641342985, -0.07048579621186354, -0.00940965]
         }, {
             "mesh": "507-movements/227-chain-pully/barring.obj",
             "rotation": [90, 0, 0],
@@ -387,32 +87,617 @@
             "mesh": "507-movements/227-chain-pully/pin.obj",
             "rotation": [90, 0, 0],
             "scale": 0.01,
-            "position": [0.12717231075045318, -0.0923960921449176, 0.0]
+            "position": [0.14950001751814382, -0.04857550027880947, 0.0]
         }, {
             "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 81.0],
+            "rotation": [90, 0, 80.99999999999999],
             "scale": 0.01,
-            "position": [0.15334681923071564, -0.02428775013940475, 0.00940965]
+            "position": [0.15334681923071564, -0.02428775013940474, 0.007633870000000001]
         }, {
             "mesh": "507-movements/227-chain-pully/link.obj",
-            "rotation": [90, 0, 81.0],
+            "rotation": [90, 0, 80.99999999999999],
             "scale": 0.01,
-            "position": [0.15334681923071564, -0.02428775013940475, -0.00940965]
+            "position": [0.15334681923071564, -0.02428775013940474, -0.007633870000000001]
         }, {
             "mesh": "507-movements/227-chain-pully/barring.obj",
             "rotation": [90, 0, 0],
             "scale": 0.01,
-            "position": [0.14950001751814382, -0.0485755002788095, 0.0]
+            "position": [0.14950001751814382, -0.04857550027880947, 0.0]
         }, {
             "mesh": "507-movements/227-chain-pully/pin.obj",
             "rotation": [90, 0, 0],
             "scale": 0.01,
-            "position": [0.14950001751814382, -0.0485755002788095, 0.0]
+            "position": [0.15719362094328743, -9.625333236728964e-18, 0.0]
         }, {
-            "mesh": "gear.obj",
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, 99.00000000000001],
+            "scale": 0.01,
+            "position": [0.15334681923071564, 0.024287750139404724, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, 99.00000000000001],
+            "scale": 0.01,
+            "position": [0.15334681923071564, 0.024287750139404724, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [0.15719362094328743, -9.625333236728964e-18, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [0.14950001751814385, 0.048575500278809455, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, 117.0],
+            "scale": 0.01,
+            "position": [0.13833616413429853, 0.07048579621186352, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, 117.0],
+            "scale": 0.01,
+            "position": [0.13833616413429853, 0.07048579621186352, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [0.14950001751814385, 0.048575500278809455, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [0.12717231075045318, 0.09239609214491758, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, 135.0],
+            "scale": 0.01,
+            "position": [0.1097842014476854, 0.10978420144768539, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, 135.0],
+            "scale": 0.01,
+            "position": [0.1097842014476854, 0.10978420144768539, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [0.12717231075045318, 0.09239609214491758, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [0.0923960921449176, 0.12717231075045318, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, 153.00000000000003],
+            "scale": 0.01,
+            "position": [0.07048579621186354, 0.1383361641342985, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, 153.00000000000003],
+            "scale": 0.01,
+            "position": [0.07048579621186354, 0.1383361641342985, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [0.0923960921449176, 0.12717231075045318, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [0.04857550027880948, 0.14950001751814382, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, 171.0],
+            "scale": 0.01,
+            "position": [0.02428775013940475, 0.15334681923071564, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, 171.0],
+            "scale": 0.01,
+            "position": [0.02428775013940475, 0.15334681923071564, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [0.04857550027880948, 0.14950001751814382, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [1.9250666473457928e-17, 0.15719362094328743, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.024147466744004264, 0.1525468435549023, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.024147466744004264, 0.1525468435549023, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [1.9250666473457928e-17, 0.15719362094328743, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.04829493348800854, 0.14790006616651719, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.07244240023201283, 0.14325328877813207, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.07244240023201283, 0.14325328877813207, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.04829493348800854, 0.14790006616651719, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.09658986697601711, 0.13860651138974694, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.12073733372002139, 0.13395973400136182, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.12073733372002139, 0.13395973400136182, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.09658986697601711, 0.13860651138974694, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.14488480046402566, 0.1293129566129767, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.16903226720802994, 0.12466617922459157, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.16903226720802994, 0.12466617922459157, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.14488480046402566, 0.1293129566129767, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.19317973395203425, 0.12001940183620645, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.2173272006960385, 0.11537262444782133, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.2173272006960385, 0.11537262444782133, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.19317973395203425, 0.12001940183620645, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.2414746674400428, 0.11072584705943621, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.2656221341840471, 0.10607906967105109, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.2656221341840471, 0.10607906967105109, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.2414746674400428, 0.11072584705943621, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.2897696009280514, 0.10143229228266597, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.3139170676720557, 0.09678551489428085, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.3139170676720557, 0.09678551489428085, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.2897696009280514, 0.10143229228266597, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.33806453441605994, 0.09213873750589573, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.36221200116006425, 0.0874919601175106, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.36221200116006425, 0.0874919601175106, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.33806453441605994, 0.09213873750589573, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.3863594679040685, 0.08284518272912549, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.41050693464807275, 0.07819840534074037, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081905],
+            "scale": 0.01,
+            "position": [-0.41050693464807275, 0.07819840534074037, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.3863594679040685, 0.08284518272912549, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.434654401392077, 0.07355162795235524, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081914],
+            "scale": 0.01,
+            "position": [-0.45880186813608137, 0.06890485056397017, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -169.10753143081914],
+            "scale": 0.01,
+            "position": [-0.45880186813608137, 0.06890485056397017, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.434654401392077, 0.07355162795235524, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.4829493348800856, 0.06425807317558507, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -157.5],
+            "scale": 0.01,
+            "position": [-0.5056679945243044, 0.054847696232011335, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -157.5],
+            "scale": 0.01,
+            "position": [-0.5056679945243044, 0.054847696232011335, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.4829493348800856, 0.06425807317558507, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.5283866541685233, 0.04543731928843758, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -112.49999999999999],
+            "scale": 0.01,
+            "position": [-0.537797031112097, 0.02271865964421879, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -112.49999999999999],
+            "scale": 0.01,
+            "position": [-0.537797031112097, 0.02271865964421879, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.5283866541685233, 0.04543731928843758, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.5472074080556707, -3.934672181692833e-18, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -67.50000000000003],
+            "scale": 0.01,
+            "position": [-0.537797031112097, -0.0227186596442188, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -67.50000000000003],
+            "scale": 0.01,
+            "position": [-0.537797031112097, -0.0227186596442188, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.5472074080556707, -3.934672181692833e-18, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.5283866541685233, -0.0454373192884376, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -22.499999999999986],
+            "scale": 0.01,
+            "position": [-0.5056679945243044, -0.054847696232011335, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -22.499999999999986],
+            "scale": 0.01,
+            "position": [-0.5056679945243044, -0.054847696232011335, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.5283866541685233, -0.0454373192884376, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.4829493348800856, -0.06425807317558507, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180943],
+            "scale": 0.01,
+            "position": [-0.45880186813608137, -0.0689048505639702, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180943],
+            "scale": 0.01,
+            "position": [-0.45880186813608137, -0.0689048505639702, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.4829493348800856, -0.06425807317558507, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.434654401392077, -0.07355162795235531, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180968],
+            "scale": 0.01,
+            "position": [-0.41050693464807275, -0.07819840534074043, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180968],
+            "scale": 0.01,
+            "position": [-0.41050693464807275, -0.07819840534074043, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.434654401392077, -0.07355162795235531, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.3863594679040685, -0.08284518272912555, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180968],
+            "scale": 0.01,
+            "position": [-0.36221200116006425, -0.08749196011751068, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180968],
+            "scale": 0.01,
+            "position": [-0.36221200116006425, -0.08749196011751068, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.3863594679040685, -0.08284518272912555, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.33806453441605994, -0.0921387375058958, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.3139170676720557, -0.09678551489428092, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.3139170676720557, -0.09678551489428092, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.33806453441605994, -0.0921387375058958, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.28976960092805143, -0.10143229228266604, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.2656221341840471, -0.10607906967105116, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.2656221341840471, -0.10607906967105116, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.28976960092805143, -0.10143229228266604, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.24147466744004284, -0.11072584705943628, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.21732720069603859, -0.1153726244478214, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.21732720069603859, -0.1153726244478214, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.24147466744004284, -0.11072584705943628, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.19317973395203428, -0.12001940183620653, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.16903226720802997, -0.12466617922459165, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.16903226720802997, -0.12466617922459165, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.19317973395203428, -0.12001940183620653, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.14488480046402571, -0.12931295661297676, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.12073733372002143, -0.13395973400136188, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.12073733372002143, -0.13395973400136188, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.14488480046402571, -0.12931295661297676, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.09658986697601715, -0.138606511389747, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.07244240023201287, -0.14325328877813212, 0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180963],
+            "scale": 0.01,
+            "position": [-0.07244240023201287, -0.14325328877813212, -0.007633870000000001]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.09658986697601715, -0.138606511389747, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.0482949334880086, -0.14790006616651727, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180872],
+            "scale": 0.01,
+            "position": [-0.0241474667440043, -0.15254684355490233, 0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/link.obj",
+            "rotation": [90, 0, -10.892468569180872],
+            "scale": 0.01,
+            "position": [-0.0241474667440043, -0.15254684355490233, -0.00940965]
+        }, {
+            "mesh": "507-movements/227-chain-pully/barring.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [-0.0482949334880086, -0.14790006616651727, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/pin.obj",
+            "rotation": [90, 0, 0],
+            "scale": 0.01,
+            "position": [0.0, -0.15719362094328743, 0.0]
+        }, {
+            "mesh": "507-movements/227-chain-pully/sprocket-20teeth.obj",
             "angular_velocity": [0, 0, 100],
             "scale": 0.01,
-            "#type": "kinematic",
+            "type": "kinematic",
+            "is_dof_fixed": [true, true, true, true, true, false]
+        }, {
+            "mesh": "507-movements/227-chain-pully/sprocket-8teeth.obj",
+            "scale": 0.01,
+            "type": "dynamic",
             "is_dof_fixed": [true, true, true, true, true, false]
         }]
     }
