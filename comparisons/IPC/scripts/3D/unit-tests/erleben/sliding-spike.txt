@@ -1,0 +1,21 @@
+energy NH
+warmStart 0
+time 1 0.01
+turnOffGravity
+
+shapes input 2
+../../../../meshes/erleben/spike.msh  -4.9 2.0001 0  0 0 -180  1 1 1 material 1000 2e11 0.3  initVel 10 0 0  0 0 0
+../../../../../../meshes/plane.obj  0 -1 0  0 0 0  1 1 1 material 1000 2e11 0.3  linearVelocity 0 0 0
+
+
+selfCollisionOn
+selfFric 0
+
+constraintSolver interiorPoint
+dHat 0.001
+epsv 0.001
+useAbsParameters
+fricIterAmt 1
+tol 1
+0.01
+# useAbsTol

@@ -1,0 +1,24 @@
+energy NH
+warmStart 0
+time 3.0 0.01
+
+
+shapes input 5
+../../../../../meshes/plane.obj  0 -0.5 0  0 0 0  1 1 1 material 1000 2e11 0.3  linearVelocity 0 0 0
+../../../../../meshes/cube.obj  -1 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  linearVelocity 0 0 0
+../../../../../meshes/cube.obj  0 0 -1  0 0 0  1 1 1 material 1000 2e11 0.3  linearVelocity 0 0 0
+../../../../../meshes/cube.obj  1 0 0  0 0 0  1 1 1 material 1000 2e11 0.3  linearVelocity 0 0 0
+../../../meshes/tet-corner.msh  -0.4995 0.6 -0.4995  0 0 0  0.999 0.999 0.999 material 1000 2e11 0.3  initVel 0 0 0  0 0 0
+
+
+selfCollisionOn
+selfFric 0
+
+constraintSolver interiorPoint
+dHat 0.0001
+epsv 0.001
+useAbsParameters
+fricIterAmt 1
+tol 1
+0.01
+# useAbsTol

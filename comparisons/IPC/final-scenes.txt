@@ -1,0 +1,9 @@
+./scripts/3D/mechanisms/screw.txt
+./scripts/3D/pendulum/pendulum.txt
+./scripts/3D/pendulum/double-pendulum.txt
+./scripts/3D/friction/rolling/cone.txt
+./scripts/3D/friction/arch/arch-25-stones.txt
+./scripts/3D/friction/arch/arch-101-stones.txt
+./scripts/3D/chain/wrecking-ball.txt
+./scripts/3D/chain/chain-net/chain-net-4x4.txt
+./scripts/3D/chain/chain-net/chain-net-8x8.txt

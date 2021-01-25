@@ -1,0 +1,163 @@
+energy NH
+warmStart 0
+time 20.0 0.01
+
+
+shapes input 144
+../../../../../../meshes/wrecking-ball/link.obj  1.65 0 0  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 0.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  3.3 0 0  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 0.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  4.95 0 0  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 0.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  6.6 0 0  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 0.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  8.25 0 0  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 0.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  9.9 0 0  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 0.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  0 0 1.6  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  0.825 0 1.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 1.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  2.475 0 1.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 2.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 1.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.125 0 1.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 2.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 1.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  5.775 0 1.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 2.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 1.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  7.425 0 1.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 2.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 1.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.075 0 1.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 2.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 1.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  10.725 0 1.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 2.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  11.55 0 1.6  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  0 0 3.2  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  0.825 0 3.2  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 3.2  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  2.475 0 3.2  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 3.2  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.125 0 3.2  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 3.2  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  5.775 0 3.2  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 3.2  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  7.425 0 3.2  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 3.2  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.075 0 3.2  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 3.2  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  10.725 0 3.2  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  11.55 0 3.2  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  0 0 4.8  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  0.825 0 4.8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 4.8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  2.475 0 4.8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 5.6  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 4.8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.125 0 4.8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 5.6  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 4.8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  5.775 0 4.8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 5.6  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 4.8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  7.425 0 4.8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 5.6  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 4.8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.075 0 4.8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 5.6  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 4.8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  10.725 0 4.8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 5.6  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  11.55 0 4.8  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  0 0 6.4  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  0.825 0 6.4  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 6.4  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  2.475 0 6.4  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 7.2  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 6.4  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.125 0 6.4  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 7.2  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 6.4  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  5.775 0 6.4  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 7.2  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 6.4  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  7.425 0 6.4  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 7.2  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 6.4  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.075 0 6.4  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 7.2  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 6.4  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  10.725 0 6.4  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 7.2  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  11.55 0 6.4  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  0 0 8  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  0.825 0 8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  2.475 0 8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 8.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.125 0 8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 8.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  5.775 0 8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 8.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  7.425 0 8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 8.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.075 0 8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 8.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 8  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  10.725 0 8  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 8.8  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  11.55 0 8  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  0 0 9.6  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../meshes/wrecking-ball/link.msh  0.825 0 9.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 9.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  2.475 0 9.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  1.65 0 10.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 9.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.125 0 9.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  3.3 0 10.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 9.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  5.775 0 9.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  4.95 0 10.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 9.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  7.425 0 9.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  6.6 0 10.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 9.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.075 0 9.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  8.25 0 10.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 9.6  90 0 -90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  10.725 0 9.6  0 0 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../meshes/wrecking-ball/link.msh  9.9 0 10.4  0 90 90  1 1 1 material 7680 2e11 0.3  initVel 0 0 0  0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  11.55 0 9.6  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  1.65 0 11.2  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  3.3 0 11.2  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  4.95 0 11.2  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  6.6 0 11.2  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  8.25 0 11.2  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+../../../../../../meshes/wrecking-ball/link.obj  9.9 0 11.2  90 0 -90  1 1 1 material 7680 2e11 0.3  linearVelocity 0 0 0
+
+
+selfCollisionOn
+selfFric 0
+
+constraintSolver interiorPoint
+dHat 0.001
+epsv 0.001
+useAbsParameters
+fricIterAmt 1
+tol 1
+0.01
+# useAbsTol
