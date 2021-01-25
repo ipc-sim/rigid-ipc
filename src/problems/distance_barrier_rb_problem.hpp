@@ -184,6 +184,8 @@ namespace opt {
         using BarrierProblem::compute_barrier_term;
         using BarrierProblem::compute_energy_term;
 
+        /// Compute the minimum distance among geometry
+        double compute_min_distance() const override;
         double compute_min_distance(const Eigen::VectorXd& x) const override;
 
         /// Compute the value of the barrier at a distance x

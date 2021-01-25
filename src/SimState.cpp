@@ -98,6 +98,8 @@ bool SimState::load_simulation(const nlohmann::json& input_args)
         step_timings = stats["step_timings"].get<std::vector<double>>();
         solver_iterations = stats["solver_iterations"].get<std::vector<int>>();
         num_contacts = stats["num_contacts"].get<std::vector<int>>();
+        step_minimum_distances =
+            stats["step_minimum_distances"].get<std::vector<double>>();
     }
     m_num_simulation_steps = int(state_sequence.size()) - 1;
     problem_ptr->state(state_sequence.back());
@@ -249,6 +251,7 @@ bool SimState::init(const nlohmann::json& args_in)
     step_timings.clear();
     solver_iterations.clear();
     num_contacts.clear();
+    step_minimum_distances.clear();
 
     return true;
 }
@@ -393,6 +396,7 @@ void SimState::save_simulation_step()
     step_timings.push_back(step_timer.getElapsedTime());
     solver_iterations.push_back(problem_ptr->opt_result.num_iterations);
     num_contacts.push_back(problem_ptr->num_contacts());
+    step_minimum_distances.push_back(problem_ptr->compute_min_distance());
 
     PROFILE_END();
 }
@@ -418,6 +422,7 @@ bool SimState::save_simulation(const std::string& filename)
     stats["step_timings"] = step_timings;
     stats["solver_iterations"] = solver_iterations;
     stats["num_contacts"] = num_contacts;
+    stats["step_minimum_distances"] = step_minimum_distances;
     stats["solve_stats"] = problem_ptr->solver().stats();
     results["stats"] = stats;
 

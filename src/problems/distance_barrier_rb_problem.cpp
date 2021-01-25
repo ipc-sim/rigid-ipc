@@ -1539,6 +1539,13 @@ namespace opt {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    double DistanceBarrierRBProblem::compute_min_distance() const
+    {
+        double min_distance = m_constraint.compute_minimum_distance(
+            m_assembler, m_assembler.rb_poses());
+        return std::isfinite(min_distance) ? min_distance : -1;
+    }
+
     double DistanceBarrierRBProblem::compute_min_distance(
         const Eigen::VectorXd& x) const
     {

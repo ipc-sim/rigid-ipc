@@ -77,6 +77,9 @@ namespace physics {
 
         virtual int num_contacts() const = 0;
 
+        /// Compute the minimum distance among geometry
+        virtual double compute_min_distance() const = 0;
+
         opt::OptimizationResults opt_result;
     };
 
