@@ -12,7 +12,7 @@ import context
 
 from fixture_utils import save_fixture, get_fixture_dir_path, get_meshes_dir_path
 
-scale = 0.01
+scale = 1
 
 barring = {
     "mesh": "507-movements/227-chain-pully/barring.obj",
@@ -196,7 +196,7 @@ def main():
     })
 
     save_fixture(scene, get_fixture_dir_path() / "3D" /
-                 "mechanisms/507-movements" / "227-chain-pully.json")
+                 "mechanisms/507-movements" / "227-chain-pully-scaled-up.json")
 
 
 if __name__ == "__main__":
