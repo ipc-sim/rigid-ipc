@@ -2,7 +2,7 @@
     "scene_type": "distance_barrier_rb_problem",
     "solver": "ipc_solver",
     "max_time": 10,
-    "timestep": 0.04,
+    "timestep": 0.01,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-3,
         "minimum_separation_distance": 1e-3
@@ -24,34 +24,10 @@
             "mesh": "packing-3D-printer/3DBenchy.001.obj",
             "enabled": true
         }, {
-            "mesh": "packing-3D-printer/3DBenchy.002.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/CogDriveGear.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/CogDriveGear.001.obj",
-            "enabled": true
-        }, {
             "mesh": "packing-3D-printer/CogDriveGear.002.obj",
             "enabled": true
         }, {
             "mesh": "packing-3D-printer/Compound Of 3 Cubes.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Compound Of 3 Cubes.001.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Compound Of 3 Cubes.002.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Hilbert Cube1 Support.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Hilbert Cube1 Support.001.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Hilbert Cube1 Support.002.obj",
             "enabled": true
         }, {
             "mesh": "packing-3D-printer/Hilbert Cube1.obj",
@@ -60,17 +36,10 @@
             "mesh": "packing-3D-printer/Hilbert Cube1.001.obj",
             "enabled": true
         }, {
-            "mesh": "packing-3D-printer/Hilbert Cube1.002.obj",
-            "enabled": true
-        }, {
             "mesh": "packing-3D-printer/Openscad.obj",
             "enabled": true
         }, {
             "mesh": "packing-3D-printer/Openscad.001.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Openscad.001.obj",
-            "position": [0.06, 0.06, 0.06],
             "enabled": true
         }, {
             "mesh": "packing-3D-printer/Polycup.obj",
@@ -79,16 +48,10 @@
             "mesh": "packing-3D-printer/Polycup.001.obj",
             "enabled": true
         }, {
-            "mesh": "packing-3D-printer/Polycup.002.obj",
-            "enabled": true
-        }, {
             "mesh": "packing-3D-printer/Shovel1.obj",
             "enabled": true
         }, {
             "mesh": "packing-3D-printer/Shovel1.001.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Shovel1.002.obj",
             "enabled": true
         }, {
             "mesh": "packing-3D-printer/Stool.obj",
@@ -97,22 +60,13 @@
             "mesh": "packing-3D-printer/Stool.001.obj",
             "enabled": true
         }, {
-            "mesh": "packing-3D-printer/Stool.002.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Wire Holder.obj",
-            "enabled": true
-        }, {
             "mesh": "packing-3D-printer/Wire Holder.001.obj",
-            "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Wire Holder.002.obj",
             "enabled": true
         }, {
             "mesh": "plane.obj",
             "position": [0, 0.5, 0],
-            "dimensions": [0.6, 0, 0.6],
-            "#force": [0, -1e3, 0],
+            "dimensions": [0.4, 0, 0.4],
+            "force": [0, -1e3, 0],
             "density": 1e5,
             "is_dof_fixed": [true, false, true, true, true, true],
             "group_id": 0
