@@ -15,6 +15,8 @@
 #include <iostream>
 #include <limits>
 
+#include <boost/filesystem.hpp>
+
 #include <logger.hpp>
 #include <physics/rigid_body_problem.hpp>
 
@@ -72,20 +74,37 @@ namespace io {
             return false;
         }
 
+        auto p = boost::filesystem::path(str);
+        std::string ps_name =
+            (p.parent_path() / ("points-" + p.filename().string())).string();
+        std::ofstream ps(ps_name);
+        if (!s.is_open()) {
+            spdlog::error("IOError: write_obj() could not open {}", ps_name);
+            return false;
+        }
+
         s << "mtllib mat.mtl\n";
+        ps << "mtllib mat.mtl\n";
 
         size_t start_vi = 1;
         for (int i = 0; i < problem.num_bodies(); i++) {
-            s << fmt::format("o body{0:04d}\nusemtl body{0:04d}\n", i);
             Eigen::MatrixXd V = problem.vertices(i);
-            s << V.format(vertices_format)
-              << (problem.faces(i).array() + start_vi).format(faces_format);
+            const auto& F = problem.faces(i);
             const auto& E = problem.edges(i);
-            for (const size_t& ei : problem.codim_edges_to_edges(i)) {
-                s << fmt::format(
-                    "l {:d} {:d}\n", E(ei, 0) + start_vi, E(ei, 1) + start_vi);
+            if (F.rows() == 0 && E.rows() == 0) {
+                ps << fmt::format("o body{0:04d}\nusemtl body{0:04d}\n", i);
+                ps << V.format(vertices_format);
+            } else {
+                s << fmt::format("o body{0:04d}\nusemtl body{0:04d}\n", i);
+                s << V.format(vertices_format)
+                  << (F.array() + start_vi).format(faces_format);
+                for (const size_t& ei : problem.codim_edges_to_edges(i)) {
+                    s << fmt::format(
+                        "l {:d} {:d}\n", E(ei, 0) + start_vi,
+                        E(ei, 1) + start_vi);
+                }
+                start_vi += V.rows();
             }
-            start_vi += V.rows();
         }
 
         if (!write_mtl) {
