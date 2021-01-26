@@ -170,7 +170,7 @@ def main():
             fixture = fixtures_dir / rel.with_suffix(".json")
             print(f"Running {fixture}")
             subprocess.run([str(args.rigid_exe), str(fixture),
-                            str(output), "--log", str(args.loglevel)]
+                            str(output), "--log", str(args.loglevel), "--nthreads", "16"]
                            + args.rigid_args.split())
 
             # Render the RB sim

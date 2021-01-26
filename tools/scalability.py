@@ -4,6 +4,8 @@ import json
 import pathlib
 import argparse
 import subprocess
+import platform
+import re
 
 import numpy
 import pandas
@@ -91,6 +93,58 @@ def main():
     fixture_dir = get_fixture_dir()
     machine_info = get_machine_info()
 
+    weak_1t_df = pandas.DataFrame(columns=[
+        "num_threads", "num_bodies", "num_vertices", "num_edges", "num_faces",
+        "timestep", "num_timesteps", "dhat", "eps_d", "avg_num_contacts",
+        "max_num_contacts", "avg_solver_iterations", "max_solver_iterations",
+        "avg_step_time", "max_step_time", "total_runtime (s)", "memory (MB)",
+        "machine"])
+
+    max_threads = 64
+    """
+    for thread_count in range(1, max_threads + 1):
+        scene = (fixture_dir / "3D" / "scalability" /
+                 "weak" / f"{thread_count:02d}threads.json")
+
+        sim_output_dir = (pathlib.Path("output") / "3D" / "scalability" /
+                          "weak" / f"{thread_count:02d}threads")
+        subprocess.run([str(args.sim_exe), str(scene.resolve()),
+                        str(sim_output_dir),
+                        "--loglevel", str(args.loglevel),
+                        "--nthreads", str(1)
+                        ])
+
+        with open(sim_output_dir / "sim.json") as sim_output:
+            sim_json = json.load(sim_output)
+            sim_args = sim_json["args"]
+            sim_stats = sim_json["stats"]
+
+        df_row = {
+            "num_threads": thread_count,
+            "num_bodies": sim_stats["num_bodies"],
+            "num_vertices": sim_stats["num_vertices"],
+            "num_edges": sim_stats["num_edges"],
+            "num_faces": sim_stats["num_faces"],
+            "timestep": sim_args["timestep"],
+            "num_timesteps": sim_stats["num_timesteps"],
+            "dhat": sim_args["distance_barrier_constraint"]["initial_barrier_activation_distance"],
+            "eps_d": sim_args["newton_solver"]["velocity_conv_tol"],
+            "avg_num_contacts": numpy.average(sim_stats["num_contacts"]),
+            "max_num_contacts": max(sim_stats["num_contacts"]),
+            "avg_solver_iterations": numpy.average(sim_stats["solver_iterations"]),
+            "max_solver_iterations": max(sim_stats["solver_iterations"]),
+            "avg_step_time": numpy.average(sim_stats["step_timings"]),
+            "max_step_time": max(sim_stats["step_timings"]),
+            "total_runtime (s)": sum(sim_stats["step_timings"]),
+            "memory (MB)": sim_stats["memory"] / 1024**2,
+            "machine": machine_info,
+        }
+
+        weak_1t_df.loc[thread_count] = df_row
+
+        weak_1t_df.to_csv("weak-scaling-single-thread.csv", index=False)
+    print(f"Results written to weak-scaling-single-thread.csv")
+    """
     weak_df = pandas.DataFrame(columns=[
         "num_threads", "num_bodies", "num_vertices", "num_edges", "num_faces",
         "timestep", "num_timesteps", "dhat", "eps_d", "avg_num_contacts",
@@ -98,7 +152,7 @@ def main():
         "avg_step_time", "max_step_time", "total_runtime (s)", "memory (MB)",
         "machine"])
 
-    for thread_count in range(1, 65):
+    for thread_count in range(1, max_threads + 1):
         scene = (fixture_dir / "3D" / "scalability" /
                  "weak" / f"{thread_count:02d}threads.json")
 
@@ -141,14 +195,16 @@ def main():
         weak_df.to_csv("weak-scaling.csv", index=False)
     print(f"Results written to weak-scaling.csv")
 
+    exit(0)
+
     strong_df = pandas.DataFrame(columns=[
         "num_threads", "num_bodies", "num_vertices", "num_edges", "num_faces",
         "timestep", "num_timesteps", "dhat", "eps_d", "avg_num_contacts",
         "max_num_contacts", "avg_solver_iterations", "max_solver_iterations",
         "avg_step_time", "max_step_time", "total_runtime (s)", "memory (MB)",
         "machine"])
-
-    for thread_count in range(1, 65):
+    
+    for thread_count in range(1, max_threads + 1):
         scene = fixture_dir / "3D" / "scalability" / "strong.json"
 
         sim_output_dir = pathlib.Path(
