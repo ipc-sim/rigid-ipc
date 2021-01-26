@@ -191,8 +191,10 @@ def fixture_to_ipc_script(fixture, output_path, remesh=False):
     if sum(fixture["rigid_body_problem"].get("gravity", [0, 0, 0])) == 0:
         gravity = "turnOffGravity"
 
+    # velocity_conv_tol = fixture.get(
+    #     "newton_solver", {}).get("velocity_conv_tol", 1e-2)
     velocity_conv_tol = fixture.get(
-        "newton_solver", {}).get("velocity_conv_tol", 1e-2)
+        "ipc_solver", {}).get("velocity_conv_tol", 1e-2)
 
     return textwrap.dedent(f"""\
         energy NH

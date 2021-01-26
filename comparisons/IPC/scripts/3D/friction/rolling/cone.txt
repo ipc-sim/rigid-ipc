@@ -17,5 +17,5 @@ epsv 1e-05
 useAbsParameters
 fricIterAmt 1
 tol 1
-0.01
+0.0001
 # useAbsTol
