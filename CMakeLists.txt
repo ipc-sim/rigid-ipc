@@ -338,7 +338,7 @@ target_link_libraries(render_simulation PUBLIC ${PROJECT_NAME})
 target_link_libraries(render_simulation PUBLIC CLI11::CLI11)
 
 ################################################################################
-# Headless Renderer
+# OBJ Sequence Generator
 ################################################################################
 add_executable(obj_sequence
   src/tools/obj_sequence.cpp
@@ -346,6 +346,16 @@ add_executable(obj_sequence
 
 target_link_libraries(obj_sequence PUBLIC ${PROJECT_NAME})
 target_link_libraries(obj_sequence PUBLIC CLI11::CLI11)
+
+################################################################################
+# CCD Comparisons
+################################################################################
+add_executable(ccd_comparison
+  src/tools/time_ccd.cpp
+)
+
+target_link_libraries(ccd_comparison PUBLIC ${PROJECT_NAME})
+target_link_libraries(ccd_comparison PUBLIC CLI11::CLI11)
 
 ################################################################################
 # Tests
