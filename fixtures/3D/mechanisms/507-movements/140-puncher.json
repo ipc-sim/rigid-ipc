@@ -8,34 +8,34 @@
     },
     "rigid_body_problem": {
         "rigid_bodies": [{
-            "mesh": "507-movements/140-punching-machine/fixed.off",
+            "mesh": "507-movements/140-puncher/fixed.off",
             "type": "static",
             "density": 1000,
             "is_dof_fixed": [false, false, true, true, true, false],
             "scale": 0.005
         }, {
-            "mesh": "507-movements/140-punching-machine/p1.off",
+            "mesh": "507-movements/140-puncher/p1.off",
             "density": 1000,
             "is_dof_fixed": [false, false, true, true, true, false],
             "scale": 0.005,
             "force": [0.0, 10.0, 0.0]
         }, {
-            "mesh": "507-movements/140-punching-machine/p2.off",
+            "mesh": "507-movements/140-puncher/p2.off",
             "density": 1000,
             "is_dof_fixed": [false, false, true, true, true, false],
             "scale": 0.005
         }, {
-            "mesh": "507-movements/140-punching-machine/p3.off",
+            "mesh": "507-movements/140-puncher/p3.off",
             "density": 1000,
             "is_dof_fixed": [false, false, true, true, true, false],
             "scale": 0.005
         }, {
-            "mesh": "507-movements/140-punching-machine/p4.off",
+            "mesh": "507-movements/140-puncher/p4.off",
             "density": 1000,
             "is_dof_fixed": [false, false, true, true, true, false],
             "scale": 0.005
         }, {
-            "mesh": "507-movements/140-punching-machine/p5.off",
+            "mesh": "507-movements/140-puncher/p5.off",
             "density": 1000,
             "is_dof_fixed": [false, false, true, true, true, false],
             "scale": 0.005
