@@ -150,7 +150,8 @@ bool interval_root_finder(
         }
 
         Eigen::VectorX3d widths = width(x);
-        if ((widths.array() <= tol.array()).all()) {
+        bool all_tol_sat = (widths.array() <= tol.array()).all();
+        if (x[0].lower() > 0 && all_tol_sat) {
             if (constraint_predicate(x)) {
                 earliest_root = x;
                 found_root = true;
@@ -169,12 +170,13 @@ bool interval_root_finder(
         // Bisect the largest dimension divided by its tolerance
         int split_i = -1;
         for (int i = 0; i < x.size(); i++) {
-            if (widths(i) > tol(i)
+            if ((all_tol_sat || widths(i) > tol(i))
                 && (split_i == -1
                     || widths(i) * tol(split_i) > widths(split_i) * tol(i))) {
                 split_i = i;
             }
         }
+        assert(split_i >= 0 && split_i <= x.size());
 
         std::pair<Interval, Interval> halves = bisect(x(split_i));
         // Push the second half on first so it is examined after the first half
