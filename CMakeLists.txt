@@ -71,6 +71,7 @@ add_library(${PROJECT_NAME}
   src/ccd/rigid/time_of_impact.cpp
   src/ccd/rigid/rigid_trajectory_aabb.cpp
   src/ccd/redon/time_of_impact.cpp
+  src/ccd/save_queries.cpp
 
   src/geometry/intersection.cpp
 

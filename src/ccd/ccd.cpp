@@ -14,6 +14,11 @@
 #include <ccd/rigid/broad_phase.hpp>
 #include <ccd/rigid/time_of_impact.hpp>
 
+// #define SAVE_CCD_QUERIES
+#ifdef SAVE_CCD_QUERIES
+#include <ccd/save_queries.hpp>
+#endif
+
 #include <profiler.hpp>
 
 namespace ccd {
@@ -158,6 +163,10 @@ bool edge_vertex_ccd(
 {
     assert(bodies.dim() == 2);
 
+#ifdef SAVE_CCD_QUERIES
+    save_ccd_candidate(bodies, poses_t0, poses_t1, candidate);
+#endif
+
     long bodyA_id, vertex_id, bodyB_id, edge_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_edge(candidate.edge_index, bodyB_id, edge_id);
@@ -217,6 +226,10 @@ bool edge_edge_ccd(
     double earliest_toi,
     double minimum_separation_distance)
 {
+#ifdef SAVE_CCD_QUERIES
+    save_ccd_candidate(bodies, poses_t0, poses_t1, candidate);
+#endif
+
     long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
     bodies.global_to_local_edge(candidate.edge0_index, bodyA_id, edgeA_id);
     bodies.global_to_local_edge(candidate.edge1_index, bodyB_id, edgeB_id);
@@ -283,6 +296,10 @@ bool face_vertex_ccd(
     double earliest_toi,
     double minimum_separation_distance)
 {
+#ifdef SAVE_CCD_QUERIES
+    save_ccd_candidate(bodies, poses_t0, poses_t1, candidate);
+#endif
+
     long bodyA_id, vertex_id, bodyB_id, face_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_face(candidate.face_index, bodyB_id, face_id);
