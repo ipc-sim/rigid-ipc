@@ -153,7 +153,7 @@ def main():
         "max_solver_iterations", "video", "machine", "max_threads", "memory", "git_hash",
         "notes"])
 
-    max_threads = 16
+    max_threads = -1
 
     for scene in args.input:
         print(f"Running {scene}")

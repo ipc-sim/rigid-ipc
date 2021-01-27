@@ -690,7 +690,7 @@
             "position": [0.0, -0.15719362094328743, 0.0]
         }, {
             "mesh": "507-movements/227-chain-pully/sprocket-20teeth.obj",
-            "angular_velocity": [0, 0, -100],
+            "angular_velocity": [0, 0, -25],
             "scale": 0.01,
             "type": "kinematic",
             "is_dof_fixed": [true, true, true, true, true, false]
