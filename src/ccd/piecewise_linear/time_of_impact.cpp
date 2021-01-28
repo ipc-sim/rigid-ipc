@@ -209,33 +209,37 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
 
         using Vector3I = Eigen::Vector3I;
 
+        double min_ea_distance = 0;
         Vector3I ea0_ti0 = bodyA.world_vertex(poseA_ti0, ea0i).cast<Interval>();
         Vector3I ea0_ti1 = bodyA.world_vertex(poseA_ti1, ea0i).cast<Interval>();
         Vector3I ea0 = bodyA.world_vertex(RA, poseIA.position, ea0i);
         Interval d = (ea0 - ((ea0_ti1 - ea0_ti0) * ti + ea0_ti0)).norm();
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
-        min_distance = std::max(min_distance, d.upper());
+        min_ea_distance = std::max(min_ea_distance, d.upper());
 
         Vector3I ea1_ti0 = bodyA.world_vertex(poseA_ti0, ea1i).cast<Interval>();
         Vector3I ea1_ti1 = bodyA.world_vertex(poseA_ti1, ea1i).cast<Interval>();
         Vector3I ea1 = bodyA.world_vertex(RA, poseIA.position, ea1i);
         d = (ea1 - ((ea1_ti1 - ea1_ti0) * ti + ea1_ti0)).norm();
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
-        min_distance = std::max(min_distance, d.upper());
+        min_ea_distance = std::max(min_ea_distance, d.upper());
 
+        double min_eb_distance = 0;
         Vector3I eb0_ti0 = bodyB.world_vertex(poseB_ti0, eb0i).cast<Interval>();
         Vector3I eb0_ti1 = bodyB.world_vertex(poseB_ti1, eb0i).cast<Interval>();
         Vector3I eb0 = bodyB.world_vertex(RB, poseIB.position, eb0i);
         d = (eb0 - ((eb0_ti1 - eb0_ti0) * ti + eb0_ti0)).norm();
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
-        min_distance = std::max(min_distance, d.upper());
+        min_eb_distance = std::max(min_eb_distance, d.upper());
 
         Vector3I eb1_ti0 = bodyB.world_vertex(poseB_ti0, eb1i).cast<Interval>();
         Vector3I eb1_ti1 = bodyB.world_vertex(poseB_ti1, eb1i).cast<Interval>();
         Vector3I eb1 = bodyB.world_vertex(RB, poseIB.position, eb1i);
         d = (eb1 - ((eb1_ti1 - eb1_ti0) * ti + eb1_ti0)).norm();
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
-        min_distance = std::max(min_distance, d.upper());
+        min_eb_distance = std::max(min_eb_distance, d.upper());
+
+        min_distance = min_ea_distance + min_eb_distance;
 
         if (min_distance >= TRAJECTORY_DISTANCE_FACTOR * distance_ti0
             && (num_subdivisions < MAX_NUM_SUBDIVISIONS || ti0 == 0)) {
@@ -407,28 +411,31 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
         Vector3I v = bodyA.world_vertex(RA, poseIA.position, vi);
         Interval d = (v - ((v_ti1 - v_ti0) * ti + v_ti0)).norm();
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
-        min_distance = std::max(min_distance, d.upper());
+        double v_min_distance = d.upper();
 
+        double f_min_distance = 0;
         Vector3I f0_ti0 = bodyB.world_vertex(poseB_ti0, f0i).cast<Interval>();
         Vector3I f0_ti1 = bodyB.world_vertex(poseB_ti1, f0i).cast<Interval>();
         Vector3I f0 = bodyB.world_vertex(RB, poseIB.position, f0i);
         d = (f0 - ((f0_ti1 - f0_ti0) * ti + f0_ti0)).norm();
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
-        min_distance = std::max(min_distance, d.upper());
+        f_min_distance = std::max(f_min_distance, d.upper());
 
         Vector3I f1_ti0 = bodyB.world_vertex(poseB_ti0, f1i).cast<Interval>();
         Vector3I f1_ti1 = bodyB.world_vertex(poseB_ti1, f1i).cast<Interval>();
         Vector3I f1 = bodyB.world_vertex(RB, poseIB.position, f1i);
         d = (f1 - ((f1_ti1 - f1_ti0) * ti + f1_ti0)).norm();
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
-        min_distance = std::max(min_distance, d.upper());
+        f_min_distance = std::max(f_min_distance, d.upper());
 
         Vector3I f2_ti0 = bodyB.world_vertex(poseB_ti0, f2i).cast<Interval>();
         Vector3I f2_ti1 = bodyB.world_vertex(poseB_ti1, f2i).cast<Interval>();
         Vector3I f2 = bodyB.world_vertex(RB, poseIB.position, f2i);
         d = (f2 - ((f2_ti1 - f2_ti0) * ti + f2_ti0)).norm();
         assert(abs(d.lower()) < 1e-12); // The endpoints are part of both curves
-        min_distance = std::max(min_distance, d.upper());
+        f_min_distance = std::max(f_min_distance, d.upper());
+
+        min_distance = v_min_distance + f_min_distance;
 
         if (min_distance >= TRAJECTORY_DISTANCE_FACTOR * distance_ti0
             && (num_subdivisions < MAX_NUM_SUBDIVISIONS || ti0 == 0)) {

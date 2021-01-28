@@ -288,7 +288,7 @@ namespace opt {
 
         const double& dhat = m_barrier_activation_distance;
         const double& dmin = minimum_separation_distance;
-        const double inflation_radius = dhat + dmin / 2.0;
+        const double inflation_radius = (dhat + dmin) / 2.0;
 
         ipc::Candidates candidates;
         detect_collision_candidates_rigid(
