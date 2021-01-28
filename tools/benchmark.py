@@ -206,7 +206,6 @@ def main():
                         "-i", sim_output_dir / "sim.json",
                         "-o", sim_output_dir / "objs",
                         "--loglevel", str(args.loglevel)])
-        
 
         with open(sim_output_dir / "sim.json") as sim_output:
             sim_json = json.load(sim_output)
@@ -248,7 +247,7 @@ def main():
             "eps_v": sim_args["friction_constraints"]["static_friction_speed_bound"],
             "friction_iterations": sim_args["friction_constraints"]["iterations"],
             "cor": sim_args["rigid_body_problem"]["coefficient_restitution"],
-            "eps_d": sim_args["newton_solver"]["velocity_conv_tol"],
+            "eps_d": sim_args["ipc_solver"]["velocity_conv_tol"],
             "avg_num_contacts": numpy.average(sim_stats["num_contacts"]),
             "max_num_contacts": max(sim_stats["num_contacts"]),
             "avg_step_time": numpy.average(sim_stats["step_timings"]),
