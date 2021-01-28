@@ -21,10 +21,13 @@ struct CombinedQueryWriter {
     void save_queries()
     {
         static int file_counter = 0;
-        nlohmann::json queries_json;
-        queries_json["queries"] = queries;
-        std::ofstream(fmt::format("ccd-queries-{:03d}.json", file_counter++))
-            << queries_json.dump();
+        if (queries.size()) {
+            nlohmann::json queries_json;
+            queries_json["queries"] = queries;
+            std::ofstream(
+                fmt::format("ccd-queries-{:03d}.json", file_counter++))
+                << queries_json.dump();
+        }
     }
 
 private:
