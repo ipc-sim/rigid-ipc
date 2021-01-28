@@ -7,11 +7,11 @@
         "initial_barrier_activation_distance": 1e-3
     },
     "ipc_solver": {
-        "velocity_conv_tol": 1e-4
+        "velocity_conv_tol": 1e-3
     },
     "friction_constraints": {
         "iterations": 1,
-        "static_friction_speed_bound": 1e-5
+        "static_friction_speed_bound": 1e-3
     },
     "rigid_body_problem": {
         "coefficient_friction": 0.5,
