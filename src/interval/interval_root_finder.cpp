@@ -151,7 +151,8 @@ bool interval_root_finder(
 
         Eigen::VectorX3d widths = width(x);
         bool all_tol_sat = (widths.array() <= tol.array()).all();
-        if (x[0].lower() > 0 && all_tol_sat) {
+        bool all_widths_zero = (widths.array() <= 1e-10).all();
+        if ((x[0].lower() > 0 || all_widths_zero) && all_tol_sat) {
             if (constraint_predicate(x)) {
                 earliest_root = x;
                 found_root = true;
