@@ -9,9 +9,7 @@
 #include <profiler.hpp>
 #include <utils/type_name.hpp>
 
-using ipc::AABB;
-
-namespace ccd {
+namespace ipc::rigid {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Broad-Phase Discrete Collision Detection
@@ -19,10 +17,10 @@ namespace ccd {
 ///////////////////////////////////////////////////////////////////////////////
 
 void detect_collision_candidates_rigid(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     DetectionMethod method,
     const double inflation_radius)
 {
@@ -55,10 +53,10 @@ void detect_collision_candidates_rigid(
 // Find all edge-vertex collisions in one time step using spatial-hashing to
 // only compare points and edge in the same cells.
 void detect_collision_candidates_rigid_hash_grid(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     const double inflation_radius)
 {
     std::vector<std::pair<int, int>> body_pairs =
@@ -89,17 +87,17 @@ void detect_collision_candidates_rigid_hash_grid(
 
 // Use a BVH to create a set of all candidate collisions.
 void detect_collision_candidates_rigid_bvh(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     const double inflation_radius)
 {
     std::vector<std::pair<int, int>> body_pairs =
         bodies.close_bodies(poses, poses, inflation_radius);
 
     // Use interval arithmetic to conservativly capture all distance candidates
-    auto posesI = physics::cast<Interval>(poses);
+    auto posesI = cast<Interval>(poses);
 
     ThreadSpecificCandidates storages;
     tbb::parallel_for(
@@ -123,11 +121,11 @@ void detect_collision_candidates_rigid_bvh(
 ///////////////////////////////////////////////////////////////////////////////
 
 void detect_collision_candidates_rigid(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     DetectionMethod method,
     const double inflation_radius)
 {
@@ -162,11 +160,11 @@ void detect_collision_candidates_rigid(
 // Find all edge-vertex collisions in one time step using spatial-hashing to
 // only compare points and edge in the same cells.
 void detect_collision_candidates_rigid_hash_grid(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     const double inflation_radius)
 {
     std::vector<std::pair<int, int>> body_pairs =
@@ -198,19 +196,18 @@ void detect_collision_candidates_rigid_hash_grid(
 
 // Use a BVH to create a set of all candidate collisions.
 void detect_collision_candidates_rigid_bvh(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     const double inflation_radius)
 {
     std::vector<std::pair<int, int>> body_pairs =
         bodies.close_bodies(poses_t0, poses_t1, inflation_radius);
 
-    physics::Poses<Interval> poses = physics::interpolate(
-        physics::cast<Interval>(poses_t0), physics::cast<Interval>(poses_t1),
-        Interval(0, 1));
+    Poses<Interval> poses = interpolate(
+        cast<Interval>(poses_t0), cast<Interval>(poses_t1), Interval(0, 1));
 
     ThreadSpecificCandidates storages;
     tbb::parallel_for(
@@ -233,12 +230,12 @@ void detect_collision_candidates_rigid_bvh(
 // Broad-Phase Intersection Detection
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef tbb::enumerable_thread_specific<std::vector<ipc::EdgeFaceCandidate>>
+typedef tbb::enumerable_thread_specific<std::vector<EdgeFaceCandidate>>
     ThreadSpecificEFCandidates;
 
 void merge_local_candidates(
     const ThreadSpecificEFCandidates& storages,
-    std::vector<ipc::EdgeFaceCandidate>& ef_candidates)
+    std::vector<EdgeFaceCandidate>& ef_candidates)
 {
     PROFILE_POINT("merge_local_ef_candidates");
     PROFILE_START();
@@ -259,14 +256,14 @@ void merge_local_candidates(
 
 // Use a BVH to create a set of all candidate intersections.
 void detect_intersection_candidates_rigid_bvh(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
-    std::vector<ipc::EdgeFaceCandidate>& ef_candidates)
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses,
+    std::vector<EdgeFaceCandidate>& ef_candidates)
 {
     std::vector<std::pair<int, int>> body_pairs =
         bodies.close_bodies(poses, poses, /*inflation_radius=*/0);
 
-    auto posesI = physics::cast<Interval>(poses);
+    auto posesI = cast<Interval>(poses);
 
     ThreadSpecificEFCandidates storages;
     tbb::parallel_for(
@@ -288,7 +285,7 @@ void detect_intersection_candidates_rigid_bvh(
                      + (pA - pB).transpose())
                     * RB;
 
-                std::vector<ipc::AABB> aabbs = vertex_aabbs(VA);
+                std::vector<AABB> aabbs = vertex_aabbs(VA);
 
                 detect_body_pair_intersection_candidates_from_aabbs(
                     bodies, aabbs, bodyA_id, bodyB_id,
@@ -304,7 +301,7 @@ void detect_intersection_candidates_rigid_bvh(
 ///////////////////////////////////////////////////////////////////////////////
 
 void merge_local_candidates(
-    const ThreadSpecificCandidates& storages, ipc::Candidates& candidates)
+    const ThreadSpecificCandidates& storages, Candidates& candidates)
 {
     PROFILE_POINT("merge_local_candidates");
     PROFILE_START();
@@ -336,4 +333,4 @@ void merge_local_candidates(
     PROFILE_END();
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

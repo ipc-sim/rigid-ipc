@@ -14,7 +14,7 @@
 
 namespace test_utils {
 
-using namespace ccd::physics;
+using namespace ipc::rigid;
 
 RigidBody simple_rigid_body(
     Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Pose<double> velocity)
@@ -67,7 +67,7 @@ TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
             -1.0;
     }
 
-    using namespace ccd::physics;
+    using namespace ipc::rigid;
 
     std::vector<RigidBody> rbs;
     rbs.push_back(simple_rigid_body(vertices, edges, velocity));

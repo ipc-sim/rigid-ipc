@@ -6,7 +6,7 @@
 
 TEST_CASE("Center of Mass", "[physics][mass]")
 {
-    using namespace ccd::physics;
+    using namespace ipc::rigid;
     int dim = GENERATE(2);
     int num_vertices = 6 * GENERATE(10, 50, 100);
 

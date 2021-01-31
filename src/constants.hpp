@@ -2,7 +2,7 @@
 
 #include <limits>
 
-namespace ccd {
+namespace ipc::rigid {
 namespace Constants {
 
     /// \brief Value used to break newton solver
@@ -60,4 +60,4 @@ namespace Constants {
     static const double FULL_GRADIENT_TEST = 1E-10;
 
 } // namespace Constants
-} // namespace ccd
+} // namespace ipc::rigid

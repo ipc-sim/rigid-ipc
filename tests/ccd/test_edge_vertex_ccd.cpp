@@ -3,7 +3,7 @@
 #include <ccd/ccd.hpp>
 #include <ccd/linear/edge_vertex_ccd.hpp>
 
-using namespace ccd;
+using namespace ipc::rigid;
 
 TEST_CASE("Test Continous Collision Detection", "[ccd]")
 {
@@ -103,7 +103,7 @@ TEST_CASE("Test Continous Collision Detection", "[ccd]")
     }
 
     double toi, alpha;
-    bool is_colliding = autodiff::compute_edge_vertex_time_of_impact(
+    bool is_colliding = compute_edge_vertex_time_of_impact(
         e0_t0, e1_t0, v_t0, (e0_t1 - e0_t0).eval(), (e1_t1 - e1_t0).eval(),
         (v_t1 - v_t0).eval(), toi, alpha);
     REQUIRE(is_colliding == is_collision_expected);

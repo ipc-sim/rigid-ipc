@@ -14,7 +14,7 @@ TEST_CASE("Serialize to Json", "[io][json]")
     {
         Eigen::VectorXd vec(3);
         vec << 1.0, 2.0, 3.0;
-        auto jvec = ccd::io::to_json(vec);
+        auto jvec = ipc::rigid::to_json(vec);
 
         CHECK(jvec.dump() == "[1.0,2.0,3.0]");
     }
@@ -23,7 +23,7 @@ TEST_CASE("Serialize to Json", "[io][json]")
     {
         Eigen::VectorXi vec(3);
         vec << 1, 2, 3;
-        auto jvec = ccd::io::to_json(vec);
+        auto jvec = ipc::rigid::to_json(vec);
 
         CHECK(jvec.dump() == "[1,2,3]");
     }
@@ -32,7 +32,7 @@ TEST_CASE("Serialize to Json", "[io][json]")
     {
         Eigen::MatrixXd vec(1, 3);
         vec << 1.0, 2.0, 3.0;
-        auto jvec = ccd::io::to_json(vec);
+        auto jvec = ipc::rigid::to_json(vec);
 
         CHECK(jvec.dump() == "[[1.0,2.0,3.0]]");
     }
@@ -41,7 +41,7 @@ TEST_CASE("Serialize to Json", "[io][json]")
     {
         Eigen::MatrixXd vec(2, 3);
         vec << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
-        auto jvec = ccd::io::to_json(vec);
+        auto jvec = ipc::rigid::to_json(vec);
 
         CHECK(jvec.dump() == "[[1.0,2.0,3.0],[4.0,5.0,6.0]]");
     }
@@ -50,7 +50,7 @@ TEST_CASE("Serialize to Json", "[io][json]")
     {
         Eigen::MatrixXi vec(1, 3);
         vec << 1, 2, 3;
-        auto jvec = ccd::io::to_json(vec);
+        auto jvec = ipc::rigid::to_json(vec);
 
         CHECK(jvec.dump() == "[[1,2,3]]");
     }
@@ -64,7 +64,7 @@ TEST_CASE("Deserialize from Json", "[io][json]")
         Eigen::VectorXd actual(3), expected(3);
         expected << 1.0, 2.0, 3.0;
         nlohmann::json json = "[1.0, 2.0, 3.0]"_json;
-        ccd::io::from_json<double>(json, actual);
+        ipc::rigid::from_json<double>(json, actual);
 
         CHECK((actual - expected).squaredNorm() == 0.0);
     }
@@ -74,7 +74,7 @@ TEST_CASE("Deserialize from Json", "[io][json]")
         Eigen::VectorXi actual(3), expected(3);
         expected << 1, 2, 3;
         nlohmann::json json = "[1, 2, 3]"_json;
-        ccd::io::from_json(json, actual);
+        ipc::rigid::from_json(json, actual);
 
         CHECK((actual - expected).squaredNorm() == 0.0);
     }
@@ -84,7 +84,7 @@ TEST_CASE("Deserialize from Json", "[io][json]")
         Eigen::MatrixXd actual(1, 3), expected(1, 3);
         expected << 1.0, 2.0, 3.0;
         nlohmann::json json = "[[1.0,2.0,3.0]]"_json;
-        ccd::io::from_json(json, actual);
+        ipc::rigid::from_json(json, actual);
 
         CHECK((actual - expected).squaredNorm() == 0.0);
     }
@@ -94,7 +94,7 @@ TEST_CASE("Deserialize from Json", "[io][json]")
         Eigen::MatrixXd actual(2, 3), expected(2, 3);
         expected << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
         nlohmann::json json = "[[1.0,2.0,3.0],[4.0,5.0,6.0]]"_json;
-        ccd::io::from_json(json, actual);
+        ipc::rigid::from_json(json, actual);
 
         CHECK((actual - expected).squaredNorm() == 0.0);
     }
@@ -104,7 +104,7 @@ TEST_CASE("Deserialize from Json", "[io][json]")
         Eigen::MatrixXi actual(1, 3), expected(1, 3);
         expected << 1, 2, 3;
         nlohmann::json json = "[[1,2,3]]"_json;
-        ccd::io::from_json(json, actual);
+        ipc::rigid::from_json(json, actual);
 
         CHECK((actual - expected).squaredNorm() == 0.0);
     }

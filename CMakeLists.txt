@@ -289,6 +289,8 @@ if(RIGID_IPC_CODE_COVERAGE)
 endif()
 
 if(RIGID_IPC_WITH_UNIT_TESTS)
+  include(CTest)
+  enable_testing()
   add_subdirectory(tests)
 endif()
 

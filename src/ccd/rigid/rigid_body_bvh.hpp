@@ -9,24 +9,24 @@
 #include <interval/interval.hpp>
 #include <physics/rigid_body_assembler.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 inline void sort_body_pair(
-    const physics::RigidBodyAssembler& bodies, int& bodyA_id, int& bodyB_id)
+    const RigidBodyAssembler& bodies, int& bodyA_id, int& bodyB_id)
 {
     if (bodies[bodyA_id].bvh_size() > bodies[bodyB_id].bvh_size()) {
         std::swap(bodyA_id, bodyB_id);
     }
 }
 
-inline ipc::AABB
+inline AABB
 vertex_aabb(const Eigen::VectorX3d& v, double inflation_radius = 0)
 {
-    return ipc::AABB(
+    return AABB(
         v.array() - inflation_radius, v.array() + inflation_radius);
 }
 
-inline ipc::AABB
+inline AABB
 vertex_aabb(const Eigen::VectorX3I& v, double inflation_radius = 0)
 {
     assert(v.rows() == 1 || v.cols() == 1);
@@ -39,14 +39,14 @@ vertex_aabb(const Eigen::VectorX3I& v, double inflation_radius = 0)
         min(i) = (v(i) - inflation_radius).lower();
         max(i) = (v(i) + inflation_radius).upper();
     }
-    return ipc::AABB(min, max);
+    return AABB(min, max);
 }
 
 template <typename T>
-inline std::vector<ipc::AABB>
+inline std::vector<AABB>
 vertex_aabbs(const Eigen::MatrixX<T>& V, double inflation_radius = 0)
 {
-    std::vector<ipc::AABB> aabbs;
+    std::vector<AABB> aabbs;
     aabbs.reserve(V.rows());
     for (size_t i = 0; i < V.rows(); i++) {
         aabbs.push_back(
@@ -56,22 +56,22 @@ vertex_aabbs(const Eigen::MatrixX<T>& V, double inflation_radius = 0)
 }
 
 void detect_body_pair_collision_candidates_from_aabbs(
-    const physics::RigidBodyAssembler& bodies,
-    const std::vector<ipc::AABB>& bodyA_vertex_aabbs,
+    const RigidBodyAssembler& bodies,
+    const std::vector<AABB>& bodyA_vertex_aabbs,
     const int bodyA_id,
     const int bodyB_id,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     const double inflation_radius = 0.0);
 
 template <typename T>
 inline void detect_body_pair_collision_candidates_bvh(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<T>& poses,
+    const RigidBodyAssembler& bodies,
+    const Poses<T>& poses,
     int bodyA_id,
     int bodyB_id,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     const double inflation_radius = 0.0)
 {
     sort_body_pair(bodies, bodyA_id, bodyB_id);
@@ -98,11 +98,11 @@ inline void detect_body_pair_collision_candidates_bvh(
 }
 
 void detect_body_pair_intersection_candidates_from_aabbs(
-    const physics::RigidBodyAssembler& bodies,
-    const std::vector<ipc::AABB>& bodyA_vertex_aabbs,
+    const RigidBodyAssembler& bodies,
+    const std::vector<AABB>& bodyA_vertex_aabbs,
     const int bodyA_id,
     const int bodyB_id,
-    std::vector<ipc::EdgeFaceCandidate>& candidates,
+    std::vector<EdgeFaceCandidate>& candidates,
     const double inflation_radius = 0.0);
 
-} // namespace ccd
+} // namespace ipc::rigid

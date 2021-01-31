@@ -1,7 +1,7 @@
 #pragma once
 
 #if 1
-namespace ccd {
+namespace ipc::rigid {
 
 class Multiprecision {
 private:
@@ -21,13 +21,13 @@ public:
         return *this;
     }
 };
-} // namespace ccd
+} // namespace ipc::rigid
 #else
 #include <cmath>
 #include <gmp.h>
 #include <iostream>
 
-namespace ccd {
+namespace ipc::rigid {
 
 class Multiprecision {
 public:
@@ -181,5 +181,5 @@ public:
         return res;
     }
 };
-} // namespace ccd
+} // namespace ipc::rigid
 #endif

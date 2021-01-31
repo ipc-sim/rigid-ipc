@@ -5,7 +5,7 @@
 #include <time_stepper/sympletic_euler_time_stepper.hpp>
 #include <time_stepper/verlet_time_stepper.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 const TimeStepperFactory& TimeStepperFactory::factory()
 {
@@ -15,7 +15,6 @@ const TimeStepperFactory& TimeStepperFactory::factory()
 
 TimeStepperFactory::TimeStepperFactory()
 {
-    using namespace time_stepper;
     // 2D
     time_steppers.emplace(
         SympleticEulerTimeStepper::default_name(),
@@ -31,7 +30,7 @@ TimeStepperFactory::TimeStepperFactory()
         DMVTimeStepper::default_name(), std::make_shared<DMVTimeStepper>());
 }
 
-std::shared_ptr<time_stepper::TimeStepper>
+std::shared_ptr<TimeStepper>
 TimeStepperFactory::get_time_stepper(const std::string& name) const
 {
     auto it = time_steppers.find(name);
@@ -42,14 +41,13 @@ TimeStepperFactory::get_time_stepper(const std::string& name) const
     return it->second;
 }
 
-std::shared_ptr<time_stepper::TimeStepper>
+std::shared_ptr<TimeStepper>
 TimeStepperFactory::get_default_time_stepper(int dim) const
 {
     assert(dim == 2 || dim == 3);
-    using namespace time_stepper;
     return dim == 2
         ? get_time_stepper(SympleticEulerTimeStepper::default_name())
         : get_time_stepper(DMVTimeStepper::default_name());
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

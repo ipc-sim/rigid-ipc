@@ -8,9 +8,8 @@
 
 int main(int argc, char* argv[])
 {
-    using namespace ccd;
-    using namespace physics;
-    logger::set_level(spdlog::level::info);
+    using namespace ipc::rigid;
+    set_logger_level(spdlog::level::info);
 
     CLI::App app { "check for collisions over simulation results" };
 
@@ -40,8 +39,8 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    std::vector<physics::RigidBody> rbs;
-    io::read_rb_scene(scene["args"]["rigid_body_problem"], rbs);
+    std::vector<RigidBody> rbs;
+    read_rb_scene(scene["args"]["rigid_body_problem"], rbs);
     RigidBodyAssembler bodies;
     bodies.init(rbs);
 
@@ -49,22 +48,22 @@ int main(int argc, char* argv[])
         ? CollisionType::EDGE_VERTEX
         : (CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX);
 
-    Poses<double> poses_t0(bodies.num_bodies());
+    PosesD poses_t0(bodies.num_bodies());
     assert(state_sequence[0]["rigid_bodies"].size() == bodies.num_bodies());
     for (int i = 0; i < bodies.num_bodies(); i++) {
         const auto& jrb = state_sequence[0]["rigid_bodies"][i];
-        io::from_json(jrb["position"], poses_t0[i].position);
-        io::from_json(jrb["rotation"], poses_t0[i].rotation);
+        from_json(jrb["position"], poses_t0[i].position);
+        from_json(jrb["rotation"], poses_t0[i].rotation);
     }
 
     int collision_steps = 0;
     for (size_t i = 1; i < state_sequence.size(); ++i) {
-        Poses<double> poses_t1(bodies.num_bodies());
+        PosesD poses_t1(bodies.num_bodies());
         assert(state_sequence[i]["rigid_bodies"].size() == bodies.num_bodies());
         for (int j = 0; j < bodies.num_bodies(); j++) {
             const auto& jrb = state_sequence[i]["rigid_bodies"][j];
-            io::from_json(jrb["position"], poses_t1[j].position);
-            io::from_json(jrb["rotation"], poses_t1[j].rotation);
+            from_json(jrb["position"], poses_t1[j].position);
+            from_json(jrb["rotation"], poses_t1[j].rotation);
         }
 
         Impacts impacts;

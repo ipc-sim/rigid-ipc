@@ -10,8 +10,9 @@
 
 int main(int argc, char* argv[])
 {
-    ccd::logger::set_level(spdlog::level::info);
-    ccd::SimState sim;
+    using namespace ipc::rigid;
+    set_logger_level(spdlog::level::info);
+    SimState sim;
 
     struct {
         std::string scene_path = "";
@@ -56,8 +57,7 @@ int main(int argc, char* argv[])
         return app.exit(e);
     }
 
-    ccd::logger::set_level(
-        static_cast<spdlog::level::level_enum>(args.loglevel));
+    set_logger_level(static_cast<spdlog::level::level_enum>(args.loglevel));
 
     if (args.nthreads <= 0) {
         args.nthreads = tbb::task_scheduler_init::default_num_threads();

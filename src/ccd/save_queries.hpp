@@ -4,24 +4,24 @@
 #include <physics/pose.hpp>
 #include <physics/rigid_body_assembler.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 void save_ccd_candidate(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::EdgeVertexCandidate& ev_candidate);
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const EdgeVertexCandidate& ev_candidate);
 
 void save_ccd_candidate(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::FaceVertexCandidate& fv_candidate);
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const FaceVertexCandidate& fv_candidate);
 
 void save_ccd_candidate(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::EdgeEdgeCandidate& ee_candidate);
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const EdgeEdgeCandidate& ee_candidate);
 
-} // namespace ccd
+} // namespace ipc::rigid

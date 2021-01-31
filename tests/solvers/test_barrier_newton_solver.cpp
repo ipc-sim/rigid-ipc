@@ -11,8 +11,7 @@
 
 #include <logger.hpp>
 
-using namespace ccd;
-using namespace opt;
+using namespace ipc::rigid;
 
 TEST_CASE(
     "Check barrier problem derivatives", "[opt][barrier][barrier_problem]")
@@ -168,7 +167,7 @@ TEST_CASE(
 
         // Test ∇f
         Eigen::VectorXd finite_grad(problem.num_vars());
-        finite_grad = ccd::opt::eval_grad_objective_approx(problem, x);
+        finite_grad = ipc::rigid::eval_grad_objective_approx(problem, x);
         CHECK(fd::compare_gradient(finite_grad, grad_fx));
 
         // Test ∇²f

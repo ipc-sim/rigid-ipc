@@ -12,7 +12,7 @@
 
 #include <utils/eigen_ext.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 namespace interval_options {
     typedef boost::numeric::interval_lib::checking_catch_nan<double>
@@ -88,35 +88,31 @@ inline bool zero_in(const Eigen::MatrixBase<Derived>& x)
     return true;
 }
 
-namespace logger {
+/// @brief Format a string for an Interval
+std::string fmt_interval(const Interval& i, const int precision = 16);
+/// @brief Format an eigen VectorX<Interval>
+std::string fmt_eigen_intervals(
+    const Eigen::VectorX<Interval>& x, const int precision = 16);
 
-    /// @brief Format a string for an Interval
-    std::string fmt_interval(const Interval& i, const int precision = 16);
-    /// @brief Format an eigen VectorX<Interval>
-    std::string fmt_eigen_intervals(
-        const Eigen::VectorX<Interval>& x, const int precision = 16);
-
-} // namespace logger
-
-} // namespace ccd
+} // namespace ipc::rigid
 
 namespace Eigen {
-typedef Vector2<ccd::Interval> Vector2I;
-typedef Vector3<ccd::Interval> Vector3I;
-typedef VectorX<ccd::Interval> VectorXI;
-typedef VectorX3<ccd::Interval> VectorX3I;
-typedef Matrix3<ccd::Interval> Matrix3I;
-typedef MatrixXX3<ccd::Interval> MatrixXX3I;
-typedef MatrixX<ccd::Interval> MatrixXI;
+typedef Vector2<ipc::rigid::Interval> Vector2I;
+typedef Vector3<ipc::rigid::Interval> Vector3I;
+typedef VectorX<ipc::rigid::Interval> VectorXI;
+typedef VectorX3<ipc::rigid::Interval> VectorX3I;
+typedef Matrix3<ipc::rigid::Interval> Matrix3I;
+typedef MatrixXX3<ipc::rigid::Interval> MatrixXX3I;
+typedef MatrixX<ipc::rigid::Interval> MatrixXI;
 
 template <typename BinOp>
-struct ScalarBinaryOpTraits<ccd::Interval, double, BinOp> {
-    typedef ccd::Interval ReturnType;
+struct ScalarBinaryOpTraits<ipc::rigid::Interval, double, BinOp> {
+    typedef ipc::rigid::Interval ReturnType;
 };
 
 template <typename BinOp>
-struct ScalarBinaryOpTraits<double, ccd::Interval, BinOp> {
-    typedef ccd::Interval ReturnType;
+struct ScalarBinaryOpTraits<double, ipc::rigid::Interval, BinOp> {
+    typedef ipc::rigid::Interval ReturnType;
 };
 
 #if EIGEN_MAJOR_VERSION >= 3

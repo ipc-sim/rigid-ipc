@@ -14,21 +14,21 @@
 #include <utils/eigen_ext.hpp>
 #include <utils/not_implemented_error.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
-typedef physics::Pose<Interval> PoseI;
+typedef Pose<Interval> PoseI;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Edge-Vertex
 
 Eigen::Vector2d compute_edge_vertex_tolerance(
-    const physics::RigidBody& bodyA,       // Body of the vertex
-    const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
-    const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
+    const RigidBody& bodyA,       // Body of the vertex
+    const Pose<double>& poseA_t0, // Pose of bodyA at t=0
+    const Pose<double>& poseA_t1, // Pose of bodyA at t=1
     size_t vertex_id,                      // In bodyA
-    const physics::RigidBody& bodyB,       // Body of the edge
-    const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
-    const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
+    const RigidBody& bodyB,       // Body of the edge
+    const Pose<double>& poseB_t0, // Pose of bodyB at t=0
+    const Pose<double>& poseB_t1, // Pose of bodyB at t=1
     size_t edge_id)                        // In bodyB
 {
     // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
@@ -55,13 +55,13 @@ Eigen::Vector2d compute_edge_vertex_tolerance(
 
 /// Find time-of-impact between two rigid bodies
 bool compute_edge_vertex_time_of_impact(
-    const physics::RigidBody& bodyA,       // Body of the vertex
-    const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
-    const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
+    const RigidBody& bodyA,       // Body of the vertex
+    const Pose<double>& poseA_t0, // Pose of bodyA at t=0
+    const Pose<double>& poseA_t1, // Pose of bodyA at t=1
     size_t vertex_id,                      // In bodyA
-    const physics::RigidBody& bodyB,       // Body of the edge
-    const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
-    const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
+    const RigidBody& bodyB,       // Body of the edge
+    const Pose<double>& poseB_t0, // Pose of bodyB at t=0
+    const Pose<double>& poseB_t1, // Pose of bodyB at t=1
     size_t edge_id,                        // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
@@ -107,43 +107,43 @@ bool compute_edge_vertex_time_of_impact(
 // Edge-Edge
 
 void print_EE_query(
-    const physics::RigidBody& bodyA,       // Body of the first edge
-    const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
-    const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
+    const RigidBody& bodyA,       // Body of the first edge
+    const Pose<double>& poseA_t0, // Pose of bodyA at t=0
+    const Pose<double>& poseA_t1, // Pose of bodyA at t=1
     size_t edgeA_id,                       // In bodyA
-    const physics::RigidBody& bodyB,       // Body of the second edge
-    const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
-    const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
+    const RigidBody& bodyB,       // Body of the second edge
+    const Pose<double>& poseB_t0, // Pose of bodyB at t=0
+    const Pose<double>& poseB_t1, // Pose of bodyB at t=1
     size_t edgeB_id)                       // In bodyB
 {
 
-    std::cerr << logger::fmt_eigen(bodyA.vertices.row(bodyA.edges(edgeA_id, 0)))
+    std::cerr << fmt_eigen(bodyA.vertices.row(bodyA.edges(edgeA_id, 0)))
               << std::endl;
-    std::cerr << logger::fmt_eigen(bodyA.vertices.row(bodyA.edges(edgeA_id, 1)))
+    std::cerr << fmt_eigen(bodyA.vertices.row(bodyA.edges(edgeA_id, 1)))
               << std::endl;
-    std::cerr << logger::fmt_eigen(poseA_t0.position) << std::endl;
-    std::cerr << logger::fmt_eigen(poseA_t0.rotation) << std::endl;
-    std::cerr << logger::fmt_eigen(poseA_t1.position) << std::endl;
-    std::cerr << logger::fmt_eigen(poseA_t1.rotation) << std::endl;
-    std::cerr << logger::fmt_eigen(bodyB.vertices.row(bodyB.edges(edgeB_id, 0)))
+    std::cerr << fmt_eigen(poseA_t0.position) << std::endl;
+    std::cerr << fmt_eigen(poseA_t0.rotation) << std::endl;
+    std::cerr << fmt_eigen(poseA_t1.position) << std::endl;
+    std::cerr << fmt_eigen(poseA_t1.rotation) << std::endl;
+    std::cerr << fmt_eigen(bodyB.vertices.row(bodyB.edges(edgeB_id, 0)))
               << std::endl;
-    std::cerr << logger::fmt_eigen(bodyB.vertices.row(bodyB.edges(edgeB_id, 1)))
+    std::cerr << fmt_eigen(bodyB.vertices.row(bodyB.edges(edgeB_id, 1)))
               << std::endl;
-    std::cerr << logger::fmt_eigen(poseB_t0.position) << std::endl;
-    std::cerr << logger::fmt_eigen(poseB_t0.rotation) << std::endl;
-    std::cerr << logger::fmt_eigen(poseB_t1.position) << std::endl;
-    std::cerr << logger::fmt_eigen(poseB_t1.rotation) << std::endl;
+    std::cerr << fmt_eigen(poseB_t0.position) << std::endl;
+    std::cerr << fmt_eigen(poseB_t0.rotation) << std::endl;
+    std::cerr << fmt_eigen(poseB_t1.position) << std::endl;
+    std::cerr << fmt_eigen(poseB_t1.rotation) << std::endl;
     std::cerr << std::endl;
 }
 
 Eigen::Vector3d compute_edge_edge_tolerance(
-    const physics::RigidBody& bodyA,       // Body of the first edge
-    const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
-    const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
+    const RigidBody& bodyA,       // Body of the first edge
+    const Pose<double>& poseA_t0, // Pose of bodyA at t=0
+    const Pose<double>& poseA_t1, // Pose of bodyA at t=1
     size_t edgeA_id,                       // In bodyA
-    const physics::RigidBody& bodyB,       // Body of the second edge
-    const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
-    const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
+    const RigidBody& bodyB,       // Body of the second edge
+    const Pose<double>& poseB_t0, // Pose of bodyB at t=0
+    const Pose<double>& poseB_t1, // Pose of bodyB at t=1
     size_t edgeB_id)                       // In bodyB
 {
     // TODO: Compute trajecotry length for interpolating rotation vectors.
@@ -157,13 +157,13 @@ Eigen::Vector3d compute_edge_edge_tolerance(
 
 // Find time-of-impact between two rigid bodies
 bool compute_edge_edge_time_of_impact(
-    const physics::RigidBody& bodyA,       // Body of the first edge
-    const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
-    const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
+    const RigidBody& bodyA,       // Body of the first edge
+    const Pose<double>& poseA_t0, // Pose of bodyA at t=0
+    const Pose<double>& poseA_t1, // Pose of bodyA at t=1
     size_t edgeA_id,                       // In bodyA
-    const physics::RigidBody& bodyB,       // Body of the second edge
-    const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
-    const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
+    const RigidBody& bodyB,       // Body of the second edge
+    const Pose<double>& poseB_t0, // Pose of bodyB at t=0
+    const Pose<double>& poseB_t1, // Pose of bodyB at t=1
     size_t edgeB_id,                       // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
@@ -221,13 +221,13 @@ bool compute_edge_edge_time_of_impact(
 // Face-Vertex
 
 Eigen::Vector3d compute_face_vertex_tolerance(
-    const physics::RigidBody& bodyA,       // Body of the vertex
-    const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
-    const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
+    const RigidBody& bodyA,       // Body of the vertex
+    const Pose<double>& poseA_t0, // Pose of bodyA at t=0
+    const Pose<double>& poseA_t1, // Pose of bodyA at t=1
     size_t vertex_id,                      // In bodyA
-    const physics::RigidBody& bodyB,       // Body of the triangle
-    const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
-    const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
+    const RigidBody& bodyB,       // Body of the triangle
+    const Pose<double>& poseB_t0, // Pose of bodyB at t=0
+    const Pose<double>& poseB_t1, // Pose of bodyB at t=1
     size_t face_id)                        // In bodyB
 {
     // TODO: Compute trajecotry length for interpolating rotation vectors.
@@ -247,13 +247,13 @@ Eigen::Vector3d compute_face_vertex_tolerance(
 
 // Find time-of-impact between two rigid bodies
 bool compute_face_vertex_time_of_impact(
-    const physics::RigidBody& bodyA,       // Body of the vertex
-    const physics::Pose<double>& poseA_t0, // Pose of bodyA at t=0
-    const physics::Pose<double>& poseA_t1, // Pose of bodyA at t=1
+    const RigidBody& bodyA,       // Body of the vertex
+    const Pose<double>& poseA_t0, // Pose of bodyA at t=0
+    const Pose<double>& poseA_t1, // Pose of bodyA at t=1
     size_t vertex_id,                      // In bodyA
-    const physics::RigidBody& bodyB,       // Body of the triangle
-    const physics::Pose<double>& poseB_t0, // Pose of bodyB at t=0
-    const physics::Pose<double>& poseB_t1, // Pose of bodyB at t=1
+    const RigidBody& bodyB,       // Body of the triangle
+    const Pose<double>& poseB_t0, // Pose of bodyB at t=0
+    const Pose<double>& poseB_t1, // Pose of bodyB at t=1
     size_t face_id,                        // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
@@ -310,4 +310,4 @@ bool compute_face_vertex_time_of_impact(
     return is_impacting;
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

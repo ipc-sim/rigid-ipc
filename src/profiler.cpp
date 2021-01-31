@@ -5,7 +5,7 @@
 
 #ifdef RIGID_IPC_PROFILE_FUNCTIONS
 
-namespace ccd {
+namespace ipc::rigid {
 namespace profiler {
 
     // -----------------------------------------------------------------
@@ -96,7 +96,7 @@ namespace profiler {
     void Profiler::log(const std::string& fin)
     {
         std::string parent_name =
-            fmt::format("{}/log-{}", dout, ccd::logger::now());
+            fmt::format("{}/log-{}", dout, current_time_string());
         if (mkdir(parent_name.c_str(), ACCESSPERMS) == 0) {
             write_summary(parent_name, fin);
             for (auto& p : points) {
@@ -167,18 +167,18 @@ namespace profiler {
     {
         auto console_sink =
             std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-        console_sink->set_level(spdlog::level::debug);
+        console_sink->set_logger_level(spdlog::level::debug);
 
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
             "logs/profiler.log", false);
-        file_sink->set_level(spdlog::level::debug);
+        file_sink->set_logger_level(spdlog::level::debug);
 
         spdlog::sinks_init_list sinks = { console_sink, file_sink };
         spdlog::logger logger_("multi_sink", sinks);
-        logger_.set_level(spdlog::level::debug);
+        logger_.set_logger_level(spdlog::level::debug);
 
         this->logger = std::make_shared<spdlog::logger>("profile", sinks);
-        this->logger->set_level(spdlog::level::debug);
+        this->logger->set_logger_level(spdlog::level::debug);
         this->logger->debug("BEGIN SESSION");
     }
 
@@ -189,5 +189,5 @@ namespace profiler {
     }
 
 } // namespace profiler
-} // namespace ccd
+} // namespace ipc::rigid
 #endif

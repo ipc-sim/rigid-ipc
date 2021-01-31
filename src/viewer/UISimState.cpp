@@ -5,7 +5,7 @@
 
 #include <physics/rigid_body_problem.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 UISimState::UISimState()
     : m_player_state(PlayerState::Paused)
@@ -88,7 +88,7 @@ void UISimState::load_scene()
     Eigen::VectorXi vertex_type;
     if (m_state.problem_ptr->is_rb_problem()) {
         const auto& bodies =
-            std::dynamic_pointer_cast<physics::RigidBodyProblem>(
+            std::dynamic_pointer_cast<RigidBodyProblem>(
                 m_state.problem_ptr)
                 ->m_assembler;
         vertex_type.resize(bodies.num_vertices());
@@ -110,7 +110,7 @@ void UISimState::load_scene()
     velocity_data->set_vector_field(q, v);
 
     if (m_state.problem_ptr->is_rb_problem()) {
-        com_data->set_coms(std::dynamic_pointer_cast<physics::RigidBodyProblem>(
+        com_data->set_coms(std::dynamic_pointer_cast<RigidBodyProblem>(
                                m_state.problem_ptr)
                                ->m_assembler.rb_poses());
     }
@@ -156,7 +156,7 @@ void UISimState::redraw_scene()
     velocity_data->update_vector_field(q1, v1);
     if (m_state.problem_ptr->is_rb_problem()) {
         const auto& bodies =
-            std::dynamic_pointer_cast<physics::RigidBodyProblem>(
+            std::dynamic_pointer_cast<RigidBodyProblem>(
                 m_state.problem_ptr)
                 ->m_assembler;
         Eigen::VectorXi vertex_type(bodies.num_vertices());
@@ -171,7 +171,7 @@ void UISimState::redraw_scene()
     }
 
     if (m_state.problem_ptr->is_rb_problem()) {
-        com_data->set_coms(std::dynamic_pointer_cast<physics::RigidBodyProblem>(
+        com_data->set_coms(std::dynamic_pointer_cast<RigidBodyProblem>(
                                m_state.problem_ptr)
                                ->m_assembler.rb_poses());
     }
@@ -344,4 +344,4 @@ bool UISimState::custom_key_pressed(unsigned int unicode_key, int modifiers)
     return false;
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

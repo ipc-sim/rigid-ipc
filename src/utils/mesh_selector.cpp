@@ -7,7 +7,7 @@
 
 #include <fmt/format.h>
 
-namespace ccd {
+namespace ipc::rigid {
 
 Eigen::SparseMatrix<size_t>
 map_vertex_pairs_to_edge(size_t num_vertices, const Eigen::MatrixXi& E)
@@ -138,4 +138,4 @@ void MeshSelector::init_codim_edges_to_edges(size_t num_edges)
     }
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

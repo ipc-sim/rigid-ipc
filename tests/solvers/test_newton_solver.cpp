@@ -5,8 +5,7 @@
 #include <utils/eigen_ext.hpp>
 #include <utils/not_implemented_error.hpp>
 
-using namespace ccd;
-using namespace opt;
+using namespace ipc::rigid;
 
 TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
 {
@@ -113,7 +112,7 @@ TEST_CASE("Test Newton direction solve", "[opt][newtons_method][newton_dir]")
     Eigen::SparseMatrix<double> hessian =
         Eigen::SparseDiagonal<double>(2 * Eigen::VectorXd::Ones(num_vars));
     Eigen::VectorXd delta_x;
-    ccd::opt::NewtonSolver solver;
+    ipc::rigid::NewtonSolver solver;
     solver.compute_direction(gradient, hessian, delta_x);
     CHECK((x + delta_x).squaredNorm() == Approx(0.0));
 }
@@ -122,7 +121,7 @@ TEST_CASE("Test making a matrix SPD", "[opt][make_spd]")
 {
     Eigen::SparseMatrix<double> A =
         Eigen::MatrixXd::Random(100, 100).sparseView();
-    double mu = ccd::opt::make_matrix_positive_definite(A);
+    double mu = ipc::rigid::make_matrix_positive_definite(A);
     CAPTURE(mu);
     auto eig_vals = Eigen::MatrixXd(A).eigenvalues();
     for (int i = 0; i < eig_vals.size(); i++) {

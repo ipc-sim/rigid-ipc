@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-namespace ccd {
+namespace ipc::rigid {
 
 template <typename T>
 inline void flatten(Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& x)
@@ -26,4 +26,4 @@ inline void unflatten(
     assert(x.size() % cols == 0);
     x.resize(x.size() / cols, cols);
 }
-} // namespace ccd
+} // namespace ipc::rigid

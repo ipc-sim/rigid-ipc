@@ -8,7 +8,7 @@
 #include <io/serialize_json.hpp>
 #include <physics/pose.hpp>
 
-using namespace ccd;
+using namespace ipc::rigid;
 
 TEST_CASE("2D rigid body hash grid", "[hashgrid][rigid_body][2D]")
 {
@@ -30,15 +30,15 @@ void compute_scene_conservative_bbox(
 
     for (const auto& body : bodies) {
         Eigen::MatrixXd V;
-        io::from_json(body["vertices"], V);
+        from_json(body["vertices"], V);
         double radius = V.rowwise().norm().maxCoeff();
 
         Eigen::Vector3d p0, p1;
         Eigen::Vector3d r0, r1;
-        io::from_json(body["pose_t0"]["position"], p0);
-        io::from_json(body["pose_t0"]["rotation"], r0);
-        io::from_json(body["pose_t1"]["position"], p1);
-        io::from_json(body["pose_t1"]["rotation"], r1);
+        from_json(body["pose_t0"]["position"], p0);
+        from_json(body["pose_t0"]["rotation"], r0);
+        from_json(body["pose_t1"]["position"], p1);
+        from_json(body["pose_t1"]["rotation"], r1);
 
         if ((r0.array() == r1.array()).all()) {
             auto R = construct_rotation_matrix(Eigen::VectorX3d(r0));
@@ -70,10 +70,10 @@ Eigen::Vector3I compute_scene_bbox(
         for (const auto& body : bodies) {
             Eigen::Vector3d p0d, p1d;
             Eigen::Vector3d r0d, r1d;
-            io::from_json(body["pose_t0"]["position"], p0d);
-            io::from_json(body["pose_t0"]["rotation"], r0d);
-            io::from_json(body["pose_t1"]["position"], p1d);
-            io::from_json(body["pose_t1"]["rotation"], r1d);
+            from_json(body["pose_t0"]["position"], p0d);
+            from_json(body["pose_t0"]["rotation"], r0d);
+            from_json(body["pose_t1"]["position"], p1d);
+            from_json(body["pose_t1"]["rotation"], r1d);
 
             Eigen::Vector3I p0 = p0d.cast<Interval>(),
                             p1 = p1d.cast<Interval>();
@@ -85,7 +85,7 @@ Eigen::Vector3I compute_scene_bbox(
             auto R = construct_rotation_matrix(Eigen::VectorX3I(r));
 
             Eigen::MatrixXd V;
-            io::from_json(body["vertices"], V);
+            from_json(body["vertices"], V);
             Eigen::MatrixXI VI = (V * R.transpose()).rowwise() + p.transpose();
 
             for (int i = 0; i < VI.rows(); i++) {

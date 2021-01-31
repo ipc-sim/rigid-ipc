@@ -7,7 +7,7 @@
 
 #include <autodiff/autodiff_types.hpp>
 #include <utils/sinc.hpp>
-using namespace ccd;
+using namespace ipc::rigid;
 
 TEST_CASE("double sinc", "[sinc][double]")
 {

@@ -4,7 +4,7 @@
 
 #include <Eigen/Core>
 
-namespace ccd {
+namespace ipc::rigid {
 
 /// @brief Data structure representing an impact of an edge and vertex.
 struct EdgeVertexImpact {
@@ -124,4 +124,4 @@ void convert_edge_edge_to_edge_vertex_impacts(
     const std::vector<EdgeEdgeImpact>& ee_impacts,
     std::vector<EdgeVertexImpact>& ev_impacts);
 
-} // namespace ccd
+} // namespace ipc::rigid

@@ -6,7 +6,7 @@
 
 #include <opt/displacement_opt.hpp>
 
-using namespace ccd;
+using namespace ipc::rigid;
 using namespace opt;
 
 TEST_CASE("Displacement optimization test", "[!shouldfail][opt][displacements]")

@@ -6,7 +6,7 @@
 #include <interval/interval.hpp>
 #include <utils/eigen_ext.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 double sinc(const double& x);
 
@@ -98,4 +98,4 @@ sinc_normx(const Eigen::VectorX3<DScalar2<Scalar, Gradient, Hessian>>& x)
     return DScalar2<Scalar, Gradient, Hessian>(value, full_grad, full_hess);
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

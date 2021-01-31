@@ -238,7 +238,7 @@ namespace opengl {
     {
     }
 
-    void CoMData::set_coms(const ccd::physics::Poses<double>& poses)
+    void CoMData::set_coms(const ipc::rigid::PosesD& poses)
     {
         int dim = poses.size() ? poses[0].dim() : 0;
         Eigen::MatrixXd com(dim * poses.size(), dim);

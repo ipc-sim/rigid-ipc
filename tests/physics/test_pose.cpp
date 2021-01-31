@@ -10,7 +10,7 @@
 
 TEST_CASE("Poses to dofs", "[physics][pose]")
 {
-    using namespace ccd::physics;
+    using namespace ipc::rigid;
     int dim = GENERATE(2, 3);
     int num_bodies = GENERATE(0, 1, 2, 3, 10, 1000);
     Eigen::VectorXd dofs =
@@ -22,7 +22,7 @@ TEST_CASE("Poses to dofs", "[physics][pose]")
 
 TEST_CASE("Cast poses", "[physics][pose]")
 {
-    using namespace ccd::physics;
+    using namespace ipc::rigid;
     int dim = GENERATE(2, 3);
     int num_bodies = GENERATE(0, 1, 2, 3, 10, 1000);
 
@@ -41,7 +41,7 @@ TEST_CASE("Cast poses", "[physics][pose]")
 
 TEST_CASE("SE(3) ↦ SO(3)", "[physics][pose]")
 {
-    using namespace ccd::physics;
+    using namespace ipc::rigid;
     double angle;
     Eigen::Vector3d axis;
 
@@ -67,8 +67,8 @@ TEST_CASE("SE(3) ↦ SO(3)", "[physics][pose]")
 
 TEST_CASE("∇²(SE(3) ↦ SO(3))", "[!benchmark][physics][pose]")
 {
-    using namespace ccd::physics;
-    typedef ccd::AutodiffType<Eigen::Dynamic, 12> Diff;
+    using namespace ipc::rigid;
+    typedef ipc::rigid::AutodiffType<Eigen::Dynamic, 12> Diff;
     Diff::activate(12);
 
     Pose<double> p;
@@ -92,7 +92,7 @@ TEST_CASE("∇²(SE(3) ↦ SO(3))", "[!benchmark][physics][pose]")
 
 TEST_CASE("Interval SE(3) ↦ SO(3)", "[!benchmark][physics][pose]")
 {
-    using namespace ccd::physics;
+    using namespace ipc::rigid;
     double angle;
     Eigen::Vector3d axis;
 
@@ -114,7 +114,7 @@ TEST_CASE("Interval SE(3) ↦ SO(3)", "[!benchmark][physics][pose]")
     {
         Eigen::Matrix3d R = p.construct_rotation_matrix();
     };
-    Pose<ccd::Interval> pI = p.cast<ccd::Interval>();
+    Pose<ipc::rigid::Interval> pI = p.cast<ipc::rigid::Interval>();
     BENCHMARK("Interval SE(3) ↦ SO(3)")
     {
         Eigen::Matrix3I R = pI.construct_rotation_matrix();

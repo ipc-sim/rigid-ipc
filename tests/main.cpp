@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     if (returnCode != 0) // Indicates a command line error
         return returnCode;
 
-    ccd::logger::set_level(static_cast<spdlog::level::level_enum>(log_level));
+    ipc::rigid::set_logger_level(static_cast<spdlog::level::level_enum>(log_level));
 
     return session.run();
 }

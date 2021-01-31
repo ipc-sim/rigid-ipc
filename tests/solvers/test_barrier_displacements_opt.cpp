@@ -12,7 +12,7 @@
 
 //#define NUM_ANGLES (5)
 
-// using namespace ccd;
+// using namespace ipc::rigid;
 // using namespace opt;
 
 // TEST_CASE("test the setup", "[opt][displacements][barrier]")
@@ -26,11 +26,11 @@
 //    REQUIRE(state.displacements.rows() == 4);
 //    REQUIRE(state.edges.rows() == 2);
 
-//    state.constraint_function = GENERATE(ccd::ConstraintType::BARRIER);
+//    state.constraint_function = GENERATE(ipc::rigid::ConstraintType::BARRIER);
 //    state.getCollisionConstraint().update_collision_set = GENERATE(false,
 //    true);
 
-//    state.opt_method = ccd::OptimizationMethod::BARRIER_SOLVER;
+//    state.opt_method = ipc::rigid::OptimizationMethod::BARRIER_SOLVER;
 
 //    state.reset_optimization_problem();
 
@@ -106,10 +106,10 @@
 //    REQUIRE(state.displacements.rows() == 4);
 //    REQUIRE(state.edges.rows() == 2);
 
-//    state.constraint_function = ccd::ConstraintType::BARRIER;
+//    state.constraint_function = ipc::rigid::ConstraintType::BARRIER;
 
 //    state.getCollisionConstraint().update_collision_set = GENERATE(false,
-//    true); state.opt_method = ccd::OptimizationMethod::BARRIER_SOLVER;
+//    true); state.opt_method = ipc::rigid::OptimizationMethod::BARRIER_SOLVER;
 
 //    double theta1 = 2 * M_PI / NUM_ANGLES * GENERATE(range(0, NUM_ANGLES));
 //    double theta2 = 2 * M_PI / NUM_ANGLES * GENERATE(range(0, NUM_ANGLES));
@@ -154,10 +154,10 @@
 //    REQUIRE(state.displacements.rows() == 5);
 //    REQUIRE(state.edges.rows() == 3);
 
-//    state.constraint_function = ccd::ConstraintType::BARRIER;
+//    state.constraint_function = ipc::rigid::ConstraintType::BARRIER;
 
 //    state.getCollisionConstraint().update_collision_set = GENERATE(false,
-//    true); state.opt_method = ccd::OptimizationMethod::BARRIER_SOLVER;
+//    true); state.opt_method = ipc::rigid::OptimizationMethod::BARRIER_SOLVER;
 
 //    state.barrier_solver.min_barrier_epsilon = 1e-3;
 //    state.barrier_solver.inner_solver_type = BarrierInnerSolver::NEWTON;

@@ -1,16 +1,14 @@
 #include "rigid_body_bvh.hpp"
 
-using ipc::AABB;
-
-namespace ccd {
+namespace ipc::rigid {
 
 void detect_body_pair_collision_candidates_from_aabbs(
-    const physics::RigidBodyAssembler& bodies,
-    const std::vector<ipc::AABB>& bodyA_vertex_aabbs,
+    const RigidBodyAssembler& bodies,
+    const std::vector<AABB>& bodyA_vertex_aabbs,
     const int bodyA_id,
     const int bodyB_id,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     const double inflation_radius)
 {
     bool build_ev = collision_types & CollisionType::EDGE_VERTEX;
@@ -52,8 +50,8 @@ void detect_body_pair_collision_candidates_from_aabbs(
         }
     };
 
-    const physics::RigidBody& bodyA = bodies[bodyA_id];
-    const physics::RigidBody& bodyB = bodies[bodyB_id];
+    const RigidBody& bodyA = bodies[bodyA_id];
+    const RigidBody& bodyB = bodies[bodyB_id];
 
     const std::vector<AABB> bodyB_vertex_aabbs =
         vertex_aabbs(bodyB.vertices, inflation_radius);
@@ -315,11 +313,11 @@ void detect_body_pair_collision_candidates_from_aabbs(
 }
 
 void detect_body_pair_intersection_candidates_from_aabbs(
-    const physics::RigidBodyAssembler& bodies,
-    const std::vector<ipc::AABB>& bodyA_vertex_aabbs,
+    const RigidBodyAssembler& bodies,
+    const std::vector<AABB>& bodyA_vertex_aabbs,
     const int bodyA_id,
     const int bodyB_id,
-    std::vector<ipc::EdgeFaceCandidate>& ef_candidates,
+    std::vector<EdgeFaceCandidate>& ef_candidates,
     const double inflation_radius)
 {
     auto add_ef = [&](size_t eai, size_t fbi) {
@@ -333,8 +331,8 @@ void detect_body_pair_intersection_candidates_from_aabbs(
             bodies.m_body_face_id[bodyA_id] + fai);
     };
 
-    const physics::RigidBody& bodyA = bodies[bodyA_id];
-    const physics::RigidBody& bodyB = bodies[bodyB_id];
+    const RigidBody& bodyA = bodies[bodyA_id];
+    const RigidBody& bodyB = bodies[bodyB_id];
 
     const std::vector<AABB> bodyB_vertex_aabbs =
         vertex_aabbs(bodyB.vertices, inflation_radius);
@@ -445,4 +443,4 @@ void detect_body_pair_intersection_candidates_from_aabbs(
     // no need to query (cv, *)
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

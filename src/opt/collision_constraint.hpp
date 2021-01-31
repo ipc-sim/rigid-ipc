@@ -5,42 +5,40 @@
 #include <ccd/ccd.hpp>
 #include <physics/rigid_body_assembler.hpp>
 
-namespace ccd {
-namespace opt {
+namespace ipc::rigid {
 
-    class CollisionConstraint {
-    public:
-        CollisionConstraint(const std::string& name);
-        virtual ~CollisionConstraint() = default;
+class CollisionConstraint {
+public:
+    CollisionConstraint(const std::string& name);
+    virtual ~CollisionConstraint() = default;
 
-        virtual void settings(const nlohmann::json& json);
-        virtual nlohmann::json settings() const;
+    virtual void settings(const nlohmann::json& json);
+    virtual nlohmann::json settings() const;
 
-        inline const std::string& name() const { return m_name; }
+    inline const std::string& name() const { return m_name; }
 
-        virtual void initialize() {};
+    virtual void initialize() {};
 
-        void construct_collision_set(
-            const physics::RigidBodyAssembler& bodies,
-            const physics::Poses<double> poses_t0,
-            const physics::Poses<double> poses_t1,
-            Impacts& impacts) const;
+    void construct_collision_set(
+        const RigidBodyAssembler& bodies,
+        const PosesD poses_t0,
+        const PosesD poses_t1,
+        Impacts& impacts) const;
 
-        // Settings
-        // ----------
-        DetectionMethod detection_method;
-        TrajectoryType trajectory_type;
+    // Settings
+    // ----------
+    DetectionMethod detection_method;
+    TrajectoryType trajectory_type;
 
-    protected:
-        inline static int dim_to_collision_type(int dim)
-        {
-            return dim == 2
-                ? CollisionType::EDGE_VERTEX
-                : (CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX);
-        }
+protected:
+    inline static int dim_to_collision_type(int dim)
+    {
+        return dim == 2
+            ? CollisionType::EDGE_VERTEX
+            : (CollisionType::EDGE_EDGE | CollisionType::FACE_VERTEX);
+    }
 
-        std::string m_name;
-    };
+    std::string m_name;
+};
 
-} // namespace opt
-} // namespace ccd
+} // namespace ipc::rigid

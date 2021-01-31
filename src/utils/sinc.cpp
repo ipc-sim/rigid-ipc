@@ -1,6 +1,6 @@
 #include "sinc.hpp"
 
-namespace ccd {
+namespace ipc::rigid {
 
 // We use these bounds because for example 1 + x^2 = 1 for x < sqrt(ϵ).
 static const double taylor_0_bound = std::numeric_limits<double>::epsilon();
@@ -141,4 +141,4 @@ Eigen::MatrixXX3d sinc_normx_hess(const Eigen::VectorX3d& x)
         + dsinc_over_x(normx) * Eigen::MatrixXX3d::Identity(x.size(), x.size());
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

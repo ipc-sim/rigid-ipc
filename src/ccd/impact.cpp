@@ -1,7 +1,7 @@
 // Data structures for impacts between different geometry.
 #include <ccd/impact.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 EdgeVertexImpact::EdgeVertexImpact(
     double time, long edge_index, double alpha, long vertex_index)
@@ -104,4 +104,4 @@ void convert_edge_edge_to_edge_vertex_impacts(
                 int(ee_impact.impacting_alpha + 0.5))));
     }
 }
-} // namespace ccd
+} // namespace ipc::rigid

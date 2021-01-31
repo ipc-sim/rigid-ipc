@@ -5,14 +5,12 @@
 
 #include <physics/rigid_body.hpp>
 
-namespace ccd {
-namespace io {
+namespace ipc::rigid {
 
-    bool read_rb_scene_from_str(
-        const std::string str, std::vector<physics::RigidBody>& rbs);
+bool read_rb_scene_from_str(
+    const std::string str, std::vector<RigidBody>& rbs);
 
-    bool read_rb_scene(
-        const nlohmann::json& scene, std::vector<physics::RigidBody>& rbs);
+bool read_rb_scene(
+    const nlohmann::json& scene, std::vector<RigidBody>& rbs);
 
-} // namespace io
-} // namespace ccd
+} // namespace ipc::rigid

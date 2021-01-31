@@ -11,7 +11,7 @@
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
 
-using namespace ccd::geometry;
+using namespace ipc::rigid;
 
 //-----------------------------------------------------------------------------
 // Unsigned Distances
@@ -19,7 +19,7 @@ using namespace ccd::geometry;
 
 TEST_CASE("Edge-edge distance gradient", "[distance][gradient]")
 {
-    using namespace ccd;
+    using namespace ipc::rigid;
     typedef AutodiffType<12> Diff;
     Diff::activate();
 

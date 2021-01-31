@@ -129,7 +129,7 @@ namespace opengl {
         inline bool is_vector_field() override { return false; }
         inline bool is_com() override { return true; }
 
-        void set_coms(const ccd::physics::Poses<double>& poses);
+        void set_coms(const ipc::rigid::PosesD& poses);
 
         void set_vector_field(
             const Eigen::MatrixXd& V, const Eigen::MatrixXd& F) override;

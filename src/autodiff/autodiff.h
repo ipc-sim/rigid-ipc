@@ -1,3 +1,5 @@
+// clang-format off
+
 /**
     Automatic differentiation data type for C++, depends on the Eigen
 	linear algebra library.

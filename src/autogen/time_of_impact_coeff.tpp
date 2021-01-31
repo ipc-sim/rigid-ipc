@@ -7,7 +7,7 @@
 #include <autodiff/autodiff_types.hpp>
 #include <finitediff.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 namespace autogen {
 
     template <typename T>
@@ -18,11 +18,12 @@ namespace autogen {
         const Vector2T<T>& Ui,
         const Vector2T<T>& Uj,
         const Vector2T<T>& Uk,
-        T& a, T& b, T& c)
+        T& a,
+        T& b,
+        T& c)
     {
         // {{toi_abc_ccode}}
     }
 
-
-}
-}
+} // namespace autogen
+} // namespace ipc::rigid

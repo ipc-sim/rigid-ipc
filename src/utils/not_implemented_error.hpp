@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace ccd {
+namespace ipc::rigid {
 
 /// Error class for indicating features have not been implmented yet.
 class NotImplementedError : public std::logic_error {
@@ -50,4 +50,4 @@ public:
         : std::logic_error(error_message) {};
 };
 
-} // namespace ccd
+} // namespace ipc::rigid

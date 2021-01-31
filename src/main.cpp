@@ -38,8 +38,7 @@ int main(int argc, char* argv[])
 
             if (argc == 3) {
                 return json_to_mjcf(argv[2]);
-            }
-            else {
+            } else {
                 return json_to_mjcf(argv[2], std::stoi(argv[3]));
             }
         }
@@ -64,7 +63,7 @@ int main(int argc, char* argv[])
     }
 
     // tbb::global_control c(tbb::global_control::max_allowed_parallelism, 1);
-    ccd::logger::set_level(spdlog::level::info);
-    ccd::UISimState ui;
+    ipc::rigid::set_logger_level(spdlog::level::info);
+    ipc::rigid::UISimState ui;
     ui.launch((argc > 1 && !is_arg1_number) ? argv[1] : "");
 }

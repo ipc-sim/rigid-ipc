@@ -6,6 +6,8 @@
 
 int main(int argc, char* argv[])
 {
+    using namespace ipc::rigid;
+
     CLI::App app("Generate GLTF/GLB animation from simulation results.");
 
     std::string sim_path = "";
@@ -30,7 +32,7 @@ int main(int argc, char* argv[])
         return app.exit(e);
     }
 
-    ccd::logger::set_level(static_cast<spdlog::level::level_enum>(loglevel));
+    set_logger_level(static_cast<spdlog::level::level_enum>(loglevel));
 
     // Create the output directory if it does not exist
     boost::filesystem::path output_path(output);
@@ -38,7 +40,7 @@ int main(int argc, char* argv[])
         boost::filesystem::create_directories(output_path.parent_path());
     }
 
-    ccd::SimState sim;
+    SimState sim;
     bool success = sim.load_scene(sim_path);
     if (!success) {
         return app.exit(

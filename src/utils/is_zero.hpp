@@ -3,7 +3,7 @@
 #include <interval/interval.hpp>
 #include <utils/eigen_ext.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 template <typename T> inline bool is_zero(T x) { return x == 0.0; }
 
@@ -25,4 +25,4 @@ inline bool is_zero(Eigen::Vector<Interval, dim, max_dim> X)
     return true;
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

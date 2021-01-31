@@ -7,7 +7,7 @@
 
 #include <utils/not_implemented_error.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 double FILibRounding::add_down(double x, double y)
 {
@@ -273,4 +273,4 @@ double FILibRounding::int_up(double x)
     return this->to_int(x);
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

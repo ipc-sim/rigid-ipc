@@ -12,7 +12,7 @@
 
 namespace test_utils {
 
-using namespace ccd::physics;
+using namespace ipc::rigid;
 RigidBody rb_from_displacements(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& edges,
@@ -86,8 +86,8 @@ TEST_CASE(
                + rb2_pose_t1.rotation.squaredNorm());
     }
 
-    using namespace ccd::physics;
-    using namespace ccd::opt;
+    using namespace ipc::rigid;
+    using namespace ipc::rigid;
 
     std::vector<RigidBody> rbs = {
         { rb_from_displacements(vertices, edges, rb1_pose_t1),
@@ -144,8 +144,8 @@ TEST_CASE(
         vel_2.rotation << M_PI;
     }
 
-    using namespace ccd::physics;
-    using namespace ccd::opt;
+    using namespace ipc::rigid;
+    using namespace ipc::rigid;
 
     std::vector<RigidBody> rbs;
     rbs.push_back(rb_from_displacements(vertices, edges, vel_1));
@@ -197,8 +197,8 @@ TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
         vel_2.rotation << M_PI;
     }
 
-    using namespace ccd::physics;
-    using namespace ccd::opt;
+    using namespace ipc::rigid;
+    using namespace ipc::rigid;
 
     std::vector<RigidBody> rbs;
     rbs.push_back(rb_from_displacements(vertices, edges, vel_1));
@@ -252,8 +252,8 @@ TEST_CASE("dof -> poses -> dof", "[RB][RB-Problem]")
         vel_2.rotation << M_PI;
     }
 
-    using namespace ccd::physics;
-    using namespace ccd::opt;
+    using namespace ipc::rigid;
+    using namespace ipc::rigid;
 
     std::vector<RigidBody> rbs = {
         { rb_from_displacements(vertices, edges, vel_1),

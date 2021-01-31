@@ -1,8 +1,7 @@
 #pragma once
 
-namespace ccd {
-namespace opt {
+namespace ipc::rigid {
 
-    double barrier_horner_compensated(double x, double eps);
-}
-} // namespace ccd
+double barrier_horner_compensated(double x, double eps);
+
+} // namespace ipc::rigid

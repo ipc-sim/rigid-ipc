@@ -4,17 +4,15 @@
 
 #include <physics/rigid_body_assembler.hpp>
 
-namespace ccd {
-namespace io {
+namespace ipc::rigid {
 
-    bool write_gltf(
-        const std::string& filename,
-        const physics::RigidBodyAssembler& bodies,
-        const std::vector<physics::Poses<double>>& poses,
-        double timestep,
-        bool embed_buffers = true,
-        bool write_binary = true,
-        bool prettyPrint = true);
+bool write_gltf(
+    const std::string& filename,
+    const RigidBodyAssembler& bodies,
+    const std::vector<PosesD>& poses,
+    double timestep,
+    bool embed_buffers = true,
+    bool write_binary = true,
+    bool prettyPrint = true);
 
-}
-} // namespace ccd
+} // namespace ipc::rigid

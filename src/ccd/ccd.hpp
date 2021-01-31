@@ -9,7 +9,7 @@
 #include <ccd/impact.hpp>
 #include <physics/rigid_body_assembler.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 /// @brief Possible methods for detecting all edge vertex collisions.
 enum DetectionMethod {
@@ -59,9 +59,9 @@ namespace CollisionType {
 
 /// @brief Find all collisions in one time step.
 void detect_collisions(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const int collision_types,
     Impacts& impacts,
     DetectionMethod method,
@@ -73,11 +73,11 @@ void detect_collisions(
 
 /// @brief Use broad-phase method to create a set of candidate collisions.
 void detect_collision_candidates(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     DetectionMethod method,
     TrajectoryType trajectory,
     const double inflation_radius = 0.0);
@@ -87,70 +87,70 @@ void detect_collision_candidates(
 ///////////////////////////////////////////////////////////////////////////////
 
 void detect_collisions_from_candidates(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::Candidates& candidates,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const Candidates& candidates,
     Impacts& impacts,
     TrajectoryType trajectory);
 
 /// @brief Determine if a single edge-vertext pair intersects.
 bool edge_vertex_ccd(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::EdgeVertexCandidate& ev_candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const EdgeVertexCandidate& ev_candidate,
     double& toi,
     TrajectoryType trajectory,
     double earliest_toi = 1,
     double minimum_separation_distance = 0);
 
 bool edge_edge_ccd(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::EdgeEdgeCandidate& ee_candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const EdgeEdgeCandidate& ee_candidate,
     double& toi,
     TrajectoryType trajectory,
     double earliest_toi = 1,
     double minimum_separation_distance = 0);
 
 bool face_vertex_ccd(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::FaceVertexCandidate& fv_candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const FaceVertexCandidate& fv_candidate,
     double& toi,
     TrajectoryType trajectory,
     double earliest_toi = 1,
     double minimum_separation_distance = 0);
 
 double edge_vertex_closest_point(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::EdgeVertexCandidate& candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const EdgeVertexCandidate& candidate,
     double toi,
     TrajectoryType trajectory);
 
 void edge_edge_closest_point(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::EdgeEdgeCandidate& candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const EdgeEdgeCandidate& candidate,
     double toi,
     double& alpha,
     double& beta,
     TrajectoryType trajectory);
 
 void face_vertex_closest_point(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::FaceVertexCandidate& candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const FaceVertexCandidate& candidate,
     double toi,
     double& u,
     double& v,
     TrajectoryType trajectory);
 
-} // namespace ccd
+} // namespace ipc::rigid

@@ -6,7 +6,7 @@
 
 #include <logger.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 void UISimState::draw_menu()
 {
@@ -36,7 +36,7 @@ void UISimState::draw_menu()
         if (ImGui::Combo(
                 "log-level##logger", &m_log_level, level_strings,
                 CCD_IM_ARRAYSIZE(level_strings))) {
-            logger::set_level(
+            set_logger_level(
                 static_cast<spdlog::level::level_enum>(m_log_level));
         }
 
@@ -75,7 +75,7 @@ void UISimState::draw_menu()
         }
         ImGui::End();
     }
-} // namespace ccd
+} // namespace ipc::rigid
 
 void UISimState::draw_io()
 {
@@ -291,4 +291,4 @@ void UISimState::draw_legends()
     }
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

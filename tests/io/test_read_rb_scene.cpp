@@ -11,7 +11,7 @@
 
 TEST_CASE("Read 2D RB Scene", "[io][json][rigid-body]")
 {
-    std::vector<ccd::physics::RigidBody> rbs;
+    std::vector<ipc::rigid::RigidBody> rbs;
     using namespace nlohmann;
     auto j = R"({"rigid_bodies": [
              {
@@ -36,7 +36,7 @@ TEST_CASE("Read 2D RB Scene", "[io][json][rigid-body]")
              }
            ]})"_json;
 
-    ccd::io::read_rb_scene(j, rbs);
+    ipc::rigid::read_rb_scene(j, rbs);
 
     CHECK(rbs.size() == 1);
 

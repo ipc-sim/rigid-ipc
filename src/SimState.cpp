@@ -22,7 +22,7 @@
 #include <logger.hpp>
 #include <profiler.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 SimState::SimState()
     : m_step_had_collision(false)
@@ -454,7 +454,7 @@ bool SimState::save_obj_sequence(const std::string& dir_name)
     for (int i = 0; i < state_sequence.size(); i++) {
         const auto& state = state_sequence[i];
         problem_ptr->state(state);
-        io::write_obj(
+        write_obj(
             (dir_path / fmt::format("{:05d}.obj", i)).string(), *problem_ptr,
             false);
     }
@@ -466,7 +466,7 @@ bool SimState::save_obj_sequence(const std::string& dir_name)
 
 bool SimState::save_gltf(const std::string& filename)
 {
-    std::vector<physics::Poses<double>> poses(state_sequence.size());
+    std::vector<PosesD> poses(state_sequence.size());
 
     bool success = true;
     for (int i = 0; i < state_sequence.size(); i++) {
@@ -475,17 +475,17 @@ bool SimState::save_gltf(const std::string& filename)
         for (int j = 0; j < jrbs.size(); j++) {
             Eigen::VectorX3d position;
             Eigen::VectorX3d rotation;
-            io::from_json(jrbs[j]["position"], position);
-            io::from_json(jrbs[j]["rotation"], rotation);
+            from_json(jrbs[j]["position"], position);
+            from_json(jrbs[j]["rotation"], rotation);
             poses[i].emplace_back(position, rotation);
         }
     }
 
-    std::shared_ptr<physics::RigidBodyProblem> rbp =
-        std::dynamic_pointer_cast<physics::RigidBodyProblem>(problem_ptr);
+    std::shared_ptr<RigidBodyProblem> rbp =
+        std::dynamic_pointer_cast<RigidBodyProblem>(problem_ptr);
 
-    return io::write_gltf(
+    return write_gltf(
         filename, rbp->m_assembler, poses, problem_ptr->timestep());
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

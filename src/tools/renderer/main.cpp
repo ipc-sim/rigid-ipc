@@ -117,7 +117,7 @@ public:
             vertices_sequence.emplace_back();
             edges_sequence.emplace_back();
             faces_sequence.emplace_back();
-            ccd::io::read_obj(
+            ipc::rigid::read_obj(
                 obj.string(), vertices_sequence.back(), edges_sequence.back(),
                 faces_sequence.back());
         }
@@ -173,8 +173,8 @@ public:
         state_sequence = sim["animation"]["state_sequence"]
                              .get<std::vector<nlohmann::json>>();
 
-        std::vector<ccd::physics::RigidBody> rbs;
-        ccd::io::read_rb_scene(sim["args"]["rigid_body_problem"], rbs);
+        std::vector<ipc::rigid::RigidBody> rbs;
+        ipc::rigid::read_rb_scene(sim["args"]["rigid_body_problem"], rbs);
         bodies.init(rbs);
 
         // Per-vertex colors
@@ -196,12 +196,12 @@ public:
     Eigen::MatrixXd vertices(size_t i) override
     {
         assert(i < num_meshes());
-        ccd::physics::Poses<double> poses(bodies.num_bodies());
+        ipc::rigid::PosesD poses(bodies.num_bodies());
         assert(state_sequence[i]["rigid_bodies"].size() == bodies.num_bodies());
         for (int j = 0; j < bodies.num_bodies(); j++) {
             const auto& jrb = state_sequence[i]["rigid_bodies"][j];
-            ccd::io::from_json(jrb["position"], poses[j].position);
-            ccd::io::from_json(jrb["rotation"], poses[j].rotation);
+            ipc::rigid::from_json(jrb["position"], poses[j].position);
+            ipc::rigid::from_json(jrb["rotation"], poses[j].rotation);
         }
         return bodies.world_vertices(poses);
     }
@@ -216,7 +216,7 @@ public:
 
 protected:
     std::vector<nlohmann::json> state_sequence;
-    ccd::physics::RigidBodyAssembler bodies;
+    ipc::rigid::RigidBodyAssembler bodies;
     Eigen::VectorXi vertex_colors;
     int m_fps;
 };
@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
 {
     SimRenderArgs args = parse_args(argc, argv);
 
-    ccd::logger::set_level(args.loglevel);
+    ipc::rigid::set_logger_level(args.loglevel);
 
     ///////////////////////////////////////////////////////////////////////////
     // Create folder for PNG frames
@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
         boost::filesystem::create_directories(args.output_path.parent_path());
     }
     boost::filesystem::path frames_dir = args.output_path.parent_path()
-        / fmt::format("frames-{}", ccd::logger::now());
+        / fmt::format("frames-{}", ipc::rigid::current_time_string());
     boost::filesystem::create_directories(frames_dir);
     ///////////////////////////////////////////////////////////////////////////
 

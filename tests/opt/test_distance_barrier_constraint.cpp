@@ -3,9 +3,7 @@
 #include <logger.hpp>
 #include <opt/distance_barrier_constraint.hpp>
 
-using namespace ccd;
-using namespace opt;
-using namespace physics;
+using namespace ipc::rigid;
 
 // TEST_CASE(
 //     "Distance Barrier Constraint",
@@ -15,7 +13,7 @@ using namespace physics;
 //
 //     double barrier_epsilon = GENERATE(0.5, 1.0, 5.0);
 //
-//     barrier.detection_method = ccd::DetectionMethod::BRUTE_FORCE;
+//     barrier.detection_method = ipc::rigid::DetectionMethod::BRUTE_FORCE;
 //     barrier.initial_barrier_activation_distance = barrier_epsilon;
 //     barrier.barrier_activation_distance(barrier_epsilon);
 //     barrier.active_constraint_scale = 10000;

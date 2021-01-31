@@ -6,11 +6,11 @@
 
 TEST_CASE("Simple interval arithmetic", "[interval]")
 {
-    ccd::Interval i(0, 1), j(4, 5);
+    ipc::rigid::Interval i(0, 1), j(4, 5);
     CHECK(i.lower() <= i.upper());
     CHECK(j.lower() <= j.upper());
 
-    ccd::Interval result;
+    ipc::rigid::Interval result;
 
     result = i + j;
     CHECK(result.lower() <= result.upper());
@@ -34,7 +34,7 @@ TEST_CASE("Simple interval arithmetic", "[interval]")
 
 TEST_CASE("Cosine interval arithmetic", "[interval]")
 {
-    ccd::Interval r;
+    ipc::rigid::Interval r;
 
     double shift;
     SECTION("No shift") { shift = 0; }
@@ -45,24 +45,24 @@ TEST_CASE("Cosine interval arithmetic", "[interval]")
 
     CAPTURE(shift);
 
-    r = cos(ccd::Interval(-1, 7) + shift);
+    r = cos(ipc::rigid::Interval(-1, 7) + shift);
     CHECK(r.lower() == -1.0);
     CHECK(r.upper() == 1.0);
 
-    r = cos(ccd::Interval(2, 4) + shift);
+    r = cos(ipc::rigid::Interval(2, 4) + shift);
     CHECK(r.upper() < 0);
 
-    r = cos(ccd::Interval(0, 1) + shift);
+    r = cos(ipc::rigid::Interval(0, 1) + shift);
     CHECK(r.lower() > 0);
 
-    r = cos(ccd::Interval(1, 2) + shift);
+    r = cos(ipc::rigid::Interval(1, 2) + shift);
     CHECK(r.lower() < 0);
     CHECK(r.upper() > 0);
 }
 
 TEST_CASE("Sine interval arithmetic", "[interval]")
 {
-    ccd::Interval r;
+    ipc::rigid::Interval r;
 
     double shift = M_PI_2;
     SECTION("No shift") { shift += 0; }
@@ -73,28 +73,28 @@ TEST_CASE("Sine interval arithmetic", "[interval]")
 
     CAPTURE(shift);
 
-    r = sin(ccd::Interval(-1, 7) + shift);
+    r = sin(ipc::rigid::Interval(-1, 7) + shift);
     CHECK(r.lower() == -1.0);
     CHECK(r.upper() == 1.0);
 
-    r = sin(ccd::Interval(2, 4) + shift);
+    r = sin(ipc::rigid::Interval(2, 4) + shift);
     CAPTURE(
-        (ccd::Interval(2, 4) + shift).lower(),
-        (ccd::Interval(2, 4) + shift).upper());
+        (ipc::rigid::Interval(2, 4) + shift).lower(),
+        (ipc::rigid::Interval(2, 4) + shift).upper());
     CHECK(r.upper() < 0);
 
-    r = sin(ccd::Interval(0, 1) + shift);
+    r = sin(ipc::rigid::Interval(0, 1) + shift);
     CHECK(r.lower() > 0);
 
-    r = sin(ccd::Interval(1, 2) + shift);
+    r = sin(ipc::rigid::Interval(1, 2) + shift);
     CHECK(r.lower() < 0);
     CHECK(r.upper() > 0);
 }
 
 TEST_CASE("Interval rotation rounding", "[interval][matrix]")
 {
-    using namespace ccd;
-    using namespace ccd::physics;
+    using namespace ipc::rigid;
+    using namespace ipc::rigid;
     Pose<double> pose(
         /*x=*/0.30969396267858817, /*y=*/0.85675409103416755,
         /*theta=*/0.79358805865013693);
@@ -139,7 +139,7 @@ TEST_CASE("Interval rotation rounding", "[interval][matrix]")
 #ifdef USE_FILIB_INTERVALS
 TEST_CASE("CheckingPolicy", "[interval][checking_policy]")
 {
-    using namespace ccd;
+    using namespace ipc::rigid;
     typedef boost::numeric::interval_lib::checking_no_empty<double>
         m_CheckingPolicy;
 

@@ -10,8 +10,7 @@
 #include <ccd/rigid/time_of_impact.hpp>
 #include <io/serialize_json.hpp>
 
-using namespace ccd;
-using namespace ccd::physics;
+using namespace ipc::rigid;
 
 RigidBody create_body(
     const Eigen::MatrixXd& vertices,
@@ -20,11 +19,11 @@ RigidBody create_body(
 {
     static int id = 0;
     int dim = vertices.cols();
-    Pose<double> pose = Pose<double>::Zero(dim);
+    PoseD pose = PoseD::Zero(dim);
     RigidBody rb = RigidBody::from_points(
         vertices, edges, faces, pose,
-        /*velocity=*/Pose<double>::Zero(pose.dim()),
-        /*force=*/Pose<double>::Zero(pose.dim()),
+        /*velocity=*/PoseD::Zero(pose.dim()),
+        /*force=*/PoseD::Zero(pose.dim()),
         /*denisty=*/1.0,
         /*is_dof_fixed=*/Eigen::VectorX6b::Zero(pose.ndof()),
         /*oriented=*/false,
@@ -43,7 +42,7 @@ create_body(const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& edges)
 
 int main(int argc, char* argv[])
 {
-    ccd::logger::set_level(static_cast<spdlog::level::level_enum>(6));
+    set_logger_level(static_cast<spdlog::level::level_enum>(6));
     igl::Timer timer;
 
     std::ofstream fv_csv("fv.csv");
@@ -74,8 +73,8 @@ int main(int argc, char* argv[])
 
             Eigen::MatrixXd bodyA_vertices, bodyB_vertices;
             Eigen::MatrixXi bodyA_edges, bodyB_edges, bodyA_faces, bodyB_faces;
-            Pose<double> bodyA_pose_t0, bodyA_pose_t1;
-            Pose<double> bodyB_pose_t0, bodyB_pose_t1;
+            PoseD bodyA_pose_t0, bodyA_pose_t1;
+            PoseD bodyB_pose_t0, bodyB_pose_t1;
 
             std::string ccd_type = query["type"];
 
@@ -86,15 +85,15 @@ int main(int argc, char* argv[])
                 Eigen::VectorXd tmp;
 
                 bodyA_vertices.resize(2, 3);
-                io::from_json(query["edge0"]["vertex0"], tmp);
+                from_json(query["edge0"]["vertex0"], tmp);
                 bodyA_vertices.row(0) = tmp;
-                io::from_json(query["edge0"]["vertex1"], tmp);
+                from_json(query["edge0"]["vertex1"], tmp);
                 bodyA_vertices.row(1) = tmp;
 
                 bodyB_vertices.resize(2, 3);
-                io::from_json(query["edge1"]["vertex0"], tmp);
+                from_json(query["edge1"]["vertex0"], tmp);
                 bodyB_vertices.row(0) = tmp;
-                io::from_json(query["edge1"]["vertex1"], tmp);
+                from_json(query["edge1"]["vertex1"], tmp);
                 bodyB_vertices.row(1) = tmp;
 
                 bodyA_edges.resize(1, 2);
@@ -110,15 +109,15 @@ int main(int argc, char* argv[])
                 Eigen::VectorXd tmp;
 
                 bodyA_vertices.resize(3, 3);
-                io::from_json(query["face"]["vertex0"], tmp);
+                from_json(query["face"]["vertex0"], tmp);
                 bodyA_vertices.row(0) = tmp;
-                io::from_json(query["face"]["vertex1"], tmp);
+                from_json(query["face"]["vertex1"], tmp);
                 bodyA_vertices.row(1) = tmp;
-                io::from_json(query["face"]["vertex2"], tmp);
+                from_json(query["face"]["vertex2"], tmp);
                 bodyA_vertices.row(2) = tmp;
 
                 bodyB_vertices.resize(1, 3);
-                io::from_json(query["vertex"]["vertex"], tmp);
+                from_json(query["vertex"]["vertex"], tmp);
                 bodyB_vertices.row(0) = tmp;
 
                 bodyA_faces.resize(1, 3);
@@ -134,14 +133,14 @@ int main(int argc, char* argv[])
                 poseB_t1_json = query["vertex"]["pose_t1"];
             }
 
-            io::from_json(poseA_t0_json["position"], bodyA_pose_t0.position);
-            io::from_json(poseA_t0_json["rotation"], bodyA_pose_t0.rotation);
-            io::from_json(poseA_t1_json["position"], bodyA_pose_t1.position);
-            io::from_json(poseA_t1_json["rotation"], bodyA_pose_t1.rotation);
-            io::from_json(poseB_t0_json["position"], bodyB_pose_t0.position);
-            io::from_json(poseB_t0_json["rotation"], bodyB_pose_t0.rotation);
-            io::from_json(poseB_t1_json["position"], bodyB_pose_t1.position);
-            io::from_json(poseB_t1_json["rotation"], bodyB_pose_t1.rotation);
+            from_json(poseA_t0_json["position"], bodyA_pose_t0.position);
+            from_json(poseA_t0_json["rotation"], bodyA_pose_t0.rotation);
+            from_json(poseA_t1_json["position"], bodyA_pose_t1.position);
+            from_json(poseA_t1_json["rotation"], bodyA_pose_t1.rotation);
+            from_json(poseB_t0_json["position"], bodyB_pose_t0.position);
+            from_json(poseB_t0_json["rotation"], bodyB_pose_t0.rotation);
+            from_json(poseB_t1_json["position"], bodyB_pose_t1.position);
+            from_json(poseB_t1_json["rotation"], bodyB_pose_t1.rotation);
 
             RigidBody bodyA =
                 create_body(bodyA_vertices, bodyA_edges, bodyA_faces);

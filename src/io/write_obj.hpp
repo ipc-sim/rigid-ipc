@@ -16,20 +16,18 @@
 
 #include <physics/simulation_problem.hpp>
 
-namespace ccd {
-namespace io {
+namespace ipc::rigid {
 
-    bool write_obj(
-        const std::string str,
-        const Eigen::MatrixXd& V,
-        const Eigen::MatrixXi& E,
-        const std::vector<size_t>& codim_edges_to_edges,
-        const Eigen::MatrixXi& F);
+bool write_obj(
+    const std::string str,
+    const Eigen::MatrixXd& V,
+    const Eigen::MatrixXi& E,
+    const std::vector<size_t>& codim_edges_to_edges,
+    const Eigen::MatrixXi& F);
 
-    bool write_obj(
-        const std::string str,
-        const physics::SimulationProblem& problem,
-        bool write_mtl);
+bool write_obj(
+    const std::string str,
+    const SimulationProblem& problem,
+    bool write_mtl);
 
-} // namespace io
-} // namespace ccd
+} // namespace ipc::rigid

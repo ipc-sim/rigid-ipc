@@ -23,12 +23,12 @@
 
 #include <profiler.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 void detect_collisions(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const int collision_types,
     Impacts& impacts,
     DetectionMethod method,
@@ -38,7 +38,7 @@ void detect_collisions(
     assert(poses_t0.size() == poses_t1.size());
 
     // Do the broad phase by detecting candidate impacts
-    ipc::Candidates candidates;
+    Candidates candidates;
     detect_collision_candidates(
         bodies, poses_t0, poses_t1, collision_types, candidates, method,
         trajectory);
@@ -53,11 +53,11 @@ void detect_collisions(
 ///////////////////////////////////////////////////////////////////////////////
 
 void detect_collision_candidates(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     DetectionMethod method,
     TrajectoryType trajectory,
     const double inflation_radius)
@@ -87,10 +87,10 @@ void detect_collision_candidates(
 ///////////////////////////////////////////////////////////////////////////////
 
 void detect_collisions_from_candidates(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::Candidates& candidates,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const Candidates& candidates,
     Impacts& impacts,
     TrajectoryType trajectory)
 {
@@ -99,7 +99,7 @@ void detect_collisions_from_candidates(
 
     std::mutex ev_impacts_mutex, ee_impacts_mutex, fv_impacts_mutex;
 
-    auto ev_impact = [&](const ipc::EdgeVertexCandidate& ev_candidate) {
+    auto ev_impact = [&](const EdgeVertexCandidate& ev_candidate) {
         double toi;
         bool is_colliding = edge_vertex_ccd(
             bodies, poses_t0, poses_t1, ev_candidate, toi, trajectory);
@@ -112,7 +112,7 @@ void detect_collisions_from_candidates(
         }
     };
 
-    auto ee_impact = [&](const ipc::EdgeEdgeCandidate& ee_candidate) {
+    auto ee_impact = [&](const EdgeEdgeCandidate& ee_candidate) {
         double toi;
         bool is_colliding = edge_edge_ccd(
             bodies, poses_t0, poses_t1, ee_candidate, toi, trajectory);
@@ -128,7 +128,7 @@ void detect_collisions_from_candidates(
         }
     };
 
-    auto fv_impact = [&](const ipc::FaceVertexCandidate& fv_candidate) {
+    auto fv_impact = [&](const FaceVertexCandidate& fv_candidate) {
         double toi;
         bool is_colliding = face_vertex_ccd(
             bodies, poses_t0, poses_t1, fv_candidate, toi, trajectory);
@@ -154,10 +154,10 @@ void detect_collisions_from_candidates(
 
 // Determine if a single edge-vertext pair intersects.
 bool edge_vertex_ccd(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::EdgeVertexCandidate& candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const EdgeVertexCandidate& candidate,
     double& toi,
     TrajectoryType trajectory,
     double earliest_toi,
@@ -172,12 +172,12 @@ bool edge_vertex_ccd(
     long bodyA_id, vertex_id, bodyB_id, edge_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_edge(candidate.edge_index, bodyB_id, edge_id);
-    const physics::RigidBody& bodyA = bodies[bodyA_id];
-    const physics::RigidBody& bodyB = bodies[bodyB_id];
-    const physics::Pose<double>& poseA_t0 = poses_t0[bodyA_id];
-    const physics::Pose<double>& poseA_t1 = poses_t1[bodyA_id];
-    const physics::Pose<double>& poseB_t0 = poses_t0[bodyB_id];
-    const physics::Pose<double>& poseB_t1 = poses_t1[bodyB_id];
+    const RigidBody& bodyA = bodies[bodyA_id];
+    const RigidBody& bodyB = bodies[bodyB_id];
+    const PoseD& poseA_t0 = poses_t0[bodyA_id];
+    const PoseD& poseA_t1 = poses_t1[bodyA_id];
+    const PoseD& poseB_t0 = poses_t0[bodyB_id];
+    const PoseD& poseB_t1 = poses_t1[bodyB_id];
     long e0_id = bodyB.edges(edge_id, 0);
     long e1_id = bodyB.edges(edge_id, 1);
 
@@ -193,7 +193,7 @@ bool edge_vertex_ccd(
         Eigen::Vector2d e1_t1 = bodyB.world_vertex(poseB_t1, e1_id);
 
         // Expects the arguments as position and displacements
-        return autodiff::compute_edge_vertex_time_of_impact(
+        return compute_edge_vertex_time_of_impact(
             e0_t0, e1_t0, v_t0, (e0_t1 - e0_t0).eval(), (e1_t1 - e1_t0).eval(),
             (v_t1 - v_t0).eval(), toi);
     }
@@ -219,10 +219,10 @@ bool edge_vertex_ccd(
 }
 
 bool edge_edge_ccd(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::EdgeEdgeCandidate& candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const EdgeEdgeCandidate& candidate,
     double& toi,
     TrajectoryType trajectory,
     double earliest_toi,
@@ -235,12 +235,12 @@ bool edge_edge_ccd(
     long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
     bodies.global_to_local_edge(candidate.edge0_index, bodyA_id, edgeA_id);
     bodies.global_to_local_edge(candidate.edge1_index, bodyB_id, edgeB_id);
-    const physics::RigidBody& bodyA = bodies[bodyA_id];
-    const physics::RigidBody& bodyB = bodies[bodyB_id];
-    const physics::Pose<double>& poseA_t0 = poses_t0[bodyA_id];
-    const physics::Pose<double>& poseA_t1 = poses_t1[bodyA_id];
-    const physics::Pose<double>& poseB_t0 = poses_t0[bodyB_id];
-    const physics::Pose<double>& poseB_t1 = poses_t1[bodyB_id];
+    const RigidBody& bodyA = bodies[bodyA_id];
+    const RigidBody& bodyB = bodies[bodyB_id];
+    const PoseD& poseA_t0 = poses_t0[bodyA_id];
+    const PoseD& poseA_t1 = poses_t1[bodyA_id];
+    const PoseD& poseB_t0 = poses_t0[bodyB_id];
+    const PoseD& poseB_t1 = poses_t1[bodyB_id];
     long ea0_id = bodyA.edges(edgeA_id, 0);
     long ea1_id = bodyA.edges(edgeA_id, 1);
     long eb0_id = bodyB.edges(edgeB_id, 0);
@@ -289,10 +289,10 @@ bool edge_edge_ccd(
 }
 
 bool face_vertex_ccd(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::FaceVertexCandidate& candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const FaceVertexCandidate& candidate,
     double& toi,
     TrajectoryType trajectory,
     double earliest_toi,
@@ -305,12 +305,12 @@ bool face_vertex_ccd(
     long bodyA_id, vertex_id, bodyB_id, face_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_face(candidate.face_index, bodyB_id, face_id);
-    const physics::RigidBody& bodyA = bodies[bodyA_id];
-    const physics::RigidBody& bodyB = bodies[bodyB_id];
-    const physics::Pose<double>& poseA_t0 = poses_t0[bodyA_id];
-    const physics::Pose<double>& poseA_t1 = poses_t1[bodyA_id];
-    const physics::Pose<double>& poseB_t0 = poses_t0[bodyB_id];
-    const physics::Pose<double>& poseB_t1 = poses_t1[bodyB_id];
+    const RigidBody& bodyA = bodies[bodyA_id];
+    const RigidBody& bodyB = bodies[bodyB_id];
+    const PoseD& poseA_t0 = poses_t0[bodyA_id];
+    const PoseD& poseA_t1 = poses_t1[bodyA_id];
+    const PoseD& poseB_t0 = poses_t0[bodyB_id];
+    const PoseD& poseB_t1 = poses_t1[bodyB_id];
     long f0_id = bodyB.faces(face_id, 0);
     long f1_id = bodyB.faces(face_id, 1);
     long f2_id = bodyB.faces(face_id, 2);
@@ -357,24 +357,22 @@ bool face_vertex_ccd(
 }
 
 double edge_vertex_closest_point(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::EdgeVertexCandidate& candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const EdgeVertexCandidate& candidate,
     double toi,
     TrajectoryType trajectory)
 {
-    typedef physics::Pose<double> Pose;
-
     long bodyA_id, vertex_id, bodyB_id, edge_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_edge(candidate.edge_index, bodyB_id, edge_id);
-    const physics::RigidBody& bodyA = bodies[bodyA_id];
-    const physics::RigidBody& bodyB = bodies[bodyB_id];
-    const Pose& poseA_t0 = poses_t0[bodyA_id];
-    const Pose& poseA_t1 = poses_t1[bodyA_id];
-    const Pose& poseB_t0 = poses_t0[bodyB_id];
-    const Pose& poseB_t1 = poses_t1[bodyB_id];
+    const RigidBody& bodyA = bodies[bodyA_id];
+    const RigidBody& bodyB = bodies[bodyB_id];
+    const PoseD& poseA_t0 = poses_t0[bodyA_id];
+    const PoseD& poseA_t1 = poses_t1[bodyA_id];
+    const PoseD& poseB_t0 = poses_t0[bodyB_id];
+    const PoseD& poseB_t1 = poses_t1[bodyB_id];
     long e0_id = bodyB.edges(edge_id, 0);
     long e1_id = bodyB.edges(edge_id, 1);
 
@@ -400,8 +398,8 @@ double edge_vertex_closest_point(
     case TrajectoryType::RIGID:
     case TrajectoryType::REDON: {
         // Compute the poses at time toi
-        Pose poseA_toi = Pose::interpolate(poseA_t0, poseA_t1, toi);
-        Pose poseB_toi = Pose::interpolate(poseB_t0, poseB_t1, toi);
+        PoseD poseA_toi = PoseD::interpolate(poseA_t0, poseA_t1, toi);
+        PoseD poseB_toi = PoseD::interpolate(poseB_t0, poseB_t1, toi);
         v = bodyA.world_vertex(poseA_toi, vertex_id);
         e0 = bodyB.world_vertex(poseB_toi, e0_id);
         e1 = bodyB.world_vertex(poseB_toi, e1_id);
@@ -412,26 +410,24 @@ double edge_vertex_closest_point(
 }
 
 void edge_edge_closest_point(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::EdgeEdgeCandidate& candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const EdgeEdgeCandidate& candidate,
     double toi,
     double& alpha,
     double& beta,
     TrajectoryType trajectory)
 {
-    typedef physics::Pose<double> Pose;
-
     long bodyA_id, edgeA_id, bodyB_id, edgeB_id;
     bodies.global_to_local_edge(candidate.edge0_index, bodyA_id, edgeA_id);
     bodies.global_to_local_edge(candidate.edge1_index, bodyB_id, edgeB_id);
-    const physics::RigidBody& bodyA = bodies[bodyA_id];
-    const physics::RigidBody& bodyB = bodies[bodyB_id];
-    const Pose& poseA_t0 = poses_t0[bodyA_id];
-    const Pose& poseA_t1 = poses_t1[bodyA_id];
-    const Pose& poseB_t0 = poses_t0[bodyB_id];
-    const Pose& poseB_t1 = poses_t1[bodyB_id];
+    const RigidBody& bodyA = bodies[bodyA_id];
+    const RigidBody& bodyB = bodies[bodyB_id];
+    const PoseD& poseA_t0 = poses_t0[bodyA_id];
+    const PoseD& poseA_t1 = poses_t1[bodyA_id];
+    const PoseD& poseB_t0 = poses_t0[bodyB_id];
+    const PoseD& poseB_t1 = poses_t1[bodyB_id];
     long ea0_id = bodyA.edges(edgeA_id, 0);
     long ea1_id = bodyA.edges(edgeA_id, 1);
     long eb0_id = bodyB.edges(edgeB_id, 0);
@@ -463,8 +459,8 @@ void edge_edge_closest_point(
     case TrajectoryType::RIGID:
     case TrajectoryType::REDON: {
         // Compute the poses at time toi
-        Pose poseA_toi = Pose::interpolate(poseA_t0, poseA_t1, toi);
-        Pose poseB_toi = Pose::interpolate(poseB_t0, poseB_t1, toi);
+        PoseD poseA_toi = PoseD::interpolate(poseA_t0, poseA_t1, toi);
+        PoseD poseB_toi = PoseD::interpolate(poseB_t0, poseB_t1, toi);
 
         ea0 = bodyA.world_vertex(poseA_toi, bodyA.edges(edgeA_id, 0));
         ea1 = bodyA.world_vertex(poseA_toi, bodyA.edges(edgeA_id, 1));
@@ -481,26 +477,24 @@ void edge_edge_closest_point(
 }
 
 void face_vertex_closest_point(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
-    const ipc::FaceVertexCandidate& candidate,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
+    const FaceVertexCandidate& candidate,
     double toi,
     double& u,
     double& v,
     TrajectoryType trajectory)
 {
-    typedef physics::Pose<double> Pose;
-
     long bodyA_id, vertex_id, bodyB_id, face_id;
     bodies.global_to_local_vertex(candidate.vertex_index, bodyA_id, vertex_id);
     bodies.global_to_local_face(candidate.face_index, bodyB_id, face_id);
-    const physics::RigidBody& bodyA = bodies[bodyA_id];
-    const physics::RigidBody& bodyB = bodies[bodyB_id];
-    const Pose& poseA_t0 = poses_t0[bodyA_id];
-    const Pose& poseA_t1 = poses_t1[bodyA_id];
-    const Pose& poseB_t0 = poses_t0[bodyB_id];
-    const Pose& poseB_t1 = poses_t1[bodyB_id];
+    const RigidBody& bodyA = bodies[bodyA_id];
+    const RigidBody& bodyB = bodies[bodyB_id];
+    const PoseD& poseA_t0 = poses_t0[bodyA_id];
+    const PoseD& poseA_t1 = poses_t1[bodyA_id];
+    const PoseD& poseB_t0 = poses_t0[bodyB_id];
+    const PoseD& poseB_t1 = poses_t1[bodyB_id];
     long f0_id = bodyB.faces(face_id, 0);
     long f1_id = bodyB.faces(face_id, 1);
     long f2_id = bodyB.faces(face_id, 2);
@@ -530,8 +524,8 @@ void face_vertex_closest_point(
     case TrajectoryType::RIGID:
     case TrajectoryType::REDON: {
         // Compute the poses at time toi
-        Pose poseA_toi = Pose::interpolate(poseA_t0, poseA_t1, toi);
-        Pose poseB_toi = Pose::interpolate(poseB_t0, poseB_t1, toi);
+        PoseD poseA_toi = PoseD::interpolate(poseA_t0, poseA_t1, toi);
+        PoseD poseB_toi = PoseD::interpolate(poseB_t0, poseB_t1, toi);
 
         // Get the world vertex of the point at time t
         p = bodyA.world_vertex(poseA_toi, vertex_id);
@@ -547,4 +541,4 @@ void face_vertex_closest_point(
     v = uv[1];
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

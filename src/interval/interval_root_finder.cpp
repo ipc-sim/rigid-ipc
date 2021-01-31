@@ -5,7 +5,7 @@
 
 #include <logger.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 bool interval_root_finder(
     const std::function<Interval(const Interval&)>& f,
@@ -77,7 +77,7 @@ void log_octree(
     int levels = 5)
 {
     if (levels == 1 || !zero_in(f(x0))) {
-        std::cout << "[" << logger::fmt_eigen_intervals(x0) << ", "
+        std::cout << "[" << fmt_eigen_intervals(x0) << ", "
                   << (zero_in(f(x0)) ? "True" : "False") << "]," << std::endl;
         return;
     }
@@ -142,8 +142,8 @@ bool interval_root_finder(
         Eigen::VectorX3I y = f(x);
 
         // spdlog::critical(
-        //     "{} ↦ {}", logger::fmt_eigen_intervals(x),
-        //     logger::fmt_eigen_intervals(y));
+        //     "{} ↦ {}", fmt_eigen_intervals(x),
+        //     fmt_eigen_intervals(y));
 
         if (!zero_in(y)) {
             continue;
@@ -202,4 +202,4 @@ bool interval_root_finder(
     return found_root;
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

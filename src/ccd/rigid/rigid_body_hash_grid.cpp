@@ -12,7 +12,7 @@
 #include <io/serialize_json.hpp>
 #include <nlohmann/json.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 std::vector<int> body_pairs_to_body_ids(
     const std::vector<std::pair<int, int>>& body_pairs, size_t num_bodies)
@@ -34,8 +34,8 @@ std::vector<int> body_pairs_to_body_ids(
 
 /// Resize to fit a static scene
 void RigidBodyHashGrid::resize(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses,
     const std::vector<std::pair<int, int>>& body_pairs,
     const double inflation_radius)
 {
@@ -62,9 +62,9 @@ void RigidBodyHashGrid::resize(
 }
 
 void compute_scene_conservative_bbox(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const std::vector<int>& body_ids,
     Eigen::VectorX3d& min,
     Eigen::VectorX3d& max)
@@ -88,9 +88,9 @@ void compute_scene_conservative_bbox(
 }
 
 void RigidBodyHashGrid::resize(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const std::vector<std::pair<int, int>>& body_pairs,
     const double inflation_radius)
 {
@@ -120,8 +120,8 @@ void RigidBodyHashGrid::resize(
 
 /// Add dynamic bodies
 void RigidBodyHashGrid::addBodies(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses,
     const std::vector<std::pair<int, int>>& body_pairs,
     const double inflation_radius)
 {
@@ -162,9 +162,9 @@ void RigidBodyHashGrid::addBodies(
 }
 
 void RigidBodyHashGrid::compute_vertices_intervals(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<Interval>& poses_t0,
-    const physics::Poses<Interval>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const Poses<Interval>& poses_t0,
+    const Poses<Interval>& poses_t1,
     const std::vector<int>& body_ids,
     Eigen::MatrixXI& vertices,
     double inflation_radius) const
@@ -184,17 +184,17 @@ void RigidBodyHashGrid::compute_vertices_intervals(
 }
 
 int RigidBodyHashGrid::compute_vertices_intervals(
-    const physics::RigidBody& body,
-    const physics::Pose<Interval>& pose_t0,
-    const physics::Pose<Interval>& pose_t1,
+    const RigidBody& body,
+    const Pose<Interval>& pose_t0,
+    const Pose<Interval>& pose_t1,
     Eigen::MatrixX<Interval>& vertices,
     double inflation_radius, // Only used for fit check
     const Interval& t,
     int force_subdivision) const
 {
     if (force_subdivision <= 0) {
-        physics::Pose<Interval> pose =
-            physics::Pose<Interval>::interpolate(pose_t0, pose_t1, t);
+        Pose<Interval> pose =
+            Pose<Interval>::interpolate(pose_t0, pose_t1, t);
         vertices = body.world_vertices(pose);
         // Check that the vertex intervals fit inside the scene bbox
         bool fits = true;
@@ -245,7 +245,7 @@ int RigidBodyHashGrid::compute_vertices_intervals(
 }
 
 template <typename Derived>
-inline ipc::AABB
+inline AABB
 intervals_to_AABB(const Eigen::MatrixBase<Derived>& x, double inflation_radius)
 {
     assert(x.rows() == 1 || x.cols() == 1);
@@ -258,13 +258,13 @@ intervals_to_AABB(const Eigen::MatrixBase<Derived>& x, double inflation_radius)
         min(i) = x(i).lower() - inflation_radius;
         max(i) = x(i).upper() + inflation_radius;
     }
-    return ipc::AABB(min, max);
+    return AABB(min, max);
 }
 
 void RigidBodyHashGrid::addBodies(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const std::vector<std::pair<int, int>>& body_pairs,
     const double inflation_radius)
 {
@@ -276,12 +276,12 @@ void RigidBodyHashGrid::addBodies(
 
     Eigen::MatrixX<Interval> vertices;
     compute_vertices_intervals(
-        bodies, physics::cast<Interval>(poses_t0),
-        physics::cast<Interval>(poses_t1), body_ids, vertices,
+        bodies, cast<Interval>(poses_t0),
+        cast<Interval>(poses_t1), body_ids, vertices,
         inflation_radius);
 
     // Create a bounding box for all vertices
-    std::vector<ipc::AABB> vertices_aabb;
+    std::vector<AABB> vertices_aabb;
     vertices_aabb.resize(vertices.rows());
     std::vector<bool> is_vertex_included;
     is_vertex_included.resize(vertices.rows(), true);
@@ -319,7 +319,7 @@ void RigidBodyHashGrid::addBodies(
             for (long i = 0; i < bodies.m_edges.rows(); i++) {
                 if (is_edge_include(i)) {
                     this->addElement(
-                        ipc::AABB(
+                        AABB(
                             vertices_aabb[bodies.m_edges(i, 0)],
                             vertices_aabb[bodies.m_edges(i, 1)]),
                         i, this->m_edgeItems);
@@ -332,8 +332,8 @@ void RigidBodyHashGrid::addBodies(
             for (long i = 0; i < bodies.m_faces.rows(); i++) {
                 if (is_face_include(i)) {
                     this->addElement(
-                        ipc::AABB(
-                            ipc::AABB(
+                        AABB(
+                            AABB(
                                 vertices_aabb[bodies.m_faces(i, 0)],
                                 vertices_aabb[bodies.m_faces(i, 1)]),
                             vertices_aabb[bodies.m_faces(i, 2)]),
@@ -343,4 +343,4 @@ void RigidBodyHashGrid::addBodies(
         });
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

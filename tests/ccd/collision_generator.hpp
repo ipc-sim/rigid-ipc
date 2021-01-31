@@ -6,7 +6,7 @@
 #include <Eigen/Core>
 #include <catch2/catch.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 namespace unittests {
 
     struct TestImpact {
@@ -38,5 +38,5 @@ namespace unittests {
 
 } // namespace unittests
 
-} // namespace ccd
+} // namespace ipc::rigid
 #endif // COLLISION_GENERATOR_H

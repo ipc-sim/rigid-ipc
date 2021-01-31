@@ -5,7 +5,7 @@
 #include <utils/eigen_ext.hpp>
 #include <vector>
 
-namespace ccd {
+namespace ipc::rigid {
 
 template <int N, int maxN = N> class AutodiffType {
 public:
@@ -118,7 +118,7 @@ const Hessian& get_hessian(const DScalar2<Scalar, Gradient, Hessian>& dscalar2)
     return dscalar2.getHessian();
 }
 
-} // namespace ccd
+} // namespace ipc::rigid
 
 namespace Eigen {
 

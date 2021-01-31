@@ -1,11 +1,11 @@
 #include "rigid_trajectory_aabb.hpp"
 
-namespace ccd {
+namespace ipc::rigid {
 
-typedef physics::Pose<Interval> PoseI;
+typedef Pose<Interval> PoseI;
 
 Eigen::VectorX3I vertex_trajectory_aabb(
-    const physics::RigidBody& body,
+    const RigidBody& body,
     const PoseI& pose_t0, // Pose of body at t=0
     const PoseI& pose_t1, // Pose of body at t=1
     size_t vertex_id,     // In body
@@ -18,7 +18,7 @@ Eigen::VectorX3I vertex_trajectory_aabb(
 }
 
 Eigen::VectorX3I edge_trajectory_aabb(
-    const physics::RigidBody& body,
+    const RigidBody& body,
     const PoseI& pose_t0, // Pose of body at t=0
     const PoseI& pose_t1, // Pose of body at t=1
     size_t edge_id,       // In body
@@ -34,7 +34,7 @@ Eigen::VectorX3I edge_trajectory_aabb(
 }
 
 Eigen::VectorX3I face_trajectory_aabb(
-    const physics::RigidBody& body,
+    const RigidBody& body,
     const PoseI& pose_t0, // Pose of body at t=0
     const PoseI& pose_t1, // Pose of body at t=1
     size_t face_id,       // In body
@@ -52,11 +52,11 @@ Eigen::VectorX3I face_trajectory_aabb(
 }
 
 Eigen::VectorX3I edge_vertex_aabb(
-    const physics::RigidBody& bodyA, // Body of the vertex
+    const RigidBody& bodyA, // Body of the vertex
     const PoseI& poseA_t0,           // Pose of bodyA at t=0
     const PoseI& poseA_t1,           // Pose of bodyA at t=1
     size_t vertex_id,                // In bodyA
-    const physics::RigidBody& bodyB, // Body of the edge
+    const RigidBody& bodyB, // Body of the edge
     const PoseI& poseB_t0,           // Pose of bodyB at t=0
     const PoseI& poseB_t1,           // Pose of bodyB at t=1
     size_t edge_id,                  // In bodyB
@@ -68,11 +68,11 @@ Eigen::VectorX3I edge_vertex_aabb(
 }
 
 Eigen::VectorX3I edge_edge_aabb(
-    const physics::RigidBody& bodyA, // Body of the first edge
+    const RigidBody& bodyA, // Body of the first edge
     const PoseI& poseA_t0,           // Pose of bodyA at t=0
     const PoseI& poseA_t1,           // Pose of bodyA at t=1
     size_t edgeA_id,                 // In bodyA
-    const physics::RigidBody& bodyB, // Body of the second edge
+    const RigidBody& bodyB, // Body of the second edge
     const PoseI& poseB_t0,           // Pose of bodyB at t=0
     const PoseI& poseB_t1,           // Pose of bodyB at t=1
     size_t edgeB_id,                 // In bodyB
@@ -85,13 +85,13 @@ Eigen::VectorX3I edge_edge_aabb(
 }
 
 Eigen::VectorX3I face_vertex_aabb(
-    const physics::RigidBody& bodyA,         // Body of the vertex
-    const physics::Pose<Interval>& poseA_t0, // Pose of bodyA at t=0
-    const physics::Pose<Interval>& poseA_t1, // Pose of bodyA at t=1
+    const RigidBody& bodyA,         // Body of the vertex
+    const Pose<Interval>& poseA_t0, // Pose of bodyA at t=0
+    const Pose<Interval>& poseA_t1, // Pose of bodyA at t=1
     size_t vertex_id,                        // In bodyA
-    const physics::RigidBody& bodyB,         // Body of the triangle
-    const physics::Pose<Interval>& poseB_t0, // Pose of bodyB at t=0
-    const physics::Pose<Interval>& poseB_t1, // Pose of bodyB at t=1
+    const RigidBody& bodyB,         // Body of the triangle
+    const Pose<Interval>& poseB_t0, // Pose of bodyB at t=0
+    const Pose<Interval>& poseB_t1, // Pose of bodyB at t=1
     size_t face_id,                          // In bodyB
     const Interval& t,
     const Interval& u,
@@ -101,4 +101,4 @@ Eigen::VectorX3I face_vertex_aabb(
         - face_trajectory_aabb(bodyB, poseB_t0, poseB_t1, face_id, t, u, v);
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

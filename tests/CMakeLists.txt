@@ -15,9 +15,6 @@ if(NOT TARGET Catch2::Catch2)
   list(APPEND CMAKE_MODULE_PATH ${RIGID_IPC_EXTERNAL}/Catch2/contrib)
 endif()
 
-include(CTest)
-enable_testing()
-
 ################################################################################
 
 add_executable(${PROJECT_NAME}_tests

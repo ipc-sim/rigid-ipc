@@ -8,7 +8,7 @@
 
 #include "collision_generator.hpp"
 
-using namespace ccd;
+using namespace ipc::rigid;
 
 // ---------------------------------------------------
 // Helper functions
@@ -17,7 +17,7 @@ using namespace ccd;
 /// Compares the time of impact of different implementations
 /// against the expected time of impact
 /// Functions:
-///     - ccd::compute_edge_vertex_time_of_impact(...)
+///     - ipc::rigid::compute_edge_vertex_time_of_impact(...)
 void check_toi(
     const Eigen::Vector2d& Vi,
     const Eigen::Vector2d& Vj,
@@ -30,8 +30,9 @@ void check_toi(
     double toi_actual;
     // check autodiff code
     toi_actual = -1.0;
-    bool has_collision = ccd::autodiff::compute_edge_vertex_time_of_impact(
-        Vi, Vj, Vk, Ui, Uj, Uk, toi_actual);
+    bool has_collision =
+        ipc::rigid::compute_edge_vertex_time_of_impact(
+            Vi, Vj, Vk, Ui, Uj, Uk, toi_actual);
     CHECK(has_collision);
     CHECK(toi_expected == Approx(toi_actual));
 }
@@ -100,7 +101,7 @@ TEST_CASE("TimeOfImpactRandom", "[collision_detection][toi][random]")
 
     SECTION("TimeOfImpactRigid")
     {
-        using namespace ccd::unittests;
+        using namespace ipc::rigid::unittests;
 
         auto impact = GENERATE(random_impacts(100, /*rigid=*/true));
         check_toi(

@@ -8,7 +8,7 @@
 
 TEST_CASE("Test barriers and their derivatives", "[opt][barrier]")
 {
-    using namespace ccd::opt;
+    using namespace ipc::rigid;
     double s = GENERATE(range(-5, 2));
     s = pow(10, s);
 

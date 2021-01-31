@@ -5,7 +5,7 @@
 #include <array>
 #include <vector>
 
-namespace ccd {
+namespace ipc::rigid {
 
 class MeshSelector {
 public:
@@ -82,4 +82,4 @@ protected:
     std::vector<size_t> m_codim_edges_to_edges;
 };
 
-} // namespace ccd
+} // namespace ipc::rigid

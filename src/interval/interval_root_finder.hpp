@@ -6,7 +6,7 @@
 #include <constants.hpp>
 #include <interval/interval.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 /// Find the first root of a function f: I ↦ I
 bool interval_root_finder(
@@ -52,4 +52,4 @@ bool interval_root_finder(
     Eigen::VectorX3I& x,
     int max_iterations = Constants::INTERVAL_ROOT_FINDER_MAX_ITERATIONS);
 
-} // namespace ccd
+} // namespace ipc::rigid

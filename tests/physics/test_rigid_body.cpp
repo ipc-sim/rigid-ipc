@@ -13,7 +13,7 @@
 // ---------------------------------------------------
 // Tests
 // ---------------------------------------------------
-using namespace ccd::physics;
+using namespace ipc::rigid;
 
 RigidBody
 simple(Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Pose<double> velocity)

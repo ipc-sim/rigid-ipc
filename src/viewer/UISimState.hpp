@@ -21,7 +21,7 @@ namespace {
 #include "SimState.hpp"
 #include <profiler.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 class UISimState : public igl::opengl::glfw::imgui::ImGuiMenu {
     typedef igl::opengl::glfw::imgui::ImGuiMenu Super;
@@ -149,4 +149,4 @@ private:
     std::string inital_scene;
 };
 
-} // namespace ccd
+} // namespace ipc::rigid

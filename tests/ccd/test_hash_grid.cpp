@@ -9,7 +9,7 @@
 #include <ccd/ccd.hpp>
 #include <logger.hpp>
 
-using namespace ccd;
+using namespace ipc::rigid;
 
 TEST_CASE("2D hash grid", "[hashgrid][2D]")
 {

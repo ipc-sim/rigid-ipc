@@ -11,20 +11,18 @@
 #include <logger.hpp>
 #include <profiler.hpp>
 
-using ipc::AABB;
-
-namespace ccd {
+namespace ipc::rigid {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Broad-Phase CCD
 ///////////////////////////////////////////////////////////////////////////////
 
 void detect_collision_candidates_linear(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     DetectionMethod method,
     const double inflation_radius)
 {
@@ -62,7 +60,7 @@ void detect_collision_candidates(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     DetectionMethod method,
     const double inflation_radius)
 {
@@ -95,7 +93,7 @@ void detect_edge_vertex_collision_candidates_brute_force(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& edges,
     const Eigen::VectorXi& group_ids,
-    std::vector<ipc::EdgeVertexCandidate>& ev_candidates)
+    std::vector<EdgeVertexCandidate>& ev_candidates)
 {
     const bool check_group = group_ids.size() > 0;
     for (int ei = 0; ei < edges.rows(); ei++) {
@@ -116,7 +114,7 @@ void detect_edge_vertex_collision_candidates_brute_force(
 void detect_edge_edge_collision_candidates_brute_force(
     const Eigen::MatrixXi& edges,
     const Eigen::VectorXi& group_ids,
-    std::vector<ipc::EdgeEdgeCandidate>& ee_candidates)
+    std::vector<EdgeEdgeCandidate>& ee_candidates)
 {
     const bool check_group = group_ids.size() > 0;
     for (int ei = 0; ei < edges.rows(); ei++) {
@@ -141,7 +139,7 @@ void detect_face_vertex_collision_candidates_brute_force(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
-    std::vector<ipc::FaceVertexCandidate>& fv_candidates)
+    std::vector<FaceVertexCandidate>& fv_candidates)
 {
     const bool check_group = group_ids.size() > 0;
     // Loop over all faces
@@ -170,7 +168,7 @@ void detect_collision_candidates_brute_force(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    ipc::Candidates& candidates)
+    Candidates& candidates)
 {
     assert(edges.size() == 0 || edges.cols() == 2);
     assert(faces.size() == 0 || faces.cols() == 3);
@@ -206,11 +204,11 @@ void detect_collision_candidates_hash_grid(
     const Eigen::MatrixXi& faces,
     const Eigen::VectorXi& group_ids,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     const double inflation_radius)
 {
     using namespace CollisionType;
-    ipc::HashGrid hashgrid;
+    HashGrid hashgrid;
     assert(edges.size()); // Even face-vertex need the edges
     hashgrid.resize(vertices_t0, vertices_t1, edges, inflation_radius);
 
@@ -240,17 +238,17 @@ void detect_collision_candidates_hash_grid(
 }
 
 void detect_collision_candidates_linear_bvh(
-    const physics::RigidBodyAssembler& bodies,
-    const physics::Poses<double>& poses_t0,
-    const physics::Poses<double>& poses_t1,
+    const RigidBodyAssembler& bodies,
+    const PosesD& poses_t0,
+    const PosesD& poses_t1,
     const int collision_types,
-    ipc::Candidates& candidates,
+    Candidates& candidates,
     const double inflation_radius)
 {
     std::vector<std::pair<int, int>> body_pairs =
         bodies.close_bodies(poses_t0, poses_t1, inflation_radius);
 
-    typedef tbb::enumerable_thread_specific<ipc::Candidates> LocalStorage;
+    typedef tbb::enumerable_thread_specific<Candidates> LocalStorage;
     LocalStorage storages;
     tbb::parallel_for(
         tbb::blocked_range<size_t>(size_t(0), body_pairs.size()),
@@ -309,4 +307,4 @@ void detect_collision_candidates_linear_bvh(
     merge_local_candidates(storages, candidates);
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

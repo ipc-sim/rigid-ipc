@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <stdlib.h> /* rand */
 
-namespace ccd {
+namespace ipc::rigid {
 namespace unittests {
 
     std::ostream& operator<<(std::ostream& o, const TestImpact& p)
@@ -124,4 +124,4 @@ namespace unittests {
         return impact;
     }
 } // namespace unittests
-} // namespace ccd
+} // namespace ipc::rigid

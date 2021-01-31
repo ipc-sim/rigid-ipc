@@ -6,7 +6,7 @@
 #include <problems/split_distance_barrier_rb_problem.hpp>
 // #include <problems/volume_rb_problem.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 const ProblemFactory& ProblemFactory::factory()
 {
@@ -18,16 +18,16 @@ const ProblemFactory& ProblemFactory::factory()
 ProblemFactory::ProblemFactory()
 {
     problems_.emplace(
-        opt::DistanceBarrierRBProblem::problem_name(),
-        std::make_shared<opt::DistanceBarrierRBProblem>());
+        DistanceBarrierRBProblem::problem_name(),
+        std::make_shared<DistanceBarrierRBProblem>());
     problems_.emplace(
-        opt::SplitDistanceBarrierRBProblem::problem_name(),
-        std::make_shared<opt::SplitDistanceBarrierRBProblem>());
+        SplitDistanceBarrierRBProblem::problem_name(),
+        std::make_shared<SplitDistanceBarrierRBProblem>());
     // problems_.emplace(
-    //     "volume_rb_problem", std::make_shared<opt::VolumeRBProblem>());
+    //     "volume_rb_problem", std::make_shared<VolumeRBProblem>());
 }
 
-std::shared_ptr<physics::SimulationProblem>
+std::shared_ptr<SimulationProblem>
 ProblemFactory::get_problem(const std::string& name) const
 {
     auto it = problems_.find(name);
@@ -37,4 +37,4 @@ ProblemFactory::get_problem(const std::string& name) const
     return it->second;
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

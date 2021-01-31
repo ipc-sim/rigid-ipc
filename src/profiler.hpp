@@ -12,7 +12,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-namespace ccd {
+namespace ipc::rigid {
 namespace profiler {
 
     class ProfilerPoint {
@@ -81,20 +81,19 @@ namespace profiler {
     spdlog::logger& log();
 
 } // namespace profiler
-} // namespace ccd
+} // namespace ipc::rigid
 
 #define PROFILE_MAIN_POINT(Description)                                        \
-    static std::shared_ptr<ccd::profiler::ProfilerPoint> _PROFILER_POINT_ =    \
-        ccd::profiler::Profiler::instance().create_main_point(Description);
+    static std::shared_ptr<profiler::ProfilerPoint> _PROFILER_POINT_ =         \
+        profiler::Profiler::instance().create_main_point(Description);
 
 #define NAMED_PROFILE_POINT(Description, Name)                                 \
-    static std::shared_ptr<ccd::profiler::ProfilerPoint>                       \
-        _PROFILER_POINT_##Name =                                               \
-            ccd::profiler::Profiler::instance().create_point(Description);
+    static std::shared_ptr<profiler::ProfilerPoint> _PROFILER_POINT_##Name =   \
+        profiler::Profiler::instance().create_point(Description);
 
 #define PROFILE_POINT(Description)                                             \
-    static std::shared_ptr<ccd::profiler::ProfilerPoint> _PROFILER_POINT_ =    \
-        ccd::profiler::Profiler::instance().create_point(Description);
+    static std::shared_ptr<profiler::ProfilerPoint> _PROFILER_POINT_ =         \
+        profiler::Profiler::instance().create_point(Description);
 
 #define PROFILE_START(Name) _PROFILER_POINT_##Name->begin();
 
@@ -103,11 +102,10 @@ namespace profiler {
 #define PROFILE_MESSAGE(Name, Header, Val)                                     \
     _PROFILER_POINT_##Name->message_header(Header);                            \
     _PROFILER_POINT_##Name->message(Val);
-#define PROFILER_CLEAR() ccd::profiler::Profiler::instance().clear();
-#define LOG_PROFILER(SceneFile)                                                \
-    ccd::profiler::Profiler::instance().log(SceneFile);
+#define PROFILER_CLEAR() profiler::Profiler::instance().clear();
+#define LOG_PROFILER(SceneFile) profiler::Profiler::instance().log(SceneFile);
 #define PROFILER_OUTDIR(OutputDir)                                             \
-    ccd::profiler::Profiler::instance().output_dir(OutputDir);
+    profiler::Profiler::instance().output_dir(OutputDir);
 #else
 
 #define PROFILE_MAIN_POINT(Description) ;

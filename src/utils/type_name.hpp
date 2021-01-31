@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ccd {
+namespace ipc::rigid {
 
 template <typename T> inline auto get_type_name()
 {
@@ -12,4 +12,4 @@ template <typename T> inline auto get_type_name()
     return typeid(T).name();
 }
 
-} // namespace ccd
+} // namespace ipc::rigid

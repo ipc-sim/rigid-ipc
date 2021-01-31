@@ -2,7 +2,7 @@
 
 #include <boost/numeric/interval.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 // A wrapper for filibs rounding
 struct FILibRounding : boost::numeric::interval_lib::rounding_control<double> {
@@ -70,4 +70,4 @@ struct FILibRounding : boost::numeric::interval_lib::rounding_control<double> {
     }
 };
 
-} // namespace ccd
+} // namespace ipc::rigid

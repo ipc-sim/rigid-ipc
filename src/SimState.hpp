@@ -8,7 +8,7 @@
 #include <physics/simulation_problem.hpp>
 #include <solvers/optimization_solver.hpp>
 
-namespace ccd {
+namespace ipc::rigid {
 
 class SimState {
 public:
@@ -34,7 +34,7 @@ public:
 
     // CCD
     // ----------------------------------------------
-    std::shared_ptr<physics::SimulationProblem> problem_ptr;
+    std::shared_ptr<SimulationProblem> problem_ptr;
 
     bool m_step_had_collision;     ///< last step had a collision
     bool m_step_has_collision;     ///< last step failed to solve collisions
@@ -61,4 +61,4 @@ protected:
     bool m_dirty_constraints;
 };
 
-} // namespace ccd
+} // namespace ipc::rigid

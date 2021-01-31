@@ -24,10 +24,9 @@
 // #define USE_FIXED_PIECES
 #define USE_DECREASING_DISTANCE_CHECK
 
-namespace ccd {
+namespace ipc::rigid {
 
-typedef physics::Pose<Interval> PoseI;
-typedef physics::Pose<double> Pose;
+typedef Pose<Interval> PoseI;
 
 static const size_t FIXED_NUM_PIECES = 100;
 
@@ -48,14 +47,14 @@ static const double DECREASING_DISTANCE_MIN_TIME = 1e-6;
 
 /// Find time-of-impact between two rigid bodies
 bool compute_piecewise_linear_edge_vertex_time_of_impact(
-    const physics::RigidBody& bodyA, // Body of the vertex
-    const Pose& poseA_t0,            // Pose of bodyA at t=0
-    const Pose& poseA_t1,            // Pose of bodyA at t=1
-    size_t vertex_id,                // In bodyA
-    const physics::RigidBody& bodyB, // Body of the edge
-    const Pose& poseB_t0,            // Pose of bodyB at t=0
-    const Pose& poseB_t1,            // Pose of bodyB at t=1
-    size_t edge_id,                  // In bodyB
+    const RigidBody& bodyA, // Body of the vertex
+    const PoseD& poseA_t0,  // Pose of bodyA at t=0
+    const PoseD& poseA_t1,  // Pose of bodyA at t=1
+    size_t vertex_id,       // In bodyA
+    const RigidBody& bodyB, // Body of the edge
+    const PoseD& poseB_t0,  // Pose of bodyB at t=0
+    const PoseD& poseB_t1,  // Pose of bodyB at t=1
+    size_t edge_id,         // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
     double minimum_separation_distance,
@@ -73,12 +72,12 @@ bool compute_piecewise_linear_edge_vertex_time_of_impact(
     }
 
     bool is_impacting = false;
-    Pose poseA_ti0 = poseA_t0, poseB_ti0 = poseB_t0;
+    PoseD poseA_ti0 = poseA_t0, poseB_ti0 = poseB_t0;
     for (int i = 1; i <= FIXED_NUM_PIECES; i++) {
         double ti0 = (i - 1) / double(FIXED_NUM_PIECES) * earliest_toi;
         double ti1 = i / double(FIXED_NUM_PIECES) * earliest_toi;
-        Pose poseA_ti1 = Pose::interpolate(poseA_t0, poseA_t1, ti1);
-        Pose poseB_ti1 = Pose::interpolate(poseB_t0, poseB_t1, ti1);
+        PoseD poseA_ti1 = PoseD::interpolate(poseA_t0, poseA_t1, ti1);
+        PoseD poseB_ti1 = PoseD::interpolate(poseB_t0, poseB_t1, ti1);
 
         Eigen::Vector2d v_t0 = bodyA.world_vertex(poseA_ti0, vertex_id);
         Eigen::Vector2d v_t1 = bodyA.world_vertex(poseA_ti1, vertex_id);
@@ -91,7 +90,7 @@ bool compute_piecewise_linear_edge_vertex_time_of_impact(
         Eigen::Vector2d e1_t1 =
             bodyA.world_vertex(poseB_ti1, bodyB.edges(edge_id, 1));
 
-        is_impacting = autodiff::compute_edge_vertex_time_of_impact(
+        is_impacting = compute_edge_vertex_time_of_impact(
             e0_t0, e1_t1, v_t0, (e0_t1 - e0_t0).eval(), (e1_t1 - e1_t0).eval(),
             (v_t1 - v_t0).eval(), toi);
 
@@ -114,14 +113,14 @@ bool compute_piecewise_linear_edge_vertex_time_of_impact(
 
 // Find time-of-impact between two rigid bodies
 bool compute_piecewise_linear_edge_edge_time_of_impact(
-    const physics::RigidBody& bodyA, // Body of the first edge
-    const Pose& poseA_t0,            // Pose of bodyA at t=0
-    const Pose& poseA_t1,            // Pose of bodyA at t=1
-    size_t edgeA_id,                 // In bodyA
-    const physics::RigidBody& bodyB, // Body of the second edge
-    const Pose& poseB_t0,            // Pose of bodyB at t=0
-    const Pose& poseB_t1,            // Pose of bodyB at t=1
-    size_t edgeB_id,                 // In bodyB
+    const RigidBody& bodyA, // Body of the first edge
+    const PoseD& poseA_t0,  // Pose of bodyA at t=0
+    const PoseD& poseA_t1,  // Pose of bodyA at t=1
+    size_t edgeA_id,        // In bodyA
+    const RigidBody& bodyB, // Body of the second edge
+    const PoseD& poseB_t0,  // Pose of bodyB at t=0
+    const PoseD& poseB_t1,  // Pose of bodyB at t=1
+    size_t edgeB_id,        // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
     double minimum_separation_distance,
@@ -137,7 +136,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
     long eb0i = bodyB.edges(edgeB_id, 0);
     long eb1i = bodyB.edges(edgeB_id, 1);
 
-    double distance_t0 = sqrt(ipc::edge_edge_distance(
+    double distance_t0 = sqrt(edge_edge_distance(
         bodyA.world_vertex(poseA_t0, ea0i), bodyA.world_vertex(poseA_t0, ea1i),
         bodyB.world_vertex(poseB_t0, eb0i),
         bodyB.world_vertex(poseB_t0, eb1i)));
@@ -156,7 +155,7 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
 #endif
 
     bool is_impacting = false;
-    Pose poseA_ti0 = poseA_t0, poseB_ti0 = poseB_t0;
+    PoseD poseA_ti0 = poseA_t0, poseB_ti0 = poseB_t0;
     double ti0 = 0;
     std::stack<double> ts;
 
@@ -174,10 +173,10 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
     while (!ts.empty()) {
         double ti1 = ts.top();
 
-        Pose poseA_ti1 = Pose::interpolate(poseA_t0, poseA_t1, ti1);
-        Pose poseB_ti1 = Pose::interpolate(poseB_t0, poseB_t1, ti1);
+        PoseD poseA_ti1 = PoseD::interpolate(poseA_t0, poseA_t1, ti1);
+        PoseD poseB_ti1 = PoseD::interpolate(poseB_t0, poseB_t1, ti1);
 
-        double distance_ti0 = sqrt(ipc::edge_edge_distance(
+        double distance_ti0 = sqrt(edge_edge_distance(
             bodyA.world_vertex(poseA_ti0, bodyA.edges(edgeA_id, 0)),
             bodyA.world_vertex(poseA_ti0, bodyA.edges(edgeA_id, 1)),
             bodyB.world_vertex(poseB_ti0, bodyB.edges(edgeB_id, 0)),
@@ -311,14 +310,14 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
 
 // Find time-of-impact between two rigid bodies
 bool compute_piecewise_linear_face_vertex_time_of_impact(
-    const physics::RigidBody& bodyA, // Body of the vertex
-    const Pose& poseA_t0,            // Pose of bodyA at t=0
-    const Pose& poseA_t1,            // Pose of bodyA at t=1
-    size_t vertex_id,                // In bodyA
-    const physics::RigidBody& bodyB, // Body of the triangle
-    const Pose& poseB_t0,            // Pose of bodyB at t=0
-    const Pose& poseB_t1,            // Pose of bodyB at t=1
-    size_t face_id,                  // In bodyB
+    const RigidBody& bodyA, // Body of the vertex
+    const PoseD& poseA_t0,  // Pose of bodyA at t=0
+    const PoseD& poseA_t1,  // Pose of bodyA at t=1
+    size_t vertex_id,       // In bodyA
+    const RigidBody& bodyB, // Body of the triangle
+    const PoseD& poseB_t0,  // Pose of bodyB at t=0
+    const PoseD& poseB_t1,  // Pose of bodyB at t=1
+    size_t face_id,         // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
     double minimum_separation_distance,
@@ -329,14 +328,12 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
     assert(dim == 3);
     assert(minimum_separation_distance >= 0);
 
-    typedef physics::Pose<Interval> PoseI;
-
     const auto& vi = vertex_id;
     const auto& f0i = bodyB.faces(face_id, 0);
     const auto& f1i = bodyB.faces(face_id, 1);
     const auto& f2i = bodyB.faces(face_id, 2);
 
-    double distance_t0 = sqrt(ipc::point_triangle_distance(
+    double distance_t0 = sqrt(point_triangle_distance(
         bodyA.world_vertex(poseA_t0, vi), bodyB.world_vertex(poseB_t0, f0i),
         bodyB.world_vertex(poseB_t0, f1i), bodyB.world_vertex(poseB_t0, f2i)));
     if (distance_t0 <= minimum_separation_distance) {
@@ -354,7 +351,7 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
 #endif
 
     bool is_impacting = false;
-    Pose poseA_ti0 = poseA_t0, poseB_ti0 = poseB_t0;
+    PoseD poseA_ti0 = poseA_t0, poseB_ti0 = poseB_t0;
     double ti0 = 0;
     std::stack<double> ts;
 
@@ -372,10 +369,10 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
     while (!ts.empty()) {
         double ti1 = ts.top();
 
-        Pose poseA_ti1 = Pose::interpolate(poseA_t0, poseA_t1, ti1);
-        Pose poseB_ti1 = Pose::interpolate(poseB_t0, poseB_t1, ti1);
+        PoseD poseA_ti1 = PoseD::interpolate(poseA_t0, poseA_t1, ti1);
+        PoseD poseB_ti1 = PoseD::interpolate(poseB_t0, poseB_t1, ti1);
 
-        double distance_ti0 = sqrt(ipc::point_triangle_distance(
+        double distance_ti0 = sqrt(point_triangle_distance(
             bodyA.world_vertex(poseA_ti0, vertex_id),
             bodyB.world_vertex(poseB_ti0, f0i),
             bodyB.world_vertex(poseB_ti0, f1i),
@@ -501,4 +498,4 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
     return is_impacting;
 }
 
-} // namespace ccd
+} // namespace ipc::rigid
