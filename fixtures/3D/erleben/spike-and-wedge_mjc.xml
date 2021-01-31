@@ -1,0 +1,15 @@
+<mujoco>
+    <asset>
+        <mesh file="erleben/spike.stl" name="erleben/spike"/>
+        <mesh file="erleben/wedge.stl" name="erleben/wedge"/>
+    </asset>
+    <worldbody>
+        <body pos="-0 0 3.0001" quat="0.707107 -0.707107 -4.32978e-17 -4.32978e-17">
+            <geom mesh="erleben/spike" type="mesh" friction="0.000000"/>
+            <freejoint/>
+        </body>
+        <body pos="-0 0 -3.0" quat="0 0 0.707107 0.707107">
+            <geom mesh="erleben/wedge" type="mesh" friction="0.000000"/>
+        </body>
+    </worldbody>
+</mujoco>
