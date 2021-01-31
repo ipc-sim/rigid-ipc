@@ -1654,7 +1654,7 @@ void DistanceBarrierRBProblem::check_friction_gradient(
         m_assembler.world_vertices(this->dofs_to_poses(Diff::d1vars(0, x)));
 
     Eigen::MatrixXd V0 = m_assembler.world_vertices(poses_t0);
-    Diff::DDouble1 f_diff = Compute_friction_potential(
+    Diff::DDouble1 f_diff = ipc::compute_friction_potential(
         V0, V_diff, edges(), faces(), friction_constraints,
         static_friction_speed_bound * timestep());
 
@@ -1712,7 +1712,7 @@ void DistanceBarrierRBProblem::check_friction_hessian(
     Diff::D2MatrixXd V_diff =
         m_assembler.world_vertices(this->dofs_to_poses(Diff::d2vars(0, x)));
 
-    Diff::DDouble2 f_diff = Compute_friction_potential(
+    Diff::DDouble2 f_diff = ipc::compute_friction_potential(
         V0, V_diff, edges(), faces(), friction_constraints,
         static_friction_speed_bound * timestep());
 
