@@ -80,19 +80,5 @@ namespace opt {
         const double min_step_length = 1e-10,
         const double armijo_rule_coeff = 0);
 
-    /**
-     * @brief Log values along a search direction.
-     *
-     * @param[in] x                 Starting point for the line search.
-     * @param[in] dir               Direction to search along.
-     * @param[in] f_and_gradf       Function of x to sample with gradient.
-     */
-    void sample_search_direction(
-        const Eigen::VectorXd& x,
-        const Eigen::VectorXd& dir,
-        const std::function<double(const Eigen::VectorXd&, Eigen::VectorXd&)>&
-            f_and_gradf,
-        double max_step);
-
 } // namespace opt
 } // namespace ccd

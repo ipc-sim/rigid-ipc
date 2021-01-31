@@ -6,12 +6,12 @@
 #include <ipc/friction/friction_constraint.hpp>
 
 #include <autodiff/autodiff_types.hpp>
-#include <multiprecision.hpp>
 #include <opt/distance_barrier_constraint.hpp>
 #include <opt/optimization_problem.hpp>
 #include <physics/rigid_body_problem.hpp>
 #include <problems/rigid_body_collision_constraint.hpp>
 #include <solvers/homotopy_solver.hpp>
+#include <utils/multiprecision.hpp>
 
 namespace ccd {
 
@@ -307,7 +307,7 @@ namespace opt {
                 /*compute_hess=*/false);
         }
 
-#ifdef WITH_DERIVATIVE_CHECK
+#ifdef RIGID_IPC_WITH_DERIVATIVE_CHECK
         // The following functions are used exclusivly to check that the
         // gradient and hessian match a finite difference version.
 

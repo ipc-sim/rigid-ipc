@@ -359,7 +359,7 @@ namespace opt {
 
         if (compute_grad) {
             grad = M * diff;
-#ifdef WITH_DERIVATIVE_CHECK
+#ifdef RIGID_IPC_WITH_DERIVATIVE_CHECK
             Eigen::VectorXd grad_approx = eval_grad_energy_approx(*this, x);
             if (!fd::compare_gradient(grad, grad_approx)) {
                 spdlog::error("finite gradient check failed for E(x)");
@@ -369,7 +369,7 @@ namespace opt {
 
         if (compute_hess) {
             hess = Eigen::SparseDiagonal(M.diagonal());
-#ifdef WITH_DERIVATIVE_CHECK
+#ifdef RIGID_IPC_WITH_DERIVATIVE_CHECK
             Eigen::MatrixXd hess_approx = eval_hess_energy_approx(*this, x);
             if (!fd::compare_jacobian(hess, hess_approx)) {
                 spdlog::error("finite hessian check failed for E(x)");

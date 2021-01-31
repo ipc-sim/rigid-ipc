@@ -51,7 +51,7 @@ def get_fixture_dir():
 
 
 def sim_exe_name():
-    return "FixingCollisions_ngui"
+    return "RigidIPC_ngui"
 
 
 def find_sim_exe():

@@ -1,6 +1,25 @@
 cmake_minimum_required(VERSION 3.1)
 ################################################################################
 
+# Catch2
+function(rigid_ipc_download_catch2)
+     rigid_ipc_download_project(Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v2.11.3
+    )
+endfunction()
+
+if(NOT TARGET Catch2::Catch2)
+  rigid_ipc_download_catch2()
+  add_subdirectory(${RIGID_IPC_EXTERNAL}/Catch2 catch2)
+  list(APPEND CMAKE_MODULE_PATH ${RIGID_IPC_EXTERNAL}/Catch2/contrib)
+endif()
+
+include(CTest)
+enable_testing()
+
+################################################################################
+
 add_executable(${PROJECT_NAME}_tests
   main.cpp
 
@@ -17,17 +36,10 @@ add_executable(${PROJECT_NAME}_tests
   ccd/test_rigid_body_time_of_impact.cpp
   ccd/test_rigid_body_hash_grid.cpp
 
-  # Test libarary integration
-  integration/test_mosek.cpp
-
-  solvers/test_ncp.cpp
-  solvers/test_ncp_displacements_opt.cpp
   solvers/test_newton_solver.cpp
   solvers/test_barrier_newton_solver.cpp
   solvers/test_barrier_displacements_opt.cpp
-  solvers/test_line_search.cpp
 
-  # opt/test_volume_constraint.cpp
   opt/test_distance_barrier_constraint.cpp
 
   physics/test_mass.cpp

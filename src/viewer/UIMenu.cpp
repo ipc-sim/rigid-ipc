@@ -113,7 +113,7 @@ void UISimState::draw_io()
         //     }
         // }
 
-        if (ImGui::Button("Save GLTF", ImVec2(-1, 0))) {
+        if (ImGui::Button("Save gltf", ImVec2(-1, 0))) {
             std::string filename = igl::file_dialog_save();
             if (filename != "") {
                 save_gltf(filename);

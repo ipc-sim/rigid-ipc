@@ -92,11 +92,8 @@ namespace io {
                 boost::filesystem::path mesh_path(mesh_fname);
                 if (!exists(mesh_path)) {
                     // TODO: First check a path relative to the input file
-                    mesh_path = boost::filesystem::path(__FILE__)
-                                    .parent_path() // io
-                                    .parent_path() // src
-                                    .parent_path() // root
-                        / "meshes" / mesh_path;
+                    mesh_path = boost::filesystem::path(RIGID_IPC_MESHES_DIR)
+                        / mesh_path;
                 }
                 spdlog::info("loading mesh: {:s}", mesh_path.string());
                 bool success;

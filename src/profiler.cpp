@@ -3,7 +3,7 @@
 #include <profiler.hpp>
 #include <utils/get_rss.hpp>
 
-#ifdef PROFILE_FUNCTIONS
+#ifdef RIGID_IPC_PROFILE_FUNCTIONS
 
 namespace ccd {
 namespace profiler {
@@ -170,7 +170,7 @@ namespace profiler {
         console_sink->set_level(spdlog::level::debug);
 
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-            fmt::format("{}/profiler.log", LOGS_OUTPUT_DIR), false);
+            "logs/profiler.log", false);
         file_sink->set_level(spdlog::level::debug);
 
         spdlog::sinks_init_list sinks = { console_sink, file_sink };

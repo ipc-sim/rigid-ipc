@@ -59,7 +59,7 @@ def fixture_dir():
 
 
 def sim_exe_name():
-    return "FixingCollisions_ngui"
+    return "RigidIPC_ngui"
 
 
 def find_sim_exe():
@@ -202,10 +202,10 @@ def main():
                     capture_output=True, text=True).stdout.strip()
                 print(f"Uploaded video to {video_url}")
 
-        subprocess.run([str(args.sim_exe.parent / "obj_sequence"),
-                        "-i", sim_output_dir / "sim.json",
-                        "-o", sim_output_dir / "objs",
-                        "--loglevel", str(args.loglevel)])
+        # subprocess.run([str(args.sim_exe.parent / "tools" / "obj_sequence"),
+        #                 "-i", sim_output_dir / "sim.json",
+        #                 "-o", sim_output_dir / "objs",
+        #                 "--loglevel", str(args.loglevel)])
 
         with open(sim_output_dir / "sim.json") as sim_output:
             sim_json = json.load(sim_output)

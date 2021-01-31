@@ -6,7 +6,7 @@
 
 #include <ipc/distance/edge_edge.hpp>
 
-#include <ccd.hpp>
+// #include <ccd.hpp>
 #include <ccd/piecewise_linear/time_of_impact.hpp>
 #include <ccd/rigid/time_of_impact.hpp>
 #include <constants.hpp>
@@ -589,36 +589,6 @@ TEST_CASE(
             bodyA, bodyA_pose_t0, bodyA_pose_t1, /*edgeA_id=*/0, //
             bodyB, bodyB_pose_t0, bodyB_pose_t1, /*edgeB_id=*/0, //
             toi);
-    };
-    BENCHMARK("Extremly Slow EE CCD Linearized")
-    {
-        bool is_impacting = false;
-        int n = 100;
-        Pose<double> poseA_ti0 = bodyA_pose_t0, poseB_ti0 = bodyB_pose_t0;
-        for (int i = 1; i <= n; i++) {
-            Pose<double> poseA_ti1 = Pose<double>::interpolate(
-                bodyA_pose_t0, bodyA_pose_t1, i / double(n));
-            Pose<double> poseB_ti1 = Pose<double>::interpolate(
-                bodyB_pose_t0, bodyB_pose_t1, i / double(n));
-
-            is_impacting = ccd::edgeEdgeCCD(
-                bodyA.world_vertex(poseA_ti0, 0),
-                bodyA.world_vertex(poseA_ti0, 1),
-                bodyB.world_vertex(poseB_ti0, 0),
-                bodyB.world_vertex(poseB_ti0, 1),
-                bodyA.world_vertex(poseA_ti1, 0),
-                bodyA.world_vertex(poseA_ti1, 1),
-                bodyB.world_vertex(poseB_ti1, 0),
-                bodyB.world_vertex(poseB_ti1, 1),
-                ccd::CCDMethod::TIGHT_INCLUSION);
-
-            if (is_impacting) {
-                break;
-            }
-
-            poseA_ti0 = poseA_ti1;
-            poseB_ti0 = poseB_ti1;
-        }
     };
 }
 

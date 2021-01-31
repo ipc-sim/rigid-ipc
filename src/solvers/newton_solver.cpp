@@ -8,7 +8,6 @@
 #include <constants.hpp>
 #include <logger.hpp>
 #include <profiler.hpp>
-#include <solvers/line_search.hpp> // sample_search_direction
 
 // #define USE_GRADIENT_DESCENT
 
@@ -632,6 +631,43 @@ namespace opt {
         if (is_energy_converged
             && !problem_ptr->are_equality_constraints_satisfied(x)) {
             problem_ptr->update_augmented_lagrangian(x);
+        }
+    }
+
+    // Log samples along the search direction.
+    void sample_search_direction(
+        const Eigen::VectorXd& x,
+        const Eigen::VectorXd& dir,
+        const std::function<double(const Eigen::VectorXd&, Eigen::VectorXd&)>&
+            f_and_gradf,
+        double max_step)
+    {
+        Eigen::VectorXd grad_fx;
+
+        Eigen::VectorXd sampling;
+        int num_samples = 25;
+        bool use_geometric_sampling = true;
+        if (use_geometric_sampling) {
+            sampling.resize(2 * num_samples + 1);
+            double max_pow = log10(max_step);
+            sampling.tail(num_samples) =
+                pow(10, Eigen::ArrayXd::LinSpaced(num_samples, -16, max_pow));
+            sampling(num_samples) = 0;
+            sampling.head(num_samples) = -sampling.tail(num_samples).reverse();
+        } else {
+            sampling = Eigen::VectorXd::LinSpaced(
+                2 * num_samples + 1, -max_step, max_step);
+        }
+
+        double fx0 = f_and_gradf(x, grad_fx);
+        for (int i = 0; i < sampling.size(); i++) {
+            double step_length = sampling(i);
+            double fx = f_and_gradf(x + step_length * dir, grad_fx);
+            spdlog::log(
+                step_length < 0 ? spdlog::level::debug : spdlog::level::info,
+                "method=line_search step_length={:+.1e} obj={:.16g} "
+                "(obj_i-obj_0)={:.16g} grad_L∞norm={:g}",
+                step_length, fx, fx - fx0, grad_fx.lpNorm<Eigen::Infinity>());
         }
     }
 

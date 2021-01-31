@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef PROFILE_FUNCTIONS
+#ifdef RIGID_IPC_PROFILE_FUNCTIONS
 
 #include <igl/Timer.h>
 #include <iostream>
@@ -63,7 +63,7 @@ namespace profiler {
         void log(const std::string& fin = "");
 
     protected:
-        std::string dout = LOGS_OUTPUT_DIR;
+        std::string dout = "logs";
         Profiler() {}
         void write_summary(const std::string& dout, const std::string& fin);
         void write_point_details(

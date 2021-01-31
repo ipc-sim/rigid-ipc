@@ -8,7 +8,7 @@
 #include <ipc/distance/point_triangle.hpp>
 #include <ipc/ipc.hpp>
 
-#ifdef WITH_DERIVATIVE_CHECK
+#ifdef RIGID_IPC_WITH_DERIVATIVE_CHECK
 #include <finitediff.hpp>
 #endif
 
@@ -802,7 +802,7 @@ namespace opt {
 
         PROFILE_END();
 
-#ifdef WITH_DERIVATIVE_CHECK
+#ifdef RIGID_IPC_WITH_DERIVATIVE_CHECK
         if (!is_checking_derivative) {
             is_checking_derivative = true;
             // A large mass (e.g., from a large ground plane) can affect the
@@ -1052,7 +1052,7 @@ namespace opt {
 
         PROFILE_END();
 
-#ifdef WITH_DERIVATIVE_CHECK
+#ifdef RIGID_IPC_WITH_DERIVATIVE_CHECK
         if (!is_checking_derivative) {
             is_checking_derivative = true;
             if (compute_grad) {
@@ -1345,7 +1345,7 @@ namespace opt {
 
         PROFILE_END();
 
-#ifdef WITH_DERIVATIVE_CHECK
+#ifdef RIGID_IPC_WITH_DERIVATIVE_CHECK
         if (!is_checking_derivative) {
             is_checking_derivative = true;
             if (compute_grad) {
@@ -1521,7 +1521,7 @@ namespace opt {
 
         PROFILE_END();
 
-#ifdef WITH_DERIVATIVE_CHECK
+#ifdef RIGID_IPC_WITH_DERIVATIVE_CHECK
         if (!is_checking_derivative) {
             is_checking_derivative = true;
             if (compute_grad) {
@@ -1586,7 +1586,7 @@ namespace opt {
         return earliest_toi;
     }
 
-#ifdef WITH_DERIVATIVE_CHECK
+#ifdef RIGID_IPC_WITH_DERIVATIVE_CHECK
     // The following functions are used exclusivly to check that the
     // gradient and hessian match a finite difference version.
 

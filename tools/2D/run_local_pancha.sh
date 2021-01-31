@@ -1,5 +1,5 @@
 RESULTS_FOLDER=results/paper-results/
-SIM=build/Release/FixingCollisions_ngui
+SIM=build/Release/RigidIPC_ngui
 MIN_DISTANCE=build/Release/cli_mindistance
 
 set -e

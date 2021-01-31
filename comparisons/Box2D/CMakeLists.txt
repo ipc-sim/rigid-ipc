@@ -1,22 +1,22 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.8)
 ################################################################################
 
 add_executable(Box2D_comparison
-    src/main.cpp
+  src/main.cpp
 )
 
 # Download Box2D
-function(fixing_collisions_download_box2d)
-    fixing_collisions_download_project(Box2D-cmake
-        GIT_REPOSITORY https://github.com/tobanteGaming/Box2D-cmake.git
-        GIT_TAG        6cf2fe06fbd7a5b6f37affcbe39a4f3a7063df85
-    )
+function(rigid_ipc_download_box2d)
+  rigid_ipc_download_project(Box2D-cmake
+    GIT_REPOSITORY https://github.com/tobanteGaming/Box2D-cmake.git
+    GIT_TAG        6cf2fe06fbd7a5b6f37affcbe39a4f3a7063df85
+  )
 endfunction()
 
 # Box2D
 if(NOT TARGET tobanteGaming::Box2D)
-    fixing_collisions_download_box2d()
-    add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/Box2D-cmake box2d)
+  rigid_ipc_download_box2d()
+  add_subdirectory(${RIGID_IPC_EXTERNAL}/Box2D-cmake box2d)
 endif()
 target_link_libraries(Box2D_comparison PUBLIC tobanteGaming::Box2D)
 

@@ -2,7 +2,9 @@
 
 #include <Eigen/Geometry>
 
+#ifdef RIGID_IPC_USE_EXACT_INTERSECTION
 #include <ECCD.hpp>
+#endif
 #include <igl/predicates/predicates.h>
 #include <ipc/friction/closest_point.hpp>
 
@@ -86,8 +88,10 @@ namespace geometry {
             return false;
         }
 
-        // int res = eccd::segment_triangle_inter(e0, e1, t0, t1, t2);
-        // return res == 1;
+#ifdef RIGID_IPC_USE_EXACT_INTERSECTION
+        int res = eccd::segment_triangle_inter(e0, e1, t0, t1, t2);
+        return res == 1;
+#else
         Eigen::Matrix3d M;
         M.col(0) = t1 - t0;
         M.col(1) = t2 - t0;
@@ -99,6 +103,7 @@ namespace geometry {
         } else {
             return false;
         }
+#endif
     }
 
 } // namespace geometry
