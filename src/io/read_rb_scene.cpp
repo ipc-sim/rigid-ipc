@@ -38,6 +38,9 @@ namespace io {
         using namespace nlohmann;
         using namespace physics;
         int dim = -1, ndof, angular_dim;
+
+        std::unordered_map<std::string, int> rb_name_to_count;
+
         for (auto& jrb : scene["rigid_bodies"]) {
             // NOTE:
             // All units by default are expressed in standard SI units
@@ -82,6 +85,7 @@ namespace io {
 
             Eigen::MatrixXd vertices;
             Eigen::MatrixXi faces, edges;
+            std::string rb_name;
 
             std::string mesh_fname = args["mesh"].get<std::string>();
             if (mesh_fname != "") {
@@ -111,11 +115,14 @@ namespace io {
                 if (!success) {
                     return false;
                 }
+
+                rb_name = mesh_path.stem().string();
             } else {
                 // Assumes that edges contains the edges of the faces too.
                 from_json(args["vertices"], vertices);
                 from_json(args["edges"], edges);
                 from_json(args["faces"], faces);
+                rb_name = "RigidBody";
             }
 
             if (dim == -1) {
@@ -260,6 +267,7 @@ namespace io {
                         Pose<double>(linear_velocity, angular_velocity),
                         Pose<double>(force, torque), density, is_dof_fixed,
                         is_oriented, group_id, rb_type, kinematic_max_time);
+                    rb.name = fmt::format("{}-part{:03d}", rb_name, ci);
                     rbs.push_back(rb);
                 }
             } else {
@@ -268,6 +276,7 @@ namespace io {
                     Pose<double>(linear_velocity, angular_velocity),
                     Pose<double>(force, torque), density, is_dof_fixed,
                     is_oriented, group_id, rb_type, kinematic_max_time);
+                rb.name = rb_name;
                 rbs.push_back(rb);
             }
         }

@@ -201,6 +201,8 @@ namespace physics {
         // Properties
         // --------------------------------------------------------------------
 
+        std::string name = "RigidBody";
+
         /// @brief Group id of this body
         int group_id;
 

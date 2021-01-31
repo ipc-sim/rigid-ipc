@@ -128,7 +128,15 @@ endfunction()
 # SimpleBVH
 function(fixing_collisions_download_simple_bvh)
   fixing_collisions_download_project(SimpleBVH
-    GIT_REPOSITORY git@github.com:geometryprocessing/SimpleBVH.git
+    GIT_REPOSITORY https://github.com/geometryprocessing/SimpleBVH.git
     GIT_TAG        15574502f6cb8039b0bfa4a85ccad04e09deaf05
+  )
+endfunction()
+
+# tinygltf
+function(fixing_collisions_download_tinygltf)
+  fixing_collisions_download_project(tinygltf
+    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+    GIT_TAG        v2.5.0
   )
 endfunction()

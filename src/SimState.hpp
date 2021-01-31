@@ -25,6 +25,7 @@ public:
     void save_simulation_step();
 
     bool save_obj_sequence(const std::string& dir_name);
+    bool save_gltf(const std::string& filename);
 
     void run_simulation(const std::string& fout);
 

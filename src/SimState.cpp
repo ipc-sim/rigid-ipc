@@ -12,7 +12,9 @@
 #include <constants.hpp>
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
+#include <io/write_gltf.hpp>
 #include <io/write_obj.hpp>
+#include <physics/rigid_body_problem.hpp>
 #include <problems/problem_factory.hpp>
 #include <utils/get_rss.hpp>
 #include <utils/regular_2d_grid.hpp>
@@ -348,6 +350,10 @@ void SimState::run_simulation(const std::string& fout)
 
     save_simulation(fout);
     spdlog::info("Simulation results saved to {}", fout);
+    boost::filesystem::path gltf_filename(fout);
+    gltf_filename.replace_extension(".glb");
+    save_gltf(gltf_filename.string());
+    spdlog::info("Animation saved to {}", gltf_filename.string());
 
     PROFILE_END();
     LOG_PROFILER(scene_file);
@@ -440,9 +446,6 @@ bool SimState::save_simulation(const std::string& filename)
 
 bool SimState::save_obj_sequence(const std::string& dir_name)
 {
-    PROFILE_POINT("SimState::save_mesh");
-    PROFILE_START();
-
     // Create the output directory if it does not exist
     boost::filesystem::path dir_path(dir_name);
     boost::filesystem::create_directories(dir_path);
@@ -458,8 +461,31 @@ bool SimState::save_obj_sequence(const std::string& dir_name)
 
     problem_ptr->state(state_sequence.back());
 
-    PROFILE_END();
     return success;
+}
+
+bool SimState::save_gltf(const std::string& filename)
+{
+    std::vector<physics::Poses<double>> poses(state_sequence.size());
+
+    bool success = true;
+    for (int i = 0; i < state_sequence.size(); i++) {
+        const auto& state = state_sequence[i];
+        std::vector<nlohmann::json> jrbs = state["rigid_bodies"];
+        for (int j = 0; j < jrbs.size(); j++) {
+            Eigen::VectorX3d position;
+            Eigen::VectorX3d rotation;
+            io::from_json(jrbs[j]["position"], position);
+            io::from_json(jrbs[j]["rotation"], rotation);
+            poses[i].emplace_back(position, rotation);
+        }
+    }
+
+    std::shared_ptr<physics::RigidBodyProblem> rbp =
+        std::dynamic_pointer_cast<physics::RigidBodyProblem>(problem_ptr);
+
+    return io::write_gltf(
+        filename, rbp->m_assembler, poses, problem_ptr->timestep());
 }
 
 } // namespace ccd

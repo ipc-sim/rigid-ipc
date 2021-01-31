@@ -79,6 +79,7 @@ add_library(${PROJECT_NAME}
   src/io/read_rb_scene.cpp
   src/io/read_obj.cpp
   src/io/write_obj.cpp
+  src/io/write_gltf.cpp
 
   src/physics/mass.cpp
   src/utils/mesh_selector.cpp
@@ -232,6 +233,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC filib)
 # SimpleBVH
 target_link_libraries(${PROJECT_NAME} PUBLIC SimpleBVH::BVH_lib)
 
+# tinygltf
+target_link_libraries(${PROJECT_NAME} PUBLIC tinygltf)
+
 ################################################################################
 # Compiler options
 ################################################################################
@@ -346,6 +350,16 @@ add_executable(obj_sequence
 
 target_link_libraries(obj_sequence PUBLIC ${PROJECT_NAME})
 target_link_libraries(obj_sequence PUBLIC CLI11::CLI11)
+
+################################################################################
+# OBJ Sequence Generator
+################################################################################
+add_executable(sim_to_gltf
+  src/tools/sim_to_gltf.cpp
+)
+
+target_link_libraries(sim_to_gltf PUBLIC ${PROJECT_NAME})
+target_link_libraries(sim_to_gltf PUBLIC CLI11::CLI11)
 
 ################################################################################
 # CCD Comparisons

@@ -69,6 +69,11 @@ public:
         return success;
     }
 
+    bool save_gltf(const std::string& filename)
+    {
+        return m_state.save_gltf(filename);
+    }
+
     void get_window_dimensions(int& width, int& height) const
     {
         width = m_viewer.core().viewport[2] - m_viewer.core().viewport[0];

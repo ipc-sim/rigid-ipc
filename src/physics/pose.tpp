@@ -141,6 +141,12 @@ namespace physics {
     }
 
     template <typename T>
+    Eigen::Quaternion<T> Pose<T>::construct_quaternion() const
+    {
+        return ccd::construct_quaternion(rotation);
+    }
+
+    template <typename T>
     Pose<T>
     Pose<T>::interpolate(const Pose<T>& pose0, const Pose<T>& pose1, T t)
     {
@@ -222,6 +228,17 @@ Eigen::MatrixXX3<T> construct_rotation_matrix(const Eigen::VectorX3<T>& r)
         R.diagonal().array() += T(1.0);
         return R;
     }
+}
+
+template <typename Derived, typename T>
+Eigen::Quaternion<T> construct_quaternion(const Eigen::MatrixBase<Derived>& r)
+{
+    assert(r.size() == 3 && (r.rows() == 3 || r.cols() == 3));
+    T angle = r.norm();
+    if (angle == 0) {
+        return Eigen::Quaternion<T>::Identity();
+    }
+    return Eigen::Quaternion<T>(Eigen::AngleAxis<T>(angle, r / angle));
 }
 
 template <typename T> Eigen::Matrix3<T> rotate_to_z(Eigen::Vector3<T> n)

@@ -154,3 +154,10 @@ if(NOT TARGET SimpleBVH::BVH_lib)
   add_subdirectory(${FIXING_COLLISIONS_EXTERNAL}/SimpleBVH)
   add_library(SimpleBVH::BVH_lib ALIAS BVH_lib)
 endif()
+
+# tinygltf
+if(NOT TARGET tinygltf)
+  fixing_collisions_download_tinygltf()
+  add_library(tinygltf INTERFACE)
+  target_include_directories(tinygltf INTERFACE ${FIXING_COLLISIONS_EXTERNAL}/tinygltf)
+endif()

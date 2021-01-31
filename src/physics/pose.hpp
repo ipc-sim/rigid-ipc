@@ -72,6 +72,8 @@ namespace physics {
 
         Eigen::MatrixXX3<T> construct_rotation_matrix() const;
 
+        Eigen::Quaternion<T> construct_quaternion() const;
+
         static Pose<T>
         interpolate(const Pose<T>& pose0, const Pose<T>& pose1, T t);
 
@@ -110,6 +112,8 @@ namespace physics {
 
 template <typename T>
 Eigen::MatrixXX3<T> construct_rotation_matrix(const Eigen::VectorX3<T>& r);
+template <typename Derived, typename T = typename Derived::Scalar>
+Eigen::Quaternion<T> construct_quaternion(const Eigen::MatrixBase<Derived>& r);
 
 template <typename T> Eigen::Matrix3<T> rotate_to_z(Eigen::Vector3<T> n);
 template <typename T> Eigen::Matrix3<T> rotate_around_z(const T& theta);

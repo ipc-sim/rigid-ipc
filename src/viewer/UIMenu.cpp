@@ -106,10 +106,17 @@ void UISimState::draw_io()
             save(fname);
         }
 
-        if (ImGui::Button("Save OBJ sequence", ImVec2(-1, 0))) {
-            std::string dir_name = igl::file_dialog_save();
-            if (dir_name != "") {
-                save_obj_sequence(dir_name);
+        // if (ImGui::Button("Save OBJ sequence", ImVec2(-1, 0))) {
+        //     std::string dir_name = igl::file_dialog_save();
+        //     if (dir_name != "") {
+        //         save_obj_sequence(dir_name);
+        //     }
+        // }
+
+        if (ImGui::Button("Save GLTF", ImVec2(-1, 0))) {
+            std::string filename = igl::file_dialog_save();
+            if (filename != "") {
+                save_gltf(filename);
             }
         }
 
