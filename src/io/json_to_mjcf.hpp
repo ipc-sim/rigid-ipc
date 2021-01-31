@@ -59,6 +59,13 @@ int json_to_mjcf(const char* jsonFilePath, int mode = 0) // mode0: bullet, mode1
         }
         printer.CloseElement(); // asset
 
+        double fricCoef = 0;
+        if (scene["rigid_body_problem"].find("coefficient_friction") != 
+            scene["rigid_body_problem"].end()) 
+        {
+            fricCoef = scene["rigid_body_problem"]["coefficient_friction"].get<double>();
+        }
+
         printer.OpenElement("worldbody");
         std::stringstream ss;
         Eigen::Matrix3d swapYZ;
@@ -69,9 +76,14 @@ int json_to_mjcf(const char* jsonFilePath, int mode = 0) // mode0: bullet, mode1
         for (const auto& rbI : scene["rigid_body_problem"]["rigid_bodies"]) {
             printer.OpenElement("body");
 
-            ss << -rbI["position"][0].get<double>() << " " << rbI["position"][2] << " " << rbI["position"][1];
-            printer.PushAttribute("pos", ss.str().c_str());
-            ss.str(std::string());
+            if (rbI.find("position") != rbI.end()) {
+                ss << -rbI["position"][0].get<double>() << " " << rbI["position"][2] << " " << rbI["position"][1];
+                printer.PushAttribute("pos", ss.str().c_str());
+                ss.str(std::string());
+            }
+            else {
+                printer.PushAttribute("pos", "0 0 0");
+            }
 
             std::vector<double> rotation;
             if (rbI.find("rotation") != rbI.end()) {
@@ -112,6 +124,7 @@ int json_to_mjcf(const char* jsonFilePath, int mode = 0) // mode0: bullet, mode1
             if (rbI.find("density") != rbI.end()) {
                 printer.PushAttribute("density", std::to_string(rbI["density"].get<double>()).c_str());
             }
+            printer.PushAttribute("friction", std::to_string(fricCoef).c_str());
             printer.CloseElement(); // geom
 
             bool isFixed = false;
@@ -132,11 +145,13 @@ int json_to_mjcf(const char* jsonFilePath, int mode = 0) // mode0: bullet, mode1
             }
 
             if (!isFixed && rbI.find("type") != rbI.end()) {
-                if (rbI["type"].get<std::string>() == "static" && mode == 0) {
+                if (rbI["type"].get<std::string>() == "static") {
                     isFixed = true;
-                    printer.OpenElement("inertial");
-                    printer.PushAttribute("mass", "0");
-                    printer.CloseElement(); // inertial
+                    if (mode == 0) {
+                        printer.OpenElement("inertial");
+                        printer.PushAttribute("mass", "0");
+                        printer.CloseElement(); // inertial
+                    }
                 }
             }
 
