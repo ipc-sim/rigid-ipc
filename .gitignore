@@ -222,8 +222,10 @@ dmypy.json
 .pyre/
 
 ## AUTOGEN!
-src/autogen/*.ipp
+#comparisons/STIV/src/autogen/*.ipp
+#src/autogen/*.ipp
 #src/autogen/*.hpp
+
 fixtures/auto_*.json
 figures/*.data
 data/*.local/

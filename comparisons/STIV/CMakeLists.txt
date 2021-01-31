@@ -21,14 +21,11 @@ add_library(STIV
   src/solvers/line_search.cpp
 
   src/problems/volume_rb_problem.cpp
-
-  # Generated files
-  src/autogen/collision_volume.tpp
 )
 
 target_include_directories(STIV PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-project_autogen(${PROJECT_NAME} collision_volume.py collision_volume.tpp auto_collision_volume .ipp)
+# project_autogen(STIV collision_volume.py collision_volume.tpp auto_collision_volume .ipp)
 
 # MOSEK QP solver
 if(STIV_WITH_MOSEK)

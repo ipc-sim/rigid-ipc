@@ -8,6 +8,6 @@ if(RIGID_IPC_WITH_BOX2D_COMPARISONS)
   add_subdirectory(Box2D)
 endif()
 
-if(RIGID_IPC_WITH_BOX2D_COMPARISONS)
+if(RIGID_IPC_WITH_STIV_COMPARISONS)
   add_subdirectory(STIV)
 endif()
