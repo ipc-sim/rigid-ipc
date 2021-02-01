@@ -181,8 +181,7 @@ void DistanceBarrierRBProblem::update_friction_constraints(
     construct_friction_constraint_set(
         V0, edges(), faces(), collision_constraints,
         barrier_activation_distance(), barrier_stiffness(),
-        coefficient_friction, friction_constraints,
-        m_constraint.minimum_separation_distance);
+        coefficient_friction, friction_constraints);
 
     PROFILE_END();
 }
@@ -1267,7 +1266,6 @@ double DistanceBarrierRBProblem::compute_barrier_term(
         x, jac_V, hess_V, compute_grad || compute_hess, compute_hess);
 
     double dhat = barrier_activation_distance();
-    double dmin = m_constraint.minimum_separation_distance;
 
     ThreadSpecificPotentials thread_storage(x.size());
     tbb::parallel_for(
@@ -1283,15 +1281,15 @@ double DistanceBarrierRBProblem::compute_barrier_term(
                 const auto& constraint = constraints[ci];
 
                 // PROFILE_START(COMPUTE_BARRIER_VAL);
-                potential += constraint.compute_potential(
-                    V, edges(), faces(), dhat, dmin);
+                potential +=
+                    constraint.compute_potential(V, edges(), faces(), dhat);
                 // PROFILE_START(COMPUTE_BARRIER_VAL);
 
                 Eigen::VectorX12d grad_B;
                 if (compute_grad || compute_hess) {
                     // PROFILE_START(COMPUTE_BARRIER_GRAD);
                     grad_B = constraint.compute_potential_gradient(
-                        V, edges(), faces(), dhat, dmin);
+                        V, edges(), faces(), dhat);
                     // PROFILE_END(COMPUTE_BARRIER_GRAD);
                 }
 
@@ -1299,7 +1297,7 @@ double DistanceBarrierRBProblem::compute_barrier_term(
                 if (compute_hess) {
                     // PROFILE_START(COMPUTE_BARRIER_HESS);
                     hess_B = constraint.compute_potential_hessian(
-                        V, edges(), faces(), dhat, dmin,
+                        V, edges(), faces(), dhat,
                         /*project_to_psd=*/false);
                     // PROFILE_END(COMPUTE_BARRIER_HESS);
                 }
