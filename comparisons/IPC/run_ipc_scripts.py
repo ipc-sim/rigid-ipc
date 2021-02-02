@@ -106,7 +106,7 @@ def main():
     scripts_dir = pathlib.Path(__file__).resolve().parent / "scripts"
     fixtures_dir = pathlib.Path(__file__).resolve().parents[2] / "fixtures"
 
-    render_exe = args.rigid_exe.parent / "render_simulation"
+    render_exe = args.rigid_exe.parent / "tools" / "render_simulation"
 
     df = pandas.DataFrame(columns=[
         "Scene", "IPC Video", "Rigid Video", "IPC Runtime", "Rigid Runtime",

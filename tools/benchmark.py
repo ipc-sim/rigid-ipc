@@ -187,7 +187,7 @@ def main():
         else:
             print("Rendering simulation")
             video_name = f"{scene.stem}-{get_time_stamp()}.mp4"
-            subprocess.run([str(args.sim_exe.parent / "render_simulation"),
+            subprocess.run([str(args.sim_exe.parent / "tools" / "render_simulation"),
                             sim_output_dir / "sim.json",
                             "-o", sim_output_dir / video_name,
                             "--loglevel", str(args.loglevel)])
