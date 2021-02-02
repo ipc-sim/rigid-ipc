@@ -202,7 +202,7 @@ bool write_gltf(
         byte_i += sizeof(Float);
     }
     for (int i = 0; i < num_bodies; i++) {
-        for (int j = 1; j < poses.size(); j++) {
+        for (int j = 0; j < num_steps; j++) {
             Eigen::Vector3d p = poses[j][i].position;
             for (int d = 0; d < p.size(); d++) {
                 Float pd = p[d];
@@ -211,7 +211,7 @@ bool write_gltf(
             }
         }
 
-        for (int j = 1; j < poses.size(); j++) {
+        for (int j = 0; j < num_steps; j++) {
             Eigen::Quaternion<double> quat = poses[j][i].construct_quaternion();
             Eigen::Vector4d q(quat.x(), quat.y(), quat.z(), quat.w());
             for (int d = 0; d < q.size(); d++) {
