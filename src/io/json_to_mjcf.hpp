@@ -126,6 +126,24 @@ int json_to_mjcf(
                     printer.PushAttribute("size", sizeStr.c_str());
                 }
             }
+            else if (rbI.find("dimensions") != rbI.end()) {
+                try {
+                    double scale = rbI["dimensions"].get<double>();
+                    std::string sizeStr(std::to_string(scale));
+                    sizeStr += " " + sizeStr + " " + sizeStr;
+                    printer.PushAttribute("size", sizeStr.c_str());
+                }
+                catch(...) {
+                    std::vector<double> scale = rbI["dimensions"].get<std::vector<double>>();
+                    if (scale.size() != 3) {
+                        spdlog::error("scale dimension error!");
+                        exit(-1);
+                    }
+                    std::string sizeStr(std::to_string(scale[0]));
+                    sizeStr += " " + std::to_string(scale[1]) + " " + std::to_string(scale[2]);
+                    printer.PushAttribute("size", sizeStr.c_str());
+                }
+            }
             if (rbI.find("density") != rbI.end()) {
                 printer.PushAttribute(
                     "density",
@@ -220,6 +238,22 @@ int generate_bullet_results(
                 } catch (...) {
                     std::vector<double> scale =
                         rbI["scale"].get<std::vector<double>>();
+                    if (scale.size() != 3) {
+                        spdlog::error("scale dimension error!");
+                        exit(-1);
+                    }
+                    V.back().col(0) *= scale[0];
+                    V.back().col(1) *= scale[1];
+                    V.back().col(2) *= scale[2];
+                }
+            }
+            else if (rbI.find("dimensions") != rbI.end()) {
+                try {
+                    double scale = rbI["dimensions"].get<double>();
+                    V.back() *= scale;
+                }
+                catch(...) {
+                    std::vector<double> scale = rbI["dimensions"].get<std::vector<double>>();
                     if (scale.size() != 3) {
                         spdlog::error("scale dimension error!");
                         exit(-1);
