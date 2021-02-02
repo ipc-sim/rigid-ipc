@@ -1,6 +1,7 @@
 <mujoco>
     <asset>
         <mesh file="plane.stl" name="plane"/>
+        <mesh file="plane.stl" name="plane_0" scale="110.361250 1.000000 100.000000"/>
         <mesh file="arch/num_stones=101/stone-01.stl" name="arch/num_stones=101/stone-01"/>
         <mesh file="arch/num_stones=101/stone-02.stl" name="arch/num_stones=101/stone-02"/>
         <mesh file="arch/num_stones=101/stone-03.stl" name="arch/num_stones=101/stone-03"/>
@@ -105,7 +106,7 @@
     </asset>
     <worldbody>
         <body pos="-0 0 0" quat="0 0 0.707107 0.707107">
-            <geom mesh="plane" type="mesh" size="110.361250 0.000000 100.000000" friction="0.500000"/>
+            <geom mesh="plane_0" type="mesh" friction="0.500000"/>
         </body>
         <body pos="0 0 0" quat="0 0 0.707107 0.707107">
             <geom mesh="arch/num_stones=101/stone-01" type="mesh" friction="0.500000"/>

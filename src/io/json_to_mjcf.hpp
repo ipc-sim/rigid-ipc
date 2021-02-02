@@ -42,6 +42,7 @@ int json_to_mjcf(
         std::set<std::string> meshFilePathSet;
         std::vector<std::string> meshNames;
         printer.OpenElement("asset");
+        int rbId = 0;
         for (const auto& rbI : scene["rigid_body_problem"]["rigid_bodies"]) {
             std::string meshFilePath = rbI["mesh"].get<std::string>();
             meshNames.emplace_back(
@@ -59,6 +60,62 @@ int json_to_mjcf(
                 printer.PushAttribute("name", meshNames.back().c_str());
                 printer.CloseElement(); // mesh
             }
+            if (mode == 1 && (rbI.find("dimensions") != rbI.end() || rbI.find("scale") != rbI.end())) {
+                printer.OpenElement("mesh");
+                printer.PushAttribute("file", (meshNames.back() + ".stl").c_str());
+                meshNames.back() += "_" + std::to_string(rbId);
+                printer.PushAttribute("name", meshNames.back().c_str());
+                if (rbI.find("scale") != rbI.end()) {
+                    try {
+                        double scale = rbI["scale"].get<double>();
+                        std::string sizeStr(std::to_string(scale));
+                        sizeStr += " " + sizeStr + " " + sizeStr;
+                        printer.PushAttribute("scale", sizeStr.c_str());
+                    } catch (...) {
+                        std::vector<double> scale =
+                            rbI["scale"].get<std::vector<double>>();
+                        if (scale.size() != 3) {
+                            spdlog::error("scale dimension error!");
+                            exit(-1);
+                        }
+                        for (auto &i : scale) {
+                            if (!i) {
+                                i = 1;
+                            }
+                        }
+                        std::string sizeStr(std::to_string(scale[0]));
+                        sizeStr += " " + std::to_string(scale[1]) + " "
+                            + std::to_string(scale[2]);
+                        printer.PushAttribute("scale", sizeStr.c_str());
+                    }
+                }
+                else if (rbI.find("dimensions") != rbI.end()) {
+                    try {
+                        double scale = rbI["dimensions"].get<double>();
+                        std::string sizeStr(std::to_string(scale));
+                        sizeStr += " " + sizeStr + " " + sizeStr;
+                        printer.PushAttribute("scale", sizeStr.c_str());
+                    }
+                    catch(...) {
+                        std::vector<double> scale = rbI["dimensions"].get<std::vector<double>>();
+                        if (scale.size() != 3) {
+                            spdlog::error("scale dimension error!");
+                            exit(-1);
+                        }
+                        for (auto &i : scale) {
+                            if (!i) {
+                                i = 1;
+                            }
+                        }
+                        std::string sizeStr(std::to_string(scale[0]));
+                        sizeStr += " " + std::to_string(scale[1]) + " " + std::to_string(scale[2]);
+                        printer.PushAttribute("scale", sizeStr.c_str());
+                    }
+                }
+                printer.CloseElement(); // mesh
+            }
+            
+            ++rbId;
         }
         printer.CloseElement(); // asset
 
@@ -73,7 +130,7 @@ int json_to_mjcf(
         std::stringstream ss;
         Eigen::Matrix3d swapYZ;
         swapYZ << -1, 0, 0, 0, 0, 1, 0, 1, 0;
-        int rbId = 0;
+        rbId = 0;
         for (const auto& rbI : scene["rigid_body_problem"]["rigid_bodies"]) {
             printer.OpenElement("body");
 
@@ -107,41 +164,53 @@ int json_to_mjcf(
             printer.OpenElement("geom");
             printer.PushAttribute("mesh", meshNames[rbId].c_str());
             printer.PushAttribute("type", "mesh");
-            if (rbI.find("scale") != rbI.end()) {
-                try {
-                    double scale = rbI["scale"].get<double>();
-                    std::string sizeStr(std::to_string(scale));
-                    sizeStr += " " + sizeStr + " " + sizeStr;
-                    printer.PushAttribute("size", sizeStr.c_str());
-                } catch (...) {
-                    std::vector<double> scale =
-                        rbI["scale"].get<std::vector<double>>();
-                    if (scale.size() != 3) {
-                        spdlog::error("scale dimension error!");
-                        exit(-1);
+            if (mode == 0) {
+                if (rbI.find("scale") != rbI.end()) {
+                    try {
+                        double scale = rbI["scale"].get<double>();
+                        std::string sizeStr(std::to_string(scale));
+                        sizeStr += " " + sizeStr + " " + sizeStr;
+                        printer.PushAttribute("size", sizeStr.c_str());
+                    } catch (...) {
+                        std::vector<double> scale =
+                            rbI["scale"].get<std::vector<double>>();
+                        if (scale.size() != 3) {
+                            spdlog::error("scale dimension error!");
+                            exit(-1);
+                        }
+                        for (auto &i : scale) {
+                            if (!i) {
+                                i = 1;
+                            }
+                        }
+                        std::string sizeStr(std::to_string(scale[0]));
+                        sizeStr += " " + std::to_string(scale[1]) + " "
+                            + std::to_string(scale[2]);
+                        printer.PushAttribute("size", sizeStr.c_str());
                     }
-                    std::string sizeStr(std::to_string(scale[0]));
-                    sizeStr += " " + std::to_string(scale[1]) + " "
-                        + std::to_string(scale[2]);
-                    printer.PushAttribute("size", sizeStr.c_str());
                 }
-            }
-            else if (rbI.find("dimensions") != rbI.end()) {
-                try {
-                    double scale = rbI["dimensions"].get<double>();
-                    std::string sizeStr(std::to_string(scale));
-                    sizeStr += " " + sizeStr + " " + sizeStr;
-                    printer.PushAttribute("size", sizeStr.c_str());
-                }
-                catch(...) {
-                    std::vector<double> scale = rbI["dimensions"].get<std::vector<double>>();
-                    if (scale.size() != 3) {
-                        spdlog::error("scale dimension error!");
-                        exit(-1);
+                else if (rbI.find("dimensions") != rbI.end()) {
+                    try {
+                        double scale = rbI["dimensions"].get<double>();
+                        std::string sizeStr(std::to_string(scale));
+                        sizeStr += " " + sizeStr + " " + sizeStr;
+                        printer.PushAttribute("size", sizeStr.c_str());
                     }
-                    std::string sizeStr(std::to_string(scale[0]));
-                    sizeStr += " " + std::to_string(scale[1]) + " " + std::to_string(scale[2]);
-                    printer.PushAttribute("size", sizeStr.c_str());
+                    catch(...) {
+                        std::vector<double> scale = rbI["dimensions"].get<std::vector<double>>();
+                        if (scale.size() != 3) {
+                            spdlog::error("scale dimension error!");
+                            exit(-1);
+                        }
+                        for (auto &i : scale) {
+                            if (!i) {
+                                i = 1;
+                            }
+                        }
+                        std::string sizeStr(std::to_string(scale[0]));
+                        sizeStr += " " + std::to_string(scale[1]) + " " + std::to_string(scale[2]);
+                        printer.PushAttribute("size", sizeStr.c_str());
+                    }
                 }
             }
             if (rbI.find("density") != rbI.end()) {
