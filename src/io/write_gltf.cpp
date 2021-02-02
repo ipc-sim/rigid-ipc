@@ -32,7 +32,7 @@ bool write_gltf(
     assert(bodies.dim() == 3);
     size_t num_bodies = bodies.num_bodies();
     assert(poses.size() > 0);
-    size_t num_steps = poses.size() - 1;
+    size_t num_steps = poses.size();
 
     Model model;
     model.defaultScene = 0;
@@ -197,7 +197,7 @@ bool write_gltf(
         }
     }
     for (int i = 0; i < num_steps; i++) {
-        Float t = (i + 1) * timestep;
+        Float t = i * timestep;
         std::memcpy(&byte_data[byte_i], &t, sizeof(Float));
         byte_i += sizeof(Float);
     }
