@@ -3,14 +3,9 @@
     "solver": "ipc_solver",
     "timestep": 0.01,
     "max_time": 10.0,
-    "distance_barrier_constraint": {},
-    "ipc_solver": {
-        "min_barrier_stiffness_scale": 1e11
-    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
-        "time_stepper": "exponential_euler",
         "rigid_bodies": [{
             "mesh": "torus.obj",
             "position": [1.5, 0, 0],

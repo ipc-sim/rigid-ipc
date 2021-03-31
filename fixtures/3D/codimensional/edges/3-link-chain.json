@@ -3,9 +3,6 @@
     "solver": "ipc_solver",
     "timestep": 0.01,
     "max_time": 10.0,
-    "ipc_solver": {
-        "min_barrier_stiffness_scale": 1e11
-    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],

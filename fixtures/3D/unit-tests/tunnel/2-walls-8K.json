@@ -6,9 +6,6 @@
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 1e-3
     },
-    "ipc_solver": {
-        "min_barrier_stiffness_scale": 1e9
-    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, 0, 0],

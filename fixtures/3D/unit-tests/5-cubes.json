@@ -7,7 +7,6 @@
         "velocity_conv_tol": 1e-5
     },
     "rigid_body_problem": {
-        "time_stepper": "implicit_euler",
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "cube.obj",
