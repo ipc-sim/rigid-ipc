@@ -1,0 +1,14 @@
+<mujoco>
+    <asset>
+        <mesh file="tet-pyramid.stl" name="tet-pyramid"/>
+    </asset>
+    <worldbody>
+        <body pos="-0 0 0.5" quat="0.707107 -0.707107 -4.32978e-17 -4.32978e-17">
+            <geom mesh="tet-pyramid" type="mesh" friction="0.000000"/>
+            <freejoint/>
+        </body>
+        <body pos="-0 0 -0.5" quat="0.707107 -0.707107 -4.32978e-17 -4.32978e-17">
+            <geom mesh="tet-pyramid" type="mesh" friction="0.000000"/>
+        </body>
+    </worldbody>
+</mujoco>

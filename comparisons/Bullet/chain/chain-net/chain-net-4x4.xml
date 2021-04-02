@@ -1,0 +1,87 @@
+<mujoco>
+    <asset>
+        <mesh file="wrecking-ball/link.obj" name="wrecking-ball/link"/>
+    </asset>
+    <worldbody>
+        <body pos="-1.65 0.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+            <inertial mass="0"/>
+        </body>
+        <body pos="-1.65 0.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-3.3 0.0 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+            <inertial mass="0"/>
+        </body>
+        <body pos="-3.3 0.8 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-0 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+            <inertial mass="0"/>
+        </body>
+        <body pos="-0.825 1.6 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-1.65 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-2.475 1.6 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-1.65 2.4000000000000004 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-3.3 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-4.125 1.6 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-3.3 2.4000000000000004 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-4.95 1.6 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+            <inertial mass="0"/>
+        </body>
+        <body pos="-0 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+            <inertial mass="0"/>
+        </body>
+        <body pos="-0.825 3.2 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-1.65 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-2.475 3.2 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-1.65 4.0 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-3.3 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-4.125 3.2 0" quat="-0.5 0.5 0.5 0.5">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-3.3 4.0 0" quat="0.707107 -2.16489e-17 -0.707107 -2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+        </body>
+        <body pos="-4.95 3.2 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+            <inertial mass="0"/>
+        </body>
+        <body pos="-1.65 4.800000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+            <inertial mass="0"/>
+        </body>
+        <body pos="-3.3 4.800000000000001 0" quat="-2.16489e-17 -0.707107 0.707107 2.16489e-17">
+            <geom mesh="wrecking-ball/link" type="mesh" density="7680.000000"/>
+            <inertial mass="0"/>
+        </body>
+    </worldbody>
+</mujoco>

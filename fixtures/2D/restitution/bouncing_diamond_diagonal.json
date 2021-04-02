@@ -5,7 +5,7 @@
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 0.1,
         "detection_method": "hash_grid",
-        "use_distance_hashgrid": true,
+        "use_distance_hashgrid": true
     },
     "homotopy_solver": {
         "e_b": 1e-10,

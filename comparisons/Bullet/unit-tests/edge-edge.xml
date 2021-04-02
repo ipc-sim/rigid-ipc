@@ -1,0 +1,14 @@
+<mujoco>
+    <asset>
+        <mesh file="tet-perp.obj" name="tet-perp"/>
+    </asset>
+    <worldbody>
+        <body pos="-0 0 0.5" quat="0 0 0.707107 0.707107">
+            <geom mesh="tet-perp" type="mesh"/>
+        </body>
+        <body pos="-0 0 -0.5" quat="0 0 0.707107 0.707107">
+            <geom mesh="tet-perp" type="mesh"/>
+            <inertial mass="0"/>
+        </body>
+    </worldbody>
+</mujoco>

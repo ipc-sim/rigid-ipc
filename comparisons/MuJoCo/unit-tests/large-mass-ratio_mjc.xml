@@ -1,0 +1,21 @@
+<mujoco>
+    <asset>
+        <mesh file="plane.stl" name="plane"/>
+        <mesh file="plane.stl" name="plane_0" scale="2.000000 2.000000 2.000000"/>
+        <mesh file="cube.stl" name="cube"/>
+        <mesh file="cube.stl" name="cube_2" scale="10.000000 10.000000 10.000000"/>
+    </asset>
+    <worldbody>
+        <body pos="-0 0 -0.5" quat="0 0 0.707107 0.707107">
+            <geom mesh="plane_0" type="mesh" friction="0.000000"/>
+        </body>
+        <body pos="-0 0 0.1" quat="0 0 0.707107 0.707107">
+            <geom mesh="cube" type="mesh" friction="0.000000"/>
+            <freejoint/>
+        </body>
+        <body pos="-0 0 6.0" quat="0 0 0.707107 0.707107">
+            <geom mesh="cube_2" type="mesh" friction="0.000000"/>
+            <freejoint/>
+        </body>
+    </worldbody>
+</mujoco>

@@ -1,0 +1,18 @@
+<mujoco>
+    <asset>
+        <mesh file="plane.stl" name="plane"/>
+        <mesh file="tet-corner.stl" name="tet-corner"/>
+    </asset>
+    <worldbody>
+        <body pos="-0 0 -0.5" quat="0 0 0.707107 0.707107">
+            <geom mesh="plane" type="mesh" friction="0.000000"/>
+        </body>
+        <body pos="-0 0 -0.5" quat="0 0 0.707107 0.707107">
+            <geom mesh="tet-corner" type="mesh" friction="0.000000"/>
+        </body>
+        <body pos="-0 0 0.7" quat="0 0 0.707107 0.707107">
+            <geom mesh="tet-corner" type="mesh" friction="0.000000"/>
+            <freejoint/>
+        </body>
+    </worldbody>
+</mujoco>

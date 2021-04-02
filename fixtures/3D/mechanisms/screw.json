@@ -8,6 +8,9 @@
         "initial_barrier_activation_distance": 1e-4,
         "trajectory_type": "piecewise_linear"
     },
+    "ipc_solver": {
+        "#velocity_conv_tol": 1e-5
+    },
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.81, 0],
