@@ -1,31 +1,108 @@
 # Script to test Rigid IPC examples in Project Chrono
 # Adapted from a pychrono example originally from Alessandro Tasora
 
+import json
+import pathlib
+import argparse
+import subprocess
+from datetime import datetime
+
+import numpy
+from scipy.spatial.transform import Rotation
+
+import tqdm
 
 import pychrono.core as chrono
-import pychrono.irrlicht as chronoirr
-import time
-import json
-import os
 import igl
-import numpy as np
-from scipy.spatial.transform import Rotation
+
+
+timestepper_names = {
+    0: "EULER_IMPLICIT_LINEARIZED",
+    1: "EULER_IMPLICIT_PROJECTED",
+    2: "EULER_IMPLICIT",
+    3: "TRAPEZOIDAL",
+    4: "TRAPEZOIDAL_LINEARIZED",
+    5: "HHT",
+    6: "HEUN",
+    7: "RUNGEKUTTA45",
+    8: "EULER_EXPLICIT",
+    9: "LEAPFROG",
+    10: "NEWMARK",
+    20: "CUSTOM",
+}
+
+solver_names = {
+    0: "PSOR",
+    1: "PSSOR",
+    2: "PJACOBI",
+    3: "PMINRES",
+    4: "BARZILAIBORWEIN",
+    5: "APGD",
+    6: "ADDM",
+    7: "SPARSE_LU",
+    8: "SPARSE_QR",
+    9: "PARDISO_MKL",
+    10: "PARDISO_PROJECT",
+    11: "MUMPS",
+    12: "GMRES",
+    13: "MINRES",
+    14: "BICGSTAB",
+    15: "CUSTOM"
+}
+
+
+def print_simulation_parameters(system):
+    print(f"""SolverType: {solver_names[system.GetSolverType()]},
+TimestepperType: {timestepper_names[system.GetTimestepperType()]},
+SolverMaxIterations: {system.GetSolverMaxIterations():d},
+SolverTolerance: {system.GetSolverTolerance():g},
+Maxiter: {system.GetMaxiter():d},
+MaxPenetrationRecoverySpeed: {system.GetMaxPenetrationRecoverySpeed():g},
+DefaultSuggestedEnvelope: {chrono.ChCollisionModel.GetDefaultSuggestedEnvelope():g},
+DefaultSuggestedMargin: {chrono.ChCollisionModel.GetDefaultSuggestedMargin():g},
+""")
+
+
+def set_simulation_parameters(system):
+    print("Default parameters:")
+    print_simulation_parameters(system)
+
+    # system.SetSolverType(chrono.ChSolver.Type_APGD)
+    system.SetSolverType(chrono.ChSolver.Type_BARZILAIBORWEIN)
+    system.SetTimestepperType(
+        chrono.ChTimestepper.Type_EULER_IMPLICIT_PROJECTED)
+    system.SetSolverMaxIterations(15000)
+    system.SetSolverTolerance(1e-12)
+    system.SetMaxiter(1000)
+    # system.SetMaxPenetrationRecoverySpeed(0.1)
+
+    # Set the global collision margins. This is expecially important for very large or
+    # very small objects. Set this before creating shapes. Not before creating system.
+    # chrono.ChCollisionModel.SetDefaultSuggestedEnvelope(0.001)
+    # chrono.ChCollisionModel.SetDefaultSuggestedMargin(0.001)
+    # chrono.ChCollisionModel.SetDefaultSuggestedEnvelope(1e-4)
+    # chrono.ChCollisionModel.SetDefaultSuggestedMargin(1e-4)
+
+    print("Using parameters:")
+    print_simulation_parameters(system)
+
+
+def get_time_stamp():
+    return datetime.now().strftime("%Y-%b-%d-%H-%M-%S")
 
 
 def get_trafos(body):
     t = body.GetPos()
-    t = np.array([t.x, t.y, t.z])
-    R = np.zeros((3, 3))
+    t = numpy.array([t.x, t.y, t.z])
+    R = numpy.zeros((3, 3))
     for i in range(3):
         for j in range(3):
             R[i, j] = body.GetA()[i, j]
-
     return t, R
 
 
-def save_mesh(application, out_path, index):
-    sys = application.GetSystem()
-    bds = sys.Get_bodylist()
+def save_mesh(system, meshes, out_path, index):
+    bds = system.Get_bodylist()
 
     Vs = []
     Fs = []
@@ -45,79 +122,18 @@ def save_mesh(application, out_path, index):
         Vs.append(V)
         Fs.append(F)
 
-    V = np.concatenate(Vs)
-    F = np.concatenate(Fs)
+    V = numpy.concatenate(Vs)
+    F = numpy.concatenate(Fs)
 
-    igl.write_triangle_mesh(os.path.join(
-        out_path, "m_{:04d}.obj".format(index)), V, F)
+    igl.write_triangle_mesh(str(out_path / f"m_{index:04d}.obj"), V, F)
 
 
-if __name__ == "__main__":
-    root_path = "/home/tlangloi/work/sandbox/rigid-ipc-chrono/"
-    # out_folder = "xyz"
-    # json_file = "xyz.json"
-    out_folder = "slopeTest_highSchoolPhysics_mu=0.5"
-    json_file = "fixtures/3D/friction/incline-plane/slopeTest_highSchoolPhysics_mu=0.5.json"
-    # out_folder = "large-mass-ratio"
-    # json_file = "fixtures/3D/unit-tests/large-mass-ratio.json"
-    # out_folder = "spike-and-wedge"
-    # json_file = "fixtures/3D/unit-tests/erleben/spike-and-wedge.json"
-    # out_folder = "wedges"
-    # json_file = "fixtures/3D/unit-tests/erleben/wedges.json"
-    # out_folder = "vertex-face"
-    # json_file = "fixtures/3D/unit-tests/vertex-face.json"
-    # out_folder = "arch-101-stones"
-    # json_file = "fixtures/3D/friction/arch/arch-101-stones.json"
-    # out_folder = "edge-edge"
-    # json_file = "fixtures/3D/unit-tests/edge-edge.json"
-    # out_folder = "spikes"
-    # json_file = "fixtures/3D/unit-tests/erleben/spikes.json"
-    # out_folder = "internal-edges"
-    # json_file = "fixtures/3D/unit-tests/erleben/internal-edges.json"
-    # out_folder = "wedge-in-crack"
-    # json_file = "fixtures/3D/unit-tests/erleben/wedge-in-crack.json"
-    # out_folder = "spike-in-crack"
-    # json_file = "fixtures/3D/unit-tests/erleben/spike-in-crack.json"
-    # out_folder = "5-cubes"
-    # json_file = "fixtures/3D/unit-tests/5-cubes.json"
-    # out_folder = "screw"
-    # json_file = "fixtures/3D/mechanisms/screw.json"
-    # out_folder = "chain-net-8x8"
-    # json_file = "fixtures/3D/chain/chain-net/chain-net-8x8.json"
-    # out_folder = "chain-net-4x4"
-    # json_file = "fixtures/3D/chain/chain-net/chain-net-4x4.json"
-    # out_folder = "10-links"
-    # json_file = "fixtures/3D/chain/10-links.json"
-
-    # The path to the Chrono data directory containing various assets (meshes, textures, data files)
-    # is automatically set, relative to the default location of this demo.
-    # If running from a different directory, you must change the path to the data directory with:
-    chrono.SetChronoDataPath(root_path)
-    mesh_path = os.path.join(root_path, "fixing-collisions/meshes")
-    #mesh_path = ""
-
-    out_path = os.path.join(root_path, out_folder)
-    if not os.path.exists(out_path):
-        os.mkdir(out_path)
-
-    with open(os.path.join(root_path, "fixing-collisions", json_file)) as f:
-        data = json.load(f)
+def run_simulation(fixture, mesh_path, out_path, timestep=None):
+    rb_problem = fixture["rigid_body_problem"]
 
     system = chrono.ChSystemNSC()
-    if "gravity" in data["rigid_body_problem"]:
-        g = data["rigid_body_problem"]["gravity"]
-        system.Set_G_acc(chrono.ChVectorD(g[0], g[1], g[2]))
-
-    # system.SetSolverType(chrono.ChSolver.Type_APGD)
-    system.SetSolverType(chrono.ChSolver.Type_BARZILAIBORWEIN)
-    system.SetSolverMaxIterations(15000)
-
-    # Set the global collision margins. This is expecially important for very large or
-    # very small objects. Set this before creating shapes. Not before creating system.
-    # chrono.ChCollisionModel.SetDefaultSuggestedEnvelope(0.001)
-    # chrono.ChCollisionModel.SetDefaultSuggestedMargin(0.001)
-    chrono.ChCollisionModel.SetDefaultSuggestedEnvelope(0.1)
-    chrono.ChCollisionModel.SetDefaultSuggestedMargin(0.00001)
+    system.Set_G_acc(chrono.ChVectorD(*rb_problem.get("gravity", [0, 0, 0])))
+    set_simulation_parameters(system)
 
     # ---------------------------------------------------------------------
     #
@@ -127,63 +143,57 @@ if __name__ == "__main__":
     # Create a contact material (with default properties, shared by all collision shapes)
     contact_material = chrono.ChMaterialSurfaceNSC()
 
-    has_friction = False
-    if "coefficient_friction" in data["rigid_body_problem"]:
-        contact_material.SetFriction(
-            data["rigid_body_problem"]["coefficient_friction"])
-        has_friction = True
+    mu = rb_problem.get("coefficient_friction", 0)
+    contact_material.SetFriction(max(mu, 0))
 
     meshes = []
 
-    for body in data["rigid_body_problem"]["rigid_bodies"]:
-        mpath = os.path.join(mesh_path, body["mesh"])
+    for body in rb_problem["rigid_bodies"]:
+        mpath = str(mesh_path / body["mesh"])
 
         if body["mesh"] == "plane.obj":
             pos = body["position"]
-            dim = body["dimensions"] if "dimensions" in body else [
-                10, 0.005, 10]
-            rot = body["rotation"] if "rotation" in body else [0.0, 0.0, 0.0]
+            dim = body.get("dimensions", [10, 0.005, 10])
+            rot = body.get("rotation", [0, 0, 0])
             rot = Rotation.from_euler('xyz', rot, degrees=True)
             rot = rot.as_quat()
 
-            floor = chrono.ChBodyEasyBox(
-                dim[0], dim[1], dim[2], 1, True, True, contact_material)
-            floor.SetPos(chrono.ChVectorD(pos[0], pos[1], pos[2]))
+            floor = chrono.ChBodyEasyBox(*dim, 1, True, True, contact_material)
+            floor.SetPos(chrono.ChVectorD(*pos))
             floor.SetRot(chrono.ChQuaternionD(rot[3], rot[0], rot[1], rot[2]))
-            if "is_dof_fixed" in body and body["is_dof_fixed"]:
+            if body.get("is_dof_fixed", False) or body.get("type", None) == "static":
                 floor.SetBodyFixed(True)
             system.Add(floor)
-            meshes.append((np.zeros((0, 3)), np.zeros((0, 3), dtype=np.int)))
+            meshes.append(
+                (numpy.zeros((0, 3)), numpy.zeros((0, 3), dtype=numpy.int)))
             continue
 
-        if "scale" in body and body["scale"] != 1:
+        if body.get("scale", 1) != 1:
             v, f = igl.read_triangle_mesh(mpath)
             v *= body["scale"]
             igl.write_triangle_mesh("tmp.obj", v, f)
             mpath = "tmp.obj"
 
-        density = 1000
-        if "density" in body:
-            density = body["density"]
+        density = body.get("density", 1000)
 
-        cbody = chrono.ChBodyEasyMesh(mpath,  # mesh filename
-                                      density,             # density kg/m^3
-                                      True,             # automatically compute mass and inertia
-                                      True,             # visualize?>
-                                      True,             # collide?
-                                      contact_material,  # contact material
-                                      )
+        cbody = chrono.ChBodyEasyMesh(
+            mpath,             # mesh filename
+            density,           # density kg/m^3
+            True,              # automatically compute mass and inertia
+            True,              # visualize?
+            True,              # collide?
+            contact_material)  # contact material
 
         cbody.Update()
         V, F = igl.read_triangle_mesh(mpath)
         t, R = get_trafos(cbody)
-        print(t)
-        print(R)
+        # print(t)
+        # print(R)
         V = V - t
         V = V @ R
         meshes.append((V, F))
 
-        #rot = Rotation.from_euler('zyx', body["rotation"], degrees=True)
+        # rot = Rotation.from_euler('zyx', body["rotation"], degrees=True)
         rot2 = Rotation.from_matrix(R)
         rotTmp = body["rotation"] if "rotation" in body else [0.0, 0.0, 0.0]
         rot = Rotation.from_euler('xyz', rotTmp, degrees=True) * rot2
@@ -192,64 +202,136 @@ if __name__ == "__main__":
 
         if "position" in body:
             pos = body["position"]
-            pos = [x - y for (x, y) in zip(pos, t)]
+            pos = [x + y for (x, y) in zip(pos, t)]
             cbody.SetPos(chrono.ChVectorD(pos[0], pos[1], pos[2]))
 
         # print(body)
 
         # Need to fix coordinate systems
-        # if "linear_velocity" in body:
-        #     vel = body["linear_velocity"]
-        #     cbody.SetPos_dt(chrono.ChVectorD(vel[0], vel[1], vel[2]))
+        if body.get("linear_velocity", [0, 0, 0]) != [0, 0, 0]:
+            raise NotImplementedError(
+                "Initial linear velocity not implemented!")
+            # vel = body["linear_velocity"]
+            # cbody.SetPos_dt(chrono.ChVectorD(vel[0], vel[1], vel[2]))
+        if body.get("angular_velocity", [0, 0, 0]) != [0, 0, 0]:
+            raise NotImplementedError(
+                "Initial angular velocity not implemented!")
+            # vel = body["angular_velocity"]
+            # cbody.SetWVel_loc(chrono.ChVectorD(vel[0], vel[1], vel[2]))
 
-        # if "angular_velocity" in body:
-        #     vel = body["angular_velocity"]
-        #     cbody.SetWVel_loc(chrono.ChVectorD(vel[0], vel[1], vel[2]))
-
-        is_fixed = False
-        if "type" in body:
-            is_fixed = body["type"] == "static"
-        elif "is_dof_fixed" in body:
-            if isinstance(body["is_dof_fixed"], list):
-                for k in range(min(6, len(body["is_dof_fixed"]))):
-                    if not body["is_dof_fixed"][k]:
-                        print("warning only all dofs fixed supported")
-                    else:
-                        is_fixed = True
+        is_fixed = body.get("type", "dynamic") == "static"
+        if not is_fixed:
+            is_dof_fixed = body.get("is_dof_fixed", False)
+            if isinstance(is_dof_fixed, list):
+                is_fixed = all(is_dof_fixed)
+                if not is_fixed and any(is_dof_fixed):
+                    raise NotImplementedError("Only all dofs fixed supported!")
             else:
-                is_fixed = body["is_dof_fixed"]
+                is_fixed = is_dof_fixed
         cbody.SetBodyFixed(is_fixed)
 
         system.Add(cbody)
 
-    application = chronoirr.ChIrrApp(
-        system, 'runner', chronoirr.dimension2du(1024, 768))
-
-    application.AddTypicalCamera(chronoirr.vector3df(
-        0.5, 0.5, 1), chronoirr.vector3df(0, 0, 0))
-    application.AddTypicalLights()
-    application.AssetBindAll()
-    application.AssetUpdateAll()
-
-    application.SetTimestep(data["timestep"])
+    if timestep is None:
+        timestep = fixture["timestep"]
     tt = 0
     index = 0
+    prev_save = 0
 
-    save_mesh(application, out_path, 0)
+    max_time = fixture.get("max_time", 10)
 
-    while(application.GetDevice().run()):
-        application.BeginScene()
-        application.DrawAll()
-        application.DoStep()
-        # if index == 0:
-        #     application.DoStep()
-        #     index += 1
-        application.EndScene()
+    save_mesh(system, meshes, out_path, 0)
+    pbar = tqdm.tqdm(total=max_time)
+    while(system.GetChTime() < max_time):
+        system.DoStepDynamics(timestep)
+        pbar.update(timestep)
+        if system.GetChTime() - prev_save > 1e-2 or timestep >= 1e-2:
+            index += 1
+            save_mesh(system, meshes, out_path, index)
+            prev_save = system.GetChTime()
+    pbar.close()
 
-        tt += application.GetTimestep()
-        index += 1
-        print("t = {}".format(tt))
-        save_mesh(application, out_path, index)
 
-        if tt >= data["max_time"]:
-            break
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Test Rigid IPC examples in Project Chrono")
+    parser.add_argument(
+        "-i", "--input", metavar="path/to/input", type=pathlib.Path,
+        dest="input", help="path to input json(s)", nargs="+")
+    parser.add_argument(
+        "--chrono-data", metavar="path/to/chrono/data", type=str,
+        default="/usr/local/share/chrono/data/",
+        dest="chrono_data_path", help="path to Chrono data")
+    parser.add_argument(
+        "--dt", "--timestep", type=float, default=None,
+        dest="timestep", help="timestep")
+    args, _ = parser.parse_known_args()
+
+    if not pathlib.Path(args.chrono_data_path).exists():
+        parser.error(f"Invalid Chrono data path: {args.chrono_data_path}")
+
+    inputs = []
+    for input in args.input:
+        if input.is_file() and input.suffix == ".json":
+            inputs.append(input.resolve())
+        elif input.is_dir():
+            for glob_input in input.glob('**/*.json'):
+                inputs.append(glob_input.resolve())
+    args.input = inputs
+
+    return args
+
+
+def main():
+    args = parse_args()
+
+    # The path to the Chrono data directory containing various assets (meshes,
+    # textures, data files) is automatically set, relative to the default
+    # location of this demo. If running from a different directory, you must
+    # change the path to the data directory with:
+    chrono.SetChronoDataPath(str(args.chrono_data_path))
+
+    root_path = pathlib.Path(__file__).resolve().parents[2]
+    mesh_path = root_path / "meshes"
+
+    renderer = root_path / "build" / "release" / "tools" / "render_simulation"
+    if not renderer.exists():
+        renderer = None
+
+    cwd_output = pathlib.Path("output").resolve()
+
+    for input in args.input:
+        try:
+            out_path = input.resolve().relative_to(
+                root_path / "fixtures" / "3D").with_suffix("")
+        except:
+            out_path = input.stem
+        out_path = cwd_output / out_path
+        if args.timestep is not None:
+            out_path /= f"timestep={args.timestep:g}"
+        print("out_path:", out_path)
+        out_path.mkdir(exist_ok=True, parents=True)
+
+        with open(input) as f:
+            fixture = json.load(f)
+
+        try:
+            run_simulation(fixture, mesh_path, out_path,
+                           timestep=args.timestep)
+
+            # Render simulation
+            if renderer is not None:
+                print("Rendering simulation")
+                video_name = f"{input.stem}-{get_time_stamp()}-chrono.mp4"
+                subprocess.run([str(renderer),
+                                "-i", out_path,
+                                "-o", out_path / video_name,
+                                "--fps", "100"])
+        except NotImplementedError as err:
+            print(f"{input}: {err}")
+            out_path.rmdir()
+        print()
+
+
+if __name__ == "__main__":
+    main()
