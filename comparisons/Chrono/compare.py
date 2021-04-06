@@ -50,6 +50,29 @@ solver_names = {
     15: "CUSTOM"
 }
 
+box_vertices = numpy.array([
+    [-0.5, -0.5, -0.5],
+    [0.5, 0.5, -0.5],
+    [0.5, -0.5, -0.5],
+    [-0.5, 0.5, -0.5],
+    [-0.5, 0.5, 0.5],
+    [-0.5, -0.5, 0.5],
+    [0.5, 0.5, 0.5],
+    [0.5, -0.5, 0.5]])
+box_faces = numpy.array([
+    [0, 1, 2],
+    [0, 3, 1],
+    [0, 4, 3],
+    [0, 5, 4],
+    [3, 6, 1],
+    [3, 4, 6],
+    [2, 1, 6],
+    [2, 6, 7],
+    [0, 2, 7],
+    [0, 7, 5],
+    [5, 7, 6],
+    [5, 6, 4]], dtype=int)
+
 
 def print_simulation_parameters(system):
     print(f"""SolverType: {solver_names[system.GetSolverType()]},
@@ -164,8 +187,7 @@ def run_simulation(fixture, mesh_path, out_path, timestep=None):
             if body.get("is_dof_fixed", False) or body.get("type", None) == "static":
                 floor.SetBodyFixed(True)
             system.Add(floor)
-            meshes.append(
-                (numpy.zeros((0, 3)), numpy.zeros((0, 3), dtype=numpy.int)))
+            meshes.append((dim * box_vertices, box_faces))
             continue
 
         if body.get("scale", 1) != 1:
@@ -179,7 +201,7 @@ def run_simulation(fixture, mesh_path, out_path, timestep=None):
         cbody = chrono.ChBodyEasyMesh(
             mpath,             # mesh filename
             density,           # density kg/m^3
-            True,              # automatically compute mass and inertia
+            True,              # automatically compute mass and inertia?
             True,              # visualize?
             True,              # collide?
             contact_material)  # contact material
@@ -265,7 +287,7 @@ def parse_args():
     parser.add_argument(
         "--dt", "--timestep", type=float, default=None,
         dest="timestep", help="timestep")
-    args, _ = parser.parse_known_args()
+    args = parser.parse_args()
 
     if not pathlib.Path(args.chrono_data_path).exists():
         parser.error(f"Invalid Chrono data path: {args.chrono_data_path}")
