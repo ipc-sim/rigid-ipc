@@ -1,0 +1,20 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "max_iterations": 1000,
+    "timestep": 1e-3,
+    "rigid_body_problem": {
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "corner.obj",
+            "position": [0, 0, 0],
+            "enabled": false
+        }, {
+            "mesh": "L.obj",
+            "position": [0, 2, 0]
+        }, {
+            "mesh": "plane.obj",
+            "position": [0, -4, 0],
+            "type": "static"
+        }]
+    }
+}

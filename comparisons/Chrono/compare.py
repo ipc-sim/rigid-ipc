@@ -256,7 +256,6 @@ def run_simulation(fixture, mesh_path, out_path, timestep=None):
 
     if timestep is None:
         timestep = fixture["timestep"]
-    tt = 0
     index = 0
     prev_save = 0
 
@@ -264,7 +263,7 @@ def run_simulation(fixture, mesh_path, out_path, timestep=None):
 
     save_mesh(system, meshes, out_path, 0)
     pbar = tqdm.tqdm(total=max_time)
-    while(system.GetChTime() < max_time):
+    while system.GetChTime() < max_time:
         system.DoStepDynamics(timestep)
         pbar.update(timestep)
         if system.GetChTime() - prev_save > 1e-2 or timestep >= 1e-2:
@@ -282,11 +281,11 @@ def parse_args():
         dest="input", help="path to input json(s)", nargs="+")
     parser.add_argument(
         "--chrono-data", metavar="path/to/chrono/data", type=str,
-        default="/usr/local/share/chrono/data/",
-        dest="chrono_data_path", help="path to Chrono data")
+        default="/usr/local/share/chrono/data/", dest="chrono_data_path",
+        help="path to Chrono data")
     parser.add_argument(
-        "--dt", "--timestep", type=float, default=None,
-        dest="timestep", help="timestep")
+        "--dt", "--timestep", type=float, default=None, dest="timestep",
+        help="timestep")
     args = parser.parse_args()
 
     if not pathlib.Path(args.chrono_data_path).exists():
