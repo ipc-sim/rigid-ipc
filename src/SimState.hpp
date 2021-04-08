@@ -32,7 +32,6 @@ public:
     const nlohmann::json& get_config() { return args; }
     nlohmann::json get_active_config();
 
-    // CCD
     // ----------------------------------------------
     std::shared_ptr<SimulationProblem> problem_ptr;
 

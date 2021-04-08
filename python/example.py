@@ -11,6 +11,7 @@ sim = rigidipc.Simulation()
 root_path = pathlib.Path(__file__).parents[1]
 scene = root_path / "fixtures" / "3D" / "unit-tests" / "5-cubes.json"
 sim.load_scene(str(scene))
+print(f"timestep={sim.timestep:g}")
 sim.max_simulation_steps = 50
 
 # Make body 0 a kinematic object

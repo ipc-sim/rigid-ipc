@@ -181,5 +181,12 @@ PYBIND11_MODULE(rigidipc, m)
         .def_readwrite(
             "max_simulation_steps", &SimState::m_max_simulation_steps)
         .def_readwrite(
-            "checkpoint_frequency", &SimState::m_checkpoint_frequency);
+            "checkpoint_frequency", &SimState::m_checkpoint_frequency)
+        .def_property(
+            "timestep",
+            [](const SimState& self) { return self.problem_ptr->timestep(); },
+            [](const SimState& self, double timestep) {
+                self.problem_ptr->timestep(timestep);
+            },
+            "Time step size");
 }
