@@ -110,13 +110,17 @@ void RigidBodyAssembler::init(const std::vector<RigidBody>& rigid_bodies)
     if (num_free_dof) {
         average_mass /= num_free_dof;
     }
+}
 
-    m_kinematic_body_ids.clear();
-    for (size_t i = 0; i < rigid_bodies.size(); i++) {
-        if (m_rbs[i].type == RigidBodyType::KINEMATIC) {
-            m_kinematic_body_ids.push_back(i);
+size_t RigidBodyAssembler::count_kinematic_bodies() const
+{
+    size_t n = 0;
+    for (const auto& body : m_rbs) {
+        if (body.type == RigidBodyType::KINEMATIC) {
+            n++;
         }
     }
+    return n;
 }
 
 void RigidBodyAssembler::global_to_local_vertex(

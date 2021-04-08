@@ -195,10 +195,11 @@ void DistanceBarrierRBProblem::init_augmented_lagrangian()
 
     linear_augmented_lagrangian_penalty = 1e3;
     angular_augmented_lagrangian_penalty = 1e3;
+    size_t num_kinematic_bodies = m_assembler.count_kinematic_bodies();
     linear_augmented_lagrangian_multiplier.setZero(
-        pos_ndof * m_assembler.num_kinematic_bodies());
+        pos_ndof * num_kinematic_bodies);
     angular_augmented_lagrangian_multiplier.setZero(
-        rot_ndof * m_assembler.num_kinematic_bodies(), rot_ndof);
+        rot_ndof * num_kinematic_bodies, rot_ndof);
 
     for (int i = 0; i < num_bodies(); i++) {
         if (m_assembler[i].type == RigidBodyType::KINEMATIC
@@ -284,13 +285,15 @@ double DistanceBarrierRBProblem::compute_linear_augment_lagrangian_progress(
 
     double a = 0, b = 0;
 
-    for (const auto& k : m_assembler.m_kinematic_body_ids) {
-        a +=
-            (x_pred.segment(ndof * k, pos_ndof) - x.segment(ndof * k, pos_ndof))
-                .squaredNorm();
-        b += (x_pred.segment(ndof * k, pos_ndof)
-              - x0.segment(ndof * k, pos_ndof))
-                 .squaredNorm();
+    for (size_t i = 0; i < num_bodies(); i++) {
+        if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
+            a += (x_pred.segment(ndof * i, pos_ndof)
+                  - x.segment(ndof * i, pos_ndof))
+                     .squaredNorm();
+            b += (x_pred.segment(ndof * i, pos_ndof)
+                  - x0.segment(ndof * i, pos_ndof))
+                     .squaredNorm();
+        }
     }
 
     if (a == 0 && b == 0) {
@@ -307,22 +310,24 @@ double DistanceBarrierRBProblem::compute_angular_augment_lagrangian_progress(
     int pos_ndof = PoseD::dim_to_pos_ndof(dim());
 
     double a = 0, b = 0;
-    for (const auto& k : m_assembler.m_kinematic_body_ids) {
-        size_t ri = ndof * k + pos_ndof;
-        if (dim() == 2) {
-            a += (x_pred.segment(ri, rot_ndof) - x.segment(ri, rot_ndof))
-                     .squaredNorm();
-            b += (x_pred.segment(ri, rot_ndof) - x0.segment(ri, rot_ndof))
-                     .squaredNorm();
-        } else {
-            auto Q_pred = construct_rotation_matrix(
-                Eigen::VectorX3d(x_pred.segment(ri, rot_ndof)));
-            auto Q = construct_rotation_matrix(
-                Eigen::VectorX3d(x.segment(ri, rot_ndof)));
-            auto Q0 = construct_rotation_matrix(
-                Eigen::VectorX3d(x0.segment(ri, rot_ndof)));
-            a += (Q - Q_pred).squaredNorm();
-            b += (Q0 - Q_pred).squaredNorm();
+    for (size_t i = 0; i < num_bodies(); i++) {
+        if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
+            size_t ri = ndof * i + pos_ndof;
+            if (dim() == 2) {
+                a += (x_pred.segment(ri, rot_ndof) - x.segment(ri, rot_ndof))
+                         .squaredNorm();
+                b += (x_pred.segment(ri, rot_ndof) - x0.segment(ri, rot_ndof))
+                         .squaredNorm();
+            } else {
+                auto Q_pred = construct_rotation_matrix(
+                    Eigen::VectorX3d(x_pred.segment(ri, rot_ndof)));
+                auto Q = construct_rotation_matrix(
+                    Eigen::VectorX3d(x.segment(ri, rot_ndof)));
+                auto Q0 = construct_rotation_matrix(
+                    Eigen::VectorX3d(x0.segment(ri, rot_ndof)));
+                a += (Q - Q_pred).squaredNorm();
+                b += (Q0 - Q_pred).squaredNorm();
+            }
         }
     }
     if (a == 0 && b == 0) {
@@ -343,51 +348,63 @@ void DistanceBarrierRBProblem::update_augmented_lagrangian(
 
     if (eta_q >= 0.999) {
         // Fix the kinematic DoF that have converged
-        for (const auto& k : m_assembler.m_kinematic_body_ids) {
-            is_dof_satisfied.segment(ndof * k, pos_ndof).setOnes();
+        for (size_t i = 0; i < num_bodies(); i++) {
+            if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
+                is_dof_satisfied.segment(ndof * i, pos_ndof).setOnes();
+            }
         }
     } else if (eta_q < 0.99 && linear_augmented_lagrangian_penalty < 1e8) {
         // Increase the κ_q
         linear_augmented_lagrangian_penalty *= 2;
     } else {
         // Increase the λ
-        for (int ki = 0; ki < m_assembler.num_kinematic_bodies(); ki++) {
-            const auto& k = m_assembler.m_kinematic_body_ids[ki];
-            linear_augmented_lagrangian_multiplier.segment(
-                ki * pos_ndof, pos_ndof) -= linear_augmented_lagrangian_penalty
-                * sqrt(m_assembler[k].mass)
-                * (x.segment(ndof * k, pos_ndof)
-                   - x_pred.segment(ndof * k, pos_ndof));
+        for (size_t i = 0, ki = 0; i < num_bodies(); i++) {
+            if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
+                linear_augmented_lagrangian_multiplier.segment(
+                    ki * pos_ndof, pos_ndof) -=
+                    linear_augmented_lagrangian_penalty
+                    * sqrt(m_assembler[i].mass)
+                    * (x.segment(ndof * i, pos_ndof)
+                       - x_pred.segment(ndof * i, pos_ndof));
+                ki++;
+            }
         }
     }
 
     if (eta_Q >= 0.999) {
         // Fix the kinematic DoF that have converged
-        for (const auto& k : m_assembler.m_kinematic_body_ids) {
-            is_dof_satisfied.segment(ndof * k + pos_ndof, rot_ndof).setOnes();
+        for (size_t i = 0; i < num_bodies(); i++) {
+            if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
+                is_dof_satisfied.segment(ndof * i + pos_ndof, rot_ndof)
+                    .setOnes();
+            }
         }
     } else if (eta_Q < 0.99 && angular_augmented_lagrangian_penalty < 1e8) {
         // Increase the κ_Q
         angular_augmented_lagrangian_penalty *= 2;
     } else {
         // Increase the Λ
-        for (int ki = 0; ki < m_assembler.num_kinematic_bodies(); ki++) {
-            const auto& k = m_assembler.m_kinematic_body_ids[ki];
-            size_t ri = ndof * k + pos_ndof;
-            if (dim() == 2) {
-                angular_augmented_lagrangian_multiplier.middleRows(
-                    ki * rot_ndof, rot_ndof) -=
-                    angular_augmented_lagrangian_penalty
-                    * sqrt(m_assembler[k].moment_of_inertia[0])
-                    * (x.segment(ri, rot_ndof) - x_pred.segment(ri, rot_ndof));
-            } else {
-                auto Q_pred = construct_rotation_matrix(
-                    Eigen::VectorX3d(x_pred.segment(ri, rot_ndof)));
-                auto Q = construct_rotation_matrix(
-                    Eigen::VectorX3d(x.segment(ri, rot_ndof)));
-                angular_augmented_lagrangian_multiplier.middleRows(3 * ki, 3) -=
-                    angular_augmented_lagrangian_penalty * (Q - Q_pred)
-                    * compute_Jsqrt(m_assembler[k].moment_of_inertia);
+        for (size_t i = 0, ki = 0; i < num_bodies(); i++) {
+            if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
+                size_t ri = ndof * i + pos_ndof;
+                if (dim() == 2) {
+                    angular_augmented_lagrangian_multiplier.middleRows(
+                        ki * rot_ndof, rot_ndof) -=
+                        angular_augmented_lagrangian_penalty
+                        * sqrt(m_assembler[i].moment_of_inertia[0])
+                        * (x.segment(ri, rot_ndof)
+                           - x_pred.segment(ri, rot_ndof));
+                } else {
+                    auto Q_pred = construct_rotation_matrix(
+                        Eigen::VectorX3d(x_pred.segment(ri, rot_ndof)));
+                    auto Q = construct_rotation_matrix(
+                        Eigen::VectorX3d(x.segment(ri, rot_ndof)));
+                    angular_augmented_lagrangian_multiplier.middleRows(
+                        3 * ki, 3) -= angular_augmented_lagrangian_penalty
+                        * (Q - Q_pred)
+                        * compute_Jsqrt(m_assembler[i].moment_of_inertia);
+                }
+                ki++;
             }
         }
     }
@@ -407,7 +424,7 @@ void DistanceBarrierRBProblem::update_augmented_lagrangian(
 bool DistanceBarrierRBProblem::are_equality_constraints_satisfied(
     const Eigen::VectorXd& x) const
 {
-    if (m_assembler.num_kinematic_bodies()) {
+    if (m_assembler.count_kinematic_bodies()) {
         return compute_linear_augment_lagrangian_progress(x) >= 0.999
             && compute_angular_augment_lagrangian_progress(x) >= 0.999;
     }
@@ -939,6 +956,7 @@ double DistanceBarrierRBProblem::compute_augmented_lagrangian(
     int ndof = PoseD::dim_to_ndof(dim());
     int pos_ndof = PoseD::dim_to_pos_ndof(dim());
     int rot_ndof = PoseD::dim_to_rot_ndof(dim());
+    size_t num_kinematic_bodies = m_assembler.count_kinematic_bodies();
 
     double potential = 0;
     if (compute_grad) {
@@ -947,13 +965,16 @@ double DistanceBarrierRBProblem::compute_augmented_lagrangian(
     std::vector<Eigen::Triplet<double>> hess_triplets;
     if (compute_hess) {
         hess.resize(x.size(), x.size());
-        hess_triplets.reserve(m_assembler.num_kinematic_bodies() * ndof);
+        hess_triplets.reserve(num_kinematic_bodies * ndof);
     }
 
     bool all_kinematic_dof_satisfied = true;
-    for (const auto& k : m_assembler.m_kinematic_body_ids) {
-        all_kinematic_dof_satisfied &=
-            is_dof_satisfied.segment(ndof * k, ndof).all();
+    for (size_t i = 0; i < num_bodies(); i++) {
+        if (m_assembler[i].type == RigidBodyType::KINEMATIC
+            && !is_dof_satisfied.segment(ndof * i, ndof).all()) {
+            all_kinematic_dof_satisfied = false;
+            break;
+        }
     }
 
     if (all_kinematic_dof_satisfied) {
@@ -965,27 +986,30 @@ double DistanceBarrierRBProblem::compute_augmented_lagrangian(
 
     // Compute the linear AL potential
     const double& kappa_q = linear_augmented_lagrangian_penalty;
-    for (int ki = 0; ki < m_assembler.num_kinematic_bodies(); ki++) {
-        const auto& k = m_assembler.m_kinematic_body_ids[ki];
+    for (size_t i = 0, ki = 0; i < num_bodies(); i++) {
+        if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
 
-        double m = m_assembler[k].mass;
-        const auto& lambda = linear_augmented_lagrangian_multiplier.segment(
-            ki * pos_ndof, pos_ndof);
+            double m = m_assembler[i].mass;
+            const auto& lambda = linear_augmented_lagrangian_multiplier.segment(
+                ki * pos_ndof, pos_ndof);
 
-        const auto& q = x.segment(k * ndof, pos_ndof);
-        const auto& q_pred = x_pred.segment(k * ndof, pos_ndof);
+            const auto& q = x.segment(i * ndof, pos_ndof);
+            const auto& q_pred = x_pred.segment(i * ndof, pos_ndof);
 
-        potential += kappa_q / 2 * m * (q - q_pred).squaredNorm()
-            - sqrt(m) * lambda.dot(q - q_pred);
-        if (compute_grad) {
-            grad.segment(k * ndof, pos_ndof) =
-                kappa_q * m * (q - q_pred) - sqrt(m) * lambda;
-        }
-        if (compute_hess) {
-            for (int i = 0; i < pos_ndof; i++) {
-                hess_triplets.emplace_back(
-                    ndof * k + i, ndof * k + i, kappa_q * m);
+            potential += kappa_q / 2 * m * (q - q_pred).squaredNorm()
+                - sqrt(m) * lambda.dot(q - q_pred);
+            if (compute_grad) {
+                grad.segment(i * ndof, pos_ndof) =
+                    kappa_q * m * (q - q_pred) - sqrt(m) * lambda;
             }
+            if (compute_hess) {
+                for (int j = 0; j < pos_ndof; j++) {
+                    hess_triplets.emplace_back(
+                        ndof * i + j, ndof * i + j, kappa_q * m);
+                }
+            }
+
+            ki++;
         }
     }
 
@@ -996,42 +1020,47 @@ double DistanceBarrierRBProblem::compute_augmented_lagrangian(
     if (dim() == 2) {
         throw NotImplementedError("AL not implemented for 2D");
     }
+
     const double& kappa_Q = angular_augmented_lagrangian_penalty;
-    for (int ki = 0; ki < m_assembler.num_kinematic_bodies(); ki++) {
-        const auto& k = m_assembler.m_kinematic_body_ids[ki];
 
-        Eigen::VectorX3<Diff::DDouble2> theta_diff =
-            Diff::d2vars(0, x.segment(k * ndof + pos_ndof, rot_ndof));
-        Eigen::VectorX3d theta_pred =
-            x_pred.segment(k * ndof + pos_ndof, rot_ndof);
+    for (size_t i = 0, ki = 0; i < num_bodies(); i++) {
+        if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
 
-        Eigen::DiagonalMatrix<double, 3> J =
-            compute_J(m_assembler[k].moment_of_inertia);
-        Eigen::DiagonalMatrix<double, 3> Jsqrt =
-            compute_Jsqrt(m_assembler[k].moment_of_inertia);
-        const auto& lambda =
-            angular_augmented_lagrangian_multiplier.middleRows(3 * ki, 3);
+            Eigen::VectorX3<Diff::DDouble2> theta_diff =
+                Diff::d2vars(0, x.segment(i * ndof + pos_ndof, rot_ndof));
+            Eigen::VectorX3d theta_pred =
+                x_pred.segment(i * ndof + pos_ndof, rot_ndof);
 
-        const auto& Q = construct_rotation_matrix(theta_diff);
-        const auto& Q_pred = construct_rotation_matrix(theta_pred);
+            Eigen::DiagonalMatrix<double, 3> J =
+                compute_J(m_assembler[i].moment_of_inertia);
+            Eigen::DiagonalMatrix<double, 3> Jsqrt =
+                compute_Jsqrt(m_assembler[i].moment_of_inertia);
+            const auto& lambda =
+                angular_augmented_lagrangian_multiplier.middleRows(3 * ki, 3);
 
-        Diff::DDouble2 dAL =
-            kappa_Q / 2 * ((Q - Q_pred) * J * (Q - Q_pred).transpose()).trace()
-            - (lambda.transpose() * (Q - Q_pred) * Jsqrt).trace();
+            const auto& Q = construct_rotation_matrix(theta_diff);
+            const auto& Q_pred = construct_rotation_matrix(theta_pred);
 
-        potential += dAL.getValue();
-        if (compute_grad) {
-            grad.segment(k * ndof + pos_ndof, rot_ndof) = dAL.getGradient();
-        }
-        if (compute_hess) {
-            Eigen::Matrix3d H = dAL.getHessian();
-            for (int i = 0; i < H.rows(); i++) {
-                for (int j = 0; j < H.cols(); j++) {
-                    hess_triplets.emplace_back(
-                        ndof * k + pos_ndof + i, ndof * k + pos_ndof + j,
-                        H(i, j));
+            Diff::DDouble2 dAL = kappa_Q / 2
+                    * ((Q - Q_pred) * J * (Q - Q_pred).transpose()).trace()
+                - (lambda.transpose() * (Q - Q_pred) * Jsqrt).trace();
+
+            potential += dAL.getValue();
+            if (compute_grad) {
+                grad.segment(i * ndof + pos_ndof, rot_ndof) = dAL.getGradient();
+            }
+            if (compute_hess) {
+                Eigen::Matrix3d H = dAL.getHessian();
+                for (int hi = 0; hi < H.rows(); hi++) {
+                    for (int hj = 0; hj < H.cols(); hj++) {
+                        hess_triplets.emplace_back(
+                            ndof * i + pos_ndof + hi, ndof * i + pos_ndof + hj,
+                            H(hi, hj));
+                    }
                 }
             }
+
+            ki++;
         }
     }
 

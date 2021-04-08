@@ -1,7 +1,7 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "timestep": 1e-2,
-    "max_time": 4,
+    "max_time": 3,
     "rigid_body_problem": {
         "coefficient_restitution": -1,
         "gravity": [0, -9.8, 0],
@@ -32,6 +32,8 @@
             }, {
                 "position": [0, 3, 0]
             }],
+            "angular_velocity": [1500, 0, 0],
+            "#kinematic_max_time": 0.25,
             "enabled": true
         }]
     }

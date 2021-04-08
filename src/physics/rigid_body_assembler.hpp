@@ -115,7 +115,7 @@ public:
     long num_edges() const { return m_body_edge_id.back(); }
     long num_faces() const { return m_body_face_id.back(); }
     size_t num_bodies() const { return m_rbs.size(); }
-    size_t num_kinematic_bodies() const { return m_kinematic_body_ids.size(); }
+    size_t count_kinematic_bodies() const;
     int dim() const { return m_rbs.size() ? m_rbs[0].dim() : 0; }
 
     long vertex_id_to_body_id(long vi) const
@@ -207,9 +207,6 @@ public:
 
     /// @brief flag for vertices degrees of freedom (used for visualization)
     Eigen::MatrixXb is_dof_fixed;
-
-    // Indices of bodies that are kinematic
-    std::vector<int> m_kinematic_body_ids;
 
 protected:
     /// @brief Group ids per vertex
