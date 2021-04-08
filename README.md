@@ -6,7 +6,7 @@
 
 ## Compilation
 
-To build the project, use the following commands from the root directory of the project.
+To build the project, use the following commands from the root directory of the project:
 
 ```bash
 mkdir build
@@ -28,3 +28,14 @@ manipulation.
 
 We take as input a single JSON file that specifies the mesh and initial
 conditions for each body. The `fixtures` directory contains example scenes.
+
+## Python Bindings
+
+We expose some functionality of Rigid IPC through Python. This is still in
+development and lacks the ability to script many features available in the full
+simulator.
+
+To build the Python bindings use the `setup.py` script:
+```sh
+python setup.py install
+```

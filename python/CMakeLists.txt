@@ -21,4 +21,4 @@ endif()
 
 pybind11_add_module(rigidipc src/bindings.cpp)
 target_link_libraries(rigidipc PRIVATE ${PROJECT_NAME})
-set_target_properties(rigidipc PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+# set_target_properties(rigidipc PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
