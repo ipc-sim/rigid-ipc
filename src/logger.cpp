@@ -16,7 +16,9 @@
 
 namespace ipc::rigid {
 
-static const Eigen::IOFormat CleanFmt(
+static const Eigen::IOFormat RowVectorFmt(
+    Eigen::FullPrecision, Eigen::DontAlignCols, ", ", ",\n", "[", "]", "", "");
+static const Eigen::IOFormat MatrixFmt(
     Eigen::FullPrecision,
     Eigen::DontAlignCols,
     ", ",
@@ -32,7 +34,12 @@ std::string fmt_eigen(const Eigen::MatrixXd& x, const int precision)
     if (m.cols() == 1) {
         m.transposeInPlace();
     }
-    ssx << std::setprecision(precision) << m.format(CleanFmt);
+    ssx << std::setprecision(precision);
+    if (m.rows() == 1) {
+        ssx << m.format(RowVectorFmt);
+    } else {
+        ssx << m.format(MatrixFmt);
+    }
     return ssx.str();
 }
 

@@ -278,3 +278,6 @@ meshes/kinematic-dress/dress*
 notebooks/*.pdf
 comparisons/Chrono/tmp.obj
 **/vhacd_log.txt
+
+# Python bindings
+!python/src/*

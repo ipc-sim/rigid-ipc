@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     // Create the output directory if it does not exist
     boost::filesystem::create_directories(
         boost::filesystem::path(args.output_dir));
-    PROFILER_OUTDIR(args.output_dir)
+    PROFILER_OUTDIR(args.output_dir);
     std::string fout = fmt::format("{}/{}", args.output_dir, args.output_name);
 
     bool success = sim.load_scene(args.scene_path, args.patch);

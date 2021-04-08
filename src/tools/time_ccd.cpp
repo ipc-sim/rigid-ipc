@@ -20,7 +20,7 @@ RigidBody create_body(
     static int id = 0;
     int dim = vertices.cols();
     PoseD pose = PoseD::Zero(dim);
-    RigidBody rb = RigidBody::from_points(
+    RigidBody rb(
         vertices, edges, faces, pose,
         /*velocity=*/PoseD::Zero(pose.dim()),
         /*force=*/PoseD::Zero(pose.dim()),

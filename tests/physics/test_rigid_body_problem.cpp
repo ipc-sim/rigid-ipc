@@ -31,7 +31,7 @@ RigidBody rb_from_displacements(
     pose_t1.position += pose_t0.position;
 
     int ndof = pose_t0.ndof();
-    auto rb = RigidBody::from_points(
+    auto rb = RigidBody(
         vertices, edges, pose_t0,
         /*velocity=*/Pose<double>::Zero(vertices.cols()),
         /*force=*/Pose<double>::Zero(vertices.cols()),

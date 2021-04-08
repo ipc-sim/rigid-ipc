@@ -14,56 +14,31 @@
 
 namespace ipc::rigid {
 
-RigidBody RigidBody::from_points(
-    const Eigen::MatrixXd& vertices,
+void center_vertices(
+    Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& edges,
     const Eigen::MatrixXi& faces,
-    const PoseD& pose,
-    const PoseD& velocity,
-    const PoseD& force,
-    const double density,
-    const Eigen::VectorX6b& is_dof_fixed,
-    const bool oriented,
-    const int group_id,
-    const RigidBodyType type,
-    const double kinematic_max_time)
+    PoseD& pose)
 {
     int dim = vertices.cols();
-    assert(dim == pose.dim());
-    assert(dim == velocity.dim());
-    assert(dim == force.dim());
-    assert(edges.size() == 0 || edges.cols() == 2);
-    assert(faces.size() == 0 || faces.cols() == 3);
 
-    // move vertices so their center of mass is at (0, 0)
-    Eigen::MatrixXd vertices_ = vertices;
-    vertices_.rowwise() += pose.position.transpose();
+    vertices.rowwise() += pose.position.transpose();
 
     // compute the center of mass several times to get more accurate
-    Eigen::MatrixXd centered_vertices = vertices_;
-    Eigen::VectorX3d center_of_mass = Eigen::VectorX3d::Zero(dim);
+    pose.position.setZero(dim);
     for (int i = 0; i < 10; i++) {
-        double tmp_m;
-        Eigen::VectorX3d tmp_center_of_mass;
-        Eigen::MatrixXX3d tmp_I;
+        double mass;
+        Eigen::VectorX3d com;
+        Eigen::MatrixXX3d inertia;
         compute_mass_properties(
-            centered_vertices,
-            dim == 2 || faces.size() == 0 ? edges : faces, //
-            tmp_m, tmp_center_of_mass, tmp_I);
-        centered_vertices.rowwise() -= tmp_center_of_mass.transpose();
-        center_of_mass += tmp_center_of_mass;
-        if (tmp_center_of_mass.squaredNorm() < 1e-8) {
+            vertices, dim == 2 || faces.size() == 0 ? edges : faces, mass, com,
+            inertia);
+        vertices.rowwise() -= com.transpose();
+        pose.position += com;
+        if (com.squaredNorm() < 1e-8) {
             break;
         }
     }
-
-    // set position so current vertices match input
-    PoseD adjusted_pose(center_of_mass, pose.rotation);
-
-    assert(is_dof_fixed.size() == pose.ndof());
-    return RigidBody(
-        centered_vertices, edges, faces, adjusted_pose, velocity, force,
-        density, is_dof_fixed, oriented, group_id, type, kinematic_max_time);
 }
 
 RigidBody::RigidBody(
@@ -78,10 +53,10 @@ RigidBody::RigidBody(
     const bool oriented,
     const int group_id,
     const RigidBodyType type,
-    const double kinematic_max_time)
+    const double kinematic_max_time,
+    const std::deque<PoseD>& kinematic_poses)
     : group_id(group_id)
     , type(type)
-    , kinematic_max_time(kinematic_max_time)
     , vertices(vertices)
     , edges(edges)
     , faces(faces)
@@ -91,7 +66,12 @@ RigidBody::RigidBody(
     , pose(pose)
     , velocity(velocity)
     , force(force)
+    , kinematic_max_time(kinematic_max_time)
+    , kinematic_poses(kinematic_poses)
 {
+    assert(dim() == pose.dim());
+    assert(dim() == velocity.dim());
+    assert(dim() == force.dim());
     assert(edges.size() == 0 || edges.cols() == 2);
     assert(faces.size() == 0 || faces.cols() == 3);
 
@@ -101,11 +81,13 @@ RigidBody::RigidBody(
         this->type = RigidBodyType::STATIC;
     }
 
+    center_vertices(this->vertices, edges, faces, this->pose);
     Eigen::VectorX3d center_of_mass;
     Eigen::MatrixXX3d I;
     compute_mass_properties(
-        vertices, dim() == 2 || faces.size() == 0 ? edges : faces, mass,
-        center_of_mass, I);
+        this->vertices,
+        dim() == 2 || faces.size() == 0 ? edges : faces, //
+        mass, center_of_mass, I);
     // assert(center_of_mass.squaredNorm() < 1e-8);
 
     // Mass above is actually volume in m³ and density is Kg/m³
@@ -182,12 +164,13 @@ RigidBody::RigidBody(
     mass_matrix.diagonal().head(pos_ndof()).setConstant(mass);
     mass_matrix.diagonal().tail(rot_ndof()) = moment_of_inertia;
 
-    r_max = vertices.rowwise().norm().maxCoeff();
+    r_max = this->vertices.rowwise().norm().maxCoeff();
 
     average_edge_length = 0;
     for (long i = 0; i < edges.rows(); i++) {
         average_edge_length +=
-            (vertices.row(edges(i, 0)) - vertices.row(edges(i, 1))).norm();
+            (this->vertices.row(edges(i, 0)) - this->vertices.row(edges(i, 1)))
+                .norm();
     }
     if (edges.rows() > 0) {
         average_edge_length /= edges.rows();

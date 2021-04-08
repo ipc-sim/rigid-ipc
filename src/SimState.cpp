@@ -309,6 +309,7 @@ void SimState::run_simulation(const std::string& fout)
     PROFILE_START();
 
     boost::filesystem::path fout_path(fout);
+    boost::filesystem::create_directories(fout_path.parent_path());
     std::string chkpt_base =
         (fout_path.parent_path() / fout_path.stem()).string();
 

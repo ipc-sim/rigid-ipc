@@ -3,6 +3,17 @@ project(RigidIPC)
 
 ################################################################################
 
+# project-options
+option(RIGID_IPC_WITH_UNIT_TESTS       "Build unit-tests"       ON)
+option(RIGID_IPC_WITH_CODE_COVERAGE    "Builds targets with code coverage instrumentation (Requires GCC or Clang)" OFF)
+option(RIGID_IPC_WITH_DERIVATIVE_CHECK "Check derivatives"     OFF)
+option(RIGID_IPC_WITH_PROFILING        "Profile functions"     OFF)
+option(RIGID_IPC_WITH_COMPARISONS      "Build comparisons"     OFF)
+option(RIGID_IPC_WITH_SIMD             "Enable SIMD"           OFF)
+option(RIGID_IPC_WITH_OPENGL           "Build GUI"              ON)
+option(RIGID_IPC_WITH_TOOLS            "Build tools"            ON)
+option(RIGID_IPC_WITH_PYTHON           "Build Python bindings" OFF)
+
 # libigl-options
 option(LIBIGL_USE_STATIC_LIBRARY     "Use libigl as static library" OFF)
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"                    ON)
@@ -10,6 +21,11 @@ option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"                      ON)
 option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use IMGUI"                     ON)
 option(LIBIGL_WITH_PNG               "Use PNG"                       ON)
 option(LIBIGL_WITH_PREDICATES        "Use exact predicates"          ON)
+
+set(LIBIGL_WITH_OPENGL_GLFW_IMGUI ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
+set(LIBIGL_WITH_OPENGL_GLFW ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
+set(LIBIGL_WITH_OPENGL ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
+set(LIBIGL_WITH_PNG ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
 
 # PolySolve settings
 option(POLYSOLVE_WITH_CHOLMOD          "Enable Cholmod library"            ON)
@@ -20,21 +36,6 @@ option(POLYSOLVE_WITH_PARDISO          "Enable Pardiso library"            OFF)
 option(POLYSOLVE_WITH_HYPRE            "Enable hypre"                      OFF)
 option(POLYSOLVE_WITH_AMGCL            "Use AMGCL"                         OFF)
 option(POLYSOLVE_WITH_SPECTRA          "Enable computing spectrum"         OFF)
-
-# project-options
-option(RIGID_IPC_WITH_UNIT_TESTS       "Build unit-tests"       ON)
-option(RIGID_IPC_WITH_CODE_COVERAGE    "Builds targets with code coverage instrumentation. (Requires GCC or Clang)" OFF)
-option(RIGID_IPC_WITH_DERIVATIVE_CHECK "Check Derivatives"     OFF)
-option(RIGID_IPC_WITH_PROFILING        "Profile Functions"     OFF)
-option(RIGID_IPC_WITH_COMPARISONS      "Build comparisons"     OFF)
-option(RIGID_IPC_WITH_SIMD             "Enable SIMD"           OFF)
-option(RIGID_IPC_WITH_OPENGL           "Build GUI"              ON)
-option(RIGID_IPC_WITH_TOOLS            "Build Tools"            ON)
-
-set(LIBIGL_WITH_OPENGL_GLFW_IMGUI ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
-set(LIBIGL_WITH_OPENGL_GLFW ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
-set(LIBIGL_WITH_OPENGL ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
-set(LIBIGL_WITH_PNG ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
 
 ################################################################################
 
@@ -49,7 +50,7 @@ include(${PROJECT_NAME}Dependencies)
 mark_as_advanced(CLEAR CMAKE_BUILD_TYPE)
 
 ################################################################################
-# Fixing Collisions Library
+# Rigid IPC Library
 ################################################################################
 
 add_library(${PROJECT_NAME}
@@ -299,4 +300,12 @@ endif()
 ################################################################################
 if(RIGID_IPC_WITH_COMPARISONS)
   add_subdirectory(comparisons)
+endif()
+
+################################################################################
+# Python bindings
+################################################################################
+
+if(RIGID_IPC_WITH_PYTHON)
+  add_subdirectory(python)
 endif()

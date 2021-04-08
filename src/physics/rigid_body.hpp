@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deque>
+
 #include <Eigen/Core>
 #include <nlohmann/json.hpp>
 
@@ -20,7 +22,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
       { DYNAMIC, "dynamic" } });
 
 class RigidBody {
-protected:
+public:
     /**
      * @brief Create rigid body with center of mass at \f$\vec{0}\f$.
      *
@@ -41,13 +43,13 @@ protected:
         const int group_id,
         const RigidBodyType type = RigidBodyType::DYNAMIC,
         const double kinematic_max_time =
-            std::numeric_limits<double>::infinity());
+            std::numeric_limits<double>::infinity(),
+        const std::deque<PoseD>& kinematic_poses = std::deque<PoseD>());
 
-public:
-    static RigidBody from_points(
+    // Faceless version for convienence (useful for 2D)
+    RigidBody(
         const Eigen::MatrixXd& vertices,
         const Eigen::MatrixXi& edges,
-        const Eigen::MatrixXi& faces,
         const PoseD& pose,
         const PoseD& velocity,
         const PoseD& force,
@@ -57,32 +59,30 @@ public:
         const int group_id,
         const RigidBodyType type = RigidBodyType::DYNAMIC,
         const double kinematic_max_time =
-            std::numeric_limits<double>::infinity());
-
-    // Faceless version for convienence (useful for 2D)
-    static RigidBody from_points(
-        const Eigen::MatrixXd& vertices,
-        const Eigen::MatrixXi& edges,
-        const PoseD& pose,
-        const PoseD& velocity,
-        const PoseD& force,
-        const double density,
-        const Eigen::VectorX6b& is_dof_fixed,
-        const bool oriented,
-        const int group_id,
-        const RigidBodyType type = RigidBodyType::DYNAMIC)
+            std::numeric_limits<double>::infinity(),
+        const std::deque<PoseD>& kinematic_poses = std::deque<PoseD>())
+        : RigidBody(
+              vertices,
+              edges,
+              Eigen::MatrixXi(),
+              pose,
+              velocity,
+              force,
+              density,
+              is_dof_fixed,
+              oriented,
+              group_id,
+              type,
+              kinematic_max_time,
+              kinematic_poses)
     {
-        return from_points(
-            vertices, edges, Eigen::MatrixXi(), pose, velocity, force, density,
-            is_dof_fixed, oriented, group_id);
     }
-
-    enum Step { PREVIOUS_STEP = 0, CURRENT_STEP };
 
     // --------------------------------------------------------------------
     // State Functions
     // --------------------------------------------------------------------
 
+    enum Step { PREVIOUS_STEP = 0, CURRENT_STEP };
     /// @brief: computes vertices position for current or previous state
     Eigen::MatrixXd world_vertices(const Step step = CURRENT_STEP) const
     {
@@ -208,8 +208,6 @@ public:
     /// @brief Dyanmic type of rigid body
     RigidBodyType type;
 
-    double kinematic_max_time;
-
     // --------------------------------------------------------------------
     // Geometry
     // --------------------------------------------------------------------
@@ -259,6 +257,12 @@ public:
 
     /// @brief external force acting on the body
     PoseD force;
+
+    // --------------------------------------------------------------------
+    // Scripted kinematic motion
+    // --------------------------------------------------------------------
+    double kinematic_max_time;
+    std::deque<PoseD> kinematic_poses;
 
 protected:
     void init_bvh();

@@ -212,6 +212,8 @@ public:
 
     /// Initialize the augmented Lagrangian variables.
     void init_augmented_lagrangian();
+    /// Update the target poses of kinematic bodies
+    void step_kinematic_bodies();
 
     /// Update the augmented Lagrangian for kinematic bodies.
     void update_augmented_lagrangian(const Eigen::VectorXd& x) override;
@@ -241,8 +243,7 @@ protected:
 
     /// Update problem using current status of bodies.
     void update_friction_constraints(
-        const Constraints& collision_constraints,
-        const PosesD& poses);
+        const Constraints& collision_constraints, const PosesD& poses);
 
     template <typename T>
     T compute_body_energy(

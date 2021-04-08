@@ -20,7 +20,7 @@ simple(Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Pose<double> velocity)
 {
     static int id = 0;
     int ndof = Pose<double>::dim_to_ndof(vertices.cols());
-    return RigidBody::from_points(
+    return RigidBody(
         vertices, edges, Pose<double>::Zero(vertices.cols()), velocity,
         /*force=*/Pose<double>::Zero(vertices.cols()), /*density=*/1.0,
         /*is_dof_fixed=*/Eigen::VectorXb::Zero(ndof), /*oriented=*/false,

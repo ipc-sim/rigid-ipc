@@ -67,6 +67,7 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
                 "enabled": true,
                 "type": "dynamic",
                 "kinematic_max_time": -1,
+                "kinematic_poses": [],
                 "split_components": false
             })"_json;
         args.merge_patch(jrb);
@@ -225,6 +226,19 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
         RigidBodyType rb_type = args["type"];
         double kinematic_max_time = args["kinematic_max_time"];
 
+        std::vector<json> json_kinematic_poses = args["kinematic_poses"];
+        std::deque<PoseD> kinematic_poses;
+        for (const auto& json_pose : json_kinematic_poses) {
+            PoseD pose = PoseD::Zero(dim);
+            if (json_pose.contains("position")) {
+                from_json(json_pose["position"], pose.position);
+            }
+            if (json_pose.contains("rotation")) {
+                from_json(json_pose["rotation"], pose.rotation);
+            }
+            kinematic_poses.push_back(pose);
+        }
+
         if (args["split_components"].get<bool>()) {
             // TODO: Handle codimensional edges too
             assert(faces.cols() == 3);
@@ -239,7 +253,6 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
             }
 
             for (int ci = 0; ci < CFs.size(); ci++) {
-
                 Eigen::MatrixXi F = Eigen::Map<Eigen::MatrixXi>(
                     CFs[ci].data(), CFs[ci].size() / 3, 3);
                 Eigen::MatrixXd CV;
@@ -250,22 +263,20 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
                 igl::edges(CF, CE);
                 // WARNING: angular velocity and torque will be around the
                 // components center of mass not the entire meshes.
-                auto rb = RigidBody::from_points(
+                rbs.emplace_back(
                     CV, CE, CF, PoseD(position, rotation),
                     PoseD(linear_velocity, angular_velocity),
                     PoseD(force, torque), density, is_dof_fixed, is_oriented,
-                    group_id, rb_type, kinematic_max_time);
-                rb.name = fmt::format("{}-part{:03d}", rb_name, ci);
-                rbs.push_back(rb);
+                    group_id, rb_type, kinematic_max_time, kinematic_poses);
+                rbs.back().name = fmt::format("{}-part{:03d}", rb_name, ci);
             }
         } else {
-            auto rb = RigidBody::from_points(
+            rbs.emplace_back(
                 vertices, edges, faces, PoseD(position, rotation),
                 PoseD(linear_velocity, angular_velocity), PoseD(force, torque),
                 density, is_dof_fixed, is_oriented, group_id, rb_type,
-                kinematic_max_time);
-            rb.name = rb_name;
-            rbs.push_back(rb);
+                kinematic_max_time, kinematic_poses);
+            rbs.back().name = rb_name;
         }
     }
 

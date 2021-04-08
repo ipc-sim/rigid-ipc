@@ -19,10 +19,13 @@ public:
         const Eigen::VectorX3<T>& position, const Eigen::VectorX3<T>& rotation);
     Pose(const Eigen::VectorX6<T>& dof);
     Pose(const T& x, const T& y, const T& theta);
-    // clang-format off
-        Pose(const T& x, const T& y, const T& z,
-             const T& theta_x, const T& theta_y, const T& theta_z);
-    // clang-format on
+    Pose(
+        const T& x,
+        const T& y,
+        const T& z,
+        const T& theta_x,
+        const T& theta_y,
+        const T& theta_z);
 
     static Pose<T> Zero(int dim);
 

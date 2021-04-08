@@ -72,7 +72,7 @@ RigidBody create_body(
     static int id = 0;
     int dim = vertices.cols();
     Pose<double> pose = Pose<double>::Zero(dim);
-    RigidBody rb = RigidBody::from_points(
+    RigidBody rb = RigidBody(
         vertices, edges, faces, pose,
         /*velocity=*/Pose<double>::Zero(pose.dim()),
         /*force=*/Pose<double>::Zero(pose.dim()),

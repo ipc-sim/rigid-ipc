@@ -138,6 +138,7 @@ void DistanceBarrierRBProblem::simulation_step(
     update_constraints();
     opt_result = solve_constraints();
     _has_intersections = take_step(opt_result.x);
+    step_kinematic_bodies();
     had_collisions = m_had_collisions;
 }
 
@@ -200,28 +201,50 @@ void DistanceBarrierRBProblem::init_augmented_lagrangian()
         rot_ndof * m_assembler.num_kinematic_bodies(), rot_ndof);
 
     for (int i = 0; i < num_bodies(); i++) {
-        if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
-            if (m_assembler[i].kinematic_max_time < 0) {
-                m_assembler[i].convert_to_static();
-            }
-            m_assembler[i].kinematic_max_time -= timestep();
+        if (m_assembler[i].type == RigidBodyType::KINEMATIC
+            && m_assembler[i].kinematic_max_time < 0) {
+            m_assembler[i].convert_to_static();
         }
     }
 
     x_pred = x0;
     for (int i = 0; i < num_bodies(); i++) {
-        // Kinematic position
-        x_pred.segment(ndof * i, pos_ndof) +=
-            timestep() * m_assembler[i].velocity.position;
-        // Kinematic rotation
-        x_pred.segment(ndof * i + pos_ndof, rot_ndof) +=
-            timestep() * m_assembler[i].velocity.rotation;
+        if (m_assembler[i].kinematic_poses.size()) {
+            const PoseD& pose = m_assembler[i].kinematic_poses.front();
+            // Kinematic position
+            x_pred.segment(ndof * i, pos_ndof) = pose.position;
+            // Kinematic rotation
+            x_pred.segment(ndof * i + pos_ndof, rot_ndof) = pose.rotation;
+        } else {
+            // Kinematic position
+            x_pred.segment(ndof * i, pos_ndof) +=
+                timestep() * m_assembler[i].velocity.position;
+            // Kinematic rotation
+            x_pred.segment(ndof * i + pos_ndof, rot_ndof) +=
+                timestep() * m_assembler[i].velocity.rotation;
+        }
     }
 
     is_dof_satisfied.setZero(x0.size());
     for (int i = 0; i < num_bodies(); i++) {
         if (m_assembler[i].type == RigidBodyType::STATIC) {
             is_dof_satisfied.segment(ndof * i, ndof).setOnes();
+        }
+    }
+}
+
+void DistanceBarrierRBProblem::step_kinematic_bodies()
+{
+    for (int i = 0; i < num_bodies(); i++) {
+        if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
+            if (m_assembler[i].kinematic_max_time < 0) {
+                m_assembler[i].convert_to_static();
+            } else {
+                m_assembler[i].kinematic_max_time -= timestep();
+                if (m_assembler[i].kinematic_poses.size()) {
+                    m_assembler[i].kinematic_poses.pop_front();
+                }
+            }
         }
     }
 }

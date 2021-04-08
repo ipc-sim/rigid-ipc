@@ -107,19 +107,18 @@ nlohmann::json RigidBodyProblem::state() const
 {
     nlohmann::json json;
     std::vector<nlohmann::json> rbs;
-    Eigen::VectorXd p = Eigen::VectorXd::Zero(
-        PoseD::dim_to_pos_ndof(dim())); // Linear momentum
+    Eigen::VectorXd p =
+        Eigen::VectorXd::Zero(PoseD::dim_to_pos_ndof(dim())); // Linear momentum
     Eigen::VectorXd L = Eigen::VectorXd::Zero(
         PoseD::dim_to_rot_ndof(dim())); // Angular momentum
-    double T = 0.0;                            // Kinetic energy
-    double G = 0.0;                            // Potential energy
+    double T = 0.0;                     // Kinetic energy
+    double G = 0.0;                     // Potential energy
 
     for (auto& rb : m_assembler.m_rbs) {
         nlohmann::json jrb;
         jrb["position"] = to_json(Eigen::VectorXd(rb.pose.position));
         jrb["rotation"] = to_json(Eigen::VectorXd(rb.pose.rotation));
-        jrb["linear_velocity"] =
-            to_json(Eigen::VectorXd(rb.velocity.position));
+        jrb["linear_velocity"] = to_json(Eigen::VectorXd(rb.velocity.position));
         jrb["angular_velocity"] =
             to_json(Eigen::VectorXd(rb.velocity.rotation));
         if (dim() == 3) {
@@ -159,8 +158,7 @@ void RigidBodyProblem::state(const nlohmann::json& args)
         from_json(jrb["position"], m_assembler[i].pose.position);
         from_json(jrb["rotation"], m_assembler[i].pose.rotation);
         from_json(jrb["linear_velocity"], m_assembler[i].velocity.position);
-        from_json(
-            jrb["angular_velocity"], m_assembler[i].velocity.rotation);
+        from_json(jrb["angular_velocity"], m_assembler[i].velocity.rotation);
         if (dim() == 3) {
             if (jrb.contains("Qdot")) {
                 from_json(jrb["Qdot"], m_assembler[i].Qdot);

@@ -1,3 +1,4 @@
+#include <boost/filesystem.hpp>
 #include <logger.hpp>
 #include <map>
 #include <profiler.hpp>
@@ -95,13 +96,13 @@ namespace profiler {
 
     void Profiler::log(const std::string& fin)
     {
-        std::string parent_name =
-            fmt::format("{}/log-{}", dout, current_time_string());
-        if (mkdir(parent_name.c_str(), ACCESSPERMS) == 0) {
-            write_summary(parent_name, fin);
-            for (auto& p : points) {
-                write_point_details(parent_name, *p);
-            }
+        boost::filesystem::path outpath(dout);
+        outpath /= fmt::format("log-{}", current_time_string());
+        boost::filesystem::create_directories(outpath);
+
+        write_summary(outpath.string(), fin);
+        for (auto& p : points) {
+            write_point_details(outpath.string(), *p);
         }
     }
 
