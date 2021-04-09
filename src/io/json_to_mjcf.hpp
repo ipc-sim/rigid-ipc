@@ -161,6 +161,34 @@ int json_to_mjcf(
             printer.PushAttribute("quat", ss.str().c_str());
             ss.str(std::string());
 
+            bool isFixed = false;
+            if (rbI.find("is_dof_fixed") != rbI.end()) {
+                try {
+                    for (bool i :
+                         rbI["is_dof_fixed"].get<std::vector<bool>>()) {
+                        isFixed |= i;
+                    }
+                } catch (...) {
+                    isFixed = rbI["is_dof_fixed"].get<bool>();
+                }
+                if (isFixed && mode == 0) {
+                    printer.OpenElement("inertial");
+                    printer.PushAttribute("mass", "0");
+                    printer.CloseElement(); // inertial
+                }
+            }
+
+            if (!isFixed && rbI.find("type") != rbI.end()) {
+                if (rbI["type"].get<std::string>() == "static") {
+                    isFixed = true;
+                    if (mode == 0) {
+                        printer.OpenElement("inertial");
+                        printer.PushAttribute("mass", "0");
+                        printer.CloseElement(); // inertial
+                    }
+                }
+            }
+
             printer.OpenElement("geom");
             printer.PushAttribute("mesh", meshNames[rbId].c_str());
             printer.PushAttribute("type", "mesh");
@@ -218,36 +246,15 @@ int json_to_mjcf(
                     "density",
                     std::to_string(rbI["density"].get<double>()).c_str());
             }
-            printer.PushAttribute("friction", std::to_string(fricCoef).c_str());
+            if (mode == 0) {
+                // Bullet
+                printer.PushAttribute("friction", std::to_string(std::sqrt(fricCoef)).c_str());
+            }
+            else if (mode == 1) {
+                // Mujoco
+                printer.PushAttribute("friction", std::to_string(fricCoef).c_str());
+            }
             printer.CloseElement(); // geom
-
-            bool isFixed = false;
-            if (rbI.find("is_dof_fixed") != rbI.end()) {
-                try {
-                    for (bool i :
-                         rbI["is_dof_fixed"].get<std::vector<bool>>()) {
-                        isFixed |= i;
-                    }
-                } catch (...) {
-                    isFixed = rbI["is_dof_fixed"].get<bool>();
-                }
-                if (isFixed && mode == 0) {
-                    printer.OpenElement("inertial");
-                    printer.PushAttribute("mass", "0");
-                    printer.CloseElement(); // inertial
-                }
-            }
-
-            if (!isFixed && rbI.find("type") != rbI.end()) {
-                if (rbI["type"].get<std::string>() == "static") {
-                    isFixed = true;
-                    if (mode == 0) {
-                        printer.OpenElement("inertial");
-                        printer.PushAttribute("mass", "0");
-                        printer.CloseElement(); // inertial
-                    }
-                }
-            }
 
             if (mode == 1 && !isFixed) {
                 printer.OpenElement("freejoint");
