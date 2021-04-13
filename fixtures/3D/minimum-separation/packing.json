@@ -21,46 +21,25 @@
             "mesh": "packing-3D-printer/3DBenchy.obj",
             "enabled": true
         }, {
-            "mesh": "packing-3D-printer/3DBenchy.001.obj",
-            "enabled": false
-        }, {
-            "mesh": "packing-3D-printer/CogDriveGear.002.obj",
+            "mesh": "packing-3D-printer/CogDriveGear.obj",
             "enabled": true
         }, {
-            "mesh": "packing-3D-printer/Compound Of 3 Cubes.obj",
-            "enabled": false
-        }, {
-            "mesh": "packing-3D-printer/Hilbert Cube1.obj",
+            "mesh": "packing-3D-printer/HilbertCube.obj",
             "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Hilbert Cube1.001.obj",
-            "enabled": false
         }, {
             "mesh": "packing-3D-printer/Openscad.obj",
             "enabled": true
         }, {
-            "mesh": "packing-3D-printer/Openscad.001.obj",
-            "enabled": false
-        }, {
             "mesh": "packing-3D-printer/Polycup.obj",
             "enabled": true
         }, {
-            "mesh": "packing-3D-printer/Polycup.001.obj",
-            "enabled": false
-        }, {
-            "mesh": "packing-3D-printer/Shovel1.obj",
+            "mesh": "packing-3D-printer/Shovel.obj",
             "enabled": true
-        }, {
-            "mesh": "packing-3D-printer/Shovel1.001.obj",
-            "enabled": false
         }, {
             "mesh": "packing-3D-printer/Stool.obj",
             "enabled": true
         }, {
-            "mesh": "packing-3D-printer/Stool.001.obj",
-            "enabled": false
-        }, {
-            "mesh": "packing-3D-printer/Wire Holder.001.obj",
+            "mesh": "packing-3D-printer/WireHolder.obj",
             "enabled": true
         }, {
             "mesh": "plane.obj",
@@ -68,7 +47,7 @@
             "dimensions": [0.4, 0, 0.4],
             "is_dof_fixed": [true, false, true, true, true, true],
             "group_id": 0,
-	    "enabled": true
+            "enabled": true
         }]
     }
 }
