@@ -86,7 +86,7 @@ DefaultSuggestedMargin: {chrono.ChCollisionModel.GetDefaultSuggestedMargin():g},
 """)
 
 
-def set_simulation_parameters(system):
+def set_simulation_parameters(system, collision_envelope=None, collision_margin=None):
     print("Default parameters:")
     print_simulation_parameters(system)
 
@@ -101,10 +101,10 @@ def set_simulation_parameters(system):
 
     # Set the global collision margins. This is expecially important for very large or
     # very small objects. Set this before creating shapes. Not before creating system.
-    # chrono.ChCollisionModel.SetDefaultSuggestedEnvelope(0.001)
-    # chrono.ChCollisionModel.SetDefaultSuggestedMargin(0.001)
-    # chrono.ChCollisionModel.SetDefaultSuggestedEnvelope(1e-4)
-    # chrono.ChCollisionModel.SetDefaultSuggestedMargin(1e-4)
+    if collision_envelope is not None:
+        chrono.ChCollisionModel.SetDefaultSuggestedEnvelope(collision_envelope)
+    if collision_margin is not None:
+        chrono.ChCollisionModel.SetDefaultSuggestedMargin(collision_margin)
 
     print("Using parameters:")
     print_simulation_parameters(system)
@@ -151,12 +151,21 @@ def save_mesh(system, meshes, out_path, index):
     igl.write_triangle_mesh(str(out_path / f"m_{index:04d}.obj"), V, F)
 
 
-def run_simulation(fixture, mesh_path, out_path, timestep=None):
+def run_simulation(fixture, mesh_path, out_path, timestep=None,
+                   collision_envelope=None, collision_margin=None):
     rb_problem = fixture["rigid_body_problem"]
 
     system = chrono.ChSystemNSC()
     system.Set_G_acc(chrono.ChVectorD(*rb_problem.get("gravity", [0, 0, 0])))
-    set_simulation_parameters(system)
+    dhat = fixture.get(
+        "distance_barrier_constraint",
+        {"initial_barrier_activation_distance": 1e-3}).get(
+        "initial_barrier_activation_distance", 1e-3)
+    if collision_envelope is not None and collision_envelope < 0:
+        collision_envelope = dhat
+    if collision_margin is not None and collision_margin < 0:
+        collision_margin = dhat
+    set_simulation_parameters(system, collision_envelope, collision_margin)
 
     # ---------------------------------------------------------------------
     #
@@ -168,6 +177,7 @@ def run_simulation(fixture, mesh_path, out_path, timestep=None):
 
     mu = rb_problem.get("coefficient_friction", 0)
     contact_material.SetFriction(max(mu, 0))
+    # comp = system.GetMaterialCompositionStrategy()
 
     meshes = []
 
@@ -255,22 +265,19 @@ def run_simulation(fixture, mesh_path, out_path, timestep=None):
         system.Add(cbody)
 
     if timestep is None:
-        timestep = fixture["timestep"]
-    index = 0
-    prev_save = 0
-
+        timestep = fixture.get("timestep", 1e-2)
     max_time = fixture.get("max_time", 10)
 
+    index = 0
+    prev_save = 0
     save_mesh(system, meshes, out_path, 0)
-    pbar = tqdm.tqdm(total=max_time)
-    while system.GetChTime() < max_time:
+
+    for i in tqdm.tqdm(range(int(numpy.ceil(max_time / timestep)))):
         system.DoStepDynamics(timestep)
-        pbar.update(timestep)
-        if system.GetChTime() - prev_save > 1e-2 or timestep >= 1e-2:
+        if timestep >= 1e-2 or system.GetChTime() - prev_save > 1e-2:
             index += 1
             save_mesh(system, meshes, out_path, index)
             prev_save = system.GetChTime()
-    pbar.close()
 
 
 def parse_args():
@@ -286,6 +293,18 @@ def parse_args():
     parser.add_argument(
         "--dt", "--timestep", type=float, default=None, dest="timestep",
         help="timestep")
+
+    def env_mar_to_float(x):
+        if x == "dhat":
+            return -1
+        return float(x)
+
+    parser.add_argument("--envelope", type=env_mar_to_float, default=None,
+                        help="collision envelope value")
+    parser.add_argument("--margin", type=env_mar_to_float, default=None,
+                        help="collision margin value")
+    parser.add_argument("--no-video", action="store_true", default=False,
+                        help="skip rendering")
     args = parser.parse_args()
 
     if not pathlib.Path(args.chrono_data_path).exists():
@@ -322,6 +341,12 @@ def main():
     cwd_output = pathlib.Path("output").resolve()
 
     for input in args.input:
+        with open(input) as f:
+            fixture = json.load(f)
+
+        if args.timestep is None:
+            args.timestep = fixture.get("timestep", 1e-2)
+
         try:
             out_path = input.resolve().relative_to(
                 root_path / "fixtures" / "3D").with_suffix("")
@@ -333,15 +358,14 @@ def main():
         print("out_path:", out_path)
         out_path.mkdir(exist_ok=True, parents=True)
 
-        with open(input) as f:
-            fixture = json.load(f)
-
         try:
             run_simulation(fixture, mesh_path, out_path,
-                           timestep=args.timestep)
+                           timestep=args.timestep,
+                           collision_envelope=args.envelope,
+                           collision_margin=args.margin)
 
             # Render simulation
-            if renderer is not None:
+            if renderer is not None and not args.no_video:
                 print("Rendering simulation")
                 video_name = f"{input.stem}-{get_time_stamp()}-chrono.mp4"
                 subprocess.run([str(renderer),
