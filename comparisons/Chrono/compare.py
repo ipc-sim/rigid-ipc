@@ -152,7 +152,7 @@ def save_mesh(system, meshes, out_path, index):
 
 
 def run_simulation(fixture, mesh_path, out_path, timestep=None,
-                   collision_envelope=None, collision_margin=None):
+                   collision_envelope=None, collision_margin=None, mu=None):
     rb_problem = fixture["rigid_body_problem"]
 
     system = chrono.ChSystemNSC()
@@ -175,7 +175,8 @@ def run_simulation(fixture, mesh_path, out_path, timestep=None,
     # Create a contact material (with default properties, shared by all collision shapes)
     contact_material = chrono.ChMaterialSurfaceNSC()
 
-    mu = rb_problem.get("coefficient_friction", 0)
+    if mu is None:
+        mu = rb_problem.get("coefficient_friction", 0)
     contact_material.SetFriction(max(mu, 0))
     # comp = system.GetMaterialCompositionStrategy()
 
@@ -227,7 +228,7 @@ def run_simulation(fixture, mesh_path, out_path, timestep=None,
 
         # rot = Rotation.from_euler('zyx', body["rotation"], degrees=True)
         rot2 = Rotation.from_matrix(R)
-        rotTmp = body["rotation"] if "rotation" in body else [0.0, 0.0, 0.0]
+        rotTmp = body.get("rotation", [0.0, 0.0, 0.0])
         rot = Rotation.from_euler('xyz', rotTmp, degrees=True) * rot2
         rot = rot.as_quat()
         cbody.SetRot(chrono.ChQuaternionD(rot[3], rot[0], rot[1], rot[2]))
@@ -236,8 +237,6 @@ def run_simulation(fixture, mesh_path, out_path, timestep=None,
             pos = body["position"]
             pos = [x + y for (x, y) in zip(pos, t)]
             cbody.SetPos(chrono.ChVectorD(pos[0], pos[1], pos[2]))
-
-        # print(body)
 
         # Need to fix coordinate systems
         if body.get("linear_velocity", [0, 0, 0]) != [0, 0, 0]:
@@ -262,6 +261,7 @@ def run_simulation(fixture, mesh_path, out_path, timestep=None,
                 is_fixed = is_dof_fixed
         cbody.SetBodyFixed(is_fixed)
 
+        cbody.Update()
         system.Add(cbody)
 
     if timestep is None:
@@ -293,6 +293,8 @@ def parse_args():
     parser.add_argument(
         "--dt", "--timestep", type=float, default=None, dest="timestep",
         help="timestep")
+    parser.add_argument(
+        "--mu", type=float, default=None, dest="mu", help="coeff. friction")
 
     def env_mar_to_float(x):
         if x == "dhat":
@@ -353,8 +355,10 @@ def main():
         except:
             out_path = input.stem
         out_path = cwd_output / out_path
-        if args.timestep is not None:
-            out_path /= f"timestep={args.timestep:g}"
+        folder_name = "_".join(
+            ([] if args.timestep is None else [f"timestep={args.timestep:g}"])
+            + ([] if args.mu is None else [f"mu={args.mu:g}"]))
+        out_path /= folder_name
         print("out_path:", out_path)
         out_path.mkdir(exist_ok=True, parents=True)
 
@@ -362,7 +366,8 @@ def main():
             run_simulation(fixture, mesh_path, out_path,
                            timestep=args.timestep,
                            collision_envelope=args.envelope,
-                           collision_margin=args.margin)
+                           collision_margin=args.margin,
+                           mu=args.mu)
 
             # Render simulation
             if renderer is not None and not args.no_video:

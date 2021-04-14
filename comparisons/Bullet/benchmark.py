@@ -116,6 +116,12 @@ def convert_to_convex_mesh(in_path, out_path):
         convexhullApproximation=0)
 
 
+def print_simulation_parameters():
+    for param, val in bullet.getPhysicsEngineParameters().items():
+        print(f"{param}: {val}")
+    print()
+
+
 def run_simulation(fixture, meshes_path, out_path, args):
     rigid_body_problem = fixture["rigid_body_problem"]
 
@@ -131,7 +137,13 @@ def run_simulation(fixture, meshes_path, out_path, args):
         bullet.configureDebugVisualizer(bullet.COV_ENABLE_RENDERING, 0)
     else:
         bullet.connect(bullet.DIRECT)
+
+    print("Default parameters:")
+    print_simulation_parameters()
+
     bullet.setPhysicsEngineParameter(
+        numSolverIterations=2500,
+        solverResidualThreshold=1e-12,
         enableSAT=args.enable_sat,
         enableConeFriction=args.enable_cone_friction)
     bullet.setGravity(*gravity)
@@ -147,7 +159,10 @@ def run_simulation(fixture, meshes_path, out_path, args):
     convex_meshes_path = pathlib.Path(__file__).resolve().parent / "meshes"
 
     # combined_friction = friction_a * friction_b so take the sqrt
-    mu = numpy.sqrt(rigid_body_problem.get("coefficient_friction", 0.0))
+    mu = args.mu
+    if mu is None:
+        mu = rigid_body_problem.get("coefficient_friction", 0.0)
+    mu = numpy.sqrt(mu)
 
     for body in rigid_body_problem["rigid_bodies"]:
         if not body.get("enabled", True):
@@ -187,7 +202,7 @@ def run_simulation(fixture, meshes_path, out_path, args):
             mesh_path, mass=mass, mesh_scale=mesh_scale)
 
         bullet.changeDynamics(
-            body_id, -1, lateralFriction=mu, frictionAnchor=1)
+            body_id, -1, lateralFriction=mu, frictionAnchor=False)
 
         pos = body.get("position", [0, 0, 0])
         eul = numpy.deg2rad(body.get("rotation", [0, 0, 0]))
@@ -225,6 +240,9 @@ def run_simulation(fixture, meshes_path, out_path, args):
         run_id = bullet.addUserDebugParameter("Run", 1, -1, prev_run)
         run_sim = False
 
+    print("Using parameters:")
+    print_simulation_parameters()
+
     pbar = tqdm.tqdm(total=(max_steps + 1))
     i = 0
     while (args.use_gui and bullet.isConnected()) or i <= max_steps:
@@ -250,8 +268,8 @@ def run_simulation(fixture, meshes_path, out_path, args):
                 prev_save = i
 
         i += 1
-        if args.use_gui:
-            time.sleep(1e-3)
+        # if args.use_gui:
+        #     time.sleep(1e-3)
     pbar.close()
 
 
@@ -276,15 +294,17 @@ def parse_args():
         "--enable-sat", action="store_true", default=False,
         dest="enable_sat", help="Enable Separating Axis Test (SAT) collision")
     parser.add_argument(
-        "--enable-cone-friction", action="store_true", default=False,
+        "--disable-cone-friction", action="store_false", default=True,
         dest="enable_cone_friction",
-        help="Disable Cone friction (instead use the default pyramid friction model)")
+        help="Disable Cone friction (instead use the pyramid friction model)")
     parser.add_argument(
         "--make-convex", action="store_true", default=False,
         help="Convert dynamic bodies to convex meshes (using V-HACD)")
     parser.add_argument(
         "--dt", "--timestep", type=float, default=None, dest="timestep",
         help="timestep")
+    parser.add_argument(
+        "--mu", type=float, default=None, dest="mu", help="coeff. friction")
     parser.add_argument("--no-video", action="store_true", default=False,
                         help="skip rendering")
     parser.add_argument("--use-gui", action="store_true", default=False,
@@ -326,10 +346,11 @@ def main():
         except:
             out_path = input.stem
         out_path = ("output" / out_path).resolve()
-        if args.timestep is not None:
-            out_path /= f"timestep={args.timestep:g}"
-        if args.enable_sat:
-            out_path = out_path.parent / (out_path.name + "-sat")
+        folder_name = "_".join(
+            ([] if args.timestep is None else [f"timestep={args.timestep:g}"])
+            + (["sat"] if args.enable_sat else [])
+            + ([] if args.mu is None else [f"mu={args.mu:g}"]))
+        out_path /= folder_name
         print("out_path:", out_path)
         out_path.mkdir(exist_ok=True, parents=True)
 
