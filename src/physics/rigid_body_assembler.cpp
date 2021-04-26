@@ -162,6 +162,14 @@ void RigidBodyAssembler::set_rb_poses(const PosesD& poses)
     assert(num_bodies() == poses.size());
     for (size_t i = 0; i < num_bodies(); i++) {
         m_rbs[i].pose = poses[i];
+        // if (m_rbs[i].pose.rotation.size() > 1) {
+        //     // Mod 2π on the angle
+        //     double angle = m_rbs[i].pose.rotation.norm();
+        //     if (abs(angle) >= 2 * M_PI) {
+        //         m_rbs[i].pose.rotation /= angle;
+        //         m_rbs[i].pose.rotation *= fmod(angle, 2 * M_PI);
+        //     }
+        // }
     }
 }
 

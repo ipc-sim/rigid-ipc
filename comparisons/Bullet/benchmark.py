@@ -146,6 +146,8 @@ def run_simulation(fixture, meshes_path, out_path, args):
         solverResidualThreshold=1e-12,
         enableSAT=args.enable_sat,
         enableConeFriction=args.enable_cone_friction)
+    if args.use_ccd:
+        bullet.setPhysicsEngineParameter(allowedCcdPenetration=0.0)
     bullet.setGravity(*gravity)
     bullet.setTimeStep(timestep)
 
@@ -203,6 +205,9 @@ def run_simulation(fixture, meshes_path, out_path, args):
 
         bullet.changeDynamics(
             body_id, -1, lateralFriction=mu, frictionAnchor=False)
+        if args.use_ccd:
+            bullet.changeDynamics(
+                body_id, -1, ccdSweptSphereRadius=args.ccd_radius)
 
         pos = body.get("position", [0, 0, 0])
         eul = numpy.deg2rad(body.get("rotation", [0, 0, 0]))
@@ -305,6 +310,15 @@ def parse_args():
         help="timestep")
     parser.add_argument(
         "--mu", type=float, default=None, dest="mu", help="coeff. friction")
+    parser.add_argument(
+        "--use-ccd", action="store_true", default=False, dest="use_ccd",
+        help="enable CCD using swept spheres")
+    parser.add_argument(
+        "--ccd-radius", type=float, default=0.002, dest="ccd_radius",
+        help="CCD swept sphere radius")
+    parser.add_argument(
+        "--erp", type=float, default=None,
+        help="error reduction parameter")
     parser.add_argument("--no-video", action="store_true", default=False,
                         help="skip rendering")
     parser.add_argument("--use-gui", action="store_true", default=False,
