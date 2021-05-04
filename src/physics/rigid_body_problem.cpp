@@ -8,9 +8,10 @@
 #include <igl/PI.h>
 #include <igl/predicates/segment_segment_intersect.h>
 
+#include <ipc/utils/intersection.hpp>
+
 #include <ccd/rigid/broad_phase.hpp>
 #include <ccd/rigid/rigid_body_hash_grid.hpp>
-#include <geometry/intersection.hpp>
 #include <io/read_rb_scene.hpp>
 #include <io/serialize_json.hpp>
 #include <logger.hpp>
@@ -336,7 +337,7 @@ bool RigidBodyProblem::detect_intersections(const PosesD& poses) const
             m_assembler, poses, ef_candidates);
 
         for (const EdgeFaceCandidate& ef_candidate : ef_candidates) {
-            if (are_edge_triangle_intersecting(
+            if (is_edge_intersecting_triangle(
                     vertices.row(edges(ef_candidate.edge_index, 0)),
                     vertices.row(edges(ef_candidate.edge_index, 1)),
                     vertices.row(faces(ef_candidate.face_index, 0)),

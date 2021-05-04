@@ -4,9 +4,11 @@
 
 #include <physics/mass.hpp>
 
+using namespace ipc;
+using namespace ipc::rigid;
+
 TEST_CASE("Center of Mass", "[physics][mass]")
 {
-    using namespace ipc::rigid;
     int dim = GENERATE(2);
     int num_vertices = 6 * GENERATE(10, 50, 100);
 
@@ -20,15 +22,14 @@ TEST_CASE("Center of Mass", "[physics][mass]")
         Eigen::Map<Eigen::MatrixXi>(edges.data(), num_vertices / dim, dim));
 
     double total_mass1;
-    Eigen::VectorX3d center_of_mass1;
-    Eigen::MatrixXX3d moment_of_inertia1;
+    VectorMax3d center_of_mass1;
+    MatrixMax3d moment_of_inertia1;
     compute_mass_properties(
         vertices, edges, total_mass1, center_of_mass1, moment_of_inertia1);
 
     double total_mass2 = compute_total_mass(vertices, edges);
-    Eigen::VectorX3d center_of_mass2 = compute_center_of_mass(vertices, edges);
-    Eigen::MatrixXX3d moment_of_inertia2 =
-        compute_moment_of_inertia(vertices, edges);
+    VectorMax3d center_of_mass2 = compute_center_of_mass(vertices, edges);
+    MatrixMax3d moment_of_inertia2 = compute_moment_of_inertia(vertices, edges);
 
     CAPTURE(dim, num_vertices);
     CHECK(total_mass1 == Approx(total_mass2));

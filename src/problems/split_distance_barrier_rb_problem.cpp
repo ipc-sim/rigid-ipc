@@ -151,21 +151,17 @@ void SplitDistanceBarrierRBProblem::solve_velocities()
         bool is_oriented = m_assembler[body_B_id].is_oriented;
 
         Eigen::Vector2d n_toi;
-        Eigen::VectorX3d e_toi; // edge vector at toi
+        VectorMax3d e_toi; // edge vector at toi
         switch (constraint().trajectory_type) {
         case TrajectoryType::LINEAR: {
             // Use linearized trajectories
-            Eigen::VectorX3d e_v0_t0 =
-                m_assembler.world_vertex(poses_t0, b0_id);
-            Eigen::VectorX3d e_v0_t1 =
-                m_assembler.world_vertex(poses_t1, b0_id);
-            Eigen::VectorX3d e_v0_toi = (e_v0_t1 - e_v0_t0) * toi + e_v0_t0;
+            VectorMax3d e_v0_t0 = m_assembler.world_vertex(poses_t0, b0_id);
+            VectorMax3d e_v0_t1 = m_assembler.world_vertex(poses_t1, b0_id);
+            VectorMax3d e_v0_toi = (e_v0_t1 - e_v0_t0) * toi + e_v0_t0;
 
-            Eigen::VectorX3d e_v1_t0 =
-                m_assembler.world_vertex(poses_t0, b1_id);
-            Eigen::VectorX3d e_v1_t1 =
-                m_assembler.world_vertex(poses_t1, b1_id);
-            Eigen::VectorX3d e_v1_toi = (e_v1_t1 - e_v1_t0) * toi + e_v1_t0;
+            VectorMax3d e_v1_t0 = m_assembler.world_vertex(poses_t0, b1_id);
+            VectorMax3d e_v1_t1 = m_assembler.world_vertex(poses_t1, b1_id);
+            VectorMax3d e_v1_toi = (e_v1_t1 - e_v1_t0) * toi + e_v1_t0;
 
             e_toi = e_v1_toi - e_v0_toi;
         } break;
@@ -276,7 +272,7 @@ void SplitDistanceBarrierRBProblem::solve_velocities()
         const PoseD pose_Btoi =
             PoseD::interpolate(body_B.pose_prev, body_B.pose, toi);
         // (3) then the vectors are given by r = R(\theta_{t})*r_0
-        Eigen::Matrix2d one_hat = Eigen::Hat(1.0);
+        Eigen::Matrix2d one_hat = Hat(1.0);
         const Eigen::VectorXd r_Aperp_toi =
             pose_Atoi.construct_rotation_matrix() * one_hat * r0_A;
         const Eigen::VectorXd r_Bperp_toi =
@@ -342,7 +338,7 @@ double SplitDistanceBarrierRBProblem::compute_energy_term(
     bool compute_hess)
 {
     Eigen::VectorXd diff = x - this->poses_to_dofs(poses_t1);
-    Eigen::DiagonalMatrixXd M = m_assembler.m_rb_mass_matrix;
+    DiagonalMatrixXd M = m_assembler.m_rb_mass_matrix;
 
     if (compute_grad) {
         grad = M * diff;
@@ -355,7 +351,7 @@ double SplitDistanceBarrierRBProblem::compute_energy_term(
     }
 
     if (compute_hess) {
-        hess = Eigen::SparseDiagonal(M.diagonal());
+        hess = SparseDiagonal(M.diagonal());
 #ifdef RIGID_IPC_WITH_DERIVATIVE_CHECK
         Eigen::MatrixXd hess_approx = eval_hess_energy_approx(*this, x);
         if (!fd::compare_jacobian(hess, hess_approx)) {

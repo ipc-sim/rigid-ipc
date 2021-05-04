@@ -20,6 +20,7 @@
 #include <profiler.hpp>
 
 namespace py = pybind11;
+using namespace ipc;
 using namespace ipc::rigid;
 
 // static tbb::global_control thread_limiter = tbb::global_control(
@@ -75,7 +76,7 @@ PYBIND11_MODULE(rigidipc, m)
     py::class_<PoseD>(m, "Pose")
         .def(py::init<>())
         .def(
-            py::init<const Eigen::VectorX3d&, const Eigen::VectorX3d&>(),
+            py::init<const VectorMax3d&, const VectorMax3d&>(),
             "Pose of a rigid body", py::arg("position"), py::arg("rotation"))
         .def(
             "__repr__",
@@ -86,15 +87,15 @@ PYBIND11_MODULE(rigidipc, m)
             })
         .def_property(
             "position",
-            [](PoseD& self) -> Eigen::VectorX3d& { return self.position; },
-            [](PoseD& self, const Eigen::VectorX3d& position) {
+            [](PoseD& self) -> VectorMax3d& { return self.position; },
+            [](PoseD& self, const VectorMax3d& position) {
                 self.position = position;
             },
             py::return_value_policy::reference)
         .def_property(
             "rotation",
-            [](PoseD& self) -> Eigen::VectorX3d& { return self.rotation; },
-            [](PoseD& self, const Eigen::VectorX3d& rotation) {
+            [](PoseD& self) -> VectorMax3d& { return self.rotation; },
+            [](PoseD& self, const VectorMax3d& rotation) {
                 self.rotation = rotation;
             },
             py::return_value_policy::reference);
@@ -109,7 +110,7 @@ PYBIND11_MODULE(rigidipc, m)
         .def(py::init<
              const Eigen::MatrixXd&, const Eigen::MatrixXi&,
              const Eigen::MatrixXi&, const PoseD&, const PoseD&, const PoseD&,
-             const double, const Eigen::VectorX6b&, const bool, const int>())
+             const double, const VectorMax6b&, const bool, const int>())
         .def(py::init([](const std::string& mesh_filename) {
             std::vector<nlohmann::json> jrbs = { { { "mesh",
                                                      mesh_filename } } };

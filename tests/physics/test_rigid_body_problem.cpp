@@ -10,9 +10,9 @@
 #include <problems/split_distance_barrier_rb_problem.hpp>
 #include <utils/not_implemented_error.hpp>
 
-namespace test_utils {
-
+using namespace ipc;
 using namespace ipc::rigid;
+
 RigidBody rb_from_displacements(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& edges,
@@ -20,7 +20,7 @@ RigidBody rb_from_displacements(
 {
     static int id = 0;
     // move vertices so they center of mass is at 0,0
-    Eigen::VectorX3d x = compute_center_of_mass(vertices, edges);
+    VectorMax3d x = compute_center_of_mass(vertices, edges);
     Eigen::MatrixXd centered_vertices = vertices.rowwise() - x.transpose();
 
     // set position so current vertices match input
@@ -36,20 +36,16 @@ RigidBody rb_from_displacements(
         /*velocity=*/Pose<double>::Zero(vertices.cols()),
         /*force=*/Pose<double>::Zero(vertices.cols()),
         /*density=*/1,
-        /*dof=*/Eigen::VectorXb::Zero(ndof),
+        /*dof=*/VectorXb::Zero(ndof),
         /*oriented=*/false,
         /*group=*/id++);
     rb.pose = pose_t1;
     return rb;
 }
 
-} // namespace test_utils
-
 TEST_CASE(
     "Rigid Body Problem Functional", "[RB][RB-Problem][RB-Problem-functional]")
 {
-    using namespace test_utils;
-
     Eigen::MatrixXd vertices(4, 2);
     int dim = vertices.cols();
     Eigen::MatrixXi edges(4, 2);
@@ -86,9 +82,6 @@ TEST_CASE(
                + rb2_pose_t1.rotation.squaredNorm());
     }
 
-    using namespace ipc::rigid;
-    using namespace ipc::rigid;
-
     std::vector<RigidBody> rbs = {
         { rb_from_displacements(vertices, edges, rb1_pose_t1),
           rb_from_displacements(vertices, edges, rb2_pose_t1) }
@@ -112,8 +105,6 @@ TEST_CASE(
 TEST_CASE(
     "Rigid Body Problem Gradient", "[RB][RB-Problem][RB-Problem-gradient]")
 {
-    using namespace test_utils;
-
     Eigen::MatrixXd vertices(4, 2);
     int dim = vertices.cols();
     Eigen::MatrixXi edges(4, 2);
@@ -143,9 +134,6 @@ TEST_CASE(
         vel_2.position << 1.0, 1.0;
         vel_2.rotation << M_PI;
     }
-
-    using namespace ipc::rigid;
-    using namespace ipc::rigid;
 
     std::vector<RigidBody> rbs;
     rbs.push_back(rb_from_displacements(vertices, edges, vel_1));
@@ -166,7 +154,6 @@ TEST_CASE(
 
 TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
 {
-    using namespace test_utils;
     Eigen::MatrixXd vertices(4, 2);
     int dim = vertices.cols();
     Eigen::MatrixXi edges(4, 2);
@@ -196,9 +183,6 @@ TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
         vel_2.position << 1.0, 1.0;
         vel_2.rotation << M_PI;
     }
-
-    using namespace ipc::rigid;
-    using namespace ipc::rigid;
 
     std::vector<RigidBody> rbs;
     rbs.push_back(rb_from_displacements(vertices, edges, vel_1));
@@ -221,7 +205,6 @@ TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
 
 TEST_CASE("dof -> poses -> dof", "[RB][RB-Problem]")
 {
-    using namespace test_utils;
     Eigen::MatrixXd vertices(4, 2);
     int dim = vertices.cols();
     Eigen::MatrixXi edges(4, 2);
@@ -251,9 +234,6 @@ TEST_CASE("dof -> poses -> dof", "[RB][RB-Problem]")
         vel_2.position << 1.0, 1.0;
         vel_2.rotation << M_PI;
     }
-
-    using namespace ipc::rigid;
-    using namespace ipc::rigid;
 
     std::vector<RigidBody> rbs = {
         { rb_from_displacements(vertices, edges, vel_1),

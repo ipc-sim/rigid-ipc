@@ -23,14 +23,13 @@ Pose<T>::Pose()
 }
 
 template <typename T>
-Pose<T>::Pose(
-    const Eigen::VectorX3<T>& position, const Eigen::VectorX3<T>& rotation)
+Pose<T>::Pose(const VectorMax3<T>& position, const VectorMax3<T>& rotation)
     : position(position)
     , rotation(rotation)
 {
 }
 
-template <typename T> Pose<T>::Pose(const Eigen::VectorX6<T>& dof)
+template <typename T> Pose<T>::Pose(const VectorMax6<T>& dof)
 {
     if (dof.size() == dim_to_ndof(2)) {
         position = dof.head(dim_to_pos_ndof(2));
@@ -45,7 +44,7 @@ template <typename T> Pose<T>::Pose(const Eigen::VectorX6<T>& dof)
 
 template <typename T>
 Pose<T>::Pose(const T& x, const T& y, const T& theta)
-    : Pose(Eigen::Vector2<T>(x, y), Eigen::Vector1<T>())
+    : Pose(Vector2<T>(x, y), Vector1<T>())
 {
     rotation << theta;
 }
@@ -58,9 +57,7 @@ Pose<T>::Pose(
     const T& theta_x,
     const T& theta_y,
     const T& theta_z)
-    : Pose(
-          Eigen::Vector3<T>(x, y, z),
-          Eigen::Vector3<T>(theta_x, theta_y, theta_z))
+    : Pose(Vector3<T>(x, y, z), Vector3<T>(theta_x, theta_y, theta_z))
 {
 }
 
@@ -68,12 +65,12 @@ template <typename T> Pose<T> Pose<T>::Zero(int dim)
 {
     assert(dim == 2 || dim == 3);
     return Pose(
-        Eigen::VectorX<T>::Zero(Pose<T>::dim_to_pos_ndof(dim)),
-        Eigen::VectorX<T>::Zero(Pose<T>::dim_to_rot_ndof(dim)));
+        VectorX<T>::Zero(Pose<T>::dim_to_pos_ndof(dim)),
+        VectorX<T>::Zero(Pose<T>::dim_to_rot_ndof(dim)));
 }
 
 template <typename T>
-Poses<T> Pose<T>::dofs_to_poses(const Eigen::VectorX<T>& dofs, int dim)
+Poses<T> Pose<T>::dofs_to_poses(const VectorX<T>& dofs, int dim)
 {
     int ndof = dim_to_ndof(dim);
     int num_poses = dofs.size() / ndof;
@@ -86,11 +83,10 @@ Poses<T> Pose<T>::dofs_to_poses(const Eigen::VectorX<T>& dofs, int dim)
     return poses;
 }
 
-template <typename T>
-Eigen::VectorX<T> Pose<T>::poses_to_dofs(const Poses<T>& poses)
+template <typename T> VectorX<T> Pose<T>::poses_to_dofs(const Poses<T>& poses)
 {
     const int ndof = poses.size() ? poses[0].ndof() : 0;
-    Eigen::VectorX<T> dofs(poses.size() * ndof);
+    VectorX<T> dofs(poses.size() * ndof);
     for (size_t i = 0; i < poses.size(); i++) {
         assert(poses[i].ndof() == ndof);
         dofs.segment(i * ndof, ndof) = poses[i].dof();
@@ -98,9 +94,9 @@ Eigen::VectorX<T> Pose<T>::poses_to_dofs(const Poses<T>& poses)
     return dofs;
 }
 
-template <typename T> Eigen::VectorX6<T> Pose<T>::dof() const
+template <typename T> VectorMax6<T> Pose<T>::dof() const
 {
-    Eigen::VectorX6<T> pose_dof(ndof());
+    VectorMax6<T> pose_dof(ndof());
     pose_dof.head(pos_ndof()) = position;
     pose_dof.tail(rot_ndof()) = rotation;
     return pose_dof;
@@ -109,9 +105,9 @@ template <typename T> Eigen::VectorX6<T> Pose<T>::dof() const
 // Replace a selected dof with the dof in other.
 template <typename T>
 void Pose<T>::select_dof(
-    const Eigen::VectorX6b& is_dof_selected,
+    const VectorMax6b& is_dof_selected,
     const Pose<T>& other,
-    const Eigen::MatrixXX3d& R)
+    const MatrixMax3d& R)
 {
     assert(is_dof_selected.size() == this->ndof());
     assert(other.dim() == this->dim());
@@ -127,14 +123,12 @@ void Pose<T>::select_dof(
 
 // Zero out the i-th dof if is_dof_zero(i) == true.
 template <typename T>
-void Pose<T>::zero_dof(
-    const Eigen::VectorX6b& is_dof_zero, const Eigen::MatrixXX3d& R)
+void Pose<T>::zero_dof(const VectorMax6b& is_dof_zero, const MatrixMax3d& R)
 {
     select_dof(is_dof_zero, Pose<T>::Zero(dim()), R);
 }
 
-template <typename T>
-Eigen::MatrixXX3<T> Pose<T>::construct_rotation_matrix() const
+template <typename T> MatrixMax3<T> Pose<T>::construct_rotation_matrix() const
 {
     return ipc::rigid::construct_rotation_matrix(rotation);
 }
@@ -206,7 +200,7 @@ template <typename T, typename U> Poses<T> cast(const Poses<U>& poses)
 }
 
 template <typename T>
-Eigen::MatrixXX3<T> construct_rotation_matrix(const Eigen::VectorX3<T>& r)
+MatrixMax3<T> construct_rotation_matrix(const VectorMax3<T>& r)
 {
     if (r.size() == 1) {
         return Eigen::Rotation2D<T>(r(0)).toRotationMatrix();
@@ -214,9 +208,9 @@ Eigen::MatrixXX3<T> construct_rotation_matrix(const Eigen::VectorX3<T>& r)
         assert(r.size() == 3);
         T sinc_angle = sinc_normx(r);
         T sinc_half_angle = sinc_normx((r / T(2.0)).eval());
-        Eigen::Matrix3<T> K = Eigen::Hat(r);
-        Eigen::Matrix3<T> K2 = K * K;
-        Eigen::Matrix3<T> R =
+        Matrix3<T> K = Hat(r);
+        Matrix3<T> K2 = K * K;
+        Matrix3<T> R =
             sinc_angle * K + 0.5 * sinc_half_angle * sinc_half_angle * K2;
         R.diagonal().array() += T(1.0);
         return R;
@@ -234,18 +228,18 @@ Eigen::Quaternion<T> construct_quaternion(const Eigen::MatrixBase<Derived>& r)
     return Eigen::Quaternion<T>(Eigen::AngleAxis<T>(angle, r / angle));
 }
 
-template <typename T> Eigen::Matrix3<T> rotate_to_z(Eigen::Vector3<T> n)
+template <typename T> Matrix3<T> rotate_to_z(Vector3<T> n)
 {
     if (n.norm() == T(0)) {
-        return Eigen::Matrix3<T>::Identity();
+        return Matrix3<T>::Identity();
     }
-    return Eigen::Quaternion<T>::FromTwoVectors(n, Eigen::Vector3<T>::UnitZ())
+    return Eigen::Quaternion<T>::FromTwoVectors(n, Vector3<T>::UnitZ())
         .toRotationMatrix();
 }
 
-template <typename T> Eigen::Matrix3<T> rotate_around_z(const T& theta)
+template <typename T> Matrix3<T> rotate_around_z(const T& theta)
 {
-    Eigen::Matrix3<T> R;
+    Matrix3<T> R;
     R.row(0) << cos(theta), -sin(theta), T(0);
     R.row(1) << sin(theta), cos(theta), T(0);
     R.row(2) << T(0), T(0), T(1);
@@ -256,8 +250,8 @@ template <typename T>
 void decompose_to_z_screwing(
     const Pose<T>& pose_t0,
     const Pose<T>& pose_t1,
-    Eigen::Matrix3<T>& R0,
-    Eigen::Matrix3<T>& P,
+    Matrix3<T>& R0,
+    Matrix3<T>& P,
     T& omega)
 {
     // Decompose the inbetween rotation as a rotation around the z-axis:
@@ -265,7 +259,7 @@ void decompose_to_z_screwing(
     // Where R = R₁R₀ᵀ, P is a rotation from n̂ to ẑ, and R_z is a rotation
     // of ω around the z-axis.
     R0 = pose_t0.construct_rotation_matrix();
-    Eigen::Matrix3<T> R1 = pose_t1.construct_rotation_matrix();
+    Matrix3<T> R1 = pose_t1.construct_rotation_matrix();
     Eigen::AngleAxis<T> r(R1 * R0.transpose());
     omega = r.angle();
     P = rotate_to_z(r.axis());

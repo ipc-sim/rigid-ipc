@@ -7,6 +7,8 @@
 #include <physics/pose.hpp>
 #include <utils/eigen_ext.hpp>
 
+using namespace ipc;
+
 namespace igl {
 namespace opengl {
 
@@ -77,7 +79,7 @@ namespace opengl {
             const Eigen::MatrixXi& F);
 
         void set_vertex_data(
-            const Eigen::MatrixXb& data, const Eigen::VectorXi& vertex_type);
+            const MatrixXb& data, const Eigen::VectorXi& vertex_type);
         void update_vertex_data() override;
         void update_vertices(const Eigen::MatrixXd& V);
 

@@ -96,21 +96,19 @@ public:
         return m_assembler.group_ids();
     }
 
-    const Eigen::MatrixXb& vertex_dof_fixed() const override
+    const MatrixXb& vertex_dof_fixed() const override
     {
         return m_assembler.is_dof_fixed;
     }
 
     /// Convert from dof expressed in distances to poses
-    template <typename T>
-    Eigen::VectorX<T> poses_to_dofs(const Poses<T>& poses) const
+    template <typename T> VectorX<T> poses_to_dofs(const Poses<T>& poses) const
     {
         return Pose<T>::poses_to_dofs(poses);
     }
 
     /// Convert from poses to dof expressed in distances
-    template <typename T>
-    Poses<T> dofs_to_poses(const Eigen::VectorX<T>& dofs) const
+    template <typename T> Poses<T> dofs_to_poses(const VectorX<T>& dofs) const
     {
         return Pose<T>::dofs_to_poses(dofs, dim());
     }
@@ -128,7 +126,7 @@ public:
     // --------------------------------------------------------------------
     double coefficient_restitution; ///< Coefficent of resitution
     double coefficient_friction;    ///< Coefficent of friction
-    Eigen::VectorX3d gravity;       ///< Acceleration due to gravity
+    VectorMax3d gravity;            ///< Acceleration due to gravity
     double collision_eps;           ///< Scale trajectory for early collision
 
     RigidBodyAssembler m_assembler;

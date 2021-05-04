@@ -11,27 +11,24 @@
 
 namespace ipc::rigid {
 
-inline void sort_body_pair(
-    const RigidBodyAssembler& bodies, int& bodyA_id, int& bodyB_id)
+inline void
+sort_body_pair(const RigidBodyAssembler& bodies, int& bodyA_id, int& bodyB_id)
 {
     if (bodies[bodyA_id].bvh_size() > bodies[bodyB_id].bvh_size()) {
         std::swap(bodyA_id, bodyB_id);
     }
 }
 
-inline AABB
-vertex_aabb(const Eigen::VectorX3d& v, double inflation_radius = 0)
+inline AABB vertex_aabb(const VectorMax3d& v, double inflation_radius = 0)
 {
-    return AABB(
-        v.array() - inflation_radius, v.array() + inflation_radius);
+    return AABB(v.array() - inflation_radius, v.array() + inflation_radius);
 }
 
-inline AABB
-vertex_aabb(const Eigen::VectorX3I& v, double inflation_radius = 0)
+inline AABB vertex_aabb(const VectorMax3I& v, double inflation_radius = 0)
 {
     assert(v.rows() == 1 || v.cols() == 1);
-    Eigen::VectorX3d min(v.size());
-    Eigen::VectorX3d max(v.size());
+    VectorMax3d min(v.size());
+    VectorMax3d max(v.size());
     for (int i = 0; i < v.size(); i++) {
         if (empty(v(i))) {
             throw "interval is empty";
@@ -44,13 +41,12 @@ vertex_aabb(const Eigen::VectorX3I& v, double inflation_radius = 0)
 
 template <typename T>
 inline std::vector<AABB>
-vertex_aabbs(const Eigen::MatrixX<T>& V, double inflation_radius = 0)
+vertex_aabbs(const MatrixX<T>& V, double inflation_radius = 0)
 {
     std::vector<AABB> aabbs;
     aabbs.reserve(V.rows());
     for (size_t i = 0; i < V.rows(); i++) {
-        aabbs.push_back(
-            vertex_aabb(Eigen::VectorX3<T>(V.row(i)), inflation_radius));
+        aabbs.push_back(vertex_aabb(VectorMax3<T>(V.row(i)), inflation_radius));
     }
     return aabbs;
 }
@@ -86,7 +82,7 @@ inline void detect_body_pair_collision_candidates_bvh(
     const auto RB = poses[bodyB_id].construct_rotation_matrix();
     const auto& pA = poses[bodyA_id].position;
     const auto& pB = poses[bodyB_id].position;
-    const Eigen::MatrixX<T> VA =
+    const MatrixX<T> VA =
         ((bodies[bodyA_id].vertices * RA.transpose()).rowwise()
          + (pA - pB).transpose())
         * RB;

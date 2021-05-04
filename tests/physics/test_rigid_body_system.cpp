@@ -11,9 +11,7 @@
 // ---------------------------------------------------
 // Tests
 // ---------------------------------------------------
-
-namespace test_utils {
-
+using namespace ipc;
 using namespace ipc::rigid;
 
 RigidBody simple_rigid_body(
@@ -24,15 +22,12 @@ RigidBody simple_rigid_body(
     return RigidBody(
         vertices, edges, /*pose=*/Pose<double>::Zero(vertices.cols()), velocity,
         /*force=*/Pose<double>::Zero(vertices.cols()), /*density=*/1.0,
-        /*is_dof_fixed=*/Eigen::VectorXb::Zero(ndof), /*oriented=*/false,
+        /*is_dof_fixed=*/VectorXb::Zero(ndof), /*oriented=*/false,
         /*group=*/id++);
 }
 
-} // namespace test_utils
-
 TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
 {
-    using namespace test_utils;
     Eigen::MatrixXd vertices(4, 2);
     Eigen::MatrixXi edges(4, 2);
     Pose<double> velocity = Pose<double>::Zero(vertices.cols());
@@ -66,8 +61,6 @@ TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
         expected.block(4, 0, 4, 2) << 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
             -1.0;
     }
-
-    using namespace ipc::rigid;
 
     std::vector<RigidBody> rbs;
     rbs.push_back(simple_rigid_body(vertices, edges, velocity));

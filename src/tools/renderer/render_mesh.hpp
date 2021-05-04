@@ -11,8 +11,8 @@
 namespace swr {
 
 struct Scene {
-    Eigen::Vector4F background_color;
-    Eigen::Vector3F ambient_light;
+    Vector4F background_color;
+    Vector3F ambient_light;
     Float line_thickness;
 
     Camera camera;

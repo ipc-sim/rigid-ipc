@@ -71,7 +71,7 @@ public:
     int num_vars() const override { return num_vars_; }
 
     /// @returns A vector of booleans indicating if a DoF is fixed.
-    const Eigen::VectorXb& is_dof_fixed() const override
+    const VectorXb& is_dof_fixed() const override
     {
         return m_assembler.is_rb_dof_fixed;
     }
@@ -105,7 +105,7 @@ public:
     }
 
     /// Get the mass matrix
-    Eigen::DiagonalMatrixXd mass_matrix() const override
+    DiagonalMatrixXd mass_matrix() const override
     {
         return m_assembler.m_rb_mass_matrix;
     }
@@ -249,7 +249,7 @@ protected:
     T compute_body_energy(
         const RigidBody& body,
         const Pose<T>& pose,
-        const Eigen::VectorX6d& grad_barrier_t0);
+        const VectorMax6d& grad_barrier_t0);
 
     template <typename RigidBodyConstraint, typename FrictionConstraint>
     double compute_friction_potential(
@@ -359,7 +359,7 @@ protected:
     Eigen::VectorXd linear_augmented_lagrangian_multiplier;
     Eigen::MatrixXd angular_augmented_lagrangian_multiplier;
     Eigen::VectorXd x_pred; ///< Predicted DoF using unconstrained timestep
-    Eigen::VectorXb is_dof_satisfied;
+    VectorXb is_dof_satisfied;
 
 private:
     /// Method for integrating the body energy.

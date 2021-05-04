@@ -54,11 +54,11 @@ public:
     virtual int num_vars() const = 0;
 
     /// @returns A vector of booleans indicating if a DoF is fixed.
-    virtual const Eigen::VectorXb& is_dof_fixed() const = 0;
+    virtual const VectorXb& is_dof_fixed() const = 0;
 
     virtual Eigen::VectorXi free_dof() const
     {
-        const Eigen::VectorXb& is_fixed = is_dof_fixed();
+        const VectorXb& is_fixed = is_dof_fixed();
         Eigen::VectorXi free_dof(is_fixed.size() - is_fixed.count());
         for (int i = 0, j = 0; i < is_fixed.size(); i++) {
             if (!is_fixed(i)) {
@@ -88,7 +88,7 @@ public:
     virtual double world_bbox_diagonal() const = 0;
 
     /// Get the mass matrix
-    virtual Eigen::DiagonalMatrixXd mass_matrix() const = 0;
+    virtual DiagonalMatrixXd mass_matrix() const = 0;
 
     /// Get the average mass
     virtual double average_mass() const = 0;

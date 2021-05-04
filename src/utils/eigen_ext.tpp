@@ -2,9 +2,9 @@
 
 #include "eigen_ext.hpp"
 
-namespace Eigen {
+namespace ipc {
 
-template <typename T> SparseMatrix<T> SparseDiagonal(const VectorX<T>& x)
+template <typename T> Eigen::SparseMatrix<T> SparseDiagonal(const VectorX<T>& x)
 {
     return MatrixX<T>(x.asDiagonal()).sparseView();
 }
@@ -18,7 +18,7 @@ template <typename T> inline Matrix2<T> Hat(T x)
     return M;
 }
 
-template <typename T> inline Matrix3<T> Hat(Eigen::Vector3<T> x)
+template <typename T> inline Matrix3<T> Hat(Vector3<T> x)
 {
     Matrix3<T> M;
     T zero(0);
@@ -28,13 +28,13 @@ template <typename T> inline Matrix3<T> Hat(Eigen::Vector3<T> x)
     return M;
 }
 
-template <typename T> inline MatrixXX3<T> Hat(Eigen::VectorX3<T> x)
+template <typename T> inline MatrixMax3<T> Hat(VectorMax3<T> x)
 {
     if (x.size() == 1) {
         return Hat(x(0));
     } else {
-        return Hat(Eigen::Vector3<T>(x));
+        return Hat(Vector3<T>(x));
     }
 }
 
-} // namespace Eigen
+} // namespace ipc

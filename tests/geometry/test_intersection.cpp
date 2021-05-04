@@ -2,16 +2,17 @@
 
 #include <ipc/friction/closest_point.hpp>
 
-#include <interval/interval.hpp>
 #include <geometry/intersection.hpp>
+#include <interval/interval.hpp>
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
 
+using namespace ipc;
 using namespace ipc::rigid;
 
 TEST_CASE("Point-edge interval intersection", "[intersection]")
 {
-    typedef Eigen::VectorX3<ipc::rigid::Interval> VectorX3I;
+    typedef VectorMax3<ipc::rigid::Interval> VectorX3I;
 
     int dim = GENERATE(2, 3);
     double expected_distance = GENERATE(-10, -1, -1e-12, 0, 1e-12, 1, 10);

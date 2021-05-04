@@ -40,7 +40,7 @@ void RigidBodyHashGrid::resize(
     const double inflation_radius)
 {
     int dim = bodies.dim();
-    Eigen::VectorX3d min, max;
+    VectorMax3d min, max;
     min.setConstant(dim, +std::numeric_limits<double>::infinity());
     max.setConstant(dim, -std::numeric_limits<double>::infinity());
 
@@ -58,7 +58,7 @@ void RigidBodyHashGrid::resize(
     // TODO: this may not be well scaled depending on the body_ids
     double cell_size = bodies.average_edge_length;
 
-    HashGrid::resize(min, max, cell_size);
+    HashGrid::resizeFromBox(min, max, cell_size);
 }
 
 void compute_scene_conservative_bbox(
@@ -66,15 +66,15 @@ void compute_scene_conservative_bbox(
     const PosesD& poses_t0,
     const PosesD& poses_t1,
     const std::vector<int>& body_ids,
-    Eigen::VectorX3d& min,
-    Eigen::VectorX3d& max)
+    VectorMax3d& min,
+    VectorMax3d& max)
 {
     int dim = bodies.dim();
     min.setConstant(dim, +std::numeric_limits<double>::infinity());
     max.setConstant(dim, -std::numeric_limits<double>::infinity());
 
     for (int i : body_ids) {
-        Eigen::VectorX3d body_min, body_max;
+        VectorMax3d body_min, body_max;
         bodies[i].compute_bounding_box(
             poses_t0[i], poses_t1[i], body_min, body_max);
         min = min.cwiseMin(body_min);
@@ -97,7 +97,7 @@ void RigidBodyHashGrid::resize(
     std::vector<int> body_ids =
         body_pairs_to_body_ids(body_pairs, bodies.num_bodies());
 
-    Eigen::VectorX3d min(bodies.dim()), max(bodies.dim());
+    VectorMax3d min(bodies.dim()), max(bodies.dim());
     compute_scene_conservative_bbox(
         bodies, poses_t0, poses_t1, body_ids, min, max);
     min.array() -= inflation_radius;
@@ -115,7 +115,7 @@ void RigidBodyHashGrid::resize(
     double cell_size =
         std::max(average_displacement_length, average_edge_length);
 
-    HashGrid::resize(min, max, cell_size);
+    HashGrid::resizeFromBox(min, max, cell_size);
 }
 
 /// Add dynamic bodies
@@ -166,13 +166,13 @@ void RigidBodyHashGrid::compute_vertices_intervals(
     const Poses<Interval>& poses_t0,
     const Poses<Interval>& poses_t1,
     const std::vector<int>& body_ids,
-    Eigen::MatrixXI& vertices,
+    MatrixXI& vertices,
     double inflation_radius) const
 {
     vertices.setConstant(
         bodies.num_vertices(), bodies.dim(), Interval::empty());
     for (int i : body_ids) {
-        Eigen::MatrixXI V;
+        MatrixXI V;
         int n_subs = compute_vertices_intervals(
             bodies[i], poses_t0[i], poses_t1[i], V, inflation_radius,
             Interval(0, 1), 1);
@@ -183,18 +183,19 @@ void RigidBodyHashGrid::compute_vertices_intervals(
     }
 }
 
+typedef Pose<Interval> PoseI;
+
 int RigidBodyHashGrid::compute_vertices_intervals(
     const RigidBody& body,
-    const Pose<Interval>& pose_t0,
-    const Pose<Interval>& pose_t1,
-    Eigen::MatrixX<Interval>& vertices,
+    const PoseI& pose_t0,
+    const PoseI& pose_t1,
+    MatrixX<Interval>& vertices,
     double inflation_radius, // Only used for fit check
     const Interval& t,
     int force_subdivision) const
 {
     if (force_subdivision <= 0) {
-        Pose<Interval> pose =
-            Pose<Interval>::interpolate(pose_t0, pose_t1, t);
+        PoseI pose = PoseI::interpolate(pose_t0, pose_t1, t);
         vertices = body.world_vertices(pose);
         // Check that the vertex intervals fit inside the scene bbox
         bool fits = true;
@@ -221,7 +222,7 @@ int RigidBodyHashGrid::compute_vertices_intervals(
     // If the vertices' intervals are outside the scene bbox, then split t in
     // hopes that a smaller interval will be more accurate.
     std::pair<Interval, Interval> t_halves = bisect(t);
-    Eigen::MatrixXI V_first, V_second;
+    MatrixXI V_first, V_second;
     int n_subs0 = compute_vertices_intervals(
         body, pose_t0, pose_t1, V_first, inflation_radius, t_halves.first,
         force_subdivision);
@@ -249,8 +250,8 @@ inline AABB
 intervals_to_AABB(const Eigen::MatrixBase<Derived>& x, double inflation_radius)
 {
     assert(x.rows() == 1 || x.cols() == 1);
-    Eigen::VectorX3d min(x.size());
-    Eigen::VectorX3d max(x.size());
+    VectorMax3d min(x.size());
+    VectorMax3d max(x.size());
     for (int i = 0; i < x.size(); i++) {
         if (empty(x(i))) {
             throw "interval is empty";
@@ -274,11 +275,10 @@ void RigidBodyHashGrid::addBodies(
     std::vector<int> body_ids =
         body_pairs_to_body_ids(body_pairs, bodies.num_bodies());
 
-    Eigen::MatrixX<Interval> vertices;
+    MatrixXI vertices;
     compute_vertices_intervals(
-        bodies, cast<Interval>(poses_t0),
-        cast<Interval>(poses_t1), body_ids, vertices,
-        inflation_radius);
+        bodies, cast<Interval>(poses_t0), cast<Interval>(poses_t1), body_ids,
+        vertices, inflation_radius);
 
     // Create a bounding box for all vertices
     std::vector<AABB> vertices_aabb;

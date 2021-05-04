@@ -4,6 +4,9 @@
 #include <logger.hpp>
 #include <physics/pose.hpp>
 
+using namespace ipc;
+using namespace ipc::rigid;
+
 TEST_CASE("Simple interval arithmetic", "[interval]")
 {
     ipc::rigid::Interval i(0, 1), j(4, 5);
@@ -93,8 +96,6 @@ TEST_CASE("Sine interval arithmetic", "[interval]")
 
 TEST_CASE("Interval rotation rounding", "[interval][matrix]")
 {
-    using namespace ipc::rigid;
-    using namespace ipc::rigid;
     Pose<double> pose(
         /*x=*/0.30969396267858817, /*y=*/0.85675409103416755,
         /*theta=*/0.79358805865013693);
@@ -105,8 +106,8 @@ TEST_CASE("Interval rotation rounding", "[interval][matrix]")
     V.row(3) << 0.0, -0.5;
 
     Pose<Interval> posei = pose.cast<Interval>();
-    Eigen::MatrixXX3<Interval> R = posei.construct_rotation_matrix();
-    Eigen::MatrixXX3<Interval> expected_R;
+    MatrixMax3<Interval> R = posei.construct_rotation_matrix();
+    MatrixMax3<Interval> expected_R;
     expected_R.resize(2, 2);
     expected_R.row(0) << cos(posei.rotation(0)), -sin(posei.rotation(0));
     expected_R.row(1) << sin(posei.rotation(0)), cos(posei.rotation(0));
@@ -118,7 +119,7 @@ TEST_CASE("Interval rotation rounding", "[interval][matrix]")
     CHECK(!boost::numeric::empty(interval));
     Interval tmp = 0.5 * interval;
 
-    Eigen::MatrixXX3<Interval> RT = R.transpose();
+    MatrixMax3<Interval> RT = R.transpose();
     // Eigen::Matrix<Interval, 4, 2> RV = Vi * RT;
     Eigen::Matrix<Interval, 4, 2> RV;
     for (int i = 0; i < V.rows(); i++) {
@@ -139,7 +140,6 @@ TEST_CASE("Interval rotation rounding", "[interval][matrix]")
 #ifdef USE_FILIB_INTERVALS
 TEST_CASE("CheckingPolicy", "[interval][checking_policy]")
 {
-    using namespace ipc::rigid;
     typedef boost::numeric::interval_lib::checking_no_empty<double>
         m_CheckingPolicy;
 

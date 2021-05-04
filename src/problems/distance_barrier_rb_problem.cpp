@@ -101,7 +101,7 @@ nlohmann::json DistanceBarrierRBProblem::state() const
 
 Eigen::VectorXi DistanceBarrierRBProblem::free_dof() const
 {
-    const Eigen::VectorXb& is_dof_fixed = this->is_dof_fixed();
+    const VectorXb& is_dof_fixed = this->is_dof_fixed();
     std::vector<int> free_dofs;
     free_dofs.reserve(is_dof_fixed.size() - is_dof_fixed.count());
     for (int i = 0; i < is_dof_fixed.size(); i++) {
@@ -250,28 +250,28 @@ void DistanceBarrierRBProblem::step_kinematic_bodies()
     }
 }
 
-inline Eigen::DiagonalMatrix<double, 3> compute_J(const Eigen::VectorX3d& I)
+inline DiagonalMatrix3d compute_J(const VectorMax3d& I)
 {
-    return Eigen::DiagonalMatrix<double, 3>(
+    return DiagonalMatrix3d(
         0.5 * (-I.x() + I.y() + I.z()), //
         0.5 * (I.x() - I.y() + I.z()),  //
         0.5 * (I.x() + I.y() - I.z()));
 }
 
-inline Eigen::DiagonalMatrix<double, 3> compute_Jinv(const Eigen::VectorX3d& I)
+inline DiagonalMatrix3d compute_Jinv(const VectorMax3d& I)
 {
-    return Eigen::DiagonalMatrix<double, 3>(
+    return DiagonalMatrix3d(
         2 / (-I.x() + I.y() + I.z()), //
         2 / (I.x() - I.y() + I.z()),  //
         2 / (I.x() + I.y() - I.z()));
 }
 
-inline Eigen::DiagonalMatrix<double, 3> compute_Jsqrt(const Eigen::VectorX3d& I)
+inline DiagonalMatrix3d compute_Jsqrt(const VectorMax3d& I)
 {
     assert(0.5 * (-I.x() + I.y() + I.z()) >= 0);
     assert(0.5 * (I.x() - I.y() + I.z()) >= 0);
     assert(0.5 * (I.x() + I.y() - I.z()) >= 0);
-    return Eigen::DiagonalMatrix<double, 3>(
+    return DiagonalMatrix3d(
         sqrt(std::max(0.5 * (-I.x() + I.y() + I.z()), 0.0)),
         sqrt(std::max(0.5 * (I.x() - I.y() + I.z()), 0.0)),
         sqrt(std::max(0.5 * (I.x() + I.y() - I.z()), 0.0)));
@@ -320,11 +320,11 @@ double DistanceBarrierRBProblem::compute_angular_augment_lagrangian_progress(
                          .squaredNorm();
             } else {
                 auto Q_pred = construct_rotation_matrix(
-                    Eigen::VectorX3d(x_pred.segment(ri, rot_ndof)));
+                    VectorMax3d(x_pred.segment(ri, rot_ndof)));
                 auto Q = construct_rotation_matrix(
-                    Eigen::VectorX3d(x.segment(ri, rot_ndof)));
+                    VectorMax3d(x.segment(ri, rot_ndof)));
                 auto Q0 = construct_rotation_matrix(
-                    Eigen::VectorX3d(x0.segment(ri, rot_ndof)));
+                    VectorMax3d(x0.segment(ri, rot_ndof)));
                 a += (Q - Q_pred).squaredNorm();
                 b += (Q0 - Q_pred).squaredNorm();
             }
@@ -396,9 +396,9 @@ void DistanceBarrierRBProblem::update_augmented_lagrangian(
                            - x_pred.segment(ri, rot_ndof));
                 } else {
                     auto Q_pred = construct_rotation_matrix(
-                        Eigen::VectorX3d(x_pred.segment(ri, rot_ndof)));
+                        VectorMax3d(x_pred.segment(ri, rot_ndof)));
                     auto Q = construct_rotation_matrix(
-                        Eigen::VectorX3d(x.segment(ri, rot_ndof)));
+                        VectorMax3d(x.segment(ri, rot_ndof)));
                     angular_augmented_lagrangian_multiplier.middleRows(
                         3 * ki, 3) -= angular_augmented_lagrangian_penalty
                         * (Q - Q_pred)
@@ -528,7 +528,7 @@ bool DistanceBarrierRBProblem::take_step(const Eigen::VectorXd& x)
                 2 * (rb.pose.position - rb.pose_prev.position) / h
                 - rb.velocity.position;
             // q̃ = q⁰ + hv⁰+ ¼h²(g + m⁻¹f + a⁰)
-            Eigen::VectorX3d pos_tilde = rb.pose_prev.position
+            VectorMax3d pos_tilde = rb.pose_prev.position
                 + h
                     * (rb.velocity_prev.position
                        + h / 4.0
@@ -597,7 +597,7 @@ bool DistanceBarrierRBProblem::take_step(const Eigen::VectorXd& x)
                 rb.Qdot = 2 * (Q - Q_prev) / h - rb.Qdot;
                 // auto Jinv = compute_Jinv(rb.moment_of_inertia);
                 // Eigen::Matrix3d Tau =
-                //     Q_prev.transpose() * Eigen::Hat(rb.force.rotation);
+                //     Q_prev.transpose() * Hat(rb.force.rotation);
                 Eigen::Matrix3d Q_tilde = Q_prev
                     + h
                         * (Qdot_prev
@@ -749,7 +749,7 @@ double DistanceBarrierRBProblem::compute_energy_term(
                     continue;
                 }
 
-                Eigen::VectorX6d gradi;
+                VectorMax6d gradi;
 
                 if (compute_hess) {
                     // Initialize autodiff variables
@@ -761,12 +761,11 @@ double DistanceBarrierRBProblem::compute_energy_term(
 
                     energies[i] = dExi.getValue();
                     gradi = dExi.getGradient();
-                    Eigen::MatrixXX6d hessi = dExi.getHessian();
+                    MatrixMax6d hessi = dExi.getHessian();
 
                     // Project dense block to make assembled matrix PSD
-                    hessi.topLeftCorner(pos_ndof, pos_ndof) =
-                        Eigen::project_to_psd(Eigen::MatrixXX3d(
-                            hessi.topLeftCorner(pos_ndof, pos_ndof)));
+                    hessi.topLeftCorner(pos_ndof, pos_ndof) = project_to_psd(
+                        MatrixMax3d(hessi.topLeftCorner(pos_ndof, pos_ndof)));
                     // NOTE: This is handled with Tikhonov regularization
                     // instead hessi.bottomRightCorner(rot_ndof, rot_ndof) =
                     //     Eigen::project_to_pd(
@@ -849,7 +848,7 @@ template <typename T>
 T DistanceBarrierRBProblem::compute_body_energy(
     const RigidBody& body,
     const Pose<T>& pose,
-    const Eigen::VectorX6d& grad_barrier_t0)
+    const VectorMax6d& grad_barrier_t0)
 {
     // NOTE: t0 suffix indicates the current value not the inital value
     double h = timestep();
@@ -858,10 +857,10 @@ T DistanceBarrierRBProblem::compute_body_energy(
 
     // Linear energy
     if (!body.is_dof_fixed.head(pose.pos_ndof()).all()) {
-        Eigen::VectorX3<T> q = pose.position;
-        const Eigen::VectorX3d& q_t0 = body.pose.position;
-        const Eigen::VectorX3d& qdot_t0 = body.velocity.position;
-        Eigen::VectorX3d qddot_t0 = gravity + body.force.position / body.mass;
+        VectorMax3<T> q = pose.position;
+        const VectorMax3d& q_t0 = body.pose.position;
+        const VectorMax3d& qdot_t0 = body.velocity.position;
+        VectorMax3d qddot_t0 = gravity + body.force.position / body.mass;
         switch (body_energy_integration_method) {
         case IMPLICIT_EULER:
             break;
@@ -880,14 +879,13 @@ T DistanceBarrierRBProblem::compute_body_energy(
     // Rotational energy
     if (!body.is_dof_fixed.tail(pose.rot_ndof()).all()) {
         if (dim() == 3) {
-            Eigen::Matrix3<T> Q = pose.construct_rotation_matrix();
+            Matrix3<T> Q = pose.construct_rotation_matrix();
             Eigen::Matrix3d Q_t0 = body.pose.construct_rotation_matrix();
             // Eigen::Matrix3d Qdot_t0 =
-            //     Q_t0 * Eigen::Hat(body.velocity.rotation);
+            //     Q_t0 * Hat(body.velocity.rotation);
             Eigen::Matrix3d Qdot_t0 = body.Qdot;
 
-            Eigen::DiagonalMatrix<double, 3> J =
-                compute_J(body.moment_of_inertia);
+            DiagonalMatrix3d J = compute_J(body.moment_of_inertia);
 
             // Transform the world space torque into body space
             Eigen::Matrix3d Qddot_t0;
@@ -907,8 +905,7 @@ T DistanceBarrierRBProblem::compute_body_energy(
                 (Q * J * (Q_t0 + h * (Qdot_t0 + h * Qddot_t0)).transpose())
                     .trace();
             // Transform the world space torque into body space
-            Eigen::Matrix3d Tau =
-                Q_t0.transpose() * Eigen::Hat(body.force.rotation);
+            Eigen::Matrix3d Tau = Q_t0.transpose() * Hat(body.force.rotation);
             switch (body_energy_integration_method) {
             case IMPLICIT_EULER:
                 energy += h * h * (Q * Tau).trace();
@@ -1026,14 +1023,13 @@ double DistanceBarrierRBProblem::compute_augmented_lagrangian(
     for (size_t i = 0, ki = 0; i < num_bodies(); i++) {
         if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
 
-            Eigen::VectorX3<Diff::DDouble2> theta_diff =
+            VectorMax3<Diff::DDouble2> theta_diff =
                 Diff::d2vars(0, x.segment(i * ndof + pos_ndof, rot_ndof));
-            Eigen::VectorX3d theta_pred =
+            VectorMax3d theta_pred =
                 x_pred.segment(i * ndof + pos_ndof, rot_ndof);
 
-            Eigen::DiagonalMatrix<double, 3> J =
-                compute_J(m_assembler[i].moment_of_inertia);
-            Eigen::DiagonalMatrix<double, 3> Jsqrt =
+            DiagonalMatrix3d J = compute_J(m_assembler[i].moment_of_inertia);
+            DiagonalMatrix3d Jsqrt =
                 compute_Jsqrt(m_assembler[i].moment_of_inertia);
             const auto& lambda =
                 angular_augmented_lagrangian_multiplier.middleRows(3 * ki, 3);
@@ -1166,9 +1162,9 @@ void local_hessian_to_global_triplets(
 
 // Apply the chain rule of f(V(x)) given ∇ᵥf(V) and ∇ₓV(x)
 void apply_chain_rule(
-    const Eigen::VectorX12d& grad_f,
+    const VectorMax12d& grad_f,
     const Eigen::MatrixXd& jac_V,
-    const Eigen::MatrixXX12d& hess_f,
+    const MatrixMax12d& hess_f,
     const Eigen::MatrixXd& hess_V,
     const std::vector<long>& vertex_ids,
     const std::vector<uint8_t>& local_body_ids,
@@ -1190,7 +1186,7 @@ void apply_chain_rule(
 
     if (compute_grad) {
         // jac_Vi ∈ R^{4n × 2m}
-        Eigen::VectorX12d local_grad = Eigen::VectorX12d::Zero(2 * rb_ndof);
+        VectorMax12d local_grad = VectorMax12d::Zero(2 * rb_ndof);
         for (int i = 0; i < vertex_ids.size(); i++) {
             local_grad.segment(rb_ndof * local_body_ids[i], rb_ndof) +=
                 jac_V.middleRows(vertex_ids[i] * dim, dim).transpose()
@@ -1202,15 +1198,15 @@ void apply_chain_rule(
 
     if (compute_hess) {
         // jac_Vi ∈ R^{4n × 2m}
-        Eigen::MatrixXX12d jac_Vi =
-            Eigen::MatrixXX12d::Zero(vertex_ids.size() * dim, 2 * rb_ndof);
+        MatrixMax12d jac_Vi =
+            MatrixMax12d::Zero(vertex_ids.size() * dim, 2 * rb_ndof);
         for (int i = 0; i < vertex_ids.size(); i++) {
             jac_Vi.block(i * dim, local_body_ids[i] * rb_ndof, dim, rb_ndof) =
                 jac_V.middleRows(vertex_ids[i] * dim, dim);
         }
 
         // hess ∈ R^{2m × 2m}
-        Eigen::MatrixXX12d hess = jac_Vi.transpose() * hess_f * jac_Vi;
+        MatrixMax12d hess = jac_Vi.transpose() * hess_f * jac_Vi;
         for (int i = 0; i < vertex_ids.size(); i++) {
             for (int j = 0; j < dim; j++) {
                 // Off diagaonal blocks are all zero because the derivative
@@ -1337,7 +1333,7 @@ double DistanceBarrierRBProblem::compute_barrier_term(
                     constraint.compute_potential(V, edges(), faces(), dhat);
                 // PROFILE_START(COMPUTE_BARRIER_VAL);
 
-                Eigen::VectorX12d grad_B;
+                VectorMax12d grad_B;
                 if (compute_grad || compute_hess) {
                     // PROFILE_START(COMPUTE_BARRIER_GRAD);
                     grad_B = constraint.compute_potential_gradient(
@@ -1345,12 +1341,12 @@ double DistanceBarrierRBProblem::compute_barrier_term(
                     // PROFILE_END(COMPUTE_BARRIER_GRAD);
                 }
 
-                Eigen::MatrixXX12d hess_B;
+                MatrixMax12d hess_B;
                 if (compute_hess) {
                     // PROFILE_START(COMPUTE_BARRIER_HESS);
                     hess_B = constraint.compute_potential_hessian(
                         V, edges(), faces(), dhat,
-                        /*project_to_psd=*/false);
+                        /*project_hessian_to_psd=*/false);
                     // PROFILE_END(COMPUTE_BARRIER_HESS);
                 }
 
@@ -1425,7 +1421,7 @@ double DistanceBarrierRBProblem::compute_friction_potential(
     double Dx = constraint.compute_potential(U, edges(), faces(), epsv_times_h);
     // PROFILE_END(COMPUTE_FRICTION_VAL);
 
-    Eigen::VectorX12d grad_D;
+    VectorMax12d grad_D;
     if (compute_grad || compute_hess) {
         // PROFILE_START(COMPUTE_FRICTION_GRAD);
         grad_D = constraint.compute_potential_gradient(
@@ -1433,11 +1429,12 @@ double DistanceBarrierRBProblem::compute_friction_potential(
         // PROFILE_END(COMPUTE_FRICTION_GRAD);
     }
 
-    Eigen::MatrixXX12d hess_D;
+    MatrixMax12d hess_D;
     if (compute_hess) {
         // PROFILE_START(COMPUTE_FRICTION_HESS);
         hess_D = constraint.compute_potential_hessian(
-            U, edges(), faces(), epsv_times_h, /*project_to_psd=*/false);
+            U, edges(), faces(), epsv_times_h,
+            /*project_hessian_to_psd=*/false);
         // PROFILE_END(COMPUTE_FRICTION_HESS);
     }
 
@@ -1670,7 +1667,7 @@ void DistanceBarrierRBProblem::check_barrier_hessian(
     };
     Eigen::MatrixXd hess_approx;
     fd::finite_jacobian(x, b, hess_approx);
-    // hess_approx = Eigen::project_to_psd(hess_approx);
+    // hess_approx = project_to_psd(hess_approx);
     if (!fd::compare_jacobian(hess, hess_approx, Constants::FINITE_DIFF_TEST)) {
         spdlog::error("finite hessian check failed for barrier");
     }
@@ -1746,7 +1743,7 @@ void DistanceBarrierRBProblem::check_friction_hessian(
     };
     Eigen::MatrixXd hess_approx;
     fd::finite_jacobian(x, f, hess_approx);
-    hess_approx = Eigen::project_to_psd(hess_approx);
+    hess_approx = project_to_psd(hess_approx);
     if (!fd::compare_hessian(hess, hess_approx, 1e-2)) {
         spdlog::error(
             "finite hessian check failed for friction "
@@ -1766,7 +1763,7 @@ void DistanceBarrierRBProblem::check_friction_hessian(
         V0, V_diff, edges(), faces(), friction_constraints,
         static_friction_speed_bound * timestep());
 
-    Eigen::MatrixXd hess_autodiff = Eigen::project_to_psd(f_diff.getHessian());
+    Eigen::MatrixXd hess_autodiff = project_to_psd(f_diff.getHessian());
 
     if (std::isfinite(hess_autodiff.sum())) {
         if (!fd::compare_hessian(dense_hess, hess_autodiff, 1e-3)) {

@@ -16,7 +16,7 @@ void from_json(
 }
 
 template <typename T>
-void from_json(const nlohmann::json& json, Eigen::MatrixX<T>& matrix)
+void from_json(const nlohmann::json& json, MatrixX<T>& matrix)
 {
     typedef std::vector<std::vector<T>> L;
     L list = json.get<L>();
@@ -36,7 +36,7 @@ void from_json(const nlohmann::json& json, Eigen::MatrixX<T>& matrix)
 }
 
 template <typename T>
-void from_json(const nlohmann::json& json, Eigen::Matrix3<T>& matrix)
+void from_json(const nlohmann::json& json, Matrix3<T>& matrix)
 {
     typedef std::vector<std::vector<T>> L;
     L list = json.get<L>();

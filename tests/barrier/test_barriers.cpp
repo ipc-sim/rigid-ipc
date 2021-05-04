@@ -6,9 +6,11 @@
 #include <barrier/barrier.hpp>
 #include <utils/eigen_ext.hpp>
 
+using namespace ipc;
+using namespace ipc::rigid;
+
 TEST_CASE("Test barriers and their derivatives", "[opt][barrier]")
 {
-    using namespace ipc::rigid;
     double s = GENERATE(range(-5, 2));
     s = pow(10, s);
 
@@ -16,7 +18,7 @@ TEST_CASE("Test barriers and their derivatives", "[opt][barrier]")
         GENERATE(BarrierType::IPC, BarrierType::POLY_LOG, BarrierType::SPLINE);
 
     double x = GENERATE_COPY(take(10, random(s / 2, 0.9 * s))); // ∈ [0, s]
-    Eigen::Vector1d x_vec;
+    Vector1d x_vec;
     x_vec << x;
 
     Eigen::VectorXd fgrad(1);

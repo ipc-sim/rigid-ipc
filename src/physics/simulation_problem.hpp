@@ -70,7 +70,7 @@ public:
     virtual Eigen::MatrixXd velocities() const = 0;
     virtual const Eigen::VectorXi& group_ids() const = 0;
 
-    virtual const Eigen::MatrixXb& vertex_dof_fixed() const = 0;
+    virtual const MatrixXb& vertex_dof_fixed() const = 0;
 
     virtual bool is_rb_problem() const { return false; };
 

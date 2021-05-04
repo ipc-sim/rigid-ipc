@@ -40,13 +40,13 @@ void rasterize_triangle(
     uy = std::max(std::min(uy, int(frameBuffer.cols() - 1)), int(0));
 
     // Build the implicit triangle representation
-    Eigen::Matrix3F A;
+    Matrix3F A;
     A.col(0) = p.row(0).head<3>();
     A.col(1) = p.row(1).head<3>();
     A.col(2) = p.row(2).head<3>();
     A.row(2) << 1.0, 1.0, 1.0;
 
-    Eigen::Matrix3F Ai = A.inverse();
+    Matrix3F Ai = A.inverse();
 
     // Rasterize the triangle
     tbb::parallel_for(
@@ -55,8 +55,8 @@ void rasterize_triangle(
             for (size_t i = r.rows().begin(); i != r.rows().end(); ++i) {
                 for (size_t j = r.cols().begin(); j != r.cols().end(); ++j) {
                     // The pixel center is offset by 0.5, 0.5
-                    Eigen::Vector3F pixel(i + 0.5, j + 0.5, 1);
-                    Eigen::Vector3F b = Ai * pixel;
+                    Vector3F pixel(i + 0.5, j + 0.5, 1);
+                    Vector3F b = Ai * pixel;
                     if (b.minCoeff() >= 0) {
                         VertexAttributes va = VertexAttributes::interpolate(
                             v1, v2, v3, b[0], b[1], b[2]);
@@ -126,8 +126,8 @@ void rasterize_line(
     uy = std::max(std::min(uy, int(frameBuffer.cols() - 1)), int(0));
 
     // We only need the 2d coordinates of the endpoints of the line
-    Eigen::Vector2F l1(p(0, 0), p(0, 1));
-    Eigen::Vector2F l2(p(1, 0), p(1, 1));
+    Vector2F l1(p(0, 0), p(0, 1));
+    Vector2F l2(p(1, 0), p(1, 1));
 
     // Parametrize the line as l1 + t (l2-l1)
     Float t = -1;
@@ -140,7 +140,7 @@ void rasterize_line(
             for (size_t i = r.rows().begin(); i != r.rows().end(); ++i) {
                 for (size_t j = r.cols().begin(); j != r.cols().end(); ++j) {
                     // The pixel center is offset by 0.5, 0.5
-                    Eigen::Vector2F pixel(i + 0.5, j + 0.5);
+                    Vector2F pixel(i + 0.5, j + 0.5);
 
                     if (ll == 0.0)
                         // The segment has zero length
@@ -152,7 +152,7 @@ void rasterize_line(
                         t = std::fmax(0, std::fmin(1, t));
                     }
 
-                    Eigen::Vector2F pixel_p = l1 + t * (l2 - l1);
+                    Vector2F pixel_p = l1 + t * (l2 - l1);
 
                     if ((pixel - pixel_p).squaredNorm()
                         < (line_thickness * line_thickness)) {

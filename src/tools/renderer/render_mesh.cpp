@@ -54,40 +54,40 @@ Shaders create_face_shaders()
         VertexAttributes out;
         out.position = uniform.M * va.position;
         out.position /= out.position.w();
-        Eigen::Vector3F ambient_color =
+        Vector3F ambient_color =
             va.material.ambient_color.cwiseProduct(uniform.ambient);
 
         // Skip this step if the diffuse and specular are not used
-        Eigen::Vector3F lights_color(0, 0, 0);
+        Vector3F lights_color(0, 0, 0);
         if (va.material.diffuse_color.squaredNorm() != 0
             || va.material.specular_color.squaredNorm() != 0) {
 
             // The vertex position has to be after translation and scaling
-            Eigen::Vector4F homogenous_hit = uniform.ST * va.position;
-            Eigen::Vector3F hit = homogenous_hit.head<3>() / homogenous_hit.w();
-            Eigen::Vector3F N = va.normal;
-            Eigen::Vector3F V;
+            Vector4F homogenous_hit = uniform.ST * va.position;
+            Vector3F hit = homogenous_hit.head<3>() / homogenous_hit.w();
+            Vector3F N = va.normal;
+            Vector3F V;
             if (uniform.camera.is_perspective) {
                 V = (uniform.camera.position - hit).normalized();
             } else {
                 V = -uniform.camera.gaze.normalized();
             }
             for (auto light : uniform.lights) {
-                Eigen::Vector3F Li = (light.position - hit).normalized();
+                Vector3F Li = (light.position - hit).normalized();
 
                 // Diffuse contribution
-                Eigen::Vector3F diffuse =
+                Vector3F diffuse =
                     va.material.diffuse_color * std::max(Li.dot(N), Float(0));
 
                 // Specular contribution
-                Eigen::Vector3F H = (Li + V).normalized();
-                Eigen::Vector3F specular = va.material.specular_color
+                Vector3F H = (Li + V).normalized();
+                Vector3F specular = va.material.specular_color
                     * std::pow(std::max(N.dot(H), Float(0)),
                                va.material.specular_exponent);
 
                 // Attenuate lights according to the squared distance to the
                 // lights
-                Eigen::Vector3F D = light.position - hit;
+                Vector3F D = light.position - hit;
                 lights_color +=
                     (diffuse + specular).cwiseProduct(light.intensity)
                     / D.squaredNorm();
@@ -171,9 +171,9 @@ bool render_mesh(
 
     std::vector<VertexAttributes> face_vertex_attributes;
     for (int i = 0; i < F.rows(); i++) {
-        Eigen::Vector3F l1 = (V.row(F(i, 1)) - V.row(F(i, 0))).cast<Float>();
-        Eigen::Vector3F l2 = (V.row(F(i, 2)) - V.row(F(i, 0))).cast<Float>();
-        Eigen::Vector3F normal = (l1).cross(l2).normalized();
+        Vector3F l1 = (V.row(F(i, 1)) - V.row(F(i, 0))).cast<Float>();
+        Vector3F l2 = (V.row(F(i, 2)) - V.row(F(i, 0))).cast<Float>();
+        Vector3F normal = (l1).cross(l2).normalized();
         for (int j = 0; j < 3; j++) {
             VertexAttributes va(V.row(F(i, j)).cast<Float>());
             va.material = scene.materials[C[F(i, j)]];

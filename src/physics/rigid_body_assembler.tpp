@@ -4,11 +4,10 @@
 namespace ipc::rigid {
 
 template <typename T>
-Eigen::MatrixX<T>
-RigidBodyAssembler::world_vertices(const Poses<T>& poses) const
+MatrixX<T> RigidBodyAssembler::world_vertices(const Poses<T>& poses) const
 {
     assert(poses.size() == num_bodies());
-    Eigen::MatrixX<T> V(num_vertices(), dim());
+    MatrixX<T> V(num_vertices(), dim());
     for (size_t i = 0; i < num_bodies(); ++i) {
         const RigidBody& rb = m_rbs[i];
         V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), rb.dim()) =
@@ -18,13 +17,13 @@ RigidBodyAssembler::world_vertices(const Poses<T>& poses) const
 }
 
 template <typename T>
-Eigen::MatrixX<T> RigidBodyAssembler::world_vertices(
-    const std::vector<Eigen::MatrixXX3<T>>& rotations,
-    const std::vector<Eigen::VectorX3<T>>& positions) const
+MatrixX<T> RigidBodyAssembler::world_vertices(
+    const std::vector<MatrixMax3<T>>& rotations,
+    const std::vector<VectorMax3<T>>& positions) const
 {
     assert(rotations.size() == num_bodies());
     assert(positions.size() == num_bodies());
-    Eigen::MatrixX<T> V(num_vertices(), dim());
+    MatrixX<T> V(num_vertices(), dim());
     for (size_t i = 0; i < num_bodies(); ++i) {
         const RigidBody& rb = m_rbs[i];
         V.block(m_body_vertex_id[i], 0, rb.vertices.rows(), rb.dim()) =
@@ -34,7 +33,7 @@ Eigen::MatrixX<T> RigidBodyAssembler::world_vertices(
 }
 
 template <typename T>
-Eigen::VectorX3<T> RigidBodyAssembler::world_vertex(
+VectorMax3<T> RigidBodyAssembler::world_vertex(
     const Pose<T>& pose, const int vertex_idx) const
 {
     long body_idx, vertex_local_idx;
@@ -43,7 +42,7 @@ Eigen::VectorX3<T> RigidBodyAssembler::world_vertex(
 }
 
 template <typename T>
-Eigen::VectorX3<T> RigidBodyAssembler::world_vertex(
+VectorMax3<T> RigidBodyAssembler::world_vertex(
     const Poses<T>& poses, const int vertex_idx) const
 {
     assert(poses.size() == num_bodies());

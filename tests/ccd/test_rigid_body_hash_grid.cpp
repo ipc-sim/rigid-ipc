@@ -8,6 +8,7 @@
 #include <io/serialize_json.hpp>
 #include <physics/pose.hpp>
 
+using namespace ipc;
 using namespace ipc::rigid;
 
 TEST_CASE("2D rigid body hash grid", "[hashgrid][rigid_body][2D]")
@@ -41,7 +42,7 @@ void compute_scene_conservative_bbox(
         from_json(body["pose_t1"]["rotation"], r1);
 
         if ((r0.array() == r1.array()).all()) {
-            auto R = construct_rotation_matrix(Eigen::VectorX3d(r0));
+            auto R = construct_rotation_matrix(VectorMax3d(r0));
             Eigen::MatrixXd V0 = (V * R.transpose()).rowwise() + p0.transpose();
             scene_min = scene_min.cwiseMin(V0.colwise().minCoeff().transpose());
             scene_max = scene_max.cwiseMax(V0.colwise().maxCoeff().transpose());
@@ -57,10 +58,10 @@ void compute_scene_conservative_bbox(
     }
 }
 
-Eigen::Vector3I compute_scene_bbox(
+Vector3I compute_scene_bbox(
     const std::vector<nlohmann::json>& bodies, int num_subdivisions)
 {
-    Eigen::Vector3I scene_bbox = Eigen::Vector3I::Constant(Interval::empty());
+    Vector3I scene_bbox = Vector3I::Constant(Interval::empty());
 
     double ti0 = 0;
     for (int i = 0; i < num_subdivisions; i++) {
@@ -75,18 +76,16 @@ Eigen::Vector3I compute_scene_bbox(
             from_json(body["pose_t1"]["position"], p1d);
             from_json(body["pose_t1"]["rotation"], r1d);
 
-            Eigen::Vector3I p0 = p0d.cast<Interval>(),
-                            p1 = p1d.cast<Interval>();
-            Eigen::Vector3I r0 = r0d.cast<Interval>(),
-                            r1 = r1d.cast<Interval>();
+            Vector3I p0 = p0d.cast<Interval>(), p1 = p1d.cast<Interval>();
+            Vector3I r0 = r0d.cast<Interval>(), r1 = r1d.cast<Interval>();
 
-            Eigen::Vector3I p = (p1 - p0) * t + p0;
-            Eigen::Vector3I r = (r1 - r0) * t + r0;
-            auto R = construct_rotation_matrix(Eigen::VectorX3I(r));
+            Vector3I p = (p1 - p0) * t + p0;
+            Vector3I r = (r1 - r0) * t + r0;
+            auto R = construct_rotation_matrix(VectorMax3I(r));
 
             Eigen::MatrixXd V;
             from_json(body["vertices"], V);
-            Eigen::MatrixXI VI = (V * R.transpose()).rowwise() + p.transpose();
+            MatrixXI VI = (V * R.transpose()).rowwise() + p.transpose();
 
             for (int i = 0; i < VI.rows(); i++) {
                 for (int j = 0; j < VI.cols(); j++) {
@@ -123,7 +122,7 @@ Eigen::Vector3I compute_scene_bbox(
 //     igl::Timer timer;
 //     for (int n = 1; n < 20; n++) {
 //         timer.start();
-//         Eigen::Vector3I scene_bbox = compute_scene_bbox(bodies, n);
+//         Vector3I scene_bbox = compute_scene_bbox(bodies, n);
 //         timer.stop();
 //         Eigen::Vector3d scene_min, scene_max;
 //         for (int i = 0; i < scene_bbox.size(); i++) {

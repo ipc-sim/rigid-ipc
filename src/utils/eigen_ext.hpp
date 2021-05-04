@@ -5,14 +5,17 @@
 
 #include <ipc/utils/eigen_ext.hpp>
 
-namespace Eigen {
+namespace ipc {
 
-template <typename T> SparseMatrix<T> SparseDiagonal(const VectorX<T>& x);
+typedef Eigen::DiagonalMatrix<double, 3> DiagonalMatrix3d;
+
+template <typename T>
+Eigen::SparseMatrix<T> SparseDiagonal(const VectorX<T>& x);
 
 template <typename T> inline Matrix2<T> Hat(T x);
 template <typename T> inline Matrix3<T> Hat(Vector3<T> x);
-template <typename T> inline MatrixXX3<T> Hat(VectorX3<T> x);
+template <typename T> inline MatrixMax3<T> Hat(VectorMax3<T> x);
 
-} // namespace Eigen
+} // namespace ipc
 
 #include "eigen_ext.tpp"

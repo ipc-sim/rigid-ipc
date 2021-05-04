@@ -34,7 +34,7 @@ void ExponentialEulerTimeStepper::step3D(
     // Update the orientaiton
     // R₁ = R₀ + h * R₀ω̂
     Eigen::Matrix3d R1 = body.pose_prev.construct_rotation_matrix();
-    R1 += time_step * R1 * Eigen::Hat(body.velocity.rotation);
+    R1 += time_step * R1 * Hat(body.velocity.rotation);
     project_orientation(R1);
     Eigen::AngleAxisd r1 = Eigen::AngleAxisd(R1);
     double angle = r1.angle();
@@ -45,8 +45,8 @@ void ExponentialEulerTimeStepper::step3D(
     if (k != 0) {
         const Eigen::Vector3d r1_star = (angle + 2 * igl::PI * k) * axis;
         spdlog::warn(
-            "r0={} r1={} k={} r1'={}", fmt_eigen(r0),
-            fmt_eigen(angle * axis), k, fmt_eigen(r1_star));
+            "r0={} r1={} k={} r1'={}", fmt_eigen(r0), fmt_eigen(angle * axis),
+            k, fmt_eigen(r1_star));
     }
     body.pose.rotation = (angle + 2 * igl::PI * k) * axis;
 

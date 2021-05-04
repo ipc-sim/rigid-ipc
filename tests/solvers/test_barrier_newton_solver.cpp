@@ -11,6 +11,7 @@
 
 #include <logger.hpp>
 
+using namespace ipc;
 using namespace ipc::rigid;
 
 TEST_CASE(
@@ -108,10 +109,7 @@ TEST_CASE(
         }
 
         int num_vars() const override { return num_vars_; }
-        const Eigen::VectorXb& is_dof_fixed() const override
-        {
-            return is_dof_fixed_;
-        }
+        const VectorXb& is_dof_fixed() const override { return is_dof_fixed_; }
         const Eigen::VectorXd& starting_point() const { return x0; }
 
         double compute_min_distance(const Eigen::VectorXd& x) const override
@@ -131,9 +129,9 @@ TEST_CASE(
             throw NotImplementedError("no world bbox diagonal");
         }
 
-        Eigen::DiagonalMatrixXd mass_matrix() const override
+        DiagonalMatrixXd mass_matrix() const override
         {
-            Eigen::DiagonalMatrixXd I(num_vars_);
+            DiagonalMatrixXd I(num_vars_);
             I.setIdentity();
             return I;
         }
@@ -145,7 +143,7 @@ TEST_CASE(
         double m_barrier_epsilon;
         double m_barrier_stiffness;
         Eigen::VectorXd x0;
-        Eigen::VectorXb is_dof_fixed_;
+        VectorXb is_dof_fixed_;
     };
 
     double epsilon = GENERATE(1.0, 0.5, 1e-1, 5e-2);

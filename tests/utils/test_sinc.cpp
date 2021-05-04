@@ -7,6 +7,8 @@
 
 #include <autodiff/autodiff_types.hpp>
 #include <utils/sinc.hpp>
+
+using namespace ipc;
 using namespace ipc::rigid;
 
 TEST_CASE("double sinc", "[sinc][double]")
@@ -89,7 +91,7 @@ TEST_CASE("interval sinc with looser bounds", "[sinc][interval]")
 
 TEST_CASE("interval sinc_normx", "[sinc][interval]")
 {
-    Eigen::VectorX3<Interval> x = Eigen::VectorX3<Interval>::Zero(3);
+    VectorMax3<Interval> x = VectorMax3<Interval>::Zero(3);
     Interval expected_y;
 
     SECTION("Zero")
@@ -149,21 +151,18 @@ TEST_CASE("∇²sinc(||x||)", "[sinc][vector][diff]")
     CHECK(fd::compare_hessian(hess, fhess));
 }
 
-template <typename T> Eigen::VectorX<T> identity(const Eigen::VectorX<T>& x)
-{
-    return x;
-}
-template <typename T> Eigen::VectorX<T> square(const Eigen::VectorX<T>& x)
+template <typename T> VectorX<T> identity(const VectorX<T>& x) { return x; }
+template <typename T> VectorX<T> square(const VectorX<T>& x)
 {
     return x.array().square();
 }
-template <typename T> Eigen::VectorX<T> const_sum(const Eigen::VectorX<T>& x)
+template <typename T> VectorX<T> const_sum(const VectorX<T>& x)
 {
-    return Eigen::VectorX<T>::Constant(x.size(), x.sum());
+    return VectorX<T>::Constant(x.size(), x.sum());
 }
-template <typename T> Eigen::VectorX<T> const_prod(const Eigen::VectorX<T>& x)
+template <typename T> VectorX<T> const_prod(const VectorX<T>& x)
 {
-    return Eigen::VectorX<T>::Constant(x.size(), x.prod());
+    return VectorX<T>::Constant(x.size(), x.prod());
 }
 
 TEST_CASE("autodiff sinc(||x||)", "[sinc][vector][autodiff]")
@@ -208,13 +207,13 @@ TEST_CASE("autodiff sinc(||x||)", "[sinc][vector][autodiff]")
     }
 
     // Compute the expected values
-    double expected_value = sinc_normx(Eigen::VectorX3d(g(x).tail<3>()));
+    double expected_value = sinc_normx(VectorMax3d(g(x).tail<3>()));
 
     Eigen::VectorXd fgrad(size);
     fd::finite_gradient(
         x,
         [&](const Eigen::VectorXd& x) {
-            return sinc_normx(Eigen::VectorX3d(g(x).tail<3>()));
+            return sinc_normx(VectorMax3d(g(x).tail<3>()));
         },
         fgrad);
 
@@ -222,7 +221,7 @@ TEST_CASE("autodiff sinc(||x||)", "[sinc][vector][autodiff]")
     fd::finite_hessian(
         x,
         [&](const Eigen::VectorXd& x) {
-            return sinc_normx(Eigen::VectorX3d(g(x).tail<3>()));
+            return sinc_normx(VectorMax3d(g(x).tail<3>()));
         },
         fhess);
 
@@ -230,7 +229,7 @@ TEST_CASE("autodiff sinc(||x||)", "[sinc][vector][autodiff]")
     {
         Diff::D1VectorXd x_diff = Diff::d1vars(0, x);
         Diff::DDouble1 y = sinc_normx(
-            Eigen::VectorX3<Diff::DDouble1>(g_autodiff1(x_diff).tail<3>()));
+            VectorMax3<Diff::DDouble1>(g_autodiff1(x_diff).tail<3>()));
 
         double value = y.getValue();
         CHECK(value == Approx(expected_value));
@@ -243,7 +242,7 @@ TEST_CASE("autodiff sinc(||x||)", "[sinc][vector][autodiff]")
     {
         Diff::D2VectorXd x_diff = Diff::d2vars(0, x);
         Diff::DDouble2 y = sinc_normx(
-            Eigen::VectorX3<Diff::DDouble2>(g_autodiff2(x_diff).tail<3>()));
+            VectorMax3<Diff::DDouble2>(g_autodiff2(x_diff).tail<3>()));
 
         double value = y.getValue();
         CHECK(value == Approx(expected_value));

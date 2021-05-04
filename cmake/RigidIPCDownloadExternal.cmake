@@ -106,7 +106,7 @@ endfunction()
 function(rigid_ipc_download_ipc_toolkit)
   rigid_ipc_download_project(ipc-toolkit
     GIT_REPOSITORY https://github.com/ipc-sim/ipc-toolkit.git
-    GIT_TAG        b51025310223b487e7c39858265d8d5c3e8b1e8a
+    GIT_TAG        59ec167b85eaf56095a2d0333bdd96146d658ebf
   )
 endfunction()
 

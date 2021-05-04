@@ -117,6 +117,6 @@ TEST_CASE("Interval SE(3) ↦ SO(3)", "[!benchmark][physics][pose]")
     Pose<ipc::rigid::Interval> pI = p.cast<ipc::rigid::Interval>();
     BENCHMARK("Interval SE(3) ↦ SO(3)")
     {
-        Eigen::Matrix3I R = pI.construct_rotation_matrix();
+        Matrix3I R = pI.construct_rotation_matrix();
     };
 }

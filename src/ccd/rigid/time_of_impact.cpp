@@ -25,11 +25,11 @@ Eigen::Vector2d compute_edge_vertex_tolerance(
     const RigidBody& bodyA,       // Body of the vertex
     const Pose<double>& poseA_t0, // Pose of bodyA at t=0
     const Pose<double>& poseA_t1, // Pose of bodyA at t=1
-    size_t vertex_id,                      // In bodyA
+    size_t vertex_id,             // In bodyA
     const RigidBody& bodyB,       // Body of the edge
     const Pose<double>& poseB_t0, // Pose of bodyB at t=0
     const Pose<double>& poseB_t1, // Pose of bodyB at t=1
-    size_t edge_id)                        // In bodyB
+    size_t edge_id)               // In bodyB
 {
     // double sA_sqr = (poseA_t1.position - poseA_t0.position).squaredNorm();
     // double sB_sqr = (poseB_t1.position - poseB_t0.position).squaredNorm();
@@ -58,11 +58,11 @@ bool compute_edge_vertex_time_of_impact(
     const RigidBody& bodyA,       // Body of the vertex
     const Pose<double>& poseA_t0, // Pose of bodyA at t=0
     const Pose<double>& poseA_t1, // Pose of bodyA at t=1
-    size_t vertex_id,                      // In bodyA
+    size_t vertex_id,             // In bodyA
     const RigidBody& bodyB,       // Body of the edge
     const Pose<double>& poseB_t0, // Pose of bodyB at t=0
     const Pose<double>& poseB_t1, // Pose of bodyB at t=1
-    size_t edge_id,                        // In bodyB
+    size_t edge_id,               // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
     double toi_tolerance)
@@ -77,7 +77,7 @@ bool compute_edge_vertex_time_of_impact(
     const PoseI poseIB_t0 = poseB_t0.cast<Interval>();
     const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
 
-    const auto distance = [&](const Eigen::VectorX3I& params) {
+    const auto distance = [&](const VectorMax3I& params) {
         assert(params.size() == 2);
         return edge_vertex_aabb(
             bodyA, poseIA_t0, poseIA_t1, vertex_id, bodyB, poseIB_t0, poseIB_t1,
@@ -89,9 +89,8 @@ bool compute_edge_vertex_time_of_impact(
         edge_id);
     tol[0] = toi_tolerance;
 
-    Eigen::VectorX3I x0 =
-        Eigen::Vector2I(Interval(0, earliest_toi), Interval(0, 1));
-    Eigen::VectorX3I toi_interval;
+    VectorMax3I x0 = Vector2I(Interval(0, earliest_toi), Interval(0, 1));
+    VectorMax3I toi_interval;
     bool is_impacting = interval_root_finder(distance, x0, tol, toi_interval);
 
     // Return a conservative time-of-impact
@@ -110,11 +109,11 @@ void print_EE_query(
     const RigidBody& bodyA,       // Body of the first edge
     const Pose<double>& poseA_t0, // Pose of bodyA at t=0
     const Pose<double>& poseA_t1, // Pose of bodyA at t=1
-    size_t edgeA_id,                       // In bodyA
+    size_t edgeA_id,              // In bodyA
     const RigidBody& bodyB,       // Body of the second edge
     const Pose<double>& poseB_t0, // Pose of bodyB at t=0
     const Pose<double>& poseB_t1, // Pose of bodyB at t=1
-    size_t edgeB_id)                       // In bodyB
+    size_t edgeB_id)              // In bodyB
 {
 
     std::cerr << fmt_eigen(bodyA.vertices.row(bodyA.edges(edgeA_id, 0)))
@@ -140,11 +139,11 @@ Eigen::Vector3d compute_edge_edge_tolerance(
     const RigidBody& bodyA,       // Body of the first edge
     const Pose<double>& poseA_t0, // Pose of bodyA at t=0
     const Pose<double>& poseA_t1, // Pose of bodyA at t=1
-    size_t edgeA_id,                       // In bodyA
+    size_t edgeA_id,              // In bodyA
     const RigidBody& bodyB,       // Body of the second edge
     const Pose<double>& poseB_t0, // Pose of bodyB at t=0
     const Pose<double>& poseB_t1, // Pose of bodyB at t=1
-    size_t edgeB_id)                       // In bodyB
+    size_t edgeB_id)              // In bodyB
 {
     // TODO: Compute trajecotry length for interpolating rotation vectors.
     // double dl = ...
@@ -160,11 +159,11 @@ bool compute_edge_edge_time_of_impact(
     const RigidBody& bodyA,       // Body of the first edge
     const Pose<double>& poseA_t0, // Pose of bodyA at t=0
     const Pose<double>& poseA_t1, // Pose of bodyA at t=1
-    size_t edgeA_id,                       // In bodyA
+    size_t edgeA_id,              // In bodyA
     const RigidBody& bodyB,       // Body of the second edge
     const Pose<double>& poseB_t0, // Pose of bodyB at t=0
     const Pose<double>& poseB_t1, // Pose of bodyB at t=1
-    size_t edgeB_id,                       // In bodyB
+    size_t edgeB_id,              // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
     double toi_tolerance)
@@ -175,7 +174,7 @@ bool compute_edge_edge_time_of_impact(
     const PoseI poseIA_t1 = poseA_t1.cast<Interval>();
     const PoseI poseIB_t0 = poseB_t0.cast<Interval>();
     const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
-    const auto distance = [&](const Eigen::VectorX3I& params) {
+    const auto distance = [&](const VectorMax3I& params) {
         assert(params.size() == 3);
         return edge_edge_aabb(
             bodyA, poseIA_t0, poseIA_t1, edgeA_id, bodyB, poseIB_t0, poseIB_t1,
@@ -192,9 +191,9 @@ bool compute_edge_edge_time_of_impact(
     timer.start();
 #endif
 
-    Eigen::VectorX3I toi_interval;
-    Eigen::VectorX3I x0 = Eigen::Vector3I(
-        Interval(0, earliest_toi), Interval(0, 1), Interval(0, 1));
+    VectorMax3I toi_interval;
+    VectorMax3I x0 =
+        Vector3I(Interval(0, earliest_toi), Interval(0, 1), Interval(0, 1));
     bool is_impacting = interval_root_finder(distance, x0, tol, toi_interval);
 
 #ifdef TIME_CCD_QUERIES
@@ -224,11 +223,11 @@ Eigen::Vector3d compute_face_vertex_tolerance(
     const RigidBody& bodyA,       // Body of the vertex
     const Pose<double>& poseA_t0, // Pose of bodyA at t=0
     const Pose<double>& poseA_t1, // Pose of bodyA at t=1
-    size_t vertex_id,                      // In bodyA
+    size_t vertex_id,             // In bodyA
     const RigidBody& bodyB,       // Body of the triangle
     const Pose<double>& poseB_t0, // Pose of bodyB at t=0
     const Pose<double>& poseB_t1, // Pose of bodyB at t=1
-    size_t face_id)                        // In bodyB
+    size_t face_id)               // In bodyB
 {
     // TODO: Compute trajecotry length for interpolating rotation vectors.
     // double dl = ...
@@ -250,11 +249,11 @@ bool compute_face_vertex_time_of_impact(
     const RigidBody& bodyA,       // Body of the vertex
     const Pose<double>& poseA_t0, // Pose of bodyA at t=0
     const Pose<double>& poseA_t1, // Pose of bodyA at t=1
-    size_t vertex_id,                      // In bodyA
+    size_t vertex_id,             // In bodyA
     const RigidBody& bodyB,       // Body of the triangle
     const Pose<double>& poseB_t0, // Pose of bodyB at t=0
     const Pose<double>& poseB_t1, // Pose of bodyB at t=1
-    size_t face_id,                        // In bodyB
+    size_t face_id,               // In bodyB
     double& toi,
     double earliest_toi, // Only search for collision in [0, earliest_toi]
     double toi_tolerance)
@@ -266,7 +265,7 @@ bool compute_face_vertex_time_of_impact(
     const PoseI poseIB_t0 = poseB_t0.cast<Interval>();
     const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
 
-    const auto distance = [&](const Eigen::VectorX3I& params) {
+    const auto distance = [&](const VectorMax3I& params) {
         assert(params.size() == 3);
         return face_vertex_aabb(
             bodyA, poseIA_t0, poseIA_t1, vertex_id, //
@@ -274,7 +273,7 @@ bool compute_face_vertex_time_of_impact(
             /*t=*/params(0), /*u=*/params(1), /*v=*/params(2));
     };
 
-    const auto is_domain_valid = [&](const Eigen::VectorX3I& params) {
+    const auto is_domain_valid = [&](const VectorMax3I& params) {
         const Interval &t = params[0], &u = params[1], &v = params[2];
         // 0 ≤ t, u, v ≤ 1 is satisfied by the initial domain of the solve
         return overlap(u + v, Interval(0, 1));
@@ -290,9 +289,9 @@ bool compute_face_vertex_time_of_impact(
     timer.start();
 #endif
 
-    Eigen::VectorX3I toi_interval;
-    Eigen::VectorX3I x0 = Eigen::Vector3I(
-        Interval(0, earliest_toi), Interval(0, 1), Interval(0, 1));
+    VectorMax3I toi_interval;
+    VectorMax3I x0 =
+        Vector3I(Interval(0, earliest_toi), Interval(0, 1), Interval(0, 1));
     bool is_impacting =
         interval_root_finder(distance, is_domain_valid, x0, tol, toi_interval);
 

@@ -28,8 +28,8 @@ void center_vertices(
     pose.position.setZero(dim);
     for (int i = 0; i < 10; i++) {
         double mass;
-        Eigen::VectorX3d com;
-        Eigen::MatrixXX3d inertia;
+        VectorMax3d com;
+        MatrixMax3d inertia;
         compute_mass_properties(
             vertices, dim == 2 || faces.size() == 0 ? edges : faces, mass, com,
             inertia);
@@ -49,7 +49,7 @@ RigidBody::RigidBody(
     const PoseD& velocity,
     const PoseD& force,
     const double density,
-    const Eigen::VectorX6b& is_dof_fixed,
+    const VectorMax6b& is_dof_fixed,
     const bool oriented,
     const int group_id,
     const RigidBodyType type,
@@ -82,8 +82,8 @@ RigidBody::RigidBody(
     }
 
     center_vertices(this->vertices, edges, faces, this->pose);
-    Eigen::VectorX3d center_of_mass;
-    Eigen::MatrixXX3d I;
+    VectorMax3d center_of_mass;
+    MatrixMax3d I;
     compute_mass_properties(
         this->vertices,
         dim() == 2 || faces.size() == 0 ? edges : faces, //
@@ -138,7 +138,7 @@ RigidBody::RigidBody(
         // ω = R₀ᵀω₀ (ω₀ expressed in body coordinates)
         this->velocity.rotation = R0.transpose() * this->velocity.rotation;
         Eigen::Matrix3d Q_t0 = this->pose.construct_rotation_matrix();
-        this->Qdot = Q_t0 * Eigen::Hat(this->velocity.rotation);
+        this->Qdot = Q_t0 * Hat(this->velocity.rotation);
         // τ = R₀ᵀτ₀ (τ₀ expressed in body coordinates)
         // NOTE: this transformation will be done later
         // this->force.rotation = R0.transpose() * this->force.rotation;
@@ -233,8 +233,8 @@ Eigen::MatrixXd RigidBody::world_velocities() const
     // compute ẋ = Q̇ * x_B + q̇
     // where Q̇ = Qω̂
     if (dim() == 2) {
-        Eigen::MatrixXX3d Q_dt =
-            pose.construct_rotation_matrix() * Eigen::Hat(velocity.rotation);
+        MatrixMax3d Q_dt =
+            pose.construct_rotation_matrix() * Hat(velocity.rotation);
         return (vertices * Q_dt.transpose()).rowwise()
             + velocity.position.transpose();
     }
@@ -245,8 +245,8 @@ Eigen::MatrixXd RigidBody::world_velocities() const
 void RigidBody::compute_bounding_box(
     const PoseD& pose_t0,
     const PoseD& pose_t1,
-    Eigen::VectorX3d& box_min,
-    Eigen::VectorX3d& box_max) const
+    VectorMax3d& box_min,
+    VectorMax3d& box_max) const
 {
     PROFILE_POINT("RigidBody::compute_bounding_box");
     PROFILE_START();

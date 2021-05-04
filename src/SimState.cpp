@@ -474,8 +474,8 @@ bool SimState::save_gltf(const std::string& filename)
         const auto& state = state_sequence[i];
         std::vector<nlohmann::json> jrbs = state["rigid_bodies"];
         for (int j = 0; j < jrbs.size(); j++) {
-            Eigen::VectorX3d position;
-            Eigen::VectorX3d rotation;
+            VectorMax3d position;
+            VectorMax3d rotation;
             from_json(jrbs[j]["position"], position);
             from_json(jrbs[j]["rotation"], rotation);
             poses[i].emplace_back(position, rotation);

@@ -27,19 +27,19 @@ Camera::Camera(const nlohmann::json& json)
     from_json(json["resolution"], resolution);
 }
 
-Eigen::Matrix4F Camera::shift_and_zoom() const
+Matrix4F Camera::shift_and_zoom() const
 {
     return (Eigen::Scaling(zoom) * Eigen::Translation<Float, 3>(shift))
         .matrix();
 }
 
-Eigen::Matrix4F Camera::view_transform() const
+Matrix4F Camera::view_transform() const
 {
-    Eigen::Vector3F w = -gaze.normalized();
-    Eigen::Vector3F u = view_up.cross(w).normalized();
-    Eigen::Vector3F v = w.cross(u);
+    Vector3F w = -gaze.normalized();
+    Vector3F u = view_up.cross(w).normalized();
+    Vector3F v = w.cross(u);
 
-    Eigen::Matrix4F view_inv;
+    Matrix4F view_inv;
     // clang-format off
     view_inv << u.x(), v.x(), w.x(), position.x(),
                 u.y(), v.y(), w.y(), position.y(),
@@ -50,7 +50,7 @@ Eigen::Matrix4F Camera::view_transform() const
     return view_inv.inverse();
 }
 
-Eigen::Matrix4F Camera::projection_matrix() const
+Matrix4F Camera::projection_matrix() const
 {
     Float t;
     if (is_perspective) {
@@ -65,7 +65,7 @@ Eigen::Matrix4F Camera::projection_matrix() const
     Float n = -near_clip;
     Float f = -far_clip;
 
-    Eigen::Matrix4F M_orth;
+    Matrix4F M_orth;
     // clang-format off
     M_orth << 2 / (r - l), 0, 0, -(r + l) / (r - l),
               0, 2 / (t - b), 0, -(t + b) / (t - b),
@@ -73,7 +73,7 @@ Eigen::Matrix4F Camera::projection_matrix() const
               0, 0, 0, 1;
     // clang-format on
 
-    Eigen::Matrix4F P;
+    Matrix4F P;
     if (is_perspective) {
         // clang-format off
         P << n, 0, 0, 0,
@@ -92,7 +92,7 @@ void get_scale_and_shift_to_fit_mesh(
     const Eigen::MatrixXd& V,
     const Eigen::MatrixXi& F,
     Float& zoom,
-    Eigen::Vector3F& shift)
+    Vector3F& shift)
 {
     if (V.rows() == 0) {
         return;

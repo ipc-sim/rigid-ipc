@@ -12,8 +12,8 @@ void compute_mass_properties(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& facets,
     double& mass,
-    Eigen::VectorX3d& center,
-    Eigen::MatrixXX3d& inertia)
+    VectorMax3d& center,
+    MatrixMax3d& inertia)
 {
     if (vertices.cols() == 2) {
         compute_mass_properties_2D(vertices, facets, mass, center, inertia);
@@ -31,8 +31,8 @@ void compute_mass_properties_2D(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& edges,
     double& mass,
-    Eigen::VectorX3d& center,
-    Eigen::MatrixXX3d& inertia)
+    VectorMax3d& center,
+    MatrixMax3d& inertia)
 {
     Eigen::SparseMatrix<double> M;
     construct_mass_matrix(vertices, edges, M);
@@ -52,8 +52,8 @@ void compute_mass_properties_3D(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& faces,
     double& mass,
-    Eigen::VectorX3d& center,
-    Eigen::MatrixXX3d& inertia)
+    VectorMax3d& center,
+    MatrixMax3d& inertia)
 {
     if (faces.size() == 0 || faces.cols() != 3) {
         throw NotImplementedError("compute_mass_properties_3D() not "
@@ -188,7 +188,7 @@ void construct_mass_matrix(
             vertex_masses(facets(i, 0)) += edge_length / 2;
             vertex_masses(facets(i, 1)) += edge_length / 2;
         }
-        mass_matrix = Eigen::SparseDiagonal<double>(vertex_masses);
+        mass_matrix = SparseDiagonal<double>(vertex_masses);
     } else if (facets.cols() == 3) {
         assert(vertices.cols() == 3); // Only use triangles in 3D
         igl::massmatrix(
@@ -214,7 +214,7 @@ double compute_total_mass(const Eigen::SparseMatrix<double>& mass_matrix)
     return mass_matrix.sum();
 }
 
-Eigen::VectorX3d compute_center_of_mass(
+VectorMax3d compute_center_of_mass(
     const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& facets)
 {
     Eigen::SparseMatrix<double> M;
@@ -222,18 +222,18 @@ Eigen::VectorX3d compute_center_of_mass(
     return compute_center_of_mass(vertices, M);
 }
 
-Eigen::VectorX3d compute_center_of_mass(
+VectorMax3d compute_center_of_mass(
     const Eigen::MatrixXd& vertices,
     const Eigen::SparseMatrix<double>& mass_matrix)
 {
     double total_mass = mass_matrix.sum();
     if (total_mass == 0) {
-        return Eigen::VectorX3d::Zero(vertices.cols());
+        return VectorMax3d::Zero(vertices.cols());
     }
     return (mass_matrix * vertices).colwise().sum() / mass_matrix.sum();
 }
 
-Eigen::MatrixXX3d compute_moment_of_inertia(
+MatrixMax3d compute_moment_of_inertia(
     const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& facets)
 {
     // NOTE: this assumes center of mass is at 0,0
@@ -250,14 +250,14 @@ Eigen::MatrixXX3d compute_moment_of_inertia(
         return I;
     } else {
         double mass;
-        Eigen::VectorX3d center;
-        Eigen::MatrixXX3d inertia;
+        VectorMax3d center;
+        MatrixMax3d inertia;
         compute_mass_properties_3D(vertices, facets, mass, center, inertia);
         return inertia;
     }
 }
 
-Eigen::MatrixXX3d compute_moment_of_inertia(
+MatrixMax3d compute_moment_of_inertia(
     const Eigen::MatrixXd& vertices,
     const Eigen::SparseMatrix<double>& mass_matrix)
 {

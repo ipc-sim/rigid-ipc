@@ -38,7 +38,7 @@ public:
         const PoseD& velocity,
         const PoseD& force,
         const double density,
-        const Eigen::VectorX6b& is_dof_fixed,
+        const VectorMax6b& is_dof_fixed,
         const bool oriented,
         const int group_id,
         const RigidBodyType type = RigidBodyType::DYNAMIC,
@@ -54,7 +54,7 @@ public:
         const PoseD& velocity,
         const PoseD& force,
         const double density,
-        const Eigen::VectorX6b& is_dof_fixed,
+        const VectorMax6b& is_dof_fixed,
         const bool oriented,
         const int group_id,
         const RigidBodyType type = RigidBodyType::DYNAMIC,
@@ -107,35 +107,33 @@ public:
     /// @return The positions of all vertices in 'world space',
     ///         taking into account the given body's position.
     template <typename T>
-    Eigen::MatrixX<T> world_vertices(
-        const Eigen::MatrixXX3<T>& R, const Eigen::VectorX3<T>& p) const;
-    template <typename T>
-    Eigen::MatrixX<T> world_vertices(const Pose<T>& _pose) const
+    MatrixX<T>
+    world_vertices(const MatrixMax3<T>& R, const VectorMax3<T>& p) const;
+    template <typename T> MatrixX<T> world_vertices(const Pose<T>& _pose) const
     {
         return world_vertices<T>(
             _pose.construct_rotation_matrix(), _pose.position);
     }
     template <typename T>
-    Eigen::MatrixX<T> world_vertices(const Eigen::VectorX6<T>& dof) const
+    MatrixX<T> world_vertices(const VectorMax6<T>& dof) const
     {
         return world_vertices(Pose<T>(dof));
     }
 
     template <typename T>
-    Eigen::VectorX3<T> world_vertex(
-        const Eigen::MatrixXX3<T>& R,
-        const Eigen::VectorX3<T>& p,
+    VectorMax3<T> world_vertex(
+        const MatrixMax3<T>& R,
+        const VectorMax3<T>& p,
         const int vertex_idx) const;
     template <typename T>
-    Eigen::VectorX3<T>
-    world_vertex(const Pose<T>& _pose, const int vertex_idx) const
+    VectorMax3<T> world_vertex(const Pose<T>& _pose, const int vertex_idx) const
     {
         return world_vertex<T>(
             _pose.construct_rotation_matrix(), _pose.position, vertex_idx);
     }
     template <typename T>
-    Eigen::VectorX3<T>
-    world_vertex(const Eigen::VectorX6<T>& dof, const int vertex_idx) const
+    VectorMax3<T>
+    world_vertex(const VectorMax6<T>& dof, const int vertex_idx) const
     {
         return world_vertex<T>(Pose<T>(dof), vertex_idx);
     }
@@ -177,12 +175,10 @@ public:
     void compute_bounding_box(
         const PoseD& pose_t0,
         const PoseD& pose_t1,
-        Eigen::VectorX3d& box_min,
-        Eigen::VectorX3d& box_max) const;
+        VectorMax3d& box_min,
+        VectorMax3d& box_max) const;
     void compute_bounding_box(
-        const PoseD& pose,
-        Eigen::VectorX3d& box_min,
-        Eigen::VectorX3d& box_max) const
+        const PoseD& pose, VectorMax3d& box_min, VectorMax3d& box_max) const
     {
         return compute_bounding_box(pose, pose, box_min, box_max);
     }
@@ -220,16 +216,16 @@ public:
     /// @brief total mass (M) of the rigid body
     double mass;
     /// @brief moment of inertia measured with respect to the principal axes
-    Eigen::VectorX3d moment_of_inertia;
+    VectorMax3d moment_of_inertia;
     /// @brief rotation from the principal axes to the input orientation
-    Eigen::MatrixXX3d R0;
+    MatrixMax3d R0;
     /// @brief maximum distance from CM to a vertex
     double r_max;
     /// @brief the mass matrix of the rigid body
-    Eigen::DiagonalMatrixX6d mass_matrix;
+    DiagonalMatrixMax6d mass_matrix;
 
     /// @brief Flag to indicate if dof is fixed (doesnt' change)
-    Eigen::VectorX6b is_dof_fixed;
+    VectorMax6b is_dof_fixed;
 
     /// @brief Use edge orientation for normal in 2D restitution
     bool is_oriented;

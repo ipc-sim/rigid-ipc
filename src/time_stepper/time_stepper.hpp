@@ -25,7 +25,7 @@ public:
      */
     virtual void step(
         RigidBody& body,
-        const Eigen::VectorX3d& gravity,
+        const VectorMax3d& gravity,
         const double& time_step) const
     {
         switch (body.dim()) {
@@ -47,7 +47,7 @@ public:
      */
     virtual void step(
         RigidBodyAssembler& bodies,
-        const Eigen::VectorX3d& gravity,
+        const VectorMax3d& gravity,
         const double& time_step) const
     {
         switch (bodies.dim()) {

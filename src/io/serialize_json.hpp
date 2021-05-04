@@ -12,13 +12,13 @@ void from_json(
     Eigen::Matrix<T, dim, 1, Eigen::ColMajor, max_dim, 1>& vector);
 
 template <typename T>
-void from_json(const nlohmann::json& json, Eigen::MatrixX<T>& matrix);
+void from_json(const nlohmann::json& json, MatrixX<T>& matrix);
 
 template <typename T>
-void from_json(const nlohmann::json& json, Eigen::Matrix3<T>& matrix);
+void from_json(const nlohmann::json& json, Matrix3<T>& matrix);
 
 template <>
-void from_json<bool>(const nlohmann::json& json, Eigen::VectorX<bool>& vector);
+void from_json<bool>(const nlohmann::json& json, VectorX<bool>& vector);
 
 template <typename Derived>
 nlohmann::json to_json(const Eigen::MatrixBase<Derived>& matrix);

@@ -5,6 +5,7 @@
 #include <utils/eigen_ext.hpp>
 #include <utils/not_implemented_error.hpp>
 
+using namespace ipc;
 using namespace ipc::rigid;
 
 TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
@@ -20,7 +21,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
             num_vars_ = num_vars;
             x0.resize(num_vars);
             x0.setRandom();
-            is_dof_fixed_ = Eigen::VectorXb::Zero(num_vars);
+            is_dof_fixed_ = VectorXb::Zero(num_vars);
         }
 
         double compute_objective(
@@ -54,10 +55,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
 
         const Eigen::VectorXd& starting_point() const { return x0; }
         int num_vars() const override { return num_vars_; }
-        const Eigen::VectorXb& is_dof_fixed() const override
-        {
-            return is_dof_fixed_;
-        }
+        const VectorXb& is_dof_fixed() const override { return is_dof_fixed_; }
 
         double compute_min_distance(const Eigen::VectorXd& x) const override
         {
@@ -76,9 +74,9 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
             throw NotImplementedError("no world bbox diagonal");
         }
 
-        Eigen::DiagonalMatrixXd mass_matrix() const override
+        DiagonalMatrixXd mass_matrix() const override
         {
-            Eigen::DiagonalMatrixXd I(num_vars_);
+            DiagonalMatrixXd I(num_vars_);
             I.setIdentity();
             return I;
         }
@@ -87,7 +85,7 @@ TEST_CASE("Simple tests of Newton's Method", "[opt][newtons_method]")
         double timestep() const override { return 1; }
 
         int num_vars_;
-        Eigen::VectorXb is_dof_fixed_;
+        VectorXb is_dof_fixed_;
         Eigen::VectorXd x0;
     };
 
@@ -110,7 +108,7 @@ TEST_CASE("Test Newton direction solve", "[opt][newtons_method][newton_dir]")
     // f = x^2
     Eigen::VectorXd gradient = 2 * x;
     Eigen::SparseMatrix<double> hessian =
-        Eigen::SparseDiagonal<double>(2 * Eigen::VectorXd::Ones(num_vars));
+        SparseDiagonal<double>(2 * Eigen::VectorXd::Ones(num_vars));
     Eigen::VectorXd delta_x;
     ipc::rigid::NewtonSolver solver;
     solver.compute_direction(gradient, hessian, delta_x);

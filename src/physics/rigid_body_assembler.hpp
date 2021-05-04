@@ -23,13 +23,13 @@ public:
     // --------------------------------------------------------------------
 
     template <typename T>
-    Eigen::MatrixX<T> world_vertices(
-        const std::vector<Eigen::MatrixXX3<T>>& rotations,
-        const std::vector<Eigen::VectorX3<T>>& positions) const;
+    MatrixX<T> world_vertices(
+        const std::vector<MatrixMax3<T>>& rotations,
+        const std::vector<VectorMax3<T>>& positions) const;
     template <typename T>
-    Eigen::MatrixX<T> world_vertices(const Poses<T>& poses) const;
+    MatrixX<T> world_vertices(const Poses<T>& poses) const;
     template <typename T>
-    Eigen::MatrixX<T> world_vertices(const Eigen::VectorX<T>& dofs) const
+    MatrixX<T> world_vertices(const VectorX<T>& dofs) const
     {
         return world_vertices(Pose<T>::dofs_to_poses(dofs, dim()));
     }
@@ -46,10 +46,9 @@ public:
     }
 
     template <typename T>
-    Eigen::VectorX3<T>
-    world_vertex(const Pose<T>& pose, const int vertex_idx) const;
+    VectorMax3<T> world_vertex(const Pose<T>& pose, const int vertex_idx) const;
     template <typename T>
-    Eigen::VectorX3<T>
+    VectorMax3<T>
     world_vertex(const Poses<T>& poses, const int vertex_idx) const;
 
     Eigen::MatrixXd world_velocities() const;
@@ -200,13 +199,13 @@ public:
     std::vector<size_t> m_codim_edges_to_edges;
 
     /// @brief mass_matrix of the rigid bodies dof
-    Eigen::DiagonalMatrixXd m_rb_mass_matrix;
+    DiagonalMatrixXd m_rb_mass_matrix;
 
     /// @brief flags for rb degrees of freedom
-    Eigen::VectorXb is_rb_dof_fixed;
+    VectorXb is_rb_dof_fixed;
 
     /// @brief flag for vertices degrees of freedom (used for visualization)
-    Eigen::MatrixXb is_dof_fixed;
+    MatrixXb is_dof_fixed;
 
 protected:
     /// @brief Group ids per vertex

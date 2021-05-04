@@ -9,17 +9,15 @@
 namespace ipc::rigid {
 
 template <typename T>
-Eigen::MatrixX<T> RigidBody::world_vertices(
-    const Eigen::MatrixXX3<T>& R, const Eigen::VectorX3<T>& p) const
+MatrixX<T>
+RigidBody::world_vertices(const MatrixMax3<T>& R, const VectorMax3<T>& p) const
 {
     return (vertices * R.transpose()).rowwise() + p.transpose();
 }
 
 template <typename T>
-Eigen::VectorX3<T> RigidBody::world_vertex(
-    const Eigen::MatrixXX3<T>& R,
-    const Eigen::VectorX3<T>& p,
-    const int vertex_idx) const
+VectorMax3<T> RigidBody::world_vertex(
+    const MatrixMax3<T>& R, const VectorMax3<T>& p, const int vertex_idx) const
 {
     // compute X[i] = R(θ) * rᵢ + X
     return (vertices.row(vertex_idx) * R.transpose()) + p.transpose();
@@ -49,8 +47,8 @@ Eigen::MatrixXd RigidBody::world_vertices_diff(
         !compute_hess || rb_v0_i <= (hess.size() / ndof()) - vertices.size());
 
     auto R = construct_rotation_matrix(
-        Eigen::VectorX3<DScalar>(Diff::dTvars<DScalar>(0, pose.rotation)));
-    Eigen::MatrixX<DScalar> V_diff = vertices * R.transpose();
+        VectorMax3<DScalar>(Diff::dTvars<DScalar>(0, pose.rotation)));
+    MatrixX<DScalar> V_diff = vertices * R.transpose();
 
     for (int i = 0; i < V_diff.rows(); i++) {
         for (int j = 0; j < V_diff.cols(); j++) {

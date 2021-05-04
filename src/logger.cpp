@@ -56,8 +56,7 @@ std::string fmt_interval(const Interval& i, const int precision)
     return ssx.str();
 }
 
-std::string
-fmt_eigen_intervals(const Eigen::VectorX<Interval>& x, const int precision)
+std::string fmt_eigen_intervals(const VectorXI& x, const int precision)
 {
     std::stringstream ss;
     ss << std::setprecision(precision) << "[";

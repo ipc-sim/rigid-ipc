@@ -280,7 +280,7 @@ void detect_intersection_candidates_rigid_bvh(
                 const auto RB = poses[bodyB_id].construct_rotation_matrix();
                 const auto& pA = poses[bodyA_id].position;
                 const auto& pB = poses[bodyB_id].position;
-                const Eigen::MatrixXI VA =
+                const MatrixXI VA =
                     ((bodies[bodyA_id].vertices * RA.transpose()).rowwise()
                      + (pA - pB).transpose())
                     * RB;

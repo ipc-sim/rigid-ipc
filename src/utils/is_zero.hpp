@@ -13,7 +13,7 @@ template <> inline bool is_zero(Interval x)
 }
 
 template <int dim, int max_dim>
-inline bool is_zero(Eigen::Vector<Interval, dim, max_dim> X)
+inline bool is_zero(Vector<Interval, dim, max_dim> X)
 {
     // Check that all components contain zero
     // WARNING: This is conservative, but no exact

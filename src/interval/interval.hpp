@@ -88,22 +88,21 @@ inline bool zero_in(const Eigen::MatrixBase<Derived>& x)
     return true;
 }
 
+typedef Vector2<Interval> Vector2I;
+typedef Vector3<Interval> Vector3I;
+typedef VectorX<Interval> VectorXI;
+typedef VectorMax3<Interval> VectorMax3I;
+typedef Matrix3<Interval> Matrix3I;
+typedef MatrixMax3<Interval> MatrixMax3I;
+typedef MatrixX<Interval> MatrixXI;
+
 /// @brief Format a string for an Interval
 std::string fmt_interval(const Interval& i, const int precision = 16);
 /// @brief Format an eigen VectorX<Interval>
-std::string fmt_eigen_intervals(
-    const Eigen::VectorX<Interval>& x, const int precision = 16);
-
+std::string fmt_eigen_intervals(const VectorXI& x, const int precision = 16);
 } // namespace ipc::rigid
 
 namespace Eigen {
-typedef Vector2<ipc::rigid::Interval> Vector2I;
-typedef Vector3<ipc::rigid::Interval> Vector3I;
-typedef VectorX<ipc::rigid::Interval> VectorXI;
-typedef VectorX3<ipc::rigid::Interval> VectorX3I;
-typedef Matrix3<ipc::rigid::Interval> Matrix3I;
-typedef MatrixXX3<ipc::rigid::Interval> MatrixXX3I;
-typedef MatrixX<ipc::rigid::Interval> MatrixXI;
 
 template <typename BinOp>
 struct ScalarBinaryOpTraits<ipc::rigid::Interval, double, BinOp> {

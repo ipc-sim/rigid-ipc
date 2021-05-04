@@ -46,14 +46,14 @@ protected:
         const Poses<Interval>& poses_t0,
         const Poses<Interval>& poses_t1,
         const std::vector<int>& body_ids,
-        Eigen::MatrixXI& vertices,
+        MatrixXI& vertices,
         double inflation_radius = 0.0) const;
 
     int compute_vertices_intervals(
         const RigidBody& body,
         const Pose<Interval>& pose_t0,
         const Pose<Interval>& pose_t1,
-        Eigen::MatrixXI& vertices,
+        MatrixXI& vertices,
         double inflation_radius = 0.0,
         const Interval& t = Interval(0, 1),
         int force_subdivision = 0) const;

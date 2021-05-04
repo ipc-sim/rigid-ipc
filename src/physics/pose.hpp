@@ -15,9 +15,8 @@ template <typename T> using Poses = std::vector<Pose<T>>;
 template <typename T> class Pose {
 public:
     Pose();
-    Pose(
-        const Eigen::VectorX3<T>& position, const Eigen::VectorX3<T>& rotation);
-    Pose(const Eigen::VectorX6<T>& dof);
+    Pose(const VectorMax3<T>& position, const VectorMax3<T>& rotation);
+    Pose(const VectorMax6<T>& dof);
     Pose(const T& x, const T& y, const T& theta);
     Pose(
         const T& x,
@@ -29,8 +28,8 @@ public:
 
     static Pose<T> Zero(int dim);
 
-    static Poses<T> dofs_to_poses(const Eigen::VectorX<T>& dofs, int dim);
-    static Eigen::VectorX<T> poses_to_dofs(const Poses<T>& poses);
+    static Poses<T> dofs_to_poses(const VectorX<T>& dofs, int dim);
+    static VectorX<T> poses_to_dofs(const Poses<T>& poses);
 
     static int dim_to_ndof(const int dim) { return dim == 2 ? 3 : 6; }
     static int dim_to_pos_ndof(const int dim) { return dim; }
@@ -43,34 +42,31 @@ public:
     int rot_ndof() const { return rotation.size(); }
     int ndof() const { return pos_ndof() + rot_ndof(); }
 
-    Eigen::VectorX6<T> dof() const;
+    VectorMax6<T> dof() const;
 
     /// @brief Replace a selected dof with the dof in other.
     /// @param R Rotation this rotations coordinates to the dof in
     ///          is_dof_selected.
     void select_dof(
-        const Eigen::VectorX6b& is_dof_selected,
+        const VectorMax6b& is_dof_selected,
         const Pose<T>& other,
-        const Eigen::MatrixXX3d& R);
+        const MatrixMax3d& R);
     /// @brief Replace a selected dof with the dof in other.
-    void
-    select_dof(const Eigen::VectorX6b& is_dof_selected, const Pose<T>& other)
+    void select_dof(const VectorMax6b& is_dof_selected, const Pose<T>& other)
     {
         select_dof(
             is_dof_selected, other,
-            Eigen::MatrixXX3d::Identity(rot_ndof(), rot_ndof()));
+            MatrixMax3d::Identity(rot_ndof(), rot_ndof()));
     }
     /// @brief Zero out the i-th dof if is_dof_zero(i) == true.
-    void
-    zero_dof(const Eigen::VectorX6b& is_dof_zero, const Eigen::MatrixXX3d& R);
+    void zero_dof(const VectorMax6b& is_dof_zero, const MatrixMax3d& R);
     /// @brief Zero out the i-th dof if is_dof_zero(i) == true.
-    void zero_dof(const Eigen::VectorX6b& is_dof_zero)
+    void zero_dof(const VectorMax6b& is_dof_zero)
     {
-        zero_dof(
-            is_dof_zero, Eigen::MatrixXX3d::Identity(rot_ndof(), rot_ndof()));
+        zero_dof(is_dof_zero, MatrixMax3d::Identity(rot_ndof(), rot_ndof()));
     }
 
-    Eigen::MatrixXX3<T> construct_rotation_matrix() const;
+    MatrixMax3<T> construct_rotation_matrix() const;
 
     Eigen::Quaternion<T> construct_quaternion() const;
 
@@ -96,9 +92,9 @@ public:
     }
 
     /// Position dof (either 2D or 3D)
-    Eigen::VectorX3<T> position;
+    VectorMax3<T> position;
     /// Rotation dof (either 1D or 3D) expressed as a rotation vector
-    Eigen::VectorX3<T> rotation;
+    VectorMax3<T> rotation;
 };
 
 typedef Pose<double> PoseD;
@@ -111,18 +107,18 @@ template <typename T> Poses<T> operator*(const Poses<T>& poses, const T& x);
 template <typename T, typename U> Poses<T> cast(const Poses<U>& poses);
 
 template <typename T>
-Eigen::MatrixXX3<T> construct_rotation_matrix(const Eigen::VectorX3<T>& r);
+MatrixMax3<T> construct_rotation_matrix(const VectorMax3<T>& r);
 template <typename Derived, typename T = typename Derived::Scalar>
 Eigen::Quaternion<T> construct_quaternion(const Eigen::MatrixBase<Derived>& r);
 
-template <typename T> Eigen::Matrix3<T> rotate_to_z(Eigen::Vector3<T> n);
-template <typename T> Eigen::Matrix3<T> rotate_around_z(const T& theta);
+template <typename T> Matrix3<T> rotate_to_z(Vector3<T> n);
+template <typename T> Matrix3<T> rotate_around_z(const T& theta);
 template <typename T>
 void decompose_to_z_screwing(
     const Pose<T>& pose_t0,
     const Pose<T>& pose_t1,
-    Eigen::Matrix3<T>& R0,
-    Eigen::Matrix3<T>& P,
+    Matrix3<T>& R0,
+    Matrix3<T>& P,
     T& omega);
 
 } // namespace ipc::rigid

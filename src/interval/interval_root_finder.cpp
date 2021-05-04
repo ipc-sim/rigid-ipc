@@ -26,18 +26,18 @@ bool interval_root_finder(
     Interval& x,
     int max_iterations)
 {
-    Eigen::VectorX3I x0_vec = Eigen::VectorX3I::Constant(1, x0), x_vec;
-    Eigen::VectorX3d tol_vec = Eigen::VectorX3d::Constant(1, tol);
+    VectorMax3I x0_vec = VectorMax3I::Constant(1, x0), x_vec;
+    VectorMax3d tol_vec = VectorMax3d::Constant(1, tol);
     bool found_root = interval_root_finder(
-        [&](const Eigen::VectorX3I& x) {
+        [&](const VectorMax3I& x) {
             assert(x.size() == 1);
-            return Eigen::VectorX3I::Constant(1, f(x(0)));
+            return VectorMax3I::Constant(1, f(x(0)));
         },
-        [&](const Eigen::VectorX3I& x) {
+        [&](const VectorMax3I& x) {
             assert(x.size() == 1);
             return constraint_predicate(x(0));
         },
-        [&](const Eigen::VectorX3I& x) { return true; }, x0_vec, tol_vec, x_vec,
+        [&](const VectorMax3I& x) { return true; }, x0_vec, tol_vec, x_vec,
         max_iterations);
     if (found_root) {
         assert(x_vec.size() == 1);
@@ -47,33 +47,32 @@ bool interval_root_finder(
 }
 
 bool interval_root_finder(
-    const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
-    const Eigen::VectorX3I& x0,
-    Eigen::VectorX3d tol,
-    Eigen::VectorX3I& x,
+    const std::function<VectorMax3I(const VectorMax3I&)>& f,
+    const VectorMax3I& x0,
+    VectorMax3d tol,
+    VectorMax3I& x,
     int max_iterations)
 {
     return interval_root_finder(
-        f, [](const Eigen::VectorX3I&) { return true; }, x0, tol, x,
-        max_iterations);
+        f, [](const VectorMax3I&) { return true; }, x0, tol, x, max_iterations);
 }
 
 bool interval_root_finder(
-    const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
-    const std::function<bool(const Eigen::VectorX3I&)>& is_domain_valid,
-    const Eigen::VectorX3I& x0,
-    Eigen::VectorX3d tol,
-    Eigen::VectorX3I& x,
+    const std::function<VectorMax3I(const VectorMax3I&)>& f,
+    const std::function<bool(const VectorMax3I&)>& is_domain_valid,
+    const VectorMax3I& x0,
+    VectorMax3d tol,
+    VectorMax3I& x,
     int max_iterations)
 {
     return interval_root_finder(
-        f, [](const Eigen::VectorX3I&) { return true; }, is_domain_valid, x0,
-        tol, x, max_iterations);
+        f, [](const VectorMax3I&) { return true; }, is_domain_valid, x0, tol, x,
+        max_iterations);
 }
 
 void log_octree(
-    const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
-    const Eigen::VectorX3I& x0,
+    const std::function<VectorMax3I(const VectorMax3I&)>& f,
+    const VectorMax3I& x0,
     int levels = 5)
 {
     if (levels == 1 || !zero_in(f(x0))) {
@@ -88,7 +87,7 @@ void log_octree(
         for (Interval alpha : { alpha_split.first, alpha_split.second }) {
             std::pair<Interval, Interval> beta_split = bisect(x0(2));
             for (Interval beta : { beta_split.first, beta_split.second }) {
-                Eigen::Vector3I x(t, alpha, beta);
+                Vector3I x(t, alpha, beta);
                 log_octree(f, x, levels - 1);
             }
         }
@@ -96,28 +95,28 @@ void log_octree(
 }
 
 bool interval_root_finder(
-    const std::function<Eigen::VectorX3I(const Eigen::VectorX3I&)>& f,
-    const std::function<bool(const Eigen::VectorX3I&)>& constraint_predicate,
-    const std::function<bool(const Eigen::VectorX3I&)>& is_domain_valid,
-    const Eigen::VectorX3I& x0,
-    Eigen::VectorX3d tol,
-    Eigen::VectorX3I& x,
+    const std::function<VectorMax3I(const VectorMax3I&)>& f,
+    const std::function<bool(const VectorMax3I&)>& constraint_predicate,
+    const std::function<bool(const VectorMax3I&)>& is_domain_valid,
+    const VectorMax3I& x0,
+    VectorMax3d tol,
+    VectorMax3I& x,
     int max_iterations)
 {
     // log_octree(f, x0);
 
     // Keep searching for earlier roots (assumes time is first coordinate)
-    Eigen::VectorX3I earliest_root = Eigen::VectorX3I::Constant(
+    VectorMax3I earliest_root = VectorMax3I::Constant(
         x0.size(), Interval(std::numeric_limits<double>::infinity()));
     bool found_root = false;
 
     // Stack of intervals and the last split dimension
-    std::stack<Eigen::VectorX3I> xs;
+    std::stack<VectorMax3I> xs;
     xs.push(x0);
 
     // If the start is a root then we are in trouble, so we should reduce the
     // tolerance.
-    Eigen::VectorX3I x_tol(tol.size());
+    VectorMax3I x_tol(tol.size());
     for (int i = 0; i < x_tol.size(); i++) {
         x_tol(i) = Interval(0, tol(i));
     }
@@ -139,7 +138,7 @@ bool interval_root_finder(
             continue;
         }
 
-        Eigen::VectorX3I y = f(x);
+        VectorMax3I y = f(x);
 
         // spdlog::critical(
         //     "{} ↦ {}", fmt_eigen_intervals(x),
@@ -149,7 +148,7 @@ bool interval_root_finder(
             continue;
         }
 
-        Eigen::VectorX3d widths = width(x);
+        VectorMax3d widths = width(x);
         bool all_tol_sat = (widths.array() <= tol.array()).all();
         bool all_widths_zero = (widths.array() <= 1e-10).all();
         if ((x[0].lower() > 0 || all_widths_zero) && all_tol_sat) {

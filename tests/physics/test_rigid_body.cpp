@@ -13,6 +13,7 @@
 // ---------------------------------------------------
 // Tests
 // ---------------------------------------------------
+using namespace ipc;
 using namespace ipc::rigid;
 
 RigidBody
@@ -23,7 +24,7 @@ simple(Eigen::MatrixXd& vertices, Eigen::MatrixXi& edges, Pose<double> velocity)
     return RigidBody(
         vertices, edges, Pose<double>::Zero(vertices.cols()), velocity,
         /*force=*/Pose<double>::Zero(vertices.cols()), /*density=*/1.0,
-        /*is_dof_fixed=*/Eigen::VectorXb::Zero(ndof), /*oriented=*/false,
+        /*is_dof_fixed=*/VectorXb::Zero(ndof), /*oriented=*/false,
         /*group=*/id++);
 }
 

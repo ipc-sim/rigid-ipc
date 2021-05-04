@@ -114,7 +114,7 @@ inline double dsinc_over_x(double x)
 }
 
 // Compute ∇sinc(||x||) for x ∈ Rⁿ
-Eigen::VectorX3d sinc_normx_grad(const Eigen::VectorX3d& x)
+VectorMax3d sinc_normx_grad(const VectorMax3d& x)
 {
     return dsinc_over_x(x.norm()) * x;
 }
@@ -134,11 +134,11 @@ inline double ddsinc_over_x2_minus_dsinc_over_x3(double x)
 }
 
 // Compute ∇²sinc(||x||) for x ∈ Rⁿ
-Eigen::MatrixXX3d sinc_normx_hess(const Eigen::VectorX3d& x)
+MatrixMax3d sinc_normx_hess(const VectorMax3d& x)
 {
     double normx = x.norm();
     return ddsinc_over_x2_minus_dsinc_over_x3(normx) * x * x.transpose()
-        + dsinc_over_x(normx) * Eigen::MatrixXX3d::Identity(x.size(), x.size());
+        + dsinc_over_x(normx) * MatrixMax3d::Identity(x.size(), x.size());
 }
 
 } // namespace ipc::rigid

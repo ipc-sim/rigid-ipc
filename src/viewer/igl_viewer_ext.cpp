@@ -5,6 +5,8 @@
 #include <igl/slice.h>
 #include <igl/slice_mask.h>
 
+using namespace ipc;
+
 namespace igl {
 namespace opengl {
     ViewerDataExt::ViewerDataExt(
@@ -155,7 +157,7 @@ namespace opengl {
     }
 
     void MeshData::set_vertex_data(
-        const Eigen::MatrixXb& vtx_data, const Eigen::VectorXi& vertex_type)
+        const MatrixXb& vtx_data, const Eigen::VectorXi& vertex_type)
     {
         assert(vtx_data.rows() == mV.rows());
 
@@ -245,10 +247,10 @@ namespace opengl {
         Eigen::MatrixXd principle_axes(dim * poses.size(), dim);
 
         for (int i = 0; i < poses.size(); i++) {
-            Eigen::MatrixXX3d R = poses[i].construct_rotation_matrix();
+            MatrixMax3d R = poses[i].construct_rotation_matrix();
             for (int j = 0; j < dim; j++) {
                 com.row(dim * i + j) = poses[i].position;
-                Eigen::VectorX3d axis = Eigen::VectorX3d::Zero(dim);
+                VectorMax3d axis = VectorMax3d::Zero(dim);
                 axis(j) = 1;
                 principle_axes.row(dim * i + j) = R * axis;
             }

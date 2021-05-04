@@ -10,6 +10,7 @@
 #include <ccd/rigid/time_of_impact.hpp>
 #include <io/serialize_json.hpp>
 
+using namespace ipc;
 using namespace ipc::rigid;
 
 RigidBody create_body(
@@ -25,7 +26,7 @@ RigidBody create_body(
         /*velocity=*/PoseD::Zero(pose.dim()),
         /*force=*/PoseD::Zero(pose.dim()),
         /*denisty=*/1.0,
-        /*is_dof_fixed=*/Eigen::VectorX6b::Zero(pose.ndof()),
+        /*is_dof_fixed=*/VectorMax6b::Zero(pose.ndof()),
         /*oriented=*/false,
         /*group_id=*/id++);
     rb.vertices = vertices; // Cancel out the inertial rotation for testing

@@ -4,6 +4,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <physics/rigid_body_problem.hpp>
+#include <utils/eigen_ext.hpp>
 
 namespace ipc::rigid {
 
@@ -88,8 +89,7 @@ void UISimState::load_scene()
     Eigen::VectorXi vertex_type;
     if (m_state.problem_ptr->is_rb_problem()) {
         const auto& bodies =
-            std::dynamic_pointer_cast<RigidBodyProblem>(
-                m_state.problem_ptr)
+            std::dynamic_pointer_cast<RigidBodyProblem>(m_state.problem_ptr)
                 ->m_assembler;
         vertex_type.resize(bodies.num_vertices());
         int start_i = 0;
@@ -110,9 +110,9 @@ void UISimState::load_scene()
     velocity_data->set_vector_field(q, v);
 
     if (m_state.problem_ptr->is_rb_problem()) {
-        com_data->set_coms(std::dynamic_pointer_cast<RigidBodyProblem>(
-                               m_state.problem_ptr)
-                               ->m_assembler.rb_poses());
+        com_data->set_coms(
+            std::dynamic_pointer_cast<RigidBodyProblem>(m_state.problem_ptr)
+                ->m_assembler.rb_poses());
     }
 
     m_has_scene = true;
@@ -156,8 +156,7 @@ void UISimState::redraw_scene()
     velocity_data->update_vector_field(q1, v1);
     if (m_state.problem_ptr->is_rb_problem()) {
         const auto& bodies =
-            std::dynamic_pointer_cast<RigidBodyProblem>(
-                m_state.problem_ptr)
+            std::dynamic_pointer_cast<RigidBodyProblem>(m_state.problem_ptr)
                 ->m_assembler;
         Eigen::VectorXi vertex_type(bodies.num_vertices());
         int start_i = 0;
@@ -171,9 +170,9 @@ void UISimState::redraw_scene()
     }
 
     if (m_state.problem_ptr->is_rb_problem()) {
-        com_data->set_coms(std::dynamic_pointer_cast<RigidBodyProblem>(
-                               m_state.problem_ptr)
-                               ->m_assembler.rb_poses());
+        com_data->set_coms(
+            std::dynamic_pointer_cast<RigidBodyProblem>(m_state.problem_ptr)
+                ->m_assembler.rb_poses());
     }
 }
 
@@ -224,8 +223,7 @@ void UISimState::save_screenshot(const std::string& filename)
 
     int width, height;
     get_window_dimensions(width, height);
-    using MatrixXuc =
-        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>;
+    using MatrixXuc = MatrixX<unsigned char>;
     // Allocate temporary buffers for image
     MatrixXuc R(width, height), G(width, height), B(width, height),
         A(width, height);
@@ -277,8 +275,7 @@ bool UISimState::post_draw_loop()
         width = static_cast<int>(m_gif_scale * width);
         height = static_cast<int>(m_gif_scale * height);
 
-        using MatrixXuc =
-            Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>;
+        using MatrixXuc = MatrixX<unsigned char>;
         // Allocate temporary buffers for image
         MatrixXuc R(width, height), G(width, height), B(width, height),
             A(width, height);

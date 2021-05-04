@@ -311,7 +311,7 @@ std::vector<std::pair<int, int>> RigidBodyAssembler::close_bodies_bvh(
     PROFILE_START(BUILD);
 
     for (int i = 0; i < num_bodies(); i++) {
-        Eigen::VectorX3d min, max;
+        VectorMax3d min, max;
         m_rbs[i].compute_bounding_box(poses_t0[i], poses_t1[i], min, max);
         min.array() -= inflation_radius;
         max.array() += inflation_radius;

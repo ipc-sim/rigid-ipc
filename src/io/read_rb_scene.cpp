@@ -136,22 +136,19 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
             faces.resize(0, 0);
         }
 
-        Eigen::VectorX3d position;
+        VectorMax3d position;
         from_json(args["position"], position);
         assert(position.size() >= dim);
         position.conservativeResize(dim);
 
-        Eigen::VectorX3d scale;
+        VectorMax3d scale;
         // Dimensions overrides a scale argument
         if (args.contains("dimensions")) {
-            Eigen::VectorX3d initial_dimensions =
+            VectorMax3d initial_dimensions =
                 (vertices.colwise().maxCoeff() - vertices.colwise().minCoeff())
                     .cwiseAbs();
-            for (int i = 0; i < initial_dimensions.size(); i++) {
-                if (initial_dimensions(i) == 0) {
-                    initial_dimensions(i) = 1.0;
-                }
-            }
+            initial_dimensions =
+                (initial_dimensions.array() == 0).select(1, initial_dimensions);
             from_json(args["dimensions"], scale);
             assert(scale.size() >= dim);
             scale.conservativeResize(dim);
@@ -163,17 +160,17 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
             assert(scale.size() >= dim);
             scale.conservativeResize(dim);
         }
-        vertices = vertices * scale.asDiagonal();
+        vertices *= scale.asDiagonal();
 
         // Rotate around the models origin NOT the rigid bodies center of
         // mass
-        Eigen::VectorX3d rotation;
+        VectorMax3d rotation;
         from_json(args["rotation"], rotation);
         assert(rotation.size() >= angular_dim);
         rotation.conservativeResize(angular_dim);
         // Convert to radians for easy use later
         rotation *= M_PI / 180.0;
-        Eigen::MatrixXX3d R;
+        MatrixMax3d R;
         if (rotation.size() == 3) {
             R = (Eigen::AngleAxisd(rotation.z(), Eigen::Vector3d::UnitZ())
                  * Eigen::AngleAxisd(rotation.y(), Eigen::Vector3d::UnitY())
@@ -185,31 +182,31 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
         vertices = vertices * R.transpose();
         rotation.setZero(angular_dim); // Zero initial body rotation
 
-        Eigen::VectorX3d linear_velocity;
+        VectorMax3d linear_velocity;
         from_json(args["linear_velocity"], linear_velocity);
         assert(linear_velocity.size() >= dim);
         linear_velocity.conservativeResize(dim);
 
-        Eigen::VectorX3d angular_velocity;
+        VectorMax3d angular_velocity;
         from_json(args["angular_velocity"], angular_velocity);
         assert(angular_velocity.size() >= angular_dim);
         angular_velocity.conservativeResize(angular_dim);
         // Convert to radians for easy use later
         angular_velocity *= M_PI / 180.0;
 
-        Eigen::VectorX3d force;
+        VectorMax3d force;
         from_json(args["force"], force);
         assert(force.size() >= dim);
         force.conservativeResize(dim);
 
-        Eigen::VectorX3d torque;
+        VectorMax3d torque;
         from_json(args["torque"], torque);
         assert(torque.size() >= angular_dim);
         torque.conservativeResize(angular_dim);
         // Convert to radians for easy use later
         torque *= M_PI / 180.0;
 
-        Eigen::VectorXb is_dof_fixed;
+        VectorXb is_dof_fixed;
         if (args["is_dof_fixed"].is_boolean()) {
             is_dof_fixed.setConstant(ndof, args["is_dof_fixed"].get<bool>());
         } else {

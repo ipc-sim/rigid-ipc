@@ -203,10 +203,8 @@ bool compute_piecewise_linear_edge_edge_time_of_impact(
         PoseI poseIA = PoseI::interpolate(poseIA_ti0, poseIA_ti1, ti);
         PoseI poseIB = PoseI::interpolate(poseIB_ti0, poseIB_ti1, ti);
 
-        Eigen::MatrixXX3I RA = poseIA.construct_rotation_matrix();
-        Eigen::MatrixXX3I RB = poseIB.construct_rotation_matrix();
-
-        using Vector3I = Eigen::Vector3I;
+        MatrixMax3I RA = poseIA.construct_rotation_matrix();
+        MatrixMax3I RB = poseIB.construct_rotation_matrix();
 
         double min_ea_distance = 0;
         Vector3I ea0_ti0 = bodyA.world_vertex(poseA_ti0, ea0i).cast<Interval>();
@@ -398,10 +396,8 @@ bool compute_piecewise_linear_face_vertex_time_of_impact(
         PoseI poseIA = PoseI::interpolate(poseIA_ti0, poseIA_ti1, ti);
         PoseI poseIB = PoseI::interpolate(poseIB_ti0, poseIB_ti1, ti);
 
-        Eigen::MatrixXX3I RA = poseIA.construct_rotation_matrix();
-        Eigen::MatrixXX3I RB = poseIB.construct_rotation_matrix();
-
-        using Vector3I = Eigen::Vector3I;
+        MatrixMax3I RA = poseIA.construct_rotation_matrix();
+        MatrixMax3I RB = poseIB.construct_rotation_matrix();
 
         Vector3I v_ti0 = bodyA.world_vertex(poseA_ti0, vi).cast<Interval>();
         Vector3I v_ti1 = bodyA.world_vertex(poseA_ti1, vi).cast<Interval>();

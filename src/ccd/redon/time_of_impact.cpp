@@ -34,30 +34,30 @@ bool compute_edge_vertex_time_of_impact_redon(
     const PoseI poseIB_t0 = poseB_t0.cast<Interval>();
     const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
 
-    const auto vertex_positions =
-        [&](const Interval& t, Eigen::Vector2I& vertex,
-            Eigen::Vector2I& edge_vertex0, Eigen::Vector2I& edge_vertex1) {
-            // Compute the poses at time t
-            PoseI poseIA = PoseI::interpolate(poseIA_t0, poseIA_t1, t);
-            PoseI poseIB = PoseI::interpolate(poseIB_t0, poseIB_t1, t);
+    const auto vertex_positions = [&](const Interval& t, Vector2I& vertex,
+                                      Vector2I& edge_vertex0,
+                                      Vector2I& edge_vertex1) {
+        // Compute the poses at time t
+        PoseI poseIA = PoseI::interpolate(poseIA_t0, poseIA_t1, t);
+        PoseI poseIB = PoseI::interpolate(poseIB_t0, poseIB_t1, t);
 
-            // Get the world vertex of the edges at time t
-            vertex = bodyA.world_vertex(poseIA, vertex_id);
-            // Get the world vertex of the edge at time t
-            edge_vertex0 = bodyB.world_vertex(poseIB, bodyB.edges(edge_id, 0));
-            edge_vertex1 = bodyB.world_vertex(poseIB, bodyB.edges(edge_id, 1));
-        };
+        // Get the world vertex of the edges at time t
+        vertex = bodyA.world_vertex(poseIA, vertex_id);
+        // Get the world vertex of the edge at time t
+        edge_vertex0 = bodyB.world_vertex(poseIB, bodyB.edges(edge_id, 0));
+        edge_vertex1 = bodyB.world_vertex(poseIB, bodyB.edges(edge_id, 1));
+    };
 
     const auto distance = [&](const Interval& t) {
         // Get the world vertex of the vertex and edge at time t
-        Eigen::Vector2I vertex, edge_vertex0, edge_vertex1;
+        Vector2I vertex, edge_vertex0, edge_vertex1;
         vertex_positions(t, vertex, edge_vertex0, edge_vertex1);
         return point_line_signed_distance(vertex, edge_vertex0, edge_vertex1);
     };
 
     const auto is_inside = [&](const Interval& t) {
         // Get the world vertex of the vertex and edge at time t
-        Eigen::Vector2I vertex, edge_vertex0, edge_vertex1;
+        Vector2I vertex, edge_vertex0, edge_vertex1;
         vertex_positions(t, vertex, edge_vertex0, edge_vertex1);
         return is_point_along_edge(vertex, edge_vertex0, edge_vertex1);
     };
@@ -98,10 +98,10 @@ bool compute_edge_edge_time_of_impact_redon(
     const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
 
     const auto vertex_positions = [&](const Interval& t,
-                                      Eigen::Vector3I& edgeA_vertex0,
-                                      Eigen::Vector3I& edgeA_vertex1,
-                                      Eigen::Vector3I& edgeB_vertex0,
-                                      Eigen::Vector3I& edgeB_vertex1) {
+                                      Vector3I& edgeA_vertex0,
+                                      Vector3I& edgeA_vertex1,
+                                      Vector3I& edgeB_vertex0,
+                                      Vector3I& edgeB_vertex1) {
         // Compute the poses at time t
         PoseI poseIA = PoseI::interpolate(poseIA_t0, poseIA_t1, t);
         PoseI poseIB = PoseI::interpolate(poseIB_t0, poseIB_t1, t);
@@ -116,8 +116,8 @@ bool compute_edge_edge_time_of_impact_redon(
 
     const auto distance = [&](const Interval& t) {
         // Get the world vertex of the edges at time t
-        Eigen::Vector3I edgeA_vertex0, edgeA_vertex1;
-        Eigen::Vector3I edgeB_vertex0, edgeB_vertex1;
+        Vector3I edgeA_vertex0, edgeA_vertex1;
+        Vector3I edgeB_vertex0, edgeB_vertex1;
         vertex_positions(
             t, edgeA_vertex0, edgeA_vertex1, edgeB_vertex0, edgeB_vertex1);
         return line_line_signed_distance(
@@ -126,8 +126,8 @@ bool compute_edge_edge_time_of_impact_redon(
 
     const auto is_inside = [&](const Interval& t) -> bool {
         // Get the world vertex of the edges at time t
-        Eigen::Vector3I edgeA_vertex0, edgeA_vertex1;
-        Eigen::Vector3I edgeB_vertex0, edgeB_vertex1;
+        Vector3I edgeA_vertex0, edgeA_vertex1;
+        Vector3I edgeB_vertex0, edgeB_vertex1;
         vertex_positions(
             t, edgeA_vertex0, edgeA_vertex1, edgeB_vertex0, edgeB_vertex1);
         return are_edges_intersecting(
@@ -171,9 +171,8 @@ bool compute_face_vertex_time_of_impact_redon(
     const PoseI poseIB_t1 = poseB_t1.cast<Interval>();
 
     const auto vertex_positions =
-        [&](const Interval& t, Eigen::Vector3I& vertex,
-            Eigen::Vector3I& face_vertex0, Eigen::Vector3I& face_vertex1,
-            Eigen::Vector3I& face_vertex2) {
+        [&](const Interval& t, Vector3I& vertex, Vector3I& face_vertex0,
+            Vector3I& face_vertex1, Vector3I& face_vertex2) {
             // Compute the poses at time t
             PoseI poseIA = PoseI::interpolate(poseIA_t0, poseIA_t1, t);
             PoseI poseIB = PoseI::interpolate(poseIB_t0, poseIB_t1, t);
@@ -188,7 +187,7 @@ bool compute_face_vertex_time_of_impact_redon(
 
     const auto distance = [&](const Interval& t) {
         // Get the world vertex and face of the point at time t
-        Eigen::Vector3I vertex, face_vertex0, face_vertex1, face_vertex2;
+        Vector3I vertex, face_vertex0, face_vertex1, face_vertex2;
         vertex_positions(t, vertex, face_vertex0, face_vertex1, face_vertex2);
         return point_plane_signed_distance(
             vertex, face_vertex0, face_vertex1, face_vertex2);
@@ -196,7 +195,7 @@ bool compute_face_vertex_time_of_impact_redon(
 
     const auto is_inside = [&](const Interval& t) {
         // Get the world vertex and face of the point at time t
-        Eigen::Vector3I vertex, face_vertex0, face_vertex1, face_vertex2;
+        Vector3I vertex, face_vertex0, face_vertex1, face_vertex2;
         vertex_positions(t, vertex, face_vertex0, face_vertex1, face_vertex2);
         return is_point_inside_triangle(
             vertex, face_vertex0, face_vertex1, face_vertex2);

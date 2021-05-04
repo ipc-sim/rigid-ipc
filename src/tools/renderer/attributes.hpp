@@ -21,8 +21,8 @@ struct Light {
         from_json(json["color"], intensity);
     }
 
-    Eigen::Vector3F position;
-    Eigen::Vector3F intensity;
+    Vector3F position;
+    Vector3F intensity;
 };
 
 struct Material {
@@ -35,19 +35,19 @@ struct Material {
         specular_exponent = json["shininess"];
     }
 
-    Eigen::Vector3F ambient_color;
-    Eigen::Vector3F diffuse_color;
-    Eigen::Vector3F specular_color;
+    Vector3F ambient_color;
+    Vector3F diffuse_color;
+    Vector3F specular_color;
     Float specular_exponent; // Also called "shininess"
 };
 
 class VertexAttributes {
 public:
     VertexAttributes(Float x = 0, Float y = 0, Float z = 0, Float w = 1)
-        : VertexAttributes(Eigen::Vector3F(x, y, z), w)
+        : VertexAttributes(Vector3F(x, y, z), w)
     {
     }
-    VertexAttributes(const Eigen::Vector3F& pos, Float w = 1)
+    VertexAttributes(const Vector3F& pos, Float w = 1)
     {
         position.head<3>() = pos;
         position.w() = w;
@@ -70,26 +70,26 @@ public:
         return r;
     }
 
-    Eigen::Vector4F position;
-    Eigen::Vector3F normal;
-    Eigen::Vector3F color;
-    Eigen::Vector3F bc;
+    Vector4F position;
+    Vector3F normal;
+    Vector3F color;
+    Vector3F bc;
     Material material;
 };
 
 class FragmentAttributes {
 public:
     FragmentAttributes(Float r = 0, Float g = 0, Float b = 0, Float a = 1)
-        : FragmentAttributes(Eigen::Vector3F(r, g, b), a)
+        : FragmentAttributes(Vector3F(r, g, b), a)
     {
     }
-    FragmentAttributes(const Eigen::Vector3F& rgb, Float a = 1)
+    FragmentAttributes(const Vector3F& rgb, Float a = 1)
     {
         color.head<3>() = rgb;
         color(3) = a;
     }
     Float depth;
-    Eigen::Vector4F color;
+    Vector4F color;
 };
 
 class FrameBufferAttributes {
@@ -127,10 +127,10 @@ inline FrameBuffer create_frame_buffer(
 
 class UniformAttributes {
 public:
-    Eigen::Matrix4F M;
-    Eigen::Matrix4F ST;
+    Matrix4F M;
+    Matrix4F ST;
     std::vector<Light> lights;
-    Eigen::Vector3F ambient;
+    Vector3F ambient;
     Camera camera;
 };
 

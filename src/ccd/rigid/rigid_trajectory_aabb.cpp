@@ -4,7 +4,7 @@ namespace ipc::rigid {
 
 typedef Pose<Interval> PoseI;
 
-Eigen::VectorX3I vertex_trajectory_aabb(
+VectorMax3I vertex_trajectory_aabb(
     const RigidBody& body,
     const PoseI& pose_t0, // Pose of body at t=0
     const PoseI& pose_t1, // Pose of body at t=1
@@ -17,7 +17,7 @@ Eigen::VectorX3I vertex_trajectory_aabb(
     return body.world_vertex(pose, vertex_id);
 }
 
-Eigen::VectorX3I edge_trajectory_aabb(
+VectorMax3I edge_trajectory_aabb(
     const RigidBody& body,
     const PoseI& pose_t0, // Pose of body at t=0
     const PoseI& pose_t1, // Pose of body at t=1
@@ -28,12 +28,12 @@ Eigen::VectorX3I edge_trajectory_aabb(
     // Compute the pose at time t
     PoseI pose = PoseI::interpolate(pose_t0, pose_t1, t);
     // Get the world vertex of the edges at time t
-    Eigen::VectorX3I e0 = body.world_vertex(pose, body.edges(edge_id, 0));
-    Eigen::VectorX3I e1 = body.world_vertex(pose, body.edges(edge_id, 1));
+    VectorMax3I e0 = body.world_vertex(pose, body.edges(edge_id, 0));
+    VectorMax3I e1 = body.world_vertex(pose, body.edges(edge_id, 1));
     return (e1 - e0) * alpha + e0;
 }
 
-Eigen::VectorX3I face_trajectory_aabb(
+VectorMax3I face_trajectory_aabb(
     const RigidBody& body,
     const PoseI& pose_t0, // Pose of body at t=0
     const PoseI& pose_t1, // Pose of body at t=1
@@ -45,21 +45,21 @@ Eigen::VectorX3I face_trajectory_aabb(
     // Compute the pose at time t
     PoseI pose = PoseI::interpolate(pose_t0, pose_t1, t);
     // Get the world vertex of the edges at time t
-    Eigen::VectorX3I f0 = body.world_vertex(pose, body.faces(face_id, 0));
-    Eigen::VectorX3I f1 = body.world_vertex(pose, body.faces(face_id, 1));
-    Eigen::VectorX3I f2 = body.world_vertex(pose, body.faces(face_id, 2));
+    VectorMax3I f0 = body.world_vertex(pose, body.faces(face_id, 0));
+    VectorMax3I f1 = body.world_vertex(pose, body.faces(face_id, 1));
+    VectorMax3I f2 = body.world_vertex(pose, body.faces(face_id, 2));
     return (f1 - f0) * u + (f2 - f0) * v + f0;
 }
 
-Eigen::VectorX3I edge_vertex_aabb(
+VectorMax3I edge_vertex_aabb(
     const RigidBody& bodyA, // Body of the vertex
-    const PoseI& poseA_t0,           // Pose of bodyA at t=0
-    const PoseI& poseA_t1,           // Pose of bodyA at t=1
-    size_t vertex_id,                // In bodyA
+    const PoseI& poseA_t0,  // Pose of bodyA at t=0
+    const PoseI& poseA_t1,  // Pose of bodyA at t=1
+    size_t vertex_id,       // In bodyA
     const RigidBody& bodyB, // Body of the edge
-    const PoseI& poseB_t0,           // Pose of bodyB at t=0
-    const PoseI& poseB_t1,           // Pose of bodyB at t=1
-    size_t edge_id,                  // In bodyB
+    const PoseI& poseB_t0,  // Pose of bodyB at t=0
+    const PoseI& poseB_t1,  // Pose of bodyB at t=1
+    size_t edge_id,         // In bodyB
     const Interval& t,
     const Interval& alpha)
 {
@@ -67,15 +67,15 @@ Eigen::VectorX3I edge_vertex_aabb(
         - edge_trajectory_aabb(bodyB, poseB_t0, poseB_t1, edge_id, t, alpha);
 }
 
-Eigen::VectorX3I edge_edge_aabb(
+VectorMax3I edge_edge_aabb(
     const RigidBody& bodyA, // Body of the first edge
-    const PoseI& poseA_t0,           // Pose of bodyA at t=0
-    const PoseI& poseA_t1,           // Pose of bodyA at t=1
-    size_t edgeA_id,                 // In bodyA
+    const PoseI& poseA_t0,  // Pose of bodyA at t=0
+    const PoseI& poseA_t1,  // Pose of bodyA at t=1
+    size_t edgeA_id,        // In bodyA
     const RigidBody& bodyB, // Body of the second edge
-    const PoseI& poseB_t0,           // Pose of bodyB at t=0
-    const PoseI& poseB_t1,           // Pose of bodyB at t=1
-    size_t edgeB_id,                 // In bodyB
+    const PoseI& poseB_t0,  // Pose of bodyB at t=0
+    const PoseI& poseB_t1,  // Pose of bodyB at t=1
+    size_t edgeB_id,        // In bodyB
     const Interval& t,
     const Interval& alpha,
     const Interval& beta)
@@ -84,15 +84,15 @@ Eigen::VectorX3I edge_edge_aabb(
         - edge_trajectory_aabb(bodyB, poseB_t0, poseB_t1, edgeB_id, t, beta);
 }
 
-Eigen::VectorX3I face_vertex_aabb(
-    const RigidBody& bodyA,         // Body of the vertex
-    const Pose<Interval>& poseA_t0, // Pose of bodyA at t=0
-    const Pose<Interval>& poseA_t1, // Pose of bodyA at t=1
-    size_t vertex_id,                        // In bodyA
-    const RigidBody& bodyB,         // Body of the triangle
-    const Pose<Interval>& poseB_t0, // Pose of bodyB at t=0
-    const Pose<Interval>& poseB_t1, // Pose of bodyB at t=1
-    size_t face_id,                          // In bodyB
+VectorMax3I face_vertex_aabb(
+    const RigidBody& bodyA, // Body of the vertex
+    const PoseI& poseA_t0,  // Pose of bodyA at t=0
+    const PoseI& poseA_t1,  // Pose of bodyA at t=1
+    size_t vertex_id,       // In bodyA
+    const RigidBody& bodyB, // Body of the triangle
+    const PoseI& poseB_t0,  // Pose of bodyB at t=0
+    const PoseI& poseB_t1,  // Pose of bodyB at t=1
+    size_t face_id,         // In bodyB
     const Interval& t,
     const Interval& u,
     const Interval& v)
