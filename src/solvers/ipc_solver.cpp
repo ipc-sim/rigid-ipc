@@ -76,7 +76,7 @@ void IPCSolver::post_step_update()
     double kappa = barrier_problem_ptr()->barrier_stiffness();
     update_barrier_stiffness(
         prev_min_distance, min_distance, max_barrier_stiffness, kappa,
-        dhat_epsilon, problem_ptr->world_bbox_diagonal());
+        problem_ptr->world_bbox_diagonal(), dhat_epsilon);
     if (kappa != barrier_problem_ptr()->barrier_stiffness()) {
         spdlog::info(
             "solver={} iter={:d} msg=\"updated κ to {:g}\"", name(),
