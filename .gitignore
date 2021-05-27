@@ -274,7 +274,8 @@ comparisons/IPC/*.csv
 # this is a model we bought and cannot share
 meshes/expanding-lock-box
 # this was provided by Nervous system
-meshes/kinematic-dress/dress*
+meshes/kinematic-dress
+fixtures/3D/kinematic-dress
 notebooks/*.pdf
 comparisons/Chrono/tmp.obj
 **/vhacd_log.txt

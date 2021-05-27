@@ -1,1 +1,0 @@
-Gearbox for 8 motors by LetsPrintYT on Thingiverse: https://www.thingiverse.com/thing:4605922

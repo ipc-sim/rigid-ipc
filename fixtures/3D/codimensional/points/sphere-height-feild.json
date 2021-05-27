@@ -1,0 +1,23 @@
+{
+    "scene_type": "distance_barrier_rb_problem",
+    "timestep": 0.01,
+    "max_time": 10,
+    "rigid_body_problem": {
+        "coefficient_friction": 0.1,
+        "gravity": [0, -9.8, 0],
+        "rigid_bodies": [{
+            "mesh": "sphere.obj",
+            "position": [1.5, 4, 0],
+            "rotation": [0, 0, 0],
+            "linear_velocity": [0, 0, 0],
+            "angular_velocity": [0, 0, 0],
+            "enabled": true,
+            "scale": 0.25
+        }, {
+            "mesh": "codimensional/points/height-field.obj",
+            "position": [0, 0, 0],
+            "rotation": [0, 0, 0],
+            "type": "static"
+        }]
+    }
+}

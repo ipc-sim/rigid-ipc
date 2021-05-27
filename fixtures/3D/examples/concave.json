@@ -1,13 +1,13 @@
 {
     "scene_type": "distance_barrier_rb_problem",
     "max_iterations": 1000,
-    "timestep": 1e-3,
+    "timestep": 1e-2,
     "rigid_body_problem": {
         "gravity": [0, -9.8, 0],
         "rigid_bodies": [{
             "mesh": "corner.obj",
             "position": [0, 0, 0],
-            "enabled": false
+            "enabled": true
         }, {
             "mesh": "L.obj",
             "position": [0, 2, 0]
