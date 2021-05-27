@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/geometryprocessing/fixing-collisions.svg?token=uiCkVsJXonpF1gk5xcRf&branch=master)](https://travis-ci.com/geometryprocessing/fixing-collisions)
 
-**Robust, intersection free, simulations of rigid bodies in 2D and 3D.**
+**Robust, intersection-free, simulations of rigid bodies in 2D and 3D.**
 
 ## Compilation
 
