@@ -5,14 +5,14 @@
     </asset>
     <worldbody>
         <body pos="-0 0 -0.5" quat="0 0 0.707107 0.707107">
-            <geom mesh="plane" type="mesh" size="2.000000 2.000000 2.000000"/>
             <inertial mass="0"/>
+            <geom mesh="plane" type="mesh" size="2.000000 2.000000 2.000000" friction="0.000000"/>
         </body>
         <body pos="-0 0 0.1" quat="0 0 0.707107 0.707107">
-            <geom mesh="cube" type="mesh"/>
+            <geom mesh="cube" type="mesh" friction="0.000000"/>
         </body>
         <body pos="-0 0 6.0" quat="0 0 0.707107 0.707107">
-            <geom mesh="cube" type="mesh" size="10.000000 10.000000 10.000000"/>
+            <geom mesh="cube" type="mesh" size="10.000000 10.000000 10.000000" friction="0.000000"/>
         </body>
     </worldbody>
 </mujoco>

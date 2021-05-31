@@ -275,6 +275,9 @@ int json_to_mjcf(
         input.close();
         return 0;
     }
+    else {
+        spdlog::error("Json file not found!");
+    }
     return -1;
 }
 

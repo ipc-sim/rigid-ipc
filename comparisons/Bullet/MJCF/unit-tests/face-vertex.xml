@@ -4,11 +4,11 @@
     </asset>
     <worldbody>
         <body pos="-0 -0.1 0.5" quat="0 0 0.707107 0.707107">
-            <geom mesh="tet-pyramid" type="mesh"/>
+            <geom mesh="tet-pyramid" type="mesh" friction="0.000000"/>
         </body>
         <body pos="-0 0 -0.5" quat="0 0 0.707107 0.707107">
-            <geom mesh="tet-pyramid" type="mesh"/>
             <inertial mass="0"/>
+            <geom mesh="tet-pyramid" type="mesh" friction="0.000000"/>
         </body>
     </worldbody>
 </mujoco>

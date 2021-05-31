@@ -3,6 +3,7 @@
         <mesh file="plane.stl" name="plane"/>
         <mesh file="cube.stl" name="cube"/>
         <mesh file="tet-corner.stl" name="tet-corner"/>
+        <mesh file="tet-corner.stl" name="tet-corner_4" scale="0.999000 0.999000 0.999000"/>
     </asset>
     <worldbody>
         <body pos="-0 0 -0.5" quat="0 0 0.707107 0.707107">
@@ -18,7 +19,7 @@
             <geom mesh="cube" type="mesh" friction="0.000000"/>
         </body>
         <body pos="0.4995 -0.4995 0.6" quat="0 0 0.707107 0.707107">
-            <geom mesh="tet-corner" type="mesh" size="0.999000 0.999000 0.999000" friction="0.000000"/>
+            <geom mesh="tet-corner_4" type="mesh" friction="0.000000"/>
             <freejoint/>
         </body>
     </worldbody>
