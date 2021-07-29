@@ -1,0 +1,2 @@
+# These files should be ignored from GitHub's language statistics.
+notebooks/** linguist-vendored
