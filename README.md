@@ -3,13 +3,9 @@
 <!-- [![Build status](https://github.com/ipc-sim/IPC/workflows/Build/badge.svg?event=push)](https://github.com/ipc-sim/IPC/actions?query=workflow%3ABuild+branch%3Amaster+event%3Apush) -->
 <!-- [![License](https://img.shields.io/github/license/ipc-sim/IPC.svg?color=blue)](https://github.com/ipc-sim/IPC/blob/master/LICENSE) -->
 
+<img src="docs/imgs/teaser.png">
 
-<center>
-<img src="docs/imgs/teaser.png"><br>
 <b>Robust, intersection-free, simulations of rigid bodies in 2D and 3D.</b>
-<br>
-<br>
-</center>
 
 This is the open-source reference implementation of the SIGGRAPH 2021 paper [Intersection-free Rigid Body Dynamics](https://ipc-sim.github.io/rigid-ipc/).
 
