@@ -1,15 +1,38 @@
 # Rigid IPC
 
-**Robust, intersection-free, simulations of rigid bodies in 2D and 3D.**
+<!-- [![Build status](https://github.com/ipc-sim/IPC/workflows/Build/badge.svg?event=push)](https://github.com/ipc-sim/IPC/actions?query=workflow%3ABuild+branch%3Amaster+event%3Apush) -->
+<!-- [![License](https://img.shields.io/github/license/ipc-sim/IPC.svg?color=blue)](https://github.com/ipc-sim/IPC/blob/master/LICENSE) -->
 
-## Compilation
+
+<center>
+<img src="docs/imgs/teaser.png"><br>
+<b>Robust, intersection-free, simulations of rigid bodies in 2D and 3D.</b>
+<br>
+<br>
+</center>
+
+This is the open-source reference implementation of the SIGGRAPH 2021 paper [Intersection-free Rigid Body Dynamics](https://ipc-sim.github.io/rigid-ipc/).
+
+## Files
+
+* `src/`: source code
+* `cmake/` and `CMakeLists.txt`: CMake files
+* `fixtures/`: input scripts to rerun all examples in our paper
+* `meshes/`: input meshes used by the fixtures
+* `tests/`: unit-tests
+* `tools/`: Python and Bash scripts for generating and processing results
+* `comparisons/`: files used in comparisons with other rigid body simulators
+* `python/`: Python binding files
+* `notebooks/`: Jupyter notebooks
+
+## Build
 
 To build the project, use the following commands from the root directory of the project:
 
 ```bash
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 ```
 

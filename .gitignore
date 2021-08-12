@@ -239,7 +239,8 @@ logs/**/*.log
 
 
 ## Documentation
-docs
+docs/*
+!/docs/imgs
 
 ## Symbolic link to Google Drive folder
 results
