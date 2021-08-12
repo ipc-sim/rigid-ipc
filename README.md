@@ -38,8 +38,7 @@ Most dependancies are downloaded through CMake depending on the build options.
 The only exceptions to this are:
 
 * [Boost](https://www.boost.org/): We currently use the interval arithmetic
-library for interval root finding and the filesystem library for path
-manipulation.
+library for interval root finding
 
 ## Scenes
 
