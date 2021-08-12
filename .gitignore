@@ -277,10 +277,14 @@ meshes/expanding-lock-box
 # this was provided by Nervous system
 meshes/kinematic-dress
 fixtures/3D/kinematic-dress
-notebooks/*.pdf
 comparisons/Chrono/tmp.obj
 **/vhacd_log.txt
 src/tools/ccd-queries
 
 # Python bindings
 !python/src/*
+
+# Jupyter Notebooks
+notebooks/*
+!notebooks/compute_J.ipynb
+!notebooks/sinc.ipynb
