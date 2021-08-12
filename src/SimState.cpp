@@ -1,10 +1,12 @@
 #include "SimState.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <iostream>
+#include <string>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <ghc/fs_std.hpp> // filesystem
 #include <igl/Timer.h>
 #include <igl/write_triangle_mesh.h>
 #include <nlohmann/json.hpp>
@@ -37,13 +39,20 @@ SimState::SimState()
     initial_rss = getCurrentRSS();
 }
 
+void to_lower(std::string& s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+}
+
 bool SimState::load_scene(const std::string& filename, const std::string& patch)
 {
     PROFILER_CLEAR();
     initial_rss = getCurrentRSS();
 
-    std::string ext = boost::filesystem::extension(filename);
-    boost::algorithm::to_lower(ext); // modifies ext
+    std::string ext = fs::path(filename).extension();
+    to_lower(ext); // modifies ext
 
     nlohmann::json scene;
     if (ext == ".mjcf") {
@@ -308,8 +317,8 @@ void SimState::run_simulation(const std::string& fout)
     PROFILE_MAIN_POINT("run_simulation");
     PROFILE_START();
 
-    boost::filesystem::path fout_path(fout);
-    boost::filesystem::create_directories(fout_path.parent_path());
+    fs::path fout_path(fout);
+    fs::create_directories(fout_path.parent_path());
     std::string chkpt_base =
         (fout_path.parent_path() / fout_path.stem()).string();
 
@@ -351,7 +360,7 @@ void SimState::run_simulation(const std::string& fout)
 
     save_simulation(fout);
     spdlog::info("Simulation results saved to {}", fout);
-    boost::filesystem::path gltf_filename(fout);
+    fs::path gltf_filename(fout);
     gltf_filename.replace_extension(".glb");
     save_gltf(gltf_filename.string());
     spdlog::info("Animation saved to {}", gltf_filename.string());
@@ -448,8 +457,8 @@ bool SimState::save_simulation(const std::string& filename)
 bool SimState::save_obj_sequence(const std::string& dir_name)
 {
     // Create the output directory if it does not exist
-    boost::filesystem::path dir_path(dir_name);
-    boost::filesystem::create_directories(dir_path);
+    fs::path dir_path(dir_name);
+    fs::create_directories(dir_path);
 
     bool success = true;
     for (int i = 0; i < state_sequence.size(); i++) {

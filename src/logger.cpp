@@ -1,11 +1,11 @@
 #include "logger.hpp"
 
-#include <ctime> // localtime
-#include <fmt/chrono.h>
+#include <ctime>   // localtime
 #include <iomanip> // put_time
 #include <sstream> // stringstream
 #include <string>  // string
 
+#include <fmt/chrono.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <ipc/utils/logger.hpp>

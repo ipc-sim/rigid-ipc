@@ -178,8 +178,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${RIGID_IPC_EXTERNAL}/finite-d
 
 # Boost
 set(Boost_USE_MULTITHREADED TRUE)
-find_package(Boost COMPONENTS filesystem REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost Boost::filesystem)
+find_package(Boost REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost)
 
 # TBB
 target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
@@ -189,9 +189,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC TightInclusion)
 
 # PolySolve for wrapping linear solvers
 target_link_libraries(${PROJECT_NAME} PUBLIC PolyFEM::polysolve)
-
-# tinyxml2
-target_link_libraries(${PROJECT_NAME} PUBLIC tinyxml2::tinyxml2)
 
 # IPC Toolkit
 target_link_libraries(${PROJECT_NAME} PUBLIC ipc::toolkit)
@@ -204,6 +201,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC SimpleBVH::BVH_lib)
 
 # tinygltf
 target_link_libraries(${PROJECT_NAME} PUBLIC tinygltf::tinygltf)
+
+# Filesystem
+target_link_libraries(${PROJECT_NAME} PUBLIC ghc::filesystem)
 
 ################################################################################
 # Compiler options
@@ -256,6 +256,8 @@ if(RIGID_IPC_WITH_OPENGL)
 
   # Charlie Tangora's gif-h library
   target_link_libraries(${PROJECT_NAME}_sim PRIVATE gif_h::gif_h)
+
+  target_link_libraries(${PROJECT_NAME}_sim PUBLIC CLI11::CLI11)
 endif()
 
 ################################################################################

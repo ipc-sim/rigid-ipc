@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iomanip> // std::setw
 #include <iostream>
+#include <vector>
 
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
@@ -23,6 +24,15 @@ std::string current_time_string();
 
 // NOTE: Interval logging is defined in the CPP file but declares in
 // interval.hpp.
+
+const std::vector<std::pair<std::string, spdlog::level::level_enum>>
+    SPDLOG_LEVEL_NAMES_TO_LEVELS = { { "trace", spdlog::level::trace },
+                                     { "debug", spdlog::level::debug },
+                                     { "info", spdlog::level::info },
+                                     { "warning", spdlog::level::warn },
+                                     { "error", spdlog::level::err },
+                                     { "critical", spdlog::level::critical },
+                                     { "off", spdlog::level::off } };
 
 void set_logger_level(spdlog::level::level_enum log_level);
 

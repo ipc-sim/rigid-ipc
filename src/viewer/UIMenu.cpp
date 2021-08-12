@@ -31,13 +31,13 @@ void UISimState::draw_menu()
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
     {
-
-        const char* level_strings[] = SPDLOG_LEVEL_NAMES;
+        const char* level_strings[] = { "trace", "debug",    "info", "warning",
+                                        "error", "critical", "off" };
+        int log_level = spdlog::get_level();
         if (ImGui::Combo(
-                "log-level##logger", &m_log_level, level_strings,
+                "log-level##logger", &log_level, level_strings,
                 CCD_IM_ARRAYSIZE(level_strings))) {
-            set_logger_level(
-                static_cast<spdlog::level::level_enum>(m_log_level));
+            set_logger_level(static_cast<spdlog::level::level_enum>(log_level));
         }
 
         draw_io();

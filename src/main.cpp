@@ -1,69 +1,53 @@
 // Launch simulation GUI
 
-#include <Eigen/Core>
+#include <CLI/CLI.hpp>
+
 #include <tbb/global_control.h>
+#include <tbb/task_scheduler_init.h>
+#include <thread>
 
 #include <logger.hpp>
 #include <viewer/UISimState.hpp>
 
-#include <io/json_to_mjcf.hpp>
-
-bool is_number(const std::string& s)
-{
-    return !s.empty()
-        && std::find_if(
-               s.begin(), s.end(),
-               [](unsigned char c) { return !std::isdigit(c); })
-        == s.end();
-}
-
 int main(int argc, char* argv[])
 {
-    spdlog::debug(
-        "Using Eigen {}.{}.{}", EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION,
-        EIGEN_MINOR_VERSION);
+    using namespace ipc::rigid;
+    set_logger_level(spdlog::level::info);
 
-    bool is_arg1_number = argc > 1 && is_number(argv[1]);
+    CLI::App app("run simulation with viewer");
 
-    if (is_arg1_number) {
-        int mode = std::stoi(argv[1]);
-        switch (mode) {
-        case 1: { // json to MJCF
-            spdlog::info("transform json to MJCF");
+    std::string scene_path = "";
+    app.add_option(
+        "scene_path,-i,-s,--scene-path", scene_path,
+        "JSON file with input scene");
 
-            if (argc < 3) {
-                spdlog::error("need input json file path!");
-                return -1;
-            }
+    spdlog::level::level_enum loglevel = spdlog::level::info;
+    app.add_option("--log,--loglevel", loglevel, "log level")
+        ->default_val(loglevel)
+        ->transform(CLI::CheckedTransformer(
+            SPDLOG_LEVEL_NAMES_TO_LEVELS, CLI::ignore_case));
 
-            if (argc == 3) {
-                return json_to_mjcf(argv[2]);
-            } else {
-                return json_to_mjcf(argv[2], std::stoi(argv[3]));
-            }
-        }
+    int nthreads = tbb::task_scheduler_init::default_num_threads();
+    app.add_option("--nthreads", nthreads, "maximum number of threads to use")
+        ->default_val(nthreads);
 
-        case 2: { // process bullet output
-            spdlog::info(
-                "generating bullet output geometry from transformation");
+    CLI11_PARSE(app, argc, argv);
 
-            if (argc < 4) {
-                spdlog::error(
-                    "need input json file and bullet output file path!");
-                return -1;
-            }
+    set_logger_level(loglevel);
 
-            return generate_bullet_results(argv[2], argv[3]);
-        }
-
-        case 0: // simulation
-        default:
-            break;
-        }
+    if (nthreads <= 0) {
+        nthreads = tbb::task_scheduler_init::default_num_threads();
     }
 
-    // tbb::global_control c(tbb::global_control::max_allowed_parallelism, 1);
-    ipc::rigid::set_logger_level(spdlog::level::info);
-    ipc::rigid::UISimState ui;
-    ui.launch((argc > 1 && !is_arg1_number) ? argv[1] : "");
+    if (nthreads > tbb::task_scheduler_init::default_num_threads()) {
+        spdlog::warn(
+            "Attempting to use more threads than available ({:d} > {:d})!",
+            nthreads, tbb::task_scheduler_init::default_num_threads());
+    }
+
+    tbb::global_control thread_limiter(
+        tbb::global_control::max_allowed_parallelism, nthreads);
+
+    UISimState ui;
+    ui.launch(scene_path);
 }

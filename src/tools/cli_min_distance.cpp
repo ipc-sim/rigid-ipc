@@ -15,25 +15,23 @@ int main(int argc, char* argv[])
     using namespace ipc::rigid;
     set_logger_level(spdlog::level::info);
 
-    struct {
-        std::string input_json = "";
-        std::string output_csv = "";
-        std::string header = "min_distance";
-    } args;
-
     CLI::App app {
         "compute minimum distance for each step of simulation results"
     };
 
+    std::string input_json = "";
     app.add_option(
-           "input_json,-i,--input", args.input_json,
+           "input_json,-i,--input", input_json,
            "JSON file with input simulation.")
         ->required();
 
+    std::string output_csv = "";
     app.add_option(
-           "output_csv,-o,--outputh", args.output_csv, "CSV file for output.")
+           "output_csv,-o,--outputh", output_csv, "CSV file for output.")
         ->required();
-    app.add_option("--header", args.header, "use as name for header.");
+
+    std::string header = "min_distance";
+    app.add_option("--header", header, "use as name for header.");
 
     try {
         app.parse(argc, argv);
@@ -42,7 +40,7 @@ int main(int argc, char* argv[])
     }
 
     using nlohmann::json;
-    std::ifstream input(args.input_json);
+    std::ifstream input(input_json);
     json scene = json::parse(input, nullptr, false);
     if (scene.is_discarded()) {
         spdlog::error("Invalid Json file");
@@ -61,7 +59,7 @@ int main(int argc, char* argv[])
     bodies.init(rbs);
 
     std::stringstream csv;
-    csv << fmt::format("it, {}\n", args.header);
+    csv << fmt::format("it, {}\n", header);
     for (size_t i = 0; i < state_sequence.size(); ++i) {
         PosesD poses(bodies.num_bodies());
         assert(state_sequence[i]["rigid_bodies"].size() == bodies.num_bodies());
@@ -84,7 +82,7 @@ int main(int argc, char* argv[])
         csv << fmt::format("{},{:.18e}\n", i, min_distance);
     }
     std::ofstream myfile;
-    myfile.open(args.output_csv);
+    myfile.open(output_csv);
     myfile << csv.str();
     myfile.close();
 }

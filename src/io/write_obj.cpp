@@ -15,7 +15,7 @@
 #include <iostream>
 #include <limits>
 
-#include <boost/filesystem.hpp>
+#include <ghc/fs_std.hpp> // filesystem
 
 #include <logger.hpp>
 #include <physics/rigid_body_problem.hpp>
@@ -49,9 +49,7 @@ bool write_obj(
 }
 
 bool write_obj(
-    const std::string str,
-    const SimulationProblem& problem,
-    bool write_mtl)
+    const std::string str, const SimulationProblem& problem, bool write_mtl)
 {
     std::ofstream s(str);
     if (!s.is_open()) {
@@ -59,7 +57,7 @@ bool write_obj(
         return false;
     }
 
-    auto p = boost::filesystem::path(str);
+    auto p = fs::path(str);
     std::string ps_name =
         (p.parent_path() / ("points-" + p.filename().string())).string();
     std::ofstream ps(ps_name);

@@ -1,6 +1,6 @@
 #include <CLI/CLI.hpp>
 
-#include <boost/filesystem.hpp>
+#include <ghc/fs_std.hpp> // filesystem
 #include <igl/Timer.h>
 #include <igl/edges.h>
 
@@ -56,8 +56,7 @@ int main(int argc, char* argv[])
     static double REDON_TOL = 1e-4, RIGID_TOL = 1e-4;
 
     for (int i = 0; i < 60; i++) {
-        boost::filesystem::path data_path =
-            boost::filesystem::path(__FILE__).parent_path() / "ccd-queries"
+        fs::path data_path = fs::path(__FILE__).parent_path() / "ccd-queries"
             / fmt::format("ccd-queries-{:03d}.json", i);
 
         std::ifstream input(data_path.string());

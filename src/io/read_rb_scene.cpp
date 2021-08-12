@@ -3,7 +3,7 @@
 #include <unordered_set>
 
 #include <Eigen/Geometry>
-#include <boost/filesystem.hpp>
+#include <ghc/fs_std.hpp> // filesystem
 #include <igl/edges.h>
 #include <igl/facet_components.h>
 #include <igl/read_triangle_mesh.h>
@@ -86,11 +86,10 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
 
         std::string mesh_fname = args["mesh"].get<std::string>();
         if (mesh_fname != "") {
-            boost::filesystem::path mesh_path(mesh_fname);
+            fs::path mesh_path(mesh_fname);
             if (!exists(mesh_path)) {
                 // TODO: First check a path relative to the input file
-                mesh_path =
-                    boost::filesystem::path(RIGID_IPC_MESHES_DIR) / mesh_path;
+                mesh_path = fs::path(RIGID_IPC_MESHES_DIR) / mesh_path;
             }
             spdlog::info("loading mesh: {:s}", mesh_path.string());
             bool success;

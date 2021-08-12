@@ -1,4 +1,4 @@
-#include <boost/filesystem.hpp>
+#include <ghc/fs_std.hpp> // filesystem
 #include <logger.hpp>
 #include <map>
 #include <profiler.hpp>
@@ -96,9 +96,9 @@ namespace profiler {
 
     void Profiler::log(const std::string& fin)
     {
-        boost::filesystem::path outpath(dout);
+        fs::path outpath(dout);
         outpath /= fmt::format("log-{}", current_time_string());
-        boost::filesystem::create_directories(outpath);
+        fs::create_directories(outpath);
 
         write_summary(outpath.string(), fin);
         for (auto& p : points) {

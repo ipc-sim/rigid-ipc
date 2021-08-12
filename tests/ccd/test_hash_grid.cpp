@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <boost/filesystem.hpp>
+#include <ghc/fs_std.hpp> // filesystem
 #include <igl/edges.h>
 #include <igl/read_triangle_mesh.h>
 
@@ -148,10 +148,8 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
         std::string fname = GENERATE(std::string("cube.obj")
                                      /*, std::string("bunny-lowpoly.obj")*/);
 
-        boost::filesystem::path mesh_path = boost::filesystem::path(__FILE__)
-                                                .parent_path()
-                                                .parent_path()
-                                                .parent_path()
+        fs::path mesh_path =
+            fs::path(__FILE__).parent_path().parent_path().parent_path()
             / "meshes" / fname;
         igl::read_triangle_mesh(mesh_path.string(), vertices, faces);
         igl::edges(faces, edges);
@@ -394,10 +392,8 @@ TEST_CASE("3D brute force is duplicate free", "[ccd][brute_force]")
         std::string fname = GENERATE(std::string("cube.obj")
                                      /*, std::string("bunny-lowpoly.obj")*/);
 
-        boost::filesystem::path mesh_path = boost::filesystem::path(__FILE__)
-                                                .parent_path()
-                                                .parent_path()
-                                                .parent_path()
+        fs::path mesh_path =
+            fs::path(__FILE__).parent_path().parent_path().parent_path()
             / "meshes" / fname;
         igl::read_triangle_mesh(mesh_path.string(), vertices, faces);
         igl::edges(faces, edges);

@@ -1,8 +1,7 @@
 #include <string>
 
 #include <CLI/CLI.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <ghc/fs_std.hpp> // filesystem
 #include <igl/Timer.h>
 #include <nlohmann/json.hpp>
 #include <tbb/parallel_for.h>
@@ -20,8 +19,8 @@
 using namespace swr;
 
 struct SimRenderArgs {
-    boost::filesystem::path sim_path;
-    boost::filesystem::path output_path = boost::filesystem::path("sim.mp4");
+    fs::path sim_path;
+    fs::path output_path = fs::path("sim.mp4");
     spdlog::level::level_enum loglevel = spdlog::level::level_enum::info;
     int fps = -1;
 };
@@ -49,14 +48,14 @@ SimRenderArgs parse_args(int argc, char* argv[])
         exit(app.exit(e));
     }
 
-    if (!boost::filesystem::exists(args.sim_path)) {
+    if (!fs::exists(args.sim_path)) {
         exit(app.exit(CLI::Error(
             "input does not exist",
             fmt::format(
                 "input path does not exist ({})", args.sim_path.string()))));
     }
 
-    if (!boost::filesystem::is_directory(args.sim_path)
+    if (!fs::is_directory(args.sim_path)
         && args.sim_path.extension().string() != ".json"
         && args.sim_path.extension().string() != ".JSON") {
         exit(app.exit(CLI::Error(
@@ -91,20 +90,17 @@ public:
 
 class OBJSequence : public MeshGenerator {
 public:
-    OBJSequence(const boost::filesystem::path& input)
+    OBJSequence(const fs::path& input)
     {
-        std::vector<boost::filesystem::path> objs;
-        for (const auto& entry : boost::make_iterator_range(
-                 boost::filesystem::directory_iterator(input), {})) {
+        std::vector<fs::path> objs;
+        for (const auto& entry : fs::directory_iterator(input)) {
             if (entry.path().extension().string() == ".obj"
                 || entry.path().extension().string() == ".OBJ") {
                 objs.push_back(entry.path());
             }
         }
         tbb::parallel_sort(
-            objs.begin(), objs.end(),
-            [](const boost::filesystem::path& a,
-               const boost::filesystem::path& b) {
+            objs.begin(), objs.end(), [](const fs::path& a, const fs::path& b) {
                 try {
                     return std::stoi(a.stem().string())
                         < std::stoi(b.stem().string());
@@ -161,7 +157,7 @@ protected:
 
 class RigidBodySequence : public MeshGenerator {
 public:
-    RigidBodySequence(const boost::filesystem::path& input)
+    RigidBodySequence(const fs::path& input)
     {
         // Read the simulation json file
         nlohmann::json sim;
@@ -231,17 +227,17 @@ int main(int argc, char* argv[])
     // Create folder for PNG frames
     // Create the output directory if it does not exist
     if (args.output_path.has_parent_path()) {
-        boost::filesystem::create_directories(args.output_path.parent_path());
+        fs::create_directories(args.output_path.parent_path());
     }
-    boost::filesystem::path frames_dir = args.output_path.parent_path()
+    fs::path frames_dir = args.output_path.parent_path()
         / fmt::format("frames-{}", ipc::rigid::current_time_string());
-    boost::filesystem::create_directories(frames_dir);
+    fs::create_directories(frames_dir);
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Determine if the input is a simulation json or sequence of OBJs
     std::unique_ptr<MeshGenerator> mesh_generator;
-    if (boost::filesystem::is_directory(args.sim_path)) {
+    if (fs::is_directory(args.sim_path)) {
         mesh_generator = std::make_unique<OBJSequence>(args.sim_path);
     } else {
         mesh_generator = std::make_unique<RigidBodySequence>(args.sim_path);
@@ -253,8 +249,8 @@ int main(int argc, char* argv[])
 
     ///////////////////////////////////////////////////////////////////////////
     // Create a scene
-    auto render_args_path = boost::filesystem::path(__FILE__).parent_path()
-        / "render_settings.json";
+    auto render_args_path =
+        fs::path(__FILE__).parent_path() / "render_settings.json";
     nlohmann::json render_args;
     if (!read_json(render_args_path.string(), render_args)) {
         spdlog::error(

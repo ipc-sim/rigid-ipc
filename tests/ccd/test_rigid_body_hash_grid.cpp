@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include <boost/filesystem.hpp>
 #include <fmt/format.h>
+#include <ghc/fs_std.hpp> // filesystem
 #include <igl/Timer.h>
 #include <nlohmann/json.hpp>
 
@@ -104,8 +104,8 @@ Vector3I compute_scene_bbox(
 // {
 //     // Load json file
 //     std::string filename = "large-rb-hashgrid-001.json";
-//     boost::filesystem::path data_path =
-//         boost::filesystem::path(__FILE__).parent_path().parent_path() /
+//     fs::path data_path =
+//         fs::path(__FILE__).parent_path().parent_path() /
 //         "data" / "large-rb-hashgrid" / filename;
 //     std::ifstream input(data_path.string());
 //     REQUIRE(input.is_open());

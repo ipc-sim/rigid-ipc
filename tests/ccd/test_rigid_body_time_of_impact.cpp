@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <boost/filesystem.hpp>
+#include <ghc/fs_std.hpp> // filesystem
 #include <igl/PI.h>
 #include <igl/edges.h>
 
@@ -597,9 +597,8 @@ TEST_CASE("Failing earliest tois", "[ccd][rigid_toi][failing_toi]")
     int id = GENERATE(range(0, 385));
     std::string filename =
         fmt::format("wrecking-ball/ccd-test-{:03d}.json", id);
-    boost::filesystem::path data_path =
-        boost::filesystem::path(__FILE__).parent_path().parent_path() / "data"
-        / filename;
+    fs::path data_path =
+        fs::path(__FILE__).parent_path().parent_path() / "data" / filename;
 
     std::ifstream input(data_path.string());
     nlohmann::json json = nlohmann::json::parse(input);
@@ -726,9 +725,8 @@ TEST_CASE("toi=0", "[ccd][rigid_toi][thisone]")
 {
     int id = GENERATE(range(0, 13));
     std::string filename = fmt::format("kinematic/ccd-test-{:03d}.json", id);
-    boost::filesystem::path data_path =
-        boost::filesystem::path(__FILE__).parent_path().parent_path() / "data"
-        / filename;
+    fs::path data_path =
+        fs::path(__FILE__).parent_path().parent_path() / "data" / filename;
 
     std::ifstream input(data_path.string());
     nlohmann::json json = nlohmann::json::parse(input);

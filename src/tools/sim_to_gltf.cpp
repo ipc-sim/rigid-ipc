@@ -1,5 +1,5 @@
 #include <CLI/CLI.hpp>
-#include <boost/filesystem.hpp>
+#include <ghc/fs_std.hpp> // filesystem
 
 #include <SimState.hpp>
 #include <logger.hpp>
@@ -19,12 +19,11 @@ int main(int argc, char* argv[])
     std::string output = "";
     app.add_option("output,-o,--output", output, "output filename")->required();
 
-    int loglevel = 3; // info
-    app.add_option(
-        "--log,--loglevel", loglevel,
-        "set log level 0=trace, 1=debug, 2=info, 3=warn, 4=error, 5=critical, "
-        "6=off",
-        true);
+    spdlog::level::level_enum loglevel = spdlog::level::warn;
+    app.add_option("--log,--loglevel", loglevel, "log level")
+        ->default_val(loglevel)
+        ->transform(
+            CLI::CheckedTransformer(SPDLOG_LEVEL_NAMES_TO_LEVELS, CLI::ignore_case));
 
     try {
         app.parse(argc, argv);
@@ -32,12 +31,12 @@ int main(int argc, char* argv[])
         return app.exit(e);
     }
 
-    set_logger_level(static_cast<spdlog::level::level_enum>(loglevel));
+    set_logger_level(loglevel);
 
     // Create the output directory if it does not exist
-    boost::filesystem::path output_path(output);
+    fs::path output_path(output);
     if (output_path.has_parent_path()) {
-        boost::filesystem::create_directories(output_path.parent_path());
+        fs::create_directories(output_path.parent_path());
     }
 
     SimState sim;

@@ -135,3 +135,10 @@ if(NOT TARGET tinygltf::tinygltf)
   target_include_directories(tinygltf INTERFACE ${RIGID_IPC_EXTERNAL}/tinygltf)
   add_library(tinygltf::tinygltf ALIAS tinygltf)
 endif()
+
+# GHC Filesystem
+if(NOT TARGET ghc::filesystem)
+  rigid_ipc_download_filesystem()
+  add_subdirectory(${RIGID_IPC_EXTERNAL}/filesystem)
+  add_library(ghc::filesystem ALIAS ghc_filesystem)
+endif()
