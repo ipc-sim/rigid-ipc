@@ -41,7 +41,11 @@ jobs:
       - name: Dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-            sudo apt-get install ccache libboost-all-dev
+            sudo apt-get install \
+            ccache \
+            libboost-all-dev \
+            xorg-dev \
+            libglu1-mesa-dev
 
       - name: Dependencies (macOS)
         if: runner.os == 'macOS'
