@@ -5,7 +5,7 @@
 
 <img src="docs/imgs/teaser.png">
 
-<b>Robust, intersection-free, simulations of rigid bodies in 2D and 3D.</b>
+<b>Robust, intersection-free, simulations of rigid bodies.</b>
 
 This is the open-source reference implementation of the SIGGRAPH 2021 paper [Intersection-free Rigid Body Dynamics](https://ipc-sim.github.io/rigid-ipc/).
 
