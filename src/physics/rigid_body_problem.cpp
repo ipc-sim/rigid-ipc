@@ -315,8 +315,13 @@ bool RigidBodyProblem::detect_intersections(const PosesD& poses) const
         hashgrid.resize(m_assembler, poses, close_bodies, inflation_radius);
         hashgrid.addBodies(m_assembler, poses, close_bodies, inflation_radius);
 
+        const Eigen::VectorXi& vertex_group_ids = group_ids();
+        auto can_vertices_collide = [&vertex_group_ids](size_t vi, size_t vj) {
+            return vertex_group_ids[vi] != vertex_group_ids[vj];
+        };
+
         std::vector<EdgeEdgeCandidate> ee_candidates;
-        hashgrid.getEdgeEdgePairs(edges, group_ids(), ee_candidates);
+        hashgrid.getEdgeEdgePairs(edges, ee_candidates, can_vertices_collide);
 
         for (const EdgeEdgeCandidate& ee_candidate : ee_candidates) {
             if (igl::predicates::segment_segment_intersect(

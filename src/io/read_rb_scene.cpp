@@ -30,6 +30,28 @@ bool read_rb_scene_from_str(const std::string str, std::vector<RigidBody>& rbs)
     return read_rb_scene(scene, rbs);
 }
 
+VectorMax3d read_angular_field(const nlohmann::json& field, int dim)
+{
+    int angular_dim = dim == 2 ? 1 : 3;
+
+    VectorMax3d v;
+    if (field.is_number()) {
+        assert(dim == 2);
+        v.setZero(angular_dim);
+        v[0] = field.get<double>();
+    } else {
+        assert(field.is_array());
+        from_json(field, v);
+        assert(v.size() >= angular_dim);
+        v.conservativeResize(angular_dim);
+    }
+
+    // Convert to radians for easy use later
+    v *= M_PI / 180.0;
+
+    return v;
+}
+
 bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
 {
     using namespace nlohmann;
@@ -161,14 +183,8 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
         }
         vertices *= scale.asDiagonal();
 
-        // Rotate around the models origin NOT the rigid bodies center of
-        // mass
-        VectorMax3d rotation;
-        from_json(args["rotation"], rotation);
-        assert(rotation.size() >= angular_dim);
-        rotation.conservativeResize(angular_dim);
-        // Convert to radians for easy use later
-        rotation *= M_PI / 180.0;
+        // Rotate around the models origin NOT the rigid bodies center of mass
+        VectorMax3d rotation = read_angular_field(args["rotation"], dim);
         MatrixMax3d R;
         if (rotation.size() == 3) {
             R = (Eigen::AngleAxisd(rotation.z(), Eigen::Vector3d::UnitZ())
@@ -186,24 +202,15 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
         assert(linear_velocity.size() >= dim);
         linear_velocity.conservativeResize(dim);
 
-        VectorMax3d angular_velocity;
-        from_json(args["angular_velocity"], angular_velocity);
-        assert(angular_velocity.size() >= angular_dim);
-        angular_velocity.conservativeResize(angular_dim);
-        // Convert to radians for easy use later
-        angular_velocity *= M_PI / 180.0;
+        VectorMax3d angular_velocity =
+            read_angular_field(args["angular_velocity"], dim);
 
         VectorMax3d force;
         from_json(args["force"], force);
         assert(force.size() >= dim);
         force.conservativeResize(dim);
 
-        VectorMax3d torque;
-        from_json(args["torque"], torque);
-        assert(torque.size() >= angular_dim);
-        torque.conservativeResize(angular_dim);
-        // Convert to radians for easy use later
-        torque *= M_PI / 180.0;
+        VectorMax3d torque = read_angular_field(args["torque"], dim);
 
         VectorXb is_dof_fixed;
         if (args["is_dof_fixed"].is_boolean()) {
@@ -260,7 +267,7 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
                 // WARNING: angular velocity and torque will be around the
                 // components center of mass not the entire meshes.
                 rbs.emplace_back(
-                    CV, CE, CF, PoseD(position, rotation),
+                    CV, CE, CF, PoseD(position, VectorMax3d::Zero(angular_dim)),
                     PoseD(linear_velocity, angular_velocity),
                     PoseD(force, torque), density, is_dof_fixed, is_oriented,
                     group_id, rb_type, kinematic_max_time, kinematic_poses);
@@ -268,7 +275,8 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
             }
         } else {
             rbs.emplace_back(
-                vertices, edges, faces, PoseD(position, rotation),
+                vertices, edges, faces,
+                PoseD(position, VectorMax3d::Zero(angular_dim)),
                 PoseD(linear_velocity, angular_velocity), PoseD(force, torque),
                 density, is_dof_fixed, is_oriented, group_id, rb_type,
                 kinematic_max_time, kinematic_poses);

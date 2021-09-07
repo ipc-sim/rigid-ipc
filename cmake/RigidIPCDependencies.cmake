@@ -14,6 +14,13 @@ include(RigidIPCDownloadExternal)
 # Required libraries
 ################################################################################
 
+# IPC Toolkit
+if(NOT TARGET ipc::toolkit)
+  rigid_ipc_download_ipc_toolkit()
+  set(IPC_TOOLKIT_BUILD_UNIT_TESTS OFF CACHE BOOL " " FORCE)
+  add_subdirectory(${RIGID_IPC_EXTERNAL}/ipc-toolkit)
+endif()
+
 # format strings
 if(NOT TARGET fmt::fmt)
   rigid_ipc_download_fmt()
@@ -68,13 +75,8 @@ endif()
 # TBB
 if(NOT TARGET TBB::tbb)
   rigid_ipc_download_tbb()
-  set(TBB_BUILD_STATIC ON CACHE BOOL " " FORCE)
-  set(TBB_BUILD_SHARED OFF CACHE BOOL " " FORCE)
-  set(TBB_BUILD_TBBMALLOC OFF CACHE BOOL " " FORCE)
-  set(TBB_BUILD_TBBMALLOC_PROXY OFF CACHE BOOL " " FORCE)
-  set(TBB_BUILD_TESTS OFF CACHE BOOL " " FORCE)
   add_subdirectory(${RIGID_IPC_EXTERNAL}/tbb EXCLUDE_FROM_ALL)
-  add_library(TBB::tbb ALIAS tbb_static)
+  add_library(TBB::tbb ALIAS tbb_tbb)
 endif()
 
 # Tight Inclusion for MSCCD
@@ -104,14 +106,6 @@ if(NOT TARGET PolyFEM::polysolve)
   rigid_ipc_download_polysolve()
   add_subdirectory(${RIGID_IPC_EXTERNAL}/polysolve)
   add_library(PolyFEM::polysolve ALIAS polysolve)
-endif()
-
-# IPC Toolkit
-if(NOT TARGET ipc::toolkit)
-  rigid_ipc_download_ipc_toolkit()
-  set(IPC_TOOLKIT_BUILD_UNIT_TESTS OFF CACHE BOOL " " FORCE)
-  add_subdirectory(${RIGID_IPC_EXTERNAL}/ipc-toolkit)
-  add_library(ipc::toolkit ALIAS IPCToolkit)
 endif()
 
 # filib

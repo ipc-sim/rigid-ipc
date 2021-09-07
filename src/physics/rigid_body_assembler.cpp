@@ -2,8 +2,8 @@
 
 #include <Eigen/Geometry>
 #include <finitediff.hpp>
+#include <ipc/broad_phase/hash_grid.hpp>
 #include <ipc/distance/edge_edge.hpp>
-#include <ipc/spatial_hash/hash_grid.hpp>
 #include <tbb/parallel_sort.h>
 
 #include <logger.hpp>
@@ -380,8 +380,12 @@ std::vector<std::pair<int, int>> RigidBodyAssembler::close_bodies_hash_grid(
             m_rbs[i].r_max);
     }
 
+    auto can_collide = [&group_ids](size_t vi, size_t vj) {
+        return group_ids[vi] != group_ids[vj];
+    };
+
     std::vector<EdgeEdgeCandidate> body_candidates;
-    hashgrid.getEdgeEdgePairs(E, group_ids, body_candidates);
+    hashgrid.getEdgeEdgePairs(E, body_candidates, can_collide);
 
     std::vector<std::pair<int, int>> close_body_pairs;
     close_body_pairs.reserve(body_candidates.size());

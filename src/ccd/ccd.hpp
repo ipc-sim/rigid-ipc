@@ -4,7 +4,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <ipc/spatial_hash/collision_candidate.hpp>
+#include <ipc/broad_phase/collision_candidate.hpp>
 
 #include <ccd/impact.hpp>
 #include <physics/rigid_body_assembler.hpp>

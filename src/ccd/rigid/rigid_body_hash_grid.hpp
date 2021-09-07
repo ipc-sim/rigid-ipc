@@ -1,7 +1,7 @@
 // A spatial hash grid for rigid bodies with angular trajectories.
 #pragma once
 
-#include <ipc/spatial_hash/hash_grid.hpp>
+#include <ipc/broad_phase/hash_grid.hpp>
 
 #include <physics/rigid_body_assembler.hpp>
 

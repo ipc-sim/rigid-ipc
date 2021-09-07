@@ -70,12 +70,18 @@ int main(int argc, char* argv[])
         }
 
         Eigen::MatrixXd V = bodies.world_vertices(poses);
+
+        const Eigen::VectorXi& group_ids = bodies.group_ids();
+        auto can_collide = [&group_ids](size_t vi, size_t vj) {
+            return group_ids[vi] != group_ids[vj];
+        };
+
         Constraints constraint_set;
         construct_constraint_set(
             /*V_rest=*/V, V, bodies.m_edges, bodies.m_faces,
-            /*dhat=*/1, constraint_set,
-            /*ignore_internal_vertices=*/false,
-            /*vertex_group_ids=*/bodies.group_ids(), bodies.m_faces_to_edges);
+            /*dhat=*/1, constraint_set, bodies.m_faces_to_edges, /*dmin=*/0,
+            BroadPhaseMethod::HASH_GRID,
+            /*ignore_internal_vertices=*/false, can_collide);
         double min_distance = sqrt(compute_minimum_distance(
             V, bodies.m_edges, bodies.m_faces, constraint_set));
 

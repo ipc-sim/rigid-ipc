@@ -224,16 +224,23 @@ void detect_collision_candidates_hash_grid(
         hashgrid.addFaces(vertices_t0, vertices_t1, faces, inflation_radius);
     }
 
+    auto can_vertices_collide = [&group_ids](size_t vi, size_t vj) {
+        return group_ids[vi] != group_ids[vj];
+    };
+
     // Assume checking if vertex is and end-point of the edge is done by
     // `hashgrid.getVertexEdgePairs(...)`.
     if (collision_types & EDGE_VERTEX) {
-        hashgrid.getVertexEdgePairs(edges, group_ids, candidates.ev_candidates);
+        hashgrid.getVertexEdgePairs(
+            edges, candidates.ev_candidates, can_vertices_collide);
     }
     if (collision_types & EDGE_EDGE) {
-        hashgrid.getEdgeEdgePairs(edges, group_ids, candidates.ee_candidates);
+        hashgrid.getEdgeEdgePairs(
+            edges, candidates.ee_candidates, can_vertices_collide);
     }
     if (collision_types & FACE_VERTEX) {
-        hashgrid.getFaceVertexPairs(faces, group_ids, candidates.fv_candidates);
+        hashgrid.getFaceVertexPairs(
+            faces, candidates.fv_candidates, can_vertices_collide);
     }
 }
 

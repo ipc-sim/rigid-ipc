@@ -71,17 +71,21 @@ void detect_collision_candidates_rigid_hash_grid(
     hashgrid.addBodies(bodies, poses, body_pairs, inflation_radius);
 
     const Eigen::VectorXi& group_ids = bodies.group_ids();
+    auto can_vertices_collide = [&group_ids](size_t vi, size_t vj) {
+        return group_ids[vi] != group_ids[vj];
+    };
+
     if (collision_types & CollisionType::EDGE_VERTEX) {
         hashgrid.getVertexEdgePairs(
-            bodies.m_edges, group_ids, candidates.ev_candidates);
+            bodies.m_edges, candidates.ev_candidates, can_vertices_collide);
     }
     if (collision_types & CollisionType::EDGE_EDGE) {
         hashgrid.getEdgeEdgePairs(
-            bodies.m_edges, group_ids, candidates.ee_candidates);
+            bodies.m_edges, candidates.ee_candidates, can_vertices_collide);
     }
     if (collision_types & CollisionType::FACE_VERTEX) {
         hashgrid.getFaceVertexPairs(
-            bodies.m_faces, group_ids, candidates.fv_candidates);
+            bodies.m_faces, candidates.fv_candidates, can_vertices_collide);
     }
 }
 
@@ -180,17 +184,21 @@ void detect_collision_candidates_rigid_hash_grid(
         bodies, poses_t0, poses_t1, body_pairs, inflation_radius);
 
     const Eigen::VectorXi& group_ids = bodies.group_ids();
+    auto can_vertices_collide = [&group_ids](size_t vi, size_t vj) {
+        return group_ids[vi] != group_ids[vj];
+    };
+
     if (collision_types & CollisionType::EDGE_VERTEX) {
         hashgrid.getVertexEdgePairs(
-            bodies.m_edges, group_ids, candidates.ev_candidates);
+            bodies.m_edges, candidates.ev_candidates, can_vertices_collide);
     }
     if (collision_types & CollisionType::EDGE_EDGE) {
         hashgrid.getEdgeEdgePairs(
-            bodies.m_edges, group_ids, candidates.ee_candidates);
+            bodies.m_edges, candidates.ee_candidates, can_vertices_collide);
     }
     if (collision_types & CollisionType::FACE_VERTEX) {
         hashgrid.getFaceVertexPairs(
-            bodies.m_faces, group_ids, candidates.fv_candidates);
+            bodies.m_faces, candidates.fv_candidates, can_vertices_collide);
     }
 }
 

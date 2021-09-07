@@ -8,8 +8,8 @@
 
 #include <Eigen/Core>
 
-#include <ipc/spatial_hash/collision_candidate.hpp>
-#include <ipc/spatial_hash/hash_grid.hpp>
+#include <ipc/broad_phase/collision_candidate.hpp>
+#include <ipc/broad_phase/hash_grid.hpp>
 
 #include <ccd/ccd.hpp>
 #include <ccd/impact.hpp>

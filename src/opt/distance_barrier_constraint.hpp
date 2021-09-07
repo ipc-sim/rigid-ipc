@@ -9,7 +9,7 @@
 #include <autodiff/autodiff_types.hpp>
 #include <barrier/barrier.hpp>
 #include <ccd/ccd.hpp>
-#include <ipc/spatial_hash/hash_grid.hpp>
+#include <ipc/broad_phase/hash_grid.hpp>
 #include <utils/eigen_ext.hpp>
 
 namespace ipc::rigid {
