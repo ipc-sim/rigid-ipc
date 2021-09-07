@@ -5,7 +5,6 @@
 #include <iostream>
 #include <vector>
 
-#include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
 #include <Eigen/Core>

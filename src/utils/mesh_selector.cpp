@@ -3,10 +3,6 @@
 #include <Eigen/SparseCore>
 #include <igl/Timer.h>
 
-#include <iostream>
-
-#include <fmt/format.h>
-
 namespace ipc::rigid {
 
 Eigen::SparseMatrix<size_t>

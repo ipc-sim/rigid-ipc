@@ -1,7 +1,6 @@
 #include "serialize_json.hpp"
 
-#include <fmt/format.h>
-
+#include <logger.hpp>
 #include <utils/eigen_ext.hpp>
 
 namespace ipc::rigid {

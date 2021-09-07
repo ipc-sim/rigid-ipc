@@ -2,6 +2,7 @@
 
 #include <Eigen/Dense>
 #include <nlohmann/json.hpp>
+
 #include <utils/eigen_ext.hpp>
 
 namespace ipc::rigid {

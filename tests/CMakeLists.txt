@@ -1,23 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
+################################################################################
+# Tests
 ################################################################################
 
-# Catch2
-function(rigid_ipc_download_catch2)
-     rigid_ipc_download_project(Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v2.11.3
-    )
-endfunction()
-
-if(NOT TARGET Catch2::Catch2)
-  rigid_ipc_download_catch2()
-  add_subdirectory(${RIGID_IPC_EXTERNAL}/Catch2 catch2)
-  list(APPEND CMAKE_MODULE_PATH ${RIGID_IPC_EXTERNAL}/Catch2/contrib)
-endif()
-
-################################################################################
-
-add_executable(${PROJECT_NAME}_tests
+add_executable(rigid_ipc_tests
   main.cpp
 
   barrier/test_barriers.cpp
@@ -54,14 +39,30 @@ add_executable(${PROJECT_NAME}_tests
   utils/test_sinc.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}_tests PUBLIC ${PROJECT_NAME} Catch2::Catch2 warnings::all)
-target_link_libraries(${PROJECT_NAME}_tests PUBLIC FiniteDiff::FiniteDiff)
+################################################################################
+# Required Libraries
+################################################################################
 
-target_compile_definitions(${PROJECT_NAME}_tests PUBLIC CATCH_CONFIG_ENABLE_BENCHMARKING)
+target_link_libraries(rigid_ipc_tests PUBLIC ipc::rigid)
 
-if(FIXING_COLLISIONS_WITH_CODE_COVERAGE)
-  target_code_coverage(${PROJECT_NAME}_tests AUTO ALL)
-endif()
+include(rigid_ipc_warnings)
+target_link_libraries(rigid_ipc_tests PRIVATE ipc::rigid::warnings)
+
+include(catch2)
+target_link_libraries(rigid_ipc_tests PUBLIC Catch2::Catch2)
+
+include(finite_diff)
+target_link_libraries(rigid_ipc_tests PUBLIC finitediff::finitediff)
+
+################################################################################
+# Compiler options
+################################################################################
+
+target_compile_definitions(rigid_ipc_tests PUBLIC CATCH_CONFIG_ENABLE_BENCHMARKING)
+
+################################################################################
+# Register tests
+################################################################################
 
 foreach(source IN ITEMS ${test_sources})
   source_group("tests" FILES "${source}")
@@ -69,8 +70,7 @@ endforeach()
 
 # Register tests
 set(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS ON)
-include(Catch)
-catch_discover_tests(${PROJECT_NAME}_tests)
+catch_discover_tests(rigid_ipc_tests)
 
 ################################################################################
 

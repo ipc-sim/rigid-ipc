@@ -1,10 +1,9 @@
 #pragma once
 #include "barrier.hpp"
 
-#include <fmt/format.h>
-
 #include <ipc/barrier/barrier.hpp>
 
+#include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
 
 namespace ipc::rigid {

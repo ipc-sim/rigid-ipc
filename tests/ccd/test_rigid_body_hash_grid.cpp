@@ -1,11 +1,11 @@
 #include <catch2/catch.hpp>
 
-#include <fmt/format.h>
 #include <ghc/fs_std.hpp> // filesystem
 #include <igl/Timer.h>
 #include <nlohmann/json.hpp>
 
 #include <io/serialize_json.hpp>
+#include <logger.hpp>
 #include <physics/pose.hpp>
 
 using namespace ipc;

@@ -1,31 +1,72 @@
-cmake_minimum_required(VERSION 3.8)
-project(RigidIPC)
+# Detects whether this is a top-level project
+get_directory_property(HAS_PARENT PARENT_DIRECTORY)
+if(HAS_PARENT)
+    set(RIGID_IPC_TOPLEVEL_PROJECT OFF)
+else()
+    set(RIGID_IPC_TOPLEVEL_PROJECT ON)
+endif()
+
+# Check required CMake version
+set(REQUIRED_CMAKE_VERSION "3.14.0")
+if(RIGID_IPC_TOPLEVEL_PROJECT)
+    cmake_minimum_required(VERSION ${REQUIRED_CMAKE_VERSION})
+else()
+    # Don't use cmake_minimum_required here to avoid implicitly overriding parent policies
+    if(${CMAKE_VERSION} VERSION_LESS ${REQUIRED_CMAKE_VERSION})
+        message(FATAL_ERROR "CMake required version to build Rigid IPC is ${REQUIRED_CMAKE_VERSION}")
+    endif()
+endif()
+
+# Include user-provided default options if available. We do that before the main
+# `project()` so that we can define the C/C++ compilers from the option file.
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/RigidIPCOptions.cmake)
+    message(STATUS "Using local options file: ${CMAKE_CURRENT_SOURCE_DIR}/RigidIPCOptions.cmake")
+    include(${CMAKE_CURRENT_SOURCE_DIR}/RigidIPCOptions.cmake)
+endif()
 
 ################################################################################
 
-# project-options
-option(RIGID_IPC_WITH_UNIT_TESTS       "Build unit-tests"       ON)
-option(RIGID_IPC_WITH_CODE_COVERAGE    "Builds targets with code coverage instrumentation (Requires GCC or Clang)" OFF)
-option(RIGID_IPC_WITH_DERIVATIVE_CHECK "Check derivatives"     OFF)
-option(RIGID_IPC_WITH_PROFILING        "Profile functions"     OFF)
-option(RIGID_IPC_WITH_COMPARISONS      "Build comparisons"     OFF)
-option(RIGID_IPC_WITH_SIMD             "Enable SIMD"           OFF)
-option(RIGID_IPC_WITH_OPENGL           "Build GUI"              ON)
-option(RIGID_IPC_WITH_TOOLS            "Build tools"            ON)
-option(RIGID_IPC_WITH_PYTHON           "Build Python bindings" OFF)
+project(RigidIPC
+        DESCRIPTION "Robust, intersection-free, simulations of rigid bodies."
+        LANGUAGES CXX)
 
-# libigl-options
-option(LIBIGL_USE_STATIC_LIBRARY     "Use libigl as static library" OFF)
-option(LIBIGL_WITH_OPENGL            "Use OpenGL"                    ON)
-option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"                      ON)
-option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use IMGUI"                     ON)
-option(LIBIGL_WITH_PNG               "Use PNG"                       ON)
-option(LIBIGL_WITH_PREDICATES        "Use exact predicates"          ON)
+option(RIGID_IPC_WITH_UNIT_TESTS  "Build unit-tests"      ${RIGID_IPC_TOPLEVEL_PROJECT})
+option(RIGID_IPC_WITH_OPENGL      "Build GUI"             ${RIGID_IPC_TOPLEVEL_PROJECT})
+option(RIGID_IPC_WITH_TOOLS       "Build tools"           ${RIGID_IPC_TOPLEVEL_PROJECT})
+option(RIGID_IPC_WITH_PROFILING   "Profile functions"     OFF)
+option(RIGID_IPC_WITH_COMPARISONS "Build comparisons"     OFF)
+option(RIGID_IPC_WITH_SIMD        "Enable SIMD"           OFF)
+option(RIGID_IPC_WITH_PYTHON      "Build Python bindings" OFF)
 
-set(LIBIGL_WITH_OPENGL_GLFW_IMGUI ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
-set(LIBIGL_WITH_OPENGL_GLFW ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
-set(LIBIGL_WITH_OPENGL ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
-set(LIBIGL_WITH_PNG ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "" FORCE)
+# Set default minimum C++ standard
+if(RIGID_IPC_TOPLEVEL_PROJECT)
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
+
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/rigid_ipc/")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/recipes/")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find/")
+
+# Color output
+include(rigid_ipc_use_colors)
+
+include(rigid_ipc_autogen)
+
+mark_as_advanced(CLEAR CMAKE_BUILD_TYPE)
+
+################################################################################
+# External project settings
+################################################################################
+
+# libigl options
+option(LIBIGL_USE_STATIC_LIBRARY "Use libigl as static library" OFF)
+option(LIBIGL_WITH_PREDICATES    "Use exact predicates"          ON)
+set(LIBIGL_WITH_OPENGL_GLFW_IMGUI ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Use OpenGL" FORCE)
+set(LIBIGL_WITH_OPENGL_GLFW       ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Use GLFW"   FORCE)
+set(LIBIGL_WITH_OPENGL            ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Use IMGUI"  FORCE)
+set(LIBIGL_WITH_PNG               ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Use PNG"    FORCE)
 
 # PolySolve settings
 option(POLYSOLVE_WITH_CHOLMOD          "Enable Cholmod library"            ON)
@@ -37,25 +78,14 @@ option(POLYSOLVE_WITH_HYPRE            "Enable hypre"                      OFF)
 option(POLYSOLVE_WITH_AMGCL            "Use AMGCL"                         OFF)
 option(POLYSOLVE_WITH_SPECTRA          "Enable computing spectrum"         OFF)
 
-################################################################################
-
-### Configuration
-set(RIGID_IPC_EXTERNAL "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
-include(Autogen)
-include(Warnings)
-include(UseColors)
-include(${PROJECT_NAME}Dependencies)
-mark_as_advanced(CLEAR CMAKE_BUILD_TYPE)
+set(TIGHT_INCLUSION_WITH_NO_ZERO_TOI OFF CACHE BOOL "Enable refinement if CCD produces a zero ToI" FORCE)
 
 ################################################################################
 # Rigid IPC Library
 ################################################################################
 
-add_library(${PROJECT_NAME}
+add_library(ipc_rigid
   src/autodiff/autodiff.cpp
-  ${RIGID_IPC_EXTERNAL}/finite-diff/finitediff.cpp
 
   src/utils/sinc.cpp
 
@@ -123,12 +153,11 @@ add_library(${PROJECT_NAME}
   src/logger.cpp
   src/profiler.cpp
 )
-
-target_include_directories(${PROJECT_NAME} PUBLIC src)
+target_include_directories(ipc_rigid PUBLIC src)
+add_library(ipc::rigid ALIAS ipc_rigid)
 
 # Autogenerated files ----------------------------------------------------------
-# project_autogen(${PROJECT_NAME} time_of_impact_coeff.py time_of_impact_coeff.tpp auto_time_of_impact_coeff .ipp)
-
+# project_autogen(ipc_rigid time_of_impact_coeff.py time_of_impact_coeff.tpp auto_time_of_impact_coeff .ipp)
 
 ################################################################################
 # Optional Definitions
@@ -136,74 +165,84 @@ target_include_directories(${PROJECT_NAME} PUBLIC src)
 
 # Directory paths
 set(RIGID_IPC_MESH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/meshes)
-target_compile_definitions(${PROJECT_NAME} PUBLIC -DRIGID_IPC_MESHES_DIR=\"${RIGID_IPC_MESH_DIR}\")
+target_compile_definitions(ipc_rigid PUBLIC -DRIGID_IPC_MESHES_DIR=\"${RIGID_IPC_MESH_DIR}\")
 
 if(RIGID_IPC_WITH_DERIVATIVE_CHECK)
-  target_compile_definitions(${PROJECT_NAME} PUBLIC -DRIGID_IPC_WITH_DERIVATIVE_CHECK)
+  target_compile_definitions(ipc_rigid PUBLIC -DRIGID_IPC_WITH_DERIVATIVE_CHECK)
 endif()
 
 if(RIGID_IPC_WITH_PROFILING)
   message(STATUS "Profiling Enabled")
-  target_compile_definitions(${PROJECT_NAME} PUBLIC -DRIGID_IPC_PROFILE_FUNCTIONS)
+  target_compile_definitions(ipc_rigid PUBLIC -DRIGID_IPC_PROFILE_FUNCTIONS)
 endif()
+
+# For MSVC, do not use the min and max macros.
+target_compile_definitions(ipc_rigid PUBLIC NOMINMAX)
 
 ################################################################################
 # Required Libraries
 ################################################################################
 
-# libigl
-target_link_libraries(${PROJECT_NAME} PUBLIC igl::core igl::predicates)
-
 # Extra warnings
-target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
+include(rigid_ipc_warnings)
+target_link_libraries(ipc_rigid PRIVATE ipc::rigid::warnings)
+
+# libigl
+include(eigen)
+include(libigl)
+target_link_libraries(ipc_rigid PUBLIC
+  Eigen3::Eigen
+  igl::core
+  igl::predicates
+)
 
 # JSON Parser
-target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann::json)
+include(json)
+target_link_libraries(ipc_rigid PUBLIC nlohmann::json)
 
 # Logger
-target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog)
+include(spdlog)
+target_link_libraries(ipc_rigid PUBLIC spdlog::spdlog)
 
 # Finite Differences
-# target_link_libraries(${PROJECT_NAME} PUBLIC FiniteDiff::FiniteDiff)
-target_include_directories(${PROJECT_NAME} PUBLIC ${RIGID_IPC_EXTERNAL}/finite-diff)
-
-# GMP
-#find_package(GMP)
-#if(NOT ${GMP_FOUND})
-#        MESSAGE(FATAL_ERROR "Cannot find GMP")
-#endif()
-#target_include_directories(${PROJECT_NAME} PUBLIC ${GMP_INCLUDE_DIRS})
-#target_link_libraries(${PROJECT_NAME} PUBLIC ${GMP_LIBRARIES})
-#
+include(finite_diff)
+target_link_libraries(ipc_rigid PUBLIC finitediff::finitediff)
 
 # Boost
-set(Boost_USE_MULTITHREADED TRUE)
-find_package(Boost REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost)
+include(boost)
+target_link_libraries(ipc_rigid PUBLIC Boost::boost)
 
 # TBB
-target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
+include(tbb)
+target_link_libraries(ipc_rigid PUBLIC TBB::tbb)
 
 # MSCCD
-target_link_libraries(${PROJECT_NAME} PUBLIC TightInclusion)
+include(tight_inclusion)
+target_link_libraries(ipc_rigid PUBLIC tight_inclusion::tight_inclusion)
 
 # PolySolve for wrapping linear solvers
-target_link_libraries(${PROJECT_NAME} PUBLIC PolyFEM::polysolve)
+include(polysolve)
+target_link_libraries(ipc_rigid PUBLIC PolyFEM::polysolve)
 
 # IPC Toolkit
-target_link_libraries(${PROJECT_NAME} PUBLIC ipc::toolkit)
+include(ipc_toolkit)
+target_link_libraries(ipc_rigid PUBLIC ipc::toolkit)
 
 # filib
-target_link_libraries(${PROJECT_NAME} PUBLIC filib::filib)
+include(filib)
+target_link_libraries(ipc_rigid PUBLIC filib::filib)
 
 # SimpleBVH
-target_link_libraries(${PROJECT_NAME} PUBLIC SimpleBVH::BVH_lib)
+include(simple_bvh)
+target_link_libraries(ipc_rigid PUBLIC SimpleBVH::BVH_lib)
 
 # tinygltf
-target_link_libraries(${PROJECT_NAME} PUBLIC tinygltf::tinygltf)
+include(tinygltf)
+target_link_libraries(ipc_rigid PUBLIC tinygltf::tinygltf)
 
 # Filesystem
-target_link_libraries(${PROJECT_NAME} PUBLIC ghc::filesystem)
+include(filesystem)
+target_link_libraries(ipc_rigid PUBLIC ghc::filesystem)
 
 ################################################################################
 # Compiler options
@@ -228,47 +267,49 @@ if(RIGID_IPC_WITH_SIMD)
   endif()
   # Add SSE, AVX, and FMA flags to compiler flags
   string(REPLACE " " ";" SIMD_FLAGS "${SSE_FLAGS} ${AVX_FLAGS} ${FMA_FLAGS}")
-  target_compile_options(${PROJECT_NAME} PUBLIC ${SIMD_FLAGS})
+  target_compile_options(ipc_rigid PUBLIC ${SIMD_FLAGS})
 endif()
 
 # Use C++17
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(ipc_rigid PUBLIC cxx_std_17)
 
 ################################################################################
 # Simulations Executable
 ################################################################################
 
 if(RIGID_IPC_WITH_OPENGL)
-  add_executable(${PROJECT_NAME}_sim
+  add_executable(rigid_ipc_sim
     src/main.cpp
-
     src/viewer/imgui_ext.cpp
     src/viewer/igl_viewer_ext.cpp
     src/viewer/UISimState.cpp
     src/viewer/UIMenu.cpp
   )
-  target_include_directories(${PROJECT_NAME}_sim PUBLIC src)
+  target_include_directories(rigid_ipc_sim PUBLIC src)
 
-  target_link_libraries(${PROJECT_NAME}_sim PUBLIC ${PROJECT_NAME})
+  target_link_libraries(rigid_ipc_sim PUBLIC ipc::rigid)
 
-  target_link_libraries(${PROJECT_NAME}_sim PUBLIC
+  include(libigl)
+  target_link_libraries(rigid_ipc_sim PUBLIC
     igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
 
   # Charlie Tangora's gif-h library
-  target_link_libraries(${PROJECT_NAME}_sim PRIVATE gif_h::gif_h)
+  include(gif_h)
+  target_link_libraries(rigid_ipc_sim PRIVATE gif_h::gif_h)
 
-  target_link_libraries(${PROJECT_NAME}_sim PUBLIC CLI11::CLI11)
+  include(cli11)
+  target_link_libraries(rigid_ipc_sim PUBLIC CLI11::CLI11)
 endif()
 
 ################################################################################
 # No UI Executable
 ################################################################################
-add_executable(${PROJECT_NAME}_ngui
-  src/cli_main.cpp
-)
+add_executable(rigid_ipc_sim_ngui src/cli_main.cpp)
 
-target_link_libraries(${PROJECT_NAME}_ngui PUBLIC ${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME}_ngui PUBLIC CLI11::CLI11)
+target_link_libraries(rigid_ipc_sim_ngui PUBLIC ipc::rigid)
+
+include(cli11)
+target_link_libraries(rigid_ipc_sim_ngui PUBLIC CLI11::CLI11)
 
 ################################################################################
 # Tools
@@ -281,20 +322,17 @@ endif()
 # Tests
 ################################################################################
 
-if(RIGID_IPC_CODE_COVERAGE)
-  message(STATUS "Building with code coverage")
-  include(CodeCoverage)
-  add_code_coverage_all_targets()
-
-  target_code_coverage(${PROJECT_NAME})
-  target_code_coverage(${PROJECT_NAME}_sim)
-  target_code_coverage(${PROJECT_NAME}_ngui)
-endif()
-
+# Enable unit testing at the root level
 if(RIGID_IPC_WITH_UNIT_TESTS)
-  include(CTest)
-  enable_testing()
-  add_subdirectory(tests)
+    include(CTest)
+    enable_testing()
+
+    # Include Catch2 and provide function `catch_discover_tests` to register tests.
+    include(catch2)
+    FetchContent_GetProperties(catch2)
+    include("${catch2_SOURCE_DIR}/contrib/Catch.cmake")
+
+    add_subdirectory(tests)
 endif()
 
 ################################################################################

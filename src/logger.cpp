@@ -5,7 +5,7 @@
 #include <sstream> // stringstream
 #include <string>  // string
 
-#include <fmt/chrono.h>
+#include <spdlog/fmt/chrono.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <ipc/utils/logger.hpp>
