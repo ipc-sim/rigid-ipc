@@ -51,7 +51,7 @@ bool SimState::load_scene(const std::string& filename, const std::string& patch)
     PROFILER_CLEAR();
     initial_rss = getCurrentRSS();
 
-    std::string ext = fs::path(filename).extension();
+    std::string ext = fs::path(filename).extension().string();
     to_lower(ext); // modifies ext
 
     nlohmann::json scene;

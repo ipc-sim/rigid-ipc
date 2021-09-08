@@ -129,7 +129,8 @@ jobs:
             -DRIGID_IPC_WITH_UNIT_TESTS=ON ^
             -B build ^
             -S .
-          cmake --build build
+          cd build
+          ninja -j4
 
       - name: Tests
         run: cd build; ctest --verbose
