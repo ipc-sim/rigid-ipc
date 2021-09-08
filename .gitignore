@@ -290,3 +290,4 @@ notebooks/*
 !notebooks/sinc.ipynb
 
 tools/2D
+tools/parameter_sweep
