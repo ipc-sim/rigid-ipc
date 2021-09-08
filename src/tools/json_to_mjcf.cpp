@@ -1,4 +1,5 @@
 #include <CLI/CLI.hpp>
+#include <igl/PI.h>
 #include <nlohmann/json.hpp>
 #include <tinyxml2.h>
 
@@ -152,11 +153,11 @@ int json_to_mjcf(
             Eigen::Quaterniond q;
             q = swapYZ
                 * Eigen::AngleAxisd(
-                      rotation[2] * M_PI / 180.0, Eigen::Vector3d::UnitZ())
+                      rotation[2] * igl::PI / 180.0, Eigen::Vector3d::UnitZ())
                 * Eigen::AngleAxisd(
-                      rotation[1] * M_PI / 180.0, Eigen::Vector3d::UnitY())
+                      rotation[1] * igl::PI / 180.0, Eigen::Vector3d::UnitY())
                 * Eigen::AngleAxisd(
-                      rotation[0] * M_PI / 180.0, Eigen::Vector3d::UnitX());
+                      rotation[0] * igl::PI / 180.0, Eigen::Vector3d::UnitX());
             ss << q.w() << " " << q.x() << " " << q.y() << " " << q.z();
             printer.PushAttribute("quat", ss.str().c_str());
             ss.str(std::string());

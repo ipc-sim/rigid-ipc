@@ -2,6 +2,7 @@
 
 #include <Eigen/Geometry>
 #include <finitediff.hpp>
+#include <igl/PI.h>
 #include <ipc/broad_phase/hash_grid.hpp>
 #include <ipc/distance/edge_edge.hpp>
 #include <tbb/parallel_sort.h>
@@ -165,9 +166,9 @@ void RigidBodyAssembler::set_rb_poses(const PosesD& poses)
         // if (m_rbs[i].pose.rotation.size() > 1) {
         //     // Mod 2π on the angle
         //     double angle = m_rbs[i].pose.rotation.norm();
-        //     if (abs(angle) >= 2 * M_PI) {
+        //     if (abs(angle) >= 2 * igl::PI) {
         //         m_rbs[i].pose.rotation /= angle;
-        //         m_rbs[i].pose.rotation *= fmod(angle, 2 * M_PI);
+        //         m_rbs[i].pose.rotation *= fmod(angle, 2 * igl::PI);
         //     }
         // }
     }

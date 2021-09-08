@@ -6,6 +6,7 @@
 #include <ghc/fs_std.hpp> // filesystem
 #include <igl/edges.h>
 #include <igl/facet_components.h>
+#include <igl/PI.h>
 #include <igl/read_triangle_mesh.h>
 #include <igl/remove_unreferenced.h>
 #include <tbb/parallel_sort.h>
@@ -47,7 +48,7 @@ VectorMax3d read_angular_field(const nlohmann::json& field, int dim)
     }
 
     // Convert to radians for easy use later
-    v *= M_PI / 180.0;
+    v *= igl::PI / 180.0;
 
     return v;
 }
