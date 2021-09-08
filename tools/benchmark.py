@@ -59,7 +59,7 @@ def fixture_dir():
 
 
 def sim_exe_name():
-    return "RigidIPC_ngui"
+    return "rigid_ipc_sim_ngui"
 
 
 def find_sim_exe():

@@ -26,7 +26,7 @@ python $TOOLS_DIR/$GENERATION_SCRIPT \
 printf "Generated input fixture.\n\n"
 # Simulate using our simulation
 my_sbatch $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
-    $BUILD_DIR/RigidIPC_ngui $OUTPUT_DIR/fixture.json \
+    $BUILD_DIR/rigid_ipc_sim_ngui $OUTPUT_DIR/fixture.json \
     $OUTPUT_DIR/ours || exit 1
 # Simulate using Box2D
 my_sbatch $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
@@ -42,7 +42,7 @@ for time_epsilon in 1e-16 0e0; do
                 --time-epsilon $time_epsilon --update-type $update_type \
                 --lcp-solver $lcp_solver --out-path $ncp_output_dir/fixture.json || exit 1
             my_sbatch $TOOLS_DIR/generate_result.sh $FIXING_COLLISIONS_ROOT \
-                $BUILD_DIR/RigidIPC_ngui $ncp_output_dir/fixture.json \
+                $BUILD_DIR/rigid_ipc_sim_ngui $ncp_output_dir/fixture.json \
                 $ncp_output_dir || exit 1
         done
     done

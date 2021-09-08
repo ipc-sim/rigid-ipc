@@ -1,5 +1,5 @@
 RESULTS_FOLDER=results/paper-results/
-SIM=build/Release/RigidIPC_ngui
+SIM=build/Release/rigid_ipc_sim_ngui
 MIN_DISTANCE=build/Release/cli_mindistance
 
 set -e

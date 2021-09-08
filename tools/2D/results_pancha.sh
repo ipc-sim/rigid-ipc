@@ -166,7 +166,7 @@ python tools/results_to_eps.py results/results2.local/bypass//sim_scene_2.json\
 # 	filename="${filename%.*}"
 # 	echo $filename
 
-# 	$FIXING_COLLISIONS_ROOT/build/Release/RigidIPC_ngui --scene-path "$INPUT_SCENE" \
+# 	$FIXING_COLLISIONS_ROOT/build/Release/rigid_ipc_sim_ngui --scene-path "$INPUT_SCENE" \
 # 		--output-path "$OUTPUT_DIR" \
 # 		-f "$filename".json \
 # 		--num-steps 1000 \
