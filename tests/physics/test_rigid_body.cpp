@@ -51,14 +51,14 @@ TEST_CASE("2D Rigid Body Transform", "[RB][RB-transform]")
     SECTION("90 Deg Rotation Case")
     {
         rb_step.position << 0.0, 0.0;
-        rb_step.rotation << 0.5 * M_PI;
+        rb_step.rotation << 0.5 * igl::PI;
         vertices_step << 1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, -1.0;
     }
 
     SECTION("Translation and Rotation Case")
     {
         rb_step.position << 0.5, 0.5;
-        rb_step.rotation << 0.5 * M_PI;
+        rb_step.rotation << 0.5 * igl::PI;
         vertices_step << 1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, -1.0;
         vertices_step += rb_step.position.transpose().replicate(4, 1);
     }

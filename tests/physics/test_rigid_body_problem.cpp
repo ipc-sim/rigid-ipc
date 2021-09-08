@@ -1,4 +1,4 @@
-#include <array>
+igl::PI #include<array>
 #include <iomanip>
 #include <iostream>
 
@@ -10,7 +10,7 @@
 #include <problems/split_distance_barrier_rb_problem.hpp>
 #include <utils/not_implemented_error.hpp>
 
-using namespace ipc;
+    using namespace ipc;
 using namespace ipc::rigid;
 
 RigidBody rb_from_displacements(
@@ -75,8 +75,8 @@ TEST_CASE(
 
     SECTION("90 Deg Rotation Case")
     {
-        rb1_pose_t1.rotation << 0.5 * M_PI;
-        rb2_pose_t1.rotation << M_PI;
+        rb1_pose_t1.rotation << 0.5 * igl::PI;
+        rb2_pose_t1.rotation << igl::PI;
         dx = 0.5 * moment_inertia
             * (rb1_pose_t1.rotation.squaredNorm()
                + rb2_pose_t1.rotation.squaredNorm());
@@ -124,15 +124,15 @@ TEST_CASE(
 
     SECTION("90 Deg Rotation Case")
     {
-        vel_1.rotation << 0.5 * M_PI;
-        vel_2.rotation << M_PI;
+        vel_1.rotation << 0.5 * igl::PI;
+        vel_2.rotation << igl::PI;
     }
     SECTION("Translation and Rotation Case")
     {
         vel_1.position << 0.5, 0.5;
-        vel_1.rotation << 0.5 * M_PI;
+        vel_1.rotation << 0.5 * igl::PI;
         vel_2.position << 1.0, 1.0;
-        vel_2.rotation << M_PI;
+        vel_2.rotation << igl::PI;
     }
 
     std::vector<RigidBody> rbs;
@@ -173,15 +173,15 @@ TEST_CASE("Rigid Body Problem Hessian", "[RB][RB-Problem][RB-Problem-hessian]")
 
     SECTION("90 Deg Rotation Case")
     {
-        vel_1.rotation << 0.5 * M_PI;
-        vel_2.rotation << M_PI;
+        vel_1.rotation << 0.5 * igl::PI;
+        vel_2.rotation << igl::PI;
     }
     SECTION("Translation and Rotation Case")
     {
         vel_1.position << 0.5, 0.5;
-        vel_1.rotation << 0.5 * M_PI;
+        vel_1.rotation << 0.5 * igl::PI;
         vel_2.position << 1.0, 1.0;
-        vel_2.rotation << M_PI;
+        vel_2.rotation << igl::PI;
     }
 
     std::vector<RigidBody> rbs;
@@ -224,15 +224,15 @@ TEST_CASE("dof -> poses -> dof", "[RB][RB-Problem]")
 
     SECTION("90 Deg Rotation Case")
     {
-        vel_1.rotation << 0.5 * M_PI;
-        vel_2.rotation << M_PI;
+        vel_1.rotation << 0.5 * igl::PI;
+        vel_2.rotation << igl::PI;
     }
     SECTION("Translation and Rotation Case")
     {
         vel_1.position << 0.5, 0.5;
-        vel_1.rotation << 0.5 * M_PI;
+        vel_1.rotation << 0.5 * igl::PI;
         vel_2.position << 1.0, 1.0;
-        vel_2.rotation << M_PI;
+        vel_2.rotation << igl::PI;
     }
 
     std::vector<RigidBody> rbs = {

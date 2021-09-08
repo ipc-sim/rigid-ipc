@@ -54,8 +54,8 @@ TEST_CASE("Rigid Body System Transform", "[RB][RB-System][RB-System-transform]")
 
     SECTION("90 Deg Rotation Case")
     {
-        rb1_pose_t1.rotation << 0.5 * M_PI;
-        rb2_pose_t1.rotation << M_PI;
+        rb1_pose_t1.rotation << 0.5 * igl::PI;
+        rb2_pose_t1.rotation << igl::PI;
         expected.resize(8, 2);
         expected.block(0, 0, 4, 2) << 1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, -1.0;
         expected.block(4, 0, 4, 2) << 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,

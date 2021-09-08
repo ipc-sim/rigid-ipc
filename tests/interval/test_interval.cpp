@@ -1,5 +1,7 @@
 #include <catch2/catch.hpp>
 
+#include <igl/PI.h>
+
 #include <interval/interval.hpp>
 #include <logger.hpp>
 #include <physics/pose.hpp>
@@ -41,10 +43,10 @@ TEST_CASE("Cosine interval arithmetic", "[interval]")
 
     double shift;
     SECTION("No shift") { shift = 0; }
-    SECTION("2π shift") { shift = 2 * M_PI; }
-    SECTION("-2π shift") { shift = -2 * M_PI; }
-    SECTION("100π shift") { shift = 100 * M_PI; }
-    SECTION("-100π shift") { shift = -100 * M_PI; }
+    SECTION("2π shift") { shift = 2 * igl::PI; }
+    SECTION("-2π shift") { shift = -2 * igl::PI; }
+    SECTION("100π shift") { shift = 100 * igl::PI; }
+    SECTION("-100π shift") { shift = -100 * igl::PI; }
 
     CAPTURE(shift);
 
@@ -69,10 +71,10 @@ TEST_CASE("Sine interval arithmetic", "[interval]")
 
     double shift = M_PI_2;
     SECTION("No shift") { shift += 0; }
-    SECTION("2π shift") { shift += 2 * M_PI; }
-    SECTION("-2π shift") { shift += -2 * M_PI; }
-    SECTION("100π shift") { shift += 100 * M_PI; }
-    SECTION("-100π shift") { shift += -100 * M_PI; }
+    SECTION("2π shift") { shift += 2 * igl::PI; }
+    SECTION("-2π shift") { shift += -2 * igl::PI; }
+    SECTION("100π shift") { shift += 100 * igl::PI; }
+    SECTION("-100π shift") { shift += -100 * igl::PI; }
 
     CAPTURE(shift);
 

@@ -5,7 +5,9 @@
 
 //#include <catch2/catch.hpp>
 
+// #include <igl/PI.h>
 //#include <finitediff.hpp>
+
 //#include <state.hpp>
 
 //#include <Eigen/Geometry>
@@ -111,8 +113,8 @@
 //    state.getCollisionConstraint().update_collision_set = GENERATE(false,
 //    true); state.opt_method = ipc::rigid::OptimizationMethod::BARRIER_SOLVER;
 
-//    double theta1 = 2 * M_PI / NUM_ANGLES * GENERATE(range(0, NUM_ANGLES));
-//    double theta2 = 2 * M_PI / NUM_ANGLES * GENERATE(range(0, NUM_ANGLES));
+//    double theta1 = 2 * igl::PI / NUM_ANGLES * GENERATE(range(0, NUM_ANGLES));
+//    double theta2 = 2 * igl::PI / NUM_ANGLES * GENERATE(range(0, NUM_ANGLES));
 
 //    for (int i = 0; i < state.edges.rows(); i++) {
 //        Eigen::Rotation2D<double> R(i == 0 ? theta1 : theta2);
