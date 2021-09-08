@@ -3,7 +3,7 @@
 <img src="docs/imgs/teaser.png">
 
 [![Build](https://github.com/ipc-sim/rigid-ipc/actions/workflows/continuous.yml/badge.svg)](https://github.com/ipc-sim/rigid-ipc/actions/workflows/continuous.yml)
-[![License](https://img.shields.io/github/license/ipc-sim/rigid-ipc.svg?color=blue)](https://github.com/ipc-sim/rigid-ipc/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/ipc-sim/rigid-ipc.svg?color=blue)](https://github.com/ipc-sim/rigid-ipc/blob/main/LICENSE)
 
 <b>Robust, intersection-free, simulations of rigid bodies.</b>
 
