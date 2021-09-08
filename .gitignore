@@ -288,3 +288,5 @@ src/tools/ccd-queries
 notebooks/*
 !notebooks/compute_J.ipynb
 !notebooks/sinc.ipynb
+
+tools/2D

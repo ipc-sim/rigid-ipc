@@ -69,7 +69,7 @@ bool compute_edge_vertex_time_of_impact(
 {
     int dim = bodyA.dim();
     assert(bodyB.dim() == dim);
-    assert(dim == 2); // TODO: 3D
+    assert(dim == 2);
 
     const PoseI poseIA_t0 = poseA_t0.cast<Interval>();
     const PoseI poseIA_t1 = poseA_t1.cast<Interval>();
