@@ -163,9 +163,9 @@ namespace opengl {
 
         vertex_data_labels.clear();
         vertex_data_labels.resize(size_t(vtx_data.rows()));
-        for (uint i = 0; i < vtx_data.rows(); i++) {
+        for (size_t i = 0; i < vtx_data.rows(); i++) {
             std::string data_i = std::to_string(i) + ":";
-            for (uint j = 0; j < vtx_data.cols(); j++) {
+            for (size_t j = 0; j < vtx_data.cols(); j++) {
                 if (vtx_data(i, j)) {
                     data_i += std::to_string(j) + ",";
                 }
