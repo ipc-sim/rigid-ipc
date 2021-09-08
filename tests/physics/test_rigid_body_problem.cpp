@@ -1,4 +1,4 @@
-igl::PI #include<array>
+#include <array>
 #include <iomanip>
 #include <iostream>
 
@@ -10,7 +10,7 @@ igl::PI #include<array>
 #include <problems/split_distance_barrier_rb_problem.hpp>
 #include <utils/not_implemented_error.hpp>
 
-    using namespace ipc;
+using namespace ipc;
 using namespace ipc::rigid;
 
 RigidBody rb_from_displacements(
