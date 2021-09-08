@@ -64,10 +64,6 @@ target_compile_definitions(rigid_ipc_tests PUBLIC CATCH_CONFIG_ENABLE_BENCHMARKI
 # Register tests
 ################################################################################
 
-foreach(source IN ITEMS ${test_sources})
-  source_group("tests" FILES "${source}")
-endforeach()
-
 # Register tests
 set(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS ON)
 catch_discover_tests(rigid_ipc_tests)

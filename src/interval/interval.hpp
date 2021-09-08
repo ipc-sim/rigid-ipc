@@ -92,6 +92,7 @@ typedef Vector2<Interval> Vector2I;
 typedef Vector3<Interval> Vector3I;
 typedef VectorX<Interval> VectorXI;
 typedef VectorMax3<Interval> VectorMax3I;
+typedef Matrix3<Interval> Matrix2I;
 typedef Matrix3<Interval> Matrix3I;
 typedef MatrixMax3<Interval> MatrixMax3I;
 typedef MatrixX<Interval> MatrixXI;

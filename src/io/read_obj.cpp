@@ -90,14 +90,14 @@ bool read_obj(
                 std::vector<double> vertex { std::istream_iterator<double>(ls),
                                              std::istream_iterator<double>() };
 
-                if (vertex.size() < 3) {
-                    spdlog::error(
-                        "read_obj: vertex on line {:d} should have at "
-                        "least 3 coordinates",
-                        line_no);
-                    fclose(obj_file);
-                    return false;
-                }
+                // if (vertex.size() < 3) {
+                //     spdlog::error(
+                //         "read_obj: vertex on line {:d} should have at "
+                //         "least 3 coordinates",
+                //         line_no);
+                //     fclose(obj_file);
+                //     return false;
+                // }
 
                 V.push_back(vertex);
             } else if (type == vn) {

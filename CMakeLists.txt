@@ -235,7 +235,7 @@ target_link_libraries(ipc_rigid PUBLIC filib::filib)
 
 # SimpleBVH
 include(simple_bvh)
-target_link_libraries(ipc_rigid PUBLIC SimpleBVH::BVH_lib)
+target_link_libraries(ipc_rigid PUBLIC simple_bvh::simple_bvh)
 
 # tinygltf
 include(tinygltf)

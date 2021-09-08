@@ -281,7 +281,7 @@ void UISimState::draw_legends()
                 float aux = float(ptr->m_scaling);
                 if (ImGui::SliderFloat(
                         ("scale##UI-com-scaling" + label).c_str(), &aux, 0.00f,
-                        10.0f, "%1.1f", 2.0f)) {
+                        10.0f, "%1.1f", 1.0f)) {
                     ptr->m_scaling = double(aux);
                     ptr->recolor();
                 }
