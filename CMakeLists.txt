@@ -28,7 +28,7 @@ endif()
 
 project(RigidIPC
         DESCRIPTION "Robust, intersection-free, simulations of rigid bodies."
-        LANGUAGES C CXX)
+        LANGUAGES CXX)
 
 option(RIGID_IPC_WITH_UNIT_TESTS  "Build unit-tests"      ${RIGID_IPC_TOPLEVEL_PROJECT})
 option(RIGID_IPC_WITH_OPENGL      "Build GUI"             ${RIGID_IPC_TOPLEVEL_PROJECT})
@@ -147,7 +147,7 @@ add_library(ipc_rigid
   src/utils/tensor.cpp
   src/utils/eigen_ext.cpp
   src/utils/regular_2d_grid.cpp
-  src/utils/get_rss.c
+  src/utils/get_rss.cpp
 
   src/SimState.cpp
   src/logger.cpp

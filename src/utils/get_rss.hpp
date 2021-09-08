@@ -5,14 +5,18 @@
  *          http://creativecommons.org/licenses/by/3.0/deed.en_US
  */
 
+namespace ipc::rigid {
+
 /**
  * Returns the peak (maximum so far) resident set size (physical memory use)
  * measured in bytes, or zero if the value cannot be determined on this OS.
  */
-extern "C" size_t getPeakRSS();
+size_t getPeakRSS();
 
 /**
  * Returns the current resident set size (physical memory use) measured in
  * bytes, or zero if the value cannot be determined on this OS.
  */
-extern "C" size_t getCurrentRSS();
+size_t getCurrentRSS();
+
+} // namespace ipc::rigid

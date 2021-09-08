@@ -6,13 +6,13 @@
  */
 
 #if defined(_WIN32)
-#include <psapi.h>
 #include <windows.h>
+#include <psapi.h>
 
 #elif defined(__unix__) || defined(__unix) || defined(unix)                    \
     || (defined(__APPLE__) && defined(__MACH__))
-#include <sys/resource.h>
 #include <unistd.h>
+#include <sys/resource.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/mach.h>
@@ -32,6 +32,8 @@
 #else
 #error "Cannot define getPeakRSS( ) or getCurrentRSS( ) for an unknown OS."
 #endif
+
+namespace ipc::rigid {
 
 /**
  * Returns the peak (maximum so far) resident set size (physical
@@ -120,3 +122,5 @@ size_t getCurrentRSS()
     return (size_t)0L; /* Unsupported. */
 #endif
 }
+
+} // namespace ipc::rigid
