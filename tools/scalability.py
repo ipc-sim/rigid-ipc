@@ -51,7 +51,7 @@ def get_fixture_dir():
 
 
 def sim_exe_name():
-    return "rigid_ipc_sim_ngui"
+    return "rigid_ipc_sim"
 
 
 def find_sim_exe():
@@ -108,7 +108,7 @@ def main():
 
         sim_output_dir = (pathlib.Path("output") / "3D" / "scalability" /
                           "weak" / f"{thread_count:02d}threads")
-        subprocess.run([str(args.sim_exe), str(scene.resolve()),
+        subprocess.run([str(args.sim_exe), --ngui, str(scene.resolve()),
                         str(sim_output_dir),
                         "--loglevel", str(args.loglevel),
                         "--nthreads", str(1)
@@ -158,7 +158,7 @@ def main():
 
         sim_output_dir = (pathlib.Path("output") / "3D" / "scalability" /
                           "weak" / f"{thread_count:02d}threads")
-        subprocess.run([str(args.sim_exe), str(scene.resolve()),
+        subprocess.run([str(args.sim_exe), "--ngui", str(scene.resolve()),
                         str(sim_output_dir),
                         "--loglevel", str(args.loglevel),
                         "--nthreads", str(thread_count)
@@ -203,13 +203,13 @@ def main():
         "max_num_contacts", "avg_solver_iterations", "max_solver_iterations",
         "avg_step_time", "max_step_time", "total_runtime (s)", "memory (MB)",
         "machine"])
-    
+
     for thread_count in range(1, max_threads + 1):
         scene = fixture_dir / "3D" / "scalability" / "strong.json"
 
         sim_output_dir = pathlib.Path(
             "output") / "3D" / "scalability" / "strong"
-        subprocess.run([str(args.sim_exe), str(scene.resolve()),
+        subprocess.run([str(args.sim_exe),  "--ngui", str(scene.resolve()),
                         str(sim_output_dir),
                         "--loglevel", str(args.loglevel),
                         "--nthreads", str(thread_count)

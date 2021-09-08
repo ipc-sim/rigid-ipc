@@ -166,15 +166,15 @@ add_library(ipc::rigid ALIAS ipc_rigid)
 
 # Directory paths
 set(RIGID_IPC_MESH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/meshes)
-target_compile_definitions(ipc_rigid PUBLIC -DRIGID_IPC_MESHES_DIR=\"${RIGID_IPC_MESH_DIR}\")
+target_compile_definitions(ipc_rigid PUBLIC RIGID_IPC_MESHES_DIR=\"${RIGID_IPC_MESH_DIR}\")
 
 if(RIGID_IPC_WITH_DERIVATIVE_CHECK)
-  target_compile_definitions(ipc_rigid PUBLIC -DRIGID_IPC_WITH_DERIVATIVE_CHECK)
+  target_compile_definitions(ipc_rigid PUBLIC RIGID_IPC_WITH_DERIVATIVE_CHECK)
 endif()
 
 if(RIGID_IPC_WITH_PROFILING)
   message(STATUS "Profiling Enabled")
-  target_compile_definitions(ipc_rigid PUBLIC -DRIGID_IPC_PROFILE_FUNCTIONS)
+  target_compile_definitions(ipc_rigid PUBLIC RIGID_IPC_PROFILE_FUNCTIONS)
 endif()
 
 # For MSVC, do not use the min and max macros.
@@ -278,39 +278,32 @@ target_compile_features(ipc_rigid PUBLIC cxx_std_17)
 # Simulations Executable
 ################################################################################
 
+add_executable(rigid_ipc_sim src/main.cpp)
 if(RIGID_IPC_WITH_OPENGL)
-  add_executable(rigid_ipc_sim
-    src/main.cpp
-    src/viewer/imgui_ext.cpp
-    src/viewer/igl_viewer_ext.cpp
-    src/viewer/UISimState.cpp
-    src/viewer/UIMenu.cpp
-  )
-  target_include_directories(rigid_ipc_sim PUBLIC src)
-
-  target_link_libraries(rigid_ipc_sim PUBLIC ipc::rigid)
-
-  include(libigl)
-  target_link_libraries(rigid_ipc_sim PUBLIC
-    igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
-
-  # Charlie Tangora's gif-h library
-  include(gif_h)
-  target_link_libraries(rigid_ipc_sim PRIVATE gif_h::gif_h)
-
-  include(cli11)
-  target_link_libraries(rigid_ipc_sim PUBLIC CLI11::CLI11)
+    target_sources(rigid_ipc_sim PUBLIC
+      src/viewer/imgui_ext.cpp
+      src/viewer/igl_viewer_ext.cpp
+      src/viewer/UISimState.cpp
+      src/viewer/UIMenu.cpp
+    )
 endif()
 
-################################################################################
-# No UI Executable
-################################################################################
-add_executable(rigid_ipc_sim_ngui src/cli_main.cpp)
-
-target_link_libraries(rigid_ipc_sim_ngui PUBLIC ipc::rigid)
+target_link_libraries(rigid_ipc_sim PUBLIC ipc::rigid)
 
 include(cli11)
-target_link_libraries(rigid_ipc_sim_ngui PUBLIC CLI11::CLI11)
+target_link_libraries(rigid_ipc_sim PUBLIC CLI11::CLI11)
+
+if(RIGID_IPC_WITH_OPENGL)
+    target_compile_definitions(rigid_ipc_sim PUBLIC RIGID_IPC_WITH_OPENGL)
+
+    include(libigl)
+    target_link_libraries(rigid_ipc_sim PUBLIC
+        igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
+
+    # Charlie Tangora's gif-h library
+    include(gif_h)
+    target_link_libraries(rigid_ipc_sim PRIVATE gif_h::gif_h)
+endif()
 
 ################################################################################
 # Tools

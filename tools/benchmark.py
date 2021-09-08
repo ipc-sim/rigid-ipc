@@ -59,7 +59,7 @@ def fixture_dir():
 
 
 def sim_exe_name():
-    return "rigid_ipc_sim_ngui"
+    return "rigid_ipc_sim"
 
 
 def find_sim_exe():
@@ -177,7 +177,7 @@ def main():
         #         sys.stdout.write(line)
         #         log_file.write(line)
         #     sim.wait()
-        subprocess.run([str(args.sim_exe), str(scene.resolve()),
+        subprocess.run([str(args.sim_exe), "--ngui", str(scene.resolve()),
                         str(sim_output_dir), "--loglevel", str(args.loglevel),
                         "--nthreads", str(max_threads)]
                        + args.sim_args.split())

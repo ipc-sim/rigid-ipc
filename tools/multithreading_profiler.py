@@ -16,7 +16,7 @@ def get_fixture_dir():
 
 
 def sim_exe_name():
-    return "rigid_ipc_sim_ngui"
+    return "rigid_ipc_sim"
 
 
 def find_sim_exe():
@@ -95,7 +95,7 @@ def main():
 
             sim_output_dir = (pathlib.Path(
                 f"output-{thread_count_str}threads") / scene_name)
-            subprocess.run([str(args.sim_exe), str(scene.resolve()),
+            subprocess.run([str(args.sim_exe), "--ngui", str(scene.resolve()),
                             str(sim_output_dir),
                             "--loglevel", str(args.loglevel),
                             "--nthreads", str(thread_count)

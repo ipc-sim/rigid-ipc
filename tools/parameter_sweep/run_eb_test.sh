@@ -23,8 +23,7 @@ BUILD_DIR="$FIXING_COLLISIONS_ROOT/build/"
 
 mkdir -p $OUTPUT_DIR
 
-$BUILD_DIR/Release/rigid_ipc_sim_ngui --scene-path $OUTPUT_DIR/$OUTPUT_NAME.json \
+$BUILD_DIR/Release/rigid_ipc_sim --ngui --scene-path $OUTPUT_DIR/$OUTPUT_NAME.json \
         --output-path $OUTPUT_DIR -f "$OUTPUT_NAME"_sim.json > $OUTPUT_DIR/"$OUTPUT_NAME"_sim.log
 
 python $TOOLS_DIR/results_to_vtk_files.py $OUTPUT_DIR/"$OUTPUT_NAME"_sim.json $OUTPUT_DIR
-

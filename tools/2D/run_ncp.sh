@@ -1,5 +1,5 @@
 RESULTS_FOLDER=results/paper-results/
-SIM=build/Release/rigid_ipc_sim_ngui
+SIM="build/Release/rigid_ipc_sim --ngui"
 MIN_DISTANCE=build/Release/cli_mindistance
 
 
@@ -15,7 +15,7 @@ function run_npc(){
 
 	echo "Run Simulation"
  	$SIM "$out_fixture_folder/fixture.json" \
- 		--output-path="$out_fixture_folder" > "$out_fixture_folder/log.log" 
+ 		--output-path="$out_fixture_folder" > "$out_fixture_folder/log.log"
 
  	echo "Check for Collisions:"
  	cat  "$out_fixture_folder/log.log" | grep -c "unsolved"
@@ -28,13 +28,13 @@ function run_npc(){
 
 function axle(){
 	out_folder=$1
-	
+
 	cor=1
 	timestep=0.1
 
 	out_fixture_folder="${out_folder}/cor=${cor}_timestep_${timestep}"
 	mkdir -p $out_fixture_folder
-	
+
 	python tools/generate_axle_fixture.py \
 		--cor $cor \
 		--time-step $timestep \
@@ -45,13 +45,13 @@ function axle(){
 
 function billiards(){
 	out_folder=$1
-	
+
 	cor=0
 	timestep=0.01
 
 	out_fixture_folder="${out_folder}/cor=${cor}_timestep_${timestep}"
 	mkdir -p $out_fixture_folder
-	
+
 	python tools/generate_billiards_fixture.py \
 		--cor $cor \
 		--time-step $timestep \
@@ -62,13 +62,13 @@ function billiards(){
 
 function compactor_10_boxes(){
 	out_folder=$1
-	
+
 	cor=1
 	timestep=0.001
 
 	out_fixture_folder="${out_folder}/cor=${cor}_timestep_${timestep}_blocks=10"
 	mkdir -p $out_fixture_folder
-	
+
 	python tools/generate_compactor_fixture.py \
 		--num-blocks=10 \
 		--cor $cor \
@@ -81,13 +81,13 @@ function compactor_10_boxes(){
 
 function newtons_craddle(){
 	out_folder=$1
-	
+
 	cor=0
 	timestep=0.001
 
 	out_fixture_folder="${out_folder}/cor=${cor}_timestep_${timestep}"
 	mkdir -p $out_fixture_folder
-	
+
 	python tools/generate_newtons_cradle_fixture.py \
 		--cor $cor \
 		--time-step $timestep \
@@ -98,14 +98,14 @@ function newtons_craddle(){
 
 function filling_box(){
 	out_folder=$1
-	
+
 	cor=0
 	timestep=0.01
 	num_blocks=25
 
 	out_fixture_folder="${out_folder}/cor=${cor}_timestep_${timestep}_num_blocks=${num_blocks}"
 	mkdir -p $out_fixture_folder
-	
+
 	python tools/generate_filling_box_fixture.py \
 		--cor $cor \
 		--time-step $timestep \
@@ -117,13 +117,13 @@ function filling_box(){
 
 function line_stack(){
 	out_folder=$1
-	
+
 	cor=0
 	timestep=0.001
 
 	out_fixture_folder="${out_folder}/cor=${cor}_timestep_${timestep}"
 	mkdir -p $out_fixture_folder
-	
+
 	python tools/generate_line_stack.py \
 		--cor $cor \
 		--time-step $timestep \
@@ -134,13 +134,13 @@ function line_stack(){
 
 function pyramid(){
 	out_folder=$1
-	
+
 	cor=0
 	timestep=0.1
 
 	out_fixture_folder="${out_folder}/cor=${cor}_timestep_${timestep}"
 	mkdir -p $out_fixture_folder
-	
+
 	python tools/generate_pyramid_fixture.py \
 		--cor $cor \
 		--time-step $timestep \
@@ -152,13 +152,13 @@ function pyramid(){
 
 function interlocking_saw(){
 	out_folder=$1
-	
+
 	cor=1
 	timestep=0.001
 	num_teeth=100
 	out_fixture_folder="${out_folder}/cor=${cor}_timestep_${timestep}_num_teeth=${num_teeth}"
 	mkdir -p $out_fixture_folder
-	
+
 	python tools/generate_interlocking_saw_fixture.py \
 		--cor $cor \
 		--time-step $timestep \

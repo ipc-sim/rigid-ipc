@@ -2,7 +2,7 @@ if(TARGET simple_bvh::simple_bvh)
     return()
 endif()
 
-message(STATUS "Third-party: creating target 'SimpleBVH::BVH_lib'")
+message(STATUS "Third-party: creating target 'simple_bvh::simple_bvh'")
 
 include(FetchContent)
 FetchContent_Declare(
