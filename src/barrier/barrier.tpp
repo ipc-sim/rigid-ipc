@@ -1,5 +1,4 @@
 #pragma once
-#include "barrier.hpp"
 
 #include <ipc/barrier/barrier.hpp>
 

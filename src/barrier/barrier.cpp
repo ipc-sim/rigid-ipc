@@ -78,10 +78,10 @@ double poly_log_barrier_hessian(double x, double s)
 // Spline Barrier
 // template spetialization
 
-template <> double spline_barrier<double>(const double& x, double s)
-{
-    return barrier_horner_compensated(x, s);
-}
+// template <> double spline_barrier(const double& x, double s)
+// {
+//     return barrier_horner_compensated(x, s);
+// }
 
 // Derivative of the spline_barrier function with respect to x.
 double spline_barrier_gradient(double x, double s)
