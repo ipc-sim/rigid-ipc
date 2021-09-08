@@ -38,7 +38,7 @@ FetchContent_Declare(
     tbb
     GIT_REPOSITORY https://github.com/wjakob/tbb.git
     GIT_TAG 141b0e310e1fb552bdca887542c9c1a8544d6503
-    GIT_SHALLOW TRUE
+    GIT_SHALLOW FALSE
 )
 
 option(TBB_PREFER_STATIC         "Use the static version of TBB for the alias target" ON)

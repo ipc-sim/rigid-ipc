@@ -9,7 +9,7 @@ FetchContent_Declare(
     gif_h
     GIT_REPOSITORY https://github.com/charlietangora/gif-h.git
     GIT_TAG 3d2657b9ad40aac9fd6f75ad079335856e94d664
-    GIT_SHALLOW TRUE
+    GIT_SHALLOW FALSE
 )
 
 FetchContent_GetProperties(gif_h)
