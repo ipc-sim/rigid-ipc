@@ -43,13 +43,12 @@ jobs:
         run: |
             sudo apt-get install \
             ccache \
-            libboost-all-dev \
             xorg-dev \
             libglu1-mesa-dev
 
       - name: Dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install ccache boost
+        run: brew install ccache
 
       - name: Cache Build
         id: cache-build
@@ -92,13 +91,6 @@ jobs:
       matrix:
         config: [Debug, Release]
     steps:
-      - name: Download and install Boost
-        uses: MarkusJx/install-boost@v1.0.1
-        id: install-boost
-        with:
-          boost_version: 1.73.0
-          boost_install_dir: D:\a\
-
       - name: Checkout repository
         uses: actions/checkout@v1
         with:
@@ -109,7 +101,6 @@ jobs:
       - name: Set env
         run: |
           echo "appdata=$env:LOCALAPPDATA" >> ${env:GITHUB_ENV}
-          echo "BOOST_ROOT=${{ steps.install-boost.outputs.BOOST_ROOT }}" >> ${env:GITHUB_ENV}
 
       - name: Cache build
         id: cache-build
@@ -136,11 +127,9 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ^
             -DCMAKE_BUILD_TYPE=${{ matrix.config }} ^
             -DRIGID_IPC_WITH_UNIT_TESTS=ON ^
-            -DBOOST_ROOT="${{ steps.install-boost.outputs.BOOST_ROOT }}" ^
-            -DBoost_INCLUDE_DIR="D:/a/boost/${{ steps.install-boost.outputs.BOOST_VER }}/include" ^
             -B build ^
             -S .
-          ninja -j1
+          cmake --build build
 
       - name: Tests
         run: cd build; ctest --verbose
