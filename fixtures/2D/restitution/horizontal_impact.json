@@ -3,7 +3,7 @@
     "timestep": 0.1,
     "scene_type": "distance_barrier_rb_problem",
     "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 0.1,
+        "initial_barrier_activation_distance": 0.01,
         "detection_method": "hash_grid",
         "use_distance_hashgrid": true,
         "custom_hashgrid_cellsize": -1

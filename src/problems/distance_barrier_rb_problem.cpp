@@ -400,8 +400,8 @@ void DistanceBarrierRBProblem::update_augmented_lagrangian(
                     auto Q = construct_rotation_matrix(
                         VectorMax3d(x.segment(ri, rot_ndof)));
                     angular_augmented_lagrangian_multiplier.middleRows(
-                        3 * ki, 3) -= angular_augmented_lagrangian_penalty
-                        * (Q - Q_pred)
+                        rot_ndof * ki, rot_ndof) -=
+                        angular_augmented_lagrangian_penalty * (Q - Q_pred)
                         * compute_Jsqrt(m_assembler[i].moment_of_inertia);
                 }
                 ki++;
@@ -984,55 +984,73 @@ double DistanceBarrierRBProblem::compute_augmented_lagrangian(
     // Compute the linear AL potential
     const double& kappa_q = linear_augmented_lagrangian_penalty;
     for (size_t i = 0, ki = 0; i < num_bodies(); i++) {
-        if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
-
-            double m = m_assembler[i].mass;
-            const auto& lambda = linear_augmented_lagrangian_multiplier.segment(
-                ki * pos_ndof, pos_ndof);
-
-            const auto& q = x.segment(i * ndof, pos_ndof);
-            const auto& q_pred = x_pred.segment(i * ndof, pos_ndof);
-
-            potential += kappa_q / 2 * m * (q - q_pred).squaredNorm()
-                - sqrt(m) * lambda.dot(q - q_pred);
-            if (compute_grad) {
-                grad.segment(i * ndof, pos_ndof) =
-                    kappa_q * m * (q - q_pred) - sqrt(m) * lambda;
-            }
-            if (compute_hess) {
-                for (int j = 0; j < pos_ndof; j++) {
-                    hess_triplets.emplace_back(
-                        ndof * i + j, ndof * i + j, kappa_q * m);
-                }
-            }
-
-            ki++;
+        if (m_assembler[i].type != RigidBodyType::KINEMATIC) {
+            continue;
         }
+
+        double m = m_assembler[i].mass;
+        const auto& lambda = linear_augmented_lagrangian_multiplier.segment(
+            ki * pos_ndof, pos_ndof);
+
+        const auto& q = x.segment(i * ndof, pos_ndof);
+        const auto& q_pred = x_pred.segment(i * ndof, pos_ndof);
+
+        potential += kappa_q / 2 * m * (q - q_pred).squaredNorm()
+            - sqrt(m) * lambda.dot(q - q_pred);
+        if (compute_grad) {
+            grad.segment(i * ndof, pos_ndof) =
+                kappa_q * m * (q - q_pred) - sqrt(m) * lambda;
+        }
+        if (compute_hess) {
+            for (int j = 0; j < pos_ndof; j++) {
+                hess_triplets.emplace_back(
+                    ndof * i + j, ndof * i + j, kappa_q * m);
+            }
+        }
+
+        ki++;
     }
 
     typedef AutodiffType<Eigen::Dynamic, /*maxN=*/3> Diff;
     Diff::activate(rot_ndof);
 
     // Compute the angular AL potential
-    if (dim() == 2) {
-        throw NotImplementedError("AL not implemented for 2D");
-    }
-
     const double& kappa_Q = angular_augmented_lagrangian_penalty;
-
     for (size_t i = 0, ki = 0; i < num_bodies(); i++) {
-        if (m_assembler[i].type == RigidBodyType::KINEMATIC) {
+        if (m_assembler[i].type != RigidBodyType::KINEMATIC) {
+            continue;
+        }
 
-            VectorMax3<Diff::DDouble2> theta_diff =
-                Diff::d2vars(0, x.segment(i * ndof + pos_ndof, rot_ndof));
-            VectorMax3d theta_pred =
-                x_pred.segment(i * ndof + pos_ndof, rot_ndof);
+        const VectorMax3d& moment_of_inertia = m_assembler[i].moment_of_inertia;
+        MatrixMax3d lambda = angular_augmented_lagrangian_multiplier.middleRows(
+            rot_ndof * ki, rot_ndof);
 
-            DiagonalMatrix3d J = compute_J(m_assembler[i].moment_of_inertia);
-            DiagonalMatrix3d Jsqrt =
-                compute_Jsqrt(m_assembler[i].moment_of_inertia);
-            const auto& lambda =
-                angular_augmented_lagrangian_multiplier.middleRows(3 * ki, 3);
+        VectorMax3d theta = x.segment(i * ndof + pos_ndof, rot_ndof);
+        VectorMax3d theta_pred = x_pred.segment(i * ndof + pos_ndof, rot_ndof);
+
+        if (dim() == 2) {
+            double I = moment_of_inertia(0);
+            double Isqrt = sqrt(I);
+
+            potential += kappa_Q / 2 * I * (theta - theta_pred).squaredNorm()
+                - (Isqrt * lambda.transpose() * (theta - theta_pred)).trace();
+
+            if (compute_grad) {
+                grad.segment(i * ndof + pos_ndof, rot_ndof) =
+                    kappa_Q * I * (theta - theta_pred) - Isqrt * lambda;
+            }
+            if (compute_hess) {
+                for (int j = 0; j < rot_ndof; j++) {
+                    hess_triplets.emplace_back(
+                        ndof * i + pos_ndof + j, ndof * i + pos_ndof + j,
+                        kappa_Q * I);
+                }
+            }
+        } else {
+            VectorMax3<Diff::DDouble2> theta_diff = Diff::d2vars(0, theta);
+
+            DiagonalMatrix3d J = compute_J(moment_of_inertia);
+            DiagonalMatrix3d Jsqrt = compute_Jsqrt(moment_of_inertia);
 
             const auto& Q = construct_rotation_matrix(theta_diff);
             const auto& Q_pred = construct_rotation_matrix(theta_pred);
@@ -1055,9 +1073,9 @@ double DistanceBarrierRBProblem::compute_augmented_lagrangian(
                     }
                 }
             }
-
-            ki++;
         }
+
+        ki++;
     }
 
     if (compute_hess) {

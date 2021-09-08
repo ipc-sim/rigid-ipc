@@ -3,7 +3,7 @@
     "max_iterations": 1000,
     "timestep": 0.001,
     "distance_barrier_constraint": {
-        "initial_barrier_activation_distance": 0.1,
+        "initial_barrier_activation_distance": 0.01,
         "detection_method": "hash_grid"
     },
     "homotopy_solver": {
