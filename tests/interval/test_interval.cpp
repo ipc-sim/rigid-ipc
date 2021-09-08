@@ -69,7 +69,7 @@ TEST_CASE("Sine interval arithmetic", "[interval]")
 {
     ipc::rigid::Interval r;
 
-    double shift = M_PI_2;
+    double shift = igl::PI / 2;
     SECTION("No shift") { shift += 0; }
     SECTION("2π shift") { shift += 2 * igl::PI; }
     SECTION("-2π shift") { shift += -2 * igl::PI; }

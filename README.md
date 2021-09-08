@@ -34,11 +34,24 @@ make -j4
 
 ### Dependencies
 
-Most dependancies are downloaded through CMake depending on the build options.
-The only exceptions to this are:
+**All dependancies are downloaded through CMake** depending on the build options.
+The following libraries are used in this project:
 
-* [Boost](https://www.boost.org/): We currently use the interval arithmetic
-library for interval root finding
+* [IPC Toolkit](https://github.com/ipc-sim/ipc-toolkit): common IPC functions
+* [Eigen](https://eigen.tuxfamily.org/): linear algebra
+* [libigl](https://github.com/libigl/libigl): basic geometry functions, predicates, and viewer
+* [TBB](https://github.com/wjakob/tbb): parallelization
+* [Tight Inclusion CCD](https://github.com/Continuous-Collision-Detection/Tight-Inclusion): correct (conservative) continuous collision detection between triangle meshes in 3D
+* [spdlog](https://github.com/gabime/spdlog): logging information
+* [filib](https://github.com/txstc55/filib): interval arithmetic
+* [Niels Lohmann's JSON](https://github.com/nlohmann/json): parsing input JSON scenes
+* [tinygltf](https://github.com/syoyo/tinygltf.git): exporting simulation animation to GLTF format
+* [finite-diff](https://github.com/zfergus/finite-diff): finite difference comparisons
+    * Only used by the unit tests and when `RIGID_IPC_WITH_DERIVATIVE_CHECK=ON`
+
+#### Optional
+
+* [Catch2](https://github.com/catchorg/Catch2.git): unit tests
 
 ## Scenes
 

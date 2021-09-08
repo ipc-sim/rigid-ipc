@@ -5,7 +5,6 @@
 #include <iostream>
 
 #include <autodiff/autodiff_types.hpp>
-#include <finitediff.hpp>
 
 namespace ipc::rigid {
 namespace autogen {

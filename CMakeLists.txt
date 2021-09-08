@@ -30,13 +30,14 @@ project(RigidIPC
         DESCRIPTION "Robust, intersection-free, simulations of rigid bodies."
         LANGUAGES CXX)
 
-option(RIGID_IPC_WITH_UNIT_TESTS  "Build unit-tests"      ${RIGID_IPC_TOPLEVEL_PROJECT})
-option(RIGID_IPC_WITH_OPENGL      "Build GUI"             ${RIGID_IPC_TOPLEVEL_PROJECT})
-option(RIGID_IPC_WITH_TOOLS       "Build tools"           ${RIGID_IPC_TOPLEVEL_PROJECT})
-option(RIGID_IPC_WITH_PROFILING   "Profile functions"     OFF)
-option(RIGID_IPC_WITH_COMPARISONS "Build comparisons"     OFF)
-option(RIGID_IPC_WITH_SIMD        "Enable SIMD"           OFF)
-option(RIGID_IPC_WITH_PYTHON      "Build Python bindings" OFF)
+option(RIGID_IPC_WITH_UNIT_TESTS             "Build unit-tests"      ${RIGID_IPC_TOPLEVEL_PROJECT})
+option(RIGID_IPC_WITH_OPENGL                 "Build GUI"             ${RIGID_IPC_TOPLEVEL_PROJECT})
+option(RIGID_IPC_WITH_TOOLS                  "Build tools"           ${RIGID_IPC_TOPLEVEL_PROJECT})
+option(RIGID_IPC_WITH_PROFILING              "Profile functions"                               OFF)
+option(RIGID_IPC_WITH_COMPARISONS            "Build comparisons"                               OFF)
+option(RIGID_IPC_WITH_SIMD                   "Enable SIMD"                                     OFF)
+option(RIGID_IPC_WITH_PYTHON                 "Build Python bindings"                           OFF)
+option(RIGID_IPC_WITH_DERIVATIVE_CHECK      "Check derivatives using finite differences"       OFF)
 
 # Set default minimum C++ standard
 if(RIGID_IPC_TOPLEVEL_PROJECT)
