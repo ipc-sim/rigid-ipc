@@ -1,9 +1,9 @@
 # Rigid IPC
 
-<!-- [![Build status](https://github.com/ipc-sim/IPC/workflows/Build/badge.svg?event=push)](https://github.com/ipc-sim/IPC/actions?query=workflow%3ABuild+branch%3Amaster+event%3Apush) -->
-<!-- [![License](https://img.shields.io/github/license/ipc-sim/IPC.svg?color=blue)](https://github.com/ipc-sim/IPC/blob/master/LICENSE) -->
-
 <img src="docs/imgs/teaser.png">
+
+[![Build](https://github.com/ipc-sim/rigid-ipc/actions/workflows/continuous.yml/badge.svg)](https://github.com/ipc-sim/rigid-ipc/actions/workflows/continuous.yml)
+[![License](https://img.shields.io/github/license/ipc-sim/rigid-ipc.svg?color=blue)](https://github.com/ipc-sim/rigid-ipc/blob/master/LICENSE)
 
 <b>Robust, intersection-free, simulations of rigid bodies.</b>
 
