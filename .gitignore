@@ -221,67 +221,44 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-## AUTOGEN!
-#comparisons/STIV/src/autogen/*.ipp
-#src/autogen/*.ipp
-#src/autogen/*.hpp
 
-fixtures/auto_*.json
-figures/*.data
-data/*.local/
-data/linesearch_*.csv
-logs/*.csv
-logs/**/*.csv
-logs/*.log
-logs/**/*.log
+################################################################################
+# Code Editors
+################################################################################
 
-3rdparty*
+# Atom beautifier files
+.atom-beautify.*
 
+**/*.bak
 
-## Documentation
+################################################################################
+# Documentation
+################################################################################
+
 docs/*
 !/docs/imgs
 
 ## Symbolic link to Google Drive folder
 results
 
-# Atom beautifier files
-.atom-beautify.*
+src/ccd/EE-CCD-plan.txt
 
-logs
-core*
-tmp
-hpc-results
-paper
-temp-plot.html
-
-*.blend[123456789]
-meshes/tennis-racket.obj
-# UNC Dynamic Scene Benchmarks fracture example that contains intersections
-meshes/fracture/chinese-lion
-
-**/*.bak
+################################################################################
+# Output
+################################################################################
 
 output*/
 output-*threads/
-fixtures/**/*.gif
-fixtures/**/*.obj
-
-src/ccd/EE-CCD-plan.txt
-tools/blender
-*.csv
-comparisons/IPC/*.csv
 **/*.sim.json
-# this is a model we bought and cannot share
-meshes/expanding-lock-box
-# this was provided by Nervous system
-meshes/kinematic-dress
-fixtures/3D/kinematic-dress
-comparisons/Chrono/tmp.obj
 **/vhacd_log.txt
 src/tools/ccd-queries
+*.csv
+comparisons/IPC/*.csv
 
-# Python bindings
+################################################################################
+# Python
+################################################################################
+
 !python/src/*
 
 # Jupyter Notebooks
@@ -289,5 +266,43 @@ notebooks/*
 !notebooks/compute_J.ipynb
 !notebooks/sinc.ipynb
 
+################################################################################
+# Tools
+################################################################################
+
 tools/2D
 tools/parameter_sweep
+tools/blender
+
+################################################################################
+# Meshes
+################################################################################
+
+*.blend[123456789]
+
+meshes/507-movements/227-chain-pully/chain.blend
+meshes/**/*.blend
+
+# this is a model we bought and cannot share
+meshes/expanding-lock-box
+
+# this was provided by Nervous system
+meshes/kinematic-dress
+
+meshes/tennis-racket.obj
+
+# UNC Dynamic Scene Benchmarks fracture example that contains intersections
+meshes/fracture/chinese-lion
+
+comparisons/Chrono/tmp.obj
+
+################################################################################
+# Fixtures
+################################################################################
+
+fixtures/auto_*.json
+figures/*.data
+
+fixtures/**/*.gif
+fixtures/**/*.obj
+fixtures/3D/kinematic-dress
