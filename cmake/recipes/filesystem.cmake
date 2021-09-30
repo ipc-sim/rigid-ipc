@@ -15,7 +15,8 @@ FetchContent_MakeAvailable(filesystem)
 add_library(ghc::filesystem ALIAS ghc_filesystem)
 
 # Check if we need to link against any special libraries (e.g., stdc++fs for GCC < 9)
-cmake_push_check_state()
+set(SAVED_CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES})
+set(SAVED_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
 
 set(GHC_FILESYSTEM_TEST_CODE [[
         #include <ghc/fs_std.hpp>
@@ -27,20 +28,17 @@ set(GHC_FILESYSTEM_TEST_CODE [[
 
 
 # Try to compile a simple filesystem program without any linker flags
-set(CMAKE_REQUIRED_QUIET ON)
 list(APPEND CMAKE_REQUIRED_INCLUDES "${filesystem_SOURCE_DIR}/include")
 check_cxx_source_compiles("${GHC_FILESYSTEM_TEST_CODE}" GHC_FILESYSTEM_NO_LINK_NEEDED)
 
 if(NOT GHC_FILESYSTEM_NO_LINK_NEEDED)
-    set(PREV_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
-
     # Add the libstdc++ flag
-    set(CMAKE_REQUIRED_LIBRARIES ${PREV_LIBRARIES} -lstdc++fs)
+    set(CMAKE_REQUIRED_LIBRARIES ${SAVED_CMAKE_REQUIRED_LIBRARIES} -lstdc++fs)
     check_cxx_source_compiles("${GHC_FILESYSTEM_TEST_CODE}" GHC_FILESYSTEM_STDCPPFS_NEEDED)
 
     if(NOT GHC_FILESYSTEM_STDCPPFS_NEEDED)
         # Try the libc++ flag
-        set(CMAKE_REQUIRED_LIBRARIES ${PREV_LIBRARIES} -lc++fs)
+        set(CMAKE_REQUIRED_LIBRARIES ${SAVED_CMAKE_REQUIRED_LIBRARIES} -lc++fs)
         check_cxx_source_compiles("${GHC_FILESYSTEM_TEST_CODE}" GHC_FILESYSTEM_CPPFS_NEEDED)
     endif()
 endif()
@@ -61,4 +59,5 @@ else()
     message(FATAL_ERROR "Unable to determine correct linking options to compile GHC filesystem!")
 endif()
 
-cmake_pop_check_state()
+set(CMAKE_REQUIRED_INCLUDES ${SAVED_CMAKE_REQUIRED_INCLUDES})
+set(CMAKE_REQUIRED_LIBRARIES ${SAVED_CMAKE_REQUIRED_LIBRARIES})
