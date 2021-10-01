@@ -4,7 +4,7 @@
     "timestep": 0.01,
     "distance_barrier_constraint": {
         "initial_barrier_activation_distance": 0.01,
-        "detection_method": "hash_grid",
+        "detection_method": "hash_grid"
     },
     "homotopy_solver": {
         "e_b": 1e-08,
@@ -20,8 +20,7 @@
             -9.81
         ],
         "coefficient_restitution": -1,
-        "rigid_bodies": [
-            {
+        "rigid_bodies": [{
                 "vertices": [
                     [
                         0.5,
