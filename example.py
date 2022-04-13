@@ -1,7 +1,7 @@
 import numpy
 import pathlib
 
-import rigidipc_py as ri
+import rigidipc as ri
 
 ri.set_logger_level(ri.LoggerLevel.error)
 

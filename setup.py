@@ -12,12 +12,12 @@ except ImportError:
     raise
 
 requirements = ["autolab-core", "numpy"]
-exec(open("src/rigidipc_py/version.py").read())
+exec(open("src/rigidipc/version.py").read())
 
 from setuptools import find_packages
 
 setup(
-    name="rigidipc_py",
+    name="rigidipc",
     version=__version__,
     # description="PhoXi python driver",
     # long_description="Python bindings for Photoneo PhoXi camera driver",
@@ -27,7 +27,7 @@ setup(
     install_requires=requirements,
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    cmake_install_dir="src/rigidipc_py",
+    cmake_install_dir="src/rigidipc",
     include_package_data=True,
     python_requires=">=3.6",
 )
