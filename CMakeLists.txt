@@ -337,9 +337,48 @@ if(RIGID_IPC_WITH_COMPARISONS)
 endif()
 
 ################################################################################
-# Python bindings
-################################################################################
 
-if(RIGID_IPC_WITH_PYTHON)
-  add_subdirectory(python)
+if(SKBUILD)
+  # Scikit-Build does not add your site-packages to the search path
+  # automatically, so we need to add it _or_ the pybind11 specific directory
+  # here.
+  execute_process(
+    COMMAND "${PYTHON_EXECUTABLE}" -c
+            "import pybind11; print(pybind11.get_cmake_dir())"
+    OUTPUT_VARIABLE _tmp_dir
+    OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT)
+  list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
 endif()
+
+if (UNIX AND NOT APPLE)
+    add_compile_options(-std=c++1y)
+    add_compile_options(-pthread)
+endif()
+
+include(pybind11)
+
+# find_package(pybind11 CONFIG REQUIRED)
+# find_package(PhoXi REQUIRED CONFIG PATHS "$ENV{PHOXI_CONTROL_PATH}")
+
+pybind11_add_module(_${PROJECT_NAME} MODULE src/bindings.cpp)
+target_link_libraries(_${PROJECT_NAME} PUBLIC ipc::rigid)
+
+# target_include_directories(_${PROJECT_NAME} PUBLIC ${PHOXI_INCLUDE_DIRS})
+# target_link_libraries(_${PROJECT_NAME}
+#   PRIVATE
+#   ${PHOXI_LIBRARY}
+#   $<$<PLATFORM_ID:Linux>:rt>
+# )
+target_compile_definitions(_${PROJECT_NAME} PRIVATE VERSION_INFO=${PROJECT_VERSION})
+
+set(lib_path "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${lib_path}" is_system)
+if ("${is_system}" STREQUAL "-1")
+    set_target_properties(_${PROJECT_NAME} PROPERTIES
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+        INSTALL_RPATH "${lib_path}")
+endif()
+
+install(TARGETS _${PROJECT_NAME}
+    DESTINATION .
+)
