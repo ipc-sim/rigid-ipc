@@ -306,3 +306,4 @@ figures/*.data
 fixtures/**/*.gif
 fixtures/**/*.obj
 fixtures/3D/kinematic-dress
+src/tools/ccd-queries.zip
