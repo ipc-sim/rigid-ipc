@@ -81,11 +81,11 @@ void log_octree(
         return;
     }
 
-    std::pair<Interval, Interval> t_split = bisect(x0(0));
+    std::pair<Interval, Interval> t_split = x0(0).bisect();
     for (Interval t : { t_split.first, t_split.second }) {
-        std::pair<Interval, Interval> alpha_split = bisect(x0(1));
+        std::pair<Interval, Interval> alpha_split = x0(1).bisect();
         for (Interval alpha : { alpha_split.first, alpha_split.second }) {
-            std::pair<Interval, Interval> beta_split = bisect(x0(2));
+            std::pair<Interval, Interval> beta_split = x0(2).bisect();
             for (Interval beta : { beta_split.first, beta_split.second }) {
                 Vector3I x(t, alpha, beta);
                 log_octree(f, x, levels - 1);
@@ -178,26 +178,13 @@ bool interval_root_finder(
         }
         assert(split_i >= 0 && split_i <= x.size());
 
-        std::pair<Interval, Interval> halves = bisect(x(split_i));
+        std::pair<Interval, Interval> halves = x(split_i).bisect();
         // Push the second half on first so it is examined after the first half
         x(split_i) = halves.second;
         xs.push(x);
         x(split_i) = halves.first;
         xs.push(x);
     }
-    // TODO: This is needs to be updated when max_iterations is renabled
-    // if (!xs.empty()) {
-    //     // Return the earliest possible time of impact
-    //     x = xs.top().first;
-    //     xs.pop();
-    //     while (!xs.empty()) {
-    //         if (xs.top().first[0].lower() < x[0].lower()) {
-    //             x = xs.top().first;
-    //         }
-    //         xs.pop();
-    //     }
-    //     return true; // A conservative answer
-    // }
     x = earliest_root;
     return found_root;
 }

@@ -79,22 +79,19 @@ Interval sinc(const Interval& x)
         }
         // sinc is monotonically decreasing, so flip a and b.
         // TODO: Set rounding modes here to avoid round off error.
-        y = hull(
-            y,
-            Interval(
-                // https://www.wolframalpha.com/input/?i=min+sin%28x%29%2Fx+between+4+and+5
-                std::max(
-                    _sinc_interval_taylor(x_monotonic.upper()).lower(),
-                    -0.271724), // <-- A conservative lower bound for sinc(x)
-                std::min(
-                    _sinc_interval_taylor(x_monotonic.lower()).upper(), 1.0)));
+        y |= Interval(
+            // https://www.wolframalpha.com/input/?i=min+sin%28x%29%2Fx+between+4+and+5
+            std::max(
+                _sinc_interval_taylor(x_monotonic.upper()).lower(),
+                -0.271724), // <-- A conservative lower bound for sinc(x)
+            std::min(_sinc_interval_taylor(x_monotonic.lower()).upper(), 1.0));
     }
 
     // Case 2 (Not necessarily monotonic):
-    if (!empty(x_gt_monotonic)) {
+    if (!x_gt_monotonic.is_empty()) {
         // x_gt_monotonic is larger than one, so the division should be well
         // behaved.
-        y = hull(y, sin(x_gt_monotonic) / x_gt_monotonic);
+        y |= sin(x_gt_monotonic) / x_gt_monotonic;
     }
 
     return y;

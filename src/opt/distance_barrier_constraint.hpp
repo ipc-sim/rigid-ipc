@@ -70,8 +70,7 @@ public:
     }
 
     double compute_minimum_distance(
-        const RigidBodyAssembler& bodies,
-        const PosesD& poses) const;
+        const RigidBodyAssembler& bodies, const PosesD& poses) const;
 
     // Settings
     // ----------

@@ -1,8 +1,10 @@
 #include <CLI/CLI.hpp>
-#include <ghc/fs_std.hpp> // filesystem
 
 #include <SimState.hpp>
 #include <logger.hpp>
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 int main(int argc, char* argv[])
 {

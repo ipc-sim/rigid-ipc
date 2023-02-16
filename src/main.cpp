@@ -6,14 +6,15 @@
 #include <tbb/task_scheduler_init.h>
 #include <thread>
 
-#include <ghc/fs_std.hpp> // filesystem
-
 #include <SimState.hpp>
 #ifdef RIGID_IPC_WITH_OPENGL
 #include <viewer/UISimState.hpp>
 #endif
 #include <logger.hpp>
 #include <profiler.hpp>
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 int main(int argc, char* argv[])
 {

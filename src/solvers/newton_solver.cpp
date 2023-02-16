@@ -23,7 +23,6 @@ NewtonSolver::NewtonSolver()
     , is_velocity_conv_tol_abs(false)
     , is_energy_converged(false)
 {
-    linear_solver = polysolve::LinearSolver::create("", "");
 }
 
 void NewtonSolver::settings(const nlohmann::json& json)
@@ -34,19 +33,6 @@ void NewtonSolver::settings(const nlohmann::json& json)
     velocity_conv_tol = json["velocity_conv_tol"];
     is_velocity_conv_tol_abs = json["is_velocity_conv_tol_abs"];
     m_line_search_lower_bound = json["line_search_lower_bound"];
-
-    linear_solver_settings = json["linear_solver"];
-    try {
-        linear_solver =
-            polysolve::LinearSolver::create(linear_solver_settings["name"], "");
-    } catch (const std::runtime_error& err) {
-        spdlog::error("{}! Using Eigen::SimplicialLDLT instead.", err.what());
-        linear_solver_settings["name"] = "Eigen::SimplicialLDLT";
-        linear_solver =
-            polysolve::LinearSolver::create(linear_solver_settings["name"], "");
-    }
-    linear_solver->setParameters(linear_solver_settings);
-
     reset_stats();
 }
 
@@ -55,7 +41,6 @@ nlohmann::json NewtonSolver::settings() const
     nlohmann::json settings;
     settings["max_iterations"] = max_iterations;
     settings["convergence_criteria"] = convergence_criteria;
-    settings["linear_solver"] = linear_solver_settings;
     settings["energy_conv_tol"] = energy_conv_tol;
     settings["velocity_conv_tol"] = velocity_conv_tol;
     settings["is_velocity_conv_tol_abs"] = is_velocity_conv_tol_abs;
@@ -517,18 +502,14 @@ bool NewtonSolver::compute_direction(
     //     direction = dense_hessian.ldlt().solve(-gradient);
     //     solve_success = true;
     // } else {
-    linear_solver->analyzePattern(hessian, hessian.rows());
-    linear_solver->factorize(hessian);
-    nlohmann::json info;
-    linear_solver->getInfo(info);
-    // TODO: This check only works for direct Eigen solvers
-    if (!info.contains("solver_info") || info["solver_info"] == "Success") {
-        // TODO: Do we have a better initial guess for iterative
-        // solvers?
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> linear_solver;
+    linear_solver.analyzePattern(hessian);
+    linear_solver.factorize(hessian);
+
+    if (linear_solver.info() == Eigen::Success) {
         direction = Eigen::VectorXd::Zero(gradient.size());
-        linear_solver->solve(-gradient, direction);
-        linear_solver->getInfo(info);
-        if (!info.contains("solver_info") || info["solver_info"] == "Success") {
+        direction = linear_solver.solve(-gradient);
+        if (linear_solver.info() == Eigen::Success) {
             solve_success = true;
         } else {
             spdlog::warn(

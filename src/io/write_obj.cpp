@@ -15,10 +15,11 @@
 #include <iostream>
 #include <limits>
 
-#include <ghc/fs_std.hpp> // filesystem
-
 #include <logger.hpp>
 #include <physics/rigid_body_problem.hpp>
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace ipc::rigid {
 

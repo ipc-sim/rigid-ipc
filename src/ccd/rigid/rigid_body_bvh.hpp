@@ -30,7 +30,7 @@ inline AABB vertex_aabb(const VectorMax3I& v, double inflation_radius = 0)
     VectorMax3d min(v.size());
     VectorMax3d max(v.size());
     for (int i = 0; i < v.size(); i++) {
-        if (empty(v(i))) {
+        if (v(i).is_empty()) {
             throw "interval is empty";
         }
         min(i) = (v(i) - inflation_radius).lower();

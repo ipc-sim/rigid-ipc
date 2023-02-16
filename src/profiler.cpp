@@ -1,8 +1,10 @@
-#include <ghc/fs_std.hpp> // filesystem
 #include <logger.hpp>
 #include <map>
 #include <profiler.hpp>
 #include <utils/get_rss.hpp>
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #ifdef RIGID_IPC_PROFILE_FUNCTIONS
 
