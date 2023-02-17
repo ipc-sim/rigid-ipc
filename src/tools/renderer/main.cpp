@@ -1,7 +1,6 @@
 #include <string>
 
 #include <CLI/CLI.hpp>
-#include <ghc/fs_std.hpp> // filesystem
 #include <igl/Timer.h>
 #include <nlohmann/json.hpp>
 #include <tbb/parallel_for.h>
@@ -15,6 +14,9 @@
 #include <physics/rigid_body_assembler.hpp>
 
 #include "render_mesh.hpp"
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 using namespace swr;
 

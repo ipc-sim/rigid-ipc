@@ -90,8 +90,7 @@ void detect_intersection_candidates_rigid_bvh(
 // Helper functions
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef tbb::enumerable_thread_specific<Candidates>
-    ThreadSpecificCandidates;
+typedef tbb::enumerable_thread_specific<Candidates> ThreadSpecificCandidates;
 
 void merge_local_candidates(
     const ThreadSpecificCandidates& storages, Candidates& candidates);

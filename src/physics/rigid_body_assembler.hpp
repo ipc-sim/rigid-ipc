@@ -13,8 +13,8 @@ namespace ipc::rigid {
 
 class RigidBodyAssembler {
 public:
-    RigidBodyAssembler() {}
-    ~RigidBodyAssembler() {}
+    RigidBodyAssembler() { }
+    ~RigidBodyAssembler() { }
 
     /// @brief inits assembler to use this set of rigid-bodies
     void init(const std::vector<RigidBody>& rbs);
