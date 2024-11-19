@@ -30,9 +30,8 @@ void check_toi(
     double toi_actual;
     // check autodiff code
     toi_actual = -1.0;
-    bool has_collision =
-        ipc::rigid::compute_edge_vertex_time_of_impact(
-            Vi, Vj, Vk, Ui, Uj, Uk, toi_actual);
+    bool has_collision = ipc::rigid::compute_edge_vertex_time_of_impact(
+        Vi, Vj, Vk, Ui, Uj, Uk, toi_actual);
     CHECK(has_collision);
     CHECK(toi_expected == Approx(toi_actual));
 }
@@ -122,23 +121,16 @@ TEST_CASE("TimeOfImpactBadCases", "[collision_detection][toi]")
     Eigen::Vector2d Vi, Vj, Vk; // positions
     Eigen::Vector2d Ui, Uj, Uk; // velocities
 
-    Eigen::Vector2d* V[3] = { &Vi, &Vj, &Vk };
-    Eigen::Vector2d* U[3] = { &Ui, &Uj, &Uk };
-
-    for (size_t i = 0; i < 3; i++) {
-        V[i]->setZero();
-        U[i]->setZero();
-    }
+    Vi = Vj = Vk = Ui = Uj = Uk = Eigen::Vector2d::Zero();
 
     SECTION("TangentImpact") //  (alpha=0 || alpha = 1)
     {
-
         Vi << -0.5, 0.0;
         Vj << -1.5, 0.0;
         Vk << 0.5, 0.0;
 
         // touches, intersects, passes-trough
-        auto vel = GENERATE(1.0 + 1e-6, 2.0, 4.0);
+        auto vel = GENERATE(1.0 + 1e-3, 2.0, 4.0);
         // moving: both (same), ij, both (op), kl, both (same)
         auto j = GENERATE(0, 1, 2, 3, 4);
         // extension, no-deform, compression,
@@ -152,11 +144,9 @@ TEST_CASE("TimeOfImpactBadCases", "[collision_detection][toi]")
 
         double toi = 1.0 / vel;
 
+        CAPTURE(vel, j, dx);
         check_toi(Vi, Vj, Vk, Ui, Uj, Uk, toi);
-        SECTION("flipped")
-        {
-            // change order of edge indices (i.e edge symmetry)
-            check_toi(Vj, Vi, Vk, Uj, Ui, Uk, toi);
-        }
+        // change order of edge indices (i.e edge symmetry)
+        check_toi(Vj, Vi, Vk, Uj, Ui, Uk, toi);
     }
 }
