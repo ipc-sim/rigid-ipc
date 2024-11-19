@@ -276,7 +276,7 @@ bool compute_face_vertex_time_of_impact(
     const auto is_domain_valid = [&](const VectorMax3I& params) {
         const Interval &t = params[0], &u = params[1], &v = params[2];
         // 0 ≤ t, u, v ≤ 1 is satisfied by the initial domain of the solve
-        return overlap(u + v, Interval(0, 1));
+        return (u + v).overlaps(Interval(0, 1));
     };
 
     Eigen::Vector3d tol = compute_face_vertex_tolerance(

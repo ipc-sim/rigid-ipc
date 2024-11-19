@@ -3,7 +3,6 @@
 #include <unordered_set>
 
 #include <Eigen/Geometry>
-#include <ghc/fs_std.hpp> // filesystem
 #include <igl/edges.h>
 #include <igl/facet_components.h>
 #include <igl/PI.h>
@@ -15,6 +14,9 @@
 #include <io/serialize_json.hpp>
 #include <logger.hpp>
 #include <utils/not_implemented_error.hpp>
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace ipc::rigid {
 

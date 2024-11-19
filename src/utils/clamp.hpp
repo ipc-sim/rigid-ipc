@@ -11,7 +11,7 @@ template <typename T> inline T clamp_to_01(const T& x)
 
 template <> inline Interval clamp_to_01(const Interval& x)
 {
-    return boost::numeric::intersect(x, Interval(0, 1));
+    return x & Interval(0, 1);
 }
 
 } // namespace ipc::rigid

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <polysolve/LinearSolver.hpp>
 
 #include <constants.hpp>
 #include <solvers/optimization_solver.hpp>
@@ -129,10 +128,6 @@ protected:
     Eigen::VectorXd direction, direction_free;
     Eigen::VectorXd grad_direction; ///< Gradient with fixed DoF set to zero
     Eigen::SparseMatrix<double> hessian, hessian_free;
-
-    // Linear solver pointer
-    std::unique_ptr<polysolve::LinearSolver> linear_solver;
-    nlohmann::json linear_solver_settings;
 
 private:
     void reset_stats();
