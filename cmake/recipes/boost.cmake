@@ -20,7 +20,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 set(OLD_CMAKE_POSITION_INDEPENDENT_CODE ${CMAKE_POSITION_INDEPENDENT_CODE})
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(BOOST_URL "https://boostorg.jfrog.io/artifactory/main/release/1.86.0/source/boost_1_86_0.tar.bz2" CACHE STRING "Boost download URL")
+set(BOOST_URL "https://archives.boost.io/release/1.86.0/source/boost_1_86_0.tar.bz2" CACHE STRING "Boost download URL")
 set(BOOST_URL_SHA256 "1bed88e40401b2cb7a1f76d4bab499e352fa4d0c5f31c0dbae64e24d34d7513b" CACHE STRING "Boost download URL SHA256 checksum")
 
 include(CPM)
