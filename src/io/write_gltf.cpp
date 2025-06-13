@@ -72,7 +72,11 @@ bool write_gltf(
         node.translation = { { poses[0][i].position.x(),
                                poses[0][i].position.y(),
                                poses[0][i].position.z() } };
-        Eigen::Quaternion<double> q = poses[0][i].construct_quaternion();
+        // NOTE: Use identity for the first frame by applying the initial
+        // rotation to the vertices and removing the rotation from further
+        // rotations.
+        // Eigen::Quaternion<double> q = poses[0][i].construct_quaternion();
+        Eigen::Quaternion<double> q = Eigen::Quaternion<double>::Identity();
         node.rotation = { { q.x(), q.y(), q.z(), q.w() } };
 
         animation.channels[2 * i + 0].sampler = 2 * i;
@@ -178,7 +182,8 @@ bool write_gltf(
     std::vector<unsigned char> byte_data(byte_offset);
     size_t byte_i = 0;
     for (int i = 0; i < num_bodies; i++) {
-        Eigen::MatrixXd V = bodies[i].vertices;
+        // NOTE: Apply the initial rotation to the vertices
+        Eigen::MatrixXd V = bodies[i].vertices * bodies[i].R0.transpose();
         for (int r = 0; r < V.rows(); r++) {
             for (int c = 0; c < V.cols(); c++) {
                 Float v = V(r, c);
@@ -211,8 +216,12 @@ bool write_gltf(
             }
         }
 
+        const Eigen::Quaternion<double> q0(Eigen::Matrix3d(bodies[i].R0));
         for (int j = 0; j < num_steps; j++) {
-            Eigen::Quaternion<double> quat = poses[j][i].construct_quaternion();
+            // NOTE: Apply the inverse of the initial rotation to the
+            // quaternion to get the rotation relative to the input orientation.
+            Eigen::Quaternion<double> quat =
+                poses[j][i].construct_quaternion() * q0.inverse();
             Eigen::Vector4d q(quat.x(), quat.y(), quat.z(), quat.w());
             for (int d = 0; d < q.size(); d++) {
                 Float qd = q[d];
