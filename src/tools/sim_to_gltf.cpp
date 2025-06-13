@@ -1,10 +1,10 @@
 #include <CLI/CLI.hpp>
 
-#include <SimState.hpp>
-#include <logger.hpp>
-
 #include <filesystem>
 namespace fs = std::filesystem;
+
+#include <SimState.hpp>
+#include <logger.hpp>
 
 int main(int argc, char* argv[])
 {

@@ -1248,7 +1248,7 @@ void apply_chain_rule(
 }
 
 struct PotentialStorage {
-    PotentialStorage() { }
+    PotentialStorage() {}
     PotentialStorage(size_t nvars) { gradient.setZero(nvars); }
     double potential = 0;
     Eigen::VectorXd gradient;

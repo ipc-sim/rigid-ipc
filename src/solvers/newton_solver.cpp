@@ -33,6 +33,7 @@ void NewtonSolver::settings(const nlohmann::json& json)
     velocity_conv_tol = json["velocity_conv_tol"];
     is_velocity_conv_tol_abs = json["is_velocity_conv_tol_abs"];
     m_line_search_lower_bound = json["line_search_lower_bound"];
+
     reset_stats();
 }
 

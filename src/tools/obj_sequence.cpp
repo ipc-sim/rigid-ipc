@@ -1,10 +1,10 @@
 #include <CLI/CLI.hpp>
 
-#include <SimState.hpp>
-#include <logger.hpp>
-
 #include <filesystem>
 namespace fs = std::filesystem;
+
+#include <SimState.hpp>
+#include <logger.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -27,8 +27,7 @@ int main(int argc, char* argv[])
     spdlog::level::level_enum loglevel = spdlog::level::warn;
     app.add_option("--log,--loglevel", loglevel, "log level")
         ->default_val(loglevel)
-        ->transform(
-            CLI::CheckedTransformer(
+        ->transform(CLI::CheckedTransformer(
                 SPDLOG_LEVEL_NAMES_TO_LEVELS, CLI::ignore_case));
 
     try {

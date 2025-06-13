@@ -1,5 +1,8 @@
 #include <CLI/CLI.hpp>
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 #include <igl/Timer.h>
 #include <igl/edges.h>
 
@@ -8,9 +11,6 @@
 #include <ccd/redon/time_of_impact.hpp>
 #include <ccd/rigid/time_of_impact.hpp>
 #include <io/serialize_json.hpp>
-
-#include <filesystem>
-namespace fs = std::filesystem;
 
 using namespace ipc;
 using namespace ipc::rigid;

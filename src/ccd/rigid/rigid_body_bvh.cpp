@@ -114,7 +114,7 @@ void detect_body_pair_collision_candidates_from_aabbs(
                     size_t vb_id = EB(eb_id, vi);
                     if (selectorB.vertex_to_edge(vb_id) == eb_id
                         && AABB::are_overlapping(
-                            fa_aabb, bodyB_vertex_aabbs[vb_id])) {
+                               fa_aabb, bodyB_vertex_aabbs[vb_id])) {
                         add_fv(fa_id, vb_id);
                     }
                 }

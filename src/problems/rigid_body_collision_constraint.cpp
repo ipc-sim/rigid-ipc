@@ -49,7 +49,9 @@ RigidBodyEdgeEdgeConstraint::RigidBodyEdgeEdgeConstraint(
 }
 
 RigidBodyFaceVertexConstraint::RigidBodyFaceVertexConstraint(
-    const RigidBodyAssembler& bodies, long face_index, long vertex_index)
+    const RigidBodyAssembler& bodies,
+    long face_index, 
+    long vertex_index)
 {
     const auto& face = bodies.m_faces.row(face_index);
     bodies.global_to_local_vertex(

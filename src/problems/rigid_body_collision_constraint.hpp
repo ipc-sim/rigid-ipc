@@ -154,7 +154,9 @@ struct RigidBodyFaceVertexConstraint {
     const long multiplicity = 1;
 
     RigidBodyFaceVertexConstraint(
-        const RigidBodyAssembler& bodies, long face_index, long vertex_index);
+        const RigidBodyAssembler& bodies, 
+        long face_index, 
+        long vertex_index);
     RigidBodyFaceVertexConstraint(
         const RigidBodyAssembler& bodies,
         const FaceVertexConstraint& fv_constraint)
@@ -206,7 +208,9 @@ vertex_local_body_ids(const Constraints& constraints, size_t ci)
 
 template <typename Constraints>
 std::array<long, 2> body_ids(
-    const RigidBodyAssembler& bodies, const Constraints& constraints, size_t ci)
+    const RigidBodyAssembler& bodies, 
+    const Constraints& constraints, 
+    size_t ci)
 {
     if (ci < constraints.vv_constraints.size()) {
         return RigidBodyVertexVertexConstraint(
