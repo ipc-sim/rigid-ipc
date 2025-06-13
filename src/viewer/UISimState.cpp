@@ -63,24 +63,30 @@ void UISimState::load_scene()
         m_state.problem_ptr->codim_vertices_to_vertices());
     m_mesh_data.update_velocities(v);
 
-    Eigen::VectorXi vertex_types;
+    Eigen::VectorXi vertex_types, vertex_ids;
     if (m_state.problem_ptr->is_rb_problem()) {
         const auto& bodies =
             std::dynamic_pointer_cast<RigidBodyProblem>(m_state.problem_ptr)
                 ->m_assembler;
         vertex_types.resize(bodies.num_vertices());
+        vertex_ids.resize(bodies.num_vertices());
         int start_i = 0;
+        int i = 0;
         for (const auto& body : bodies.m_rbs) {
             vertex_types.segment(start_i, body.vertices.rows())
                 .setConstant(int(body.type));
+            vertex_ids.segment(start_i, body.vertices.rows()).setConstant(i++);
             start_i += body.vertices.rows();
         }
+
     } else {
         vertex_types =
             m_state.problem_ptr->vertex_dof_fixed().rowwise().all().cast<int>();
         vertex_types *= 2; // 0 is static, 1 is kinematic, 2 is dynamic
+        vertex_ids = m_state.problem_ptr->group_ids();
     }
     m_mesh_data.set_vertex_types(vertex_types);
+    m_mesh_data.set_vertex_ids(vertex_ids);
 
     if (m_state.problem_ptr->is_rb_problem()) {
         m_com_data.set_coms(
@@ -111,6 +117,11 @@ void UISimState::load_scene()
     //     q, dim == 2.0 ? mesh_data->mE : mesh_data->mF);
 
     // Default colors
+    // if (q.cols() == 2) {
+    ps::view::bgColor = { { 0.0f, 0.0f, 0.0f, 0.0f } }; // Black for 2D
+    // } else {
+    // ps::view::bgColor = { { 1.0f, 1.0f, 1.0f, 0.0f } }; // White for 3D
+    // }
     // ps::view::bgColor = { { 0.3f, 0.3f, 0.5f, 0.0f } };
 
     // Camera parameters

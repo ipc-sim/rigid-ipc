@@ -30,6 +30,7 @@ public:
     void update_vertices(const Eigen::MatrixXd& V);
     void update_velocities(const Eigen::MatrixXd& velocities);
     void set_vertex_types(const Eigen::VectorXi& vertex_types);
+    void set_vertex_ids(const Eigen::VectorXi& ids);
 
     glm::vec3 mesh_color = glm::vec3(
         0xE3 / 255.0, 0x1C / 255.0, 0x1C / 255.0); // #E31C1C - ALIZARIN

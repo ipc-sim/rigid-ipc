@@ -16,7 +16,7 @@ namespace ipc::rigid {
 /// MeshData
 // =============================================================================
 
-const glm::vec3 MeshData::EDGE_COLOR(0.0, 0.0, 0.0); // #000000
+const glm::vec3 MeshData::EDGE_COLOR(1.0, 1.0, 1.0); // #FFFFFF
 const glm::vec3
     MeshData::STATIC_COLOR(0xB3 / 255.0, 0xB3 / 255.0, 0xB3 / 255.0); // #B3B3B3
 // const glm::vec3 MeshData::KINEMATIC_COLOR(1.0, 0.5, 0.0); // #FF8000
@@ -24,18 +24,26 @@ const glm::vec3 MeshData::KINEMATIC_COLOR(
     0xE3 / 255.0, 0x82 / 255.0, 0x1C / 255.0); // #E3821C
 
 void MeshData::set_mesh(
-    const Eigen::MatrixXd& V,
+    const Eigen::MatrixXd& _V,
     const Eigen::MatrixXi& E,
     const Eigen::MatrixXi& F,
     const std::vector<int>& CE2E,
     const std::vector<int>& CV2V)
 {
-    ps_surface_mesh = ps::registerSurfaceMesh("mesh", V, F);
+    const int dim = _V.cols();
+    Eigen::MatrixXd V(_V.rows(), 3);
+    V.leftCols(dim) = _V;
+    if (dim == 2) {
+        V.col(2).setZero();
+    }
 
-    ps_velocities = ps_surface_mesh->addVertexVectorQuantity(
-        "velocities", Eigen::MatrixXd::Zero(V.rows(), V.cols()));
-    ps_velocities->setEnabled(false);
-    ps_velocities->setVectorColor(velocity_color);
+    if (F.size() > 0) {
+        ps_surface_mesh = ps::registerSurfaceMesh("mesh", V, F);
+        ps_velocities = ps_surface_mesh->addVertexVectorQuantity(
+            "velocities", Eigen::MatrixXd::Zero(V.rows(), V.cols()));
+        ps_velocities->setEnabled(false);
+        ps_velocities->setVectorColor(velocity_color);
+    }
 
     if (CE2E.size() > 0) {
         Eigen::MatrixXi CE;
@@ -51,9 +59,14 @@ void MeshData::set_mesh(
 
         if (CE.rows() != 0) {
             ps_codim_edges = ps::registerCurveNetwork("edges", CE_V, CE_E);
-            ps_codim_edges->setRadius(5e-4);
-            ps_codim_edges->setColor(EDGE_COLOR);
+            ps_codim_edges->setRadius(dim == 2 ? 1e-3 : 5e-4);
+            if (dim == 3) {
+                ps_codim_edges->setColor(EDGE_COLOR);
+            }
         }
+    } else if (ps_codim_edges != nullptr) {
+        ps::removeStructure(ps_codim_edges);
+        ps_codim_edges = nullptr;
     }
 
     if (CV2V.size() > 0) {
@@ -65,11 +78,21 @@ void MeshData::set_mesh(
         ps_codim_points = ps::registerPointCloud("vertices", CV);
         ps_codim_points->setPointRadius(5e-4);
         ps_codim_points->setPointColor(EDGE_COLOR);
+    } else if (ps_codim_points != nullptr) {
+        ps::removeStructure(ps_codim_points);
+        ps_codim_points = nullptr;
     }
 }
 
-void MeshData::update_vertices(const Eigen::MatrixXd& V)
+void MeshData::update_vertices(const Eigen::MatrixXd& _V)
 {
+    const int dim = _V.cols();
+    Eigen::MatrixXd V(_V.rows(), 3);
+    V.leftCols(dim) = _V;
+    if (dim == 2) {
+        V.col(2).setZero();
+    }
+
     if (ps_surface_mesh != nullptr) {
         ps_surface_mesh->updateVertexPositions(V);
     }
@@ -95,19 +118,33 @@ void MeshData::update_velocities(const Eigen::MatrixXd& velocities)
 
 void MeshData::set_vertex_types(const Eigen::VectorXi& vertex_types)
 {
-    if (ps_surface_mesh != nullptr) {
-        std::vector<glm::vec3> colors(vertex_types.size());
-        for (int i = 0; i < vertex_types.size(); i++) {
-            if (vertex_types(i) == 0) {
-                colors[i] = STATIC_COLOR;
-            } else if (vertex_types(i) == 1) {
-                colors[i] = KINEMATIC_COLOR;
-            } else {
-                colors[i] = mesh_color; // Default color for other types
-            }
+    std::vector<glm::vec3> colors(vertex_types.size());
+    for (int i = 0; i < vertex_types.size(); i++) {
+        if (vertex_types(i) == 0) {
+            colors[i] = STATIC_COLOR;
+        } else if (vertex_types(i) == 1) {
+            colors[i] = KINEMATIC_COLOR;
+        } else {
+            colors[i] = mesh_color; // Default color for other types
         }
-        ps_surface_mesh->addVertexColorQuantity("type", colors)
-            ->setEnabled(true);
+    }
+    if (ps_surface_mesh != nullptr) {
+        ps_surface_mesh->addVertexColorQuantity("type", colors);
+    } else if (ps_codim_edges != nullptr) {
+        ps_codim_edges->addNodeColorQuantity("type", colors);
+    }
+}
+
+void MeshData::set_vertex_ids(const Eigen::VectorXi& ids)
+{
+    if (ps_surface_mesh != nullptr) {
+        auto tmp = ps_surface_mesh->addVertexScalarQuantity("id", ids);
+        tmp->setEnabled(true);
+        tmp->setColorMap("rainbow");
+    } else if (ps_codim_edges != nullptr) {
+        auto tmp = ps_codim_edges->addNodeScalarQuantity("id", ids);
+        tmp->setEnabled(true);
+        tmp->setColorMap("rainbow");
     }
 }
 
@@ -118,17 +155,16 @@ void MeshData::set_vertex_types(const Eigen::VectorXi& vertex_types)
 void CoMData::set_coms(const ipc::rigid::PosesD& poses)
 {
     int dim = poses.size() ? poses[0].dim() : 0;
-    Eigen::MatrixXd coms(poses.size(), dim);
-    std::vector<Eigen::MatrixXd> principle_axes(
-        dim, Eigen::MatrixXd(poses.size(), dim));
+    Eigen::MatrixXd coms = Eigen::MatrixXd::Zero(poses.size(), 3);
+    std::vector<Eigen::MatrixXd> principle_axes(dim, coms);
 
     for (int i = 0; i < poses.size(); i++) {
-        coms.row(i) = poses[i].position;
+        coms.row(i).head(dim) = poses[i].position;
         MatrixMax3d R = poses[i].construct_rotation_matrix();
         for (int j = 0; j < dim; j++) {
             VectorMax3d axis = VectorMax3d::Zero(dim);
             axis(j) = 1;
-            principle_axes[j].row(i) = R * axis;
+            principle_axes[j].row(i).head(dim) = R * axis;
         }
     }
 
@@ -150,21 +186,20 @@ void CoMData::set_coms(const ipc::rigid::PosesD& poses)
 void CoMData::update_coms(const ipc::rigid::PosesD& poses)
 {
     int dim = poses.size() ? poses[0].dim() : 0;
-    Eigen::MatrixXd coms(poses.size(), dim);
-    std::vector<Eigen::MatrixXd> principle_axes(
-        dim, Eigen::MatrixXd(poses.size(), dim));
+    Eigen::MatrixXd coms = Eigen::MatrixXd::Zero(poses.size(), 3);
+    std::vector<Eigen::MatrixXd> principle_axes(dim, coms);
 
     for (int i = 0; i < poses.size(); i++) {
-        coms.row(i) = poses[i].position;
+        coms.row(i).head(dim) = poses[i].position;
         MatrixMax3d R = poses[i].construct_rotation_matrix();
         for (int j = 0; j < dim; j++) {
             VectorMax3d axis = VectorMax3d::Zero(dim);
             axis(j) = 1;
-            principle_axes[j].row(i) = R * axis;
+            principle_axes[j].row(i).head(dim) = R * axis;
         }
     }
 
-    ps_coms->updatePointPositions(coms);
+    ps_coms = ps::registerPointCloud("CoMs", coms);
 
     for (int j = 0; j < dim; j++) {
         ps_coms->addVectorQuantity(
