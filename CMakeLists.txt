@@ -1,3 +1,5 @@
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+
 # Detects whether this is a top-level project
 get_directory_property(HAS_PARENT PARENT_DIRECTORY)
 if(HAS_PARENT)
@@ -41,7 +43,7 @@ option(RIGID_IPC_WITH_DERIVATIVE_CHECK      "Check derivatives using finite diff
 
 # Set default minimum C++ standard
 if(RIGID_IPC_TOPLEVEL_PROJECT)
-    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
@@ -57,29 +59,9 @@ include(rigid_ipc_use_colors)
 
 include(rigid_ipc_autogen)
 
-mark_as_advanced(CLEAR CMAKE_BUILD_TYPE)
-
 ################################################################################
 # External project settings
 ################################################################################
-
-# libigl options
-option(LIBIGL_USE_STATIC_LIBRARY "Use libigl as static library" OFF)
-option(LIBIGL_WITH_PREDICATES    "Use exact predicates"          ON)
-set(LIBIGL_WITH_OPENGL_GLFW_IMGUI ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Use OpenGL" FORCE)
-set(LIBIGL_WITH_OPENGL_GLFW       ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Use GLFW"   FORCE)
-set(LIBIGL_WITH_OPENGL            ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Use IMGUI"  FORCE)
-set(LIBIGL_WITH_PNG               ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Use PNG"    FORCE)
-
-# PolySolve settings
-option(POLYSOLVE_WITH_CHOLMOD          "Enable Cholmod library"            ON)
-option(POLYSOLVE_WITH_UMFPACK          "Enable UmfPack library"            OFF)
-option(POLYSOLVE_WITH_SUPERLU          "Enable SuperLU library"            OFF)
-option(POLYSOLVE_WITH_MKL              "Enable MKL library"                OFF)
-option(POLYSOLVE_WITH_PARDISO          "Enable Pardiso library"            OFF)
-option(POLYSOLVE_WITH_HYPRE            "Enable hypre"                      OFF)
-option(POLYSOLVE_WITH_AMGCL            "Use AMGCL"                         OFF)
-option(POLYSOLVE_WITH_SPECTRA          "Enable computing spectrum"         OFF)
 
 set(TIGHT_INCLUSION_WITH_NO_ZERO_TOI OFF CACHE BOOL "Enable refinement if CCD produces a zero ToI" FORCE)
 
@@ -201,7 +183,7 @@ target_link_libraries(ipc_rigid PUBLIC
 
 # JSON Parser
 include(json)
-target_link_libraries(ipc_rigid PUBLIC nlohmann::json)
+target_link_libraries(ipc_rigid PUBLIC nlohmann_json::nlohmann_json)
 
 # Logger
 include(spdlog)
@@ -216,16 +198,12 @@ include(boost)
 target_link_libraries(ipc_rigid PUBLIC Boost::boost)
 
 # TBB
-include(tbb)
+include(onetbb)
 target_link_libraries(ipc_rigid PUBLIC TBB::tbb)
 
 # MSCCD
 include(tight_inclusion)
 target_link_libraries(ipc_rigid PUBLIC tight_inclusion::tight_inclusion)
-
-# PolySolve for wrapping linear solvers
-include(polysolve)
-target_link_libraries(ipc_rigid PUBLIC PolyFEM::polysolve)
 
 # IPC Toolkit
 include(ipc_toolkit)
@@ -242,10 +220,6 @@ target_link_libraries(ipc_rigid PUBLIC simple_bvh::simple_bvh)
 # tinygltf
 include(tinygltf)
 target_link_libraries(ipc_rigid PUBLIC tinygltf::tinygltf)
-
-# Filesystem
-include(filesystem)
-target_link_libraries(ipc_rigid PUBLIC ghc::filesystem)
 
 ################################################################################
 # Compiler options
@@ -284,7 +258,7 @@ add_executable(rigid_ipc_sim src/main.cpp)
 if(RIGID_IPC_WITH_OPENGL)
     target_sources(rigid_ipc_sim PUBLIC
       src/viewer/imgui_ext.cpp
-      src/viewer/igl_viewer_ext.cpp
+      src/viewer/viewer_data.cpp
       src/viewer/UISimState.cpp
       src/viewer/UIMenu.cpp
     )
@@ -298,13 +272,13 @@ target_link_libraries(rigid_ipc_sim PUBLIC CLI11::CLI11)
 if(RIGID_IPC_WITH_OPENGL)
     target_compile_definitions(rigid_ipc_sim PUBLIC RIGID_IPC_WITH_OPENGL)
 
-    include(libigl)
-    target_link_libraries(rigid_ipc_sim PUBLIC
-        igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
-
     # Charlie Tangora's gif-h library
     include(gif_h)
     target_link_libraries(rigid_ipc_sim PRIVATE gif_h::gif_h)
+
+    # Polyscope visualization library
+    include(polyscope)
+    target_link_libraries(rigid_ipc_sim PUBLIC polyscope::polyscope)
 endif()
 
 ################################################################################

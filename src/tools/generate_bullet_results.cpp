@@ -1,9 +1,11 @@
 #include <CLI/CLI.hpp>
-#include <ghc/fs_std.hpp> // filesystem
 #include <igl/readOBJ.h>
 #include <nlohmann/json.hpp>
 
 #include <logger.hpp>
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 int generate_bullet_results(
     const std::string& json_path, const std::string& bullet_result_file_path)
@@ -21,8 +23,8 @@ int generate_bullet_results(
         int lastSlash = bullet_result_file_path.find_last_of('/');
         std::string folderPath = "output/"
             + bullet_result_file_path.substr(
-                  lastSlash,
-                  bullet_result_file_path.find_last_of('.') - lastSlash)
+                lastSlash,
+                bullet_result_file_path.find_last_of('.') - lastSlash)
             + "/";
         fs::create_directories(fs::path(folderPath));
 

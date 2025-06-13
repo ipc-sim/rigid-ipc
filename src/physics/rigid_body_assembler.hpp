@@ -13,8 +13,8 @@ namespace ipc::rigid {
 
 class RigidBodyAssembler {
 public:
-    RigidBodyAssembler() {}
-    ~RigidBodyAssembler() {}
+    RigidBodyAssembler() { }
+    ~RigidBodyAssembler() { }
 
     /// @brief inits assembler to use this set of rigid-bodies
     void init(const std::vector<RigidBody>& rbs);
@@ -195,8 +195,11 @@ public:
     /// @brief re-indexed faces to edges of the whole system
     Eigen::MatrixXi m_faces_to_edges;
 
-    /// @brief re-indexed faces to edges of the whole system
-    std::vector<size_t> m_codim_edges_to_edges;
+    /// @brief re-indexed codimg vertices to vertices of the whole system
+    std::vector<int> m_codim_vertices_to_vertices;
+
+    /// @brief re-indexed codim edges to edges of the whole system
+    std::vector<int> m_codim_edges_to_edges;
 
     /// @brief mass_matrix of the rigid bodies dof
     DiagonalMatrixXd m_rb_mass_matrix;

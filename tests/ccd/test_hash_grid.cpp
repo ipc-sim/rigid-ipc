@@ -2,7 +2,9 @@
 
 #include <string>
 
-#include <ghc/fs_std.hpp> // filesystem
+#include <filesystem>
+namespace fs = std::filesystem;
+
 #include <igl/edges.h>
 #include <igl/read_triangle_mesh.h>
 
@@ -130,7 +132,7 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
         edges.row(0) << 0, 1;
         edges.row(1) << 2, 3;
 
-        SECTION("Without group ids") {}
+        SECTION("Without group ids") { }
         SECTION("With group ids")
         {
             group_ids.resize(4);
@@ -145,8 +147,9 @@ TEST_CASE("3D hash grid", "[hashgrid][3D]")
     }
     SECTION("Complex")
     {
-        std::string fname = GENERATE(std::string("cube.obj")
-                                     /*, std::string("bunny-lowpoly.obj")*/);
+        std::string fname = GENERATE(
+            std::string("cube.obj")
+            /*, std::string("bunny-lowpoly.obj")*/);
 
         fs::path mesh_path =
             fs::path(__FILE__).parent_path().parent_path().parent_path()
@@ -378,7 +381,7 @@ TEST_CASE("3D brute force is duplicate free", "[ccd][brute_force]")
         edges.row(0) << 0, 1;
         edges.row(1) << 2, 3;
 
-        SECTION("Without group ids") {}
+        SECTION("Without group ids") { }
         SECTION("With group ids")
         {
             group_ids.resize(4);
@@ -389,8 +392,9 @@ TEST_CASE("3D brute force is duplicate free", "[ccd][brute_force]")
     }
     SECTION("Complex")
     {
-        std::string fname = GENERATE(std::string("cube.obj")
-                                     /*, std::string("bunny-lowpoly.obj")*/);
+        std::string fname = GENERATE(
+            std::string("cube.obj")
+            /*, std::string("bunny-lowpoly.obj")*/);
 
         fs::path mesh_path =
             fs::path(__FILE__).parent_path().parent_path().parent_path()

@@ -67,9 +67,3 @@ target_compile_definitions(rigid_ipc_tests PUBLIC CATCH_CONFIG_ENABLE_BENCHMARKI
 # Register tests
 set(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS ON)
 catch_discover_tests(rigid_ipc_tests)
-
-################################################################################
-
-add_executable(test_rounding rounding_test.cpp)
-target_link_libraries(test_rounding PUBLIC Boost::boost)
-target_compile_options(test_rounding PUBLIC -msse2)

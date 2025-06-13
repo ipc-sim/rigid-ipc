@@ -6,110 +6,84 @@
 #include <physics/rigid_body_problem.hpp>
 #include <utils/eigen_ext.hpp>
 
-namespace ipc::rigid {
+#include <polyscope/polyscope.h>
 
-UISimState::UISimState()
-    : m_player_state(PlayerState::Paused)
-    , m_has_scene(false)
-    , m_bkp_had_collision(false)
-    , m_bkp_has_intersections(true)
-    , m_bkp_optimization_failed(true)
-    , m_interval_time(0.0)
-    , m_show_vertex_data(false)
-    , m_reloading_scene(false)
-    , m_scene_changed(false)
-    , m_simulation_time(0)
-{
-}
+namespace ps = polyscope;
+
+namespace ipc::rigid {
 
 void UISimState::launch(const std::string& inital_scene)
 {
-    m_viewer.plugins.push_back(this);
-    m_viewer.core().set_rotation_type(
-        igl::opengl::ViewerCore::ROTATION_TYPE_NO_ROTATION);
-    m_viewer.core().orthographic = true;
-    m_viewer.core().is_animating = true;
-    m_viewer.core().lighting_factor = 0.0;
-    m_viewer.core().animation_max_fps = 120.0;
     this->inital_scene = inital_scene;
-    m_viewer.callback_pre_draw = [&](igl::opengl::glfw::Viewer&) {
-        return pre_draw_loop();
+
+    ps::options::programName = "Rigid IPC";
+    ps::options::giveFocusOnShow = true;
+
+    ps::init();
+    ps::options::groundPlaneMode = ps::GroundPlaneMode::None;
+
+    this->init();
+
+    ps::state::userCallback = [this]() {
+        draw_menu();
+        pre_draw_loop();
+        post_draw_loop();
     };
-    m_viewer.callback_post_draw = [&](igl::opengl::glfw::Viewer&) {
-        return post_draw_loop();
-    };
-    m_viewer.callback_key_pressed = [&](igl::opengl::glfw::Viewer&,
-                                        unsigned int unicode_key,
-                                        int modifiers) {
-        return custom_key_pressed(unicode_key, modifiers);
-    };
-    m_viewer.launch(
-        /*resizable=*/true, /*fullscreen=*/false,
-        /*name=*/"Simulation");
+
+    ps::show();
 }
 
-void UISimState::init(igl::opengl::glfw::Viewer* _viewer)
+void UISimState::init() { load(this->inital_scene); }
+
+bool UISimState::load(std::string scene_filename)
 {
-    Super::init(_viewer);
-    viewer->data().clear();
+    if (scene_filename != "" && m_state.load_scene(scene_filename)) {
+        load_scene();
+        return true;
+    }
+    return false;
+}
 
-    viewer->append_mesh();
-    mesh_data = std::make_unique<igl::opengl::MeshData>(
-        _viewer,
-        Eigen::RowVector3d(0xE7, 0x4C, 0x3C) / 0xFF); // #E74C3C - ALIZARIN RED
-    mesh_data->visibility(true);
-
-    viewer->append_mesh();
-    velocity_data = std::make_unique<igl::opengl::VectorFieldData>(
-        _viewer,
-        Eigen::RowVector3d(0xF1, 0xC4, 0x0F) / 0xFF); // #F1C40F - SUN FLOWER
-    velocity_data->visibility(false);
-
-    viewer->append_mesh();
-    com_data = std::make_unique<igl::opengl::CoMData>(_viewer);
-    com_data->visibility(true);
-
-    datas_.emplace_back("edges", mesh_data);
-    datas_.emplace_back("velocity", velocity_data);
-    datas_.emplace_back("body-frame", com_data);
-
-    load(this->inital_scene);
+void UISimState::reload()
+{
+    m_reloading_scene = true;
+    m_state.reload_scene();
+    load_scene();
+    m_reloading_scene = false;
 }
 
 void UISimState::load_scene()
 {
     Eigen::MatrixXd q = m_state.problem_ptr->vertices();
-    Eigen::MatrixXd v =
-        m_state.problem_ptr->velocities() * m_state.problem_ptr->timestep();
+    Eigen::MatrixXd v = m_state.problem_ptr->velocities();
 
-    // mesh_data->data().show_vertid = false;
-    mesh_data->set_mesh(
-        q, m_state.problem_ptr->edges(), m_state.problem_ptr->faces());
-    Eigen::VectorXi vertex_type;
+    m_mesh_data.set_mesh(
+        q, m_state.problem_ptr->edges(), m_state.problem_ptr->faces(),
+        m_state.problem_ptr->codim_edges_to_edges(),
+        m_state.problem_ptr->codim_vertices_to_vertices());
+    m_mesh_data.update_velocities(v);
+
+    Eigen::VectorXi vertex_types;
     if (m_state.problem_ptr->is_rb_problem()) {
         const auto& bodies =
             std::dynamic_pointer_cast<RigidBodyProblem>(m_state.problem_ptr)
                 ->m_assembler;
-        vertex_type.resize(bodies.num_vertices());
+        vertex_types.resize(bodies.num_vertices());
         int start_i = 0;
         for (const auto& body : bodies.m_rbs) {
-            vertex_type.segment(start_i, body.vertices.rows())
+            vertex_types.segment(start_i, body.vertices.rows())
                 .setConstant(int(body.type));
             start_i += body.vertices.rows();
         }
     } else {
-        vertex_type =
+        vertex_types =
             m_state.problem_ptr->vertex_dof_fixed().rowwise().all().cast<int>();
-        vertex_type *= 2; // 0 is static, 1 is kinematic, 2 is dynamic
+        vertex_types *= 2; // 0 is static, 1 is kinematic, 2 is dynamic
     }
-    mesh_data->set_vertex_data(
-        m_state.problem_ptr->vertex_dof_fixed(), vertex_type);
-    mesh_data->data().point_size = 0 * pixel_ratio();
-
-    velocity_data->set_vector_field(q, v);
+    m_mesh_data.set_vertex_types(vertex_types);
 
     if (m_state.problem_ptr->is_rb_problem()) {
-        com_data->set_coms(
+        m_com_data.set_coms(
             std::dynamic_pointer_cast<RigidBodyProblem>(m_state.problem_ptr)
                 ->m_assembler.rb_poses());
     }
@@ -117,7 +91,6 @@ void UISimState::load_scene()
     m_has_scene = true;
     m_player_state = PlayerState::Paused;
     m_interval_time = 0.0;
-
     m_simulation_time = 0;
 
     // Do not change the view setting upon reload
@@ -126,128 +99,115 @@ void UISimState::load_scene()
     }
 
     int dim = q.cols();
-    m_viewer.core().trackball_angle.setIdentity();
-    m_viewer.core().set_rotation_type(
-        dim == 2 ? igl::opengl::ViewerCore::ROTATION_TYPE_NO_ROTATION
-                 : igl::opengl::ViewerCore::
-                       ROTATION_TYPE_TWO_AXIS_VALUATOR_FIXED_UP);
-    m_viewer.core().orthographic = dim == 2;
-    m_viewer.core().lighting_factor = 0.0; // dim == 2 ? 0.0 : 1.0;
-    // mesh_data->data().set_face_based(true);
-    m_viewer.core().align_camera_center(
-        q, dim == 2.0 ? mesh_data->mE : mesh_data->mF);
+    // m_viewer.core().trackball_angle.setIdentity();
+    if (dim == 2) {
+        ps::view::setNavigateStyle(ps::NavigateStyle::Planar);
+        ps::view::projectionMode = ps::ProjectionMode::Orthographic;
+    } else {
+        ps::view::setNavigateStyle(ps::NavigateStyle::Turntable);
+        ps::view::projectionMode = ps::ProjectionMode::Perspective;
+    }
+    // m_viewer.core().align_camera_center(
+    //     q, dim == 2.0 ? mesh_data->mE : mesh_data->mF);
 
     // Default colors
-    // background_color << 0.3f, 0.3f, 0.5f, 1.0f;
+    // ps::view::bgColor = { { 0.3f, 0.3f, 0.5f, 0.0f } };
 
     // Camera parameters
-    m_viewer.core().camera_zoom = 1.0f;
-    m_viewer.core().camera_translation << 0, 0, 0;
+    // m_viewer.core().camera_zoom = 1.0f;
+    // m_viewer.core().camera_translation << 0, 0, 0;
 }
 
-void UISimState::redraw_scene()
-{
-    Eigen::MatrixXd q1 = m_state.problem_ptr->vertices();
-    Eigen::MatrixXd v1 =
-        m_state.problem_ptr->velocities() * m_state.problem_ptr->timestep();
-
-    mesh_data->update_vertices(q1);
-    velocity_data->update_vector_field(q1, v1);
-    if (m_state.problem_ptr->is_rb_problem()) {
-        const auto& bodies =
-            std::dynamic_pointer_cast<RigidBodyProblem>(m_state.problem_ptr)
-                ->m_assembler;
-        Eigen::VectorXi vertex_type(bodies.num_vertices());
-        int start_i = 0;
-        for (const auto& body : bodies.m_rbs) {
-            vertex_type.segment(start_i, body.vertices.rows())
-                .setConstant(int(body.type));
-            start_i += body.vertices.rows();
-        }
-        mesh_data->set_vertex_data(
-            m_state.problem_ptr->vertex_dof_fixed(), vertex_type);
-    }
-
-    if (m_state.problem_ptr->is_rb_problem()) {
-        com_data->set_coms(
-            std::dynamic_pointer_cast<RigidBodyProblem>(m_state.problem_ptr)
-                ->m_assembler.rb_poses());
-    }
-}
-
-bool UISimState::pre_draw_loop()
+void UISimState::pre_draw_loop()
 {
     size_t last_save_state = m_state.state_sequence.size() - 1;
     if (m_state.m_num_simulation_steps > last_save_state) {
         m_state.m_num_simulation_steps = last_save_state;
         m_player_state = PlayerState::Paused;
-        replaying = false;
     }
-    if (replaying) {
-        m_state.problem_ptr->state(
-            m_state.state_sequence[m_state.m_num_simulation_steps]);
-        redraw_scene();
-        m_scene_changed = true;
-        if (m_player_state == PlayerState::Playing) {
-            m_state.m_num_simulation_steps++;
-        } else if (m_state.m_num_simulation_steps >= last_save_state) {
-            m_state.m_num_simulation_steps = last_save_state;
-            m_player_state = PlayerState::Paused;
-            replaying = false;
-        }
-    } else if (m_player_state == PlayerState::Playing) {
-        simulation_step();
 
-        bool breakpoint = (m_bkp_had_collision && m_state.m_step_had_collision)
-            || (m_bkp_has_intersections && m_state.m_step_has_intersections)
-            || (m_bkp_optimization_failed
-                && !m_state.problem_ptr->opt_result.success)
-            || (m_state.m_max_simulation_steps >= 0
-                && m_state.m_num_simulation_steps
-                    >= m_state.m_max_simulation_steps);
-        if (breakpoint) {
-            m_player_state = PlayerState::Paused;
-            log_simulation_time();
+    if (m_player_state == PlayerState::Playing) {
+        if (m_state.m_num_simulation_steps < last_save_state) {
+            // Replaying the simulation
+            m_state.problem_ptr->state(
+                m_state.state_sequence[++m_state.m_num_simulation_steps]);
+            redraw_scene();
+            if (m_state.m_num_simulation_steps >= last_save_state) {
+                m_state.m_num_simulation_steps = last_save_state;
+                m_player_state = PlayerState::Paused;
+            }
+        } else {
+            simulation_step(); // calls redraw_scene()
+
+            bool breakpoint =
+                (m_bkp_had_collision && m_state.m_step_had_collision)
+                || (m_bkp_has_intersections && m_state.m_step_has_intersections)
+                || (m_bkp_optimization_failed
+                    && !m_state.problem_ptr->opt_result.success)
+                || (m_state.m_max_simulation_steps >= 0
+                    && m_state.m_num_simulation_steps
+                        >= m_state.m_max_simulation_steps);
+            if (breakpoint) {
+                m_player_state = PlayerState::Paused;
+                log_simulation_time();
+            }
         }
         m_scene_changed = true;
     }
-    return false;
 }
 
-void UISimState::save_screenshot(const std::string& filename)
+void UISimState::redraw_scene()
 {
-    if (filename == "") {
-        return;
+    Eigen::MatrixXd q1 = m_state.problem_ptr->vertices();
+    Eigen::MatrixXd v1 = m_state.problem_ptr->velocities();
+
+    m_mesh_data.update_vertices(q1);
+    m_mesh_data.update_velocities(v1);
+
+    if (m_state.problem_ptr->is_rb_problem()) {
+        m_com_data.update_coms(
+            std::dynamic_pointer_cast<RigidBodyProblem>(m_state.problem_ptr)
+                ->m_assembler.rb_poses());
     }
+}
 
-    int width, height;
-    get_window_dimensions(width, height);
-    using MatrixXuc = MatrixX<unsigned char>;
-    // Allocate temporary buffers for image
-    MatrixXuc R(width, height), G(width, height), B(width, height),
-        A(width, height);
+void UISimState::post_draw_loop()
+{
+    if (m_scene_changed && m_is_gif_recording) {
+        int width = ps::view::bufferWidth, height = ps::view::bufferHeight;
+        width = width >> m_gif_downscale;
+        height = height >> m_gif_downscale;
 
-    // Draw the scene in the buffers
-    // m_viewer.core().draw_buffer(mesh_data->data(), false, R, G, B, A);
-    // m_viewer.core().draw_buffer(velocity_data->data(), true, R, G, B, A);
-    // m_viewer.core().draw_buffer(com_data->data(), true, R, G, B, A);
+        const std::vector<unsigned char> buffer = ps::screenshotToBuffer(
+            /*transparentBG=*/true);
 
-    std::vector<unsigned char> data(4 * width * height);
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
-    // img->flip();
-    for (int i = 0; i < width; i++) {
-        for (int j = 0; j < height; j++) {
-            R(i, j) = data[4 * (i + j * width) + 0];
-            G(i, j) = data[4 * (i + j * width) + 1];
-            B(i, j) = data[4 * (i + j * width) + 2];
-            A(i, j) = data[4 * (i + j * width) + 3];
+        // Flip the buffer vertically and downscale it
+        std::vector<uint8_t> img(width * height * 4);
+        const int delta = 1 << m_gif_downscale;
+        for (int x = 0; x < ps::view::bufferWidth; x += delta) {
+            for (int y = 0; y < ps::view::bufferHeight; y += delta) {
+                // int buffer_i = (y * ps::view::bufferWidth + x) * 4;
+                int img_i = ((height - 1 - (y >> m_gif_downscale)) * width
+                             + (x >> m_gif_downscale))
+                    * 4;
+                for (int d = 0; d < 4; ++d) {
+                    img[img_i + d] = 0; // Initialize to zero
+                    // Average the pixels in the downscaled region
+                    for (int i = 0; i < delta; ++i) {
+                        for (int j = 0; j < delta; ++j) {
+                            int buffer_i =
+                                ((y + i) * ps::view::bufferWidth + (x + j)) * 4;
+                            img[img_i + d] +=
+                                buffer[buffer_i + d] / (delta * delta);
+                        }
+                    }
+                }
+            }
         }
-    }
-    bool success = igl::png::writePNG(R, G, B, A, filename);
 
-    if (!success) {
-        spdlog::error("Unable to save screenshot to {}", filename);
+        GifWriteFrame(&m_gif_writer, img.data(), width, height, m_gif_delay);
     }
+    m_scene_changed = false;
 }
 
 void UISimState::start_recording(const std::string& filename)
@@ -256,88 +216,17 @@ void UISimState::start_recording(const std::string& filename)
         return;
     }
 
-    int width, height;
-    get_window_dimensions(width, height);
-    width = static_cast<int>(m_gif_scale * width);
-    height = static_cast<int>(m_gif_scale * height);
+    int width = ps::view::bufferWidth, height = ps::view::bufferHeight;
+    width = width >> m_gif_downscale;
+    height = height >> m_gif_downscale;
     GifBegin(&m_gif_writer, filename.c_str(), width, height, m_gif_delay);
-    m_scene_changed = true;
-    // post_draw_loop();
     m_is_gif_recording = true;
-}
-
-bool UISimState::post_draw_loop()
-{
-    if (m_scene_changed && m_is_gif_recording) {
-        int width, height;
-        get_window_dimensions(width, height);
-        width = static_cast<int>(m_gif_scale * width);
-        height = static_cast<int>(m_gif_scale * height);
-
-        using MatrixXuc = MatrixX<unsigned char>;
-        // Allocate temporary buffers for image
-        MatrixXuc R(width, height), G(width, height), B(width, height),
-            A(width, height);
-
-        // Draw the scene in the buffers
-        m_viewer.core().draw_buffer(mesh_data->data(), false, R, G, B, A);
-
-        std::vector<uint8_t> img(width * height * 4);
-        for (int rowI = 0; rowI < width; rowI++) {
-            for (int colI = 0; colI < height; colI++) {
-                int indStart = (rowI + (height - 1 - colI) * width) * 4;
-                img[indStart] = R(rowI, colI);
-                img[indStart + 1] = G(rowI, colI);
-                img[indStart + 2] = B(rowI, colI);
-                img[indStart + 3] = A(rowI, colI);
-            }
-        }
-        GifWriteFrame(&m_gif_writer, img.data(), width, height, m_gif_delay);
-    }
-    m_scene_changed = false;
-    return false;
 }
 
 void UISimState::end_recording()
 {
     GifEnd(&m_gif_writer);
     m_is_gif_recording = false;
-}
-
-bool UISimState::custom_key_pressed(unsigned int unicode_key, int modifiers)
-{
-    if (mesh_data == nullptr) {
-        return false;
-    }
-
-    switch (unicode_key) {
-    case 'F':
-    case 'f': {
-        // mesh_data->data().set_face_based(!mesh_data->data().face_based);
-        return true;
-    }
-    case 'L':
-    case 'l': {
-        bool toggle = mesh_data->visibility();
-        mesh_data->visibility(!toggle);
-        return true;
-    }
-    case 'T':
-    case 't': {
-        m_viewer.core().toggle(mesh_data->data().show_faces);
-        return true;
-    }
-    case ' ': {
-        m_player_state = m_player_state == PlayerState::Playing
-            ? PlayerState::Paused
-            : PlayerState::Playing;
-        log_simulation_time();
-        return true;
-    }
-    default:
-        break; // do nothing
-    }
-    return false;
 }
 
 } // namespace ipc::rigid

@@ -1,6 +1,8 @@
 #include <catch2/catch.hpp>
 
-#include <ghc/fs_std.hpp> // filesystem
+#include <filesystem>
+namespace fs = std::filesystem;
+
 #include <igl/Timer.h>
 #include <nlohmann/json.hpp>
 

@@ -57,12 +57,13 @@ public:
     virtual size_t num_bodies() const = 0;
 
     virtual Eigen::MatrixXd vertices() const = 0;
+    virtual const std::vector<int>& codim_vertices_to_vertices() const = 0;
     virtual const Eigen::MatrixXi& edges() const = 0;
-    virtual const std::vector<size_t>& codim_edges_to_edges() const = 0;
+    virtual const std::vector<int>& codim_edges_to_edges() const = 0;
     virtual const Eigen::MatrixXi& faces() const = 0;
     virtual Eigen::MatrixXd vertices(size_t i) const { return vertices(); }
     virtual const Eigen::MatrixXi& edges(size_t i) const { return edges(); }
-    virtual const std::vector<size_t>& codim_edges_to_edges(size_t i) const
+    virtual const std::vector<int>& codim_edges_to_edges(size_t i) const
     {
         return codim_edges_to_edges();
     }

@@ -5,12 +5,8 @@
 #include <spdlog/spdlog.h>
 
 #include <igl/Timer.h>
-#include <igl/opengl/glfw/Viewer.h>
-#include <igl/opengl/glfw/imgui/ImGuiMenu.h>
-#include <igl/png/render_to_png.h>
-#include <igl/png/writePNG.h>
 
-#include <viewer/igl_viewer_ext.hpp>
+#include <viewer/viewer_data.hpp>
 
 // WARNING: Use an anonymous namespace when including gif.h to avoid duplicate
 //          symbols.
@@ -23,40 +19,25 @@ namespace {
 
 namespace ipc::rigid {
 
-class UISimState : public igl::opengl::glfw::imgui::ImGuiMenu {
-    typedef igl::opengl::glfw::imgui::ImGuiMenu Super;
-
+class UISimState {
 public:
-    UISimState();
-    ~UISimState() override {}
+    UISimState() = default;
 
     enum PlayerState { Playing = 0, Paused, TotalPlayerStatus };
 
-    virtual void init(igl::opengl::glfw::Viewer* _viewer) override;
-    virtual void draw_menu() override;
-    // virtual bool mouse_down(int button, int modifier) override;
-    // virtual bool key_pressed(unsigned int key, int modifiers) override;
-
-    std::shared_ptr<igl::opengl::ViewerDataExt>
-    get_data(const std::string& data) const;
+    void init();
+    void draw_menu();
 
     void launch(const std::string& inital_scene);
     void load_scene();
     void redraw_scene();
-    bool pre_draw_loop();
-    bool post_draw_loop();
+    void pre_draw_loop();
+    void post_draw_loop();
 
     bool custom_key_pressed(unsigned int unicode_key, int modifiers);
 
-    bool load(std::string scene_filename) override
-    {
-        if (scene_filename != "" && m_state.load_scene(scene_filename)) {
-            load_scene();
-            return true;
-        }
-        return false;
-    }
-    bool save(std::string scene_filename) override
+    bool load(std::string scene_filename);
+    bool save(std::string scene_filename)
     {
         return m_state.save_simulation(scene_filename);
     }
@@ -74,23 +55,10 @@ public:
         return m_state.save_gltf(filename);
     }
 
-    void get_window_dimensions(int& width, int& height) const
-    {
-        width = m_viewer.core().viewport[2] - m_viewer.core().viewport[0];
-        height = m_viewer.core().viewport[3] - m_viewer.core().viewport[1];
-    }
-
-    void save_screenshot(const std::string& filename);
     void start_recording(const std::string& filename);
     void end_recording();
 
-    void reload()
-    {
-        m_reloading_scene = true;
-        m_state.reload_scene();
-        load_scene();
-        m_reloading_scene = false;
-    }
+    void reload();
 
     void simulation_step()
     {
@@ -108,17 +76,15 @@ public:
         spdlog::info("total_simulation_time={:g}s", m_simulation_time);
     }
 
-    igl::opengl::glfw::Viewer m_viewer;
     SimState m_state;
-    PlayerState m_player_state;
-    bool replaying = false;
+    PlayerState m_player_state = PlayerState::Paused;
 
-    bool m_has_scene;
-    bool m_bkp_had_collision;
-    bool m_bkp_has_intersections;
-    bool m_bkp_optimization_failed;
-    double m_interval_time; ///< @brief time within the interval
-    bool m_show_vertex_data;
+    bool m_has_scene = false;            ///< @brief true if a scene is loaded
+    bool m_bkp_had_collision = false;    ///< @brief breakpoint on collisions
+    bool m_bkp_has_intersections = true; ///< @brief breakpoint on intersections
+    bool m_bkp_optimization_failed = true; ///< @brief breakpoint on opt failure
+    double m_interval_time = 0.0;          ///< @brief time within the interval
+    bool m_show_vertex_data = false; ///< @brief show vertex data in the viewer
 
 protected:
     void draw_io();
@@ -127,23 +93,18 @@ protected:
     void draw_legends();
 
 private:
-    std::shared_ptr<igl::opengl::MeshData> mesh_data;
-    std::shared_ptr<igl::opengl::VectorFieldData> velocity_data;
-    std::shared_ptr<igl::opengl::CoMData> com_data;
+    MeshData m_mesh_data;
+    CoMData m_com_data;
 
-    std::vector<
-        std::pair<std::string, std::shared_ptr<igl::opengl::ViewerDataExt>>>
-        datas_;
-
-    bool m_reloading_scene;
+    bool m_reloading_scene = false; ///< @brief is the scene is being reloaded?
 
     GifWriter m_gif_writer;
     uint32_t m_gif_delay = 1; //*10ms
-    double m_gif_scale = 0.5;
+    int m_gif_downscale = 1;
     bool m_is_gif_recording = false;
-    bool m_scene_changed;
+    bool m_scene_changed = false; ///< @brief scene changed since last draw
 
-    double m_simulation_time;
+    double m_simulation_time = 0.0; ///< @brief total simulation time
 
     std::string inital_scene;
 };
