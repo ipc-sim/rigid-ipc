@@ -1,6 +1,8 @@
 #include <CLI/CLI.hpp>
 
-#include <ghc/fs_std.hpp> // filesystem
+#include <filesystem>
+namespace fs = std::filesystem;
+
 #include <igl/Timer.h>
 #include <igl/edges.h>
 

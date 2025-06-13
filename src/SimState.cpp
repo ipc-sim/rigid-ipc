@@ -6,7 +6,6 @@
 #include <iostream>
 #include <string>
 
-#include <ghc/fs_std.hpp> // filesystem
 #include <igl/Timer.h>
 #include <igl/write_triangle_mesh.h>
 #include <nlohmann/json.hpp>
@@ -23,6 +22,9 @@
 
 #include <logger.hpp>
 #include <profiler.hpp>
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace ipc::rigid {
 

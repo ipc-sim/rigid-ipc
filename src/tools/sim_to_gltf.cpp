@@ -1,5 +1,7 @@
 #include <CLI/CLI.hpp>
-#include <ghc/fs_std.hpp> // filesystem
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #include <SimState.hpp>
 #include <logger.hpp>
@@ -23,7 +25,8 @@ int main(int argc, char* argv[])
     app.add_option("--log,--loglevel", loglevel, "log level")
         ->default_val(loglevel)
         ->transform(
-            CLI::CheckedTransformer(SPDLOG_LEVEL_NAMES_TO_LEVELS, CLI::ignore_case));
+            CLI::CheckedTransformer(
+                SPDLOG_LEVEL_NAMES_TO_LEVELS, CLI::ignore_case));
 
     try {
         app.parse(argc, argv);
