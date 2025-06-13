@@ -16,10 +16,10 @@ bool is_point_along_edge(
 
     Interval alpha = point_edge_closest_point(p, e0, e1);
     // Check this in case empty intervals are not allowed
-    if (!overlap(alpha, Interval(0, 1))) {
+    if (!alpha.overlaps(Interval(0, 1))) {
         return false;
     }
-    Interval valid_alpha = boost::numeric::intersect(alpha, Interval(0, 1));
+    Interval valid_alpha = alpha & Interval(0, 1);
 
     // Check the distance to the closest point is small
     VectorMax3I edge_to_point = e0 + valid_alpha * e - p;

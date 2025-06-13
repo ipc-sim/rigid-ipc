@@ -603,8 +603,8 @@ bool DistanceBarrierRBProblem::take_step(const Eigen::VectorXd& x)
                         * (Qdot_prev
                            + h / 4.0
                                * (
-                                     // Tau * Jinv +
-                                     rb.Qddot));
+                                   // Tau * Jinv +
+                                   rb.Qddot));
                 rb.Qddot = 4 * (Q - Q_tilde) / (h * h); //+ Tau * Jinv;
                 break;
             }

@@ -7,13 +7,10 @@ namespace ipc::rigid {
 
 template <typename T> inline bool is_zero(T x) { return x == 0.0; }
 
-template <> inline bool is_zero(Interval x)
-{
-    return boost::numeric::zero_in(x);
-}
+template <> inline bool is_zero(Interval x) { return x.zero_in(); }
 
 template <int dim, int max_dim>
-inline bool is_zero(Vector<Interval, dim, max_dim> X)
+inline bool is_zero(const Vector<Interval, dim, max_dim>& X)
 {
     // Check that all components contain zero
     // WARNING: This is conservative, but no exact

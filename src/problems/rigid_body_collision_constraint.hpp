@@ -26,20 +26,20 @@ struct RigidBodyVertexVertexConstraint {
         const RigidBodyAssembler& bodies,
         const VertexVertexConstraint& vv_constraint)
         : RigidBodyVertexVertexConstraint(
-              bodies,
-              vv_constraint.vertex0_index,
-              vv_constraint.vertex1_index,
-              vv_constraint.multiplicity)
+            bodies,
+            vv_constraint.vertex0_index,
+            vv_constraint.vertex1_index,
+            vv_constraint.multiplicity)
     {
     }
     RigidBodyVertexVertexConstraint(
         const RigidBodyAssembler& bodies,
         const VertexVertexFrictionConstraint& vv_constraint)
         : RigidBodyVertexVertexConstraint(
-              bodies,
-              vv_constraint.vertex0_index,
-              vv_constraint.vertex1_index,
-              vv_constraint.multiplicity)
+            bodies,
+            vv_constraint.vertex0_index,
+            vv_constraint.vertex1_index,
+            vv_constraint.multiplicity)
     {
     }
 
@@ -69,20 +69,20 @@ struct RigidBodyEdgeVertexConstraint {
         const RigidBodyAssembler& bodies,
         const EdgeVertexConstraint& ev_constraint)
         : RigidBodyEdgeVertexConstraint(
-              bodies,
-              ev_constraint.edge_index,
-              ev_constraint.vertex_index,
-              ev_constraint.multiplicity)
+            bodies,
+            ev_constraint.edge_index,
+            ev_constraint.vertex_index,
+            ev_constraint.multiplicity)
     {
     }
     RigidBodyEdgeVertexConstraint(
         const RigidBodyAssembler& bodies,
         const EdgeVertexFrictionConstraint& ev_constraint)
         : RigidBodyEdgeVertexConstraint(
-              bodies,
-              ev_constraint.edge_index,
-              ev_constraint.vertex_index,
-              ev_constraint.multiplicity)
+            bodies,
+            ev_constraint.edge_index,
+            ev_constraint.vertex_index,
+            ev_constraint.multiplicity)
     {
     }
 
@@ -118,17 +118,17 @@ struct RigidBodyEdgeEdgeConstraint {
         const RigidBodyAssembler& bodies,
         const EdgeEdgeConstraint& ee_constraint)
         : RigidBodyEdgeEdgeConstraint(
-              bodies,
-              ee_constraint.edge0_index,
-              ee_constraint.edge1_index,
-              ee_constraint.eps_x)
+            bodies,
+            ee_constraint.edge0_index,
+            ee_constraint.edge1_index,
+            ee_constraint.eps_x)
     {
     }
     RigidBodyEdgeEdgeConstraint(
         const RigidBodyAssembler& bodies,
         const EdgeEdgeFrictionConstraint& ee_constraint)
         : RigidBodyEdgeEdgeConstraint(
-              bodies, ee_constraint.edge0_index, ee_constraint.edge1_index, -1)
+            bodies, ee_constraint.edge0_index, ee_constraint.edge1_index, -1)
     {
     }
 
@@ -154,21 +154,21 @@ struct RigidBodyFaceVertexConstraint {
     const long multiplicity = 1;
 
     RigidBodyFaceVertexConstraint(
-        const RigidBodyAssembler& bodies,
-        long face_index,
+        const RigidBodyAssembler& bodies, 
+        long face_index, 
         long vertex_index);
     RigidBodyFaceVertexConstraint(
         const RigidBodyAssembler& bodies,
         const FaceVertexConstraint& fv_constraint)
         : RigidBodyFaceVertexConstraint(
-              bodies, fv_constraint.face_index, fv_constraint.vertex_index)
+            bodies, fv_constraint.face_index, fv_constraint.vertex_index)
     {
     }
     RigidBodyFaceVertexConstraint(
         const RigidBodyAssembler& bodies,
         const FaceVertexFrictionConstraint& fv_constraint)
         : RigidBodyFaceVertexConstraint(
-              bodies, fv_constraint.face_index, fv_constraint.vertex_index)
+            bodies, fv_constraint.face_index, fv_constraint.vertex_index)
     {
     }
 
@@ -208,8 +208,8 @@ vertex_local_body_ids(const Constraints& constraints, size_t ci)
 
 template <typename Constraints>
 std::array<long, 2> body_ids(
-    const RigidBodyAssembler& bodies,
-    const Constraints& constraints,
+    const RigidBodyAssembler& bodies, 
+    const Constraints& constraints, 
     size_t ci)
 {
     if (ci < constraints.vv_constraints.size()) {

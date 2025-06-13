@@ -72,13 +72,14 @@ set(TIGHT_INCLUSION_WITH_NO_ZERO_TOI OFF CACHE BOOL "Enable refinement if CCD pr
 add_library(ipc_rigid
   src/autodiff/autodiff.cpp
 
+
   src/utils/sinc.cpp
 
   src/ccd/impact.cpp
   src/ccd/ccd.cpp
   src/ccd/linear/broad_phase.cpp
   src/ccd/piecewise_linear/time_of_impact.cpp
-  src/interval/filib_rounding.cpp
+  src/interval/interval.cpp
   src/interval/interval_root_finder.cpp
   src/ccd/rigid/broad_phase.cpp
   src/ccd/rigid/rigid_body_hash_grid.cpp
@@ -192,10 +193,6 @@ target_link_libraries(ipc_rigid PUBLIC spdlog::spdlog)
 # Finite Differences
 include(finite_diff)
 target_link_libraries(ipc_rigid PUBLIC finitediff::finitediff)
-
-# Boost
-include(boost)
-target_link_libraries(ipc_rigid PUBLIC Boost::boost)
 
 # TBB
 include(onetbb)
