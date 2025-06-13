@@ -39,6 +39,7 @@ void center_vertices(
             break;
         }
     }
+    assert(vertices.array().isFinite().all());
 }
 
 RigidBody::RigidBody(
@@ -98,9 +99,7 @@ RigidBody::RigidBody(
         double threshold = I.lpNorm<Eigen::Infinity>() * 1e-16;
         I = (threshold < I.array().abs()).select(I, 0.0);
         es.compute(I);
-        if (es.info() != Eigen::Success) {
-            spdlog::error("Eigen decompostion of the inertia tensor failed!");
-        }
+        assert(es.info() == Eigen::Success);
         moment_of_inertia = density * es.eigenvalues();
         if ((moment_of_inertia.array() < 0).any()) {
             spdlog::warn(
@@ -126,8 +125,9 @@ RigidBody::RigidBody(
             moment_of_inertia = -I.diagonal().array() + I.diagonal().sum();
             R0.setIdentity();
         } else if (num_rot_dof_fixed == 1) {
-            spdlog::warn("Rigid body dynamics with two rotational DoF has "
-                         "not been tested thoroughly.");
+            spdlog::warn(
+                "Rigid body dynamics with two rotational DoF has "
+                "not been tested thoroughly.");
         }
         // R = RᵢR₀
         Eigen::AngleAxisd r = Eigen::AngleAxisd(
@@ -146,6 +146,7 @@ RigidBody::RigidBody(
         moment_of_inertia = density * I.diagonal();
         R0 = Eigen::Matrix<double, 1, 1>::Identity();
     }
+    assert(this->vertices.array().isFinite().all());
 
     // Zero out the velocity and forces of fixed dof
     this->velocity.zero_dof(is_dof_fixed, R0);

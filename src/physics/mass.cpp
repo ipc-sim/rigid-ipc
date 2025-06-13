@@ -17,6 +17,10 @@ void compute_mass_properties(
 {
     if (vertices.cols() == 2) {
         compute_mass_properties_2D(vertices, facets, mass, center, inertia);
+    } else if (facets.rows() < 4) {
+        // This must be an open mesh, so we compute the mass properties
+        // using the 2D method.
+        compute_mass_properties_2D(vertices, facets, mass, center, inertia);
     } else {
         // TODO: Fix this temporary version
         try {
@@ -56,8 +60,9 @@ void compute_mass_properties_3D(
     MatrixMax3d& inertia)
 {
     if (faces.size() == 0 || faces.cols() != 3) {
-        throw NotImplementedError("compute_mass_properties_3D() not "
-                                  "implemented for faceless meshes!");
+        throw NotImplementedError(
+            "compute_mass_properties_3D() not "
+            "implemented for faceless meshes!");
     }
     assert(vertices.cols() == 3);
     assert(faces.cols() == 3);
