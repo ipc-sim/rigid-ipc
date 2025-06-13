@@ -39,6 +39,7 @@ void RigidBodyAssembler::init(const std::vector<RigidBody>& rigid_bodies)
     m_faces.resize(m_body_face_id.back(), 3);
     m_faces_to_edges.resize(m_body_face_id.back(), 3);
     m_codim_edges_to_edges.clear();
+    m_codim_vertices_to_vertices.clear();
     for (size_t i = 0; i < num_bodies; ++i) {
         auto& rb = rigid_bodies[i];
         if (rb.edges.size() != 0) {
@@ -53,6 +54,9 @@ void RigidBodyAssembler::init(const std::vector<RigidBody>& rigid_bodies)
         }
         for (const auto& ei : rb.mesh_selector.codim_edges_to_edges()) {
             m_codim_edges_to_edges.push_back(ei + m_body_edge_id[i]);
+        }
+        for (const auto& vi : rb.mesh_selector.codim_vertices_to_vertices()) {
+            m_codim_vertices_to_vertices.push_back(vi + m_body_vertex_id[i]);
         }
     }
     // vertex to body map

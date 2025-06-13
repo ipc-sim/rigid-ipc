@@ -3,7 +3,7 @@
 #include <CLI/CLI.hpp>
 
 #include <tbb/global_control.h>
-#include <tbb/task_scheduler_init.h>
+#include <tbb/info.h>
 #include <thread>
 
 #include <SimState.hpp>
@@ -59,10 +59,11 @@ int main(int argc, char* argv[])
     spdlog::level::level_enum loglevel = spdlog::level::info;
     app.add_option("--log,--loglevel", loglevel, "log level")
         ->default_val(loglevel)
-        ->transform(CLI::CheckedTransformer(
-            SPDLOG_LEVEL_NAMES_TO_LEVELS, CLI::ignore_case));
+        ->transform(
+            CLI::CheckedTransformer(
+                SPDLOG_LEVEL_NAMES_TO_LEVELS, CLI::ignore_case));
 
-    int nthreads = tbb::task_scheduler_init::default_num_threads();
+    int nthreads = tbb::info::default_concurrency();
     app.add_option("--nthreads", nthreads, "maximum number of threads to use")
         ->default_val(nthreads);
 
@@ -75,13 +76,13 @@ int main(int argc, char* argv[])
     set_logger_level(loglevel);
 
     if (nthreads <= 0) {
-        nthreads = tbb::task_scheduler_init::default_num_threads();
+        nthreads = tbb::info::default_concurrency();
     }
 
-    if (nthreads > tbb::task_scheduler_init::default_num_threads()) {
+    if (nthreads > tbb::info::default_concurrency()) {
         spdlog::warn(
             "Attempting to use more threads than available ({:d} > {:d})!",
-            nthreads, tbb::task_scheduler_init::default_num_threads());
+            nthreads, tbb::info::default_concurrency());
     }
 
     tbb::global_control thread_limiter(
@@ -92,20 +93,23 @@ int main(int argc, char* argv[])
         UISimState ui;
         ui.launch(scene_path);
 #else
-        exit(app.exit(CLI::Error(
-            "gui",
-            "Unable to use GUI mode because OpenGL is disable in CMake!")));
+        exit(app.exit(
+            CLI::Error(
+                "gui",
+                "Unable to use GUI mode because OpenGL is disable in CMake!")));
 #endif
     } else {
         if (scene_path.empty()) {
-            exit(app.exit(CLI::Error(
-                "scene_path", "Must provide a scene path in ngui mode!")));
+            exit(app.exit(
+                CLI::Error(
+                    "scene_path", "Must provide a scene path in ngui mode!")));
         }
 
         if (output_dir.empty()) {
-            exit(app.exit(CLI::Error(
-                "output_dir",
-                "Must provide a output directory in ngui mode!")));
+            exit(app.exit(
+                CLI::Error(
+                    "output_dir",
+                    "Must provide a output directory in ngui mode!")));
         }
 
         // Create the output directory if it does not exist

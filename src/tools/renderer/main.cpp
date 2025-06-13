@@ -51,22 +51,25 @@ SimRenderArgs parse_args(int argc, char* argv[])
     }
 
     if (!fs::exists(args.sim_path)) {
-        exit(app.exit(CLI::Error(
-            "input does not exist",
-            fmt::format(
-                "input path does not exist ({})", args.sim_path.string()))));
+        exit(app.exit(
+            CLI::Error(
+                "input does not exist",
+                fmt::format(
+                    "input path does not exist ({})",
+                    args.sim_path.string()))));
     }
 
     if (!fs::is_directory(args.sim_path)
         && args.sim_path.extension().string() != ".json"
         && args.sim_path.extension().string() != ".JSON") {
-        exit(app.exit(CLI::Error(
-            "invalid input",
-            fmt::format(
-                "invalid input path ({}) must be a simulation JSON or "
-                "directory "
-                "containing an OBJ sequence",
-                args.sim_path.string()))));
+        exit(app.exit(
+            CLI::Error(
+                "invalid input",
+                fmt::format(
+                    "invalid input path ({}) must be a simulation JSON or "
+                    "directory "
+                    "containing an OBJ sequence",
+                    args.sim_path.string()))));
     }
 
     return args;
@@ -81,7 +84,7 @@ bool read_json(const std::string& filename, nlohmann::json& json)
 
 class MeshGenerator {
 public:
-    virtual ~MeshGenerator() {};
+    virtual ~MeshGenerator() { };
     virtual size_t num_meshes() = 0;
     virtual Eigen::MatrixXd vertices(size_t i) = 0;
     virtual Eigen::MatrixXi edges(size_t i) = 0;
@@ -121,7 +124,7 @@ public:
         }
     }
 
-    virtual ~OBJSequence() override {};
+    virtual ~OBJSequence() override { };
 
     size_t num_meshes() override { return vertices_sequence.size(); }
 
@@ -187,7 +190,7 @@ public:
         m_fps = int(1 / sim["args"]["timestep"].get<double>());
     }
 
-    virtual ~RigidBodySequence() override {};
+    virtual ~RigidBodySequence() override { };
 
     size_t num_meshes() override { return state_sequence.size(); }
 

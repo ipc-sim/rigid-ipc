@@ -50,12 +50,17 @@ public:
         return m_assembler.world_vertices_t1();
     }
 
+    const std::vector<int>& codim_vertices_to_vertices() const override
+    {
+        return m_assembler.m_codim_vertices_to_vertices;
+    }
+
     const Eigen::MatrixXi& edges() const override
     {
         return m_assembler.m_edges;
     }
 
-    const std::vector<size_t>& codim_edges_to_edges() const override
+    const std::vector<int>& codim_edges_to_edges() const override
     {
         return m_assembler.m_codim_edges_to_edges;
     }
@@ -75,7 +80,7 @@ public:
         return m_assembler[i].edges;
     }
 
-    virtual const std::vector<size_t>&
+    virtual const std::vector<int>&
     codim_edges_to_edges(size_t i) const override
     {
         return m_assembler[i].mesh_selector.codim_edges_to_edges();

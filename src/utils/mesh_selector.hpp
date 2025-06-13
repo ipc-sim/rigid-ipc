@@ -9,7 +9,7 @@ namespace ipc::rigid {
 
 class MeshSelector {
 public:
-    MeshSelector() {}
+    MeshSelector() { }
     MeshSelector(
         size_t num_vertices,
         const Eigen::MatrixXi& E,
@@ -37,9 +37,14 @@ public:
         return m_codim_edges_to_edges[ei];
     }
 
-    const std::vector<size_t>& codim_edges_to_edges() const
+    const std::vector<int>& codim_edges_to_edges() const
     {
         return m_codim_edges_to_edges;
+    }
+
+    const std::vector<int>& codim_vertices_to_vertices() const
+    {
+        return m_codim_vertices_to_vertices;
     }
 
     size_t num_codim_vertices() const
@@ -77,9 +82,9 @@ protected:
     /// A mapping from a face to the indices of the face's edges.
     Eigen::MatrixXi m_faces_to_edges;
     /// A map from codimensional vertices ids to full vertices ids.
-    std::vector<size_t> m_codim_vertices_to_vertices;
+    std::vector<int> m_codim_vertices_to_vertices;
     /// A map from codimensional edges ids to full edges ids.
-    std::vector<size_t> m_codim_edges_to_edges;
+    std::vector<int> m_codim_edges_to_edges;
 };
 
 } // namespace ipc::rigid

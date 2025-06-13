@@ -25,19 +25,19 @@ set_target_properties(cli_ccd PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINAR
 ################################################################################
 # Headless Renderer
 ################################################################################
-add_executable(render_simulation
-  renderer/main.cpp
-)
+# add_executable(render_simulation
+#   renderer/main.cpp
+# )
 
-target_link_libraries(render_simulation PUBLIC ipc::rigid)
+# target_link_libraries(render_simulation PUBLIC ipc::rigid)
 
-include(software_renderer)
-target_link_libraries(render_simulation PUBLIC software_renderer::software_renderer)
+# include(software_renderer)
+# target_link_libraries(render_simulation PUBLIC software_renderer::software_renderer)
 
-include(cli11)
-target_link_libraries(render_simulation PUBLIC CLI11::CLI11)
+# include(cli11)
+# target_link_libraries(render_simulation PUBLIC CLI11::CLI11)
 
-set_target_properties(render_simulation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tools")
+# set_target_properties(render_simulation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tools")
 
 ################################################################################
 # OBJ Sequence Generator

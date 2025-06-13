@@ -82,7 +82,7 @@ bool write_obj(
             s << fmt::format("o body{0:04d}\nusemtl body{0:04d}\n", i);
             s << V.format(vertices_format)
               << (F.array() + start_vi).format(faces_format);
-            for (const size_t& ei : problem.codim_edges_to_edges(i)) {
+            for (const size_t ei : problem.codim_edges_to_edges(i)) {
                 s << fmt::format(
                     "l {:d} {:d}\n", E(ei, 0) + start_vi, E(ei, 1) + start_vi);
             }

@@ -27,8 +27,9 @@ int main(int argc, char* argv[])
     spdlog::level::level_enum loglevel = spdlog::level::warn;
     app.add_option("--log,--loglevel", loglevel, "log level")
         ->default_val(loglevel)
-        ->transform(CLI::CheckedTransformer(
-            SPDLOG_LEVEL_NAMES_TO_LEVELS, CLI::ignore_case));
+        ->transform(
+            CLI::CheckedTransformer(
+                SPDLOG_LEVEL_NAMES_TO_LEVELS, CLI::ignore_case));
 
     try {
         app.parse(argc, argv);

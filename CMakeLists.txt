@@ -1,3 +1,5 @@
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+
 # Detects whether this is a top-level project
 get_directory_property(HAS_PARENT PARENT_DIRECTORY)
 if(HAS_PARENT)
@@ -60,12 +62,6 @@ include(rigid_ipc_autogen)
 ################################################################################
 # External project settings
 ################################################################################
-
-# libigl options
-set(LIBIGL_GLFW   ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Build target igl::glfw"   FORCE)
-set(LIBIGL_IMGUI  ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Build target igl::imgui"  FORCE)
-set(LIBIGL_OPENGL ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Build target igl::opengl" FORCE)
-set(LIBIGL_PNG    ${RIGID_IPC_WITH_OPENGL} CACHE BOOL "Build target igl::png"    FORCE)
 
 set(TIGHT_INCLUSION_WITH_NO_ZERO_TOI OFF CACHE BOOL "Enable refinement if CCD produces a zero ToI" FORCE)
 
@@ -199,7 +195,7 @@ include(finite_diff)
 target_link_libraries(ipc_rigid PUBLIC finitediff::finitediff)
 
 # TBB
-include(tbb)
+include(onetbb)
 target_link_libraries(ipc_rigid PUBLIC TBB::tbb)
 
 # MSCCD
@@ -259,7 +255,7 @@ add_executable(rigid_ipc_sim src/main.cpp)
 if(RIGID_IPC_WITH_OPENGL)
     target_sources(rigid_ipc_sim PUBLIC
       src/viewer/imgui_ext.cpp
-      src/viewer/igl_viewer_ext.cpp
+      src/viewer/viewer_data.cpp
       src/viewer/UISimState.cpp
       src/viewer/UIMenu.cpp
     )
@@ -273,12 +269,13 @@ target_link_libraries(rigid_ipc_sim PUBLIC CLI11::CLI11)
 if(RIGID_IPC_WITH_OPENGL)
     target_compile_definitions(rigid_ipc_sim PUBLIC RIGID_IPC_WITH_OPENGL)
 
-    target_link_libraries(rigid_ipc_sim PUBLIC
-        igl::opengl igl::glfw igl::imgui igl::png)
-
     # Charlie Tangora's gif-h library
     include(gif_h)
     target_link_libraries(rigid_ipc_sim PRIVATE gif_h::gif_h)
+
+    # Polyscope visualization library
+    include(polyscope)
+    target_link_libraries(rigid_ipc_sim PUBLIC polyscope::polyscope)
 endif()
 
 ################################################################################
