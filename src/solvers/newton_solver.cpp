@@ -508,8 +508,6 @@ bool NewtonSolver::compute_direction(
     linear_solver.factorize(hessian);
 
     if (linear_solver.info() == Eigen::Success) {
-        // TODO: Do we have a better initial guess for iterative
-        // solvers?
         direction = Eigen::VectorXd::Zero(gradient.size());
         direction = linear_solver.solve(-gradient);
         if (linear_solver.info() == Eigen::Success) {

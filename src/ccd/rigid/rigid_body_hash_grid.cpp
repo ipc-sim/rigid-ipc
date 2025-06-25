@@ -221,7 +221,7 @@ int RigidBodyHashGrid::compute_vertices_intervals(
 
     // If the vertices' intervals are outside the scene bbox, then split t in
     // hopes that a smaller interval will be more accurate.
-    std::pair<Interval, Interval> t_halves = bisect(t);
+    std::pair<Interval, Interval> t_halves = t.bisect();
     MatrixXI V_first, V_second;
     int n_subs0 = compute_vertices_intervals(
         body, pose_t0, pose_t1, V_first, inflation_radius, t_halves.first,
@@ -236,7 +236,7 @@ int RigidBodyHashGrid::compute_vertices_intervals(
     // Take the hull of the two halves of the vertices' trajectories
     for (int i = 0; i < vertices.rows(); i++) {
         for (int j = 0; j < vertices.cols(); j++) {
-            vertices(i, j) = hull(V_first(i, j), V_second(i, j));
+            vertices(i, j) = V_first(i, j) | V_second(i, j);
             assert(vertices(i, j).lower() - inflation_radius >= m_domainMin(j));
             assert(vertices(i, j).upper() + inflation_radius <= m_domainMax(j));
         }
@@ -253,7 +253,7 @@ intervals_to_AABB(const Eigen::MatrixBase<Derived>& x, double inflation_radius)
     VectorMax3d min(x.size());
     VectorMax3d max(x.size());
     for (int i = 0; i < x.size(); i++) {
-        if (empty(x(i))) {
+        if (x(i).is_empty()) {
             throw "interval is empty";
         }
         min(i) = x(i).lower() - inflation_radius;

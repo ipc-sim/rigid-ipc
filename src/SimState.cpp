@@ -153,14 +153,7 @@ bool SimState::init(const nlohmann::json& args_in)
             "energy_conv_tol": null,
             "velocity_conv_tol": null,
             "is_velocity_conv_tol_abs": false,
-            "line_search_lower_bound": null,
-            "linear_solver": {
-                "name": "Eigen::SimplicialLDLT",
-                "max_iter": 1000,
-                "tolerance": 1e-10,
-                "pre_max_iter": 1,
-                "mtype": 2
-            }
+            "line_search_lower_bound": null
         },
         "ipc_solver": {
             "dhat_epsilon": 1e-9,

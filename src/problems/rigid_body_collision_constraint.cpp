@@ -50,7 +50,7 @@ RigidBodyEdgeEdgeConstraint::RigidBodyEdgeEdgeConstraint(
 
 RigidBodyFaceVertexConstraint::RigidBodyFaceVertexConstraint(
     const RigidBodyAssembler& bodies,
-    long face_index,
+    long face_index, 
     long vertex_index)
 {
     const auto& face = bodies.m_faces.row(face_index);
