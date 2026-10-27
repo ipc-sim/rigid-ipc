@@ -9,6 +9,34 @@
 
 namespace ipc::rigid {
 
+namespace {
+    // We write each body as a single primitive of its highest-dimensional
+    // elements. Codimensional bodies (e.g., an edge-only chain link or a
+    // point cloud) have no faces, so we fall back to lines or points instead
+    // of writing an empty triangle list that would drop their geometry.
+    int primitive_mode(const RigidBody& body)
+    {
+        if (body.num_faces() > 0) {
+            return TINYGLTF_MODE_TRIANGLES;
+        } else if (body.num_edges() > 0) {
+            return TINYGLTF_MODE_LINE;
+        }
+        return TINYGLTF_MODE_POINTS;
+    }
+
+    Eigen::MatrixXi primitive_elements(const RigidBody& body)
+    {
+        if (body.num_faces() > 0) {
+            return body.faces;
+        } else if (body.num_edges() > 0) {
+            return body.edges;
+        }
+        Eigen::MatrixXi P(body.num_vertices(), 1);
+        std::iota(P.data(), P.data() + P.size(), 0);
+        return P;
+    }
+} // namespace
+
 bool write_gltf(
     const std::string& filename,
     const RigidBodyAssembler& bodies,
@@ -98,7 +126,7 @@ bool write_gltf(
         Primitive& primitive = mesh.primitives.emplace_back();
         primitive.attributes["POSITION"] = 2 * i;
         primitive.indices = 2 * i + 1;
-        primitive.mode = TINYGLTF_MODE_TRIANGLES;
+        primitive.mode = primitive_mode(bodies[i]);
 
         Accessor* accessor = &model.accessors[2 * i];
         accessor->name = bodies[i].name + "Vertices";
@@ -113,7 +141,7 @@ bool write_gltf(
         accessor->name = bodies[i].name + "Faces";
         accessor->bufferView = 2 * i + 1;
         accessor->componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT;
-        accessor->count = 3 * bodies[i].num_faces();
+        accessor->count = primitive_elements(bodies[i]).size();
         accessor->type = TINYGLTF_TYPE_SCALAR;
 
         accessor = &model.accessors[2 * num_bodies + 2 * i + 1];
@@ -148,7 +176,8 @@ bool write_gltf(
         buffer_view = &model.bufferViews[2 * i + 1];
         buffer_view->name = bodies[i].name + "Faces";
         buffer_view->buffer = 0;
-        buffer_view->byteLength = sizeof(unsigned int) * bodies[i].faces.size();
+        buffer_view->byteLength =
+            sizeof(unsigned int) * primitive_elements(bodies[i]).size();
         buffer_view->byteOffset = byte_offset;
         byte_offset += buffer_view->byteLength;
     }
@@ -192,7 +221,7 @@ bool write_gltf(
             }
         }
 
-        Eigen::MatrixXi F = bodies[i].faces;
+        Eigen::MatrixXi F = primitive_elements(bodies[i]);
         for (int r = 0; r < F.rows(); r++) {
             for (int c = 0; c < F.cols(); c++) {
                 unsigned int fij = F(r, c);
