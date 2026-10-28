@@ -134,6 +134,7 @@ bool SimState::init(const nlohmann::json& args_in)
             "rigid_bodies": [],
             "coefficient_restitution": 0.0,
             "coefficient_friction": 0.0,
+            "friction_pairs": [],
             "gravity": [0.0, 0.0, 0.0],
             "collision_eps": 0.0,
             "time_stepper": "default",

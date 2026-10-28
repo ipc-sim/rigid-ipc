@@ -40,9 +40,20 @@ bool RigidBodyProblem::settings(const nlohmann::json& params)
             "Coefficient of friction (μ={:g}) is outside the standard "
             "[0, 1]",
             coefficient_friction);
-    } else if (coefficient_friction == 0) {
-        spdlog::info(
-            "Disabling friction because coefficient of friction is zero");
+    }
+
+    // Each pair names its two bodies, e.g.,
+    // {"bodies": ["pin", "sleeve"], "coefficient_friction": 0.1}.
+    friction_pairs.clear();
+    for (const auto& jpair : params["friction_pairs"]) {
+        const auto& names = jpair["bodies"];
+        if (!names.is_array() || names.size() != 2) {
+            spdlog::error("A friction pair must name exactly two bodies");
+            return false;
+        }
+        friction_pairs.push_back(
+            { names[0].get<std::string>(), names[1].get<std::string>(),
+              jpair["coefficient_friction"].get<double>() });
     }
 
     std::vector<RigidBody> rbs;
@@ -53,6 +64,45 @@ bool RigidBodyProblem::settings(const nlohmann::json& params)
     }
 
     init(rbs);
+
+    // We resolve the names to body indices once, so each contact can look
+    // its coefficient up by the indices of the bodies it touches. A name can
+    // match several bodies (e.g., the parts of a split mesh).
+    m_pair_coefficient_friction.clear();
+    for (const FrictionPair& pair : friction_pairs) {
+        if (pair.coefficient < 0) {
+            spdlog::error(
+                "Friction pair ({}, {}) has a negative coefficient ({:g})",
+                pair.body0, pair.body1, pair.coefficient);
+            return false;
+        }
+        std::vector<long> ids0, ids1;
+        for (long i = 0; i < long(num_bodies()); i++) {
+            if (m_assembler[i].name == pair.body0) {
+                ids0.push_back(i);
+            }
+            if (m_assembler[i].name == pair.body1) {
+                ids1.push_back(i);
+            }
+        }
+        if (ids0.empty() || ids1.empty()) {
+            spdlog::error(
+                "Friction pair ({}, {}) names a body that does not exist",
+                pair.body0, pair.body1);
+            return false;
+        }
+        for (long i : ids0) {
+            for (long j : ids1) {
+                m_pair_coefficient_friction[std::minmax(i, j)] =
+                    pair.coefficient;
+            }
+        }
+    }
+
+    if (!has_friction()) {
+        spdlog::info(
+            "Disabling friction because coefficient of friction is zero");
+    }
 
     from_json(params["gravity"], gravity);
     assert(gravity.size() >= dim());
@@ -69,9 +119,35 @@ nlohmann::json RigidBodyProblem::settings() const
     json["collision_eps"] = collision_eps;
     json["coefficient_restitution"] = coefficient_restitution;
     json["coefficient_friction"] = coefficient_friction;
+    json["friction_pairs"] = nlohmann::json::array();
+    for (const FrictionPair& pair : friction_pairs) {
+        json["friction_pairs"].push_back(
+            { { "bodies", { pair.body0, pair.body1 } },
+              { "coefficient_friction", pair.coefficient } });
+    }
     json["gravity"] = to_json(gravity);
     json["do_intersection_check"] = do_intersection_check;
     return json;
+}
+
+bool RigidBodyProblem::has_friction() const
+{
+    if (coefficient_friction > 0) {
+        return true;
+    }
+    for (const auto& [bodies, coefficient] : m_pair_coefficient_friction) {
+        if (coefficient > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+double RigidBodyProblem::coefficient_friction_between(long b0, long b1) const
+{
+    const auto it = m_pair_coefficient_friction.find(std::minmax(b0, b1));
+    return it != m_pair_coefficient_friction.end() ? it->second
+                                                   : coefficient_friction;
 }
 
 void RigidBodyProblem::init(const std::vector<RigidBody>& rbs)

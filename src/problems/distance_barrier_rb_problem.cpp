@@ -63,7 +63,10 @@ bool DistanceBarrierRBProblem::settings(const nlohmann::json& params)
 
     if (friction_iterations == 0) {
         spdlog::info("Disabling friction because friction iterations is zero");
-        coefficient_friction = 0; // This disables all friction computation
+        // This disables all friction computation
+        coefficient_friction = 0;
+        friction_pairs.clear();
+        m_pair_coefficient_friction.clear();
     }
     // else if (friction_iterations < 0) {
     //     friction_iterations = Constants::MAXIMUM_FRICTION_ITERATIONS;
@@ -172,7 +175,7 @@ void DistanceBarrierRBProblem::update_constraints()
 void DistanceBarrierRBProblem::update_friction_constraints(
     const Constraints& collision_constraints, const PosesD& poses)
 {
-    if (coefficient_friction <= 0) {
+    if (!has_friction()) {
         return;
     }
 
@@ -187,6 +190,19 @@ void DistanceBarrierRBProblem::update_friction_constraints(
         V0, edges(), faces(), collision_constraints,
         barrier_activation_distance(), barrier_stiffness(),
         coefficient_friction, friction_constraints);
+
+    // Every constraint lists one body's vertices before the other's, so the
+    // first and last vertices name the two bodies in contact.
+    if (!m_pair_coefficient_friction.empty()) {
+        for (size_t ci = 0; ci < friction_constraints.size(); ci++) {
+            FrictionConstraint& constraint = friction_constraints[ci];
+            const std::vector<long> vis =
+                constraint.vertex_indices(edges(), faces());
+            constraint.mu = coefficient_friction_between(
+                m_assembler.vertex_id_to_body_id(vis.front()),
+                m_assembler.vertex_id_to_body_id(vis.back()));
+        }
+    }
 
     PROFILE_END();
 }
@@ -1481,7 +1497,7 @@ double DistanceBarrierRBProblem::compute_friction_term(
     bool compute_grad,
     bool compute_hess)
 {
-    if (coefficient_friction <= 0 || friction_constraints.size() == 0) {
+    if (!has_friction() || friction_constraints.size() == 0) {
         grad.setZero(x.size());
         hess.resize(x.size(), x.size());
         return 0;

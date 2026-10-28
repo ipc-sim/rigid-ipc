@@ -73,7 +73,9 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
         // angular_velocity: world coordinates in degrees
         // force: applied to center of mass
         // torque: world coordinates in degrees
+        // name: the body's name (defaults to the mesh file's stem)
         json args = R"({
+                "name": "",
                 "mesh": "",
                 "vertices": [],
                 "edges": [],
@@ -140,6 +142,9 @@ bool read_rb_scene(const nlohmann::json& scene, std::vector<RigidBody>& rbs)
             from_json(args["edges"], edges);
             from_json(args["faces"], faces);
             rb_name = "RigidBody";
+        }
+        if (!args["name"].get<std::string>().empty()) {
+            rb_name = args["name"].get<std::string>();
         }
 
         if (dim == -1) {

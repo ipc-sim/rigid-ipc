@@ -1,6 +1,10 @@
 #pragma once
 
+#include <map>
 #include <memory> // shared_ptr
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <physics/rigid_body_assembler.hpp>
 #include <physics/simulation_problem.hpp>
@@ -134,6 +138,21 @@ public:
     VectorMax3d gravity;            ///< Acceleration due to gravity
     double collision_eps;           ///< Scale trajectory for early collision
 
+    /// A coefficient of friction for the contacts between two named bodies,
+    /// overriding coefficient_friction.
+    struct FrictionPair {
+        std::string body0; ///< Name of one of the bodies
+        std::string body1; ///< Name of the other body
+        double coefficient;
+    };
+    std::vector<FrictionPair> friction_pairs;
+
+    /// Whether any contact has a nonzero coefficient of friction.
+    bool has_friction() const;
+
+    /// Coefficient of friction for a contact between bodies b0 and b1.
+    double coefficient_friction_between(long b0, long b1) const;
+
     RigidBodyAssembler m_assembler;
 
 protected:
@@ -166,6 +185,10 @@ protected:
     double init_bbox_diagonal;
 
     bool do_intersection_check;
+
+    /// Coefficient of friction per body-index pair (smaller index first),
+    /// resolved from friction_pairs.
+    std::map<std::pair<long, long>, double> m_pair_coefficient_friction;
 };
 
 } // namespace ipc::rigid

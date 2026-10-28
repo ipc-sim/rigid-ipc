@@ -29,6 +29,7 @@ add_executable(rigid_ipc_tests
   physics/test_rigid_body.cpp
   physics/test_rigid_body_system.cpp
   physics/test_rigid_body_problem.cpp
+  physics/test_friction_pairs.cpp
 
   io/test_serialize_json.cpp
   io/test_read_rb_scene.cpp
