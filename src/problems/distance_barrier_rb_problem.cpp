@@ -911,13 +911,16 @@ T DistanceBarrierRBProblem::compute_body_energy(
                     .trace();
             // Transform the world space torque into body space
             Eigen::Matrix3d Tau = Q_t0.transpose() * Hat(body.force.rotation);
+            // The torque's work over a small rotation φ is τ·φ, but
+            // tr(QQᵗᵀ[τ]) = tr([φ][τ]) = -2τ·φ, so we halve the trace. Without
+            // the ½, every torque acted twice as strongly as it should.
             switch (body_energy_integration_method) {
             case IMPLICIT_EULER:
-                energy += h * h * (Q * Tau).trace();
+                energy += 0.5 * h * h * (Q * Tau).trace();
                 break;
             case IMPLICIT_NEWMARK:
             case STABILIZED_NEWMARK:
-                energy += 0.25 * h * h * (Q * Tau).trace();
+                energy += 0.125 * h * h * (Q * Tau).trace();
                 break;
             }
         } else {
