@@ -44,7 +44,11 @@ namespace Constants {
     /// \brief Scaling of κ_min to better condition the system
     static const double DEFAULT_MIN_BARRIER_STIFFNESS_SCALE = 1e11;
 
-    // static const int MAXIMUM_FRICTION_ITERATIONS = 100;
+    /// \brief Most lagged friction iterations per step when the friction
+    /// iteration count is negative (lag until converged). We match IPC
+    /// Toolkit's outer-iteration cap so both simulators give up at the same
+    /// point.
+    static const int MAXIMUM_FRICTION_ITERATIONS = 50;
 
     // ------------------------------------------------------------------------
     // Debugging

@@ -1,5 +1,7 @@
 #include "distance_barrier_rb_problem.hpp"
 
+#include <limits>
+
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
 
@@ -68,9 +70,6 @@ bool DistanceBarrierRBProblem::settings(const nlohmann::json& params)
         friction_pairs.clear();
         m_pair_coefficient_friction.clear();
     }
-    // else if (friction_iterations < 0) {
-    //     friction_iterations = Constants::MAXIMUM_FRICTION_ITERATIONS;
-    // }
 
     min_distance = compute_min_distance(starting_point());
     if (min_distance < 0) {
@@ -455,8 +454,13 @@ OptimizationResults DistanceBarrierRBProblem::solve_constraints()
 {
     OptimizationResults opt_result;
     opt_result.x = starting_point();
-    double momentum_balance,
-        eps_d = momentum_balance_tol * world_bbox_diagonal();
+    double momentum_balance = std::numeric_limits<double>::infinity(),
+           eps_d = momentum_balance_tol * world_bbox_diagonal();
+    // A negative iteration count lags until converged, up to a cap.
+    const int max_iterations = friction_iterations < 0
+        ? Constants::MAXIMUM_FRICTION_ITERATIONS
+        : friction_iterations;
+    bool improving;
     int i = 0;
     int total_newton_iterations = 0;
     do {
@@ -481,7 +485,15 @@ OptimizationResults DistanceBarrierRBProblem::solve_constraints()
         Eigen::VectorXd tmp = grad_Ex + barrier_stiffness() * grad_Bx + grad_Dx;
         tmp = is_dof_fixed().select(0, tmp);
 
+        // The Newton solver's own stopping criteria bound how small the
+        // momentum balance can get. For example, a contact held by static
+        // friction stops on the velocity criterion with a residual on the
+        // order of the contact force. Re-lagging cannot get past that, so we
+        // keep going only while each iteration improves the balance by at
+        // least 10% (the same rule IPC Toolkit uses).
+        const double prev_momentum_balance = momentum_balance;
         momentum_balance = tmp.norm();
+        improving = momentum_balance < 0.9 * prev_momentum_balance;
 
         i++;
 
@@ -489,14 +501,13 @@ OptimizationResults DistanceBarrierRBProblem::solve_constraints()
             "friction_solve lagging_iteration={:d} momentum_balance={:g} "
             "eps_d={:g}",
             i, momentum_balance, eps_d);
-    } while ((friction_iterations < 0 || i < friction_iterations)
-             && momentum_balance > eps_d);
+    } while (i < max_iterations && momentum_balance > eps_d && improving);
 
     if (opt_result.success) {
         spdlog::info(
             "Finished friction solve after {:d} lagging iteration(s) and a "
-            "momentum balance error of {:g}",
-            i, momentum_balance);
+            "momentum balance error of {:g} (eps_d={:g})",
+            i, momentum_balance, eps_d);
     } else {
         spdlog::error(
             "Ending friction solve early because newton solve {:d} failed!", i);
