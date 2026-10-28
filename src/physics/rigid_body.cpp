@@ -120,9 +120,12 @@ RigidBody::RigidBody(
         int num_rot_dof_fixed =
             is_dof_fixed.tail(PoseD::dim_to_rot_ndof(dim())).count();
         if (num_rot_dof_fixed == 2) {
-            // Convert moment of inertia to world coordinates
-            // https://physics.stackexchange.com/a/268812
-            moment_of_inertia = -I.diagonal().array() + I.diagonal().sum();
+            // With two rotations fixed, the body spins about a world axis, so
+            // we keep the world frame (R₀ = I) and take the moments about the
+            // world axes. compute_mass_properties already returns the inertia
+            // tensor (I_xx = ∫y² + z²), so those are just its diagonal, and
+            // like the eigenvalues above, it is per unit density.
+            moment_of_inertia = density * I.diagonal();
             R0.setIdentity();
         } else if (num_rot_dof_fixed == 1) {
             spdlog::warn(
