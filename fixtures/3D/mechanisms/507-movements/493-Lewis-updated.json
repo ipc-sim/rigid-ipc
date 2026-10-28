@@ -3,6 +3,10 @@
     "solver": "ipc_solver",
     "max_time": 5,
     "timestep": 0.01,
+    "friction_constraints": {
+        "iterations": -1,
+        "momentum_balance_tol": 1e-4
+    },
     "rigid_body_problem": {
         "coefficient_friction": 0.7,
         "friction_pairs": [
