@@ -28,6 +28,7 @@ DistanceBarrierRBProblem::DistanceBarrierRBProblem()
     , m_had_collisions(false)
     , static_friction_speed_bound(1e-3)
     , friction_iterations(1)
+    , momentum_balance_tol(1e-2)
     , body_energy_integration_method(DEFAULT_BODY_ENERGY_INTEGRATION_METHOD)
 {
 }
@@ -49,6 +50,8 @@ bool DistanceBarrierRBProblem::settings(const nlohmann::json& params)
     static_friction_speed_bound =
         params["friction_constraints"]["static_friction_speed_bound"];
     friction_iterations = params["friction_constraints"]["iterations"];
+    momentum_balance_tol =
+        params["friction_constraints"]["momentum_balance_tol"];
 
     body_energy_integration_method =
         params["rigid_body_problem"]["time_stepper"]
@@ -84,6 +87,7 @@ nlohmann::json DistanceBarrierRBProblem::settings() const
     nlohmann::json json = RigidBodyProblem::settings();
     json["friction_iterations"] = friction_iterations;
     json["static_friction_speed_bound"] = static_friction_speed_bound;
+    json["momentum_balance_tol"] = momentum_balance_tol;
     json["time_stepper"] = body_energy_integration_method;
     return json;
 }
@@ -435,7 +439,8 @@ OptimizationResults DistanceBarrierRBProblem::solve_constraints()
 {
     OptimizationResults opt_result;
     opt_result.x = starting_point();
-    double momentum_balance, eps_d = 1e-2 * world_bbox_diagonal();
+    double momentum_balance,
+        eps_d = momentum_balance_tol * world_bbox_diagonal();
     int i = 0;
     int total_newton_iterations = 0;
     do {

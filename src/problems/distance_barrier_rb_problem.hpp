@@ -351,6 +351,14 @@ protected:
     // Friction
     double static_friction_speed_bound;
     int friction_iterations;
+    /// @brief Lagged friction iterations stop once the momentum balance
+    /// ‖∇E + κ∇B + ∇D‖ falls below this times the world bounding-box
+    /// diagonal.
+    /// @note The momentum balance carries the bodies' masses and the
+    /// timestep squared, so a tolerance that suits one scene can be loose
+    /// for heavy bodies or small net forces. A block sliding slowly down a
+    /// ramp, where friction nearly cancels gravity, needs a much smaller value.
+    double momentum_balance_tol;
     FrictionConstraints friction_constraints;
 
     // Augmented Lagrangian

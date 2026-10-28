@@ -183,7 +183,8 @@ bool SimState::init(const nlohmann::json& args_in)
         },
         "friction_constraints": {
             "static_friction_speed_bound": 1e-3,
-            "iterations": 1
+            "iterations": 1,
+            "momentum_balance_tol": 1e-2
         },
         "volume_constraint": {
             "detection_method": "hash_grid",
