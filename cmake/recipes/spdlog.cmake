@@ -16,10 +16,13 @@ endif()
 message(STATUS "Third-party: creating target 'spdlog::spdlog'")
 
 include(FetchContent)
+# We need at least v1.14.1: older releases bundle an fmt that wraps pointers in
+# stdext::checked_array_iterator in MSVC Debug builds, and Visual Studio 2026
+# removed that type, so the Debug build fails to compile.
 FetchContent_Declare(
     spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG v1.9.0
+    GIT_TAG v1.14.1
     GIT_SHALLOW TRUE
 )
 
